@@ -45,6 +45,14 @@ const Navigation = () => {
                         </Link>
                       </NavigationMenuLink>
                     </div>
+                    <NavigationMenuLink asChild>
+                      <Link to="/innovation-ecosystem" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                        <div className="text-sm font-medium leading-none">Innovation Ecosystem</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          Connect with Australia's innovation landscape
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
