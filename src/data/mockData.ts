@@ -1,4 +1,3 @@
-
 import { Company } from "@/components/CompanyCard";
 
 export interface ServiceCategory {
@@ -93,6 +92,116 @@ export const serviceCategories: ServiceCategory[] = [
 ];
 
 export const categoryGroups: CategoryGroup[] = [
+  {
+    id: "aerospace-defence",
+    name: "Aerospace & Defence",
+    categories: [
+      { id: "aerospace-manufacturing", name: "Aerospace Manufacturing", count: 8 },
+      { id: "defence-contracting", name: "Defence Contracting", count: 12 },
+      { id: "avionics-systems", name: "Avionics Systems", count: 6 }
+    ],
+    totalCount: 26
+  },
+  {
+    id: "automotive-mobility",
+    name: "Automotive & Mobility",
+    categories: [
+      { id: "electric-vehicles", name: "Electric Vehicles", count: 15 },
+      { id: "autonomous-systems", name: "Autonomous Systems", count: 8 },
+      { id: "automotive-parts", name: "Automotive Parts & Components", count: 22 }
+    ],
+    totalCount: 45
+  },
+  {
+    id: "consumer-ecommerce",
+    name: "Consumer & Ecommerce",
+    categories: [
+      { id: "retail-ecommerce", name: "Retail & Ecommerce", count: 35 },
+      { id: "consumer-goods", name: "Consumer Goods", count: 28 },
+      { id: "fashion-lifestyle", name: "Fashion & Lifestyle", count: 18 }
+    ],
+    totalCount: 81
+  },
+  {
+    id: "digital-media-adtech",
+    name: "Digital Media & Adtech",
+    categories: [
+      { id: "digital-advertising", name: "Digital Advertising", count: 24 },
+      { id: "content-creation", name: "Content Creation", count: 19 },
+      { id: "streaming-media", name: "Streaming & Media", count: 14 }
+    ],
+    totalCount: 57
+  },
+  {
+    id: "electronics-embedded",
+    name: "Electronics & Embedded Software",
+    categories: [
+      { id: "consumer-electronics", name: "Consumer Electronics", count: 20 },
+      { id: "embedded-systems", name: "Embedded Systems", count: 16 },
+      { id: "semiconductors", name: "Semiconductors", count: 12 }
+    ],
+    totalCount: 48
+  },
+  {
+    id: "energy-environment",
+    name: "Energy & Environment",
+    categories: [
+      { id: "renewable-energy", name: "Renewable Energy", count: 18 },
+      { id: "environmental-services", name: "Environmental Services", count: 14 },
+      { id: "sustainability", name: "Sustainability Consulting", count: 11 }
+    ],
+    totalCount: 43
+  },
+  {
+    id: "industrial-materials",
+    name: "Industrial & Materials",
+    categories: [
+      { id: "manufacturing", name: "Manufacturing", count: 32 },
+      { id: "materials-science", name: "Materials Science", count: 15 },
+      { id: "industrial-automation", name: "Industrial Automation", count: 21 }
+    ],
+    totalCount: 68
+  },
+  {
+    id: "intellectual-property",
+    name: "Intellectual Property",
+    categories: [
+      { id: "patent-services", name: "Patent Services", count: 14 },
+      { id: "trademark-copyright", name: "Trademark & Copyright", count: 16 },
+      { id: "ip-licensing", name: "IP Licensing", count: 8 }
+    ],
+    totalCount: 38
+  },
+  {
+    id: "medtech-life-sciences",
+    name: "Medtech & Life Sciences",
+    categories: [
+      { id: "medical-devices", name: "Medical Devices", count: 22 },
+      { id: "biotechnology", name: "Biotechnology", count: 18 },
+      { id: "pharmaceuticals", name: "Pharmaceuticals", count: 25 }
+    ],
+    totalCount: 65
+  },
+  {
+    id: "software-cloud",
+    name: "Software & Cloud",
+    categories: [
+      { id: "cloud-services", name: "Cloud Services", count: 29 },
+      { id: "software-development", name: "Software Development", count: 41 },
+      { id: "cybersecurity", name: "Cybersecurity", count: 23 }
+    ],
+    totalCount: 93
+  },
+  {
+    id: "telecoms-networks",
+    name: "Telecoms & Networks",
+    categories: [
+      { id: "telecommunications", name: "Telecommunications", count: 19 },
+      { id: "network-infrastructure", name: "Network Infrastructure", count: 16 },
+      { id: "5g-technology", name: "5G Technology", count: 12 }
+    ],
+    totalCount: 47
+  },
   {
     id: "accounting-payroll-tax",
     name: "Accounting, Payroll & Tax",
