@@ -1,9 +1,9 @@
-
 import { useState } from "react";
-import { Building2, Filter, Grid3X3 } from "lucide-react";
+import { Filter, Grid3X3 } from "lucide-react";
 import CompanyCard, { Company } from "@/components/CompanyCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
+import MarketEntryLogo from "@/components/MarketEntryLogo";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { companies, serviceCategories, categoryGroups } from "@/data/mockData";
@@ -49,9 +49,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
+              <MarketEntryLogo />
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Market Entry Secrets</h1>
                 <p className="text-muted-foreground">Market Entry Services Directory</p>
