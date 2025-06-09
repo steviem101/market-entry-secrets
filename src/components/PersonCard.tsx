@@ -23,6 +23,7 @@ export interface Person {
   image?: string;
   experienceTiles?: ExperienceTile[];
   company?: string;
+  isAnonymous?: boolean;
 }
 
 interface PersonCardProps {
@@ -32,22 +33,39 @@ interface PersonCardProps {
 }
 
 const PersonCard = ({ person, onViewProfile, onContact }: PersonCardProps) => {
+  const displayName = person.isAnonymous ? person.title : person.name;
+  const shouldBlurImage = person.isAnonymous;
+
   return (
     <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="flex items-start gap-4 mb-4">
         <Avatar className="w-16 h-16 flex-shrink-0">
-          <AvatarImage src={person.image} alt={person.name} />
-          <AvatarFallback className="bg-primary/10 text-primary text-lg">
-            {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-          </AvatarFallback>
+          {person.isAnonymous ? (
+            <AvatarFallback className="bg-primary/10 text-primary text-lg">
+              <User className="w-8 h-8" />
+            </AvatarFallback>
+          ) : (
+            <>
+              <AvatarImage 
+                src={person.image} 
+                alt={person.name}
+                className={shouldBlurImage ? "blur-sm" : ""}
+              />
+              <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </AvatarFallback>
+            </>
+          )}
         </Avatar>
         <div className="flex-1 min-w-0">
           <h3 className="text-xl font-semibold text-foreground mb-1 truncate">
-            {person.name}
+            {displayName}
           </h3>
-          <p className="text-primary font-medium text-sm mb-1 truncate">
-            {person.title}
-          </p>
+          {!person.isAnonymous && (
+            <p className="text-primary font-medium text-sm mb-1 truncate">
+              {person.title}
+            </p>
+          )}
           <div className="flex items-center text-muted-foreground text-sm">
             <MapPin className="w-4 h-4 mr-1" />
             {person.location}
