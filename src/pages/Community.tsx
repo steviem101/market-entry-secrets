@@ -1,49 +1,50 @@
 
 import { useState } from "react";
 import { Filter, Grid3X3 } from "lucide-react";
-import CompanyCard, { Company } from "@/components/CompanyCard";
+import PersonCard, { Person } from "@/components/PersonCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { companies, serviceCategories, categoryGroups } from "@/data/mockData";
+import { people, serviceCategories, categoryGroups } from "@/data/mockData";
 
 const Community = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
 
-  const filteredCompanies = companies.filter(company => {
-    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         company.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         company.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredPeople = people.filter(person => {
+    const matchesSearch = person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         person.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         person.specialties.some(specialty => specialty.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         person.title.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategories = selectedCategories.length === 0 || 
-                             company.services.some(service => 
+                             person.specialties.some(specialty => 
                                selectedCategories.some(catId => {
                                  const category = serviceCategories.find(c => c.id === catId) ||
                                                 categoryGroups.flatMap(g => g.categories).find(c => c.id === catId);
-                                 return category && service.toLowerCase().includes(category.name.toLowerCase());
+                                 return category && specialty.toLowerCase().includes(category.name.toLowerCase());
                                })
                              );
 
     const matchesLocation = selectedLocations.length === 0 || 
-                           selectedLocations.includes(company.location);
+                           selectedLocations.includes(person.location);
     
     return matchesSearch && matchesCategories && matchesLocation;
   });
 
-  const handleViewProfile = (company: Company) => {
-    setSelectedCompany(company);
+  const handleViewProfile = (person: Person) => {
+    setSelectedPerson(person);
     setIsModalOpen(true);
   };
 
-  const handleContact = (company: Company) => {
-    toast.success(`Contact request sent to ${company.name}!`);
+  const handleContact = (person: Person) => {
+    toast.success(`Contact request sent to ${person.name}!`);
     setIsModalOpen(false);
   };
 
@@ -57,7 +58,7 @@ const Community = () => {
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-4xl font-bold text-foreground mb-4">Market Entry Secrets Community</h1>
           <p className="text-lg text-muted-foreground">
-            Connect with Australia's leading market entry professionals and grow your network
+            Connect with Australia's leading market entry professionals who help companies enter and scale in the Australian market
           </p>
         </div>
       </div>
@@ -67,7 +68,7 @@ const Community = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              {filteredCompanies.length} community members found
+              {filteredPeople.length} community members found
             </span>
             <div className="flex items-center gap-2">
               {/* Location Filter Button */}
@@ -113,7 +114,7 @@ const Community = () => {
 
           {/* Main Content */}
           <main className="flex-1">
-            {filteredCompanies.length === 0 ? (
+            {filteredPeople.length === 0 ? (
               <div className="text-center py-12">
                 <Grid3X3 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No community members found</h3>
@@ -123,10 +124,10 @@ const Community = () => {
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {filteredCompanies.map((company) => (
-                  <CompanyCard
-                    key={company.id}
-                    company={company}
+                {filteredPeople.map((person) => (
+                  <PersonCard
+                    key={person.id}
+                    person={person}
                     onViewProfile={handleViewProfile}
                     onContact={handleContact}
                   />
@@ -137,13 +138,26 @@ const Community = () => {
         </div>
       </div>
 
-      {/* Company Modal */}
-      <CompanyModal
-        company={selectedCompany}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onContact={handleContact}
-      />
+      {/* Person Modal - Note: This will need to be updated to work with Person data */}
+      {selectedPerson && (
+        <CompanyModal
+          company={{
+            id: selectedPerson.id,
+            name: selectedPerson.name,
+            description: selectedPerson.description,
+            location: selectedPerson.location,
+            founded: selectedPerson.experience,
+            employees: selectedPerson.company || "Independent",
+            services: selectedPerson.specialties,
+            website: selectedPerson.website,
+            contact: selectedPerson.contact,
+            experienceTiles: selectedPerson.experienceTiles
+          }}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onContact={() => handleContact(selectedPerson)}
+        />
+      )}
     </div>
   );
 };

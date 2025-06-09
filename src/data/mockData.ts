@@ -1,4 +1,4 @@
-import { Company } from "@/components/CompanyCard";
+import { Person } from "@/components/PersonCard";
 
 export interface ServiceCategory {
   id: string;
@@ -249,144 +249,147 @@ export const categoryGroups: CategoryGroup[] = [
   }
 ];
 
-export const companies: Company[] = [
+export const people: Person[] = [
   {
     id: "1",
-    name: "Sport Endorse",
-    description: "SPORT ENDORSE is the premier global platform revolutionizing athlete endorsements by providing innovative, cost-effective solutions that connect brands and athletes, maximizing visibility through authentic and transparent engagements.",
+    name: "Sarah Johnson",
+    title: "Market Entry Strategist",
+    description: "Experienced professional helping international companies navigate the Australian market. Specializes in regulatory compliance, business development, and strategic partnerships across technology and healthcare sectors.",
     location: "Sydney, NSW",
-    founded: "2018",
-    employees: "4-10",
-    services: ["Social media & digital marketing", "Event management", "Advertising, branding & marketing"],
-    website: "https://sportendorse.com",
-    contact: "contact@sportendorse.com",
+    experience: "12+ years",
+    specialties: ["Market Entry Strategy", "Regulatory Compliance", "Business Development", "Strategic Partnerships"],
+    website: "https://sarahjohnson.com",
+    contact: "sarah@example.com",
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop",
+    company: "Johnson Strategic Consulting",
     experienceTiles: [
-      { id: "1", name: "Nike", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
-      { id: "2", name: "Adidas", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" },
-      { id: "3", name: "FIFA", logo: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=100&h=100&fit=crop" }
-    ],
-    contactPersons: [
-      { id: "1", name: "Sarah Johnson", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop", role: "Business Development" },
-      { id: "2", name: "Mike O'Connor", role: "Account Manager" }
+      { id: "1", name: "Microsoft", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
+      { id: "2", name: "Salesforce", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" },
+      { id: "3", name: "Pfizer", logo: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=100&h=100&fit=crop" }
     ]
   },
   {
     id: "2",
-    name: "TechFlow Solutions",
-    description: "Leading software development company specializing in enterprise solutions, cloud architecture, and digital transformation. We help businesses streamline their operations through innovative technology solutions.",
+    name: "David Chen",
+    title: "Technology Integration Specialist",
+    description: "Senior consultant specializing in helping tech startups and scale-ups establish operations in Australia. Expert in digital transformation, cloud migration, and establishing local development teams.",
     location: "Melbourne, VIC",
-    founded: "2015",
-    employees: "51-100",
-    services: ["Website development", "Website / Digital platform hosting & management", "Business development"],
-    website: "https://techflow.com",
-    contact: "hello@techflow.com",
+    experience: "15+ years",
+    specialties: ["Technology Integration", "Cloud Migration", "Team Building", "Digital Transformation"],
+    website: "https://davidchen.consulting",
+    contact: "david@example.com",
+    image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=200&h=200&fit=crop",
+    company: "TechScale Australia",
     experienceTiles: [
-      { id: "4", name: "Microsoft", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
-      { id: "5", name: "AWS", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
-    ],
-    contactPersons: [
-      { id: "3", name: "David Chen", image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=100&h=100&fit=crop", role: "CTO" }
+      { id: "4", name: "AWS", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
+      { id: "5", name: "Google Cloud", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
     ]
   },
   {
     id: "3",
-    name: "GreenTech Innovations",
-    description: "Sustainable technology company focused on renewable energy solutions and environmental consulting. We partner with organizations to reduce their carbon footprint and implement green technologies.",
+    name: "Anna Mueller",
+    title: "Sustainability & ESG Advisor",
+    description: "Environmental sustainability expert helping international companies align with Australia's environmental regulations and ESG requirements. Specializes in renewable energy and clean technology market entry.",
     location: "Brisbane, QLD",
-    founded: "2020",
-    employees: "11-25",
-    services: ["Strategy & long-term planning", "Business development", "Partner identification"],
-    website: "https://greentech-innovations.com",
+    experience: "10+ years",
+    specialties: ["ESG Compliance", "Renewable Energy", "Environmental Regulations", "Sustainability Strategy"],
+    website: "https://annamueller.eco",
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop",
+    company: "GreenPath Consulting",
     experienceTiles: [
       { id: "6", name: "Tesla", logo: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=100&h=100&fit=crop" },
       { id: "7", name: "Siemens", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
-      { id: "8", name: "Shell", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" },
-      { id: "9", name: "BP", logo: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=100&h=100&fit=crop" }
-    ],
-    contactPersons: [
-      { id: "4", name: "Anna Mueller", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop", role: "Head of Sustainability" },
-      { id: "5", name: "Klaus Weber", role: "Technical Director" }
+      { id: "8", name: "Shell", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
     ]
   },
   {
     id: "4",
-    name: "DataSecure Pro",
-    description: "Cybersecurity specialists providing comprehensive security solutions for enterprises. Our team of experts ensures your data and systems are protected against evolving cyber threats.",
+    name: "Emma Thompson",
+    title: "Cybersecurity & Risk Management Consultant",
+    description: "Cybersecurity specialist helping international companies establish secure operations in Australia. Expert in data protection laws, risk assessment, and implementing security frameworks for Australian compliance.",
     location: "Perth, WA",
-    founded: "2017",
-    employees: "26-50",
-    services: ["Data protection & Information assurance", "Risk consultation", "Regulatory support"],
-    website: "https://datasecure-pro.com",
-    contactPersons: [
-      { id: "6", name: "Emma Thompson", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop", role: "Security Analyst" }
-    ]
+    experience: "8+ years",
+    specialties: ["Cybersecurity", "Risk Management", "Data Protection", "Compliance Frameworks"],
+    website: "https://emmathompson.security",
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop",
+    company: "SecureOps Australia"
   },
   {
     id: "5",
-    name: "MediaCraft Studios",
-    description: "Creative digital agency specializing in brand development, content creation, and digital marketing campaigns. We bring brands to life through compelling storytelling and innovative design.",
+    name: "Alex Rivera",
+    title: "Digital Marketing & Brand Strategist",
+    description: "Creative marketing professional specializing in helping international brands establish their presence in the Australian market. Expert in digital campaigns, brand positioning, and local market insights.",
     location: "Adelaide, SA",
-    founded: "2019",
-    employees: "11-25",
-    services: ["Advertising, branding & marketing", "Social media & digital marketing", "Event management"],
-    website: "https://mediacraft-studios.com",
+    experience: "9+ years",
+    specialties: ["Digital Marketing", "Brand Strategy", "Content Creation", "Market Research"],
+    website: "https://alexrivera.marketing",
+    image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=200&h=200&fit=crop",
+    company: "Rivera Creative Agency",
     experienceTiles: [
       { id: "10", name: "Coca-Cola", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
       { id: "11", name: "Netflix", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
-    ],
-    contactPersons: [
-      { id: "7", name: "Alex Rivera", role: "Creative Director" },
-      { id: "8", name: "Sophie Martin", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop", role: "Account Executive" }
     ]
   },
   {
     id: "6",
-    name: "HealthTech Partners",
-    description: "Healthcare technology company developing cutting-edge medical software and telehealth solutions. We're committed to improving patient outcomes through innovative healthcare technology.",
+    name: "Sophie Martin",
+    title: "Healthcare & Life Sciences Advisor",
+    description: "Healthcare industry specialist with deep expertise in Australian regulatory frameworks for medical devices and pharmaceuticals. Helps international companies navigate TGA approval processes and establish clinical operations.",
     location: "Canberra, ACT",
-    founded: "2016",
-    employees: "101-250",
-    services: ["Business development", "Website development", "Strategy & long-term planning"],
-    website: "https://healthtech-partners.com"
+    experience: "14+ years",
+    specialties: ["Healthcare Regulations", "TGA Compliance", "Clinical Operations", "Medical Devices"],
+    website: "https://sophiemartin.health",
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop",
+    company: "MedTech Australia Consulting"
   },
   {
     id: "7",
-    name: "AutoMotive Solutions Inc",
-    description: "Automotive technology company specializing in electric vehicle components and smart transportation systems. We're driving the future of sustainable mobility.",
+    name: "Klaus Weber",
+    title: "Automotive & Manufacturing Expert",
+    description: "Manufacturing and automotive industry veteran helping international companies establish production facilities and supply chains in Australia. Specializes in electric vehicle market entry and sustainable manufacturing.",
     location: "Gold Coast, QLD",
-    founded: "2014",
-    employees: "251-500",
-    services: ["Product safety regulation and compliance", "Quality assurance & quality control", "Cross-border logistics support and warehousing"],
-    website: "https://automotive-solutions.com"
+    experience: "18+ years",
+    specialties: ["Manufacturing Setup", "Supply Chain", "Automotive Industry", "Electric Vehicles"],
+    website: "https://klausweber.manufacturing",
+    image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=200&h=200&fit=crop",
+    company: "AutoManufacture Solutions"
   },
   {
     id: "8",
-    name: "EduTech Global",
-    description: "Educational technology platform providing online learning solutions and digital classroom tools. We empower educators and students with innovative learning technologies.",
+    name: "Jennifer Liu",
+    title: "Education Technology Specialist",
+    description: "EdTech consultant helping international education companies and platforms enter the Australian market. Expert in education regulations, curriculum alignment, and establishing partnerships with Australian institutions.",
     location: "Darwin, NT",
-    founded: "2021",
-    employees: "26-50",
-    services: ["Website development", "Business development", "Translation / Interpretation services"],
-    website: "https://edutech-global.com"
+    experience: "7+ years",
+    specialties: ["Education Technology", "Curriculum Development", "Regulatory Compliance", "Partnership Development"],
+    website: "https://jenniferliu.edutech",
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop",
+    company: "EduPath Consulting"
   },
   {
     id: "9",
-    name: "FinanceForward",
-    description: "Financial technology company offering banking solutions, payment processing, and financial analytics. We help businesses optimize their financial operations and growth strategies.",
+    name: "Marcus O'Brien",
+    title: "Financial Services & FinTech Advisor",
+    description: "Financial services expert specializing in helping international FinTech companies navigate Australian financial regulations. Expert in APRA compliance, banking partnerships, and payment system integration.",
     location: "Hobart, TAS",
-    founded: "2013",
-    employees: "101-250",
-    services: ["Accounting & Tax", "Foreign exchange services", "Opening a bank account"],
-    website: "https://financeforward.com"
+    experience: "16+ years",
+    specialties: ["Financial Regulations", "APRA Compliance", "Banking Partnerships", "Payment Systems"],
+    website: "https://marcusobrien.fintech",
+    image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=200&h=200&fit=crop",
+    company: "FinServe Australia"
   },
   {
     id: "10",
-    name: "AeroSpace Dynamics",
-    description: "Aerospace engineering company specializing in aircraft design, avionics systems, and space technology. We push the boundaries of flight and space exploration.",
+    name: "Rachel Kim",
+    title: "Aerospace & Defence Industry Consultant",
+    description: "Aerospace and defence industry specialist helping international companies establish operations in Australia's growing space and defence sectors. Expert in government contracting and security clearance processes.",
     location: "Newcastle, NSW",
-    founded: "2012",
-    employees: "501-1000",
-    services: ["Product safety regulation and compliance", "Quality assurance & quality control", "Regulatory support"],
-    website: "https://aerospace-dynamics.com"
+    experience: "11+ years",
+    specialties: ["Aerospace Industry", "Defence Contracting", "Government Relations", "Security Clearances"],
+    website: "https://rachelkim.aerospace",
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop",
+    company: "AeroDefence Consulting"
   }
 ];
+
+export { serviceCategories, categoryGroups };
