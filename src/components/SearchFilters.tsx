@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -110,7 +109,7 @@ const SearchFilters = ({
               const category = categories.find(c => c.id === categoryId) ||
                               categoryGroups.flatMap(g => g.categories).find(c => c.id === categoryId);
               return category ? (
-                <Badge key={categoryId} variant="default" className="bg-teal-600">
+                <Badge key={categoryId} variant="default">
                   {category.name}
                 </Badge>
               ) : null;

@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -153,7 +152,7 @@ const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps
             </Button>
             <Button 
               onClick={() => onContact(company)}
-              className="flex-1 bg-teal-600 hover:bg-teal-700"
+              className="flex-1"
             >
               <Phone className="w-4 h-4 mr-2" />
               Contact

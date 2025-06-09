@@ -1,4 +1,3 @@
-
 import { Building2, MapPin, Users, Calendar, Globe, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -145,7 +144,7 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
         <Button
           size="sm"
           onClick={() => onContact(company)}
-          className="flex-1 bg-teal-600 hover:bg-teal-700"
+          className="flex-1"
         >
           <Phone className="w-4 h-4 mr-1" />
           Contact
