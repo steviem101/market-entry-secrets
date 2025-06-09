@@ -14,6 +14,19 @@ export interface CategoryGroup {
   totalCount: number;
 }
 
+export interface Company {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  founded: string;
+  employees: string;
+  services: string[];
+  website?: string;
+  contact?: string;
+  experienceTiles?: { id: string; name: string; logo: string; }[];
+}
+
 export const serviceCategories: ServiceCategory[] = [
   // Accounting, Payroll & Tax
   { id: "accounting-tax", name: "Accounting & Tax", count: 18 },
@@ -323,6 +336,7 @@ export const people: Person[] = [
     experience: "9+ years",
     specialties: ["Digital Marketing", "Brand Strategy", "Content Creation", "Market Research"],
     website: "https://alexrivera.marketing",
+    contact: "alex@example.com",
     image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=200&h=200&fit=crop",
     company: "Rivera Creative Agency",
     experienceTiles: [
@@ -392,4 +406,43 @@ export const people: Person[] = [
   }
 ];
 
-export { serviceCategories, categoryGroups };
+// Mock companies data for the vendor/company pages
+export const companies: Company[] = [
+  {
+    id: "1",
+    name: "TechForward Solutions",
+    description: "Leading technology consulting firm specializing in digital transformation and cloud migration for international companies entering the Australian market.",
+    location: "Sydney, NSW",
+    founded: "2018",
+    employees: "50-100",
+    services: ["Cloud Migration", "Digital Transformation", "Software Development", "Technology Integration"],
+    website: "https://techforward.com.au",
+    contact: "info@techforward.com.au",
+    experienceTiles: [
+      { id: "1", name: "AWS", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
+      { id: "2", name: "Microsoft", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
+    ]
+  },
+  {
+    id: "2",
+    name: "GreenPath Consulting",
+    description: "Environmental sustainability experts helping companies navigate Australia's environmental regulations and implement ESG strategies.",
+    location: "Melbourne, VIC",
+    founded: "2020",
+    employees: "20-50",
+    services: ["ESG Compliance", "Environmental Consulting", "Sustainability Strategy", "Renewable Energy"],
+    website: "https://greenpath.com.au",
+    contact: "hello@greenpath.com.au"
+  },
+  {
+    id: "3",
+    name: "MarketEntry Pro",
+    description: "Comprehensive market entry consultancy providing end-to-end support for international companies establishing operations in Australia.",
+    location: "Brisbane, QLD",
+    founded: "2015",
+    employees: "100+",
+    services: ["Market Research", "Business Development", "Regulatory Compliance", "Strategic Planning"],
+    website: "https://marketentrypro.com.au",
+    contact: "contact@marketentrypro.com.au"
+  }
+];
