@@ -1,12 +1,9 @@
-
 import { Link } from "react-router-dom";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import MarketEntryLogo from "./MarketEntryLogo";
-
 const Navigation = () => {
-  return (
-    <nav className="bg-card border-b border-border">
+  return <nav className="bg-card border-b border-border">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
@@ -30,7 +27,7 @@ const Navigation = () => {
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Services</NavigationMenuTrigger>
+                <NavigationMenuTrigger>Ecosystem</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="grid gap-3 p-6 w-[400px]">
                     <div className="row-span-3">
@@ -92,8 +89,6 @@ const Navigation = () => {
           </NavigationMenu>
         </div>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navigation;
