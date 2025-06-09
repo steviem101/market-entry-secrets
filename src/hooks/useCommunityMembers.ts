@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Person } from "@/components/PersonCard";
+import { Person, ExperienceTile } from "@/components/PersonCard";
 
 export const useCommunityMembers = () => {
   return useQuery({
@@ -36,7 +36,7 @@ export const useCommunityMembers = () => {
         company: member.company,
         isAnonymous: member.is_anonymous,
         experienceTiles: member.experience_tiles ? 
-          (Array.isArray(member.experience_tiles) ? member.experience_tiles : []) : []
+          (Array.isArray(member.experience_tiles) ? member.experience_tiles as ExperienceTile[] : []) : []
       }));
     }
   });
