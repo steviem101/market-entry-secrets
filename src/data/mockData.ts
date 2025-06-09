@@ -1,3 +1,4 @@
+
 import { Person } from "@/components/PersonCard";
 
 export interface ServiceCategory {
@@ -296,12 +297,13 @@ export const people: Person[] = [
     experienceTiles: [
       { id: "4", name: "AWS", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
       { id: "5", name: "Google Cloud", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
-    ]
+    ],
+    isAnonymous: true
   },
   {
     id: "3",
     name: "Anna Mueller",
-    title: "Sustainability & ESG Advisor",
+    title: "Environmental Sustainability Specialist",
     description: "Environmental sustainability expert helping international companies align with Australia's environmental regulations and ESG requirements. Specializes in renewable energy and clean technology market entry.",
     location: "Brisbane, QLD",
     experience: "10+ years",
@@ -313,7 +315,8 @@ export const people: Person[] = [
       { id: "6", name: "Tesla", logo: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=100&h=100&fit=crop" },
       { id: "7", name: "Siemens", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
       { id: "8", name: "Shell", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
-    ]
+    ],
+    isAnonymous: true
   },
   {
     id: "4",
@@ -330,7 +333,7 @@ export const people: Person[] = [
   {
     id: "5",
     name: "Alex Rivera",
-    title: "Digital Marketing & Brand Strategist",
+    title: "Digital Marketing Strategist",
     description: "Creative marketing professional specializing in helping international brands establish their presence in the Australian market. Expert in digital campaigns, brand positioning, and local market insights.",
     location: "Adelaide, SA",
     experience: "9+ years",
@@ -342,19 +345,21 @@ export const people: Person[] = [
     experienceTiles: [
       { id: "10", name: "Coca-Cola", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
       { id: "11", name: "Netflix", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
-    ]
+    ],
+    isAnonymous: true
   },
   {
     id: "6",
     name: "Sophie Martin",
-    title: "Healthcare & Life Sciences Advisor",
+    title: "Healthcare Regulatory Specialist",
     description: "Healthcare industry specialist with deep expertise in Australian regulatory frameworks for medical devices and pharmaceuticals. Helps international companies navigate TGA approval processes and establish clinical operations.",
     location: "Canberra, ACT",
     experience: "14+ years",
     specialties: ["Healthcare Regulations", "TGA Compliance", "Clinical Operations", "Medical Devices"],
     website: "https://sophiemartin.health",
     image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200&h=200&fit=crop",
-    company: "MedTech Australia Consulting"
+    company: "MedTech Australia Consulting",
+    isAnonymous: true
   },
   {
     id: "7",
@@ -383,14 +388,15 @@ export const people: Person[] = [
   {
     id: "9",
     name: "Marcus O'Brien",
-    title: "Financial Services & FinTech Advisor",
+    title: "Financial Services Specialist",
     description: "Financial services expert specializing in helping international FinTech companies navigate Australian financial regulations. Expert in APRA compliance, banking partnerships, and payment system integration.",
     location: "Hobart, TAS",
     experience: "16+ years",
     specialties: ["Financial Regulations", "APRA Compliance", "Banking Partnerships", "Payment Systems"],
     website: "https://marcusobrien.fintech",
     image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=200&h=200&fit=crop",
-    company: "FinServe Australia"
+    company: "FinServe Australia",
+    isAnonymous: true
   },
   {
     id: "10",
