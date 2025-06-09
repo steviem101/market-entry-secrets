@@ -1,20 +1,9 @@
-
 import { Link } from "react-router-dom";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import MarketEntryLogo from "./MarketEntryLogo";
-
 const Navigation = () => {
-  return (
-    <nav className="bg-card border-b border-border">
+  return <nav className="bg-card border-b border-border">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
@@ -22,7 +11,7 @@ const Navigation = () => {
             <MarketEntryLogo />
             <div>
               <h1 className="text-2xl font-bold text-foreground">Market Entry Secrets</h1>
-              <p className="text-muted-foreground text-sm">Market Entry Services Directory</p>
+              <p className="text-muted-foreground text-sm">Your One Stop Shop for Australian Market Entry</p>
             </div>
           </Link>
 
@@ -31,10 +20,7 @@ const Navigation = () => {
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
-                  <Link
-                    to="/"
-                    className={cn(navigationMenuTriggerStyle(), "bg-transparent")}
-                  >
+                  <Link to="/" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
                     Home
                   </Link>
                 </NavigationMenuLink>
@@ -46,10 +32,7 @@ const Navigation = () => {
                   <div className="grid gap-3 p-6 w-[400px]">
                     <div className="row-span-3">
                       <NavigationMenuLink asChild>
-                        <Link
-                          to="/"
-                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                        >
+                        <Link to="/" className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md">
                           <div className="mb-2 mt-4 text-lg font-medium">
                             All Services
                           </div>
@@ -65,10 +48,7 @@ const Navigation = () => {
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
-                  <Link
-                    to="/community"
-                    className={cn(navigationMenuTriggerStyle(), "bg-transparent")}
-                  >
+                  <Link to="/community" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
                     Community
                   </Link>
                 </NavigationMenuLink>
@@ -76,10 +56,7 @@ const Navigation = () => {
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
-                  <Link
-                    to="/about"
-                    className={cn(navigationMenuTriggerStyle(), "bg-transparent")}
-                  >
+                  <Link to="/about" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
                     About
                   </Link>
                 </NavigationMenuLink>
@@ -87,10 +64,7 @@ const Navigation = () => {
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
-                  <Link
-                    to="/contact"
-                    className={cn(navigationMenuTriggerStyle(), "bg-transparent")}
-                  >
+                  <Link to="/contact" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
                     Contact
                   </Link>
                 </NavigationMenuLink>
@@ -99,8 +73,6 @@ const Navigation = () => {
           </NavigationMenu>
         </div>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navigation;
