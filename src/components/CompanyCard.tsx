@@ -2,6 +2,20 @@
 import { Building2, MapPin, Users, Calendar, Globe, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+export interface ContactPerson {
+  id: string;
+  name: string;
+  image?: string;
+  role?: string;
+}
+
+export interface ExperienceTile {
+  id: string;
+  name: string;
+  logo: string;
+}
 
 export interface Company {
   id: string;
@@ -14,6 +28,8 @@ export interface Company {
   website?: string;
   contact?: string;
   logo?: string;
+  experienceTiles?: ExperienceTile[];
+  contactPersons?: ContactPerson[];
 }
 
 interface CompanyCardProps {
@@ -56,6 +72,49 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
           </Badge>
         )}
       </div>
+
+      {company.experienceTiles && company.experienceTiles.length > 0 && (
+        <div className="mb-4">
+          <h4 className="text-sm font-medium text-muted-foreground mb-2">Working with:</h4>
+          <div className="flex gap-2 overflow-x-auto">
+            {company.experienceTiles.slice(0, 3).map((tile) => (
+              <div key={tile.id} className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg p-1">
+                <img 
+                  src={tile.logo} 
+                  alt={tile.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ))}
+            {company.experienceTiles.length > 3 && (
+              <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                <span className="text-xs text-muted-foreground">+{company.experienceTiles.length - 3}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {company.contactPersons && company.contactPersons.length > 0 && (
+        <div className="mb-4">
+          <h4 className="text-sm font-medium text-muted-foreground mb-2">Contact person(s):</h4>
+          <div className="flex gap-2">
+            {company.contactPersons.slice(0, 3).map((person) => (
+              <Avatar key={person.id} className="w-10 h-10">
+                <AvatarImage src={person.image} alt={person.name} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+            {company.contactPersons.length > 3 && (
+              <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                <span className="text-xs text-muted-foreground">+{company.contactPersons.length - 3}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-4 mb-4 text-xs text-muted-foreground">
         <div className="flex items-center">

@@ -2,6 +2,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Building2, MapPin, Users, Calendar, Globe, Phone, Mail, ExternalLink } from "lucide-react";
 import { Company } from "./CompanyCard";
 
@@ -61,6 +62,50 @@ const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps
               ))}
             </div>
           </section>
+
+          {company.experienceTiles && company.experienceTiles.length > 0 && (
+            <section>
+              <h3 className="text-lg font-semibold mb-3">Working with</h3>
+              <div className="flex flex-wrap gap-3">
+                {company.experienceTiles.map((tile) => (
+                  <div key={tile.id} className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
+                    <div className="w-12 h-12 bg-white border rounded-lg p-1">
+                      <img 
+                        src={tile.logo} 
+                        alt={tile.name}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <span className="text-sm font-medium">{tile.name}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {company.contactPersons && company.contactPersons.length > 0 && (
+            <section>
+              <h3 className="text-lg font-semibold mb-3">Contact person(s)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {company.contactPersons.map((person) => (
+                  <div key={person.id} className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={person.image} alt={person.name} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{person.name}</div>
+                      {person.role && (
+                        <div className="text-sm text-muted-foreground">{person.role}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section>
             <h3 className="text-lg font-semibold mb-3">Company Details</h3>

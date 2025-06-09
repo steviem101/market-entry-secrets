@@ -33,7 +33,16 @@ export const companies: Company[] = [
     employees: "4-10",
     services: ["Fan Engagement", "Management Software", "Marketing & Advertising"],
     website: "https://sportendorse.com",
-    contact: "contact@sportendorse.com"
+    contact: "contact@sportendorse.com",
+    experienceTiles: [
+      { id: "1", name: "Nike", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
+      { id: "2", name: "Adidas", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" },
+      { id: "3", name: "FIFA", logo: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=100&h=100&fit=crop" }
+    ],
+    contactPersons: [
+      { id: "1", name: "Sarah Johnson", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop", role: "Business Development" },
+      { id: "2", name: "Mike O'Connor", role: "Account Manager" }
+    ]
   },
   {
     id: "2",
@@ -44,7 +53,14 @@ export const companies: Company[] = [
     employees: "51-100",
     services: ["Software Development", "Cloud Solutions", "Digital Transformation"],
     website: "https://techflow.com",
-    contact: "hello@techflow.com"
+    contact: "hello@techflow.com",
+    experienceTiles: [
+      { id: "4", name: "Microsoft", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
+      { id: "5", name: "AWS", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
+    ],
+    contactPersons: [
+      { id: "3", name: "David Chen", image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=100&h=100&fit=crop", role: "CTO" }
+    ]
   },
   {
     id: "3",
@@ -54,7 +70,17 @@ export const companies: Company[] = [
     founded: "2020",
     employees: "11-25",
     services: ["Energy", "Environmental Consulting", "Sustainability"],
-    website: "https://greentech-innovations.com"
+    website: "https://greentech-innovations.com",
+    experienceTiles: [
+      { id: "6", name: "Tesla", logo: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=100&h=100&fit=crop" },
+      { id: "7", name: "Siemens", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
+      { id: "8", name: "Shell", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" },
+      { id: "9", name: "BP", logo: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=100&h=100&fit=crop" }
+    ],
+    contactPersons: [
+      { id: "4", name: "Anna Mueller", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop", role: "Head of Sustainability" },
+      { id: "5", name: "Klaus Weber", role: "Technical Director" }
+    ]
   },
   {
     id: "4",
@@ -64,7 +90,10 @@ export const companies: Company[] = [
     founded: "2017",
     employees: "26-50",
     services: ["Cybersecurity", "Data Protection", "Security Consulting"],
-    website: "https://datasecure-pro.com"
+    website: "https://datasecure-pro.com",
+    contactPersons: [
+      { id: "6", name: "Emma Thompson", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop", role: "Security Analyst" }
+    ]
   },
   {
     id: "5",
@@ -74,7 +103,15 @@ export const companies: Company[] = [
     founded: "2019",
     employees: "11-25",
     services: ["Marketing & Advertising", "Digital Entertainment", "Brand Development"],
-    website: "https://mediacraft-studios.com"
+    website: "https://mediacraft-studios.com",
+    experienceTiles: [
+      { id: "10", name: "Coca-Cola", logo: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&h=100&fit=crop" },
+      { id: "11", name: "Netflix", logo: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=100&h=100&fit=crop" }
+    ],
+    contactPersons: [
+      { id: "7", name: "Alex Rivera", role: "Creative Director" },
+      { id: "8", name: "Sophie Martin", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop", role: "Account Executive" }
+    ]
   },
   {
     id: "6",
