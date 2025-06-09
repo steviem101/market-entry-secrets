@@ -1,9 +1,12 @@
+
 import { Link } from "react-router-dom";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import MarketEntryLogo from "./MarketEntryLogo";
+
 const Navigation = () => {
-  return <nav className="bg-card border-b border-border">
+  return (
+    <nav className="bg-card border-b border-border">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
@@ -56,6 +59,14 @@ const Navigation = () => {
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
+                  <Link to="/case-studies" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
+                    Case Studies
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
                   <Link to="/about" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
                     About
                   </Link>
@@ -73,6 +84,8 @@ const Navigation = () => {
           </NavigationMenu>
         </div>
       </div>
-    </nav>;
+    </nav>
+  );
 };
+
 export default Navigation;
