@@ -1,9 +1,39 @@
 import { Company } from "@/components/CompanyCard";
-import { ServiceCategory } from "@/components/SearchFilters";
+
+export interface ServiceCategory {
+  id: string;
+  name: string;
+  count: number;
+  parentId?: string;
+}
+
+export interface CategoryGroup {
+  id: string;
+  name: string;
+  categories: ServiceCategory[];
+  totalCount: number;
+}
 
 export const serviceCategories: ServiceCategory[] = [
-  // Accounting
+  // Accounting, Payroll & Tax
   { id: "accounting-tax", name: "Accounting & Tax", count: 18 },
+  { id: "payroll", name: "Payroll", count: 24 },
+  
+  // Communications, PR, Public Affairs
+  { id: "public-affairs", name: "Public Affairs", count: 12 },
+  { id: "public-relations", name: "Public Relations, Media Relations, Social Media & Corporate Communications", count: 18 },
+  
+  // Corporate Banking
+  { id: "corporate-banking", name: "Corporate Banking", count: 15 },
+  
+  // Coworking, Private offices & Real Estate
+  { id: "coworking-offices", name: "Coworking & Private Offices", count: 22 },
+  { id: "real-estate", name: "Real Estate", count: 16 },
+  
+  // Financial Solutions
+  { id: "private-investment", name: "Private Investment", count: 14 },
+  { id: "productive-investment", name: "Productive Investment", count: 10 },
+  { id: "rd-innovation", name: "R&D & Innovation", count: 8 },
   
   // Business support & operations
   { id: "business-relocation", name: "Business relocation, staff and family relocation", count: 12 },
@@ -33,7 +63,6 @@ export const serviceCategories: ServiceCategory[] = [
   
   // Human resources
   { id: "employment-talent", name: "Employment & talent research", count: 19 },
-  { id: "payroll", name: "Payroll", count: 24 },
   { id: "workforce-development", name: "Workforce Development & Staff Management", count: 17 },
   
   // Legal
@@ -56,12 +85,58 @@ export const serviceCategories: ServiceCategory[] = [
   // Marketing, PR & Communications
   { id: "advertising-branding", name: "Advertising, branding & marketing", count: 28 },
   { id: "event-management", name: "Event management", count: 22 },
-  { id: "public-affairs", name: "Public affairs", count: 12 },
-  { id: "public-relations", name: "Public relations", count: 18 },
   { id: "social-media-digital", name: "Social media & digital marketing", count: 31 },
   { id: "website-development", name: "Website development", count: 26 },
   { id: "website-hosting", name: "Website / Digital platform hosting & management", count: 19 },
   { id: "translation-services", name: "Translation / Interpretation services", count: 14 }
+];
+
+export const categoryGroups: CategoryGroup[] = [
+  {
+    id: "accounting-payroll-tax",
+    name: "Accounting, Payroll & Tax",
+    categories: [
+      { id: "accounting-tax", name: "Accounting & Tax", count: 18 },
+      { id: "payroll", name: "Payroll", count: 24 }
+    ],
+    totalCount: 42
+  },
+  {
+    id: "communications-pr",
+    name: "Communications, PR, Public Affairs",
+    categories: [
+      { id: "public-affairs", name: "Public Affairs", count: 12 },
+      { id: "public-relations", name: "Public Relations, Media Relations, Social Media & Corporate Communications", count: 18 }
+    ],
+    totalCount: 30
+  },
+  {
+    id: "corporate-banking",
+    name: "Corporate Banking",
+    categories: [
+      { id: "corporate-banking", name: "Corporate Banking", count: 15 }
+    ],
+    totalCount: 15
+  },
+  {
+    id: "coworking-real-estate",
+    name: "Coworking, Private offices & Real Estate",
+    categories: [
+      { id: "coworking-offices", name: "Coworking & Private Offices", count: 22 },
+      { id: "real-estate", name: "Real Estate", count: 16 }
+    ],
+    totalCount: 38
+  },
+  {
+    id: "financial-solutions",
+    name: "Financial Solutions",
+    categories: [
+      { id: "private-investment", name: "Private Investment", count: 14 },
+      { id: "productive-investment", name: "Productive Investment", count: 10 },
+      { id: "rd-innovation", name: "R&D & Innovation", count: 8 }
+    ],
+    totalCount: 32
+  }
 ];
 
 export const companies: Company[] = [

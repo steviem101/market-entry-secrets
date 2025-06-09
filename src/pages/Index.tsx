@@ -6,7 +6,7 @@ import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { companies, serviceCategories } from "@/data/mockData";
+import { companies, serviceCategories, categoryGroups } from "@/data/mockData";
 
 const Index = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -23,7 +23,8 @@ const Index = () => {
     const matchesCategories = selectedCategories.length === 0 || 
                              company.services.some(service => 
                                selectedCategories.some(catId => {
-                                 const category = serviceCategories.find(c => c.id === catId);
+                                 const category = serviceCategories.find(c => c.id === catId) ||
+                                                categoryGroups.flatMap(g => g.categories).find(c => c.id === catId);
                                  return category && service.toLowerCase().includes(category.name.toLowerCase());
                                })
                              );
@@ -79,6 +80,7 @@ const Index = () => {
           <aside className={`w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden'} lg:block`}>
             <SearchFilters
               categories={serviceCategories}
+              categoryGroups={categoryGroups}
               selectedCategories={selectedCategories}
               onCategoryChange={setSelectedCategories}
               searchTerm={searchTerm}
