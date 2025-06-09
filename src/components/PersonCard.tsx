@@ -94,25 +94,6 @@ const PersonCard = ({ person, onViewProfile, onContact }: PersonCardProps) => {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-4 mb-4 text-xs text-muted-foreground">
-        <div className="flex items-center">
-          <Calendar className="w-3 h-3 mr-1" />
-          <span className="truncate">{person.experience}</span>
-        </div>
-        {person.company && (
-          <div className="flex items-center">
-            <Briefcase className="w-3 h-3 mr-1" />
-            <span className="truncate">{person.company}</span>
-          </div>
-        )}
-        {person.website && (
-          <div className="flex items-center">
-            <Globe className="w-3 h-3 mr-1" />
-            <span className="truncate">Website</span>
-          </div>
-        )}
-      </div>
-
       <div className="flex gap-2">
         <Button
           variant="outline"
