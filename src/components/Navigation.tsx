@@ -1,9 +1,7 @@
-
 import { Link } from "react-router-dom";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import MarketEntryLogo from "./MarketEntryLogo";
-
 const Navigation = () => {
   return <nav className="bg-card border-b border-border">
       <div className="container mx-auto px-4 py-4">
@@ -52,22 +50,22 @@ const Navigation = () => {
                         </p>
                       </Link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
-                      <Link to="/community" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                        <div className="text-sm font-medium leading-none">Mentors</div>
-                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          Connect with market entry mentors and experts
-                        </p>
-                      </Link>
-                    </NavigationMenuLink>
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
-                  <Link to="/content" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
-                    Content
+                  <Link to="/community" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
+                    Community
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link to="/case-studies" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
+                    Case Studies
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
@@ -93,5 +91,4 @@ const Navigation = () => {
       </div>
     </nav>;
 };
-
 export default Navigation;

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, ChevronDown } from "lucide-react";
@@ -120,7 +119,7 @@ const mockCaseStudies: CaseStudy[] = [
   }
 ];
 
-const Content = () => {
+const CaseStudies = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [revenueFilter, setRevenueFilter] = useState("any");
   const [costsFilter, setCostsFilter] = useState("any");
@@ -160,19 +159,18 @@ const Content = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-foreground mb-4">Australian Market Entry Content</h1>
+              <h1 className="text-4xl font-bold text-foreground mb-4">Australian Market Entry Case Studies</h1>
               <p className="text-lg text-muted-foreground mb-4">
                 Real stories from international businesses entering the Australian market - their successes, failures, and lessons learned.
               </p>
               <div className="flex gap-6 text-sm">
-                <button className="text-foreground font-medium border-b-2 border-primary pb-1">All Content</button>
+                <button className="text-foreground font-medium border-b-2 border-primary pb-1">All Case Studies</button>
                 <button className="text-muted-foreground hover:text-foreground">Success Stories</button>
                 <button className="text-muted-foreground hover:text-foreground">Failure Stories</button>
                 <button className="text-muted-foreground hover:text-foreground">Lessons Learned</button>
-                <button className="text-muted-foreground hover:text-foreground">Reports</button>
               </div>
             </div>
-            <Button className="bg-primary text-primary-foreground">{mockCaseStudies.length} Stories</Button>
+            <Button className="bg-primary text-primary-foreground">{mockCaseStudies.length} Market Entry Stories</Button>
           </div>
           
           {/* Search */}
@@ -187,7 +185,7 @@ const Content = () => {
           </div>
           
           <p className="text-muted-foreground mt-4">
-            Showing {filteredCaseStudies.length} market entry stories
+            Showing {filteredCaseStudies.length} market entry case studies
           </p>
         </div>
       </div>
@@ -429,11 +427,11 @@ const Content = () => {
             </div>
           </aside>
 
-          {/* Content List */}
+          {/* Case Studies List */}
           <main className="flex-1">
             <div className="space-y-6">
               {filteredCaseStudies.map((caseStudy) => (
-                <Link key={caseStudy.id} to={`/content/${caseStudy.slug}`}>
+                <Link key={caseStudy.id} to={`/case-studies/${caseStudy.slug}`}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardHeader>
                       <div className="flex items-start gap-4">
@@ -497,4 +495,4 @@ const Content = () => {
   );
 };
 
-export default Content;
+export default CaseStudies;

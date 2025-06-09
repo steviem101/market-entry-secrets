@@ -117,7 +117,7 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground text-center">
-                    Professional {category.name.toLowerCase()} services
+                    {category.description || `Professional ${category.name.toLowerCase()} services`}
                   </p>
                 </CardContent>
               </Card>
