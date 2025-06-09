@@ -11,6 +11,7 @@ import { companies, serviceCategories, categoryGroups } from "@/data/mockData";
 
 const Community = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,8 +30,11 @@ const Community = () => {
                                  return category && service.toLowerCase().includes(category.name.toLowerCase());
                                })
                              );
+
+    const matchesLocation = selectedLocations.length === 0 || 
+                           selectedLocations.includes(company.location);
     
-    return matchesSearch && matchesCategories;
+    return matchesSearch && matchesCategories && matchesLocation;
   });
 
   const handleViewProfile = (company: Company) => {
@@ -65,14 +69,28 @@ const Community = () => {
             <span className="text-sm text-muted-foreground">
               {filteredCompanies.length} community members found
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="lg:hidden"
-            >
-              <Filter className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Location Filter Button */}
+              <SearchFilters
+                categories={[]}
+                categoryGroups={[]}
+                selectedCategories={[]}
+                onCategoryChange={() => {}}
+                searchTerm=""
+                onSearchChange={() => {}}
+                selectedLocations={selectedLocations}
+                onLocationChange={setSelectedLocations}
+                showLocationFilter={true}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="lg:hidden"
+              >
+                <Filter className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -88,6 +106,8 @@ const Community = () => {
               onCategoryChange={setSelectedCategories}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
+              selectedLocations={selectedLocations}
+              onLocationChange={setSelectedLocations}
             />
           </aside>
 
