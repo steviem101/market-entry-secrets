@@ -36,7 +36,10 @@ export const useCommunityMembers = () => {
         company: member.company,
         isAnonymous: member.is_anonymous,
         experienceTiles: member.experience_tiles ? 
-          (Array.isArray(member.experience_tiles) ? member.experience_tiles as ExperienceTile[] : []) : []
+          (Array.isArray(member.experience_tiles) ? 
+            (member.experience_tiles as unknown as ExperienceTile[]) : 
+            []) : 
+          []
       }));
     }
   });
