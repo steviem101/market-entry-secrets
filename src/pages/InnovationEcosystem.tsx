@@ -3,119 +3,202 @@ import { useState } from "react";
 import { Filter, Grid3X3 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import CompanyCard, { Company } from "@/components/CompanyCard";
+import SearchFilters from "@/components/SearchFilters";
+import CompanyModal from "@/components/CompanyModal";
+import { toast } from "sonner";
 
-interface EcosystemEntity {
-  id: string;
-  name: string;
-  type: string;
-  description: string;
-  location: string;
-  focus: string[];
-  website: string;
-  contact: string;
-}
-
-const ecosystemEntities: EcosystemEntity[] = [
+const ecosystemEntities: Company[] = [
   {
     id: "1",
     name: "Techstars Sydney",
-    type: "Accelerator",
-    description: "Leading global accelerator program helping early-stage startups scale rapidly in the Australian market.",
+    description: "Leading global accelerator program helping early-stage startups scale rapidly in the Australian market. We provide mentorship, funding, and access to a global network of entrepreneurs and investors.",
     location: "Sydney, NSW",
-    focus: ["Fintech", "SaaS", "Enterprise"],
-    website: "techstars.com/sydney",
-    contact: "sydney@techstars.com"
+    founded: "2015",
+    employees: "25-50",
+    services: ["Startup Acceleration", "Mentorship", "Seed Funding", "Network Access", "Demo Day"],
+    website: "https://techstars.com/sydney",
+    contact: "sydney@techstars.com",
+    experienceTiles: [
+      { id: "1", name: "Atlassian", logo: "/placeholder.svg" },
+      { id: "2", name: "Canva", logo: "/placeholder.svg" },
+      { id: "3", name: "Afterpay", logo: "/placeholder.svg" }
+    ],
+    contactPersons: [
+      { id: "1", name: "Sarah Chen", role: "Managing Director", image: "/placeholder.svg" },
+      { id: "2", name: "Michael Torres", role: "Program Manager", image: "/placeholder.svg" }
+    ]
   },
   {
     id: "2",
     name: "CSIRO Innovation Centre",
-    type: "Research Institution",
-    description: "Australia's national science agency fostering innovation through research collaboration and technology transfer.",
+    description: "Australia's national science agency fostering innovation through research collaboration and technology transfer. We connect researchers with industry to drive breakthrough innovations.",
     location: "Multiple Locations",
-    focus: ["Biotech", "CleanTech", "Advanced Manufacturing"],
-    website: "csiro.au",
-    contact: "innovation@csiro.au"
+    founded: "1916",
+    employees: "5000+",
+    services: ["Research Collaboration", "Technology Transfer", "IP Licensing", "Innovation Consulting", "Startup Incubation"],
+    website: "https://csiro.au",
+    contact: "innovation@csiro.au",
+    experienceTiles: [
+      { id: "1", name: "BHP", logo: "/placeholder.svg" },
+      { id: "2", name: "Woolworths", logo: "/placeholder.svg" },
+      { id: "3", name: "QANTAS", logo: "/placeholder.svg" }
+    ],
+    contactPersons: [
+      { id: "1", name: "Dr. Emma Watson", role: "Innovation Director", image: "/placeholder.svg" },
+      { id: "2", name: "James Mitchell", role: "Technology Transfer Manager", image: "/placeholder.svg" }
+    ]
   },
   {
     id: "3",
     name: "Blackbird Ventures",
-    type: "Venture Capital",
-    description: "Australia's largest venture capital fund investing in exceptional founders building global companies.",
+    description: "Australia's largest venture capital fund investing in exceptional founders building global companies. We provide seed to growth stage funding and strategic support.",
     location: "Sydney, NSW",
-    focus: ["SaaS", "Marketplace", "Deep Tech"],
-    website: "blackbird.vc",
-    contact: "hello@blackbird.vc"
+    founded: "2012",
+    employees: "50-100",
+    services: ["Venture Capital", "Seed Funding", "Growth Capital", "Strategic Advisory", "Portfolio Support"],
+    website: "https://blackbird.vc",
+    contact: "hello@blackbird.vc",
+    experienceTiles: [
+      { id: "1", name: "Canva", logo: "/placeholder.svg" },
+      { id: "2", name: "SafetyCulture", logo: "/placeholder.svg" },
+      { id: "3", name: "Culture Amp", logo: "/placeholder.svg" }
+    ],
+    contactPersons: [
+      { id: "1", name: "Niki Scevak", role: "Co-founder & Partner", image: "/placeholder.svg" },
+      { id: "2", name: "Rick Baker", role: "Co-founder & Partner", image: "/placeholder.svg" }
+    ]
   },
   {
     id: "4",
     name: "Melbourne Innovation District",
-    type: "Innovation Hub",
-    description: "World-class innovation precinct connecting startups, corporates, and research institutions.",
+    description: "World-class innovation precinct connecting startups, corporates, and research institutions. We create collaborative spaces and programs to drive innovation in health and life sciences.",
     location: "Melbourne, VIC",
-    focus: ["Biotech", "Medtech", "Digital Health"],
-    website: "mid.org.au",
-    contact: "connect@mid.org.au"
+    founded: "2017",
+    employees: "100-200",
+    services: ["Innovation Hub", "Coworking Spaces", "Corporate Innovation", "Research Partnerships", "Event Hosting"],
+    website: "https://mid.org.au",
+    contact: "connect@mid.org.au",
+    experienceTiles: [
+      { id: "1", name: "CSL", logo: "/placeholder.svg" },
+      { id: "2", name: "NAB", logo: "/placeholder.svg" },
+      { id: "3", name: "University of Melbourne", logo: "/placeholder.svg" }
+    ],
+    contactPersons: [
+      { id: "1", name: "Dr. Lisa Park", role: "CEO", image: "/placeholder.svg" },
+      { id: "2", name: "David Kim", role: "Head of Partnerships", image: "/placeholder.svg" }
+    ]
   },
   {
     id: "5",
     name: "BlueChilli",
-    type: "Startup Studio",
-    description: "Corporate venture studio and accelerator building and scaling tech startups across Australia.",
+    description: "Corporate venture studio and accelerator building and scaling tech startups across Australia. We partner with corporates to create new ventures and accelerate existing startups.",
     location: "Sydney, NSW",
-    focus: ["Corporate Innovation", "B2B SaaS", "Retail Tech"],
-    website: "bluechilli.com",
-    contact: "hello@bluechilli.com"
+    founded: "2011",
+    employees: "50-100",
+    services: ["Venture Studio", "Corporate Acceleration", "Startup Development", "Digital Transformation", "Innovation Strategy"],
+    website: "https://bluechilli.com",
+    contact: "hello@bluechilli.com",
+    experienceTiles: [
+      { id: "1", name: "Westpac", logo: "/placeholder.svg" },
+      { id: "2", name: "Telstra", logo: "/placeholder.svg" },
+      { id: "3", name: "RACV", logo: "/placeholder.svg" }
+    ],
+    contactPersons: [
+      { id: "1", name: "Sebastien Eckersley-Maslin", role: "CEO", image: "/placeholder.svg" },
+      { id: "2", name: "Annie Parker", role: "Head of Programs", image: "/placeholder.svg" }
+    ]
   },
   {
     id: "6",
     name: "University of Sydney Innovation Hub",
-    type: "University Hub",
-    description: "Connecting academic research with industry to drive innovation and entrepreneurship.",
+    description: "Connecting academic research with industry to drive innovation and entrepreneurship. We support student startups, research commercialization, and industry partnerships.",
     location: "Sydney, NSW",
-    focus: ["Research Commercialization", "Student Startups", "Industry Partnerships"],
-    website: "sydney.edu.au/innovation",
-    contact: "innovation@sydney.edu.au"
+    founded: "2018",
+    employees: "25-50",
+    services: ["Research Commercialization", "Student Startups", "Industry Partnerships", "IP Management", "Entrepreneur Education"],
+    website: "https://sydney.edu.au/innovation",
+    contact: "innovation@sydney.edu.au",
+    experienceTiles: [
+      { id: "1", name: "Google", logo: "/placeholder.svg" },
+      { id: "2", name: "Microsoft", logo: "/placeholder.svg" },
+      { id: "3", name: "Johnson & Johnson", logo: "/placeholder.svg" }
+    ],
+    contactPersons: [
+      { id: "1", name: "Prof. Rachel Thompson", role: "Director", image: "/placeholder.svg" },
+      { id: "2", name: "Mark Stevens", role: "Commercialization Manager", image: "/placeholder.svg" }
+    ]
   }
 ];
 
-const entityTypes = ["All", "Accelerator", "Venture Capital", "Research Institution", "Innovation Hub", "Startup Studio", "University Hub"];
-const locations = ["All", "Sydney, NSW", "Melbourne, VIC", "Brisbane, QLD", "Perth, WA", "Adelaide, SA", "Multiple Locations"];
+const serviceCategories = [
+  { id: "acceleration", name: "Startup Acceleration", count: 12 },
+  { id: "funding", name: "Venture Capital", count: 8 },
+  { id: "research", name: "Research Collaboration", count: 15 },
+  { id: "incubation", name: "Startup Incubation", count: 10 },
+  { id: "mentorship", name: "Mentorship Programs", count: 18 },
+  { id: "coworking", name: "Coworking Spaces", count: 6 }
+];
+
+const categoryGroups = [
+  {
+    id: "funding",
+    name: "Funding & Investment",
+    totalCount: 25,
+    categories: [
+      { id: "vc", name: "Venture Capital", count: 8 },
+      { id: "angel", name: "Angel Investment", count: 12 },
+      { id: "grants", name: "Government Grants", count: 5 }
+    ]
+  },
+  {
+    id: "support",
+    name: "Business Support",
+    totalCount: 30,
+    categories: [
+      { id: "acceleration", name: "Acceleration Programs", count: 12 },
+      { id: "incubation", name: "Incubation Services", count: 10 },
+      { id: "mentorship", name: "Mentorship", count: 8 }
+    ]
+  }
+];
 
 const InnovationEcosystem = () => {
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedEntity, setSelectedEntity] = useState<Company | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
 
   const filteredEntities = ecosystemEntities.filter(entity => {
     const matchesSearch = entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entity.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         entity.focus.some(focus => focus.toLowerCase().includes(searchTerm.toLowerCase()));
+                         entity.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(entity.type);
-    const matchesLocation = selectedLocations.length === 0 || selectedLocations.includes(entity.location);
+    const matchesCategories = selectedCategories.length === 0 || 
+                             entity.services.some(service => 
+                               selectedCategories.some(catId => {
+                                 const category = serviceCategories.find(c => c.id === catId) ||
+                                                categoryGroups.flatMap(g => g.categories).find(c => c.id === catId);
+                                 return category && service.toLowerCase().includes(category.name.toLowerCase());
+                               })
+                             );
+
+    const matchesLocation = selectedLocations.length === 0 || 
+                           selectedLocations.includes(entity.location);
     
-    return matchesSearch && matchesType && matchesLocation;
+    return matchesSearch && matchesCategories && matchesLocation;
   });
 
-  const handleTypeChange = (type: string, checked: boolean) => {
-    if (checked) {
-      setSelectedTypes([...selectedTypes, type]);
-    } else {
-      setSelectedTypes(selectedTypes.filter(t => t !== type));
-    }
+  const handleViewProfile = (entity: Company) => {
+    setSelectedEntity(entity);
+    setIsModalOpen(true);
   };
 
-  const handleLocationChange = (location: string, checked: boolean) => {
-    if (checked) {
-      setSelectedLocations([...selectedLocations, location]);
-    } else {
-      setSelectedLocations(selectedLocations.filter(l => l !== location));
-    }
+  const handleContact = (entity: Company) => {
+    toast.success(`Contact request sent to ${entity.name}!`);
+    setIsModalOpen(false);
   };
 
   return (
@@ -132,14 +215,27 @@ const InnovationEcosystem = () => {
                 {filteredEntities.length} ecosystem partners found
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="lg:hidden"
-            >
-              <Filter className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <SearchFilters
+                categories={[]}
+                categoryGroups={[]}
+                selectedCategories={[]}
+                onCategoryChange={() => {}}
+                searchTerm=""
+                onSearchChange={() => {}}
+                selectedLocations={selectedLocations}
+                onLocationChange={setSelectedLocations}
+                showLocationFilter={true}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="lg:hidden"
+              >
+                <Filter className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -148,55 +244,16 @@ const InnovationEcosystem = () => {
         <div className="flex gap-8">
           {/* Filters Sidebar */}
           <aside className={`w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden'} lg:block`}>
-            <div className="space-y-6">
-              {/* Search */}
-              <div>
-                <h3 className="font-semibold mb-3">Search</h3>
-                <Input
-                  placeholder="Search ecosystem partners..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              {/* Entity Types */}
-              <div>
-                <h3 className="font-semibold mb-3">Organization Type</h3>
-                <div className="space-y-2">
-                  {entityTypes.filter(type => type !== "All").map((type) => (
-                    <div key={type} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={type}
-                        checked={selectedTypes.includes(type)}
-                        onCheckedChange={(checked) => handleTypeChange(type, checked as boolean)}
-                      />
-                      <label htmlFor={type} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        {type}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Locations */}
-              <div>
-                <h3 className="font-semibold mb-3">Location</h3>
-                <div className="space-y-2">
-                  {locations.filter(location => location !== "All").map((location) => (
-                    <div key={location} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={location}
-                        checked={selectedLocations.includes(location)}
-                        onCheckedChange={(checked) => handleLocationChange(location, checked as boolean)}
-                      />
-                      <label htmlFor={location} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        {location}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <SearchFilters
+              categories={serviceCategories}
+              categoryGroups={categoryGroups}
+              selectedCategories={selectedCategories}
+              onCategoryChange={setSelectedCategories}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedLocations={selectedLocations}
+              onLocationChange={setSelectedLocations}
+            />
           </aside>
 
           {/* Main Content */}
@@ -212,54 +269,26 @@ const InnovationEcosystem = () => {
             ) : (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredEntities.map((entity) => (
-                  <Card key={entity.id} className="h-full hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg">{entity.name}</CardTitle>
-                          <Badge variant="secondary" className="mt-2">
-                            {entity.type}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <CardDescription className="text-sm">
-                        {entity.description}
-                      </CardDescription>
-                      
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          <span className="font-medium">Location:</span> {entity.location}
-                        </p>
-                        <div>
-                          <p className="text-sm font-medium mb-1">Focus Areas:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {entity.focus.map((focus, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {focus}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 space-y-2">
-                        <Button className="w-full" size="sm">
-                          Connect
-                        </Button>
-                        <Button variant="outline" className="w-full" size="sm">
-                          Learn More
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <CompanyCard
+                    key={entity.id}
+                    company={entity}
+                    onViewProfile={handleViewProfile}
+                    onContact={handleContact}
+                  />
                 ))}
               </div>
             )}
           </main>
         </div>
       </div>
+
+      {/* Entity Modal */}
+      <CompanyModal
+        company={selectedEntity}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onContact={handleContact}
+      />
     </div>
   );
 };
