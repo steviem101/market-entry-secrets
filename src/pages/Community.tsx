@@ -1,12 +1,14 @@
+
 import { useState } from "react";
-import { Filter, Grid3X3 } from "lucide-react";
+import { Filter, Grid3X3, Loader2 } from "lucide-react";
 import PersonCard, { Person } from "@/components/PersonCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { people, serviceCategories, categoryGroups } from "@/data/mockData";
+import { serviceCategories, categoryGroups } from "@/data/mockData";
+import { useCommunityMembers } from "@/hooks/useCommunityMembers";
 
 const Community = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -15,6 +17,8 @@ const Community = () => {
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
+
+  const { data: people = [], isLoading, error } = useCommunityMembers();
 
   const filteredPeople = people.filter(person => {
     const matchesSearch = person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -48,6 +52,22 @@ const Community = () => {
     setIsModalOpen(false);
   };
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <h3 className="text-xl font-semibold mb-2 text-destructive">Error loading community members</h3>
+            <p className="text-muted-foreground">
+              There was an error loading the community data. Please try refreshing the page.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -68,7 +88,7 @@ const Community = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              {filteredPeople.length} community members found
+              {isLoading ? 'Loading...' : `${filteredPeople.length} community members found`}
             </span>
             <div className="flex items-center gap-2">
               {/* Location Filter Button */}
@@ -114,7 +134,15 @@ const Community = () => {
 
           {/* Main Content */}
           <main className="flex-1">
-            {filteredPeople.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <Loader2 className="w-16 h-16 text-muted-foreground mx-auto mb-4 animate-spin" />
+                <h3 className="text-xl font-semibold mb-2">Loading community members...</h3>
+                <p className="text-muted-foreground">
+                  Please wait while we fetch the latest community data.
+                </p>
+              </div>
+            ) : filteredPeople.length === 0 ? (
               <div className="text-center py-12">
                 <Grid3X3 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No community members found</h3>
