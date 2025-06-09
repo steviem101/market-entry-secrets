@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Search, ChevronDown } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -8,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
 interface CaseStudy {
   id: string;
   title: string;
@@ -23,88 +21,79 @@ interface CaseStudy {
   founderImage?: string;
   founderName: string;
 }
-
-const mockCaseStudies: CaseStudy[] = [
-  {
-    id: "1",
-    title: "How I Turned A Crappy Idea Into A $3M/Year Business",
-    description: "Starter Story grew to 1.4 million monthly visitors and millions in annual revenue by sharing the stories of entrepreneurs. Pat breaks down the early days and how he grew the business into something that changed his life.",
-    monthlyRevenue: "$100K",
-    startupCosts: "$100",
-    businessType: "Content Platform",
-    niche: "Media & Publishing",
-    country: "United States",
-    continent: "North America",
-    readBy: "111,111 founders",
-    founderName: "Pat Walls"
-  },
-  {
-    id: "2",
-    title: "I Grew A Drinkware Brand To $1.1M/Month At 23 Years Old",
-    description: "BruMate is a successful insulated drinkware brand focused on the adult beverage community, with a flagship product that generated $2.1M in sales in 2017 and is now doing over $1.1M per month in sales, with plans to do $20M this year.",
-    monthlyRevenue: "$12M",
-    startupCosts: "$5K",
-    businessType: "E-commerce",
-    niche: "Consumer Products",
-    country: "United States",
-    continent: "North America",
-    readBy: "128,235 founders",
-    founderName: "Dylan Jacob"
-  },
-  {
-    id: "3",
-    title: "My SaaS Templates Make $40K/Month",
-    description: "Building and selling SaaS templates and components that help other entrepreneurs launch their products faster. Started as a side project and grew into a substantial monthly recurring revenue stream.",
-    monthlyRevenue: "$40K",
-    startupCosts: "$500",
-    businessType: "SaaS",
-    niche: "Software & Technology",
-    country: "Canada",
-    continent: "North America",
-    readBy: "89,432 founders",
-    founderName: "Alex Chen"
-  },
-  {
-    id: "4",
-    title: "How I Built A $2M/Year Marketing Agency",
-    description: "Started a digital marketing agency focused on helping Australian businesses enter international markets. Grew from a one-person operation to a team of 15 specialists serving clients across multiple continents.",
-    monthlyRevenue: "$167K",
-    startupCosts: "$2K",
-    businessType: "Service",
-    niche: "Marketing & Advertising",
-    country: "Australia",
-    continent: "Oceania",
-    readBy: "75,621 founders",
-    founderName: "Sarah Mitchell"
-  },
-  {
-    id: "5",
-    title: "I Created A $500K/Year Online Course Business",
-    description: "Teaching entrepreneurs how to enter the Australian market through comprehensive online courses and coaching programs. Built a community of over 10,000 students worldwide.",
-    monthlyRevenue: "$42K",
-    startupCosts: "$1K",
-    businessType: "Education",
-    niche: "Online Education",
-    country: "Australia",
-    continent: "Oceania",
-    readBy: "56,789 founders",
-    founderName: "James Rodriguez"
-  },
-  {
-    id: "6",
-    title: "My Food Delivery App Reaches $300K/Month",
-    description: "Built a specialized food delivery platform for healthy meal options in major Australian cities. Focused on connecting health-conscious consumers with local organic restaurants and meal prep services.",
-    monthlyRevenue: "$300K",
-    startupCosts: "$15K",
-    businessType: "Marketplace",
-    niche: "Food & Beverage",
-    country: "Australia",
-    continent: "Oceania",
-    readBy: "92,156 founders",
-    founderName: "Emma Thompson"
-  }
-];
-
+const mockCaseStudies: CaseStudy[] = [{
+  id: "1",
+  title: "How I Turned A Crappy Idea Into A $3M/Year Business",
+  description: "Starter Story grew to 1.4 million monthly visitors and millions in annual revenue by sharing the stories of entrepreneurs. Pat breaks down the early days and how he grew the business into something that changed his life.",
+  monthlyRevenue: "$100K",
+  startupCosts: "$100",
+  businessType: "Content Platform",
+  niche: "Media & Publishing",
+  country: "United States",
+  continent: "North America",
+  readBy: "111,111 founders",
+  founderName: "Pat Walls"
+}, {
+  id: "2",
+  title: "I Grew A Drinkware Brand To $1.1M/Month At 23 Years Old",
+  description: "BruMate is a successful insulated drinkware brand focused on the adult beverage community, with a flagship product that generated $2.1M in sales in 2017 and is now doing over $1.1M per month in sales, with plans to do $20M this year.",
+  monthlyRevenue: "$12M",
+  startupCosts: "$5K",
+  businessType: "E-commerce",
+  niche: "Consumer Products",
+  country: "United States",
+  continent: "North America",
+  readBy: "128,235 founders",
+  founderName: "Dylan Jacob"
+}, {
+  id: "3",
+  title: "My SaaS Templates Make $40K/Month",
+  description: "Building and selling SaaS templates and components that help other entrepreneurs launch their products faster. Started as a side project and grew into a substantial monthly recurring revenue stream.",
+  monthlyRevenue: "$40K",
+  startupCosts: "$500",
+  businessType: "SaaS",
+  niche: "Software & Technology",
+  country: "Canada",
+  continent: "North America",
+  readBy: "89,432 founders",
+  founderName: "Alex Chen"
+}, {
+  id: "4",
+  title: "How I Built A $2M/Year Marketing Agency",
+  description: "Started a digital marketing agency focused on helping Australian businesses enter international markets. Grew from a one-person operation to a team of 15 specialists serving clients across multiple continents.",
+  monthlyRevenue: "$167K",
+  startupCosts: "$2K",
+  businessType: "Service",
+  niche: "Marketing & Advertising",
+  country: "Australia",
+  continent: "Oceania",
+  readBy: "75,621 founders",
+  founderName: "Sarah Mitchell"
+}, {
+  id: "5",
+  title: "I Created A $500K/Year Online Course Business",
+  description: "Teaching entrepreneurs how to enter the Australian market through comprehensive online courses and coaching programs. Built a community of over 10,000 students worldwide.",
+  monthlyRevenue: "$42K",
+  startupCosts: "$1K",
+  businessType: "Education",
+  niche: "Online Education",
+  country: "Australia",
+  continent: "Oceania",
+  readBy: "56,789 founders",
+  founderName: "James Rodriguez"
+}, {
+  id: "6",
+  title: "My Food Delivery App Reaches $300K/Month",
+  description: "Built a specialized food delivery platform for healthy meal options in major Australian cities. Focused on connecting health-conscious consumers with local organic restaurants and meal prep services.",
+  monthlyRevenue: "$300K",
+  startupCosts: "$15K",
+  businessType: "Marketplace",
+  niche: "Food & Beverage",
+  country: "Australia",
+  continent: "Oceania",
+  readBy: "92,156 founders",
+  founderName: "Emma Thompson"
+}];
 const CaseStudies = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [revenueFilter, setRevenueFilter] = useState("any");
@@ -113,24 +102,17 @@ const CaseStudies = () => {
   const [nicheFilter, setNicheFilter] = useState("any");
   const [countryFilter, setCountryFilter] = useState("any");
   const [continentFilter, setContinentFilter] = useState("any");
-
   const filteredCaseStudies = mockCaseStudies.filter(caseStudy => {
-    const matchesSearch = caseStudy.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         caseStudy.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = caseStudy.title.toLowerCase().includes(searchTerm.toLowerCase()) || caseStudy.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRevenue = revenueFilter === "any" || true; // Add revenue filtering logic
     const matchesCosts = costsFilter === "any" || true; // Add costs filtering logic
     const matchesBusinessType = businessTypeFilter === "any" || caseStudy.businessType === businessTypeFilter;
     const matchesNiche = nicheFilter === "any" || caseStudy.niche === nicheFilter;
     const matchesCountry = countryFilter === "any" || caseStudy.country === countryFilter;
     const matchesContinent = continentFilter === "any" || caseStudy.continent === continentFilter;
-    
-    return matchesSearch && matchesRevenue && matchesCosts && matchesBusinessType && 
-           matchesNiche && matchesCountry && matchesContinent;
+    return matchesSearch && matchesRevenue && matchesCosts && matchesBusinessType && matchesNiche && matchesCountry && matchesContinent;
   });
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navigation />
       
       {/* Header */}
@@ -146,20 +128,13 @@ const CaseStudies = () => {
                 <button className="text-muted-foreground hover:text-foreground">Random</button>
               </div>
             </div>
-            <Button className="bg-primary text-primary-foreground">
-              4,418 Founder Case Studies
-            </Button>
+            <Button className="bg-primary text-primary-foreground">418 Australian Case Studies</Button>
           </div>
           
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Try 'newsletter' or 'productized service'"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 py-3 text-base"
-            />
+            <Input placeholder="Try 'newsletter' or 'productized service'" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 py-3 text-base" />
           </div>
           
           <p className="text-muted-foreground mt-4">
@@ -278,8 +253,7 @@ const CaseStudies = () => {
           {/* Case Studies List */}
           <main className="flex-1">
             <div className="space-y-6">
-              {filteredCaseStudies.map((caseStudy) => (
-                <Card key={caseStudy.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+              {filteredCaseStudies.map(caseStudy => <Card key={caseStudy.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                   <CardHeader>
                     <div className="flex items-start gap-4">
                       <Avatar className="w-12 h-12">
@@ -312,13 +286,11 @@ const CaseStudies = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex -space-x-2">
-                          {[1, 2, 3, 4].map((i) => (
-                            <Avatar key={i} className="w-6 h-6 border-2 border-background">
+                          {[1, 2, 3, 4].map(i => <Avatar key={i} className="w-6 h-6 border-2 border-background">
                               <AvatarFallback className="text-xs bg-muted">
                                 {i}
                               </AvatarFallback>
-                            </Avatar>
-                          ))}
+                            </Avatar>)}
                         </div>
                         <span className="text-sm text-muted-foreground">
                           Read by <strong>{caseStudy.readBy}</strong>
@@ -326,14 +298,11 @@ const CaseStudies = () => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </main>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default CaseStudies;
