@@ -19,41 +19,43 @@ const CaseStudyDetail = () => {
 
   // Mock data - in a real app, this would come from an API based on the ID
   const caseStudy = {
-    id: "wayward-home",
-    title: "How This Journalist Started A $20K/Month Blog About Nomadic Lifestyle After Being Laid Off",
-    companyName: "The Wayward Home",
-    website: "thewaywardhome.com",
-    country: "United States",
-    startDate: "June 2017",
-    publishDate: "November 30th, 2023",
-    monthlyRevenue: "$20,000",
-    startupCosts: "$50",
+    id: "us-tech-startup-success",
+    title: "How This US Tech Startup Successfully Entered Australia And Reached $2M ARR",
+    companyName: "CloudScale Solutions",
+    website: "cloudscale.com.au",
+    originCountry: "United States",
+    targetMarket: "Australia",
+    entryDate: "March 2022",
+    publishDate: "December 15th, 2023",
+    monthlyRevenue: "$167,000",
+    entryCosts: "$75,000",
     profitable: "Yes",
-    founders: 1,
-    employees: 0,
-    founderName: "Sarah Mitchell",
+    founders: 2,
+    employees: 15,
+    founderName: "Marcus Chen & Lisa Rodriguez",
     founderImage: "/placeholder.svg",
     socialLinks: {
       twitter: "#",
       instagram: "#",
       youtube: "#"
-    }
+    },
+    outcome: "Success"
   };
 
   const sections: CaseStudySection[] = [
     { id: "company", title: "About The Company", isActive: true },
-    { id: "idea", title: "Coming Up With The Idea" },
-    { id: "process", title: "Take us through the process of building the first version of your product." },
-    { id: "launching", title: "Launching The Business" },
-    { id: "growing", title: "Growing The Business" },
-    { id: "revenue", title: "Revenue + Financials" },
-    { id: "lessons", title: "Lessons Learned" },
-    { id: "tools", title: "Recommended Tools" },
-    { id: "resources", title: "Books & Resources" },
-    { id: "advice", title: "Advice For Founders" },
-    { id: "hiring", title: "Are you looking to hire for certain positions right now?" },
-    { id: "learn", title: "Learn More" },
-    { id: "ideas", title: "More Business Ideas Like This" }
+    { id: "market-research", title: "Australian Market Research" },
+    { id: "entry-strategy", title: "Market Entry Strategy" },
+    { id: "regulatory", title: "Regulatory & Compliance Challenges" },
+    { id: "partnerships", title: "Building Local Partnerships" },
+    { id: "team", title: "Hiring & Building Australian Team" },
+    { id: "marketing", title: "Marketing & Customer Acquisition" },
+    { id: "revenue", title: "Revenue Growth & Financials" },
+    { id: "challenges", title: "Biggest Challenges Faced" },
+    { id: "lessons", title: "Key Lessons Learned" },
+    { id: "tools", title: "Essential Tools & Resources" },
+    { id: "advice", title: "Advice For Market Entry" },
+    { id: "future", title: "Future Plans In Australia" }
   ];
 
   const toggleSave = () => {
@@ -107,8 +109,9 @@ const CaseStudyDetail = () => {
                     {caseStudy.companyName}
                   </h1>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>Interview</span>
-                    <span>Tools</span>
+                    <span>Market Entry Case Study</span>
+                    <span>Tools & Resources</span>
+                    <span>{caseStudy.originCountry} → {caseStudy.targetMarket}</span>
                   </div>
                 </div>
               </div>
@@ -118,7 +121,7 @@ const CaseStudyDetail = () => {
               </h1>
 
               <p className="text-muted-foreground mb-6">
-                {caseStudy.publishDate}
+                Published {caseStudy.publishDate} • Market Entry: {caseStudy.entryDate}
               </p>
 
               {/* Company Info Card */}
@@ -126,9 +129,12 @@ const CaseStudyDetail = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <Badge variant="secondary">ABOUT</Badge>
-                      <Badge>BUSINESS</Badge>
-                      <Badge variant="secondary">TOOLS</Badge>
+                      <Badge variant="secondary">MARKET ENTRY</Badge>
+                      <Badge>CASE STUDY</Badge>
+                      <Badge variant="secondary">AUSTRALIA</Badge>
+                      <Badge variant={caseStudy.outcome === "Success" ? "default" : "destructive"}>
+                        {caseStudy.outcome}
+                      </Badge>
                     </div>
                     <Button
                       variant="ghost"
@@ -141,7 +147,7 @@ const CaseStudyDetail = () => {
                           savedStories.includes(caseStudy.id) ? "fill-current text-red-500" : ""
                         }`} 
                       />
-                      SAVE
+                      SAVE STORY
                     </Button>
                   </div>
 
@@ -149,8 +155,8 @@ const CaseStudyDetail = () => {
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">{caseStudy.companyName}</h3>
                       <p className="text-sm text-muted-foreground mb-1">{caseStudy.website}</p>
-                      <p className="text-sm text-muted-foreground mb-1">from {caseStudy.country}</p>
-                      <p className="text-sm text-muted-foreground mb-3">started {caseStudy.startDate}</p>
+                      <p className="text-sm text-muted-foreground mb-1">from {caseStudy.originCountry}</p>
+                      <p className="text-sm text-muted-foreground mb-3">entered AU {caseStudy.entryDate}</p>
                       <div className="flex gap-2">
                         <Globe className="w-4 h-4 text-muted-foreground" />
                         <Twitter className="w-4 h-4 text-muted-foreground" />
@@ -163,7 +169,7 @@ const CaseStudyDetail = () => {
                       <div className="text-3xl font-bold text-foreground mb-1">
                         {caseStudy.monthlyRevenue}
                       </div>
-                      <div className="text-sm text-muted-foreground">REVENUE/MO</div>
+                      <div className="text-sm text-muted-foreground">MONTHLY REVENUE (AU)</div>
                     </div>
 
                     <div className="text-center">
@@ -177,7 +183,7 @@ const CaseStudyDetail = () => {
                       <div className="text-3xl font-bold text-foreground mb-1">
                         {caseStudy.employees}
                       </div>
-                      <div className="text-sm text-muted-foreground">EMPLOYEES</div>
+                      <div className="text-sm text-muted-foreground">EMPLOYEES (AU)</div>
                     </div>
                   </div>
                 </CardContent>
@@ -186,34 +192,53 @@ const CaseStudyDetail = () => {
               {/* Article Content */}
               <div className="prose prose-lg max-w-none">
                 <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                  After being laid off from her journalism job, Sarah decided to turn her passion for travel 
-                  and nomadic lifestyle into a business. What started as a personal blog about her travels 
-                  has grown into a thriving online business generating $20,000 per month through affiliate 
-                  marketing, sponsored content, and digital products.
+                  CloudScale Solutions, a successful US-based SaaS company serving enterprise clients, 
+                  decided to expand to Australia in early 2022. After 18 months of strategic market entry 
+                  efforts, they've built a thriving Australian operation generating $167,000 monthly revenue 
+                  and serving major Australian enterprises across Sydney and Melbourne.
                 </p>
 
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  The Wayward Home provides practical advice, destination guides, and resources for people 
-                  interested in location independence and remote work. Through consistent content creation 
-                  and building genuine relationships with her audience, Sarah has created multiple revenue 
-                  streams while living the lifestyle she promotes.
+                  This case study details their complete market entry journey, including the regulatory 
+                  hurdles they navigated, the local partnerships they built, their hiring strategy for 
+                  building an Australian team, and the marketing approaches that drove rapid customer 
+                  acquisition in a competitive market.
                 </p>
 
                 <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">
-                  Hello! Who are you and what business did you start?
+                  Hello! Tell us about your company and why you decided to enter the Australian market.
                 </h2>
 
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  Hi, I'm Sarah Mitchell, and I'm the founder of The Wayward Home. After getting laid off 
-                  from my journalism job in 2017, I decided to take a leap of faith and travel while 
-                  building an online business. What started as a travel blog documenting my nomadic journey 
-                  has evolved into a comprehensive resource for digital nomads and remote workers.
+                  Hi, I'm Marcus Chen, co-founder of CloudScale Solutions along with my partner Lisa Rodriguez. 
+                  We built CloudScale as a cloud infrastructure management platform for enterprise clients, 
+                  and by 2021 we were doing about $8M ARR in the US market. 
                 </p>
 
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  Today, The Wayward Home generates around $20,000 per month through various revenue streams 
-                  including affiliate marketing, sponsored content, digital courses, and consulting services. 
-                  We help thousands of people each month learn how to work remotely and travel the world.
+                  Australia became attractive to us because of the strong demand for cloud solutions, 
+                  the regulatory environment that favored data sovereignty, and the fact that many 
+                  Australian enterprises were looking for alternatives to US-only providers. We saw 
+                  an opportunity to be early in a growing market with less competition than what we 
+                  faced in Silicon Valley.
+                </p>
+
+                <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">
+                  What was your market research process for Australia?
+                </h2>
+
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  We spent six months doing deep market research before making any commitments. We hired 
+                  a local market research firm in Sydney to conduct surveys with IT directors at ASX 200 
+                  companies. We also attended three major Australian tech conferences virtually to understand 
+                  the competitive landscape and customer pain points.
+                </p>
+
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  The key insight was that Australian enterprises were frustrated with data residency 
+                  requirements and wanted cloud solutions with guaranteed Australian data storage. 
+                  This became our core value proposition and differentiated us from global competitors 
+                  who couldn't make the same guarantees.
                 </p>
               </div>
             </div>
@@ -225,42 +250,65 @@ const CaseStudyDetail = () => {
               {/* About Company Card */}
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-4">About The Wayward Home</h3>
+                  <h3 className="font-semibold text-foreground mb-4">Market Entry Details</h3>
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Monthly Revenue</span>
+                      <span className="text-muted-foreground">Monthly Revenue (AU)</span>
                       <span className="font-medium">{caseStudy.monthlyRevenue}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Startup Costs</span>
-                      <span className="font-medium">{caseStudy.startupCosts}</span>
+                      <span className="text-muted-foreground">Entry Investment</span>
+                      <span className="font-medium">{caseStudy.entryCosts}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Profitable</span>
                       <span className="font-medium">{caseStudy.profitable}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Founders</span>
-                      <span className="font-medium">{caseStudy.founders}</span>
+                      <span className="text-muted-foreground">Origin Country</span>
+                      <span className="font-medium">{caseStudy.originCountry}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Employees</span>
+                      <span className="text-muted-foreground">Entry Date</span>
+                      <span className="font-medium">{caseStudy.entryDate}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">AU Employees</span>
                       <span className="font-medium">{caseStudy.employees}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Starter Story Card */}
+              {/* Market Entry Guide Card */}
               <Card className="bg-card">
                 <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-3">Starter Story</h3>
+                  <h3 className="font-semibold text-foreground mb-3">Australian Market Entry Guide</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    See exactly how online businesses get to millions in revenue
+                    Get our comprehensive guide to entering the Australian market
                   </p>
                   <Button className="w-full bg-foreground text-background hover:bg-foreground/90">
-                    Join Starter Story
+                    Download Free Guide
                   </Button>
+                </CardContent>
+              </Card>
+
+              {/* Related Resources Card */}
+              <Card className="bg-card">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-foreground mb-3">Related Stories</h3>
+                  <div className="space-y-3">
+                    <div className="text-sm">
+                      <Link to="/case-studies/uk-ecommerce-failure" className="text-primary hover:underline">
+                        Why Our UK E-commerce Brand Failed In Australia
+                      </Link>
+                    </div>
+                    <div className="text-sm">
+                      <Link to="/case-studies/german-manufacturing-success" className="text-primary hover:underline">
+                        German Manufacturing Success Story
+                      </Link>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>

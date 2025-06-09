@@ -23,92 +23,99 @@ interface CaseStudy {
   readBy: string;
   founderImage?: string;
   founderName: string;
+  outcome: "successful" | "unsuccessful";
 }
 
 const mockCaseStudies: CaseStudy[] = [
   {
     id: "1",
-    slug: "wayward-home",
-    title: "How I Turned A Crappy Idea Into A $3M/Year Business",
-    description: "Starter Story grew to 1.4 million monthly visitors and millions in annual revenue by sharing the stories of entrepreneurs. Pat breaks down the early days and how he grew the business into something that changed his life.",
-    monthlyRevenue: "$100K",
-    startupCosts: "$100",
-    businessType: "Content Platform",
-    niche: "Media & Publishing",
+    slug: "us-tech-startup-success",
+    title: "How This US Tech Startup Successfully Entered Australia And Reached $2M ARR",
+    description: "A Silicon Valley SaaS company shares their 18-month journey entering the Australian market, including regulatory hurdles, local partnerships, and the marketing strategies that led to rapid growth in Sydney and Melbourne.",
+    monthlyRevenue: "$167K",
+    startupCosts: "$75K",
+    businessType: "SaaS",
+    niche: "Software & Technology",
     country: "United States",
     continent: "North America",
-    readBy: "111,111 founders",
-    founderName: "Pat Walls"
+    readBy: "45,234 founders",
+    founderName: "Marcus Chen",
+    outcome: "successful"
   },
   {
     id: "2",
-    slug: "brumate-drinkware",
-    title: "I Grew A Drinkware Brand To $1.1M/Month At 23 Years Old",
-    description: "BruMate is a successful insulated drinkware brand focused on the adult beverage community, with a flagship product that generated $2.1M in sales in 2017 and is now doing over $1.1M per month in sales, with plans to do $20M this year.",
-    monthlyRevenue: "$12M",
-    startupCosts: "$5K",
+    slug: "uk-ecommerce-failure",
+    title: "Why Our £2M UK E-commerce Brand Failed In Australia (And What We Learned)",
+    description: "The founder of a successful UK fashion brand shares the costly mistakes that led to their Australian market entry failure, including underestimating logistics costs, cultural differences, and regulatory compliance issues.",
+    monthlyRevenue: "$0",
+    startupCosts: "$120K",
     businessType: "E-commerce",
-    niche: "Consumer Products",
-    country: "United States",
-    continent: "North America",
-    readBy: "128,235 founders",
-    founderName: "Dylan Jacob"
+    niche: "Fashion & Retail",
+    country: "United Kingdom",
+    continent: "Europe",
+    readBy: "67,891 founders",
+    founderName: "Sarah Williams",
+    outcome: "unsuccessful"
   },
   {
     id: "3",
-    slug: "saas-templates",
-    title: "My SaaS Templates Make $40K/Month",
-    description: "Building and selling SaaS templates and components that help other entrepreneurs launch their products faster. Started as a side project and grew into a substantial monthly recurring revenue stream.",
-    monthlyRevenue: "$40K",
-    startupCosts: "$500",
-    businessType: "SaaS",
-    niche: "Software & Technology",
-    country: "Canada",
-    continent: "North America",
-    readBy: "89,432 founders",
-    founderName: "Alex Chen"
+    slug: "german-manufacturing-success",
+    title: "How We Built A $5M Manufacturing Business In Australia From Germany",
+    description: "A German automotive parts manufacturer details their successful 3-year expansion into Australia, covering supplier relationships, compliance with Australian standards, and building a local team that now serves the entire APAC region.",
+    monthlyRevenue: "$417K",
+    startupCosts: "$200K",
+    businessType: "Manufacturing",
+    niche: "Automotive & Industrial",
+    country: "Germany",
+    continent: "Europe",
+    readBy: "32,156 founders",
+    founderName: "Klaus Mueller",
+    outcome: "successful"
   },
   {
     id: "4",
-    slug: "marketing-agency-australia",
-    title: "How I Built A $2M/Year Marketing Agency",
-    description: "Started a digital marketing agency focused on helping Australian businesses enter international markets. Grew from a one-person operation to a team of 15 specialists serving clients across multiple continents.",
-    monthlyRevenue: "$167K",
-    startupCosts: "$2K",
-    businessType: "Service",
-    niche: "Marketing & Advertising",
-    country: "Australia",
-    continent: "Oceania",
-    readBy: "75,621 founders",
-    founderName: "Sarah Mitchell"
+    slug: "canadian-fintech-struggle",
+    title: "Our Canadian FinTech's Rocky Road To Australian Market Entry",
+    description: "A Toronto-based payment processing company shares their challenging but ultimately successful journey entering Australia's highly regulated financial services market, including APRA licensing and partnership strategies.",
+    monthlyRevenue: "$83K",
+    startupCosts: "$95K",
+    businessType: "FinTech",
+    niche: "Financial Services",
+    country: "Canada",
+    continent: "North America",
+    readBy: "28,945 founders",
+    founderName: "Jennifer Liu",
+    outcome: "successful"
   },
   {
     id: "5",
-    slug: "online-course-business",
-    title: "I Created A $500K/Year Online Course Business",
-    description: "Teaching entrepreneurs how to enter the Australian market through comprehensive online courses and coaching programs. Built a community of over 10,000 students worldwide.",
-    monthlyRevenue: "$42K",
-    startupCosts: "$1K",
-    businessType: "Education",
-    niche: "Online Education",
-    country: "Australia",
-    continent: "Oceania",
-    readBy: "56,789 founders",
-    founderName: "James Rodriguez"
+    slug: "japanese-food-failure",
+    title: "How Cultural Misunderstanding Killed Our Japanese Restaurant Chain In Australia",
+    description: "The story of a successful Japanese restaurant chain's failed expansion to Australia, highlighting the importance of cultural adaptation, local market research, and understanding Australian dining preferences.",
+    monthlyRevenue: "$0",
+    startupCosts: "$180K",
+    businessType: "Food & Beverage",
+    niche: "Hospitality",
+    country: "Japan",
+    continent: "Asia",
+    readBy: "41,723 founders",
+    founderName: "Hiroshi Tanaka",
+    outcome: "unsuccessful"
   },
   {
     id: "6",
-    slug: "food-delivery-app",
-    title: "My Food Delivery App Reaches $300K/Month",
-    description: "Built a specialized food delivery platform for healthy meal options in major Australian cities. Focused on connecting health-conscious consumers with local organic restaurants and meal prep services.",
-    monthlyRevenue: "$300K",
-    startupCosts: "$15K",
-    businessType: "Marketplace",
-    niche: "Food & Beverage",
-    country: "Australia",
-    continent: "Oceania",
-    readBy: "92,156 founders",
-    founderName: "Emma Thompson"
+    slug: "singapore-logistics-success",
+    title: "From Singapore To Sydney: Building A $10M Logistics Empire",
+    description: "How a Singapore-based logistics company successfully expanded to Australia by leveraging existing Asian trade routes, understanding local regulations, and building strategic partnerships with Australian ports and warehouses.",
+    monthlyRevenue: "$833K",
+    startupCosts: "$150K",
+    businessType: "Logistics",
+    niche: "Supply Chain",
+    country: "Singapore",
+    continent: "Asia",
+    readBy: "56,234 founders",
+    founderName: "Wei Zhang",
+    outcome: "successful"
   }
 ];
 
@@ -152,22 +159,25 @@ const CaseStudies = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-foreground mb-4">Full Case Studies Database</h1>
+              <h1 className="text-4xl font-bold text-foreground mb-4">Australian Market Entry Case Studies</h1>
+              <p className="text-lg text-muted-foreground mb-4">
+                Real stories from international businesses entering the Australian market - their successes, failures, and lessons learned.
+              </p>
               <div className="flex gap-6 text-sm">
                 <button className="text-foreground font-medium border-b-2 border-primary pb-1">All Case Studies</button>
-                <button className="text-muted-foreground hover:text-foreground">My Favorites</button>
-                <button className="text-muted-foreground hover:text-foreground">New Case Studies</button>
-                <button className="text-muted-foreground hover:text-foreground">Random</button>
+                <button className="text-muted-foreground hover:text-foreground">Success Stories</button>
+                <button className="text-muted-foreground hover:text-foreground">Failure Stories</button>
+                <button className="text-muted-foreground hover:text-foreground">Lessons Learned</button>
               </div>
             </div>
-            <Button className="bg-primary text-primary-foreground">418 Australian Case Studies</Button>
+            <Button className="bg-primary text-primary-foreground">{mockCaseStudies.length} Market Entry Stories</Button>
           </div>
           
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input 
-              placeholder="Try 'newsletter' or 'productized service'" 
+              placeholder="Try 'SaaS market entry' or 'regulatory compliance'" 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
               className="pl-10 py-3 text-base" 
@@ -175,7 +185,7 @@ const CaseStudies = () => {
           </div>
           
           <p className="text-muted-foreground mt-4">
-            Showing {filteredCaseStudies.length} of many case studies
+            Showing {filteredCaseStudies.length} market entry case studies
           </p>
         </div>
       </div>
@@ -227,10 +237,10 @@ const CaseStudies = () => {
                     <SelectItem value="any">Any Type</SelectItem>
                     <SelectItem value="SaaS">SaaS</SelectItem>
                     <SelectItem value="E-commerce">E-commerce</SelectItem>
-                    <SelectItem value="Service">Service</SelectItem>
-                    <SelectItem value="Content Platform">Content Platform</SelectItem>
-                    <SelectItem value="Marketplace">Marketplace</SelectItem>
-                    <SelectItem value="Education">Education</SelectItem>
+                    <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                    <SelectItem value="FinTech">FinTech</SelectItem>
+                    <SelectItem value="Food & Beverage">Food & Beverage</SelectItem>
+                    <SelectItem value="Logistics">Logistics</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -244,33 +254,35 @@ const CaseStudies = () => {
                   <SelectContent>
                     <SelectItem value="any">Any Category</SelectItem>
                     <SelectItem value="Software & Technology">Software & Technology</SelectItem>
-                    <SelectItem value="Media & Publishing">Media & Publishing</SelectItem>
-                    <SelectItem value="Consumer Products">Consumer Products</SelectItem>
-                    <SelectItem value="Marketing & Advertising">Marketing & Advertising</SelectItem>
-                    <SelectItem value="Online Education">Online Education</SelectItem>
-                    <SelectItem value="Food & Beverage">Food & Beverage</SelectItem>
+                    <SelectItem value="Fashion & Retail">Fashion & Retail</SelectItem>
+                    <SelectItem value="Automotive & Industrial">Automotive & Industrial</SelectItem>
+                    <SelectItem value="Financial Services">Financial Services</SelectItem>
+                    <SelectItem value="Hospitality">Hospitality</SelectItem>
+                    <SelectItem value="Supply Chain">Supply Chain</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Country</label>
+                <label className="text-sm font-medium text-foreground mb-2 block">Origin Country</label>
                 <Select value={countryFilter} onValueChange={setCountryFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Any Country" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="any">Any Country</SelectItem>
-                    <SelectItem value="Australia">Australia</SelectItem>
                     <SelectItem value="United States">United States</SelectItem>
-                    <SelectItem value="Canada">Canada</SelectItem>
                     <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                    <SelectItem value="Germany">Germany</SelectItem>
+                    <SelectItem value="Canada">Canada</SelectItem>
+                    <SelectItem value="Japan">Japan</SelectItem>
+                    <SelectItem value="Singapore">Singapore</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">Continent</label>
+                <label className="text-sm font-medium text-foreground mb-2 block">Origin Continent</label>
                 <Select value={continentFilter} onValueChange={setContinentFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="Any Continent" />
@@ -278,7 +290,6 @@ const CaseStudies = () => {
                   <SelectContent>
                     <SelectItem value="any">Any Continent</SelectItem>
                     <SelectItem value="North America">North America</SelectItem>
-                    <SelectItem value="Oceania">Oceania</SelectItem>
                     <SelectItem value="Europe">Europe</SelectItem>
                     <SelectItem value="Asia">Asia</SelectItem>
                   </SelectContent>
@@ -431,9 +442,14 @@ const CaseStudies = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <CardTitle className="text-xl mb-2 hover:text-primary transition-colors">
-                            {caseStudy.title}
-                          </CardTitle>
+                          <div className="flex items-center gap-2 mb-2">
+                            <CardTitle className="text-xl hover:text-primary transition-colors">
+                              {caseStudy.title}
+                            </CardTitle>
+                            <Badge variant={caseStudy.outcome === "successful" ? "default" : "destructive"}>
+                              {caseStudy.outcome === "successful" ? "Success" : "Failure"}
+                            </Badge>
+                          </div>
                           <CardDescription className="text-base leading-relaxed">
                             {caseStudy.description}
                           </CardDescription>
@@ -449,7 +465,7 @@ const CaseStudies = () => {
                           </div>
                           <div>
                             <span className="text-2xl font-bold text-foreground">{caseStudy.startupCosts}</span>
-                            <span className="text-muted-foreground ml-1">Startup Costs</span>
+                            <span className="text-muted-foreground ml-1">Entry Costs</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
