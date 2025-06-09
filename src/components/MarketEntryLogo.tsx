@@ -24,12 +24,13 @@ const MarketEntryLogo = ({ className = "", size = "md" }: MarketEntryLogoProps) 
         {/* Background circle with gradient */}
         <defs>
           <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#14b8a6" />
-            <stop offset="100%" stopColor="#0891b2" />
+            <stop offset="0%" stopColor="#0ea5e9" />
+            <stop offset="50%" stopColor="#0284c7" />
+            <stop offset="100%" stopColor="#0369a1" />
           </linearGradient>
           <linearGradient id="keyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#f0f9ff" />
+            <stop offset="100%" stopColor="#e0f2fe" />
           </linearGradient>
         </defs>
         
