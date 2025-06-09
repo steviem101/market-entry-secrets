@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -13,7 +12,7 @@ interface CaseStudySection {
   isActive?: boolean;
 }
 
-const CaseStudyDetail = () => {
+const ContentDetail = () => {
   const { id } = useParams();
   const [savedStories, setSavedStories] = useState<string[]>([]);
 
@@ -109,7 +108,7 @@ const CaseStudyDetail = () => {
                     {caseStudy.companyName}
                   </h1>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>Market Entry Case Study</span>
+                    <span>Market Entry Story</span>
                     <span>Tools & Resources</span>
                     <span>{caseStudy.originCountry} → {caseStudy.targetMarket}</span>
                   </div>
@@ -130,7 +129,7 @@ const CaseStudyDetail = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <Badge variant="secondary">MARKET ENTRY</Badge>
-                      <Badge>CASE STUDY</Badge>
+                      <Badge>CONTENT</Badge>
                       <Badge variant="secondary">AUSTRALIA</Badge>
                       <Badge variant={caseStudy.outcome === "Success" ? "default" : "destructive"}>
                         {caseStudy.outcome}
@@ -299,12 +298,12 @@ const CaseStudyDetail = () => {
                   <h3 className="font-semibold text-foreground mb-3">Related Stories</h3>
                   <div className="space-y-3">
                     <div className="text-sm">
-                      <Link to="/case-studies/uk-ecommerce-failure" className="text-primary hover:underline">
+                      <Link to="/content/uk-ecommerce-failure" className="text-primary hover:underline">
                         Why Our UK E-commerce Brand Failed In Australia
                       </Link>
                     </div>
                     <div className="text-sm">
-                      <Link to="/case-studies/german-manufacturing-success" className="text-primary hover:underline">
+                      <Link to="/content/german-manufacturing-success" className="text-primary hover:underline">
                         German Manufacturing Success Story
                       </Link>
                     </div>
@@ -319,4 +318,4 @@ const CaseStudyDetail = () => {
   );
 };
 
-export default CaseStudyDetail;
+export default ContentDetail;

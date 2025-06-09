@@ -8,8 +8,8 @@ import Index from "./pages/Index";
 import Community from "./pages/Community";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import CaseStudies from "./pages/CaseStudies";
-import CaseStudyDetail from "./pages/CaseStudyDetail";
+import Content from "./pages/Content";
+import ContentDetail from "./pages/ContentDetail";
 import InnovationEcosystem from "./pages/InnovationEcosystem";
 import NotFound from "./pages/NotFound";
 
@@ -24,8 +24,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/community" element={<Community />} />
-          <Route path="/case-studies" element={<CaseStudies />} />
-          <Route path="/case-studies/:id" element={<CaseStudyDetail />} />
+          <Route path="/content" element={<Content />} />
+          <Route path="/content/:id" element={<ContentDetail />} />
           <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

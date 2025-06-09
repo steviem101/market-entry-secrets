@@ -119,7 +119,7 @@ const mockCaseStudies: CaseStudy[] = [
   }
 ];
 
-const CaseStudies = () => {
+const Content = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [revenueFilter, setRevenueFilter] = useState("any");
   const [costsFilter, setCostsFilter] = useState("any");
@@ -159,18 +159,18 @@ const CaseStudies = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-4xl font-bold text-foreground mb-4">Australian Market Entry Case Studies</h1>
+              <h1 className="text-4xl font-bold text-foreground mb-4">Australian Market Entry Content</h1>
               <p className="text-lg text-muted-foreground mb-4">
                 Real stories from international businesses entering the Australian market - their successes, failures, and lessons learned.
               </p>
               <div className="flex gap-6 text-sm">
-                <button className="text-foreground font-medium border-b-2 border-primary pb-1">All Case Studies</button>
+                <button className="text-foreground font-medium border-b-2 border-primary pb-1">All Content</button>
                 <button className="text-muted-foreground hover:text-foreground">Success Stories</button>
                 <button className="text-muted-foreground hover:text-foreground">Failure Stories</button>
                 <button className="text-muted-foreground hover:text-foreground">Lessons Learned</button>
               </div>
             </div>
-            <Button className="bg-primary text-primary-foreground">{mockCaseStudies.length} Market Entry Stories</Button>
+            <Button className="bg-primary text-primary-foreground">{mockCaseStudies.length} Stories</Button>
           </div>
           
           {/* Search */}
@@ -185,7 +185,7 @@ const CaseStudies = () => {
           </div>
           
           <p className="text-muted-foreground mt-4">
-            Showing {filteredCaseStudies.length} market entry case studies
+            Showing {filteredCaseStudies.length} market entry stories
           </p>
         </div>
       </div>
@@ -427,11 +427,11 @@ const CaseStudies = () => {
             </div>
           </aside>
 
-          {/* Case Studies List */}
+          {/* Content List */}
           <main className="flex-1">
             <div className="space-y-6">
               {filteredCaseStudies.map((caseStudy) => (
-                <Link key={caseStudy.id} to={`/case-studies/${caseStudy.slug}`}>
+                <Link key={caseStudy.id} to={`/content/${caseStudy.slug}`}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardHeader>
                       <div className="flex items-start gap-4">
@@ -495,4 +495,4 @@ const CaseStudies = () => {
   );
 };
 
-export default CaseStudies;
+export default Content;

@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
@@ -64,8 +65,8 @@ const Navigation = () => {
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
-                  <Link to="/case-studies" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
-                    Case Studies
+                  <Link to="/content" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
+                    Content
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
