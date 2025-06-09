@@ -53,8 +53,8 @@ const Index = () => {
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Vendor Directory</h1>
-                <p className="text-muted-foreground">Connect with selected partners</p>
+                <h1 className="text-2xl font-bold text-foreground">Market Entry Secrets</h1>
+                <p className="text-muted-foreground">Market Entry Services Directory</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
