@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, ChevronDown } from "lucide-react";
@@ -168,6 +169,7 @@ const Content = () => {
                 <button className="text-muted-foreground hover:text-foreground">Success Stories</button>
                 <button className="text-muted-foreground hover:text-foreground">Failure Stories</button>
                 <button className="text-muted-foreground hover:text-foreground">Lessons Learned</button>
+                <button className="text-muted-foreground hover:text-foreground">Reports</button>
               </div>
             </div>
             <Button className="bg-primary text-primary-foreground">{mockCaseStudies.length} Stories</Button>
