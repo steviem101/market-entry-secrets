@@ -58,9 +58,9 @@ const Community = () => {
         <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
-            <h3 className="text-xl font-semibold mb-2 text-destructive">Error loading community members</h3>
+            <h3 className="text-xl font-semibold mb-2 text-destructive">Error loading mentors</h3>
             <p className="text-muted-foreground">
-              There was an error loading the community data. Please try refreshing the page.
+              There was an error loading the mentor data. Please try refreshing the page.
             </p>
           </div>
         </div>
@@ -76,7 +76,7 @@ const Community = () => {
       {/* Page Header */}
       <div className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Market Entry Secrets Community</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4">Market Entry Mentors</h1>
           <p className="text-lg text-muted-foreground">
             Connect with Australia's leading market entry professionals who help companies enter and scale in the Australian market
           </p>
@@ -88,7 +88,7 @@ const Community = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              {isLoading ? 'Loading...' : `${filteredPeople.length} community members found`}
+              {isLoading ? 'Loading...' : `${filteredPeople.length} mentors found`}
             </span>
             <div className="flex items-center gap-2">
               {/* Location Filter Button */}
@@ -137,17 +137,17 @@ const Community = () => {
             {isLoading ? (
               <div className="text-center py-12">
                 <Loader2 className="w-16 h-16 text-muted-foreground mx-auto mb-4 animate-spin" />
-                <h3 className="text-xl font-semibold mb-2">Loading community members...</h3>
+                <h3 className="text-xl font-semibold mb-2">Loading mentors...</h3>
                 <p className="text-muted-foreground">
-                  Please wait while we fetch the latest community data.
+                  Please wait while we fetch the latest mentor data.
                 </p>
               </div>
             ) : filteredPeople.length === 0 ? (
               <div className="text-center py-12">
                 <Grid3X3 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No community members found</h3>
+                <h3 className="text-xl font-semibold mb-2">No mentors found</h3>
                 <p className="text-muted-foreground">
-                  Try adjusting your search criteria or filters to find more community members.
+                  Try adjusting your search criteria or filters to find more mentors.
                 </p>
               </div>
             ) : (
