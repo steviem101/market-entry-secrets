@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Filter, Grid3X3 } from "lucide-react";
 import PersonCard, { Person } from "@/components/PersonCard";
@@ -44,7 +43,8 @@ const Community = () => {
   };
 
   const handleContact = (person: Person) => {
-    toast.success(`Contact request sent to ${person.name}!`);
+    const displayName = person.isAnonymous ? person.title : person.name;
+    toast.success(`Contact request sent to ${displayName}!`);
     setIsModalOpen(false);
   };
 
@@ -138,19 +138,19 @@ const Community = () => {
         </div>
       </div>
 
-      {/* Person Modal - Note: This will need to be updated to work with Person data */}
+      {/* Person Modal - Updated to handle anonymous data properly */}
       {selectedPerson && (
         <CompanyModal
           company={{
             id: selectedPerson.id,
-            name: selectedPerson.name,
+            name: selectedPerson.isAnonymous ? selectedPerson.title : selectedPerson.name,
             description: selectedPerson.description,
             location: selectedPerson.location,
             founded: selectedPerson.experience,
             employees: selectedPerson.company || "Independent",
             services: selectedPerson.specialties,
-            website: selectedPerson.website,
-            contact: selectedPerson.contact,
+            website: selectedPerson.isAnonymous ? undefined : selectedPerson.website,
+            contact: selectedPerson.isAnonymous ? undefined : selectedPerson.contact,
             experienceTiles: selectedPerson.experienceTiles
           }}
           isOpen={isModalOpen}
