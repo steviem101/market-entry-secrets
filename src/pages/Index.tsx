@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Filter, Grid3X3 } from "lucide-react";
 import CompanyCard, { Company } from "@/components/CompanyCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
-import MarketEntryLogo from "@/components/MarketEntryLogo";
+import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { companies, serviceCategories, categoryGroups } from "@/data/mockData";
@@ -44,33 +45,27 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-6">
+      {/* Navigation */}
+      <Navigation />
+
+      {/* Filters Toggle Header */}
+      <div className="bg-card border-b border-border">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <MarketEntryLogo />
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Market Entry Secrets</h1>
-                <p className="text-muted-foreground">Market Entry Services Directory</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">
-                {filteredCompanies.length} vendors found
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className="lg:hidden"
-              >
-                <Filter className="w-4 h-4" />
-              </Button>
-            </div>
+            <span className="text-sm text-muted-foreground">
+              {filteredCompanies.length} vendors found
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="lg:hidden"
+            >
+              <Filter className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex gap-8">
