@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Search, ChevronDown } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface CaseStudy {
   id: string;
+  slug: string;
   title: string;
   description: string;
   monthlyRevenue: string;
@@ -26,6 +28,7 @@ interface CaseStudy {
 const mockCaseStudies: CaseStudy[] = [
   {
     id: "1",
+    slug: "wayward-home",
     title: "How I Turned A Crappy Idea Into A $3M/Year Business",
     description: "Starter Story grew to 1.4 million monthly visitors and millions in annual revenue by sharing the stories of entrepreneurs. Pat breaks down the early days and how he grew the business into something that changed his life.",
     monthlyRevenue: "$100K",
@@ -39,6 +42,7 @@ const mockCaseStudies: CaseStudy[] = [
   },
   {
     id: "2",
+    slug: "brumate-drinkware",
     title: "I Grew A Drinkware Brand To $1.1M/Month At 23 Years Old",
     description: "BruMate is a successful insulated drinkware brand focused on the adult beverage community, with a flagship product that generated $2.1M in sales in 2017 and is now doing over $1.1M per month in sales, with plans to do $20M this year.",
     monthlyRevenue: "$12M",
@@ -52,6 +56,7 @@ const mockCaseStudies: CaseStudy[] = [
   },
   {
     id: "3",
+    slug: "saas-templates",
     title: "My SaaS Templates Make $40K/Month",
     description: "Building and selling SaaS templates and components that help other entrepreneurs launch their products faster. Started as a side project and grew into a substantial monthly recurring revenue stream.",
     monthlyRevenue: "$40K",
@@ -65,6 +70,7 @@ const mockCaseStudies: CaseStudy[] = [
   },
   {
     id: "4",
+    slug: "marketing-agency-australia",
     title: "How I Built A $2M/Year Marketing Agency",
     description: "Started a digital marketing agency focused on helping Australian businesses enter international markets. Grew from a one-person operation to a team of 15 specialists serving clients across multiple continents.",
     monthlyRevenue: "$167K",
@@ -78,6 +84,7 @@ const mockCaseStudies: CaseStudy[] = [
   },
   {
     id: "5",
+    slug: "online-course-business",
     title: "I Created A $500K/Year Online Course Business",
     description: "Teaching entrepreneurs how to enter the Australian market through comprehensive online courses and coaching programs. Built a community of over 10,000 students worldwide.",
     monthlyRevenue: "$42K",
@@ -91,6 +98,7 @@ const mockCaseStudies: CaseStudy[] = [
   },
   {
     id: "6",
+    slug: "food-delivery-app",
     title: "My Food Delivery App Reaches $300K/Month",
     description: "Built a specialized food delivery platform for healthy meal options in major Australian cities. Focused on connecting health-conscious consumers with local organic restaurants and meal prep services.",
     monthlyRevenue: "$300K",
@@ -412,54 +420,56 @@ const CaseStudies = () => {
           <main className="flex-1">
             <div className="space-y-6">
               {filteredCaseStudies.map((caseStudy) => (
-                <Card key={caseStudy.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start gap-4">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={caseStudy.founderImage} alt={caseStudy.founderName} />
-                        <AvatarFallback>
-                          {caseStudy.founderName.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <CardTitle className="text-xl mb-2 hover:text-primary transition-colors">
-                          {caseStudy.title}
-                        </CardTitle>
-                        <CardDescription className="text-base leading-relaxed">
-                          {caseStudy.description}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-6">
-                        <div>
-                          <span className="text-2xl font-bold text-foreground">{caseStudy.monthlyRevenue}</span>
-                          <span className="text-muted-foreground ml-1">Monthly Revenue</span>
-                        </div>
-                        <div>
-                          <span className="text-2xl font-bold text-foreground">{caseStudy.startupCosts}</span>
-                          <span className="text-muted-foreground ml-1">Startup Costs</span>
+                <Link key={caseStudy.id} to={`/case-studies/${caseStudy.slug}`}>
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardHeader>
+                      <div className="flex items-start gap-4">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={caseStudy.founderImage} alt={caseStudy.founderName} />
+                          <AvatarFallback>
+                            {caseStudy.founderName.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <CardTitle className="text-xl mb-2 hover:text-primary transition-colors">
+                            {caseStudy.title}
+                          </CardTitle>
+                          <CardDescription className="text-base leading-relaxed">
+                            {caseStudy.description}
+                          </CardDescription>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex -space-x-2">
-                          {[1, 2, 3, 4].map((i) => (
-                            <Avatar key={i} className="w-6 h-6 border-2 border-background">
-                              <AvatarFallback className="text-xs bg-muted">
-                                {i}
-                              </AvatarFallback>
-                            </Avatar>
-                          ))}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-6">
+                          <div>
+                            <span className="text-2xl font-bold text-foreground">{caseStudy.monthlyRevenue}</span>
+                            <span className="text-muted-foreground ml-1">Monthly Revenue</span>
+                          </div>
+                          <div>
+                            <span className="text-2xl font-bold text-foreground">{caseStudy.startupCosts}</span>
+                            <span className="text-muted-foreground ml-1">Startup Costs</span>
+                          </div>
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                          Read by <strong>{caseStudy.readBy}</strong>
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex -space-x-2">
+                            {[1, 2, 3, 4].map((i) => (
+                              <Avatar key={i} className="w-6 h-6 border-2 border-background">
+                                <AvatarFallback className="text-xs bg-muted">
+                                  {i}
+                                </AvatarFallback>
+                              </Avatar>
+                            ))}
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            Read by <strong>{caseStudy.readBy}</strong>
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           </main>
