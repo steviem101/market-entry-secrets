@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -9,49 +8,39 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { CalendarDays, MapPin, Clock, Users, Search, Filter } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { EventSubmissionForm } from "@/components/events/EventSubmissionForm";
-
 const Events = () => {
-  const { events, loading, error, refetch } = useEvents();
+  const {
+    events,
+    loading,
+    error,
+    refetch
+  } = useEvents();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-
   const handleEventSubmitted = () => {
     refetch();
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">Loading events...</div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (error) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-red-500">Error loading events: {error}</div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   const categories = ["All", ...Array.from(new Set(events.map(event => event.category)))];
-
-  const filteredEvents = selectedCategory === "All" 
-    ? events 
-    : events.filter(event => event.category === selectedCategory);
-
+  const filteredEvents = selectedCategory === "All" ? events : events.filter(event => event.category === selectedCategory);
   const upcomingEvents = filteredEvents.slice(0, 3);
   const featuredEvents = events.slice(0, 3);
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navigation />
       
       {/* Hero Section */}
@@ -62,11 +51,11 @@ const Events = () => {
               <div>
                 <h1 className="text-5xl font-bold mb-4">AUSTRALIAN MARKET ENTRY EVENTS</h1>
                 <div className="flex items-center gap-6 mb-6">
-                  <span className="text-lg opacity-90">Overnight Success</span>
-                  <span className="text-lg opacity-90">Frontcover</span>
-                  <span className="text-lg opacity-90">Startmate</span>
-                  <span className="text-lg opacity-90">the community collective</span>
-                  <span className="text-lg opacity-90">COHORT</span>
+                  
+                  
+                  
+                  
+                  
                 </div>
               </div>
               <Button className="bg-white/20 text-white border border-white/30 hover:bg-white/30">
@@ -98,13 +87,11 @@ const Events = () => {
           </p>
 
           {/* Featured Events Carousel */}
-          {featuredEvents.length > 0 && (
-            <div className="mb-8">
+          {featuredEvents.length > 0 && <div className="mb-8">
               <h3 className="text-2xl font-bold text-foreground mb-6">Featured Events</h3>
               <Carousel className="w-full">
                 <CarouselContent>
-                  {featuredEvents.map((event) => (
-                    <CarouselItem key={event.id} className="md:basis-1/2 lg:basis-1/3">
+                  {featuredEvents.map(event => <CarouselItem key={event.id} className="md:basis-1/2 lg:basis-1/3">
                       <Card className="h-full hover:shadow-lg transition-shadow">
                         <CardContent className="p-6">
                           <div className="flex items-center gap-2 mb-3">
@@ -124,11 +111,11 @@ const Events = () => {
                             <div className="flex items-center gap-2">
                               <CalendarDays className="w-4 h-4" />
                               <span>
-                                {new Date(event.date).toLocaleDateString('en-US', { 
-                                  month: 'short', 
-                                  day: 'numeric',
-                                  weekday: 'short'
-                                })}
+                                {new Date(event.date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            weekday: 'short'
+                          })}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -150,14 +137,12 @@ const Events = () => {
                           </Button>
                         </CardContent>
                       </Card>
-                    </CarouselItem>
-                  ))}
+                    </CarouselItem>)}
                 </CarouselContent>
                 <CarouselPrevious />
                 <CarouselNext />
               </Carousel>
-            </div>
-          )}
+            </div>}
         </div>
 
         <div className="flex gap-8">
@@ -185,22 +170,12 @@ const Events = () => {
 
             {/* Category Filters */}
             <div className="flex gap-2 mb-6">
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category)}
-                  className="rounded-full"
-                >
+              {categories.map(category => <Button key={category} variant={selectedCategory === category ? "default" : "outline"} size="sm" onClick={() => setSelectedCategory(category)} className="rounded-full">
                   {category}
-                  {category !== "All" && (
-                    <Badge variant="secondary" className="ml-2">
+                  {category !== "All" && <Badge variant="secondary" className="ml-2">
                       {events.filter(e => e.category === category).length}
-                    </Badge>
-                  )}
-                </Button>
-              ))}
+                    </Badge>}
+                </Button>)}
             </div>
 
             {/* Location Filters */}
@@ -216,19 +191,18 @@ const Events = () => {
 
             {/* Events List */}
             <div className="space-y-6">
-              {filteredEvents.map((event) => (
-                <Card key={event.id} className="hover:shadow-md transition-shadow">
+              {filteredEvents.map(event => <Card key={event.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <span className="text-sm font-medium text-muted-foreground">
-                            {new Date(event.date).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric' 
-                            })} • {new Date(event.date).toLocaleDateString('en-US', { 
-                              weekday: 'long' 
-                            })}
+                            {new Date(event.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        })} • {new Date(event.date).toLocaleDateString('en-US', {
+                          weekday: 'long'
+                        })}
                           </span>
                           <Badge variant="secondary">{event.category}</Badge>
                           <Badge variant="outline">{event.type}</Badge>
@@ -267,8 +241,7 @@ const Events = () => {
                       </Button>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
 
@@ -285,12 +258,7 @@ const Events = () => {
                     </div>
                   </div>
                   
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="rounded-md border-0"
-                  />
+                  <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="rounded-md border-0" />
                 </CardContent>
               </Card>
 
@@ -299,17 +267,15 @@ const Events = () => {
                 <CardContent className="p-6">
                   <h3 className="font-semibold mb-4">Upcoming Events</h3>
                   <div className="space-y-3">
-                    {upcomingEvents.map((event) => (
-                      <div key={event.id} className="border-l-2 border-primary pl-3">
+                    {upcomingEvents.map(event => <div key={event.id} className="border-l-2 border-primary pl-3">
                         <div className="text-sm font-medium">{event.title}</div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(event.date).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })} • {event.time.split(' - ')[0]}
+                          {new Date(event.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                      })} • {event.time.split(' - ')[0]}
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </CardContent>
               </Card>
@@ -317,8 +283,6 @@ const Events = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Events;
