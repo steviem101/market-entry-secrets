@@ -11,6 +11,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Content from "./pages/Content";
 import ContentDetail from "./pages/ContentDetail";
+import Events from "./pages/Events";
 import InnovationEcosystem from "./pages/InnovationEcosystem";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/mentors" element={<Community />} />
           <Route path="/content" element={<Content />} />
           <Route path="/content/:id" element={<ContentDetail />} />
+          <Route path="/events" element={<Events />} />
           <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
