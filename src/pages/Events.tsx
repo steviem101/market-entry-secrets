@@ -111,56 +111,37 @@ const Events = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      {/* Hero Section - Updated with blue theme */}
+      {/* Hero Section */}
       <div className="relative">
-        <div className="bg-gradient-to-r from-primary via-blue-500 to-primary text-white py-16">
+        <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-purple-800 text-white py-16">
           <div className="container mx-auto px-4">
-            <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-5xl font-bold mb-6">Your Gateway to the</h1>
-              <h2 className="text-5xl font-bold mb-6 text-primary-foreground">Australian Market</h2>
-              <p className="text-xl mb-8 opacity-90">
-                Connect with vetted service providers, learn from success stories, and accelerate your market entry with expert guidance.
-              </p>
-              <div className="flex justify-center">
-                <Button className="bg-white text-primary hover:bg-gray-100 px-8 py-3 text-lg">
-                  Submit Event
-                </Button>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-5xl font-bold mb-4">AUSTRALIAN MARKET ENTRY EVENTS</h1>
+                <div className="flex items-center gap-6 mb-6">
+                  <span className="text-lg opacity-90">Overnight Success</span>
+                  <span className="text-lg opacity-90">Frontcover</span>
+                  <span className="text-lg opacity-90">Startmate</span>
+                  <span className="text-lg opacity-90">the community collective</span>
+                  <span className="text-lg opacity-90">COHORT</span>
+                </div>
               </div>
+              <Button className="bg-white/20 text-white border border-white/30 hover:bg-white/30">
+                Subscribed
+              </Button>
             </div>
           </div>
         </div>
         
-        {/* Stats Section */}
-        <div className="bg-white py-12">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
-              <div>
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CalendarDays className="w-8 h-8 text-primary" />
-                </div>
-                <div className="text-3xl font-bold text-foreground">500+</div>
-                <div className="text-muted-foreground">Upcoming Events</div>
-              </div>
-              <div>
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-primary" />
-                </div>
-                <div className="text-3xl font-bold text-foreground">1,200+</div>
-                <div className="text-muted-foreground">Industry Leaders</div>
-              </div>
-              <div>
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="w-8 h-8 text-primary" />
-                </div>
-                <div className="text-3xl font-bold text-foreground">94%</div>
-                <div className="text-muted-foreground">Networking Success Rate</div>
-              </div>
-            </div>
+        {/* Logo positioned over the gradient */}
+        <div className="absolute bottom-0 left-8 transform translate-y-1/2">
+          <div className="w-24 h-24 bg-blue-500 rounded-xl flex items-center justify-center">
+            <div className="text-white text-2xl font-bold">📅</div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 mt-8">
         {/* Event Info */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">Australian Market Entry Events Calendar</h2>
@@ -193,7 +174,7 @@ const Events = () => {
                   <Search className="w-4 h-4 mr-2" />
                   Search
                 </Button>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button className="bg-foreground text-background hover:bg-foreground/90">
                   <Plus className="w-4 h-4 mr-2" />
                   Submit Event
                 </Button>
@@ -234,7 +215,7 @@ const Events = () => {
             {/* Events List */}
             <div className="space-y-6">
               {filteredEvents.map((event) => (
-                <Card key={event.id} className="hover:shadow-md transition-shadow border-l-4 border-l-primary">
+                <Card key={event.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -247,7 +228,7 @@ const Events = () => {
                               weekday: 'long' 
                             })}
                           </span>
-                          <Badge variant="secondary" className="bg-primary/10 text-primary">{event.category}</Badge>
+                          <Badge variant="secondary">{event.category}</Badge>
                           <Badge variant="outline">{event.type}</Badge>
                         </div>
                         
@@ -279,7 +260,7 @@ const Events = () => {
                         </div>
                       </div>
                       
-                      <Button className="ml-4 bg-primary text-primary-foreground hover:bg-primary/90">
+                      <Button className="ml-4">
                         Register
                       </Button>
                     </div>
