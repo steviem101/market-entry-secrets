@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, TrendingUp, Users, FileText, Play, Star } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Content = () => {
   const contentCategories = [
@@ -52,18 +53,21 @@ const Content = () => {
 
   const featuredContent = [
     {
+      id: "slack-australian-market-entry",
       title: "How Slack Entered the Australian Enterprise Market",
       category: "Success Story",
       readTime: "8 min read",
       featured: true
     },
     {
+      id: "australian-business-registration-guide",
       title: "Complete Guide to Australian Business Registration",
       category: "Legal Guide",
       readTime: "12 min read",
       featured: true
     },
     {
+      id: "australian-consumer-behavior",
       title: "Understanding Australian Consumer Behavior",
       category: "Market Research",
       readTime: "6 min read",
@@ -89,22 +93,24 @@ const Content = () => {
           <h2 className="text-2xl font-bold text-foreground mb-6">Featured Content</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {featuredContent.map((content, index) => (
-              <Card key={index} className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20">
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-primary font-medium">{content.category}</span>
-                    <span className="text-xs text-muted-foreground">{content.readTime}</span>
-                  </div>
-                  <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                    {content.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="ghost" className="p-0 h-auto text-primary hover:text-primary/80">
-                    Read More →
-                  </Button>
-                </CardContent>
-              </Card>
+              <Link key={index} to={`/content/${content.id}`}>
+                <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20 h-full">
+                  <CardHeader>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-primary font-medium">{content.category}</span>
+                      <span className="text-xs text-muted-foreground">{content.readTime}</span>
+                    </div>
+                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                      {content.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Button variant="ghost" className="p-0 h-auto text-primary hover:text-primary/80">
+                      Read More →
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -17,31 +16,63 @@ const ContentDetail = () => {
   const { id } = useParams();
   const [savedStories, setSavedStories] = useState<string[]>([]);
 
-  // Mock data based on the content type - in a real app, this would come from an API
-  const content = {
-    id: id || "market-entry-guide",
-    title: "How This US Tech Startup Successfully Entered Australia And Reached $2M ARR",
-    companyName: "CloudScale Solutions",
-    website: "cloudscale.com.au",
-    originCountry: "United States",
-    targetMarket: "Australia",
-    entryDate: "March 2022",
-    publishDate: "April 11th, 2025",
-    monthlyRevenue: "$167K",
-    entryCosts: "$75,000",
-    profitable: "Yes",
-    founders: 2,
-    employees: 20,
-    founderName: "Marcus Chen",
-    founderTitle: "Founder, CloudScale Solutions",
-    founderImage: "/placeholder.svg",
-    socialLinks: {
-      twitter: "#",
-      instagram: "#",
-      youtube: "#"
-    },
-    outcome: "Success"
+  // Mock data that changes based on the content ID
+  const getContentData = (contentId: string) => {
+    if (contentId === "slack-australian-market-entry") {
+      return {
+        id: contentId,
+        title: "How Slack Successfully Entered the Australian Enterprise Market",
+        companyName: "Slack Technologies",
+        website: "slack.com",
+        originCountry: "United States",
+        targetMarket: "Australia",
+        entryDate: "March 2018",
+        publishDate: "April 11th, 2025",
+        monthlyRevenue: "$2.4M",
+        entryCosts: "$150,000",
+        profitable: "Yes",
+        founders: 4,
+        employees: 45,
+        founderName: "Stewart Butterfield",
+        founderTitle: "CEO, Slack Technologies",
+        founderImage: "/placeholder.svg",
+        socialLinks: {
+          twitter: "#",
+          instagram: "#",
+          youtube: "#"
+        },
+        outcome: "Success"
+      };
+    }
+    
+    // Default content data for other IDs
+    return {
+      id: contentId || "market-entry-guide",
+      title: "How This US Tech Startup Successfully Entered Australia And Reached $2M ARR",
+      companyName: "CloudScale Solutions",
+      website: "cloudscale.com.au",
+      originCountry: "United States",
+      targetMarket: "Australia",
+      entryDate: "March 2022",
+      publishDate: "April 11th, 2025",
+      monthlyRevenue: "$167K",
+      entryCosts: "$75,000",
+      profitable: "Yes",
+      founders: 2,
+      employees: 20,
+      founderName: "Marcus Chen",
+      founderTitle: "Founder, CloudScale Solutions",
+      founderImage: "/placeholder.svg",
+      socialLinks: {
+        twitter: "#",
+        instagram: "#",
+        youtube: "#"
+      },
+      outcome: "Success"
+    };
   };
+
+  const content = getContentData(id || "");
 
   const sections: ContentSection[] = [
     { id: "company", title: "About The Company", isActive: true },
@@ -57,6 +88,26 @@ const ContentDetail = () => {
       setSavedStories([...savedStories, content.id]);
     }
   };
+
+  const getContentBody = () => {
+    if (id === "slack-australian-market-entry") {
+      return {
+        whoAreYou: `Stewart Butterfield is the CEO and co-founder of Slack Technologies, a cloud-based collaboration platform that has revolutionized workplace communication. Slack entered the Australian market in 2018 and quickly became a dominant force in the enterprise collaboration space.`,
+        backstory: `Before founding Slack, Stewart had experience building communication tools through his previous company, Tiny Speck. The idea for Slack came from internal communication challenges his team faced while developing games.`,
+        backstoryFull: `The decision to enter Australia was strategic - the country represented a mature English-speaking market with high technology adoption rates and a growing startup ecosystem. Australia's time zone also provided excellent coverage for global teams working across Asia-Pacific regions.`,
+        marketEntry: `Slack's Australian market entry strategy focused on three key areas: enterprise partnerships with local consulting firms, integration with popular Australian business tools, and targeted marketing campaigns during major business events like PAUSE Fest and SaaStr conferences.`
+      };
+    }
+    
+    return {
+      whoAreYou: `${content.founderName} is the co-founder of ${content.companyName}, an online platform that helps businesses successfully enter the Australian market. The company provides comprehensive market entry services including regulatory compliance, local partnerships, and strategic guidance.`,
+      backstory: `Before co-founding ${content.companyName}, ${content.founderName} worked extensively in international business development and saw the challenges companies faced when trying to expand into new markets. He holds a business degree and has over 10 years of experience in market expansion strategies.`,
+      backstoryFull: `The idea for ${content.companyName} came from personal experience trying to help international companies navigate the Australian market. After seeing countless businesses struggle with regulatory requirements, cultural differences, and local business practices, we realized there was a significant gap in the market for comprehensive market entry services.`,
+      marketEntry: `We started by helping a few companies informally and quickly realized the demand was much larger than we anticipated. The success of our early clients gave us the confidence to formalize our services and build a scalable platform.`
+    };
+  };
+
+  const contentBody = getContentBody();
 
   return (
     <div className="min-h-screen bg-background">
@@ -201,11 +252,11 @@ const ContentDetail = () => {
                 </h2>
 
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  {content.founderName} is the co-founder of {content.companyName}, an online platform that helps businesses successfully enter the Australian market. The company provides comprehensive market entry services including regulatory compliance, local partnerships, and strategic guidance.
+                  {contentBody.whoAreYou}
                 </p>
 
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  Before co-founding {content.companyName}, {content.founderName} worked extensively in international business development and saw the challenges companies faced when trying to expand into new markets. He holds a business degree and has over 10 years of experience in market expansion strategies.
+                  {contentBody.backstory}
                 </p>
 
                 <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">
@@ -213,11 +264,11 @@ const ContentDetail = () => {
                 </h2>
 
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  The idea for {content.companyName} came from personal experience trying to help international companies navigate the Australian market. After seeing countless businesses struggle with regulatory requirements, cultural differences, and local business practices, we realized there was a significant gap in the market for comprehensive market entry services.
+                  {contentBody.backstoryFull}
                 </p>
 
                 <p className="text-muted-foreground leading-relaxed mb-6">
-                  We started by helping a few companies informally and quickly realized the demand was much larger than we anticipated. The success of our early clients gave us the confidence to formalize our services and build a scalable platform.
+                  {contentBody.marketEntry}
                 </p>
               </div>
             </div>
