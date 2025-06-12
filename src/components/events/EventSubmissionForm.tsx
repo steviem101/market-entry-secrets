@@ -56,7 +56,7 @@ export const EventSubmissionForm: React.FC<EventSubmissionFormProps> = ({ onEven
     try {
       const { error } = await supabase
         .from('events')
-        .insert([data]);
+        .insert(data);
 
       if (error) {
         throw error;
