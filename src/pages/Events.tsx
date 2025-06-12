@@ -191,9 +191,9 @@ const Events = () => {
           {/* Left Column - Events List */}
           <div className="flex-1">
             {/* Controls */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <h3 className="text-2xl font-bold text-foreground">Events</h3>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4">
                 <Button variant="outline" size="sm">
                   <CalendarDays className="w-4 h-4 mr-2" />
                   Calendar View
@@ -216,7 +216,7 @@ const Events = () => {
             </div>
 
             {/* Category Filters */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 mb-6">
               {categories.map(category => <Button key={category} variant={selectedCategory === category ? "default" : "outline"} size="sm" onClick={() => setSelectedCategory(category)} className="rounded-full">
                   {category}
                   {category !== "All" && <Badge variant="secondary" className="ml-2">
@@ -247,9 +247,9 @@ const Events = () => {
               ) : (
                 filteredEvents.map(event => <Card key={event.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex flex-wrap items-center gap-3 mb-2">
                             <span className="text-sm font-medium text-muted-foreground">
                               {new Date(event.date).toLocaleDateString('en-US', {
                             month: 'short',
@@ -270,7 +270,7 @@ const Events = () => {
                             {event.description}
                           </p>
                           
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Clock className="w-4 h-4" />
                               <span>{event.time}</span>
@@ -290,7 +290,7 @@ const Events = () => {
                           </div>
                         </div>
                         
-                        <Button className="ml-4">
+                        <Button className="self-start sm:ml-4">
                           Register
                         </Button>
                       </div>
@@ -301,7 +301,7 @@ const Events = () => {
           </div>
 
           {/* Right Column - Calendar */}
-          <div className="w-80">
+          <div className="w-80 hidden lg:block">
             <div className="sticky top-8">
               <Card>
                 <CardContent className="p-6">
