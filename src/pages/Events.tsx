@@ -5,13 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarDays, MapPin, Clock, Users, Plus, Search, Filter } from "lucide-react";
+import { CalendarDays, MapPin, Clock, Users, Search, Filter } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
+import { EventSubmissionForm } from "@/components/events/EventSubmissionForm";
 
 const Events = () => {
-  const { events, loading, error } = useEvents();
+  const { events, loading, error, refetch } = useEvents();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
+  const handleEventSubmitted = () => {
+    refetch();
+  };
 
   if (loading) {
     return (
@@ -110,10 +115,7 @@ const Events = () => {
                   <Search className="w-4 h-4 mr-2" />
                   Search
                 </Button>
-                <Button className="bg-foreground text-background hover:bg-foreground/90">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Submit Event
-                </Button>
+                <EventSubmissionForm onEventSubmitted={handleEventSubmitted} />
               </div>
             </div>
 

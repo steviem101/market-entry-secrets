@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Event {
@@ -20,30 +20,30 @@ export const useEvents = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .order('date', { ascending: true });
+  const fetchEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
 
-        if (error) {
-          throw error;
-        }
-
-        setEvents(data || []);
-      } catch (err) {
-        console.error('Error fetching events:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch events');
-      } finally {
-        setLoading(false);
+      if (error) {
+        throw error;
       }
-    };
 
-    fetchEvents();
+      setEvents(data || []);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch events');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { events, loading, error };
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  return { events, loading, error, refetch: fetchEvents };
 };
