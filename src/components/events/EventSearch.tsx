@@ -13,26 +13,19 @@ interface EventSearchProps {
 export const EventSearch = ({ onSearch, onClear, isSearching }: EventSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    
-    console.log('Search input changed:', value); // Debug log
-    
-    // Auto-filter as user types
-    if (value.trim()) {
-      console.log('Triggering search for:', value.trim()); // Debug log
-      onSearch(value.trim());
-    } else {
-      console.log('Clearing search'); // Debug log
-      onClear();
-    }
+  const handleSearch = () => {
+    onSearch(searchQuery.trim());
   };
 
   const handleClear = () => {
-    console.log('Clear button clicked'); // Debug log
     setSearchQuery("");
     onClear();
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   return (
@@ -42,7 +35,8 @@ export const EventSearch = ({ onSearch, onClear, isSearching }: EventSearchProps
         <Input
           placeholder="Search events by title, description, or location..."
           value={searchQuery}
-          onChange={handleInputChange}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={handleKeyPress}
           className="pl-10 pr-10"
         />
         {searchQuery && (
@@ -56,9 +50,13 @@ export const EventSearch = ({ onSearch, onClear, isSearching }: EventSearchProps
           </Button>
         )}
       </div>
+      <Button onClick={handleSearch} disabled={!searchQuery.trim()}>
+        <Search className="w-4 h-4 mr-2" />
+        Search
+      </Button>
       {isSearching && (
         <Button variant="outline" onClick={handleClear}>
-          Clear All
+          Clear
         </Button>
       )}
     </div>
