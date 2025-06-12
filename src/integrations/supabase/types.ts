@@ -81,6 +81,51 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          attendees: number
+          category: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          location: string
+          organizer: string
+          time: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          attendees?: number
+          category: string
+          created_at?: string
+          date: string
+          description: string
+          id?: string
+          location: string
+          organizer: string
+          time: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          attendees?: number
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          location?: string
+          organizer?: string
+          time?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

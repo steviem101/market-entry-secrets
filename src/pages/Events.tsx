@@ -6,100 +6,36 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarDays, MapPin, Clock, Users, Plus, Search, Filter } from "lucide-react";
-
-interface Event {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  type: string;
-  category: string;
-  attendees: number;
-  description: string;
-  organizer: string;
-}
+import { useEvents } from "@/hooks/useEvents";
 
 const Events = () => {
+  const { events, loading, error } = useEvents();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
-  const events: Event[] = [
-    {
-      id: "1",
-      title: "FinTech Innovation Summit Australia",
-      date: "2024-06-15",
-      time: "9:00 AM - 5:00 PM",
-      location: "Sydney Convention Centre",
-      type: "Conference",
-      category: "Finance",
-      attendees: 500,
-      description: "Australia's premier fintech conference bringing together industry leaders, startups, and investors.",
-      organizer: "FinTech Australia"
-    },
-    {
-      id: "2",
-      title: "Telecom Network Transformation Forum",
-      date: "2024-06-18",
-      time: "10:00 AM - 4:00 PM",
-      location: "Melbourne Exhibition Centre",
-      type: "Forum",
-      category: "Telecoms",
-      attendees: 300,
-      description: "Exploring the future of telecommunications infrastructure and 5G deployment in Australia.",
-      organizer: "Telecom Industry Association"
-    },
-    {
-      id: "3",
-      title: "Digital Banking Workshop",
-      date: "2024-06-20",
-      time: "2:00 PM - 6:00 PM",
-      location: "Brisbane Technology Park",
-      type: "Workshop",
-      category: "Finance",
-      attendees: 150,
-      description: "Hands-on workshop covering digital banking technologies and customer experience design.",
-      organizer: "Australian Banking Association"
-    },
-    {
-      id: "4",
-      title: "5G & IoT Innovation Showcase",
-      date: "2024-06-22",
-      time: "11:00 AM - 3:00 PM",
-      location: "Perth Convention Centre",
-      type: "Showcase",
-      category: "Telecoms",
-      attendees: 250,
-      description: "Showcasing cutting-edge 5G applications and IoT solutions for enterprise and consumer markets.",
-      organizer: "Communications Alliance"
-    },
-    {
-      id: "5",
-      title: "RegTech & Compliance Forum",
-      date: "2024-06-25",
-      time: "9:30 AM - 4:30 PM",
-      location: "Adelaide Convention Centre",
-      type: "Forum",
-      category: "Finance",
-      attendees: 200,
-      description: "Regulatory technology solutions for financial services compliance and risk management.",
-      organizer: "RegTech Association"
-    },
-    {
-      id: "6",
-      title: "Satellite Communications Conference",
-      date: "2024-06-28",
-      time: "8:00 AM - 6:00 PM",
-      location: "Canberra Convention Centre",
-      type: "Conference",
-      category: "Telecoms",
-      attendees: 400,
-      description: "Latest developments in satellite technology and space communications infrastructure.",
-      organizer: "Space Industry Association"
-    }
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading events...</div>
+        </div>
+      </div>
+    );
+  }
 
-  const categories = ["All", "Finance", "Telecoms"];
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-red-500">Error loading events: {error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  const categories = ["All", ...Array.from(new Set(events.map(event => event.category)))];
 
   const filteredEvents = selectedCategory === "All" 
     ? events 
@@ -113,7 +49,7 @@ const Events = () => {
       
       {/* Hero Section */}
       <div className="relative">
-        <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-purple-800 text-white py-16">
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white py-16">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between">
               <div>
