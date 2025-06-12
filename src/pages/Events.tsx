@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { CalendarDays, MapPin, Clock, Users, Filter } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { EventSubmissionForm } from "@/components/events/EventSubmissionForm";
 import { EventSearch } from "@/components/events/EventSearch";
+import { supabase } from "@/integrations/supabase/client";
 
 const Events = () => {
   const {
@@ -38,7 +40,7 @@ const Events = () => {
   };
 
   // Load all events on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     fetchAllEvents();
   }, []);
 
