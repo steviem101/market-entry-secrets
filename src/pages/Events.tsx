@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -23,9 +22,29 @@ const Events = () => {
   } = useEvents();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [allEvents, setAllEvents] = useState<any[]>([]);
+
+  // Fetch all events for featured section (unfiltered)
+  const fetchAllEvents = async () => {
+    try {
+      const { data } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+      setAllEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching all events:', error);
+    }
+  };
+
+  // Load all events on component mount
+  React.useEffect(() => {
+    fetchAllEvents();
+  }, []);
 
   const handleEventSubmitted = () => {
     refetch();
+    fetchAllEvents(); // Also refresh the all events for featured section
   };
 
   const handleSearch = (query: string) => {
@@ -59,7 +78,7 @@ const Events = () => {
   const categories = ["All", ...Array.from(new Set(events.map(event => event.category)))];
   const filteredEvents = selectedCategory === "All" ? events : events.filter(event => event.category === selectedCategory);
   const upcomingEvents = filteredEvents.slice(0, 3);
-  const featuredEvents = events.slice(0, 3);
+  const featuredEvents = allEvents.slice(0, 3); // Always use unfiltered events for featured section
 
   return <div className="min-h-screen bg-background">
       <Navigation />
