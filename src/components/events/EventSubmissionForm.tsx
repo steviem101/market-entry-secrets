@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
 const eventFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -25,6 +26,7 @@ const eventFormSchema = z.object({
 });
 
 type EventFormData = z.infer<typeof eventFormSchema>;
+type EventInsert = Database['public']['Tables']['events']['Insert'];
 
 interface EventSubmissionFormProps {
   onEventSubmitted?: () => void;
@@ -54,9 +56,22 @@ export const EventSubmissionForm: React.FC<EventSubmissionFormProps> = ({ onEven
     setIsSubmitting(true);
     
     try {
+      // Transform the form data to match the database schema exactly
+      const eventData: EventInsert = {
+        title: data.title,
+        description: data.description,
+        date: data.date,
+        time: data.time,
+        location: data.location,
+        type: data.type,
+        category: data.category,
+        attendees: data.attendees,
+        organizer: data.organizer,
+      };
+
       const { error } = await supabase
         .from('events')
-        .insert(data);
+        .insert(eventData);
 
       if (error) {
         throw error;
