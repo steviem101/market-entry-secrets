@@ -100,7 +100,7 @@ export const EventSubmissionForm: React.FC<EventSubmissionFormProps> = ({ onEven
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-blue-600 text-white hover:bg-blue-700">
+        <Button className="bg-sky-400 text-white hover:bg-sky-500">
           <Plus className="w-4 h-4 mr-2" />
           Submit Event
         </Button>
@@ -262,7 +262,7 @@ export const EventSubmissionForm: React.FC<EventSubmissionFormProps> = ({ onEven
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="bg-blue-600 text-white hover:bg-blue-700"
+                className="bg-sky-400 text-white hover:bg-sky-500"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Event'}
               </Button>

@@ -190,29 +190,34 @@ const Events = () => {
         <div className="flex gap-8">
           {/* Left Column - Events List */}
           <div className="flex-1">
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h3 className="text-2xl font-bold text-foreground">Events</h3>
-              <div className="flex flex-wrap items-center gap-4">
-                <Button variant="outline" size="sm">
-                  <CalendarDays className="w-4 h-4 mr-2" />
-                  Calendar View
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Filter className="w-4 h-4 mr-2" />
-                  List View
-                </Button>
-                <EventSubmissionForm onEventSubmitted={handleEventSubmitted} />
-              </div>
-            </div>
-
-            {/* Search Bar */}
+            {/* Events Header */}
             <div className="mb-6">
-              <EventSearch
-                onSearch={handleSearch}
-                onClear={handleClearSearch}
-                isSearching={isSearching}
-              />
+              <h3 className="text-2xl font-bold text-foreground mb-4">Events</h3>
+              
+              {/* Controls Row */}
+              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                {/* Search Bar */}
+                <div className="flex-1 max-w-md">
+                  <EventSearch
+                    onSearch={handleSearch}
+                    onClear={handleClearSearch}
+                    isSearching={isSearching}
+                  />
+                </div>
+                
+                {/* Buttons */}
+                <div className="flex flex-wrap items-center gap-4">
+                  <Button variant="outline" size="sm">
+                    <CalendarDays className="w-4 h-4 mr-2" />
+                    Calendar View
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    List View
+                  </Button>
+                  <EventSubmissionForm onEventSubmitted={handleEventSubmitted} />
+                </div>
+              </div>
             </div>
 
             {/* Category Filters */}
