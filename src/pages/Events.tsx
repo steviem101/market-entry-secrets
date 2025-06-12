@@ -1,11 +1,12 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarDays, MapPin, Clock, Users, Plus, Search, Filter } from "lucide-react";
+import { Clock } from "lucide-react";
+import EventsHero from "@/components/events/EventsHero";
+import EventsStats from "@/components/events/EventsStats";
+import EventFilters from "@/components/events/EventFilters";
+import EventCard from "@/components/events/EventCard";
+import EventsSidebar from "@/components/events/EventsSidebar";
 
 interface Event {
   id: string;
@@ -21,7 +22,6 @@ interface Event {
 }
 
 const Events = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   const events: Event[] = [
@@ -111,54 +111,8 @@ const Events = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      {/* Hero Section - Updated with blue theme */}
-      <div className="relative">
-        <div className="bg-gradient-to-r from-primary via-blue-500 to-primary text-white py-16">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-5xl font-bold mb-6">Your Gateway to the</h1>
-              <h2 className="text-5xl font-bold mb-6 text-primary-foreground">Australian Market</h2>
-              <p className="text-xl mb-8 opacity-90">
-                Connect with vetted service providers, learn from success stories, and accelerate your market entry with expert guidance.
-              </p>
-              <div className="flex justify-center">
-                <Button className="bg-white text-primary hover:bg-gray-100 px-8 py-3 text-lg">
-                  Submit Event
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Stats Section */}
-        <div className="bg-white py-12">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
-              <div>
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CalendarDays className="w-8 h-8 text-primary" />
-                </div>
-                <div className="text-3xl font-bold text-foreground">500+</div>
-                <div className="text-muted-foreground">Upcoming Events</div>
-              </div>
-              <div>
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-primary" />
-                </div>
-                <div className="text-3xl font-bold text-foreground">1,200+</div>
-                <div className="text-muted-foreground">Industry Leaders</div>
-              </div>
-              <div>
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MapPin className="w-8 h-8 text-primary" />
-                </div>
-                <div className="text-3xl font-bold text-foreground">94%</div>
-                <div className="text-muted-foreground">Networking Success Rate</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <EventsHero />
+      <EventsStats />
 
       <div className="container mx-auto px-4 py-8">
         {/* Event Info */}
@@ -177,161 +131,23 @@ const Events = () => {
         <div className="flex gap-8">
           {/* Left Column - Events List */}
           <div className="flex-1">
-            {/* Controls */}
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-foreground">Events</h3>
-              <div className="flex items-center gap-4">
-                <Button variant="outline" size="sm">
-                  <CalendarDays className="w-4 h-4 mr-2" />
-                  Calendar View
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Filter className="w-4 h-4 mr-2" />
-                  List View
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Search className="w-4 h-4 mr-2" />
-                  Search
-                </Button>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Submit Event
-                </Button>
-              </div>
-            </div>
-
-            {/* Category Filters */}
-            <div className="flex gap-2 mb-6">
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category)}
-                  className="rounded-full"
-                >
-                  {category}
-                  {category !== "All" && (
-                    <Badge variant="secondary" className="ml-2">
-                      {events.filter(e => e.category === category).length}
-                    </Badge>
-                  )}
-                </Button>
-              ))}
-            </div>
-
-            {/* Location Filters */}
-            <div className="flex gap-2 mb-8 flex-wrap">
-              <Badge variant="outline">Sydney 8</Badge>
-              <Badge variant="outline">Melbourne 6</Badge>
-              <Badge variant="outline">Brisbane 4</Badge>
-              <Badge variant="outline">Perth 3</Badge>
-              <Badge variant="outline">Adelaide 2</Badge>
-              <Badge variant="outline">Canberra 1</Badge>
-              <Badge variant="outline">+2</Badge>
-            </div>
+            <EventFilters 
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              events={events}
+            />
 
             {/* Events List */}
             <div className="space-y-6">
               {filteredEvents.map((event) => (
-                <Card key={event.id} className="hover:shadow-md transition-shadow border-l-4 border-l-primary">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-sm font-medium text-muted-foreground">
-                            {new Date(event.date).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric' 
-                            })} • {new Date(event.date).toLocaleDateString('en-US', { 
-                              weekday: 'long' 
-                            })}
-                          </span>
-                          <Badge variant="secondary" className="bg-primary/10 text-primary">{event.category}</Badge>
-                          <Badge variant="outline">{event.type}</Badge>
-                        </div>
-                        
-                        <h3 className="text-xl font-semibold text-foreground mb-2">
-                          {event.title}
-                        </h3>
-                        
-                        <p className="text-muted-foreground mb-3">
-                          {event.description}
-                        </p>
-                        
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>{event.time}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            <span>{event.location}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 h-4" />
-                            <span>{event.attendees} attending</span>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-3 text-sm text-muted-foreground">
-                          Organized by {event.organizer}
-                        </div>
-                      </div>
-                      
-                      <Button className="ml-4 bg-primary text-primary-foreground hover:bg-primary/90">
-                        Register
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <EventCard key={event.id} event={event} />
               ))}
             </div>
           </div>
 
           {/* Right Column - Calendar */}
-          <div className="w-80">
-            <div className="sticky top-8">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold">June</h3>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm">‹</Button>
-                      <Button variant="ghost" size="sm">›</Button>
-                    </div>
-                  </div>
-                  
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="rounded-md border-0"
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Upcoming Events */}
-              <Card className="mt-6">
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-4">Upcoming Events</h3>
-                  <div className="space-y-3">
-                    {upcomingEvents.map((event) => (
-                      <div key={event.id} className="border-l-2 border-primary pl-3">
-                        <div className="text-sm font-medium">{event.title}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(event.date).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })} • {event.time.split(' - ')[0]}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          <EventsSidebar upcomingEvents={upcomingEvents} />
         </div>
       </div>
     </div>
