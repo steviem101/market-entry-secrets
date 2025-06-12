@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
@@ -32,18 +31,14 @@ const Navigation = () => {
                 <NavigationMenuTrigger>Ecosystem</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="grid gap-3 p-6 w-[450px]">
-                    <div className="row-span-4">
-                      <NavigationMenuLink asChild>
-                        <Link to="/service-providers" className="flex h-full w-full select-none flex-col justify-end rounded-md p-6 no-underline outline-none focus:shadow-md">
-                          <div className="mb-2 mt-4 text-lg font-medium">
-                            Service Providers
-                          </div>
-                          <p className="text-sm leading-tight text-muted-foreground">
-                            Browse all market entry service providers
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </div>
+                    <NavigationMenuLink asChild>
+                      <Link to="/service-providers" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                        <div className="text-sm font-medium leading-none">Service Providers</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          Browse all market entry service providers
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
                     <NavigationMenuLink asChild>
                       <Link to="/innovation-ecosystem" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
                         <div className="text-sm font-medium leading-none">Innovation Ecosystem</div>
