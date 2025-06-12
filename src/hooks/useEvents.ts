@@ -19,20 +19,31 @@ export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(async (query?: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let queryBuilder = supabase
         .from('events')
         .select('*')
         .order('date', { ascending: true });
+
+      // Add search functionality
+      if (query && query.trim()) {
+        queryBuilder = queryBuilder.or(
+          `title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%,organizer.ilike.%${query}%`
+        );
+      }
+
+      const { data, error } = await queryBuilder;
 
       if (error) {
         throw error;
       }
 
       setEvents(data || []);
+      setSearchQuery(query || "");
     } catch (err) {
       console.error('Error fetching events:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch events');
@@ -45,5 +56,21 @@ export const useEvents = () => {
     fetchEvents();
   }, [fetchEvents]);
 
-  return { events, loading, error, refetch: fetchEvents };
+  const searchEvents = useCallback((query: string) => {
+    fetchEvents(query);
+  }, [fetchEvents]);
+
+  const clearSearch = useCallback(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  return { 
+    events, 
+    loading, 
+    error, 
+    refetch: fetchEvents,
+    searchEvents,
+    clearSearch,
+    isSearching: !!searchQuery
+  };
 };

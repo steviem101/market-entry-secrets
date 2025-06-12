@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -5,21 +6,38 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { CalendarDays, MapPin, Clock, Users, Search, Filter } from "lucide-react";
+import { CalendarDays, MapPin, Clock, Users, Filter } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { EventSubmissionForm } from "@/components/events/EventSubmissionForm";
+import { EventSearch } from "@/components/events/EventSearch";
+
 const Events = () => {
   const {
     events,
     loading,
     error,
-    refetch
+    refetch,
+    searchEvents,
+    clearSearch,
+    isSearching
   } = useEvents();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
   const handleEventSubmitted = () => {
     refetch();
   };
+
+  const handleSearch = (query: string) => {
+    searchEvents(query);
+    setSelectedCategory("All"); // Reset category filter when searching
+  };
+
+  const handleClearSearch = () => {
+    clearSearch();
+    setSelectedCategory("All");
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-background">
         <Navigation />
@@ -28,6 +46,7 @@ const Events = () => {
         </div>
       </div>;
   }
+
   if (error) {
     return <div className="min-h-screen bg-background">
         <Navigation />
@@ -36,10 +55,12 @@ const Events = () => {
         </div>
       </div>;
   }
+
   const categories = ["All", ...Array.from(new Set(events.map(event => event.category)))];
   const filteredEvents = selectedCategory === "All" ? events : events.filter(event => event.category === selectedCategory);
   const upcomingEvents = filteredEvents.slice(0, 3);
   const featuredEvents = events.slice(0, 3);
+
   return <div className="min-h-screen bg-background">
       <Navigation />
       
@@ -160,12 +181,17 @@ const Events = () => {
                   <Filter className="w-4 h-4 mr-2" />
                   List View
                 </Button>
-                <Button variant="outline" size="sm">
-                  <Search className="w-4 h-4 mr-2" />
-                  Search
-                </Button>
                 <EventSubmissionForm onEventSubmitted={handleEventSubmitted} />
               </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mb-6">
+              <EventSearch
+                onSearch={handleSearch}
+                onClear={handleClearSearch}
+                isSearching={isSearching}
+              />
             </div>
 
             {/* Category Filters */}
@@ -191,57 +217,65 @@ const Events = () => {
 
             {/* Events List */}
             <div className="space-y-6">
-              {filteredEvents.map(event => <Card key={event.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-sm font-medium text-muted-foreground">
-                            {new Date(event.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric'
-                        })} • {new Date(event.date).toLocaleDateString('en-US', {
-                          weekday: 'long'
-                        })}
-                          </span>
-                          <Badge variant="secondary">{event.category}</Badge>
-                          <Badge variant="outline">{event.type}</Badge>
+              {filteredEvents.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {isSearching ? "No events found matching your search." : "No events found."}
+                  </p>
+                </div>
+              ) : (
+                filteredEvents.map(event => <Card key={event.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-sm font-medium text-muted-foreground">
+                              {new Date(event.date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })} • {new Date(event.date).toLocaleDateString('en-US', {
+                            weekday: 'long'
+                          })}
+                            </span>
+                            <Badge variant="secondary">{event.category}</Badge>
+                            <Badge variant="outline">{event.type}</Badge>
+                          </div>
+                          
+                          <h3 className="text-xl font-semibold text-foreground mb-2">
+                            {event.title}
+                          </h3>
+                          
+                          <p className="text-muted-foreground mb-3">
+                            {event.description}
+                          </p>
+                          
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              <span>{event.time}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              <span>{event.location}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users className="w-4 h-4" />
+                              <span>{event.attendees} attending</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3 text-sm text-muted-foreground">
+                            Organized by {event.organizer}
+                          </div>
                         </div>
                         
-                        <h3 className="text-xl font-semibold text-foreground mb-2">
-                          {event.title}
-                        </h3>
-                        
-                        <p className="text-muted-foreground mb-3">
-                          {event.description}
-                        </p>
-                        
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>{event.time}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            <span>{event.location}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 h-4" />
-                            <span>{event.attendees} attending</span>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-3 text-sm text-muted-foreground">
-                          Organized by {event.organizer}
-                        </div>
+                        <Button className="ml-4">
+                          Register
+                        </Button>
                       </div>
-                      
-                      <Button className="ml-4">
-                        Register
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>)}
+                    </CardContent>
+                  </Card>)
+              )}
             </div>
           </div>
 
@@ -285,4 +319,5 @@ const Events = () => {
       </div>
     </div>;
 };
+
 export default Events;
