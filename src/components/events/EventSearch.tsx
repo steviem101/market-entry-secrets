@@ -17,15 +17,20 @@ export const EventSearch = ({ onSearch, onClear, isSearching }: EventSearchProps
     const value = e.target.value;
     setSearchQuery(value);
     
+    console.log('Search input changed:', value); // Debug log
+    
     // Auto-filter as user types
     if (value.trim()) {
+      console.log('Triggering search for:', value.trim()); // Debug log
       onSearch(value.trim());
     } else {
+      console.log('Clearing search'); // Debug log
       onClear();
     }
   };
 
   const handleClear = () => {
+    console.log('Clear button clicked'); // Debug log
     setSearchQuery("");
     onClear();
   };
