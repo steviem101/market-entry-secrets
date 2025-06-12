@@ -13,19 +13,21 @@ interface EventSearchProps {
 export const EventSearch = ({ onSearch, onClear, isSearching }: EventSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSearch = () => {
-    onSearch(searchQuery.trim());
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    // Auto-filter as user types
+    if (value.trim()) {
+      onSearch(value.trim());
+    } else {
+      onClear();
+    }
   };
 
   const handleClear = () => {
     setSearchQuery("");
     onClear();
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
   };
 
   return (
@@ -35,8 +37,7 @@ export const EventSearch = ({ onSearch, onClear, isSearching }: EventSearchProps
         <Input
           placeholder="Search events by title, description, or location..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onChange={handleInputChange}
           className="pl-10 pr-10"
         />
         {searchQuery && (
@@ -50,13 +51,9 @@ export const EventSearch = ({ onSearch, onClear, isSearching }: EventSearchProps
           </Button>
         )}
       </div>
-      <Button onClick={handleSearch} disabled={!searchQuery.trim()}>
-        <Search className="w-4 h-4 mr-2" />
-        Search
-      </Button>
       {isSearching && (
         <Button variant="outline" onClick={handleClear}>
-          Clear
+          Clear All
         </Button>
       )}
     </div>
