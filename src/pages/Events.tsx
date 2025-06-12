@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CalendarDays, MapPin, Clock, Users, Search, Filter } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
 import { EventSubmissionForm } from "@/components/events/EventSubmissionForm";
@@ -47,6 +48,7 @@ const Events = () => {
     : events.filter(event => event.category === selectedCategory);
 
   const upcomingEvents = filteredEvents.slice(0, 3);
+  const featuredEvents = events.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
@@ -90,10 +92,72 @@ const Events = () => {
             <Clock className="w-4 h-4" />
             <span>Times in GMT+10 — 5:15 PM</span>
           </div>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground mb-8">
             Your go-to for all the market entry events happening in Australia. Hosting an event for founders, operators, investors or community builders? Submit it here. 
             Collaborate? <span className="text-primary">hello@marketentrysecrets.com.au</span>
           </p>
+
+          {/* Featured Events Carousel */}
+          {featuredEvents.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold text-foreground mb-6">Featured Events</h3>
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {featuredEvents.map((event) => (
+                    <CarouselItem key={event.id} className="md:basis-1/2 lg:basis-1/3">
+                      <Card className="h-full hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Badge variant="secondary">{event.category}</Badge>
+                            <Badge variant="outline">{event.type}</Badge>
+                          </div>
+                          
+                          <h4 className="text-lg font-semibold text-foreground mb-2 line-clamp-2">
+                            {event.title}
+                          </h4>
+                          
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+                            {event.description}
+                          </p>
+                          
+                          <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                            <div className="flex items-center gap-2">
+                              <CalendarDays className="w-4 h-4" />
+                              <span>
+                                {new Date(event.date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric',
+                                  weekday: 'short'
+                                })}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              <span>{event.time}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4" />
+                              <span className="line-clamp-1">{event.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4" />
+                              <span>{event.attendees} attending</span>
+                            </div>
+                          </div>
+                          
+                          <Button className="w-full" size="sm">
+                            Register
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-8">
