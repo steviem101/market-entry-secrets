@@ -34,7 +34,7 @@ const Navigation = () => {
                   <div className="grid gap-3 p-6 w-[450px]">
                     <div className="row-span-4">
                       <NavigationMenuLink asChild>
-                        <Link to="/service-providers" className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md">
+                        <Link to="/service-providers" className="flex h-full w-full select-none flex-col justify-end rounded-md p-6 no-underline outline-none focus:shadow-md">
                           <div className="mb-2 mt-4 text-lg font-medium">
                             Service Providers
                           </div>
