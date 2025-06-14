@@ -18,6 +18,25 @@ export interface ChatConversation {
   updated_at: string;
 }
 
+// Type for database response
+interface DatabaseMessage {
+  id: string;
+  role: string;
+  content: string;
+  metadata?: any;
+  created_at: string;
+  conversation_id: string;
+}
+
+// Helper function to convert database message to ChatMessage
+const convertToChatMessage = (dbMessage: DatabaseMessage): ChatMessage => ({
+  id: dbMessage.id,
+  role: dbMessage.role as 'user' | 'assistant' | 'system',
+  content: dbMessage.content,
+  metadata: dbMessage.metadata,
+  created_at: dbMessage.created_at
+});
+
 export const useAIChat = () => {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<ChatConversation | null>(null);
@@ -85,7 +104,8 @@ export const useAIChat = () => {
 
       if (userError) throw userError;
 
-      setMessages(prev => [...prev, userMessage]);
+      const convertedUserMessage = convertToChatMessage(userMessage as DatabaseMessage);
+      setMessages(prev => [...prev, convertedUserMessage]);
 
       // TODO: This is where you'll integrate your custom GPT
       // For now, we'll add a placeholder assistant response
@@ -104,7 +124,8 @@ export const useAIChat = () => {
 
       if (assistantError) throw assistantError;
 
-      setMessages(prev => [...prev, assistantMessage]);
+      const convertedAssistantMessage = convertToChatMessage(assistantMessage as DatabaseMessage);
+      setMessages(prev => [...prev, convertedAssistantMessage]);
 
     } catch (err) {
       console.error('Error sending message:', err);
@@ -138,7 +159,8 @@ export const useAIChat = () => {
       if (messagesError) throw messagesError;
 
       setCurrentConversation(conversation);
-      setMessages(messages || []);
+      const convertedMessages = (messages || []).map(msg => convertToChatMessage(msg as DatabaseMessage));
+      setMessages(convertedMessages);
     } catch (err) {
       console.error('Error loading conversation:', err);
       setError(err instanceof Error ? err.message : 'Failed to load conversation');
