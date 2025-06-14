@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { ArrowRight, Users, Building2, TrendingUp } from "lucide-react";
+import { ArrowRight, Users, Building2, TrendingUp, Calendar, Award, Rocket } from "lucide-react";
 import CompanyCard, { Company } from "@/components/CompanyCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
@@ -53,7 +53,10 @@ const Index = () => {
   const featuredStats = [
     { icon: Building2, label: "Service Providers", value: "500+" },
     { icon: Users, label: "Success Stories", value: "1,200+" },
-    { icon: TrendingUp, label: "Market Entry Rate", value: "94%" }
+    { icon: TrendingUp, label: "Market Entry Rate", value: "94%" },
+    { icon: Calendar, label: "Monthly Events", value: "50+" },
+    { icon: Award, label: "Expert Mentors", value: "200+" },
+    { icon: Rocket, label: "Innovation Hubs", value: "25+" }
   ];
 
   return (
@@ -78,7 +81,7 @@ const Index = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-6xl mx-auto">
               {featuredStats.map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-3">
