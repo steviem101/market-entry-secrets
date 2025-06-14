@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Filter, Grid3X3 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import CompanyCard, { Company } from "@/components/CompanyCard";
+import CompanyCard, { Company, ExperienceTile, ContactPerson } from "@/components/CompanyCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
 import { useBookmarks } from "@/hooks/useBookmarks";
@@ -72,20 +72,40 @@ const TradeInvestmentAgencies = () => {
 
       if (error) throw error;
 
-      const transformedData: Company[] = data.map((agency: TradeAgency) => ({
-        id: agency.id,
-        name: agency.name,
-        description: agency.description,
-        location: agency.location,
-        founded: agency.founded,
-        employees: agency.employees,
-        services: agency.services || [],
-        website: agency.website || undefined,
-        contact: agency.contact || undefined,
-        logo: agency.logo || undefined,
-        experienceTiles: Array.isArray(agency.experience_tiles) ? agency.experience_tiles : [],
-        contactPersons: Array.isArray(agency.contact_persons) ? agency.contact_persons : []
-      }));
+      const transformedData: Company[] = data.map((agency: TradeAgency) => {
+        // Type-safe conversion of JSON fields
+        let experienceTiles: ExperienceTile[] = [];
+        let contactPersons: ContactPerson[] = [];
+
+        // Parse experience_tiles if it exists and is an array
+        if (agency.experience_tiles && Array.isArray(agency.experience_tiles)) {
+          experienceTiles = (agency.experience_tiles as any[]).filter(tile => 
+            tile && typeof tile === 'object' && tile.id && tile.name
+          ) as ExperienceTile[];
+        }
+
+        // Parse contact_persons if it exists and is an array
+        if (agency.contact_persons && Array.isArray(agency.contact_persons)) {
+          contactPersons = (agency.contact_persons as any[]).filter(person => 
+            person && typeof person === 'object' && person.id && person.name
+          ) as ContactPerson[];
+        }
+
+        return {
+          id: agency.id,
+          name: agency.name,
+          description: agency.description,
+          location: agency.location,
+          founded: agency.founded,
+          employees: agency.employees,
+          services: agency.services || [],
+          website: agency.website || undefined,
+          contact: agency.contact || undefined,
+          logo: agency.logo || undefined,
+          experienceTiles,
+          contactPersons
+        };
+      });
 
       setAgencies(transformedData);
     } catch (error) {
