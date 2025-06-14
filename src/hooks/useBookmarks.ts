@@ -27,7 +27,14 @@ export const useBookmarks = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setBookmarks(data || []);
+      
+      // Type assertion to handle the database response
+      const typedBookmarks = (data || []).map(item => ({
+        ...item,
+        content_type: item.content_type as 'event' | 'community_member' | 'content'
+      })) as Bookmark[];
+      
+      setBookmarks(typedBookmarks);
     } catch (error) {
       console.error('Error fetching bookmarks:', error);
       toast({
@@ -61,6 +68,7 @@ export const useBookmarks = () => {
       const { error } = await supabase
         .from('bookmarks')
         .insert({
+          user_id: user.id,
           content_type: contentType,
           content_id: contentId,
           content_title: title,
