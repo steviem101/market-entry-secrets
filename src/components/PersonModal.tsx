@@ -19,6 +19,28 @@ const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) =
 
   const displayName = person.isAnonymous ? person.title : person.name;
 
+  // Placeholder images for experience tiles (company logos/work samples)
+  const getExperienceTileImage = (index: number) => {
+    const images = [
+      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1558655146-d09347e92766?w=150&h=150&fit=crop&crop=center"
+    ];
+    return images[index % images.length];
+  };
+
+  // Placeholder images for person profile pictures
+  const getPersonImage = (index: number) => {
+    const images = [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+    ];
+    return images[index % images.length];
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -32,7 +54,7 @@ const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) =
                   </AvatarFallback>
                 ) : (
                   <>
-                    <AvatarImage src={person.image} alt={person.name} />
+                    <AvatarImage src={person.image || getPersonImage(parseInt(person.id) || 0)} alt={person.name} />
                     <AvatarFallback className="bg-primary/10 text-primary text-xl">
                       {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
@@ -106,10 +128,10 @@ const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) =
             <div>
               <h3 className="text-lg font-semibold mb-3">Experience with:</h3>
               <div className="grid grid-cols-4 gap-3">
-                {person.experienceTiles.map((tile) => (
+                {person.experienceTiles.map((tile, index) => (
                   <div key={tile.id} className="flex flex-col items-center p-3 bg-white border rounded-lg">
                     <img 
-                      src={tile.logo} 
+                      src={tile.logo || getExperienceTileImage(index)} 
                       alt={tile.name}
                       className="w-12 h-12 object-contain mb-2"
                     />

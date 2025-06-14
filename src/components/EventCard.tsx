@@ -1,7 +1,8 @@
 
-import { Calendar, MapPin, Users, Clock, Building } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Building, User } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Event } from "@/hooks/useEvents";
 
@@ -10,6 +11,17 @@ interface EventCardProps {
 }
 
 export const EventCard = ({ event }: EventCardProps) => {
+  // Placeholder images for event organizers
+  const getOrganizerImage = (index: number) => {
+    const images = [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+    ];
+    return images[index % images.length];
+  };
+
   return (
     <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <CardHeader className="pb-3">
@@ -66,8 +78,13 @@ export const EventCard = ({ event }: EventCardProps) => {
             <MapPin className="w-3 h-3" />
             <span className="truncate">{event.location}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Building className="w-3 h-3" />
+          <div className="flex items-center gap-2">
+            <Avatar className="w-5 h-5">
+              <AvatarImage src={getOrganizerImage(parseInt(event.id) || 0)} alt={event.organizer} />
+              <AvatarFallback className="bg-primary/10 text-primary">
+                <User className="w-3 h-3" />
+              </AvatarFallback>
+            </Avatar>
             <span className="truncate">{event.organizer}</span>
           </div>
           <div className="flex items-center gap-1">

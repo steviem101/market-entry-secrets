@@ -1,3 +1,4 @@
+
 import { User, MapPin, Calendar, Globe, Phone, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,28 @@ const PersonCard = ({ person, onViewProfile, onContact }: PersonCardProps) => {
   const displayName = person.isAnonymous ? person.title : person.name;
   const shouldBlurImage = person.isAnonymous;
 
+  // Placeholder images for experience tiles (company logos/work samples)
+  const getExperienceTileImage = (index: number) => {
+    const images = [
+      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1558655146-d09347e92766?w=150&h=150&fit=crop&crop=center"
+    ];
+    return images[index % images.length];
+  };
+
+  // Placeholder images for person profile pictures
+  const getPersonImage = (index: number) => {
+    const images = [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+    ];
+    return images[index % images.length];
+  };
+
   return (
     <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="flex items-start gap-4 mb-4">
@@ -47,7 +70,7 @@ const PersonCard = ({ person, onViewProfile, onContact }: PersonCardProps) => {
           ) : (
             <>
               <AvatarImage 
-                src={person.image} 
+                src={person.image || getPersonImage(parseInt(person.id) || 0)} 
                 alt={person.name}
                 className={shouldBlurImage ? "blur-sm" : ""}
               />
@@ -112,10 +135,10 @@ const PersonCard = ({ person, onViewProfile, onContact }: PersonCardProps) => {
         <div className="mb-4">
           <h4 className="text-sm font-medium text-muted-foreground mb-2">Experience with:</h4>
           <div className="flex gap-2 overflow-x-auto">
-            {person.experienceTiles.slice(0, 3).map((tile) => (
+            {person.experienceTiles.slice(0, 3).map((tile, index) => (
               <div key={tile.id} className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg p-1">
                 <img 
-                  src={tile.logo} 
+                  src={tile.logo || getExperienceTileImage(index)} 
                   alt={tile.name}
                   className="w-full h-full object-contain"
                 />
