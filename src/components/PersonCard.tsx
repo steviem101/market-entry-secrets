@@ -1,8 +1,8 @@
-
 import { User, MapPin, Calendar, Globe, Phone, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { BookmarkButton } from "@/components/BookmarkButton";
 
 export interface ExperienceTile {
   id: string;
@@ -58,17 +58,35 @@ const PersonCard = ({ person, onViewProfile, onContact }: PersonCardProps) => {
           )}
         </Avatar>
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-semibold text-foreground mb-1 truncate">
-            {displayName}
-          </h3>
-          {!person.isAnonymous && (
-            <p className="text-primary font-medium text-sm mb-1 truncate">
-              {person.title}
-            </p>
-          )}
-          <div className="flex items-center text-muted-foreground text-sm">
-            <MapPin className="w-4 h-4 mr-1" />
-            {person.location}
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xl font-semibold text-foreground mb-1 truncate">
+                {displayName}
+              </h3>
+              {!person.isAnonymous && (
+                <p className="text-primary font-medium text-sm mb-1 truncate">
+                  {person.title}
+                </p>
+              )}
+              <div className="flex items-center text-muted-foreground text-sm">
+                <MapPin className="w-4 h-4 mr-1" />
+                {person.location}
+              </div>
+            </div>
+            <BookmarkButton
+              contentType="community_member"
+              contentId={person.id}
+              title={displayName}
+              description={person.description}
+              metadata={{
+                title: person.title,
+                company: person.company,
+                location: person.location,
+                specialties: person.specialties
+              }}
+              size="sm"
+              variant="ghost"
+            />
           </div>
         </div>
       </div>

@@ -1,11 +1,11 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Filter, Grid3X3 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import CompanyCard, { Company } from "@/components/CompanyCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
+import { useBookmarks } from "@/hooks/useBookmarks";
 import { toast } from "sonner";
 
 const ecosystemEntities: Company[] = [
@@ -170,6 +170,11 @@ const InnovationEcosystem = () => {
   const [selectedEntity, setSelectedEntity] = useState<Company | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
+  const { fetchBookmarks } = useBookmarks();
+
+  useEffect(() => {
+    fetchBookmarks();
+  }, [fetchBookmarks]);
 
   const filteredEntities = ecosystemEntities.filter(entity => {
     const matchesSearch = entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

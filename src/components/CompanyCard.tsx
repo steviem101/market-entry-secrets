@@ -2,6 +2,7 @@ import { Building2, MapPin, Users, Calendar, Globe, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { BookmarkButton } from "@/components/BookmarkButton";
 
 export interface ContactPerson {
   id: string;
@@ -45,12 +46,31 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
           <Building2 className="w-8 h-8 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-semibold text-foreground mb-1 truncate">
-            {company.name}
-          </h3>
-          <div className="flex items-center text-muted-foreground text-sm mb-2">
-            <MapPin className="w-4 h-4 mr-1" />
-            {company.location}
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xl font-semibold text-foreground mb-1 truncate">
+                {company.name}
+              </h3>
+              <div className="flex items-center text-muted-foreground text-sm mb-2">
+                <MapPin className="w-4 h-4 mr-1" />
+                {company.location}
+              </div>
+            </div>
+            <BookmarkButton
+              contentType="community_member"
+              contentId={company.id}
+              title={company.name}
+              description={company.description}
+              metadata={{
+                company: company.name,
+                location: company.location,
+                services: company.services,
+                founded: company.founded,
+                employees: company.employees
+              }}
+              size="sm"
+              variant="ghost"
+            />
           </div>
         </div>
       </div>
