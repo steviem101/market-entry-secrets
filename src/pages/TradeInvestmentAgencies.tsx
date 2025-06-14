@@ -10,22 +10,10 @@ import { useBookmarks } from "@/hooks/useBookmarks";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface TradeAgency {
-  id: string;
-  name: string;
-  description: string;
-  location: string;
-  founded: string;
-  employees: string;
-  services: string[];
-  website?: string;
-  contact?: string;
-  logo?: string;
-  basic_info?: string;
-  why_work_with_us?: string;
-  experience_tiles?: any[];
-  contact_persons?: any[];
-}
+// Use the Supabase-generated type directly
+import { Tables } from "@/integrations/supabase/types";
+
+type TradeAgency = Tables<'trade_investment_agencies'>;
 
 const serviceCategories = [
   { id: "export", name: "Export Promotion", count: 4 },
@@ -91,12 +79,12 @@ const TradeInvestmentAgencies = () => {
         location: agency.location,
         founded: agency.founded,
         employees: agency.employees,
-        services: agency.services,
-        website: agency.website,
-        contact: agency.contact,
-        logo: agency.logo,
-        experienceTiles: agency.experience_tiles || [],
-        contactPersons: agency.contact_persons || []
+        services: agency.services || [],
+        website: agency.website || undefined,
+        contact: agency.contact || undefined,
+        logo: agency.logo || undefined,
+        experienceTiles: Array.isArray(agency.experience_tiles) ? agency.experience_tiles : [],
+        contactPersons: Array.isArray(agency.contact_persons) ? agency.contact_persons : []
       }));
 
       setAgencies(transformedData);
