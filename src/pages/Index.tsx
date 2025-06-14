@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ArrowRight, Users, Building2, TrendingUp } from "lucide-react";
 import CompanyCard, { Company } from "@/components/CompanyCard";
@@ -5,6 +6,7 @@ import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
 import Navigation from "@/components/Navigation";
 import { MasterSearch } from "@/components/MasterSearch";
+import { BookmarksSection } from "@/components/BookmarksSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -90,6 +92,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Bookmarks Section */}
+      <BookmarksSection />
 
       {/* Featured Categories */}
       <section className="py-16 bg-card">

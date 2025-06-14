@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, FileText, MapPin, Building } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BookmarkButton } from "./BookmarkButton";
 
 interface MasterSearchResultsProps {
   results: SearchResult[];
@@ -94,9 +95,20 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
                         </CardDescription>
                       </div>
                     </div>
-                    <Badge variant={getTypeBadgeVariant(result.type)} className="text-xs ml-2 flex-shrink-0">
-                      {result.type.replace('_', ' ')}
-                    </Badge>
+                    <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                      <BookmarkButton
+                        contentType={result.type}
+                        contentId={result.id}
+                        title={result.title}
+                        description={result.description}
+                        metadata={result.metadata}
+                        size="sm"
+                        variant="ghost"
+                      />
+                      <Badge variant={getTypeBadgeVariant(result.type)} className="text-xs">
+                        {result.type.replace('_', ' ')}
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 
