@@ -1,8 +1,10 @@
+
+import { X, MapPin, Users, Calendar, Globe, Phone, Mail } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Building2, MapPin, Users, Calendar, Globe, Phone, Mail, ExternalLink } from "lucide-react";
+import { BookmarkButton } from "@/components/BookmarkButton";
 import { Company } from "./CompanyCard";
 
 interface CompanyModalProps {
@@ -17,19 +19,42 @@ const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-start gap-4 mb-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-10 h-10 text-primary" />
-            </div>
+          <div className="flex items-start justify-between">
             <div className="flex-1">
-              <DialogTitle className="text-2xl font-bold mb-2">{company.name}</DialogTitle>
-              <div className="flex items-center text-muted-foreground mb-2">
-                <MapPin className="w-4 h-4 mr-1" />
-                {company.location}
+              <DialogTitle className="text-2xl font-bold mb-2">
+                {company.name}
+              </DialogTitle>
+              <div className="flex items-center gap-4 text-muted-foreground mb-4">
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  {company.location}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  Founded {company.founded}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  {company.employees} employees
+                </div>
               </div>
             </div>
+            <BookmarkButton
+              contentType="community_member"
+              contentId={company.id}
+              title={company.name}
+              description={company.description}
+              metadata={{
+                location: company.location,
+                founded: company.founded,
+                employees: company.employees,
+                services: company.services
+              }}
+              size="default"
+              variant="outline"
+            />
           </div>
         </DialogHeader>
 
