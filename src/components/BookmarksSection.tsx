@@ -7,6 +7,48 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useBookmarks } from "@/hooks/useBookmarks";
 
+// Example bookmarks to show when no real bookmarks exist
+const exampleBookmarks = [
+  {
+    id: "example-1",
+    content_type: "event" as const,
+    content_id: "example-event-1",
+    content_title: "Australian Market Entry Workshop",
+    content_description: "Learn the essentials of entering the Australian market with expert guidance and networking opportunities.",
+    content_metadata: {
+      location: "Sydney, NSW",
+      date: "2024-07-15",
+      organizer: "Market Entry Solutions"
+    },
+    created_at: "2024-06-14T10:00:00Z"
+  },
+  {
+    id: "example-2",
+    content_type: "community_member" as const,
+    content_id: "example-member-1",
+    content_title: "Sarah Chen",
+    content_description: "Experienced business consultant specializing in market entry strategies for international companies.",
+    content_metadata: {
+      title: "Senior Business Consultant",
+      company: "Global Entry Partners",
+      location: "Melbourne, VIC"
+    },
+    created_at: "2024-06-14T09:30:00Z"
+  },
+  {
+    id: "example-3",
+    content_type: "content" as const,
+    content_id: "example-content-1",
+    content_title: "Complete Guide to Australian Business Registration",
+    content_description: "Step-by-step guide covering all aspects of registering your business in Australia, including legal requirements and best practices.",
+    content_metadata: {
+      url: "/content/business-registration-guide",
+      author: "Legal Advisory Team"
+    },
+    created_at: "2024-06-14T08:15:00Z"
+  }
+];
+
 export const BookmarksSection = () => {
   const { bookmarks, loading, fetchBookmarks } = useBookmarks();
 
@@ -66,7 +108,11 @@ export const BookmarksSection = () => {
     );
   }
 
-  if (bookmarks.length === 0) {
+  // Use real bookmarks if they exist, otherwise show examples
+  const displayBookmarks = bookmarks.length > 0 ? bookmarks : exampleBookmarks;
+  const isShowingExamples = bookmarks.length === 0;
+
+  if (displayBookmarks.length === 0) {
     return (
       <section className="py-16">
         <div className="container mx-auto px-4">
@@ -107,12 +153,16 @@ export const BookmarksSection = () => {
             <h2 className="text-3xl font-bold text-foreground">Your Loved Items</h2>
           </div>
           <p className="text-muted-foreground">
-            {bookmarks.length} saved item{bookmarks.length !== 1 ? 's' : ''}
+            {isShowingExamples ? (
+              "Example bookmarked items - start exploring to add your own!"
+            ) : (
+              `${displayBookmarks.length} saved item${displayBookmarks.length !== 1 ? 's' : ''}`
+            )}
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {bookmarks.slice(0, 6).map((bookmark) => (
+          {displayBookmarks.slice(0, 6).map((bookmark) => (
             <Link 
               key={bookmark.id} 
               to={getContentUrl(bookmark)}
@@ -160,7 +210,7 @@ export const BookmarksSection = () => {
           ))}
         </div>
 
-        {bookmarks.length > 6 && (
+        {displayBookmarks.length > 6 && (
           <div className="text-center mt-8">
             <Button variant="outline" asChild>
               <Link to="/bookmarks">
