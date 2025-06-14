@@ -6,7 +6,7 @@ export interface SearchResult {
   id: string;
   title: string;
   description: string;
-  type: 'event' | 'community_member' | 'trade_agency' | 'content';
+  type: 'event' | 'community_member' | 'content';
   url: string;
   metadata?: Record<string, any>;
 }
@@ -98,14 +98,14 @@ export const useMasterSearch = () => {
         });
       }
 
-      // Add trade & investment agencies
+      // Add trade & investment agencies as content type for bookmarking purposes
       if (agencies) {
         agencies.forEach(agency => {
           allResults.push({
             id: agency.id,
             title: agency.name,
             description: agency.description,
-            type: 'trade_agency',
+            type: 'content', // Changed from 'trade_agency' to 'content' to match BookmarkButton expectations
             url: `/trade-investment-agencies`,
             metadata: {
               location: agency.location,
@@ -113,7 +113,8 @@ export const useMasterSearch = () => {
               employees: agency.employees,
               services: agency.services,
               website: agency.website,
-              contact: agency.contact
+              contact: agency.contact,
+              originalType: 'trade_agency' // Keep track of original type in metadata
             }
           });
         });

@@ -39,14 +39,17 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
     return null;
   }
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
+  const getTypeIcon = (result: SearchResult) => {
+    // Check if this is actually a trade agency based on metadata
+    if (result.metadata?.originalType === 'trade_agency') {
+      return <Briefcase className="w-4 h-4" />;
+    }
+    
+    switch (result.type) {
       case 'event':
         return <Calendar className="w-4 h-4" />;
       case 'community_member':
         return <Users className="w-4 h-4" />;
-      case 'trade_agency':
-        return <Briefcase className="w-4 h-4" />;
       case 'content':
         return <FileText className="w-4 h-4" />;
       default:
@@ -54,14 +57,17 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
     }
   };
 
-  const getTypeBadgeVariant = (type: string) => {
-    switch (type) {
+  const getTypeBadgeVariant = (result: SearchResult) => {
+    // Check if this is actually a trade agency based on metadata
+    if (result.metadata?.originalType === 'trade_agency') {
+      return 'destructive';
+    }
+    
+    switch (result.type) {
       case 'event':
         return 'default';
       case 'community_member':
         return 'secondary';
-      case 'trade_agency':
-        return 'destructive';
       case 'content':
         return 'outline';
       default:
@@ -69,14 +75,17 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'trade_agency':
-        return 'trade agency';
+  const getTypeLabel = (result: SearchResult) => {
+    // Check if this is actually a trade agency based on metadata
+    if (result.metadata?.originalType === 'trade_agency') {
+      return 'trade agency';
+    }
+    
+    switch (result.type) {
       case 'community_member':
         return 'community member';
       default:
-        return type.replace('_', ' ');
+        return result.type.replace('_', ' ');
     }
   };
 
@@ -101,7 +110,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-2 flex-1">
                       <div className="flex items-center gap-1 mt-0.5">
-                        {getTypeIcon(result.type)}
+                        {getTypeIcon(result)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <CardTitle className="text-sm line-clamp-1">{result.title}</CardTitle>
@@ -120,8 +129,8 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
                         size="sm"
                         variant="ghost"
                       />
-                      <Badge variant={getTypeBadgeVariant(result.type)} className="text-xs">
-                        {getTypeLabel(result.type)}
+                      <Badge variant={getTypeBadgeVariant(result)} className="text-xs">
+                        {getTypeLabel(result)}
                       </Badge>
                     </div>
                   </div>
