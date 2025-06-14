@@ -6,7 +6,7 @@ export interface SearchResult {
   id: string;
   title: string;
   description: string;
-  type: 'event' | 'community_member' | 'content';
+  type: 'event' | 'community_member' | 'trade_agency' | 'content';
   url: string;
   metadata?: Record<string, any>;
 }
@@ -32,7 +32,7 @@ export const useMasterSearch = () => {
       const { data: events, error: eventsError } = await supabase
         .from('events')
         .select('*')
-        .or(`title.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},organizer.ilike.${searchTerm},category.ilike.${searchTerm}`);
+        .or(`title.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},organizer.ilike.${searchTerm},category.ilike.${searchTerm},type.ilike.${searchTerm}`);
 
       if (eventsError) throw eventsError;
 
@@ -40,9 +40,17 @@ export const useMasterSearch = () => {
       const { data: members, error: membersError } = await supabase
         .from('community_members')
         .select('*')
-        .or(`name.ilike.${searchTerm},title.ilike.${searchTerm},description.ilike.${searchTerm},company.ilike.${searchTerm},location.ilike.${searchTerm}`);
+        .or(`name.ilike.${searchTerm},title.ilike.${searchTerm},description.ilike.${searchTerm},company.ilike.${searchTerm},location.ilike.${searchTerm},experience.ilike.${searchTerm}`);
 
       if (membersError) throw membersError;
+
+      // Search trade & investment agencies
+      const { data: agencies, error: agenciesError } = await supabase
+        .from('trade_investment_agencies')
+        .select('*')
+        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
+
+      if (agenciesError) throw agenciesError;
 
       // Combine results
       const allResults: SearchResult[] = [];
@@ -58,9 +66,11 @@ export const useMasterSearch = () => {
             url: `/events`,
             metadata: {
               date: event.date,
+              time: event.time,
               location: event.location,
               organizer: event.organizer,
               category: event.category,
+              type: event.type,
               attendees: event.attendees
             }
           });
@@ -80,7 +90,30 @@ export const useMasterSearch = () => {
               title: member.title,
               company: member.company,
               location: member.location,
-              specialties: member.specialties
+              experience: member.experience,
+              specialties: member.specialties,
+              isAnonymous: member.is_anonymous
+            }
+          });
+        });
+      }
+
+      // Add trade & investment agencies
+      if (agencies) {
+        agencies.forEach(agency => {
+          allResults.push({
+            id: agency.id,
+            title: agency.name,
+            description: agency.description,
+            type: 'trade_agency',
+            url: `/trade-investment-agencies`,
+            metadata: {
+              location: agency.location,
+              founded: agency.founded,
+              employees: agency.employees,
+              services: agency.services,
+              website: agency.website,
+              contact: agency.contact
             }
           });
         });

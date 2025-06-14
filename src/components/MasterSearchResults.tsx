@@ -2,7 +2,7 @@
 import { SearchResult } from "@/hooks/useMasterSearch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, FileText, MapPin, Building } from "lucide-react";
+import { Calendar, Users, FileText, MapPin, Building, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BookmarkButton } from "./BookmarkButton";
 
@@ -45,6 +45,8 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
         return <Calendar className="w-4 h-4" />;
       case 'community_member':
         return <Users className="w-4 h-4" />;
+      case 'trade_agency':
+        return <Briefcase className="w-4 h-4" />;
       case 'content':
         return <FileText className="w-4 h-4" />;
       default:
@@ -58,10 +60,23 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
         return 'default';
       case 'community_member':
         return 'secondary';
+      case 'trade_agency':
+        return 'destructive';
       case 'content':
         return 'outline';
       default:
         return 'outline';
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'trade_agency':
+        return 'trade agency';
+      case 'community_member':
+        return 'community member';
+      default:
+        return type.replace('_', ' ');
     }
   };
 
@@ -106,7 +121,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
                         variant="ghost"
                       />
                       <Badge variant={getTypeBadgeVariant(result.type)} className="text-xs">
-                        {result.type.replace('_', ' ')}
+                        {getTypeLabel(result.type)}
                       </Badge>
                     </div>
                   </div>
@@ -131,6 +146,12 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           <span>{new Date(result.metadata.date).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                      {result.metadata.founded && (
+                        <div className="flex items-center gap-1">
+                          <Briefcase className="w-3 h-3" />
+                          <span>Est. {result.metadata.founded}</span>
                         </div>
                       )}
                     </div>
