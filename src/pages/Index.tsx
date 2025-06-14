@@ -1,5 +1,3 @@
-
-
 import { useState } from "react";
 import { ArrowRight, Users, Building2, TrendingUp, Calendar, Award, Rocket } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -8,6 +6,7 @@ import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
 import Navigation from "@/components/Navigation";
 import { MasterSearch } from "@/components/MasterSearch";
+import { AIChatSearch } from "@/components/AIChatSearch";
 import { BookmarksSection } from "@/components/BookmarksSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,9 +76,21 @@ const Index = () => {
               Connect with vetted service providers, learn from success stories, and accelerate your market entry with expert guidance.
             </p>
             
-            {/* Master Search Bar */}
-            <div className="relative max-w-2xl mx-auto mb-12">
-              <MasterSearch placeholder="Search for legal, accounting, marketing services..." />
+            {/* Search Bars Container */}
+            <div className="space-y-4 max-w-2xl mx-auto mb-12">
+              {/* Master Search Bar */}
+              <div className="relative">
+                <MasterSearch placeholder="Search for legal, accounting, marketing services..." />
+              </div>
+              
+              {/* AI Chat Search Bar */}
+              <div className="relative">
+                <AIChatSearch placeholder="Ask our AI assistant about market entry..." />
+              </div>
+              
+              <p className="text-sm text-muted-foreground">
+                Search our database above or ask our AI assistant for personalized guidance
+              </p>
             </div>
 
             {/* Stats */}
@@ -241,4 +252,3 @@ const Index = () => {
 };
 
 export default Index;
-
