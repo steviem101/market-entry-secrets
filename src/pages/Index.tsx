@@ -1,12 +1,11 @@
-
 import { useState } from "react";
-import { Search, ArrowRight, Users, Building2, TrendingUp } from "lucide-react";
+import { ArrowRight, Users, Building2, TrendingUp } from "lucide-react";
 import CompanyCard, { Company } from "@/components/CompanyCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
 import Navigation from "@/components/Navigation";
+import { MasterSearch } from "@/components/MasterSearch";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { companies, serviceCategories, categoryGroups } from "@/data/mockData";
@@ -71,16 +70,9 @@ const Index = () => {
               Connect with vetted service providers, learn from success stories, and accelerate your market entry with expert guidance.
             </p>
             
-            {/* Search Bar */}
+            {/* Master Search Bar */}
             <div className="relative max-w-2xl mx-auto mb-12">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-              <Input
-                type="text"
-                placeholder="Search for legal, accounting, marketing services..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-4 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm"
-              />
+              <MasterSearch placeholder="Search for legal, accounting, marketing services..." />
             </div>
 
             {/* Stats */}
@@ -167,7 +159,7 @@ const Index = () => {
               {filteredCompanies.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-8 h-8 text-muted-foreground" />
+                    <Users className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">No providers found</h3>
                   <p className="text-muted-foreground mb-6">
