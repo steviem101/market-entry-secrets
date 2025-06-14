@@ -10,6 +10,7 @@ import { AIChatSearch } from "@/components/AIChatSearch";
 import { BookmarksSection } from "@/components/BookmarksSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { companies, serviceCategories, categoryGroups } from "@/data/mockData";
 
@@ -20,6 +21,7 @@ const Index = () => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [searchMode, setSearchMode] = useState<'database' | 'ai'>('database');
 
   const filteredCompanies = companies.filter(company => {
     const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -76,21 +78,32 @@ const Index = () => {
               Connect with vetted service providers, learn from success stories, and accelerate your market entry with expert guidance.
             </p>
             
-            {/* Search Bars Container */}
-            <div className="space-y-4 max-w-2xl mx-auto mb-12">
-              {/* Master Search Bar */}
-              <div className="relative">
-                <MasterSearch placeholder="Search for legal, accounting, marketing services..." />
-              </div>
-              
-              {/* AI Chat Search Bar */}
-              <div className="relative">
-                <AIChatSearch placeholder="Ask our AI assistant about market entry..." />
-              </div>
-              
-              <p className="text-sm text-muted-foreground">
-                Search our database above or ask our AI assistant for personalized guidance
-              </p>
+            {/* Unified Search Interface */}
+            <div className="max-w-3xl mx-auto mb-12">
+              <Tabs value={searchMode} onValueChange={(value) => setSearchMode(value as 'database' | 'ai')} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6 bg-background/50 backdrop-blur-sm">
+                  <TabsTrigger value="database" className="text-sm font-medium">
+                    🔍 Search Database
+                  </TabsTrigger>
+                  <TabsTrigger value="ai" className="text-sm font-medium">
+                    🤖 Ask AI Assistant
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="database" className="space-y-2">
+                  <MasterSearch placeholder="Search for legal, accounting, marketing services..." />
+                  <p className="text-sm text-muted-foreground">
+                    Search through our curated database of service providers and resources
+                  </p>
+                </TabsContent>
+                
+                <TabsContent value="ai" className="space-y-2">
+                  <AIChatSearch placeholder="Ask me anything about entering the Australian market..." />
+                  <p className="text-sm text-muted-foreground">
+                    Get personalized guidance from our AI assistant trained on market entry expertise
+                  </p>
+                </TabsContent>
+              </Tabs>
             </div>
 
             {/* Stats */}
