@@ -1,5 +1,4 @@
-
-import { X, MapPin, Users, Calendar, Globe, Phone, Mail } from "lucide-react";
+import { X, MapPin, Users, Calendar, Globe, Phone, Mail, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
