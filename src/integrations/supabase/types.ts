@@ -159,6 +159,63 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_investment_agencies: {
+        Row: {
+          basic_info: string | null
+          contact: string | null
+          contact_persons: Json | null
+          created_at: string
+          description: string
+          employees: string
+          experience_tiles: Json | null
+          founded: string
+          id: string
+          location: string
+          logo: string | null
+          name: string
+          services: string[]
+          updated_at: string
+          website: string | null
+          why_work_with_us: string | null
+        }
+        Insert: {
+          basic_info?: string | null
+          contact?: string | null
+          contact_persons?: Json | null
+          created_at?: string
+          description: string
+          employees: string
+          experience_tiles?: Json | null
+          founded: string
+          id?: string
+          location: string
+          logo?: string | null
+          name: string
+          services?: string[]
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
+        }
+        Update: {
+          basic_info?: string | null
+          contact?: string | null
+          contact_persons?: Json | null
+          created_at?: string
+          description?: string
+          employees?: string
+          experience_tiles?: Json | null
+          founded?: string
+          id?: string
+          location?: string
+          logo?: string | null
+          name?: string
+          services?: string[]
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
