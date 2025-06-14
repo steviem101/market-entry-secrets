@@ -1,3 +1,4 @@
+
 import { X, MapPin, Users, Calendar, Globe, Phone, Mail, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,28 @@ interface CompanyModalProps {
 
 const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps) => {
   if (!company) return null;
+
+  // Placeholder images for experience tiles (company logos/work samples)
+  const getExperienceTileImage = (index: number) => {
+    const images = [
+      "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=150&h=150&fit=crop&crop=center"
+    ];
+    return images[index % images.length];
+  };
+
+  // Placeholder images for contact persons
+  const getContactPersonImage = (index: number) => {
+    const images = [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+    ];
+    return images[index % images.length];
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -90,13 +113,13 @@ const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps
             <section>
               <h3 className="text-lg font-semibold mb-3">Working with</h3>
               <div className="flex flex-wrap gap-3">
-                {company.experienceTiles.map((tile) => (
+                {company.experienceTiles.map((tile, index) => (
                   <div key={tile.id} className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
                     <div className="w-12 h-12 bg-white border rounded-lg p-1">
                       <img 
-                        src={tile.logo} 
+                        src={tile.logo || getExperienceTileImage(index)} 
                         alt={tile.name}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-cover rounded"
                       />
                     </div>
                     <span className="text-sm font-medium">{tile.name}</span>
@@ -110,10 +133,10 @@ const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps
             <section>
               <h3 className="text-lg font-semibold mb-3">Contact person(s)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {company.contactPersons.map((person) => (
+                {company.contactPersons.map((person, index) => (
                   <div key={person.id} className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
                     <Avatar className="w-12 h-12">
-                      <AvatarImage src={person.image} alt={person.name} />
+                      <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                       </AvatarFallback>

@@ -1,3 +1,4 @@
+
 import { Building2, MapPin, Users, Calendar, Globe, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,28 @@ interface CompanyCardProps {
 }
 
 const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) => {
+  // Placeholder images for experience tiles (company logos/work samples)
+  const getExperienceTileImage = (index: number) => {
+    const images = [
+      "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?w=150&h=150&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=150&h=150&fit=crop&crop=center"
+    ];
+    return images[index % images.length];
+  };
+
+  // Placeholder images for contact persons
+  const getContactPersonImage = (index: number) => {
+    const images = [
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+    ];
+    return images[index % images.length];
+  };
+
   return (
     <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="flex items-start gap-4 mb-4">
@@ -96,12 +119,12 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
         <div className="mb-4">
           <h4 className="text-sm font-medium text-muted-foreground mb-2">Working with:</h4>
           <div className="flex gap-2 overflow-x-auto">
-            {company.experienceTiles.slice(0, 3).map((tile) => (
+            {company.experienceTiles.slice(0, 3).map((tile, index) => (
               <div key={tile.id} className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg p-1">
                 <img 
-                  src={tile.logo} 
+                  src={tile.logo || getExperienceTileImage(index)} 
                   alt={tile.name}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover rounded"
                 />
               </div>
             ))}
@@ -118,9 +141,9 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
         <div className="mb-4">
           <h4 className="text-sm font-medium text-muted-foreground mb-2">Contact person(s):</h4>
           <div className="flex gap-2">
-            {company.contactPersons.slice(0, 3).map((person) => (
+            {company.contactPersons.slice(0, 3).map((person, index) => (
               <Avatar key={person.id} className="w-10 h-10">
-                <AvatarImage src={person.image} alt={person.name} />
+                <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
                   {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                 </AvatarFallback>
