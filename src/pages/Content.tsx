@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Calendar, Clock, Search, TrendingUp, BookOpen, Users, FileText, Play, Star } from "lucide-react";
+import { Calendar, Clock, Search, TrendingUp, BookOpen, Users, FileText, Play, Star, AlertCircle } from "lucide-react";
 import { useContentItems, useContentCategories } from "@/hooks/useContent";
 
 const iconMap: Record<string, any> = {
@@ -22,8 +22,13 @@ const Content = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const { data: contentItems = [], isLoading: itemsLoading } = useContentItems();
-  const { data: categories = [], isLoading: categoriesLoading } = useContentCategories();
+  const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems();
+  const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useContentCategories();
+
+  console.log('Content Items:', contentItems);
+  console.log('Categories:', categories);
+  console.log('Items Error:', itemsError);
+  console.log('Categories Error:', categoriesError);
 
   const filteredContent = contentItems.filter(item => {
     const matchesSearch = searchQuery === "" || 
@@ -46,6 +51,27 @@ const Content = () => {
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground mt-4">Loading content...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if there are errors
+  if (itemsError || categoriesError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-4">Error Loading Content</h2>
+            <p className="text-muted-foreground mb-6">
+              {itemsError?.message || categoriesError?.message || 'Failed to load content'}
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
           </div>
         </div>
       </div>
@@ -81,6 +107,14 @@ const Content = () => {
       </section>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Debug Info */}
+        <div className="mb-4 p-4 bg-muted rounded-lg">
+          <h3 className="font-semibold mb-2">Debug Info:</h3>
+          <p>Content Items Found: {contentItems.length}</p>
+          <p>Categories Found: {categories.length}</p>
+          <p>Featured Items: {featuredContent.length}</p>
+        </div>
+
         {/* Categories Filter */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Browse by Category</h2>
@@ -170,7 +204,19 @@ const Content = () => {
           
           {filteredContent.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No content found matching your criteria.</p>
+              <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">No Content Found</h3>
+              <p className="text-muted-foreground mb-6">
+                {contentItems.length === 0 
+                  ? "No content has been added to the database yet."
+                  : "No content found matching your criteria."
+                }
+              </p>
+              {contentItems.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Content items need to be added to the database to display here.
+                </p>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
