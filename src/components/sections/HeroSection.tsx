@@ -1,10 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
-import { useCountUp } from "@/hooks/useCountUp";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 interface HeroSectionProps {
   totalResources: number;
@@ -17,21 +15,81 @@ export const HeroSection = ({
   searchMode,
   onSearchModeChange
 }: HeroSectionProps) => {
-  const { elementRef, isVisible } = useIntersectionObserver({ 
-    threshold: 0.2,
-    rootMargin: '0px 0px -100px 0px'
-  });
-  
-  const animatedCount = useCountUp({ 
-    end: totalResources, 
-    duration: 2500, 
-    isVisible 
-  });
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const elementRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver>();
+  const animationRef = useRef<number>();
 
-  // Debug logging
+  // Intersection Observer Effect
   useEffect(() => {
-    console.log('HeroSection render:', { totalResources, isVisible, animatedCount });
-  }, [totalResources, isVisible, animatedCount]);
+    const element = elementRef.current;
+    if (!element) return;
+
+    console.log('Setting up intersection observer');
+
+    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      console.log('Intersection triggered:', entry.isIntersecting);
+      
+      if (entry.isIntersecting && !isVisible) {
+        console.log('Element became visible');
+        setIsVisible(true);
+      }
+    };
+
+    observerRef.current = new IntersectionObserver(handleIntersection, { 
+      threshold: 0.2,
+      rootMargin: '0px 0px -100px 0px'
+    });
+
+    observerRef.current.observe(element);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [isVisible]);
+
+  // Count Up Animation Effect
+  useEffect(() => {
+    if (!isVisible || hasStarted || totalResources === 0) {
+      console.log('Not starting animation:', { isVisible, hasStarted, totalResources });
+      return;
+    }
+
+    console.log('Starting count animation to:', totalResources);
+    setHasStarted(true);
+    
+    let currentCount = 0;
+    const duration = 2500;
+    const steps = 60; // Total animation steps
+    const increment = totalResources / steps;
+    const stepDuration = duration / steps;
+
+    const animate = () => {
+      currentCount += increment;
+      
+      if (currentCount >= totalResources) {
+        console.log('Animation completed at:', totalResources);
+        setCount(totalResources);
+        return;
+      }
+      
+      setCount(Math.floor(currentCount));
+      animationRef.current = setTimeout(animate, stepDuration);
+    };
+
+    animationRef.current = setTimeout(animate, stepDuration);
+
+    return () => {
+      if (animationRef.current) {
+        clearTimeout(animationRef.current);
+      }
+    };
+  }, [isVisible, hasStarted, totalResources]);
 
   return (
     <section className="relative overflow-hidden">
@@ -58,7 +116,7 @@ export const HeroSection = ({
           >
             <div className="text-center">
               <div className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {animatedCount.toLocaleString()}+
+                {count.toLocaleString()}+
               </div>
               <div className="text-sm text-muted-foreground font-medium mt-1">Total Secrets Available</div>
             </div>
