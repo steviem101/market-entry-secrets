@@ -67,10 +67,10 @@ export const AIChatSearch = ({
     return (
       <Button
         onClick={() => setChatState(prev => ({ ...prev, isMinimized: false }))}
-        className={cn("rounded-full w-12 h-12 p-0", className)}
+        className={cn("rounded-full w-10 h-10 p-0", className)}
         size="default"
       >
-        <MessageCircle className="w-6 h-6" />
+        <MessageCircle className="w-4 h-4" />
       </Button>
     );
   }

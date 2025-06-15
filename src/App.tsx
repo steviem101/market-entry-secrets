@@ -45,7 +45,7 @@ const App = () => (
         {/* AI Chat Assistant - available on all pages */}
         <AIChatSearch 
           placeholder="Ask our AI assistant about market entry..." 
-          className="fixed bottom-4 right-4 z-50 w-96"
+          className="fixed bottom-4 right-4 z-50"
         />
       </BrowserRouter>
     </TooltipProvider>

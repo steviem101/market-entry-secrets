@@ -22,9 +22,9 @@ export const CollapsedSearchBar = ({
 }: CollapsedSearchBarProps) => {
   return (
     <div className="relative">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <div className="relative flex-1">
-          <MessageCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <MessageCircle className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground w-3 h-3" />
           <Input
             type="text"
             placeholder="Ask AI..."
@@ -32,25 +32,25 @@ export const CollapsedSearchBar = ({
             onChange={(e) => setQuery(e.target.value)}
             onFocus={onExpand}
             onKeyDown={(e) => e.key === 'Enter' && onSubmit(e)}
-            className="pl-10 pr-10 py-2 text-sm rounded-full border bg-background/90 backdrop-blur-sm w-64"
+            className="pl-7 pr-7 py-1 text-xs rounded-full border bg-background/90 backdrop-blur-sm w-40"
           />
           <Button
             type="submit"
             onClick={onSubmit}
             disabled={!query.trim() || loading}
             size="sm"
-            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 rounded-full"
+            className="absolute right-0.5 top-1/2 transform -translate-y-1/2 h-5 w-5 p-0 rounded-full"
           >
-            <Send className="w-3 h-3" />
+            <Send className="w-2.5 h-2.5" />
           </Button>
         </div>
         <Button
           onClick={onToggleCollapse}
           variant="outline"
           size="sm"
-          className="h-8 w-8 p-0 rounded-full"
+          className="h-6 w-6 p-0 rounded-full"
         >
-          <ChevronUp className="w-4 h-4" />
+          <ChevronUp className="w-3 h-3" />
         </Button>
       </div>
     </div>
