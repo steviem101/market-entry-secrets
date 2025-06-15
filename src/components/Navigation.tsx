@@ -70,6 +70,14 @@ const Navigation = () => {
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
+                  <Link to="/leads" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
+                    Leads
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
                   <Link to="/events" className={cn(navigationMenuTriggerStyle(), "bg-transparent")}>
                     Events
                   </Link>

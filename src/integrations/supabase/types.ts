@@ -218,6 +218,72 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          category: string
+          contact_email: string | null
+          created_at: string
+          currency: string | null
+          data_quality_score: number | null
+          description: string
+          file_url: string | null
+          id: string
+          industry: string
+          last_updated: string | null
+          location: string
+          name: string
+          preview_url: string | null
+          price: number | null
+          provider_name: string | null
+          record_count: number | null
+          tags: string[] | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          contact_email?: string | null
+          created_at?: string
+          currency?: string | null
+          data_quality_score?: number | null
+          description: string
+          file_url?: string | null
+          id?: string
+          industry: string
+          last_updated?: string | null
+          location: string
+          name: string
+          preview_url?: string | null
+          price?: number | null
+          provider_name?: string | null
+          record_count?: number | null
+          tags?: string[] | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          contact_email?: string | null
+          created_at?: string
+          currency?: string | null
+          data_quality_score?: number | null
+          description?: string
+          file_url?: string | null
+          id?: string
+          industry?: string
+          last_updated?: string | null
+          location?: string
+          name?: string
+          preview_url?: string | null
+          price?: number | null
+          provider_name?: string | null
+          record_count?: number | null
+          tags?: string[] | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trade_investment_agencies: {
         Row: {
           basic_info: string | null
