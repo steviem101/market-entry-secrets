@@ -1,15 +1,12 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
-
 interface HeroSectionProps {
   totalResources: number;
   searchMode: 'database' | 'ai';
   onSearchModeChange: (mode: 'database' | 'ai') => void;
 }
-
 export const HeroSection = ({
   totalResources,
   searchMode,
@@ -24,39 +21,30 @@ export const HeroSection = ({
       console.log('No resources to count');
       return;
     }
-
     console.log('Starting count animation to:', totalResources);
-    
     let currentCount = 0;
     const duration = 2500;
     const steps = 60;
     const increment = totalResources / steps;
     const stepDuration = duration / steps;
-
     const animate = () => {
       currentCount += increment;
-      
       if (currentCount >= totalResources) {
         console.log('Animation completed at:', totalResources);
         setCount(totalResources);
         return;
       }
-      
       setCount(Math.floor(currentCount));
       animationRef.current = setTimeout(animate, stepDuration);
     };
-
     animationRef.current = setTimeout(animate, stepDuration);
-
     return () => {
       if (animationRef.current) {
         clearTimeout(animationRef.current);
       }
     };
   }, [totalResources]);
-
-  return (
-    <section className="relative overflow-hidden">
+  return <section className="relative overflow-hidden">
       {/* Background with soft gradients */}
       <div className="absolute inset-0 gradient-overlay" />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10" />
@@ -88,9 +76,7 @@ export const HeroSection = ({
             <Tabs value={searchMode} onValueChange={onSearchModeChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8 bg-background/60 backdrop-blur-md border border-border/50 soft-shadow">
                 <TabsTrigger value="database" className="text-sm font-medium rounded-xl">🔍 Search Secrets</TabsTrigger>
-                <TabsTrigger value="ai" className="text-sm font-medium rounded-xl">
-                  🤖 Ask AI Assistant
-                </TabsTrigger>
+                <TabsTrigger value="ai" className="text-sm font-medium rounded-xl">🤖 Use AI to Uncover Secrets</TabsTrigger>
               </TabsList>
               
               <TabsContent value="database" className="space-y-3">
@@ -110,6 +96,5 @@ export const HeroSection = ({
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
