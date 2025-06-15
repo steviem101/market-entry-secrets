@@ -6,7 +6,7 @@ export const StatsSection = () => {
   const featuredStats = [
     { icon: Building2, label: "Service Providers", value: "500+", link: "/service-providers" },
     { icon: Rocket, label: "Innovation Hubs", value: "25+", link: "/innovation-ecosystem" },
-    { icon: Database, label: "Lead Data", value: "100+", link: "/leads" },
+    { icon: Database, label: "Lead Lists", value: "100+", link: "/leads" },
     { icon: Users, label: "Success Stories", value: "1,200+", link: "/mentors" },
     { icon: Calendar, label: "Monthly Events", value: "50+", link: "/events" },
     { icon: Award, label: "Expert Mentors", value: "200+", link: "/mentors" }
