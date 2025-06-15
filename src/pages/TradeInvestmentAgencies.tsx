@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Filter, Grid3X3 } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -7,6 +6,7 @@ import CompanyCard, { Company, ExperienceTile, ContactPerson } from "@/component
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
 import { useBookmarks } from "@/hooks/useBookmarks";
+import { useEnterpriseIrelandLogo } from "@/hooks/useEnterpriseIrelandLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -57,6 +57,9 @@ const TradeInvestmentAgencies = () => {
   const [agencies, setAgencies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const { fetchBookmarks } = useBookmarks();
+  
+  // Upload Enterprise Ireland logo when component mounts
+  useEnterpriseIrelandLogo();
 
   useEffect(() => {
     fetchBookmarks();
