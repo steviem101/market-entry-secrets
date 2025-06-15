@@ -61,77 +61,91 @@ export const ProvidersSection = ({
   };
 
   return (
-    <section className="py-16">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
+    <section className="relative py-24">
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-background" />
+      <div className="relative container mx-auto px-4">
+        <div className="flex items-center justify-between mb-12">
           <div>
-            <h2 className="text-3xl font-bold text-foreground mb-2">Featured Service Providers</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Featured Service Providers</h2>
+            <p className="text-xl text-muted-foreground">
               {filteredCompanies.length} providers ready to help you succeed
             </p>
           </div>
           <Button
             variant="outline"
             onClick={() => onShowFiltersChange(!showFilters)}
-            className="lg:hidden"
+            className="lg:hidden bg-background/60 backdrop-blur-sm border-border/50"
           >
             Filters
           </Button>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex gap-10">
           {/* Filters Sidebar */}
           {showFilters && (
             <aside className="w-80 flex-shrink-0">
-              <SearchFilters
-                categories={serviceCategories}
-                categoryGroups={categoryGroups}
-                selectedCategories={selectedCategories}
-                onCategoryChange={onCategoryChange}
-                searchTerm=""
-                onSearchChange={() => {}}
-                selectedLocations={selectedLocations}
-                onLocationChange={onLocationChange}
-              />
+              <div className="sticky top-4 bg-card/60 backdrop-blur-sm rounded-2xl border border-border/40 p-6 soft-shadow">
+                <SearchFilters
+                  categories={serviceCategories}
+                  categoryGroups={categoryGroups}
+                  selectedCategories={selectedCategories}
+                  onCategoryChange={onCategoryChange}
+                  searchTerm=""
+                  onSearchChange={() => {}}
+                  selectedLocations={selectedLocations}
+                  onLocationChange={onLocationChange}
+                />
+              </div>
             </aside>
           )}
 
           {/* Main Content */}
           <main className="flex-1">
             {filteredCompanies.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-muted-foreground" />
+              <div className="text-center py-16 bg-card/40 backdrop-blur-sm rounded-2xl border border-border/30">
+                <div className="w-20 h-20 bg-gradient-to-br from-muted to-muted/60 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Users className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No providers found</h3>
-                <p className="text-muted-foreground mb-6">
+                <h3 className="text-2xl font-semibold mb-3">No providers found</h3>
+                <p className="text-muted-foreground mb-8 max-w-md mx-auto">
                   Try adjusting your search criteria to find more providers.
                 </p>
-                <Button onClick={() => {
-                  onCategoryChange([]);
-                  onLocationChange([]);
-                }}>
+                <Button 
+                  onClick={() => {
+                    onCategoryChange([]);
+                    onLocationChange([]);
+                  }}
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                >
                   Clear Filters
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {filteredCompanies.slice(0, 9).map((company) => (
-                  <CompanyCard
+              <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+                {filteredCompanies.slice(0, 9).map((company, index) => (
+                  <div 
                     key={company.id}
-                    company={company}
-                    onViewProfile={handleViewProfile}
-                    onContact={handleContact}
-                  />
+                    style={{ animationDelay: `${index * 100}ms` }}
+                    className="animate-fade-in"
+                  >
+                    <CompanyCard
+                      company={company}
+                      onViewProfile={handleViewProfile}
+                      onContact={handleContact}
+                    />
+                  </div>
                 ))}
               </div>
             )}
             
             {filteredCompanies.length > 9 && (
-              <div className="text-center mt-12">
-                <Button size="lg" className="group">
+              <div className="text-center mt-16">
+                <Button 
+                  size="lg" 
+                  className="group bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 px-8 py-3 text-lg"
+                >
                   View All Providers
-                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
             )}

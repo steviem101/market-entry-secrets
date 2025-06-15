@@ -30,16 +30,13 @@ const Index = () => {
       />
 
       {/* Stats Section */}
-      <section className="relative bg-gradient-to-br from-primary/10 via-background to-accent/5 pb-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <StatsSection />
-          </div>
-        </div>
-      </section>
+      <StatsSection />
 
-      {/* Bookmarks Section */}
-      <BookmarksSection />
+      {/* Bookmarks Section with soft integration */}
+      <div className="relative">
+        <div className="absolute inset-0 gradient-overlay" />
+        <BookmarksSection />
+      </div>
 
       {/* Featured Categories */}
       <CategoriesSection />
