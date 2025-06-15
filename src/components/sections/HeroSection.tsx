@@ -64,13 +64,13 @@ export const HeroSection = ({
       <div className="relative container mx-auto px-4 py-24">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-8 leading-tight">
-            Your Gateway to the
+            Uncover All the Secrets for Your
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block mt-2">
-              Australian Market
+              Australian Market Entry
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-6 leading-relaxed max-w-3xl mx-auto">
-            Connect with vetted service providers, learn from success stories, and accelerate your market entry with expert guidance.
+            Discover the insider knowledge, vetted service providers, and proven strategies that successful companies use to enter and thrive in the Australian market.
           </p>
 
           {/* Total Counter with animated counting */}
@@ -79,7 +79,7 @@ export const HeroSection = ({
               <div className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {count.toLocaleString()}+
               </div>
-              <div className="text-sm text-muted-foreground font-medium mt-1">Total Secrets Available</div>
+              <div className="text-sm text-muted-foreground font-medium mt-1">Market Entry Secrets Revealed</div>
             </div>
           </div>
           
@@ -94,16 +94,16 @@ export const HeroSection = ({
               </TabsList>
               
               <TabsContent value="database" className="space-y-3">
-                <MasterSearch placeholder="Search for legal, accounting, marketing services..." />
+                <MasterSearch placeholder="Search for insider secrets, hidden strategies, proven providers..." />
                 <p className="text-sm text-muted-foreground/80">
-                  Search through our curated database of service providers and resources
+                  Discover the secret strategies and vetted resources for Australian market success
                 </p>
               </TabsContent>
               
               <TabsContent value="ai" className="space-y-3">
-                <AIChatSearch placeholder="Ask me anything about entering the Australian market..." />
+                <AIChatSearch placeholder="What are the biggest secrets to succeeding in Australia?" />
                 <p className="text-sm text-muted-foreground/80">
-                  Get personalized guidance from our AI assistant trained on market entry expertise
+                  Get insider knowledge from our AI trained on successful market entry strategies
                 </p>
               </TabsContent>
             </Tabs>
