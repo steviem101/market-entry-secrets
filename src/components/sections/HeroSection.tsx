@@ -20,7 +20,7 @@ export const HeroSection = ({
   const [hasStarted, setHasStarted] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver>();
-  const animationRef = useRef<number>();
+  const animationRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Intersection Observer Effect
   useEffect(() => {
