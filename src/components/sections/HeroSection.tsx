@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
@@ -17,12 +17,21 @@ export const HeroSection = ({
   searchMode,
   onSearchModeChange
 }: HeroSectionProps) => {
-  const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.3 });
+  const { elementRef, isVisible } = useIntersectionObserver({ 
+    threshold: 0.2,
+    rootMargin: '0px 0px -100px 0px'
+  });
+  
   const animatedCount = useCountUp({ 
     end: totalResources, 
     duration: 2500, 
     isVisible 
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('HeroSection render:', { totalResources, isVisible, animatedCount });
+  }, [totalResources, isVisible, animatedCount]);
 
   return (
     <section className="relative overflow-hidden">

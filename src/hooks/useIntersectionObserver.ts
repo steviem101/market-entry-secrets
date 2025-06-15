@@ -17,9 +17,18 @@ export const useIntersectionObserver = ({
     const element = elementRef.current;
     if (!element) return;
 
+    console.log('Setting up intersection observer for element:', element);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
+        console.log('Intersection observer triggered:', {
+          isIntersecting: entry.isIntersecting,
+          intersectionRatio: entry.intersectionRatio,
+          threshold
+        });
+        
         if (entry.isIntersecting) {
+          console.log('Element is visible, triggering animation');
           setIsVisible(true);
           // Once visible, we don't need to observe anymore
           observer.unobserve(element);
@@ -31,6 +40,7 @@ export const useIntersectionObserver = ({
     observer.observe(element);
 
     return () => {
+      console.log('Cleaning up intersection observer');
       observer.disconnect();
     };
   }, [threshold, rootMargin]);
