@@ -1,4 +1,3 @@
-
 import { SearchResult } from "@/hooks/useMasterSearch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -113,7 +112,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
   };
 
   return (
-    <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-50 max-w-2xl mx-auto">
+    <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-xl mt-2 max-h-[70vh] overflow-y-auto z-50 max-w-2xl mx-auto">
       <div className="p-3">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xs font-semibold text-foreground">Search Results</h3>
@@ -121,7 +120,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
         </div>
         
         <div className="space-y-1">
-          {results.slice(0, 10).map((result) => (
+          {results.slice(0, 8).map((result) => (
             <Link 
               key={`${result.type}-${result.id}`} 
               to={result.url}
