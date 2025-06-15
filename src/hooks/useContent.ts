@@ -100,7 +100,8 @@ export const useContentCategories = () => {
 export const useIncrementViewCount = () => {
   return async (contentId: string) => {
     try {
-      const { error } = await supabase.rpc('increment_view_count', {
+      // Use type assertion to work around TypeScript type issues
+      const { error } = await (supabase as any).rpc('increment_view_count', {
         content_id: contentId
       });
       
