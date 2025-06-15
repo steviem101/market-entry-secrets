@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface Bookmark {
   id: string;
-  content_type: 'event' | 'community_member' | 'content';
+  content_type: 'event' | 'community_member' | 'content' | 'lead';
   content_id: string;
   content_title: string;
   content_description: string | null;
@@ -31,7 +31,7 @@ export const useBookmarks = () => {
       // Type assertion to handle the database response
       const typedBookmarks = (data || []).map(item => ({
         ...item,
-        content_type: item.content_type as 'event' | 'community_member' | 'content'
+        content_type: item.content_type as 'event' | 'community_member' | 'content' | 'lead'
       })) as Bookmark[];
       
       setBookmarks(typedBookmarks);
@@ -48,7 +48,7 @@ export const useBookmarks = () => {
   }, [toast]);
 
   const addBookmark = useCallback(async (
-    contentType: 'event' | 'community_member' | 'content',
+    contentType: 'event' | 'community_member' | 'content' | 'lead',
     contentId: string,
     title: string,
     description?: string,

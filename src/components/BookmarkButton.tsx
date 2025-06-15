@@ -5,7 +5,7 @@ import { useBookmarks } from "@/hooks/useBookmarks";
 import { cn } from "@/lib/utils";
 
 interface BookmarkButtonProps {
-  contentType: 'event' | 'community_member' | 'content';
+  contentType: 'event' | 'community_member' | 'content' | 'lead';
   contentId: string;
   title: string;
   description?: string;
