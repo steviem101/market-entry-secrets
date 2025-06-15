@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Building2, Calendar, Database, Users } from "lucide-react";
 import CompanyCard from "@/components/CompanyCard";
-import EventCard from "@/components/EventCard";
-import LeadCard from "@/components/LeadCard";
+import { EventCard } from "@/components/EventCard";
+import { LeadCard } from "@/components/LeadCard";
 import PersonCard from "@/components/PersonCard";
 import NotFound from "./NotFound";
 
@@ -27,6 +27,27 @@ const SectorPage = () => {
   }
 
   const isLoading = providersLoading || eventsLoading || leadsLoading || communityLoading;
+
+  // Handler functions for card interactions
+  const handleViewProfile = (item: any) => {
+    console.log('View profile:', item);
+    // TODO: Implement profile viewing logic
+  };
+
+  const handleContact = (item: any) => {
+    console.log('Contact:', item);
+    // TODO: Implement contact logic
+  };
+
+  const handleDownload = (lead: any) => {
+    console.log('Download lead:', lead);
+    // TODO: Implement download logic
+  };
+
+  const handlePreview = (lead: any) => {
+    console.log('Preview lead:', lead);
+    // TODO: Implement preview logic
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,6 +157,8 @@ const SectorPage = () => {
                         experienceTiles: provider.experience_tiles ? (Array.isArray(provider.experience_tiles) ? provider.experience_tiles as any[] : []) : [],
                         contactPersons: provider.contact_persons ? (Array.isArray(provider.contact_persons) ? provider.contact_persons as any[] : []) : []
                       }}
+                      onViewProfile={handleViewProfile}
+                      onContact={handleContact}
                     />
                   ))}
                 </div>
@@ -170,7 +193,12 @@ const SectorPage = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {leads.slice(0, 6).map((lead) => (
-                    <LeadCard key={lead.id} lead={lead} />
+                    <LeadCard 
+                      key={lead.id} 
+                      lead={lead}
+                      onDownload={handleDownload}
+                      onPreview={handlePreview}
+                    />
                   ))}
                 </div>
               </section>
@@ -204,6 +232,8 @@ const SectorPage = () => {
                         isAnonymous: member.is_anonymous,
                         experienceTiles: member.experience_tiles ? (Array.isArray(member.experience_tiles) ? member.experience_tiles as any[] : []) : []
                       }}
+                      onViewProfile={handleViewProfile}
+                      onContact={handleContact}
                     />
                   ))}
                 </div>
