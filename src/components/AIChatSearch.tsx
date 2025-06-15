@@ -77,16 +77,23 @@ export const AIChatSearch = ({
 
   return (
     <div className={className}>
-      {/* Collapsed State - Compact Search Bar */}
+      {/* Collapsed State - Compact Search Bar with consistent styling */}
       {chatState.isCollapsed && (
-        <CollapsedSearchBar
-          query={query}
-          setQuery={setQuery}
-          loading={loading}
-          onSubmit={handleSubmit}
-          onExpand={handleExpand}
-          onToggleCollapse={handleToggleCollapse}
-        />
+        <div className="relative">
+          <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+          <input
+            type="text"
+            placeholder={placeholder}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSubmit(e);
+              }
+            }}
+            className="w-full pl-12 pr-4 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          />
+        </div>
       )}
 
       {/* Expanded Search Bar */}
