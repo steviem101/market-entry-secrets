@@ -1,12 +1,15 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
+
 interface HeroSectionProps {
   totalResources: number;
   searchMode: 'database' | 'ai';
   onSearchModeChange: (mode: 'database' | 'ai') => void;
 }
+
 export const HeroSection = ({
   totalResources,
   searchMode,
@@ -44,7 +47,9 @@ export const HeroSection = ({
       }
     };
   }, [totalResources]);
-  return <section className="relative overflow-hidden">
+
+  return (
+    <section className="relative overflow-hidden">
       {/* Background with soft gradients */}
       <div className="absolute inset-0 gradient-overlay" />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10" />
@@ -87,7 +92,9 @@ export const HeroSection = ({
               </TabsContent>
               
               <TabsContent value="ai" className="space-y-3">
-                <AIChatSearch placeholder="What are the biggest secrets to succeeding in Australia?" />
+                <div className="w-full">
+                  <AIChatSearch placeholder="Ask AI..." />
+                </div>
                 <p className="text-sm text-muted-foreground/80">
                   Get insider knowledge from our AI trained on successful market entry strategies
                 </p>
@@ -96,5 +103,6 @@ export const HeroSection = ({
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
