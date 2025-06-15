@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -17,7 +16,10 @@ export const useMasterSearch = () => {
   const [error, setError] = useState<string | null>(null);
 
   const searchAll = useCallback(async (query: string) => {
+    console.log("searchAll called with query:", query);
+    
     if (!query.trim()) {
+      console.log("Empty query, clearing results");
       setResults([]);
       return;
     }
@@ -25,64 +27,101 @@ export const useMasterSearch = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log("Starting search...");
 
       const searchTerm = `%${query.trim()}%`;
+      console.log("Search term:", searchTerm);
       
       // Search events
+      console.log("Searching events...");
       const { data: events, error: eventsError } = await supabase
         .from('events')
         .select('*')
         .or(`title.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},organizer.ilike.${searchTerm},category.ilike.${searchTerm},type.ilike.${searchTerm}`);
 
-      if (eventsError) throw eventsError;
+      if (eventsError) {
+        console.error("Events search error:", eventsError);
+        throw eventsError;
+      }
+      console.log("Events found:", events?.length || 0);
 
       // Search community members
+      console.log("Searching community members...");
       const { data: members, error: membersError } = await supabase
         .from('community_members')
         .select('*')
         .or(`name.ilike.${searchTerm},title.ilike.${searchTerm},description.ilike.${searchTerm},company.ilike.${searchTerm},location.ilike.${searchTerm},experience.ilike.${searchTerm}`);
 
-      if (membersError) throw membersError;
+      if (membersError) {
+        console.error("Members search error:", membersError);
+        throw membersError;
+      }
+      console.log("Members found:", members?.length || 0);
 
       // Search trade & investment agencies
+      console.log("Searching trade agencies...");
       const { data: agencies, error: agenciesError } = await supabase
         .from('trade_investment_agencies')
         .select('*')
         .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
 
-      if (agenciesError) throw agenciesError;
+      if (agenciesError) {
+        console.error("Agencies search error:", agenciesError);
+        throw agenciesError;
+      }
+      console.log("Agencies found:", agencies?.length || 0);
 
       // Search service providers
+      console.log("Searching service providers...");
       const { data: serviceProviders, error: serviceProvidersError } = await supabase
         .from('service_providers')
         .select('*')
         .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
 
-      if (serviceProvidersError) throw serviceProvidersError;
+      if (serviceProvidersError) {
+        console.error("Service providers search error:", serviceProvidersError);
+        throw serviceProvidersError;
+      }
+      console.log("Service providers found:", serviceProviders?.length || 0);
 
       // Search innovation ecosystem
+      console.log("Searching innovation ecosystem...");
       const { data: innovationHubs, error: innovationError } = await supabase
         .from('innovation_ecosystem')
         .select('*')
         .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
 
-      if (innovationError) throw innovationError;
+      if (innovationError) {
+        console.error("Innovation ecosystem search error:", innovationError);
+        throw innovationError;
+      }
+      console.log("Innovation hubs found:", innovationHubs?.length || 0);
 
       // Search leads
+      console.log("Searching leads...");
       const { data: leads, error: leadsError } = await supabase
         .from('leads')
         .select('*')
         .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},type.ilike.${searchTerm},category.ilike.${searchTerm},industry.ilike.${searchTerm},location.ilike.${searchTerm},provider_name.ilike.${searchTerm}`);
 
-      if (leadsError) throw leadsError;
+      if (leadsError) {
+        console.error("Leads search error:", leadsError);
+        throw leadsError;
+      }
+      console.log("Leads found:", leads?.length || 0);
 
       // Search content items
+      console.log("Searching content items...");
       const { data: contentItems, error: contentError } = await supabase
         .from('content_items')
         .select('*, content_categories(name)')
         .or(`title.ilike.${searchTerm},subtitle.ilike.${searchTerm},meta_description.ilike.${searchTerm}`);
 
-      if (contentError) throw contentError;
+      if (contentError) {
+        console.error("Content items search error:", contentError);
+        throw contentError;
+      }
+      console.log("Content items found:", contentItems?.length || 0);
 
       // Combine results
       const allResults: SearchResult[] = [];
@@ -238,16 +277,19 @@ export const useMasterSearch = () => {
         });
       }
 
+      console.log("Total results compiled:", allResults.length);
       setResults(allResults);
     } catch (err) {
       console.error('Search error:', err);
       setError(err instanceof Error ? err.message : 'Search failed');
     } finally {
       setLoading(false);
+      console.log("Search completed");
     }
   }, []);
 
   const clearSearch = useCallback(() => {
+    console.log("clearSearch called");
     setResults([]);
     setError(null);
   }, []);

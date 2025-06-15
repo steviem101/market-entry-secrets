@@ -22,12 +22,17 @@ export const MasterSearch = ({
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const searchRef = useRef<HTMLDivElement>(null);
 
+  console.log("MasterSearch render:", { searchQuery, debouncedSearchQuery, results: results.length, loading, showResults });
+
   // Perform search when debounced query changes
   useEffect(() => {
+    console.log("Search effect triggered:", { debouncedSearchQuery });
     if (debouncedSearchQuery.trim()) {
+      console.log("Performing search for:", debouncedSearchQuery);
       searchAll(debouncedSearchQuery);
       setShowResults(true);
     } else {
+      console.log("Clearing search");
       clearSearch();
       setShowResults(false);
     }
@@ -46,12 +51,14 @@ export const MasterSearch = ({
   }, []);
 
   const handleClearSearch = () => {
+    console.log("Clearing search manually");
     setSearchQuery("");
     clearSearch();
     setShowResults(false);
   };
 
   const handleInputFocus = () => {
+    console.log("Input focused:", { searchQuery, resultsLength: results.length });
     if (searchQuery.trim() && results.length > 0) {
       setShowResults(true);
     }
@@ -59,6 +66,12 @@ export const MasterSearch = ({
 
   const handleResultClick = () => {
     setShowResults(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    console.log("Input changed:", value);
+    setSearchQuery(value);
   };
 
   return (
@@ -70,7 +83,7 @@ export const MasterSearch = ({
             type="text"
             placeholder={placeholder}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleInputChange}
             onFocus={handleInputFocus}
             className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm"
           />
