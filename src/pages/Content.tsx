@@ -107,14 +107,6 @@ const Content = () => {
       </section>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Debug Info */}
-        <div className="mb-4 p-4 bg-muted rounded-lg">
-          <h3 className="font-semibold mb-2">Debug Info:</h3>
-          <p>Content Items Found: {contentItems.length}</p>
-          <p>Categories Found: {categories.length}</p>
-          <p>Featured Items: {featuredContent.length}</p>
-        </div>
-
         {/* Categories Filter */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Browse by Category</h2>
