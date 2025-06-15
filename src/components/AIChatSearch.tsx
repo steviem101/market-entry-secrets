@@ -65,48 +65,45 @@ export const AIChatSearch = ({
 
   if (chatState.isMinimized) {
     return (
-      <Button
-        onClick={() => setChatState(prev => ({ ...prev, isMinimized: false }))}
-        className={cn("rounded-full w-10 h-10 p-0", className)}
-        size="default"
-      >
-        <MessageCircle className="w-4 h-4" />
-      </Button>
+      <div className={cn("fixed bottom-4 right-4 z-50", className)}>
+        <Button
+          onClick={() => setChatState(prev => ({ ...prev, isMinimized: false }))}
+          className="rounded-full w-12 h-12 p-0 shadow-lg"
+          size="default"
+        >
+          <MessageCircle className="w-5 h-5" />
+        </Button>
+      </div>
     );
   }
 
   return (
-    <div className={className}>
-      {/* Collapsed State - Matching MasterSearch styling exactly */}
+    <div className={cn("fixed bottom-4 right-4 z-50", className)}>
+      {/* Collapsed State */}
       {chatState.isCollapsed && (
-        <div className="relative">
-          <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Skip the research - ask AI for instant insights..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSubmit(e);
-              }
-            }}
-            className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm flex h-10 w-full border border-input bg-background px-3 py-2 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          />
-        </div>
-      )}
-
-      {/* Expanded Search Bar */}
-      {!chatState.isCollapsed && !chatState.isExpanded && (
-        <ExpandedSearchBar
+        <CollapsedSearchBar
           query={query}
           setQuery={setQuery}
           loading={loading}
-          placeholder="Skip the research - ask AI for instant insights..."
           onSubmit={handleSubmit}
           onExpand={handleExpand}
           onToggleCollapse={handleToggleCollapse}
         />
+      )}
+
+      {/* Expanded Search Bar */}
+      {!chatState.isCollapsed && !chatState.isExpanded && (
+        <div className="w-80">
+          <ExpandedSearchBar
+            query={query}
+            setQuery={setQuery}
+            loading={loading}
+            placeholder={placeholder}
+            onSubmit={handleSubmit}
+            onExpand={handleExpand}
+            onToggleCollapse={handleToggleCollapse}
+          />
+        </div>
       )}
 
       {/* Expanded Chat Interface */}

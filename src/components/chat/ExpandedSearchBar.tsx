@@ -23,9 +23,9 @@ export const ExpandedSearchBar = ({
   onToggleCollapse
 }: ExpandedSearchBarProps) => {
   return (
-    <div className="relative">
-      <div className="relative">
-        <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+    <div className="bg-background/95 backdrop-blur-sm rounded-xl border shadow-lg p-4">
+      <div className="relative mb-3">
+        <MessageCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
         <Input
           type="text"
           placeholder={placeholder}
@@ -33,7 +33,7 @@ export const ExpandedSearchBar = ({
           onChange={(e) => setQuery(e.target.value)}
           onFocus={onExpand}
           onKeyDown={(e) => e.key === 'Enter' && onSubmit(e)}
-          className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm border-primary/20"
+          className="pl-12 pr-12 py-3 text-base rounded-lg border-2 border-border focus:border-primary transition-colors"
         />
         <Button
           type="submit"
@@ -45,12 +45,12 @@ export const ExpandedSearchBar = ({
           <Send className="w-4 h-4" />
         </Button>
       </div>
-      <div className="flex justify-end mt-2">
+      <div className="flex justify-end">
         <Button
           onClick={onToggleCollapse}
           variant="ghost"
           size="sm"
-          className="h-6 px-2 text-xs"
+          className="h-7 px-3 text-xs"
         >
           <ChevronDown className="w-3 h-3 mr-1" />
           Collapse

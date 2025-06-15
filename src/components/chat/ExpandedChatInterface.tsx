@@ -30,15 +30,15 @@ export const ExpandedChatInterface = ({
   onClose
 }: ExpandedChatInterfaceProps) => {
   return (
-    <Card className="absolute bottom-0 right-0 w-96 h-[500px] shadow-2xl border-2">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+    <Card className="w-96 h-[500px] shadow-2xl border-2 bg-background">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b">
         <CardTitle className="text-lg font-semibold">AI Assistant</CardTitle>
         <div className="flex gap-1">
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggleCollapse}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-accent"
           >
             <ChevronDown className="w-4 h-4" />
           </Button>
@@ -46,7 +46,7 @@ export const ExpandedChatInterface = ({
             variant="ghost"
             size="sm"
             onClick={onMinimize}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-accent"
           >
             <Minimize2 className="w-4 h-4" />
           </Button>
@@ -54,7 +54,7 @@ export const ExpandedChatInterface = ({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-accent"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -65,12 +65,12 @@ export const ExpandedChatInterface = ({
         <ChatMessages messages={messages} loading={loading} />
 
         {error && (
-          <div className="mb-2 p-2 bg-destructive/10 text-destructive text-sm rounded">
+          <div className="mb-3 p-3 bg-destructive/10 text-destructive text-sm rounded-lg border border-destructive/20">
             {error}
           </div>
         )}
 
-        <form onSubmit={onSubmit} className="flex gap-2">
+        <form onSubmit={onSubmit} className="flex gap-2 mt-auto">
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -82,6 +82,7 @@ export const ExpandedChatInterface = ({
             type="submit"
             disabled={!query.trim() || loading}
             size="sm"
+            className="px-3"
           >
             <Send className="w-4 h-4" />
           </Button>
