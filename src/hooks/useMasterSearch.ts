@@ -6,7 +6,7 @@ export interface SearchResult {
   id: string;
   title: string;
   description: string;
-  type: 'event' | 'community_member' | 'content';
+  type: 'event' | 'community_member' | 'content' | 'service_provider' | 'innovation_hub' | 'lead';
   url: string;
   metadata?: Record<string, any>;
 }
@@ -52,6 +52,38 @@ export const useMasterSearch = () => {
 
       if (agenciesError) throw agenciesError;
 
+      // Search service providers
+      const { data: serviceProviders, error: serviceProvidersError } = await supabase
+        .from('service_providers')
+        .select('*')
+        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
+
+      if (serviceProvidersError) throw serviceProvidersError;
+
+      // Search innovation ecosystem
+      const { data: innovationHubs, error: innovationError } = await supabase
+        .from('innovation_ecosystem')
+        .select('*')
+        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
+
+      if (innovationError) throw innovationError;
+
+      // Search leads
+      const { data: leads, error: leadsError } = await supabase
+        .from('leads')
+        .select('*')
+        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},type.ilike.${searchTerm},category.ilike.${searchTerm},industry.ilike.${searchTerm},location.ilike.${searchTerm},provider_name.ilike.${searchTerm}`);
+
+      if (leadsError) throw leadsError;
+
+      // Search content items
+      const { data: contentItems, error: contentError } = await supabase
+        .from('content_items')
+        .select('*, content_categories(name)')
+        .or(`title.ilike.${searchTerm},subtitle.ilike.${searchTerm},meta_description.ilike.${searchTerm}`);
+
+      if (contentError) throw contentError;
+
       // Combine results
       const allResults: SearchResult[] = [];
 
@@ -85,7 +117,7 @@ export const useMasterSearch = () => {
             title: member.name,
             description: member.description,
             type: 'community_member',
-            url: `/community`,
+            url: `/mentors`,
             metadata: {
               title: member.title,
               company: member.company,
@@ -98,14 +130,14 @@ export const useMasterSearch = () => {
         });
       }
 
-      // Add trade & investment agencies as content type for bookmarking purposes
+      // Add trade & investment agencies
       if (agencies) {
         agencies.forEach(agency => {
           allResults.push({
             id: agency.id,
             title: agency.name,
             description: agency.description,
-            type: 'content', // Changed from 'trade_agency' to 'content' to match BookmarkButton expectations
+            type: 'content', // For bookmarking compatibility
             url: `/trade-investment-agencies`,
             metadata: {
               location: agency.location,
@@ -114,44 +146,97 @@ export const useMasterSearch = () => {
               services: agency.services,
               website: agency.website,
               contact: agency.contact,
-              originalType: 'trade_agency' // Keep track of original type in metadata
+              originalType: 'trade_agency'
             }
           });
         });
       }
 
-      // Add static content results (mock for now, could be moved to database later)
-      const staticContent = [
-        {
-          id: 'slack-australian-market-entry',
-          title: 'How Slack Entered the Australian Enterprise Market',
-          description: 'Step-by-step guide on how Slack successfully entered and dominated the Australian enterprise market',
-          type: 'content' as const,
-          url: '/content/slack-australian-market-entry'
-        },
-        {
-          id: 'australian-business-registration-guide',
-          title: 'Complete Guide to Australian Business Registration',
-          description: 'Everything you need to know about registering your business in Australia',
-          type: 'content' as const,
-          url: '/content/australian-business-registration-guide'
-        },
-        {
-          id: 'australian-consumer-behavior',
-          title: 'Understanding Australian Consumer Behavior',
-          description: 'Deep dive into Australian consumer preferences and market behavior',
-          type: 'content' as const,
-          url: '/content/australian-consumer-behavior'
-        }
-      ];
+      // Add service providers
+      if (serviceProviders) {
+        serviceProviders.forEach(provider => {
+          allResults.push({
+            id: provider.id,
+            title: provider.name,
+            description: provider.description,
+            type: 'service_provider',
+            url: `/service-providers`,
+            metadata: {
+              location: provider.location,
+              founded: provider.founded,
+              employees: provider.employees,
+              services: provider.services,
+              website: provider.website,
+              contact: provider.contact
+            }
+          });
+        });
+      }
 
-      // Filter static content based on search query
-      const filteredStaticContent = staticContent.filter(content =>
-        content.title.toLowerCase().includes(query.toLowerCase()) ||
-        content.description.toLowerCase().includes(query.toLowerCase())
-      );
+      // Add innovation hubs
+      if (innovationHubs) {
+        innovationHubs.forEach(hub => {
+          allResults.push({
+            id: hub.id,
+            title: hub.name,
+            description: hub.description,
+            type: 'innovation_hub',
+            url: `/innovation-ecosystem`,
+            metadata: {
+              location: hub.location,
+              founded: hub.founded,
+              employees: hub.employees,
+              services: hub.services,
+              website: hub.website,
+              contact: hub.contact
+            }
+          });
+        });
+      }
 
-      allResults.push(...filteredStaticContent);
+      // Add leads
+      if (leads) {
+        leads.forEach(lead => {
+          allResults.push({
+            id: lead.id,
+            title: lead.name,
+            description: lead.description,
+            type: 'lead',
+            url: `/leads`,
+            metadata: {
+              type: lead.type,
+              category: lead.category,
+              industry: lead.industry,
+              location: lead.location,
+              provider: lead.provider_name,
+              recordCount: lead.record_count,
+              price: lead.price,
+              currency: lead.currency
+            }
+          });
+        });
+      }
+
+      // Add content items
+      if (contentItems) {
+        contentItems.forEach(content => {
+          allResults.push({
+            id: content.id,
+            title: content.title,
+            description: content.subtitle || content.meta_description || 'Market entry content',
+            type: 'content',
+            url: `/content/${content.slug}`,
+            metadata: {
+              category: content.content_categories?.name,
+              contentType: content.content_type,
+              featured: content.featured,
+              readTime: content.read_time,
+              publishDate: content.publish_date,
+              sectorTags: content.sector_tags
+            }
+          });
+        });
+      }
 
       setResults(allResults);
     } catch (err) {

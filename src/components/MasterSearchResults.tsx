@@ -2,7 +2,7 @@
 import { SearchResult } from "@/hooks/useMasterSearch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, FileText, MapPin, Building, Briefcase } from "lucide-react";
+import { Calendar, Users, FileText, MapPin, Building, Briefcase, Lightbulb, Database, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BookmarkButton } from "./BookmarkButton";
 
@@ -52,6 +52,12 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
         return <Users className="w-4 h-4" />;
       case 'content':
         return <FileText className="w-4 h-4" />;
+      case 'service_provider':
+        return <Wrench className="w-4 h-4" />;
+      case 'innovation_hub':
+        return <Lightbulb className="w-4 h-4" />;
+      case 'lead':
+        return <Database className="w-4 h-4" />;
       default:
         return <FileText className="w-4 h-4" />;
     }
@@ -70,6 +76,12 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
         return 'secondary';
       case 'content':
         return 'outline';
+      case 'service_provider':
+        return 'default';
+      case 'innovation_hub':
+        return 'secondary';
+      case 'lead':
+        return 'destructive';
       default:
         return 'outline';
     }
@@ -83,7 +95,11 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
     
     switch (result.type) {
       case 'community_member':
-        return 'community member';
+        return 'mentor';
+      case 'service_provider':
+        return 'service provider';
+      case 'innovation_hub':
+        return 'innovation hub';
       default:
         return result.type.replace('_', ' ');
     }
@@ -121,7 +137,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
                     </div>
                     <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                       <BookmarkButton
-                        contentType={result.type}
+                        contentType={result.type === 'service_provider' || result.type === 'innovation_hub' || result.type === 'lead' ? 'content' : result.type}
                         contentId={result.id}
                         title={result.title}
                         description={result.description}
@@ -161,6 +177,18 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
                         <div className="flex items-center gap-1">
                           <Briefcase className="w-3 h-3" />
                           <span>Est. {result.metadata.founded}</span>
+                        </div>
+                      )}
+                      {result.metadata.category && (
+                        <div className="flex items-center gap-1">
+                          <FileText className="w-3 h-3" />
+                          <span className="truncate">{result.metadata.category}</span>
+                        </div>
+                      )}
+                      {result.metadata.industry && (
+                        <div className="flex items-center gap-1">
+                          <Building className="w-3 h-3" />
+                          <span className="truncate">{result.metadata.industry}</span>
                         </div>
                       )}
                     </div>
