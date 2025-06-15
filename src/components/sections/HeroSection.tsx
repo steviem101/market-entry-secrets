@@ -16,56 +16,20 @@ export const HeroSection = ({
   onSearchModeChange
 }: HeroSectionProps) => {
   const [count, setCount] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
-  const elementRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver>();
   const animationRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Intersection Observer Effect
+  // Count Up Animation Effect - starts immediately on mount
   useEffect(() => {
-    const element = elementRef.current;
-    if (!element) return;
-
-    console.log('Setting up intersection observer');
-
-    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
-      const [entry] = entries;
-      console.log('Intersection triggered:', entry.isIntersecting);
-      
-      if (entry.isIntersecting && !isVisible) {
-        console.log('Element became visible');
-        setIsVisible(true);
-      }
-    };
-
-    observerRef.current = new IntersectionObserver(handleIntersection, { 
-      threshold: 0.2,
-      rootMargin: '0px 0px -100px 0px'
-    });
-
-    observerRef.current.observe(element);
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [isVisible]);
-
-  // Count Up Animation Effect
-  useEffect(() => {
-    if (!isVisible || hasStarted || totalResources === 0) {
-      console.log('Not starting animation:', { isVisible, hasStarted, totalResources });
+    if (totalResources === 0) {
+      console.log('No resources to count');
       return;
     }
 
     console.log('Starting count animation to:', totalResources);
-    setHasStarted(true);
     
     let currentCount = 0;
     const duration = 2500;
-    const steps = 60; // Total animation steps
+    const steps = 60;
     const increment = totalResources / steps;
     const stepDuration = duration / steps;
 
@@ -89,7 +53,7 @@ export const HeroSection = ({
         clearTimeout(animationRef.current);
       }
     };
-  }, [isVisible, hasStarted, totalResources]);
+  }, [totalResources]);
 
   return (
     <section className="relative overflow-hidden">
@@ -110,10 +74,7 @@ export const HeroSection = ({
           </p>
 
           {/* Total Counter with animated counting */}
-          <div 
-            ref={elementRef}
-            className="inline-flex items-center justify-center bg-gradient-to-r from-primary/8 to-accent/8 border border-primary/15 rounded-2xl px-8 py-4 mb-12 soft-shadow backdrop-blur-sm"
-          >
+          <div className="inline-flex items-center justify-center bg-gradient-to-r from-primary/8 to-accent/8 border border-primary/15 rounded-2xl px-8 py-4 mb-12 soft-shadow backdrop-blur-sm">
             <div className="text-center">
               <div className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {count.toLocaleString()}+
