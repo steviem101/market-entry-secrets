@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AIChatSearch } from "@/components/AIChatSearch";
 import Index from "./pages/Index";
 import ServiceProviders from "./pages/ServiceProviders";
 import Community from "./pages/Community";
@@ -40,6 +41,12 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        
+        {/* AI Chat Assistant - available on all pages */}
+        <AIChatSearch 
+          placeholder="Ask our AI assistant about market entry..." 
+          className="fixed bottom-4 left-4 z-40 w-96"
+        />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
