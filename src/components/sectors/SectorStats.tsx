@@ -1,6 +1,8 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { useRef } from "react";
 
 interface SectorStatsProps {
   serviceProviders: any[];
@@ -21,13 +23,16 @@ const SectorStats = ({
   tradeAgencies,
   contentItems
 }: SectorStatsProps) => {
-  const providersCount = useCountUp({ end: serviceProviders.length, isVisible: true });
-  const upcomingEvents = useCountUp({ end: events.length, isVisible: true });
-  const availableLeads = useCountUp({ end: leads.length, isVisible: true });
-  const expertMembers = useCountUp({ end: communityMembers.length, isVisible: true });
-  const innovationPartners = useCountUp({ end: innovationEcosystem.length, isVisible: true });
-  const tradePartners = useCountUp({ end: tradeAgencies.length, isVisible: true });
-  const contentArticles = useCountUp({ end: contentItems.length, isVisible: true });
+  const statsRef = useRef<HTMLDivElement>(null);
+  const isVisible = useIntersectionObserver(statsRef, { threshold: 0.1 });
+
+  const providersCount = useCountUp({ end: serviceProviders.length, isVisible });
+  const upcomingEvents = useCountUp({ end: events.length, isVisible });
+  const availableLeads = useCountUp({ end: leads.length, isVisible });
+  const expertMembers = useCountUp({ end: communityMembers.length, isVisible });
+  const innovationPartners = useCountUp({ end: innovationEcosystem.length, isVisible });
+  const tradePartners = useCountUp({ end: tradeAgencies.length, isVisible });
+  const contentArticles = useCountUp({ end: contentItems.length, isVisible });
 
   const stats = [
     { 
@@ -68,7 +73,7 @@ const SectorStats = ({
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-12">
+    <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-12">
       {stats.map((stat, index) => (
         <Card key={index} className="text-center">
           <CardContent className="p-4">
