@@ -1,18 +1,18 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
-
 interface HeroSectionProps {
   totalResources: number;
   searchMode: 'database' | 'ai';
   onSearchModeChange: (mode: 'database' | 'ai') => void;
 }
-
-export const HeroSection = ({ totalResources, searchMode, onSearchModeChange }: HeroSectionProps) => {
-  return (
-    <section className="relative overflow-hidden">
+export const HeroSection = ({
+  totalResources,
+  searchMode,
+  onSearchModeChange
+}: HeroSectionProps) => {
+  return <section className="relative overflow-hidden">
       {/* Background with soft gradients */}
       <div className="absolute inset-0 gradient-overlay" />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10" />
@@ -35,7 +35,7 @@ export const HeroSection = ({ totalResources, searchMode, onSearchModeChange }: 
               <div className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {totalResources.toLocaleString()}+
               </div>
-              <div className="text-sm text-muted-foreground font-medium mt-1">Total Resources Available</div>
+              <div className="text-sm text-muted-foreground font-medium mt-1">Total Secrets Available</div>
             </div>
           </div>
           
@@ -43,9 +43,7 @@ export const HeroSection = ({ totalResources, searchMode, onSearchModeChange }: 
           <div className="max-w-3xl mx-auto">
             <Tabs value={searchMode} onValueChange={onSearchModeChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8 bg-background/60 backdrop-blur-md border border-border/50 soft-shadow">
-                <TabsTrigger value="database" className="text-sm font-medium rounded-xl">
-                  🔍 Search Database
-                </TabsTrigger>
+                <TabsTrigger value="database" className="text-sm font-medium rounded-xl">🔍 Search Secrets</TabsTrigger>
                 <TabsTrigger value="ai" className="text-sm font-medium rounded-xl">
                   🤖 Ask AI Assistant
                 </TabsTrigger>
@@ -68,6 +66,5 @@ export const HeroSection = ({ totalResources, searchMode, onSearchModeChange }: 
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
