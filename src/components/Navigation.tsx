@@ -8,11 +8,11 @@ import MarketEntryLogo from "./MarketEntryLogo";
 const Navigation = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
-  const toggleDropdown = (dropdownName: string) => {
-    setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
+  const handleMouseEnter = (dropdownName: string) => {
+    setOpenDropdown(dropdownName);
   };
 
-  const closeDropdown = () => {
+  const handleMouseLeave = () => {
     setOpenDropdown(null);
   };
 
@@ -36,11 +36,12 @@ const Navigation = () => {
             </Link>
             
             {/* Ecosystem Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => toggleDropdown('ecosystem')}
-                className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-              >
+            <div 
+              className="relative"
+              onMouseEnter={() => handleMouseEnter('ecosystem')}
+              onMouseLeave={handleMouseLeave}
+            >
+              <button className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
                 Ecosystem
                 <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform duration-200", openDropdown === 'ecosystem' && "rotate-180")} />
               </button>
@@ -51,7 +52,6 @@ const Navigation = () => {
                     <Link 
                       to="/service-providers" 
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={closeDropdown}
                     >
                       <div className="text-sm font-medium leading-none">Service Providers</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -61,7 +61,6 @@ const Navigation = () => {
                     <Link 
                       to="/innovation-ecosystem" 
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={closeDropdown}
                     >
                       <div className="text-sm font-medium leading-none">Innovation Ecosystem</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -71,7 +70,6 @@ const Navigation = () => {
                     <Link 
                       to="/trade-investment-agencies" 
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={closeDropdown}
                     >
                       <div className="text-sm font-medium leading-none">Trade & Investment Agencies</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -81,7 +79,6 @@ const Navigation = () => {
                     <Link 
                       to="/mentors" 
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={closeDropdown}
                     >
                       <div className="text-sm font-medium leading-none">Mentors</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -110,11 +107,12 @@ const Navigation = () => {
             </Link>
 
             {/* About Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => toggleDropdown('about')}
-                className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-              >
+            <div 
+              className="relative"
+              onMouseEnter={() => handleMouseEnter('about')}
+              onMouseLeave={handleMouseLeave}
+            >
+              <button className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
                 About
                 <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform duration-200", openDropdown === 'about' && "rotate-180")} />
               </button>
@@ -125,7 +123,6 @@ const Navigation = () => {
                     <Link 
                       to="/about" 
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={closeDropdown}
                     >
                       <div className="text-sm font-medium leading-none">About Us</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -135,7 +132,6 @@ const Navigation = () => {
                     <Link 
                       to="/contact" 
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={closeDropdown}
                     >
                       <div className="text-sm font-medium leading-none">Contact</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -145,7 +141,6 @@ const Navigation = () => {
                     <Link 
                       to="/faq" 
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={closeDropdown}
                     >
                       <div className="text-sm font-medium leading-none">FAQ</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -155,7 +150,6 @@ const Navigation = () => {
                     <Link 
                       to="/privacy-policy" 
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={closeDropdown}
                     >
                       <div className="text-sm font-medium leading-none">Privacy Policy</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
@@ -165,7 +159,6 @@ const Navigation = () => {
                     <Link 
                       to="/terms-of-service" 
                       className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      onClick={closeDropdown}
                     >
                       <div className="text-sm font-medium leading-none">Terms of Service</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
