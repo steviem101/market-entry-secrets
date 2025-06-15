@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Heart, Globe, Twitter, Instagram, Youtube, Clock, Calendar, Eye } from "lucide-react";
 import { useContentItem, useIncrementViewCount } from "@/hooks/useContent";
+import { useScrollSpy } from "@/hooks/useScrollSpy";
 
 interface ContentSection {
   id: string;
@@ -18,10 +19,13 @@ interface ContentSection {
 const ContentDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [savedStories, setSavedStories] = useState<string[]>([]);
-  const [activeSection, setActiveSection] = useState<string>("");
 
   const { data: content, isLoading, error } = useContentItem(slug || '');
   const incrementViewCount = useIncrementViewCount();
+
+  // Get section IDs for scroll spy
+  const sectionIds = content?.content_sections?.map(section => section.slug) || [];
+  const { activeSection, scrollToSection } = useScrollSpy({ sectionIds });
 
   // Increment view count when content loads
   useEffect(() => {
@@ -29,13 +33,6 @@ const ContentDetail = () => {
       incrementViewCount(content.id);
     }
   }, [content, incrementViewCount]);
-
-  // Set first section as active by default
-  useEffect(() => {
-    if (content?.content_sections && content.content_sections.length > 0 && !activeSection) {
-      setActiveSection(content.content_sections[0].slug);
-    }
-  }, [content, activeSection]);
 
   const toggleSave = () => {
     if (!content) return;
@@ -89,6 +86,15 @@ const ContentDetail = () => {
     isActive: activeSection === section.slug
   })) || [];
 
+  // Group content bodies by section
+  const groupedContent = content.content_sections?.map(section => ({
+    ...section,
+    bodies: content.content_bodies?.filter(body => body.section_id === section.id) || []
+  })) || [];
+
+  // Get content bodies that don't belong to any section
+  const generalContent = content.content_bodies?.filter(body => !body.section_id) || [];
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -120,7 +126,7 @@ const ContentDetail = () => {
                 {sections.map((section) => (
                   <button
                     key={section.id}
-                    onClick={() => setActiveSection(section.slug)}
+                    onClick={() => scrollToSection(section.slug)}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                       section.isActive
                         ? "bg-primary/10 text-primary font-medium"
@@ -253,11 +259,10 @@ const ContentDetail = () => {
                 </Card>
               )}
 
-              {/* Article Content */}
-              <div className="prose prose-lg max-w-none">
-                {content.content_bodies
-                  ?.filter(body => !body.section_id || content.content_sections?.find(s => s.slug === activeSection)?.id === body.section_id)
-                  .map((body, index) => (
+              {/* General Content (not in sections) */}
+              {generalContent.length > 0 && (
+                <div className="prose prose-lg max-w-none mb-12">
+                  {generalContent.map((body) => (
                     <div key={body.id} className="mb-8">
                       {body.question && (
                         <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">
@@ -270,6 +275,32 @@ const ContentDetail = () => {
                       />
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Sectioned Content */}
+              <div className="prose prose-lg max-w-none">
+                {groupedContent.map((section) => (
+                  <div key={section.id} id={section.slug} className="mb-16 scroll-mt-8">
+                    <h2 className="text-3xl font-bold text-foreground mb-8 border-b border-border pb-4">
+                      {section.title}
+                    </h2>
+                    
+                    {section.bodies.map((body) => (
+                      <div key={body.id} className="mb-8">
+                        {body.question && (
+                          <h3 className="text-xl font-semibold text-foreground mt-6 mb-4">
+                            {body.question}
+                          </h3>
+                        )}
+                        <div 
+                          className="text-muted-foreground leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: body.body_text }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
           </main>
