@@ -65,8 +65,21 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
   return (
     <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="flex items-start gap-4 mb-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
-          <Building2 className="w-8 h-8 text-primary" />
+        <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {company.logo ? (
+            <img 
+              src={company.logo} 
+              alt={`${company.name} logo`}
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                console.error(`Failed to load logo for ${company.name}:`, company.logo);
+                // Fallback to building icon if image fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.setAttribute('style', 'display: block');
+              }}
+            />
+          ) : null}
+          <Building2 className={`w-8 h-8 text-primary ${company.logo ? 'hidden' : ''}`} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">

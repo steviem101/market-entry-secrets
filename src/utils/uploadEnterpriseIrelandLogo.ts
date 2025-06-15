@@ -24,17 +24,9 @@ export const uploadEnterpriseIrelandLogo = async () => {
   const file = new File([blob], 'enterprise-ireland-logo.svg', { type: 'image/svg+xml' });
 
   try {
-    // First, check if the file already exists
-    const { data: existingFile } = await supabase.storage
-      .from('tradeagencies')
-      .list('', { search: 'enterprise-ireland-logo.svg' });
+    console.log('Starting Enterprise Ireland logo upload process...');
 
-    if (existingFile && existingFile.length > 0) {
-      console.log('Enterprise Ireland logo already exists');
-      return true;
-    }
-
-    // Upload the SVG file
+    // Upload the SVG file (with upsert to overwrite if exists)
     const { data, error } = await supabase.storage
       .from('tradeagencies')
       .upload('enterprise-ireland-logo.svg', file, {
