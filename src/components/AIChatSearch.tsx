@@ -83,7 +83,7 @@ export const AIChatSearch = ({
           <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <input
             type="text"
-            placeholder="Skip the research - ask AI for instant insights"
+            placeholder="Skip the research - ask AI for instant insights..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -102,7 +102,7 @@ export const AIChatSearch = ({
           query={query}
           setQuery={setQuery}
           loading={loading}
-          placeholder="Skip the research - ask AI for instant insights"
+          placeholder="Skip the research - ask AI for instant insights..."
           onSubmit={handleSubmit}
           onExpand={handleExpand}
           onToggleCollapse={handleToggleCollapse}
