@@ -2,7 +2,14 @@
 import { useParams } from "react-router-dom";
 import { getSectorConfig } from "@/config/sectors";
 import Navigation from "@/components/Navigation";
-import { useSectorServiceProviders, useSectorEvents, useSectorLeads, useSectorCommunityMembers } from "@/hooks/useSectorData";
+import { 
+  useSectorServiceProviders, 
+  useSectorEvents, 
+  useSectorLeads, 
+  useSectorCommunityMembers,
+  useSectorInnovationEcosystem,
+  useSectorTradeAgencies
+} from "@/hooks/useSectorData";
 import NotFound from "./NotFound";
 import SectorHero from "@/components/sectors/SectorHero";
 import SectorStats from "@/components/sectors/SectorStats";
@@ -16,12 +23,14 @@ const SectorPage = () => {
   const { data: events = [], isLoading: eventsLoading } = useSectorEvents(sectorId || '');
   const { data: leads = [], isLoading: leadsLoading } = useSectorLeads(sectorId || '');
   const { data: communityMembers = [], isLoading: communityLoading } = useSectorCommunityMembers(sectorId || '');
+  const { data: innovationEcosystem = [], isLoading: innovationLoading } = useSectorInnovationEcosystem(sectorId || '');
+  const { data: tradeAgencies = [], isLoading: tradeLoading } = useSectorTradeAgencies(sectorId || '');
 
   if (!sectorConfig) {
     return <NotFound />;
   }
 
-  const isLoading = providersLoading || eventsLoading || leadsLoading || communityLoading;
+  const isLoading = providersLoading || eventsLoading || leadsLoading || communityLoading || innovationLoading || tradeLoading;
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,6 +49,8 @@ const SectorPage = () => {
           eventsCount={events.length}
           leadsCount={leads.length}
           communityMembersCount={communityMembers.length}
+          innovationEcosystemCount={innovationEcosystem.length}
+          tradeAgenciesCount={tradeAgencies.length}
         />
 
         {isLoading ? (
@@ -53,6 +64,8 @@ const SectorPage = () => {
             events={events}
             leads={leads}
             communityMembers={communityMembers}
+            innovationEcosystem={innovationEcosystem}
+            tradeAgencies={tradeAgencies}
             sectorName={sectorConfig.name}
           />
         )}
