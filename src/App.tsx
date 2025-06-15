@@ -16,6 +16,10 @@ import Events from "./pages/Events";
 import InnovationEcosystem from "./pages/InnovationEcosystem";
 import TradeInvestmentAgencies from "./pages/TradeInvestmentAgencies";
 import Leads from "./pages/Leads";
+import PartnerWithUs from "./pages/PartnerWithUs";
+import FAQ from "./pages/FAQ";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,8 +40,12 @@ const App = () => (
           <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
           <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
           <Route path="/leads" element={<Leads />} />
+          <Route path="/partner-with-us" element={<PartnerWithUs />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
