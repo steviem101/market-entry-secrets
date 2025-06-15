@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface UseIntersectionObserverProps {
   threshold?: number;
@@ -12,38 +12,41 @@ export const useIntersectionObserver = ({
 }: UseIntersectionObserverProps = {}) => {
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver>();
+
+  const handleIntersection = useCallback(([entry]: IntersectionObserverEntry[]) => {
+    console.log('Intersection observer triggered:', {
+      isIntersecting: entry.isIntersecting,
+      intersectionRatio: entry.intersectionRatio,
+      threshold
+    });
+    
+    if (entry.isIntersecting && !isVisible) {
+      console.log('Element is visible, triggering animation');
+      setIsVisible(true);
+    }
+  }, [threshold, isVisible]);
 
   useEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element || isVisible) return;
 
     console.log('Setting up intersection observer for element:', element);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        console.log('Intersection observer triggered:', {
-          isIntersecting: entry.isIntersecting,
-          intersectionRatio: entry.intersectionRatio,
-          threshold
-        });
-        
-        if (entry.isIntersecting) {
-          console.log('Element is visible, triggering animation');
-          setIsVisible(true);
-          // Once visible, we don't need to observe anymore
-          observer.unobserve(element);
-        }
-      },
-      { threshold, rootMargin }
-    );
+    observerRef.current = new IntersectionObserver(handleIntersection, { 
+      threshold, 
+      rootMargin 
+    });
 
-    observer.observe(element);
+    observerRef.current.observe(element);
 
     return () => {
-      console.log('Cleaning up intersection observer');
-      observer.disconnect();
+      if (observerRef.current) {
+        console.log('Cleaning up intersection observer');
+        observerRef.current.disconnect();
+      }
     };
-  }, [threshold, rootMargin]);
+  }, [threshold, rootMargin, handleIntersection, isVisible]);
 
   return { elementRef, isVisible };
 };
