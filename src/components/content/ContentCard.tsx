@@ -3,15 +3,15 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, BookOpen } from "lucide-react";
+import { Calendar, Clock, BookOpen, TrendingUp, Users, FileText, Play, Star } from "lucide-react";
 
 const iconMap: Record<string, any> = {
-  TrendingUp: () => import("lucide-react").then(mod => mod.TrendingUp),
+  TrendingUp,
   BookOpen,
-  Users: () => import("lucide-react").then(mod => mod.Users),
-  FileText: () => import("lucide-react").then(mod => mod.FileText),
-  Play: () => import("lucide-react").then(mod => mod.Play),
-  Star: () => import("lucide-react").then(mod => mod.Star)
+  Users,
+  FileText,
+  Play,
+  Star
 };
 
 interface ContentCardProps {

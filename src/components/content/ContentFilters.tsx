@@ -1,14 +1,14 @@
 
-import { BookOpen } from "lucide-react";
+import { BookOpen, TrendingUp, Users, FileText, Play, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const iconMap: Record<string, any> = {
-  TrendingUp: () => import("lucide-react").then(mod => mod.TrendingUp),
+  TrendingUp,
   BookOpen,
-  Users: () => import("lucide-react").then(mod => mod.Users),
-  FileText: () => import("lucide-react").then(mod => mod.FileText),
-  Play: () => import("lucide-react").then(mod => mod.Play),
-  Star: () => import("lucide-react").then(mod => mod.Star)
+  Users,
+  FileText,
+  Play,
+  Star
 };
 
 interface ContentFiltersProps {
