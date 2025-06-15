@@ -1,4 +1,3 @@
-
 import { SearchResult } from "@/hooks/useMasterSearch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +15,7 @@ interface MasterSearchResultsProps {
 export const MasterSearchResults = ({ results, loading, error, onResultClick }: MasterSearchResultsProps) => {
   if (loading) {
     return (
-      <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-lg mt-2 p-4 z-50">
+      <div className="fixed inset-x-4 top-32 bg-card border border-border rounded-lg shadow-xl p-4 z-[100] max-w-4xl mx-auto">
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
           <span className="ml-2 text-muted-foreground">Searching...</span>
@@ -27,7 +26,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
 
   if (error) {
     return (
-      <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-lg mt-2 p-4 z-50">
+      <div className="fixed inset-x-4 top-32 bg-card border border-border rounded-lg shadow-xl p-4 z-[100] max-w-4xl mx-auto">
         <div className="text-red-500 text-center py-4">
           Error: {error}
         </div>
@@ -106,7 +105,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
   };
 
   return (
-    <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-lg mt-2 max-h-96 overflow-y-auto z-50">
+    <div className="fixed inset-x-4 top-32 bg-card border border-border rounded-lg shadow-xl max-h-[60vh] overflow-y-auto z-[100] max-w-4xl mx-auto">
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-foreground">Search Results</h3>
