@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { useCountUp } from "@/hooks/useCountUp";
 
@@ -21,13 +20,13 @@ const SectorStats = ({
   tradeAgenciesCount,
   contentCount
 }: SectorStatsProps) => {
-  const providersCount = useCountUp(serviceProvidersCount);
-  const upcomingEvents = useCountUp(eventsCount);
-  const availableLeads = useCountUp(leadsCount);
-  const expertMembers = useCountUp(communityMembersCount);
-  const innovationPartners = useCountUp(innovationEcosystemCount);
-  const tradePartners = useCountUp(tradeAgenciesCount);
-  const contentArticles = useCountUp(contentCount);
+  const providersCount = useCountUp({ end: serviceProvidersCount, isVisible: true });
+  const upcomingEvents = useCountUp({ end: eventsCount, isVisible: true });
+  const availableLeads = useCountUp({ end: leadsCount, isVisible: true });
+  const expertMembers = useCountUp({ end: communityMembersCount, isVisible: true });
+  const innovationPartners = useCountUp({ end: innovationEcosystemCount, isVisible: true });
+  const tradePartners = useCountUp({ end: tradeAgenciesCount, isVisible: true });
+  const contentArticles = useCountUp({ end: contentCount, isVisible: true });
 
   const stats = [
     { 
