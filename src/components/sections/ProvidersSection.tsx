@@ -1,12 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import CompanyCard, { Company } from "@/components/CompanyCard";
+import CompanyCard, { Company, ExperienceTile, ContactPerson } from "@/components/CompanyCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { companies, serviceCategories, categoryGroups } from "@/data/mockData";
+import { serviceCategories, categoryGroups } from "@/data/mockData";
+import { Tables } from "@/integrations/supabase/types";
+
+type ServiceProvider = Tables<'service_providers'>;
 
 interface ProvidersSectionProps {
   selectedCategories: string[];
@@ -29,6 +33,66 @@ export const ProvidersSection = ({
 }: ProvidersSectionProps) => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchServiceProviders();
+  }, []);
+
+  const fetchServiceProviders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('service_providers')
+        .select('*')
+        .order('name')
+        .limit(9); // Limit to 9 for the featured section
+
+      if (error) throw error;
+
+      const transformedData: Company[] = data.map((provider: ServiceProvider) => {
+        // Type-safe conversion of JSON fields
+        let experienceTiles: ExperienceTile[] = [];
+        let contactPersons: ContactPerson[] = [];
+
+        // Parse experience_tiles if it exists and is an array
+        if (provider.experience_tiles && Array.isArray(provider.experience_tiles)) {
+          experienceTiles = (provider.experience_tiles as any[]).filter(tile => 
+            tile && typeof tile === 'object' && tile.id && tile.name
+          ) as ExperienceTile[];
+        }
+
+        // Parse contact_persons if it exists and is an array
+        if (provider.contact_persons && Array.isArray(provider.contact_persons)) {
+          contactPersons = (provider.contact_persons as any[]).filter(person => 
+            person && typeof person === 'object' && person.id && person.name
+          ) as ContactPerson[];
+        }
+
+        return {
+          id: provider.id,
+          name: provider.name,
+          description: provider.description,
+          location: provider.location,
+          founded: provider.founded,
+          employees: provider.employees,
+          services: provider.services || [],
+          website: provider.website || undefined,
+          contact: provider.contact || undefined,
+          logo: provider.logo || undefined,
+          experienceTiles,
+          contactPersons
+        };
+      });
+
+      setCompanies(transformedData);
+    } catch (error) {
+      console.error('Error fetching service providers:', error);
+      toast.error('Failed to load service providers');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCompanies = companies.filter(company => {
     const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,6 +123,20 @@ export const ProvidersSection = ({
     toast.success(`Contact request sent to ${company.name}!`);
     setIsModalOpen(false);
   };
+
+  if (loading) {
+    return (
+      <section className="relative py-24">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-background" />
+        <div className="relative container mx-auto px-4">
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">Loading service providers...</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative py-24">

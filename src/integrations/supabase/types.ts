@@ -218,6 +218,63 @@ export type Database = {
         }
         Relationships: []
       }
+      innovation_ecosystem: {
+        Row: {
+          basic_info: string | null
+          contact: string | null
+          contact_persons: Json | null
+          created_at: string
+          description: string
+          employees: string
+          experience_tiles: Json | null
+          founded: string
+          id: string
+          location: string
+          logo: string | null
+          name: string
+          services: string[]
+          updated_at: string
+          website: string | null
+          why_work_with_us: string | null
+        }
+        Insert: {
+          basic_info?: string | null
+          contact?: string | null
+          contact_persons?: Json | null
+          created_at?: string
+          description: string
+          employees: string
+          experience_tiles?: Json | null
+          founded: string
+          id?: string
+          location: string
+          logo?: string | null
+          name: string
+          services?: string[]
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
+        }
+        Update: {
+          basic_info?: string | null
+          contact?: string | null
+          contact_persons?: Json | null
+          created_at?: string
+          description?: string
+          employees?: string
+          experience_tiles?: Json | null
+          founded?: string
+          id?: string
+          location?: string
+          logo?: string | null
+          name?: string
+          services?: string[]
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           category: string
@@ -281,6 +338,63 @@ export type Database = {
           tags?: string[] | null
           type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      service_providers: {
+        Row: {
+          basic_info: string | null
+          contact: string | null
+          contact_persons: Json | null
+          created_at: string
+          description: string
+          employees: string
+          experience_tiles: Json | null
+          founded: string
+          id: string
+          location: string
+          logo: string | null
+          name: string
+          services: string[]
+          updated_at: string
+          website: string | null
+          why_work_with_us: string | null
+        }
+        Insert: {
+          basic_info?: string | null
+          contact?: string | null
+          contact_persons?: Json | null
+          created_at?: string
+          description: string
+          employees: string
+          experience_tiles?: Json | null
+          founded: string
+          id?: string
+          location: string
+          logo?: string | null
+          name: string
+          services?: string[]
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
+        }
+        Update: {
+          basic_info?: string | null
+          contact?: string | null
+          contact_persons?: Json | null
+          created_at?: string
+          description?: string
+          employees?: string
+          experience_tiles?: Json | null
+          founded?: string
+          id?: string
+          location?: string
+          logo?: string | null
+          name?: string
+          services?: string[]
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
         }
         Relationships: []
       }

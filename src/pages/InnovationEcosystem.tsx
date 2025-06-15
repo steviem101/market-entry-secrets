@@ -1,135 +1,19 @@
+
 import { useState, useEffect } from "react";
 import { Filter, Grid3X3 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import CompanyCard, { Company } from "@/components/CompanyCard";
+import CompanyCard, { Company, ExperienceTile, ContactPerson } from "@/components/CompanyCard";
 import SearchFilters from "@/components/SearchFilters";
 import CompanyModal from "@/components/CompanyModal";
 import { useBookmarks } from "@/hooks/useBookmarks";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const ecosystemEntities: Company[] = [
-  {
-    id: "1",
-    name: "Techstars Sydney",
-    description: "Leading global accelerator program helping early-stage startups scale rapidly in the Australian market. We provide mentorship, funding, and access to a global network of entrepreneurs and investors.",
-    location: "Sydney, NSW",
-    founded: "2015",
-    employees: "25-50",
-    services: ["Startup Acceleration", "Mentorship", "Seed Funding", "Network Access", "Demo Day"],
-    website: "https://techstars.com/sydney",
-    contact: "sydney@techstars.com",
-    experienceTiles: [
-      { id: "1", name: "Atlassian", logo: "/placeholder.svg" },
-      { id: "2", name: "Canva", logo: "/placeholder.svg" },
-      { id: "3", name: "Afterpay", logo: "/placeholder.svg" }
-    ],
-    contactPersons: [
-      { id: "1", name: "Sarah Chen", role: "Managing Director", image: "/placeholder.svg" },
-      { id: "2", name: "Michael Torres", role: "Program Manager", image: "/placeholder.svg" }
-    ]
-  },
-  {
-    id: "2",
-    name: "CSIRO Innovation Centre",
-    description: "Australia's national science agency fostering innovation through research collaboration and technology transfer. We connect researchers with industry to drive breakthrough innovations.",
-    location: "Multiple Locations",
-    founded: "1916",
-    employees: "5000+",
-    services: ["Research Collaboration", "Technology Transfer", "IP Licensing", "Innovation Consulting", "Startup Incubation"],
-    website: "https://csiro.au",
-    contact: "innovation@csiro.au",
-    experienceTiles: [
-      { id: "1", name: "BHP", logo: "/placeholder.svg" },
-      { id: "2", name: "Woolworths", logo: "/placeholder.svg" },
-      { id: "3", name: "QANTAS", logo: "/placeholder.svg" }
-    ],
-    contactPersons: [
-      { id: "1", name: "Dr. Emma Watson", role: "Innovation Director", image: "/placeholder.svg" },
-      { id: "2", name: "James Mitchell", role: "Technology Transfer Manager", image: "/placeholder.svg" }
-    ]
-  },
-  {
-    id: "3",
-    name: "Blackbird Ventures",
-    description: "Australia's largest venture capital fund investing in exceptional founders building global companies. We provide seed to growth stage funding and strategic support.",
-    location: "Sydney, NSW",
-    founded: "2012",
-    employees: "50-100",
-    services: ["Venture Capital", "Seed Funding", "Growth Capital", "Strategic Advisory", "Portfolio Support"],
-    website: "https://blackbird.vc",
-    contact: "hello@blackbird.vc",
-    experienceTiles: [
-      { id: "1", name: "Canva", logo: "/placeholder.svg" },
-      { id: "2", name: "SafetyCulture", logo: "/placeholder.svg" },
-      { id: "3", name: "Culture Amp", logo: "/placeholder.svg" }
-    ],
-    contactPersons: [
-      { id: "1", name: "Niki Scevak", role: "Co-founder & Partner", image: "/placeholder.svg" },
-      { id: "2", name: "Rick Baker", role: "Co-founder & Partner", image: "/placeholder.svg" }
-    ]
-  },
-  {
-    id: "4",
-    name: "Melbourne Innovation District",
-    description: "World-class innovation precinct connecting startups, corporates, and research institutions. We create collaborative spaces and programs to drive innovation in health and life sciences.",
-    location: "Melbourne, VIC",
-    founded: "2017",
-    employees: "100-200",
-    services: ["Innovation Hub", "Coworking Spaces", "Corporate Innovation", "Research Partnerships", "Event Hosting"],
-    website: "https://mid.org.au",
-    contact: "connect@mid.org.au",
-    experienceTiles: [
-      { id: "1", name: "CSL", logo: "/placeholder.svg" },
-      { id: "2", name: "NAB", logo: "/placeholder.svg" },
-      { id: "3", name: "University of Melbourne", logo: "/placeholder.svg" }
-    ],
-    contactPersons: [
-      { id: "1", name: "Dr. Lisa Park", role: "CEO", image: "/placeholder.svg" },
-      { id: "2", name: "David Kim", role: "Head of Partnerships", image: "/placeholder.svg" }
-    ]
-  },
-  {
-    id: "5",
-    name: "BlueChilli",
-    description: "Corporate venture studio and accelerator building and scaling tech startups across Australia. We partner with corporates to create new ventures and accelerate existing startups.",
-    location: "Sydney, NSW",
-    founded: "2011",
-    employees: "50-100",
-    services: ["Venture Studio", "Corporate Acceleration", "Startup Development", "Digital Transformation", "Innovation Strategy"],
-    website: "https://bluechilli.com",
-    contact: "hello@bluechilli.com",
-    experienceTiles: [
-      { id: "1", name: "Westpac", logo: "/placeholder.svg" },
-      { id: "2", name: "Telstra", logo: "/placeholder.svg" },
-      { id: "3", name: "RACV", logo: "/placeholder.svg" }
-    ],
-    contactPersons: [
-      { id: "1", name: "Sebastien Eckersley-Maslin", role: "CEO", image: "/placeholder.svg" },
-      { id: "2", name: "Annie Parker", role: "Head of Programs", image: "/placeholder.svg" }
-    ]
-  },
-  {
-    id: "6",
-    name: "University of Sydney Innovation Hub",
-    description: "Connecting academic research with industry to drive innovation and entrepreneurship. We support student startups, research commercialization, and industry partnerships.",
-    location: "Sydney, NSW",
-    founded: "2018",
-    employees: "25-50",
-    services: ["Research Commercialization", "Student Startups", "Industry Partnerships", "IP Management", "Entrepreneur Education"],
-    website: "https://sydney.edu.au/innovation",
-    contact: "innovation@sydney.edu.au",
-    experienceTiles: [
-      { id: "1", name: "Google", logo: "/placeholder.svg" },
-      { id: "2", name: "Microsoft", logo: "/placeholder.svg" },
-      { id: "3", name: "Johnson & Johnson", logo: "/placeholder.svg" }
-    ],
-    contactPersons: [
-      { id: "1", name: "Prof. Rachel Thompson", role: "Director", image: "/placeholder.svg" },
-      { id: "2", name: "Mark Stevens", role: "Commercialization Manager", image: "/placeholder.svg" }
-    ]
-  }
-];
+// Use the Supabase-generated type
+import { Tables } from "@/integrations/supabase/types";
+
+type InnovationEntity = Tables<'innovation_ecosystem'>;
 
 const serviceCategories = [
   { id: "acceleration", name: "Startup Acceleration", count: 12 },
@@ -170,13 +54,69 @@ const InnovationEcosystem = () => {
   const [selectedEntity, setSelectedEntity] = useState<Company | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
+  const [entities, setEntities] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
   const { fetchBookmarks } = useBookmarks();
 
   useEffect(() => {
     fetchBookmarks();
+    fetchInnovationEntities();
   }, [fetchBookmarks]);
 
-  const filteredEntities = ecosystemEntities.filter(entity => {
+  const fetchInnovationEntities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('innovation_ecosystem')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+
+      const transformedData: Company[] = data.map((entity: InnovationEntity) => {
+        // Type-safe conversion of JSON fields
+        let experienceTiles: ExperienceTile[] = [];
+        let contactPersons: ContactPerson[] = [];
+
+        // Parse experience_tiles if it exists and is an array
+        if (entity.experience_tiles && Array.isArray(entity.experience_tiles)) {
+          experienceTiles = (entity.experience_tiles as any[]).filter(tile => 
+            tile && typeof tile === 'object' && tile.id && tile.name
+          ) as ExperienceTile[];
+        }
+
+        // Parse contact_persons if it exists and is an array
+        if (entity.contact_persons && Array.isArray(entity.contact_persons)) {
+          contactPersons = (entity.contact_persons as any[]).filter(person => 
+            person && typeof person === 'object' && person.id && person.name
+          ) as ContactPerson[];
+        }
+
+        return {
+          id: entity.id,
+          name: entity.name,
+          description: entity.description,
+          location: entity.location,
+          founded: entity.founded,
+          employees: entity.employees,
+          services: entity.services || [],
+          website: entity.website || undefined,
+          contact: entity.contact || undefined,
+          logo: entity.logo || undefined,
+          experienceTiles,
+          contactPersons
+        };
+      });
+
+      setEntities(transformedData);
+    } catch (error) {
+      console.error('Error fetching innovation entities:', error);
+      toast.error('Failed to load innovation ecosystem entities');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredEntities = entities.filter(entity => {
     const matchesSearch = entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entity.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entity.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -205,6 +145,20 @@ const InnovationEcosystem = () => {
     toast.success(`Contact request sent to ${entity.name}!`);
     setIsModalOpen(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">Loading innovation ecosystem...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
