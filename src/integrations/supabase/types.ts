@@ -173,6 +173,329 @@ export type Database = {
         }
         Relationships: []
       }
+      content_bodies: {
+        Row: {
+          body_markdown: string | null
+          body_text: string
+          content_id: string | null
+          content_type: string | null
+          created_at: string
+          id: string
+          question: string | null
+          section_id: string | null
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          body_markdown?: string | null
+          body_text: string
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          question?: string | null
+          section_id?: string | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          body_markdown?: string | null
+          body_text?: string
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          question?: string | null
+          section_id?: string | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_bodies_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_bodies_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "content_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_company_profiles: {
+        Row: {
+          annual_revenue: string | null
+          business_model: string | null
+          company_logo: string | null
+          company_name: string
+          content_id: string | null
+          created_at: string
+          employee_count: number | null
+          entry_date: string | null
+          founder_count: number | null
+          gross_margin: string | null
+          id: string
+          industry: string | null
+          is_profitable: boolean | null
+          monthly_revenue: string | null
+          origin_country: string | null
+          startup_costs: string | null
+          target_market: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          annual_revenue?: string | null
+          business_model?: string | null
+          company_logo?: string | null
+          company_name: string
+          content_id?: string | null
+          created_at?: string
+          employee_count?: number | null
+          entry_date?: string | null
+          founder_count?: number | null
+          gross_margin?: string | null
+          id?: string
+          industry?: string | null
+          is_profitable?: boolean | null
+          monthly_revenue?: string | null
+          origin_country?: string | null
+          startup_costs?: string | null
+          target_market?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          annual_revenue?: string | null
+          business_model?: string | null
+          company_logo?: string | null
+          company_name?: string
+          content_id?: string | null
+          created_at?: string
+          employee_count?: number | null
+          entry_date?: string | null
+          founder_count?: number | null
+          gross_margin?: string | null
+          id?: string
+          industry?: string | null
+          is_profitable?: boolean | null
+          monthly_revenue?: string | null
+          origin_country?: string | null
+          startup_costs?: string | null
+          target_market?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_company_profiles_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_founders: {
+        Row: {
+          bio: string | null
+          content_id: string | null
+          created_at: string
+          id: string
+          image: string | null
+          is_primary: boolean | null
+          name: string
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_twitter: string | null
+          social_youtube: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          content_id?: string | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          is_primary?: boolean | null
+          name: string
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          content_id?: string | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          is_primary?: boolean | null
+          name?: string
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_founders_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_items: {
+        Row: {
+          category_id: string | null
+          content_type: string
+          created_at: string
+          featured: boolean | null
+          id: string
+          meta_description: string | null
+          meta_keywords: string[] | null
+          publish_date: string | null
+          read_time: number | null
+          sector_tags: string[] | null
+          slug: string
+          status: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          category_id?: string | null
+          content_type?: string
+          created_at?: string
+          featured?: boolean | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          publish_date?: string | null
+          read_time?: number | null
+          sector_tags?: string[] | null
+          slug: string
+          status?: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          category_id?: string | null
+          content_type?: string
+          created_at?: string
+          featured?: boolean | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          publish_date?: string | null
+          read_time?: number | null
+          sector_tags?: string[] | null
+          slug?: string
+          status?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "content_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_sections: {
+        Row: {
+          content_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          slug: string
+          sort_order: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          slug: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          slug?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_sections_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           attendees: number
