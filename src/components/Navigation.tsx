@@ -4,9 +4,11 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MarketEntryLogo from "./MarketEntryLogo";
+import { getAllSectors } from "@/config/sectors";
 
 const Navigation = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const sectors = getAllSectors();
 
   const handleMouseEnter = (dropdownName: string) => {
     setOpenDropdown(dropdownName);
@@ -31,6 +33,37 @@ const Navigation = () => {
 
           {/* Navigation Menu */}
           <div className="flex items-center space-x-1">
+            {/* Sectors Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => handleMouseEnter('sectors')}
+              onMouseLeave={handleMouseLeave}
+            >
+              <button className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
+                Sectors
+                <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform duration-200", openDropdown === 'sectors' && "rotate-180")} />
+              </button>
+              
+              {openDropdown === 'sectors' && (
+                <div className="absolute top-full left-0 mt-1 w-[400px] bg-popover border border-border rounded-md shadow-lg z-50">
+                  <div className="grid gap-3 p-6">
+                    {sectors.map((sector) => (
+                      <Link 
+                        key={sector.id}
+                        to={`/sectors/${sector.id}`}
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                      >
+                        <div className="text-sm font-medium leading-none">{sector.name}</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          {sector.description}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Ecosystem Dropdown */}
             <div 
               className="relative"
