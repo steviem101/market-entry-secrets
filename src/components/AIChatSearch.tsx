@@ -70,7 +70,7 @@ export const AIChatSearch = ({
     return (
       <Button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-4 right-4 z-50 rounded-full w-12 h-12 p-0"
+        className={cn("rounded-full w-12 h-12 p-0", className)}
         size="default"
       >
         <MessageCircle className="w-6 h-6" />
@@ -79,9 +79,9 @@ export const AIChatSearch = ({
   }
 
   return (
-    <>
+    <div className={className}>
       {/* Search Bar */}
-      <div className={`relative ${className}`}>
+      <div className="relative">
         <div className="relative">
           <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
@@ -107,7 +107,7 @@ export const AIChatSearch = ({
 
       {/* Expanded Chat Interface */}
       {isExpanded && (
-        <Card className="fixed bottom-4 right-4 w-96 h-[500px] z-50 shadow-2xl border-2">
+        <Card className="absolute bottom-0 right-0 w-96 h-[500px] shadow-2xl border-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">AI Assistant</CardTitle>
             <div className="flex gap-1">
@@ -208,6 +208,6 @@ export const AIChatSearch = ({
           </CardContent>
         </Card>
       )}
-    </>
+    </div>
   );
 };
