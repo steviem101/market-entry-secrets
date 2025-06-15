@@ -1,18 +1,31 @@
+
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
+import { useCountUp } from "@/hooks/useCountUp";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+
 interface HeroSectionProps {
   totalResources: number;
   searchMode: 'database' | 'ai';
   onSearchModeChange: (mode: 'database' | 'ai') => void;
 }
+
 export const HeroSection = ({
   totalResources,
   searchMode,
   onSearchModeChange
 }: HeroSectionProps) => {
-  return <section className="relative overflow-hidden">
+  const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.3 });
+  const animatedCount = useCountUp({ 
+    end: totalResources, 
+    duration: 2500, 
+    isVisible 
+  });
+
+  return (
+    <section className="relative overflow-hidden">
       {/* Background with soft gradients */}
       <div className="absolute inset-0 gradient-overlay" />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10" />
@@ -29,11 +42,14 @@ export const HeroSection = ({
             Connect with vetted service providers, learn from success stories, and accelerate your market entry with expert guidance.
           </p>
 
-          {/* Total Counter with soft styling */}
-          <div className="inline-flex items-center justify-center bg-gradient-to-r from-primary/8 to-accent/8 border border-primary/15 rounded-2xl px-8 py-4 mb-12 soft-shadow backdrop-blur-sm">
+          {/* Total Counter with animated counting */}
+          <div 
+            ref={elementRef}
+            className="inline-flex items-center justify-center bg-gradient-to-r from-primary/8 to-accent/8 border border-primary/15 rounded-2xl px-8 py-4 mb-12 soft-shadow backdrop-blur-sm"
+          >
             <div className="text-center">
               <div className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {totalResources.toLocaleString()}+
+                {animatedCount.toLocaleString()}+
               </div>
               <div className="text-sm text-muted-foreground font-medium mt-1">Total Secrets Available</div>
             </div>
@@ -66,5 +82,6 @@ export const HeroSection = ({
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
