@@ -99,12 +99,16 @@ export const useContentCategories = () => {
 
 export const useIncrementViewCount = () => {
   return async (contentId: string) => {
-    const { error } = await supabase.rpc('increment_view_count', {
-      content_id: contentId
-    });
-    
-    if (error) {
-      console.error('Error incrementing view count:', error);
+    try {
+      const { error } = await supabase.rpc('increment_view_count', {
+        content_id: contentId
+      });
+      
+      if (error) {
+        console.error('Error incrementing view count:', error);
+      }
+    } catch (err) {
+      console.error('Failed to increment view count:', err);
     }
   };
 };
