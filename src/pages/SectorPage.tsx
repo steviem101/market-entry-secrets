@@ -8,7 +8,8 @@ import {
   useSectorLeads, 
   useSectorCommunityMembers,
   useSectorInnovationEcosystem,
-  useSectorTradeAgencies
+  useSectorTradeAgencies,
+  useSectorContent
 } from "@/hooks/useSectorData";
 import NotFound from "./NotFound";
 import SectorHero from "@/components/sectors/SectorHero";
@@ -25,12 +26,13 @@ const SectorPage = () => {
   const { data: communityMembers = [], isLoading: communityLoading } = useSectorCommunityMembers(sectorId || '');
   const { data: innovationEcosystem = [], isLoading: innovationLoading } = useSectorInnovationEcosystem(sectorId || '');
   const { data: tradeAgencies = [], isLoading: tradeLoading } = useSectorTradeAgencies(sectorId || '');
+  const { data: contentItems = [], isLoading: contentLoading } = useSectorContent(sectorId || '');
 
   if (!sectorConfig) {
     return <NotFound />;
   }
 
-  const isLoading = providersLoading || eventsLoading || leadsLoading || communityLoading || innovationLoading || tradeLoading;
+  const isLoading = providersLoading || eventsLoading || leadsLoading || communityLoading || innovationLoading || tradeLoading || contentLoading;
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,6 +53,7 @@ const SectorPage = () => {
           communityMembersCount={communityMembers.length}
           innovationEcosystemCount={innovationEcosystem.length}
           tradeAgenciesCount={tradeAgencies.length}
+          contentCount={contentItems.length}
         />
 
         {isLoading ? (
@@ -66,6 +69,7 @@ const SectorPage = () => {
             communityMembers={communityMembers}
             innovationEcosystem={innovationEcosystem}
             tradeAgencies={tradeAgencies}
+            contentItems={contentItems}
             sectorName={sectorConfig.name}
           />
         )}

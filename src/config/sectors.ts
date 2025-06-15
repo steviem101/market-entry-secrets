@@ -7,6 +7,7 @@ export interface SectorConfig {
   serviceKeywords: string[];
   eventKeywords: string[];
   leadKeywords: string[];
+  contentKeywords: string[];
   industries: string[];
   heroTitle: string;
   heroDescription: string;
@@ -21,6 +22,7 @@ export const SECTOR_MAPPINGS: Record<string, SectorConfig> = {
     serviceKeywords: ['financial services', 'banking', 'payment', 'fintech', 'regulatory', 'compliance', 'investment', 'trading'],
     eventKeywords: ['fintech', 'financial', 'banking', 'payments', 'blockchain', 'cryptocurrency'],
     leadKeywords: ['financial', 'banking', 'fintech', 'payments'],
+    contentKeywords: ['fintech', 'financial technology', 'digital banking', 'payments', 'blockchain', 'cryptocurrency', 'open banking', 'regtech', 'insurtech', 'wealthtech'],
     industries: ['Financial Services', 'Banking', 'FinTech', 'Insurance', 'Investment'],
     heroTitle: 'FinTech Market Entry Solutions',
     heroDescription: 'Connect with specialized service providers, events, and opportunities in Australia\'s thriving financial technology ecosystem.'
@@ -33,6 +35,7 @@ export const SECTOR_MAPPINGS: Record<string, SectorConfig> = {
     serviceKeywords: ['medical', 'healthcare', 'biotechnology', 'pharmaceutical', 'regulatory', 'clinical', 'health'],
     eventKeywords: ['medtech', 'medical', 'healthcare', 'biotechnology', 'health'],
     leadKeywords: ['medical', 'healthcare', 'pharmaceutical', 'biotech'],
+    contentKeywords: ['medtech', 'medical technology', 'healthcare innovation', 'digital health', 'telemedicine', 'medical devices', 'biotechnology', 'pharmaceutical', 'health tech'],
     industries: ['Healthcare', 'Medical Technology', 'Biotechnology', 'Pharmaceuticals', 'Digital Health'],
     heroTitle: 'MedTech Market Entry Solutions',
     heroDescription: 'Navigate Australia\'s medical technology landscape with specialized expertise and regulatory guidance.'
@@ -45,6 +48,7 @@ export const SECTOR_MAPPINGS: Record<string, SectorConfig> = {
     serviceKeywords: ['telecommunications', 'network', 'connectivity', 'infrastructure', 'spectrum', 'regulatory'],
     eventKeywords: ['telecoms', 'telecommunications', '5g', 'network', 'connectivity'],
     leadKeywords: ['telecoms', 'telecommunications', 'network', 'infrastructure'],
+    contentKeywords: ['telecommunications', '5g', 'network infrastructure', 'connectivity', 'iot', 'satellite communications', 'wireless technology', 'broadband', 'telco'],
     industries: ['Telecommunications', 'Technology', 'Infrastructure', 'IoT', 'Connectivity'],
     heroTitle: 'Telecoms Market Entry Solutions',
     heroDescription: 'Enter Australia\'s telecommunications market with expert guidance on infrastructure, regulation, and partnerships.'

@@ -1,6 +1,6 @@
 
-import { Building2, Calendar, Database, Users, Lightbulb, Globe } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { useCountUp } from "@/hooks/useCountUp";
 
 interface SectorStatsProps {
   serviceProvidersCount: number;
@@ -9,95 +9,81 @@ interface SectorStatsProps {
   communityMembersCount: number;
   innovationEcosystemCount: number;
   tradeAgenciesCount: number;
+  contentCount: number;
 }
 
-const SectorStats = ({ 
-  serviceProvidersCount, 
-  eventsCount, 
-  leadsCount, 
+const SectorStats = ({
+  serviceProvidersCount,
+  eventsCount,
+  leadsCount,
   communityMembersCount,
   innovationEcosystemCount,
-  tradeAgenciesCount
+  tradeAgenciesCount,
+  contentCount
 }: SectorStatsProps) => {
+  const providersCount = useCountUp(serviceProvidersCount);
+  const upcomingEvents = useCountUp(eventsCount);
+  const availableLeads = useCountUp(leadsCount);
+  const expertMembers = useCountUp(communityMembersCount);
+  const innovationPartners = useCountUp(innovationEcosystemCount);
+  const tradePartners = useCountUp(tradeAgenciesCount);
+  const contentArticles = useCountUp(contentCount);
+
+  const stats = [
+    { 
+      label: "Service Providers", 
+      value: providersCount,
+      description: "Specialized companies"
+    },
+    { 
+      label: "Innovation Partners", 
+      value: innovationPartners,
+      description: "Ecosystem entities"
+    },
+    { 
+      label: "Trade Agencies", 
+      value: tradePartners,
+      description: "Investment agencies"
+    },
+    { 
+      label: "Content Articles", 
+      value: contentArticles,
+      description: "Industry insights"
+    },
+    { 
+      label: "Upcoming Events", 
+      value: upcomingEvents,
+      description: "Industry gatherings"
+    },
+    { 
+      label: "Market Data", 
+      value: availableLeads,
+      description: "Available datasets"
+    },
+    { 
+      label: "Industry Experts", 
+      value: expertMembers,
+      description: "Available mentors"
+    }
+  ];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Service Providers</CardTitle>
-          <Building2 className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{serviceProvidersCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Specialized providers
-          </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{eventsCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Industry events
-          </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Available Leads</CardTitle>
-          <Database className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{leadsCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Data opportunities
-          </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Expert Members</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{communityMembersCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Industry experts
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Innovation Hub</CardTitle>
-          <Lightbulb className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{innovationEcosystemCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Ecosystem partners
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Trade Agencies</CardTitle>
-          <Globe className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{tradeAgenciesCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Government support
-          </p>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-12">
+      {stats.map((stat, index) => (
+        <Card key={index} className="text-center">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-primary mb-1">
+              {stat.value}
+            </div>
+            <div className="text-sm font-medium text-foreground mb-1">
+              {stat.label}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {stat.description}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };

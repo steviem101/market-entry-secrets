@@ -3,6 +3,7 @@ import CompanyCard from "@/components/CompanyCard";
 import { EventCard } from "@/components/EventCard";
 import { LeadCard } from "@/components/LeadCard";
 import PersonCard from "@/components/PersonCard";
+import { ContentCard } from "@/components/content/ContentCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import SectorSection from "./SectorSection";
@@ -15,6 +16,7 @@ interface SectorContentProps {
   communityMembers: any[];
   innovationEcosystem: any[];
   tradeAgencies: any[];
+  contentItems: any[];
   sectorName: string;
 }
 
@@ -25,6 +27,7 @@ const SectorContent = ({
   communityMembers,
   innovationEcosystem,
   tradeAgencies,
+  contentItems,
   sectorName
 }: SectorContentProps) => {
   const { handleViewProfile, handleContact, handleDownload, handlePreview } = useSectorHandlers();
@@ -44,12 +47,25 @@ const SectorContent = ({
 
   // If no data at all, show message
   if (serviceProviders.length === 0 && events.length === 0 && leads.length === 0 && 
-      communityMembers.length === 0 && innovationEcosystem.length === 0 && tradeAgencies.length === 0) {
+      communityMembers.length === 0 && innovationEcosystem.length === 0 && tradeAgencies.length === 0 && 
+      contentItems.length === 0) {
     return <NoDataMessage />;
   }
 
   return (
     <div className="space-y-12">
+      {/* Content Section */}
+      <SectorSection
+        title="Industry Insights & Analysis"
+        viewAllLink="/content"
+        viewAllText="View All Content"
+        isEmpty={contentItems.length === 0}
+      >
+        {contentItems.slice(0, 6).map((content) => (
+          <ContentCard key={content.id} content={content} />
+        ))}
+      </SectorSection>
+
       {/* Service Providers Section */}
       <SectorSection
         title="Specialized Service Providers"
