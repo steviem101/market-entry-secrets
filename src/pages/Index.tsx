@@ -16,7 +16,7 @@ const Index = () => {
   const [searchMode, setSearchMode] = useState<'database' | 'ai'>('database');
 
   // Calculate total resources count based on actual database tables
-  const totalResources = 500 + 25 + 1200 + 50 + 200; // Service Providers + Innovation Hubs + Success Stories + Events + Mentors
+  const totalResources = 500 + 25 + 100 + 1200 + 50 + 200; // Service Providers + Innovation Hubs + Lead Data + Success Stories + Events + Mentors
 
   return (
     <div className="min-h-screen bg-background">
