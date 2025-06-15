@@ -32,14 +32,14 @@ export const CollapsedSearchBar = ({
             onChange={(e) => setQuery(e.target.value)}
             onFocus={onExpand}
             onKeyDown={(e) => e.key === 'Enter' && onSubmit(e)}
-            className="pl-7 pr-7 py-1 text-xs rounded-full border bg-background/90 backdrop-blur-sm w-40"
+            className="pl-7 pr-8 py-1 text-xs rounded-full border bg-background/90 backdrop-blur-sm w-40"
           />
           <Button
             type="submit"
             onClick={onSubmit}
             disabled={!query.trim() || loading}
             size="sm"
-            className="absolute right-0.5 top-1/2 transform -translate-y-1/2 h-5 w-5 p-0 rounded-full"
+            className="absolute right-1.5 top-1/2 transform -translate-y-1/2 h-5 w-5 p-0 rounded-full"
           >
             <Send className="w-2.5 h-2.5" />
           </Button>
