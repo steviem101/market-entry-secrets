@@ -14,9 +14,16 @@ interface MasterSearchResultsProps {
 }
 
 export const MasterSearchResults = ({ results, loading, error, onResultClick }: MasterSearchResultsProps) => {
+  console.log("MasterSearchResults render:", { 
+    resultsLength: results.length, 
+    loading, 
+    error,
+    results: results.slice(0, 3) // Log first 3 results for debugging
+  });
+
   if (loading) {
     return (
-      <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-xl mt-2 p-4 z-[100] max-w-2xl mx-auto">
+      <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-xl mt-2 p-4 z-50 max-w-2xl mx-auto">
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
           <span className="ml-2 text-muted-foreground text-sm">Searching...</span>
@@ -27,7 +34,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
 
   if (error) {
     return (
-      <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-xl mt-2 p-4 z-[100] max-w-2xl mx-auto">
+      <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-xl mt-2 p-4 z-50 max-w-2xl mx-auto">
         <div className="text-red-500 text-center py-4 text-sm">
           Error: {error}
         </div>
@@ -106,7 +113,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
   };
 
   return (
-    <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-xl mt-2 max-h-80 overflow-y-auto z-[100] max-w-2xl mx-auto">
+    <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-50 max-w-2xl mx-auto">
       <div className="p-3">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xs font-semibold text-foreground">Search Results</h3>
@@ -114,7 +121,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
         </div>
         
         <div className="space-y-1">
-          {results.map((result) => (
+          {results.slice(0, 10).map((result) => (
             <Link 
               key={`${result.type}-${result.id}`} 
               to={result.url}

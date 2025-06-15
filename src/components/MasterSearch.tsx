@@ -22,7 +22,13 @@ export const MasterSearch = ({
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  console.log("MasterSearch render:", { searchQuery, debouncedSearchQuery, results: results.length, loading, showResults });
+  console.log("MasterSearch render:", { 
+    searchQuery, 
+    debouncedSearchQuery, 
+    results: results.length, 
+    loading, 
+    showResults 
+  });
 
   // Perform search when debounced query changes
   useEffect(() => {
@@ -32,11 +38,28 @@ export const MasterSearch = ({
       searchAll(debouncedSearchQuery);
       setShowResults(true);
     } else {
-      console.log("Clearing search");
+      console.log("Clearing search - empty query");
       clearSearch();
       setShowResults(false);
     }
   }, [debouncedSearchQuery, searchAll, clearSearch]);
+
+  // Show results when we have them and query is not empty
+  useEffect(() => {
+    console.log("Results effect:", { 
+      hasResults: results.length > 0, 
+      hasQuery: searchQuery.trim().length > 0,
+      loading 
+    });
+    
+    if (searchQuery.trim() && results.length > 0 && !loading) {
+      console.log("Setting showResults to true");
+      setShowResults(true);
+    } else if (!searchQuery.trim()) {
+      console.log("Setting showResults to false - no query");
+      setShowResults(false);
+    }
+  }, [results, searchQuery, loading]);
 
   // Handle clicks outside to close results
   useEffect(() => {
@@ -75,7 +98,7 @@ export const MasterSearch = ({
   };
 
   return (
-    <>
+    <div className="relative w-full">
       <div ref={searchRef} className={`relative ${className}`}>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -98,16 +121,16 @@ export const MasterSearch = ({
             </Button>
           )}
         </div>
-      </div>
 
-      {showResults && (
-        <MasterSearchResults
-          results={results}
-          loading={loading}
-          error={error}
-          onResultClick={handleResultClick}
-        />
-      )}
-    </>
+        {showResults && (
+          <MasterSearchResults
+            results={results}
+            loading={loading}
+            error={error}
+            onResultClick={handleResultClick}
+          />
+        )}
+      </div>
+    </div>
   );
 };
