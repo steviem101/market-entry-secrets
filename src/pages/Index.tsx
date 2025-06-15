@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { companies, serviceCategories, categoryGroups } from "@/data/mockData";
+
 const Index = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
@@ -21,59 +22,51 @@ const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchMode, setSearchMode] = useState<'database' | 'ai'>('database');
+
   const filteredCompanies = companies.filter(company => {
-    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) || company.description.toLowerCase().includes(searchTerm.toLowerCase()) || company.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategories = selectedCategories.length === 0 || company.services.some(service => selectedCategories.some(catId => {
-      const category = serviceCategories.find(c => c.id === catId) || categoryGroups.flatMap(g => g.categories).find(c => c.id === catId);
-      return category && service.toLowerCase().includes(category.name.toLowerCase());
-    }));
-    const matchesLocation = selectedLocations.length === 0 || selectedLocations.includes(company.location);
+    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         company.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         company.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesCategories = selectedCategories.length === 0 || 
+                             company.services.some(service => 
+                               selectedCategories.some(catId => {
+                                 const category = serviceCategories.find(c => c.id === catId) ||
+                                                categoryGroups.flatMap(g => g.categories).find(c => c.id === catId);
+                                 return category && service.toLowerCase().includes(category.name.toLowerCase());
+                               })
+                             );
+
+    const matchesLocation = selectedLocations.length === 0 || 
+                           selectedLocations.includes(company.location);
+    
     return matchesSearch && matchesCategories && matchesLocation;
   });
+
   const handleViewProfile = (company: Company) => {
     setSelectedCompany(company);
     setIsModalOpen(true);
   };
+
   const handleContact = (company: Company) => {
     toast.success(`Contact request sent to ${company.name}!`);
     setIsModalOpen(false);
   };
-  const featuredStats = [{
-    icon: Building2,
-    label: "Service Providers",
-    value: "500+",
-    link: "/service-providers"
-  }, {
-    icon: Users,
-    label: "Success Stories",
-    value: "1,200+",
-    link: "/mentors"
-  }, {
-    icon: TrendingUp,
-    label: "Market Entry Rate",
-    value: "94%",
-    link: "/about"
-  }, {
-    icon: Calendar,
-    label: "Monthly Events",
-    value: "50+",
-    link: "/events"
-  }, {
-    icon: Award,
-    label: "Expert Mentors",
-    value: "200+",
-    link: "/mentors"
-  }, {
-    icon: Rocket,
-    label: "Innovation Hubs",
-    value: "25+",
-    link: "/innovation-ecosystem"
-  }];
+
+  const featuredStats = [
+    { icon: Building2, label: "Service Providers", value: "500+", link: "/service-providers" },
+    { icon: Users, label: "Success Stories", value: "1,200+", link: "/mentors" },
+    { icon: TrendingUp, label: "Market Entry Rate", value: "94%", link: "/about" },
+    { icon: Calendar, label: "Monthly Events", value: "50+", link: "/events" },
+    { icon: Award, label: "Expert Mentors", value: "200+", link: "/mentors" },
+    { icon: Rocket, label: "Innovation Hubs", value: "25+", link: "/innovation-ecosystem" }
+  ];
 
   // Calculate total resources count
   const totalResources = 500 + 1200 + 50 + 200 + 25; // Service Providers + Success Stories + Events + Mentors + Innovation Hubs
 
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       {/* Hero Section */}
@@ -98,9 +91,11 @@ const Index = () => {
             
             {/* Unified Search Interface */}
             <div className="max-w-3xl mx-auto mb-12">
-              <Tabs value={searchMode} onValueChange={value => setSearchMode(value as 'database' | 'ai')} className="w-full">
+              <Tabs value={searchMode} onValueChange={(value) => setSearchMode(value as 'database' | 'ai')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6 bg-background/50 backdrop-blur-sm">
-                  <TabsTrigger value="database" className="text-sm font-medium">🔍 Search Secrets</TabsTrigger>
+                  <TabsTrigger value="database" className="text-sm font-medium">
+                    🔍 Search Database
+                  </TabsTrigger>
                   <TabsTrigger value="ai" className="text-sm font-medium">
                     🤖 Ask AI Assistant
                   </TabsTrigger>
@@ -124,7 +119,8 @@ const Index = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-6xl mx-auto">
-              {featuredStats.map((stat, index) => <Link key={index} to={stat.link} className="group">
+              {featuredStats.map((stat, index) => (
+                <Link key={index} to={stat.link} className="group">
                   <div className="text-center">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mb-3 group-hover:bg-primary/20 transition-colors">
                       <stat.icon className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
@@ -132,7 +128,8 @@ const Index = () => {
                     <div className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors">{stat.value}</div>
                     <div className="text-sm text-muted-foreground">{stat.label}</div>
                   </div>
-                </Link>)}
+                </Link>
+              ))}
             </div>
           </div>
         </div>
@@ -150,7 +147,8 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {serviceCategories.slice(0, 8).map(category => <Card key={category.id} className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20">
+            {serviceCategories.slice(0, 8).map((category) => (
+              <Card key={category.id} className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20">
                 <CardHeader className="text-center pb-2">
                   <CardTitle className="text-lg group-hover:text-primary transition-colors">
                     {category.name}
@@ -161,7 +159,8 @@ const Index = () => {
                     Professional {category.name.toLowerCase()} services for market entry
                   </p>
                 </CardContent>
-              </Card>)}
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -176,20 +175,36 @@ const Index = () => {
                 {filteredCompanies.length} providers ready to help you succeed
               </p>
             </div>
-            <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="lg:hidden">
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="lg:hidden"
+            >
               Filters
             </Button>
           </div>
 
           <div className="flex gap-8">
             {/* Filters Sidebar */}
-            {showFilters && <aside className="w-80 flex-shrink-0">
-                <SearchFilters categories={serviceCategories} categoryGroups={categoryGroups} selectedCategories={selectedCategories} onCategoryChange={setSelectedCategories} searchTerm="" onSearchChange={() => {}} selectedLocations={selectedLocations} onLocationChange={setSelectedLocations} />
-              </aside>}
+            {showFilters && (
+              <aside className="w-80 flex-shrink-0">
+                <SearchFilters
+                  categories={serviceCategories}
+                  categoryGroups={categoryGroups}
+                  selectedCategories={selectedCategories}
+                  onCategoryChange={setSelectedCategories}
+                  searchTerm=""
+                  onSearchChange={() => {}}
+                  selectedLocations={selectedLocations}
+                  onLocationChange={setSelectedLocations}
+                />
+              </aside>
+            )}
 
             {/* Main Content */}
             <main className="flex-1">
-              {filteredCompanies.length === 0 ? <div className="text-center py-12">
+              {filteredCompanies.length === 0 ? (
+                <div className="text-center py-12">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                     <Users className="w-8 h-8 text-muted-foreground" />
                   </div>
@@ -198,22 +213,34 @@ const Index = () => {
                     Try adjusting your search criteria to find more providers.
                   </p>
                   <Button onClick={() => {
-                setSearchTerm("");
-                setSelectedCategories([]);
-                setSelectedLocations([]);
-              }}>
+                    setSearchTerm("");
+                    setSelectedCategories([]);
+                    setSelectedLocations([]);
+                  }}>
                     Clear Filters
                   </Button>
-                </div> : <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  {filteredCompanies.slice(0, 9).map(company => <CompanyCard key={company.id} company={company} onViewProfile={handleViewProfile} onContact={handleContact} />)}
-                </div>}
+                </div>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  {filteredCompanies.slice(0, 9).map((company) => (
+                    <CompanyCard
+                      key={company.id}
+                      company={company}
+                      onViewProfile={handleViewProfile}
+                      onContact={handleContact}
+                    />
+                  ))}
+                </div>
+              )}
               
-              {filteredCompanies.length > 9 && <div className="text-center mt-12">
+              {filteredCompanies.length > 9 && (
+                <div className="text-center mt-12">
                   <Button size="lg" className="group">
                     View All Providers
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                </div>}
+                </div>
+              )}
             </main>
           </div>
         </div>
@@ -238,7 +265,14 @@ const Index = () => {
       </section>
 
       {/* Company Modal */}
-      <CompanyModal company={selectedCompany} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onContact={handleContact} />
-    </div>;
+      <CompanyModal
+        company={selectedCompany}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onContact={handleContact}
+      />
+    </div>
+  );
 };
+
 export default Index;
