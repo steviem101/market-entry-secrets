@@ -102,10 +102,6 @@ const Navigation = () => {
               Content
             </Link>
 
-            <Link to="/partner-with-us" className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
-              Partner With Us
-            </Link>
-
             {/* About Dropdown */}
             <div 
               className="relative"
@@ -127,6 +123,15 @@ const Navigation = () => {
                       <div className="text-sm font-medium leading-none">About Us</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                         Our mission, story, and team
+                      </p>
+                    </Link>
+                    <Link 
+                      to="/partner-with-us" 
+                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <div className="text-sm font-medium leading-none">Partner With Us</div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        Join our ecosystem and collaborate with us
                       </p>
                     </Link>
                     <Link 
