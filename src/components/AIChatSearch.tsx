@@ -77,7 +77,7 @@ export const AIChatSearch = ({
 
   return (
     <div className={className}>
-      {/* Collapsed State - Compact Search Bar with consistent styling */}
+      {/* Collapsed State - Matching MasterSearch styling exactly */}
       {chatState.isCollapsed && (
         <div className="relative">
           <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -91,7 +91,7 @@ export const AIChatSearch = ({
                 handleSubmit(e);
               }
             }}
-            className="w-full pl-12 pr-4 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm"
           />
         </div>
       )}
