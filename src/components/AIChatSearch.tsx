@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, Send, X, Minimize2 } from "lucide-react";
+import { MessageCircle, Send, X, Minimize2, ChevronUp, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,7 @@ export const AIChatSearch = ({
   const [query, setQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const { 
     messages, 
     loading, 
@@ -55,6 +56,7 @@ export const AIChatSearch = ({
   const handleExpand = () => {
     setIsExpanded(true);
     setIsMinimized(false);
+    setIsCollapsed(false);
   };
 
   const handleMinimize = () => {
@@ -64,6 +66,17 @@ export const AIChatSearch = ({
   const handleClose = () => {
     setIsExpanded(false);
     setIsMinimized(false);
+    setIsCollapsed(true);
+  };
+
+  const handleToggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    if (isCollapsed) {
+      setIsExpanded(true);
+      setIsMinimized(false);
+    } else {
+      setIsExpanded(false);
+    }
   };
 
   if (isMinimized) {
@@ -80,30 +93,80 @@ export const AIChatSearch = ({
 
   return (
     <div className={className}>
-      {/* Search Bar */}
-      <div className="relative">
+      {/* Collapsed State - Compact Search Bar */}
+      {isCollapsed && (
         <div className="relative">
-          <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-          <Input
-            type="text"
-            placeholder={placeholder}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={handleExpand}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
-            className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm border-primary/20"
-          />
-          <Button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={!query.trim() || loading}
-            size="sm"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 rounded-full"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <MessageCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Ask AI..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={handleExpand}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
+                className="pl-10 pr-10 py-2 text-sm rounded-full border bg-background/90 backdrop-blur-sm w-64"
+              />
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={!query.trim() || loading}
+                size="sm"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 rounded-full"
+              >
+                <Send className="w-3 h-3" />
+              </Button>
+            </div>
+            <Button
+              onClick={handleToggleCollapse}
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0 rounded-full"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Expanded Search Bar */}
+      {!isCollapsed && !isExpanded && (
+        <div className="relative">
+          <div className="relative">
+            <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input
+              type="text"
+              placeholder={placeholder}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={handleExpand}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
+              className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm border-primary/20"
+            />
+            <Button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={!query.trim() || loading}
+              size="sm"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 rounded-full"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex justify-end mt-2">
+            <Button
+              onClick={handleToggleCollapse}
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+            >
+              <ChevronDown className="w-3 h-3 mr-1" />
+              Collapse
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Expanded Chat Interface */}
       {isExpanded && (
@@ -111,6 +174,14 @@ export const AIChatSearch = ({
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg font-semibold">AI Assistant</CardTitle>
             <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleToggleCollapse}
+                className="h-8 w-8 p-0"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
