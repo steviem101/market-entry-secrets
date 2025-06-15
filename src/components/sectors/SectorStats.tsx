@@ -1,32 +1,33 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { useCountUp } from "@/hooks/useCountUp";
 
 interface SectorStatsProps {
-  serviceProvidersCount: number;
-  eventsCount: number;
-  leadsCount: number;
-  communityMembersCount: number;
-  innovationEcosystemCount: number;
-  tradeAgenciesCount: number;
-  contentCount: number;
+  serviceProviders: any[];
+  events: any[];
+  leads: any[];
+  communityMembers: any[];
+  innovationEcosystem: any[];
+  tradeAgencies: any[];
+  contentItems: any[];
 }
 
 const SectorStats = ({
-  serviceProvidersCount,
-  eventsCount,
-  leadsCount,
-  communityMembersCount,
-  innovationEcosystemCount,
-  tradeAgenciesCount,
-  contentCount
+  serviceProviders,
+  events,
+  leads,
+  communityMembers,
+  innovationEcosystem,
+  tradeAgencies,
+  contentItems
 }: SectorStatsProps) => {
-  const providersCount = useCountUp({ end: serviceProvidersCount, isVisible: true });
-  const upcomingEvents = useCountUp({ end: eventsCount, isVisible: true });
-  const availableLeads = useCountUp({ end: leadsCount, isVisible: true });
-  const expertMembers = useCountUp({ end: communityMembersCount, isVisible: true });
-  const innovationPartners = useCountUp({ end: innovationEcosystemCount, isVisible: true });
-  const tradePartners = useCountUp({ end: tradeAgenciesCount, isVisible: true });
-  const contentArticles = useCountUp({ end: contentCount, isVisible: true });
+  const providersCount = useCountUp({ end: serviceProviders.length, isVisible: true });
+  const upcomingEvents = useCountUp({ end: events.length, isVisible: true });
+  const availableLeads = useCountUp({ end: leads.length, isVisible: true });
+  const expertMembers = useCountUp({ end: communityMembers.length, isVisible: true });
+  const innovationPartners = useCountUp({ end: innovationEcosystem.length, isVisible: true });
+  const tradePartners = useCountUp({ end: tradeAgencies.length, isVisible: true });
+  const contentArticles = useCountUp({ end: contentItems.length, isVisible: true });
 
   const stats = [
     { 

@@ -47,13 +47,13 @@ const SectorPage = () => {
       {/* Stats and Content Section */}
       <div className="container mx-auto px-4 py-8">
         <SectorStats
-          serviceProvidersCount={serviceProviders.length}
-          eventsCount={events.length}
-          leadsCount={leads.length}
-          communityMembersCount={communityMembers.length}
-          innovationEcosystemCount={innovationEcosystem.length}
-          tradeAgenciesCount={tradeAgencies.length}
-          contentCount={contentItems.length}
+          serviceProviders={serviceProviders}
+          events={events}
+          leads={leads}
+          communityMembers={communityMembers}
+          innovationEcosystem={innovationEcosystem}
+          tradeAgencies={tradeAgencies}
+          contentItems={contentItems}
         />
 
         {isLoading ? (
