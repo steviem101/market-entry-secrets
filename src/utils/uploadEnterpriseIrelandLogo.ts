@@ -24,9 +24,20 @@ export const uploadEnterpriseIrelandLogo = async () => {
   const file = new File([blob], 'enterprise-ireland-logo.svg', { type: 'image/svg+xml' });
 
   try {
+    // First, check if the file already exists
+    const { data: existingFile } = await supabase.storage
+      .from('tradeagencies')
+      .list('', { search: 'enterprise-ireland-logo.svg' });
+
+    if (existingFile && existingFile.length > 0) {
+      console.log('Enterprise Ireland logo already exists');
+      return true;
+    }
+
+    // Upload the SVG file
     const { data, error } = await supabase.storage
       .from('tradeagencies')
-      .upload('enterprise-ireland-logo.png', file, {
+      .upload('enterprise-ireland-logo.svg', file, {
         cacheControl: '3600',
         upsert: true
       });
@@ -37,6 +48,21 @@ export const uploadEnterpriseIrelandLogo = async () => {
     }
 
     console.log('Enterprise Ireland logo uploaded successfully:', data);
+
+    // Update the database record with the correct SVG URL
+    const { error: updateError } = await supabase
+      .from('trade_investment_agencies')
+      .update({ 
+        logo: 'https://xhziwveaiuhzdoutpgrh.supabase.co/storage/v1/object/public/tradeagencies/enterprise-ireland-logo.svg'
+      })
+      .eq('name', 'Enterprise Ireland');
+
+    if (updateError) {
+      console.error('Error updating Enterprise Ireland logo URL:', updateError);
+      return false;
+    }
+
+    console.log('Enterprise Ireland logo URL updated in database');
     return true;
   } catch (error) {
     console.error('Error uploading Enterprise Ireland logo:', error);
