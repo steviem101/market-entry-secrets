@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -85,47 +84,44 @@ const Events = () => {
   return <div className="min-h-screen bg-background">
       <Navigation />
       
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white py-16">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-5xl font-bold mb-4">AUSTRALIAN MARKET ENTRY EVENTS</h1>
-                <div className="flex items-center gap-6 mb-6">
-                  
-                  
-                  
-                  
-                  
-                </div>
+      {/* Hero Section - Updated to match site branding */}
+      <div className="bg-gradient-to-br from-background via-muted/30 to-background border-b border-border">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center">
+                <CalendarDays className="w-8 h-8 text-primary" />
               </div>
-              <Button className="bg-white/20 text-white border border-white/30 hover:bg-white/30">
-                Subscribed
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Australian Market Entry Events
+            </h1>
+            <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
+              Your go-to calendar for all market entry events happening across Australia. 
+              Connect with founders, operators, investors, and community builders.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-8">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span>Times in GMT+10</span>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <EventSubmissionForm onEventSubmitted={handleEventSubmitted} />
+              <Button variant="outline">
+                Subscribe to Updates
               </Button>
             </div>
           </div>
         </div>
-        
-        {/* Logo positioned over the gradient */}
-        <div className="absolute bottom-0 left-8 transform translate-y-1/2">
-          <div className="w-24 h-24 bg-blue-500 rounded-xl flex items-center justify-center">
-            <div className="text-white text-2xl font-bold">📅</div>
-          </div>
-        </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 mt-8">
+      <div className="container mx-auto px-4 py-8">
         {/* Event Info */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">Australian Market Entry Events Calendar</h2>
-          <div className="flex items-center gap-2 text-muted-foreground mb-4">
-            <Clock className="w-4 h-4" />
-            <span>Times in GMT+10 — 5:15 PM</span>
-          </div>
-          <p className="text-muted-foreground mb-8">
-            Your go-to for all the market entry events happening in Australia. Hosting an event for founders, operators, investors or community builders? Submit it here. 
-            Collaborate? <span className="text-primary">hello@marketentrysecrets.com.au</span>
+          <p className="text-muted-foreground mb-8 text-center max-w-3xl mx-auto">
+            Hosting an event for founders, operators, investors or community builders? Submit it above. 
+            Want to collaborate? Contact us at <span className="text-primary font-medium">hello@marketentrysecrets.com.au</span>
           </p>
 
           {/* Featured Events Carousel */}
