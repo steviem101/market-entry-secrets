@@ -64,9 +64,9 @@ export const HeroSection = ({
       <div className="relative container mx-auto px-4 py-24">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-8 leading-tight">
-            Uncover All the Secrets for Your
+            Australian Market
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block mt-2">
-              Australian Market Entry
+              Entry Secrets
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-6 leading-relaxed max-w-3xl mx-auto">
