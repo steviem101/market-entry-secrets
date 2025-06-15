@@ -62,6 +62,9 @@ const Index = () => {
     { icon: Rocket, label: "Innovation Hubs", value: "25+", link: "/innovation-ecosystem" }
   ];
 
+  // Calculate total resources count
+  const totalResources = 500 + 1200 + 50 + 200 + 25; // Service Providers + Success Stories + Events + Mentors + Innovation Hubs
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -74,9 +77,17 @@ const Index = () => {
               Your Gateway to the
               <span className="text-primary block">Australian Market</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+            <p className="text-xl text-muted-foreground mb-4 leading-relaxed">
               Connect with vetted service providers, learn from success stories, and accelerate your market entry with expert guidance.
             </p>
+
+            {/* Total Counter */}
+            <div className="inline-flex items-center justify-center bg-primary/5 border border-primary/20 rounded-full px-6 py-3 mb-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-primary">{totalResources.toLocaleString()}+</div>
+                <div className="text-sm text-muted-foreground font-medium">Total Resources Available</div>
+              </div>
+            </div>
             
             {/* Unified Search Interface */}
             <div className="max-w-3xl mx-auto mb-12">
