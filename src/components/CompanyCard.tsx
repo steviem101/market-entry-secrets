@@ -62,6 +62,16 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
     return images[index % images.length];
   };
 
+  // Generate company initials for fallback
+  const getCompanyInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="flex items-start gap-4 mb-4">
@@ -70,16 +80,23 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
             <img 
               src={company.logo} 
               alt={`${company.name} logo`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain p-2"
               onError={(e) => {
-                console.error(`Failed to load logo for ${company.name}:`, company.logo);
-                // Fallback to building icon if image fails to load
+                console.log(`Logo failed to load for ${company.name}, falling back to initials`);
                 e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.setAttribute('style', 'display: block');
+                const fallbackElement = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallbackElement) {
+                  fallbackElement.style.display = 'flex';
+                }
               }}
             />
           ) : null}
-          <Building2 className={`w-8 h-8 text-primary ${company.logo ? 'hidden' : ''}`} />
+          <div 
+            className={`w-full h-full flex items-center justify-center text-primary font-bold text-lg ${company.logo ? 'hidden' : 'flex'}`}
+            style={{ display: company.logo ? 'none' : 'flex' }}
+          >
+            {getCompanyInitials(company.name)}
+          </div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
