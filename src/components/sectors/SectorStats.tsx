@@ -2,7 +2,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
-import { useRef } from "react";
 
 interface SectorStatsProps {
   serviceProviders: any[];
@@ -23,8 +22,7 @@ const SectorStats = ({
   tradeAgencies,
   contentItems
 }: SectorStatsProps) => {
-  const statsRef = useRef<HTMLDivElement>(null);
-  const isVisible = useIntersectionObserver(statsRef, { threshold: 0.1 });
+  const { elementRef: statsRef, isVisible } = useIntersectionObserver({ threshold: 0.1 });
 
   const providersCount = useCountUp({ end: serviceProviders.length, isVisible });
   const upcomingEvents = useCountUp({ end: events.length, isVisible });
