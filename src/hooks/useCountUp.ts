@@ -12,7 +12,6 @@ export const useCountUp = ({ end, duration = 2000, start = 0, isVisible = false 
   const [count, setCount] = useState(start);
   const [hasStarted, setHasStarted] = useState(false);
   const frameRef = useRef<number>();
-  const startTimeRef = useRef<number>();
 
   useEffect(() => {
     console.log('useCountUp effect triggered:', { isVisible, hasStarted, start, end });
@@ -25,23 +24,25 @@ export const useCountUp = ({ end, duration = 2000, start = 0, isVisible = false 
     console.log('Starting count-up animation from', start, 'to', end);
     setHasStarted(true);
     
-    // Use a more stable animation approach
-    let currentCount = start;
-    const increment = (end - start) / (duration / 16); // 60fps = ~16ms per frame
+    const startTime = Date.now();
+    const totalSteps = end - start;
     
     const animate = () => {
-      currentCount += increment;
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
       
-      if (currentCount >= end) {
-        currentCount = end;
-        console.log('Animation completed, final count:', currentCount);
-        setCount(Math.floor(currentCount));
-        return;
+      const currentValue = start + (totalSteps * progress);
+      const roundedValue = Math.floor(currentValue);
+      
+      console.log('Updating count to:', roundedValue, 'progress:', progress);
+      setCount(roundedValue);
+      
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(animate);
+      } else {
+        console.log('Animation completed, final count:', end);
+        setCount(end);
       }
-      
-      console.log('Updating count to:', Math.floor(currentCount));
-      setCount(Math.floor(currentCount));
-      frameRef.current = requestAnimationFrame(animate);
     };
 
     frameRef.current = requestAnimationFrame(animate);
@@ -54,7 +55,7 @@ export const useCountUp = ({ end, duration = 2000, start = 0, isVisible = false 
     };
   }, [isVisible, hasStarted, start, end, duration]);
 
-  // Reset when visibility changes back to false
+  // Reset when visibility changes back to false (for re-triggering)
   useEffect(() => {
     if (!isVisible && hasStarted) {
       console.log('Resetting count-up state');
