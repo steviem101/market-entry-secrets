@@ -24,13 +24,23 @@ const SectorStats = ({
 }: SectorStatsProps) => {
   const { elementRef: statsRef, isVisible } = useIntersectionObserver({ threshold: 0.1 });
 
-  const providersCount = useCountUp({ end: serviceProviders.length, isVisible });
-  const upcomingEvents = useCountUp({ end: events.length, isVisible });
-  const availableLeads = useCountUp({ end: leads.length, isVisible });
-  const expertMembers = useCountUp({ end: communityMembers.length, isVisible });
-  const innovationPartners = useCountUp({ end: innovationEcosystem.length, isVisible });
-  const tradePartners = useCountUp({ end: tradeAgencies.length, isVisible });
-  const contentArticles = useCountUp({ end: contentItems.length, isVisible });
+  // Use consistent hook calling order by calculating all counts first
+  const serviceProviderCount = serviceProviders.length;
+  const eventCount = events.length;
+  const leadCount = leads.length;
+  const communityMemberCount = communityMembers.length;
+  const innovationEcosystemCount = innovationEcosystem.length;
+  const tradeAgencyCount = tradeAgencies.length;
+  const contentItemCount = contentItems.length;
+
+  // Now call all hooks in consistent order
+  const providersCount = useCountUp({ end: serviceProviderCount, isVisible, duration: 2000 });
+  const upcomingEvents = useCountUp({ end: eventCount, isVisible, duration: 2200 });
+  const availableLeads = useCountUp({ end: leadCount, isVisible, duration: 2400 });
+  const expertMembers = useCountUp({ end: communityMemberCount, isVisible, duration: 2600 });
+  const innovationPartners = useCountUp({ end: innovationEcosystemCount, isVisible, duration: 2800 });
+  const tradePartners = useCountUp({ end: tradeAgencyCount, isVisible, duration: 3000 });
+  const contentArticles = useCountUp({ end: contentItemCount, isVisible, duration: 3200 });
 
   const stats = [
     { 
@@ -69,6 +79,8 @@ const SectorStats = ({
       description: "Available mentors"
     }
   ];
+
+  console.log('SectorStats render:', { isVisible, stats: stats.map(s => ({ label: s.label, value: s.value })) });
 
   return (
     <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-12">
