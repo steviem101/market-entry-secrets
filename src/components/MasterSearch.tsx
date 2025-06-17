@@ -32,14 +32,20 @@ export const MasterSearch = ({
     showResults 
   });
 
-  // Calculate dropdown position
+  // Calculate dropdown position with better error handling
   const calculateDropdownPosition = () => {
-    if (inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      console.log("Input rect:", rect);
+    if (inputRef.current && searchRef.current) {
+      const inputRect = inputRef.current.getBoundingClientRect();
+      const containerRect = searchRef.current.getBoundingClientRect();
+      
+      console.log("Input rect:", inputRect);
+      console.log("Container rect:", containerRect);
+      
+      // Use container rect as fallback if input rect is invalid
+      const rect = inputRect.width > 0 ? inputRect : containerRect;
       
       const position = {
-        top: rect.bottom + window.scrollY + 4, // Reduced gap to 4px
+        top: rect.bottom + window.scrollY + 8,
         left: rect.left + window.scrollX,
         width: rect.width
       };
@@ -72,8 +78,11 @@ export const MasterSearch = ({
     
     if (searchQuery.trim() && (results.length > 0 || loading || error)) {
       console.log("Setting showResults to true");
-      calculateDropdownPosition();
-      setShowResults(true);
+      // Calculate position with a small delay to ensure DOM is ready
+      setTimeout(() => {
+        calculateDropdownPosition();
+        setShowResults(true);
+      }, 10);
     } else {
       console.log("Setting showResults to false");
       setShowResults(false);
@@ -141,8 +150,10 @@ export const MasterSearch = ({
     
     // Show results immediately if we have a query and existing results
     if (value.trim() && (results.length > 0 || loading)) {
-      calculateDropdownPosition();
-      setShowResults(true);
+      setTimeout(() => {
+        calculateDropdownPosition();
+        setShowResults(true);
+      }, 10);
     }
   };
 
