@@ -31,32 +31,36 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/service-providers" element={<ServiceProviders />} />
-          <Route path="/mentors" element={<Community />} />
-          <Route path="/content" element={<Content />} />
-          <Route path="/content/:slug" element={<ContentDetail />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
-          <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
-          <Route path="/leads" element={<Leads />} />
-          <Route path="/partner-with-us" element={<PartnerWithUs />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-of-service" element={<TermsOfService />} />
-          <Route path="/sectors/:sectorId" element={<SectorPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        
-        {/* AI Chat Assistant - available on all pages */}
-        <AIChatSearch 
-          placeholder="Ask our AI assistant about market entry..." 
-          className="fixed bottom-4 right-4 z-50"
-        />
+        <div className="relative">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/service-providers" element={<ServiceProviders />} />
+            <Route path="/mentors" element={<Community />} />
+            <Route path="/content" element={<Content />} />
+            <Route path="/content/:slug" element={<ContentDetail />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
+            <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
+            <Route path="/leads" element={<Leads />} />
+            <Route path="/partner-with-us" element={<PartnerWithUs />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/sectors/:sectorId" element={<SectorPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          
+          {/* AI Chat Assistant - available on all pages with improved positioning */}
+          <div className="fixed bottom-4 right-4 z-[9999]">
+            <AIChatSearch 
+              placeholder="Ask our AI assistant about market entry..." 
+              className="w-auto"
+            />
+          </div>
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
