@@ -1,6 +1,7 @@
 
 import { SearchResult } from "@/hooks/useMasterSearch";
 import { SearchResultCard } from "./SearchResultCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SearchResultsContainerProps {
   results: SearchResult[];
@@ -17,15 +18,17 @@ export const SearchResultsContainer = ({ results, onResultClick }: SearchResults
         </span>
       </div>
       
-      <div className="space-y-2 overflow-y-auto max-h-[520px]">
-        {results.slice(0, 15).map((result) => (
-          <SearchResultCard
-            key={`${result.type}-${result.id}`}
-            result={result}
-            onResultClick={onResultClick}
-          />
-        ))}
-      </div>
+      <ScrollArea className="h-[60vh] w-full">
+        <div className="space-y-2 pr-4">
+          {results.slice(0, 15).map((result) => (
+            <SearchResultCard
+              key={`${result.type}-${result.id}`}
+              result={result}
+              onResultClick={onResultClick}
+            />
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   );
 };
