@@ -108,18 +108,18 @@ export const MasterSearch = ({
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={handleInputFocus}
-            className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm"
+            className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
           />
-          {searchQuery && (
+          {searchQuery ? (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleClearSearch}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 rounded-full"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-accent/50"
             >
               <X className="w-4 h-4" />
             </Button>
-          )}
+          ) : null}
         </div>
 
         {showResults && (

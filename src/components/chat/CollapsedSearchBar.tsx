@@ -34,7 +34,7 @@ export const CollapsedSearchBar = ({
         onChange={(e) => setQuery(e.target.value)}
         onFocus={onExpand}
         onKeyDown={(e) => e.key === 'Enter' && onSubmit(e)}
-        className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm"
+        className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
       />
       {query ? (
         <Button
