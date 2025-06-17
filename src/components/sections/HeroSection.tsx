@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterSearch } from "@/components/MasterSearch";
@@ -83,14 +84,14 @@ export const HeroSection = ({
                 <TabsTrigger value="ai" className="text-sm font-medium rounded-xl">🤖 Use AI to Uncover Secrets</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="database" className="space-y-3">
+              <TabsContent value="database" className="space-y-3 mt-0">
                 <MasterSearch placeholder="Search for insider secrets, hidden strategies, proven providers..." />
                 <p className="text-sm text-muted-foreground/80">
                   Discover the secret strategies and vetted resources for Australian market success
                 </p>
               </TabsContent>
               
-              <TabsContent value="ai" className="space-y-3">
+              <TabsContent value="ai" className="space-y-3 mt-0">
                 <AIChatSearch placeholder="Ask our AI about market entry strategies..." />
                 <p className="text-sm text-muted-foreground/80">
                   Get insider knowledge from our AI trained on successful market entry strategies
