@@ -92,9 +92,6 @@ export const HeroSection = ({
               </TabsContent>
               
               <TabsContent value="ai" className="space-y-3">
-                <div className="w-full">
-                  <AIChatSearch placeholder="Ask AI..." />
-                </div>
                 <p className="text-sm text-muted-foreground/80">
                   Get insider knowledge from our AI trained on successful market entry strategies
                 </p>
