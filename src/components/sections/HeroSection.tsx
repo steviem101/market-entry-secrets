@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterSearch } from "@/components/MasterSearch";
@@ -92,10 +91,7 @@ export const HeroSection = ({
               </TabsContent>
               
               <TabsContent value="ai" className="space-y-3">
-                <AIChatSearch 
-                  placeholder="Ask our AI about market entry strategies..." 
-                  className="w-full [&>div]:!w-full [&_input]:pl-12 [&_input]:pr-12 [&_input]:py-4 [&_input]:text-lg [&_input]:rounded-full [&_input]:border-2 [&_input]:bg-background/80 [&_input]:backdrop-blur-sm"
-                />
+                <AIChatSearch placeholder="Ask our AI about market entry strategies..." />
                 <p className="text-sm text-muted-foreground/80">
                   Get insider knowledge from our AI trained on successful market entry strategies
                 </p>
