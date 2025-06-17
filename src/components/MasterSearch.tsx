@@ -36,7 +36,6 @@ export const MasterSearch = ({
     if (debouncedSearchQuery.trim()) {
       console.log("Performing search for:", debouncedSearchQuery);
       searchAll(debouncedSearchQuery);
-      setShowResults(true);
     } else {
       console.log("Clearing search - empty query");
       clearSearch();
@@ -44,20 +43,17 @@ export const MasterSearch = ({
     }
   }, [debouncedSearchQuery, searchAll, clearSearch]);
 
-  // Show results when we have them and query is not empty
+  // Show results when we have a query and results are available
   useEffect(() => {
     console.log("Results effect:", { 
-      hasResults: results.length > 0, 
       hasQuery: searchQuery.trim().length > 0,
+      hasResults: results.length > 0, 
       loading 
     });
     
-    if (searchQuery.trim() && results.length > 0 && !loading) {
+    if (searchQuery.trim() && (results.length > 0 || loading)) {
       console.log("Setting showResults to true");
       setShowResults(true);
-    } else if (!searchQuery.trim()) {
-      console.log("Setting showResults to false - no query");
-      setShowResults(false);
     }
   }, [results, searchQuery, loading]);
 
@@ -82,7 +78,7 @@ export const MasterSearch = ({
 
   const handleInputFocus = () => {
     console.log("Input focused:", { searchQuery, resultsLength: results.length });
-    if (searchQuery.trim() && results.length > 0) {
+    if (searchQuery.trim() && (results.length > 0 || loading)) {
       setShowResults(true);
     }
   };
@@ -95,10 +91,18 @@ export const MasterSearch = ({
     const value = e.target.value;
     console.log("Input changed:", value);
     setSearchQuery(value);
+    
+    // Show results immediately if we have a query and existing results
+    if (value.trim() && (results.length > 0 || loading)) {
+      setShowResults(true);
+    }
   };
 
+  // Determine if we should show the results dropdown
+  const shouldShowResults = showResults && searchQuery.trim() && (loading || results.length > 0 || error);
+
   return (
-    <div className="relative w-full max-w-4xl mx-auto">
+    <div className="relative w-full max-w-6xl mx-auto">
       <div ref={searchRef} className={`relative ${className}`}>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -122,7 +126,7 @@ export const MasterSearch = ({
           ) : null}
         </div>
 
-        {showResults && (
+        {shouldShowResults && (
           <MasterSearchResults
             results={results}
             loading={loading}
