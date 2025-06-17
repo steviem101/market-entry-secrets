@@ -36,11 +36,16 @@ export const MasterSearch = ({
   const calculateDropdownPosition = () => {
     if (inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 8, // 8px gap below input
+      console.log("Input rect:", rect);
+      
+      const position = {
+        top: rect.bottom + window.scrollY + 4, // Reduced gap to 4px
         left: rect.left + window.scrollX,
         width: rect.width
-      });
+      };
+      
+      console.log("Calculated position:", position);
+      setDropdownPosition(position);
     }
   };
 
@@ -65,12 +70,15 @@ export const MasterSearch = ({
       loading 
     });
     
-    if (searchQuery.trim() && (results.length > 0 || loading)) {
+    if (searchQuery.trim() && (results.length > 0 || loading || error)) {
       console.log("Setting showResults to true");
       calculateDropdownPosition();
       setShowResults(true);
+    } else {
+      console.log("Setting showResults to false");
+      setShowResults(false);
     }
-  }, [results, searchQuery, loading]);
+  }, [results, searchQuery, loading, error]);
 
   // Recalculate position on window resize or scroll
   useEffect(() => {
@@ -116,7 +124,7 @@ export const MasterSearch = ({
 
   const handleInputFocus = () => {
     console.log("Input focused:", { searchQuery, resultsLength: results.length });
-    if (searchQuery.trim() && (results.length > 0 || loading)) {
+    if (searchQuery.trim() && (results.length > 0 || loading || error)) {
       calculateDropdownPosition();
       setShowResults(true);
     }
@@ -140,6 +148,14 @@ export const MasterSearch = ({
 
   // Determine if we should show the results dropdown
   const shouldShowResults = showResults && searchQuery.trim() && (loading || results.length > 0 || error);
+  
+  console.log("Should show results:", shouldShowResults, {
+    showResults,
+    hasQuery: !!searchQuery.trim(),
+    loading,
+    resultsCount: results.length,
+    error: !!error
+  });
 
   return (
     <>

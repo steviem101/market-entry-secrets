@@ -28,11 +28,12 @@ export const MasterSearchResults = ({
   if (loading) {
     return (
       <div 
-        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-4 z-[9999]"
+        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,
-          width: `${position.width}px`
+          width: `${Math.max(position.width, 400)}px`,
+          minHeight: '80px'
         }}
       >
         <div className="flex items-center justify-center py-4">
@@ -46,11 +47,12 @@ export const MasterSearchResults = ({
   if (error) {
     return (
       <div 
-        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-4 z-[9999]"
+        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,
-          width: `${position.width}px`
+          width: `${Math.max(position.width, 400)}px`,
+          minHeight: '80px'
         }}
       >
         <div className="text-red-500 text-center py-4 text-sm">
@@ -61,17 +63,31 @@ export const MasterSearchResults = ({
   }
 
   if (results.length === 0) {
-    return null;
+    return (
+      <div 
+        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
+        style={{
+          top: `${position.top}px`,
+          left: `${position.left}px`,
+          width: `${Math.max(position.width, 400)}px`,
+          minHeight: '80px'
+        }}
+      >
+        <div className="text-gray-500 text-center py-4 text-sm">
+          No results found
+        </div>
+      </div>
+    );
   }
 
   return (
     <div 
-      className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl z-[9999] overflow-hidden"
+      className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999] overflow-hidden"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
-        width: `${position.width}px`,
-        maxHeight: '80vh'
+        width: `${Math.max(position.width, 400)}px`,
+        maxHeight: '70vh'
       }}
     >
       <SearchResultsContainer results={results} onResultClick={onResultClick} />
