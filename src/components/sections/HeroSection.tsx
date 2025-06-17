@@ -84,18 +84,26 @@ export const HeroSection = ({
                 <TabsTrigger value="ai" className="text-sm font-medium rounded-xl">🤖 Use AI to Uncover Secrets</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="database" className={`space-y-3 mt-0 ${searchMode !== 'database' ? 'hidden' : ''}`}>
-                <MasterSearch placeholder="Search for insider secrets, hidden strategies, proven providers..." />
-                <p className="text-sm text-muted-foreground/80">
-                  Discover the secret strategies and vetted resources for Australian market success
-                </p>
+              <TabsContent value="database" className="space-y-3 mt-0">
+                {searchMode === 'database' && (
+                  <>
+                    <MasterSearch placeholder="Search for insider secrets, hidden strategies, proven providers..." />
+                    <p className="text-sm text-muted-foreground/80">
+                      Discover the secret strategies and vetted resources for Australian market success
+                    </p>
+                  </>
+                )}
               </TabsContent>
               
-              <TabsContent value="ai" className={`space-y-3 mt-0 ${searchMode !== 'ai' ? 'hidden' : ''}`}>
-                <AIChatSearch placeholder="Ask our AI about market entry strategies..." />
-                <p className="text-sm text-muted-foreground/80">
-                  Get insider knowledge from our AI trained on successful market entry strategies
-                </p>
+              <TabsContent value="ai" className="space-y-3 mt-0">
+                {searchMode === 'ai' && (
+                  <>
+                    <AIChatSearch placeholder="Ask our AI about market entry strategies..." />
+                    <p className="text-sm text-muted-foreground/80">
+                      Get insider knowledge from our AI trained on successful market entry strategies
+                    </p>
+                  </>
+                )}
               </TabsContent>
             </Tabs>
           </div>
