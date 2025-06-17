@@ -18,7 +18,7 @@ export const SearchResultsContainer = ({ results, onResultClick }: SearchResults
         </span>
       </div>
       
-      <ScrollArea className="h-[400px] w-full">
+      <ScrollArea className="h-[600px] w-full">
         <div className="space-y-2 pr-4">
           {results.slice(0, 15).map((result) => (
             <SearchResultCard
