@@ -55,14 +55,14 @@ export const HeroSection = ({
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10" />
       
       <div className="relative container mx-auto px-4 py-24">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-8 leading-tight">
             Uncover the Secrets for
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block mt-2">
               Australian Market Entry
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-6 leading-relaxed max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-6 leading-relaxed max-w-4xl mx-auto">
             Discover the insider knowledge, vetted service providers, and proven strategies that successful companies use to enter and thrive in the Australian market.
           </p>
 
@@ -77,9 +77,9 @@ export const HeroSection = ({
           </div>
           
           {/* Unified Search Interface */}
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <Tabs value={searchMode} onValueChange={onSearchModeChange} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8 bg-background/60 backdrop-blur-md border border-border/50 soft-shadow">
+              <TabsList className="grid w-full grid-cols-2 mb-8 bg-background/60 backdrop-blur-md border border-border/50 soft-shadow max-w-md mx-auto">
                 <TabsTrigger value="database" className="text-sm font-medium rounded-xl">🔍 Search Secrets</TabsTrigger>
                 <TabsTrigger value="ai" className="text-sm font-medium rounded-xl">🤖 Use AI to Uncover Secrets</TabsTrigger>
               </TabsList>
@@ -98,7 +98,9 @@ export const HeroSection = ({
               <TabsContent value="ai" className="space-y-3 mt-0">
                 {searchMode === 'ai' && (
                   <>
-                    <AIChatSearch placeholder="Ask our AI about market entry strategies..." />
+                    <div className="max-w-4xl mx-auto">
+                      <AIChatSearch placeholder="Ask our AI about market entry strategies..." />
+                    </div>
                     <p className="text-sm text-muted-foreground/80">
                       Get insider knowledge from our AI trained on successful market entry strategies
                     </p>

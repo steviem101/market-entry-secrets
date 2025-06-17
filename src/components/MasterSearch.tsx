@@ -98,7 +98,7 @@ export const MasterSearch = ({
   };
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full max-w-4xl mx-auto">
       <div ref={searchRef} className={`relative ${className}`}>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -108,7 +108,7 @@ export const MasterSearch = ({
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={handleInputFocus}
-            className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+            className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none w-full"
           />
           {searchQuery ? (
             <Button
