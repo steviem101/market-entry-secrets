@@ -31,7 +31,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="relative">
+        <div className="relative min-h-screen">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/service-providers" element={<ServiceProviders />} />
@@ -54,11 +54,13 @@ const App = () => (
           </Routes>
           
           {/* AI Chat Assistant - available on all pages with improved positioning */}
-          <div className="fixed bottom-4 right-4 z-[9999]">
-            <AIChatSearch 
-              placeholder="Ask our AI assistant about market entry..." 
-              className="w-auto"
-            />
+          <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none">
+            <div className="pointer-events-auto">
+              <AIChatSearch 
+                placeholder="Ask our AI assistant about market entry..." 
+                className="w-auto"
+              />
+            </div>
           </div>
         </div>
       </BrowserRouter>
