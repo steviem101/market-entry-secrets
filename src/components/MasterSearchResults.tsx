@@ -43,7 +43,7 @@ export const MasterSearchResults = ({ results, loading, error, onResultClick }: 
   }
 
   return (
-    <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl mt-2 z-[60] w-full max-h-[400px] overflow-hidden">
+    <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl mt-2 z-[60] w-full max-h-[600px] overflow-hidden">
       <SearchResultsContainer results={results} onResultClick={onResultClick} />
     </div>
   );

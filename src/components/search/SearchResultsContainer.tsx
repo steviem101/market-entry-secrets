@@ -17,8 +17,8 @@ export const SearchResultsContainer = ({ results, onResultClick }: SearchResults
         </span>
       </div>
       
-      <div className="space-y-2 overflow-y-auto max-h-[320px]">
-        {results.slice(0, 10).map((result) => (
+      <div className="space-y-2 overflow-y-auto max-h-[520px]">
+        {results.slice(0, 15).map((result) => (
           <SearchResultCard
             key={`${result.type}-${result.id}`}
             result={result}
