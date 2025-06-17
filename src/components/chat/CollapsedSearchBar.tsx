@@ -1,5 +1,5 @@
 
-import { MessageCircle, Send, ChevronUp } from "lucide-react";
+import { MessageCircle, Send, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +20,10 @@ export const CollapsedSearchBar = ({
   onExpand,
   onToggleCollapse
 }: CollapsedSearchBarProps) => {
+  const handleClear = () => {
+    setQuery("");
+  };
+
   return (
     <div className="relative w-full">
       <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -32,7 +36,7 @@ export const CollapsedSearchBar = ({
         onKeyDown={(e) => e.key === 'Enter' && onSubmit(e)}
         className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm"
       />
-      {query && (
+      {query ? (
         <Button
           type="submit"
           onClick={onSubmit}
@@ -42,7 +46,7 @@ export const CollapsedSearchBar = ({
         >
           <Send className="w-4 h-4" />
         </Button>
-      )}
+      ) : null}
     </div>
   );
 };
