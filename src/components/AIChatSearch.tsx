@@ -63,12 +63,15 @@ export const AIChatSearch = ({
     }
   };
 
+  // Debug logging
+  console.log('AIChatSearch render state:', chatState);
+
   if (chatState.isMinimized) {
     return (
-      <div className={cn("fixed bottom-4 right-4 z-50", className)}>
+      <div className={cn("w-auto", className)}>
         <Button
           onClick={() => setChatState(prev => ({ ...prev, isMinimized: false }))}
-          className="rounded-full w-12 h-12 p-0 shadow-lg"
+          className="rounded-full w-12 h-12 p-0 shadow-lg bg-primary hover:bg-primary/90"
           size="default"
         >
           <MessageCircle className="w-5 h-5" />
@@ -78,22 +81,24 @@ export const AIChatSearch = ({
   }
 
   return (
-    <div className={cn("fixed bottom-4 right-4 z-50", className)}>
-      {/* Collapsed State */}
+    <div className={cn("w-auto", className)}>
+      {/* Collapsed State - Always visible by default */}
       {chatState.isCollapsed && (
-        <CollapsedSearchBar
-          query={query}
-          setQuery={setQuery}
-          loading={loading}
-          onSubmit={handleSubmit}
-          onExpand={handleExpand}
-          onToggleCollapse={handleToggleCollapse}
-        />
+        <div className="bg-white border shadow-lg rounded-lg">
+          <CollapsedSearchBar
+            query={query}
+            setQuery={setQuery}
+            loading={loading}
+            onSubmit={handleSubmit}
+            onExpand={handleExpand}
+            onToggleCollapse={handleToggleCollapse}
+          />
+        </div>
       )}
 
       {/* Expanded Search Bar */}
       {!chatState.isCollapsed && !chatState.isExpanded && (
-        <div className="w-80">
+        <div className="w-80 bg-white border shadow-lg rounded-lg">
           <ExpandedSearchBar
             query={query}
             setQuery={setQuery}
@@ -108,17 +113,19 @@ export const AIChatSearch = ({
 
       {/* Expanded Chat Interface */}
       {chatState.isExpanded && (
-        <ExpandedChatInterface
-          query={query}
-          setQuery={setQuery}
-          messages={messages}
-          loading={loading}
-          error={error}
-          onSubmit={handleSubmit}
-          onToggleCollapse={handleToggleCollapse}
-          onMinimize={handleMinimize}
-          onClose={handleClose}
-        />
+        <div className="bg-white border shadow-lg rounded-lg">
+          <ExpandedChatInterface
+            query={query}
+            setQuery={setQuery}
+            messages={messages}
+            loading={loading}
+            error={error}
+            onSubmit={handleSubmit}
+            onToggleCollapse={handleToggleCollapse}
+            onMinimize={handleMinimize}
+            onClose={handleClose}
+          />
+        </div>
       )}
     </div>
   );
