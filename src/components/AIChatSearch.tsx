@@ -57,43 +57,39 @@ export const AIChatSearch = ({
 
   const handleToggleCollapse = () => {
     if (chatState.isCollapsed) {
-      setChatState({ isExpanded: true, isMinimized: false, isCollapsed: false });
+      setChatState({ isExpanded: false, isMinimized: false, isCollapsed: false });
     } else {
       setChatState({ isExpanded: false, isMinimized: false, isCollapsed: true });
     }
   };
 
-  // Debug logging
-  console.log('AIChatSearch render state:', chatState);
-
+  // Minimized state - show as floating icon
   if (chatState.isMinimized) {
     return (
-      <div className={cn("w-auto", className)}>
+      <div className={cn("fixed bottom-6 right-6 z-50", className)}>
         <Button
           onClick={() => setChatState(prev => ({ ...prev, isMinimized: false }))}
-          className="rounded-full w-12 h-12 p-0 shadow-lg bg-primary hover:bg-primary/90"
+          className="rounded-full w-14 h-14 p-0 shadow-lg bg-primary hover:bg-primary/90"
           size="default"
         >
-          <MessageCircle className="w-5 h-5" />
+          <MessageCircle className="w-6 h-6" />
         </Button>
       </div>
     );
   }
 
   return (
-    <div className={cn("w-auto", className)}>
-      {/* Collapsed State - Always visible by default */}
+    <div className={cn("relative", className)}>
+      {/* Collapsed State - Just the icon button */}
       {chatState.isCollapsed && (
-        <div className="bg-white border shadow-lg rounded-lg">
-          <CollapsedSearchBar
-            query={query}
-            setQuery={setQuery}
-            loading={loading}
-            onSubmit={handleSubmit}
-            onExpand={handleExpand}
-            onToggleCollapse={handleToggleCollapse}
-          />
-        </div>
+        <Button
+          onClick={handleToggleCollapse}
+          variant="ghost"
+          size="sm"
+          className="rounded-full w-12 h-12 p-0 bg-background/80 backdrop-blur-sm border border-border hover:bg-accent"
+        >
+          <MessageCircle className="w-5 h-5 text-muted-foreground" />
+        </Button>
       )}
 
       {/* Expanded Search Bar */}
