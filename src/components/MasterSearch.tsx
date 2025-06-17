@@ -32,26 +32,15 @@ export const MasterSearch = ({
     showResults 
   });
 
-  // Calculate dropdown position with better error handling
+  // Calculate dropdown position
   const calculateDropdownPosition = () => {
-    if (inputRef.current && searchRef.current) {
-      const inputRect = inputRef.current.getBoundingClientRect();
-      const containerRect = searchRef.current.getBoundingClientRect();
-      
-      console.log("Input rect:", inputRect);
-      console.log("Container rect:", containerRect);
-      
-      // Use container rect as fallback if input rect is invalid
-      const rect = inputRect.width > 0 ? inputRect : containerRect;
-      
-      const position = {
-        top: rect.bottom + window.scrollY + 8,
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 8, // 8px gap below input
         left: rect.left + window.scrollX,
         width: rect.width
-      };
-      
-      console.log("Calculated position:", position);
-      setDropdownPosition(position);
+      });
     }
   };
 
@@ -76,18 +65,12 @@ export const MasterSearch = ({
       loading 
     });
     
-    if (searchQuery.trim() && (results.length > 0 || loading || error)) {
+    if (searchQuery.trim() && (results.length > 0 || loading)) {
       console.log("Setting showResults to true");
-      // Calculate position with a small delay to ensure DOM is ready
-      setTimeout(() => {
-        calculateDropdownPosition();
-        setShowResults(true);
-      }, 10);
-    } else {
-      console.log("Setting showResults to false");
-      setShowResults(false);
+      calculateDropdownPosition();
+      setShowResults(true);
     }
-  }, [results, searchQuery, loading, error]);
+  }, [results, searchQuery, loading]);
 
   // Recalculate position on window resize or scroll
   useEffect(() => {
@@ -133,7 +116,7 @@ export const MasterSearch = ({
 
   const handleInputFocus = () => {
     console.log("Input focused:", { searchQuery, resultsLength: results.length });
-    if (searchQuery.trim() && (results.length > 0 || loading || error)) {
+    if (searchQuery.trim() && (results.length > 0 || loading)) {
       calculateDropdownPosition();
       setShowResults(true);
     }
@@ -150,23 +133,13 @@ export const MasterSearch = ({
     
     // Show results immediately if we have a query and existing results
     if (value.trim() && (results.length > 0 || loading)) {
-      setTimeout(() => {
-        calculateDropdownPosition();
-        setShowResults(true);
-      }, 10);
+      calculateDropdownPosition();
+      setShowResults(true);
     }
   };
 
   // Determine if we should show the results dropdown
   const shouldShowResults = showResults && searchQuery.trim() && (loading || results.length > 0 || error);
-  
-  console.log("Should show results:", shouldShowResults, {
-    showResults,
-    hasQuery: !!searchQuery.trim(),
-    loading,
-    resultsCount: results.length,
-    error: !!error
-  });
 
   return (
     <>
