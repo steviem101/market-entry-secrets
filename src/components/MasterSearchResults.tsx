@@ -7,34 +7,19 @@ interface MasterSearchResultsProps {
   loading: boolean;
   error: string | null;
   onResultClick?: () => void;
-  position: { top: number; left: number; width: number };
 }
 
-export const MasterSearchResults = ({ 
-  results, 
-  loading, 
-  error, 
-  onResultClick,
-  position 
-}: MasterSearchResultsProps) => {
+export const MasterSearchResults = ({ results, loading, error, onResultClick }: MasterSearchResultsProps) => {
   console.log("MasterSearchResults render:", { 
     resultsLength: results.length, 
     loading, 
     error,
-    position,
     results: results.slice(0, 3) // Log first 3 results for debugging
   });
 
   if (loading) {
     return (
-      <div 
-        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-4 z-[9999]"
-        style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-          width: `${position.width}px`
-        }}
-      >
+      <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl mt-2 p-4 z-[100] w-full">
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
           <span className="ml-2 text-muted-foreground text-sm">Searching...</span>
@@ -45,14 +30,7 @@ export const MasterSearchResults = ({
 
   if (error) {
     return (
-      <div 
-        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl p-4 z-[9999]"
-        style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-          width: `${position.width}px`
-        }}
-      >
+      <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl mt-2 p-4 z-[100] w-full">
         <div className="text-red-500 text-center py-4 text-sm">
           Error: {error}
         </div>
@@ -65,15 +43,7 @@ export const MasterSearchResults = ({
   }
 
   return (
-    <div 
-      className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl z-[9999] overflow-hidden"
-      style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        width: `${position.width}px`,
-        maxHeight: '80vh'
-      }}
-    >
+    <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl mt-2 z-[100] w-full max-h-[700px] overflow-hidden">
       <SearchResultsContainer results={results} onResultClick={onResultClick} />
     </div>
   );
