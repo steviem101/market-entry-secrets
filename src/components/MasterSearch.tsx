@@ -32,29 +32,6 @@ export const MasterSearch = ({
     showResults 
   });
 
-  // Calculate dropdown position with better error handling
-  const calculateDropdownPosition = () => {
-    if (inputRef.current && searchRef.current) {
-      const inputRect = inputRef.current.getBoundingClientRect();
-      const containerRect = searchRef.current.getBoundingClientRect();
-      
-      console.log("Input rect:", inputRect);
-      console.log("Container rect:", containerRect);
-      
-      // Use container rect as fallback if input rect is invalid
-      const rect = inputRect.width > 0 ? inputRect : containerRect;
-      
-      const position = {
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.left + window.scrollX,
-        width: rect.width
-      };
-      
-      console.log("Calculated position:", position);
-      setDropdownPosition(position);
-    }
-  };
-
   // Perform search when debounced query changes
   useEffect(() => {
     console.log("Search effect triggered:", { debouncedSearchQuery });
@@ -78,39 +55,12 @@ export const MasterSearch = ({
     
     if (searchQuery.trim() && (results.length > 0 || loading || error)) {
       console.log("Setting showResults to true");
-      // Calculate position with a small delay to ensure DOM is ready
-      setTimeout(() => {
-        calculateDropdownPosition();
-        setShowResults(true);
-      }, 10);
+      setShowResults(true);
     } else {
       console.log("Setting showResults to false");
       setShowResults(false);
     }
   }, [results, searchQuery, loading, error]);
-
-  // Recalculate position on window resize or scroll
-  useEffect(() => {
-    const handleResize = () => {
-      if (showResults) {
-        calculateDropdownPosition();
-      }
-    };
-
-    const handleScroll = () => {
-      if (showResults) {
-        calculateDropdownPosition();
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleScroll);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [showResults]);
 
   // Handle clicks outside to close results
   useEffect(() => {
@@ -134,7 +84,6 @@ export const MasterSearch = ({
   const handleInputFocus = () => {
     console.log("Input focused:", { searchQuery, resultsLength: results.length });
     if (searchQuery.trim() && (results.length > 0 || loading || error)) {
-      calculateDropdownPosition();
       setShowResults(true);
     }
   };
@@ -150,10 +99,7 @@ export const MasterSearch = ({
     
     // Show results immediately if we have a query and existing results
     if (value.trim() && (results.length > 0 || loading)) {
-      setTimeout(() => {
-        calculateDropdownPosition();
-        setShowResults(true);
-      }, 10);
+      setShowResults(true);
     }
   };
 
@@ -169,43 +115,41 @@ export const MasterSearch = ({
   });
 
   return (
-    <>
-      <div className="relative w-full max-w-6xl mx-auto">
-        <div ref={searchRef} className={`relative ${className}`}>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder={placeholder}
-              value={searchQuery}
-              onChange={handleInputChange}
-              onFocus={handleInputFocus}
-              className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none w-full"
-            />
-            {searchQuery ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearSearch}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-accent/50"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            ) : null}
-          </div>
+    <div className="relative w-full max-w-6xl mx-auto">
+      <div ref={searchRef} className={`relative ${className}`}>
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+          <Input
+            ref={inputRef}
+            type="text"
+            placeholder={placeholder}
+            value={searchQuery}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            className="pl-12 pr-12 py-4 text-lg rounded-full border-2 bg-background/80 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none w-full"
+          />
+          {searchQuery ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearSearch}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-accent/50"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          ) : null}
         </div>
-      </div>
 
-      {shouldShowResults && (
-        <MasterSearchResults
-          results={results}
-          loading={loading}
-          error={error}
-          onResultClick={handleResultClick}
-          position={dropdownPosition}
-        />
-      )}
-    </>
+        {shouldShowResults && (
+          <MasterSearchResults
+            results={results}
+            loading={loading}
+            error={error}
+            onResultClick={handleResultClick}
+            position={dropdownPosition}
+          />
+        )}
+      </div>
+    </div>
   );
 };

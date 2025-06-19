@@ -28,11 +28,12 @@ export const MasterSearchResults = ({
   if (loading) {
     return (
       <div 
-        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
+        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
         style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-          width: `${Math.max(position.width, 400)}px`,
+          top: '100%',
+          left: '0',
+          right: '0',
+          marginTop: '8px',
           minHeight: '80px'
         }}
       >
@@ -47,11 +48,12 @@ export const MasterSearchResults = ({
   if (error) {
     return (
       <div 
-        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
+        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
         style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-          width: `${Math.max(position.width, 400)}px`,
+          top: '100%',
+          left: '0',
+          right: '0',
+          marginTop: '8px',
           minHeight: '80px'
         }}
       >
@@ -65,11 +67,12 @@ export const MasterSearchResults = ({
   if (results.length === 0) {
     return (
       <div 
-        className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
+        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
         style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-          width: `${Math.max(position.width, 400)}px`,
+          top: '100%',
+          left: '0',
+          right: '0',
+          marginTop: '8px',
           minHeight: '80px'
         }}
       >
@@ -82,12 +85,14 @@ export const MasterSearchResults = ({
 
   return (
     <div 
-      className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999] overflow-hidden"
+      className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999] overflow-hidden"
       style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        width: `${Math.max(position.width, 400)}px`,
-        maxHeight: '70vh'
+        top: '100%',
+        left: '0',
+        right: '0',
+        marginTop: '8px',
+        maxHeight: '70vh',
+        minWidth: '400px'
       }}
     >
       <SearchResultsContainer results={results} onResultClick={onResultClick} />
