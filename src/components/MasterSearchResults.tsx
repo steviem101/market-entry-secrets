@@ -25,16 +25,20 @@ export const MasterSearchResults = ({
     results: results.slice(0, 3)
   });
 
-  // Calculate if dropdown should open upward using proper viewport coordinates
+  // Calculate if dropdown should open upward - be more conservative
   const viewportHeight = window.innerHeight;
   const maxDropdownHeight = Math.min(400, viewportHeight * 0.7);
-  const spaceBelow = viewportHeight - position.top; // Simple viewport calculation
-  const shouldOpenUpward = spaceBelow < maxDropdownHeight && position.top > maxDropdownHeight;
+  const spaceBelow = viewportHeight - position.top;
+  const spaceAbove = position.top;
+  
+  // Only open upward if there's significantly more space above AND very little space below
+  const shouldOpenUpward = spaceBelow < 200 && spaceAbove > maxDropdownHeight + 50;
 
   console.log("Dropdown positioning:", {
     viewportHeight,
     maxDropdownHeight,
     spaceBelow,
+    spaceAbove,
     shouldOpenUpward,
     positionTop: position.top
   });
