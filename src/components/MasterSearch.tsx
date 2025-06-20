@@ -32,6 +32,51 @@ export const MasterSearch = ({
     showResults 
   });
 
+  // Calculate dropdown position based on input position
+  const calculateDropdownPosition = () => {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+      
+      setDropdownPosition({
+        top: rect.bottom + scrollY + 8, // 8px margin
+        left: rect.left + scrollX,
+        width: rect.width
+      });
+    }
+  };
+
+  // Update position when showing results
+  useEffect(() => {
+    if (showResults) {
+      calculateDropdownPosition();
+    }
+  }, [showResults]);
+
+  // Handle window resize and scroll
+  useEffect(() => {
+    const handleResize = () => {
+      if (showResults) {
+        calculateDropdownPosition();
+      }
+    };
+
+    const handleScroll = () => {
+      if (showResults) {
+        calculateDropdownPosition();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [showResults]);
+
   // Perform search when debounced query changes
   useEffect(() => {
     console.log("Search effect triggered:", { debouncedSearchQuery });

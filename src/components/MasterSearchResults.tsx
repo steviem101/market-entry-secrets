@@ -25,17 +25,26 @@ export const MasterSearchResults = ({
     results: results.slice(0, 3) // Log first 3 results for debugging
   });
 
+  // Calculate if dropdown should open upward to stay within viewport
+  const viewportHeight = window.innerHeight;
+  const maxDropdownHeight = Math.min(400, viewportHeight * 0.7); // 70vh max or 400px
+  const spaceBelow = viewportHeight - (position.top - window.scrollY);
+  const shouldOpenUpward = spaceBelow < maxDropdownHeight && position.top - window.scrollY > maxDropdownHeight;
+
+  const dropdownStyle = {
+    position: 'fixed' as const,
+    top: shouldOpenUpward ? position.top - maxDropdownHeight - 8 : position.top,
+    left: position.left,
+    width: Math.max(position.width, 400), // Minimum width of 400px
+    maxHeight: maxDropdownHeight,
+    zIndex: 9999
+  };
+
   if (loading) {
     return (
       <div 
-        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
-        style={{
-          top: '100%',
-          left: '0',
-          right: '0',
-          marginTop: '8px',
-          minHeight: '80px'
-        }}
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
+        style={dropdownStyle}
       >
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
@@ -48,14 +57,8 @@ export const MasterSearchResults = ({
   if (error) {
     return (
       <div 
-        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
-        style={{
-          top: '100%',
-          left: '0',
-          right: '0',
-          marginTop: '8px',
-          minHeight: '80px'
-        }}
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
+        style={dropdownStyle}
       >
         <div className="text-red-500 text-center py-4 text-sm">
           Error: {error}
@@ -67,14 +70,8 @@ export const MasterSearchResults = ({
   if (results.length === 0) {
     return (
       <div 
-        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999]"
-        style={{
-          top: '100%',
-          left: '0',
-          right: '0',
-          marginTop: '8px',
-          minHeight: '80px'
-        }}
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
+        style={dropdownStyle}
       >
         <div className="text-gray-500 text-center py-4 text-sm">
           No results found
@@ -85,15 +82,8 @@ export const MasterSearchResults = ({
 
   return (
     <div 
-      className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[9999] overflow-hidden"
-      style={{
-        top: '100%',
-        left: '0',
-        right: '0',
-        marginTop: '8px',
-        maxHeight: '70vh',
-        minWidth: '400px'
-      }}
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
+      style={dropdownStyle}
     >
       <SearchResultsContainer results={results} onResultClick={onResultClick} />
     </div>
