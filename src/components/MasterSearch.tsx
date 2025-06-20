@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -32,16 +31,20 @@ export const MasterSearch = ({
     showResults 
   });
 
-  // Calculate dropdown position based on input position
+  // Calculate dropdown position based on input position - FIXED to use viewport coordinates
   const calculateDropdownPosition = () => {
     if (inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
+      
+      console.log("Position calculation:", {
+        rectBottom: rect.bottom,
+        rectLeft: rect.left,
+        rectWidth: rect.width
+      });
       
       setDropdownPosition({
-        top: rect.bottom + scrollY + 8, // 8px margin
-        left: rect.left + scrollX,
+        top: rect.bottom + 8, // 8px margin - using viewport coordinates directly
+        left: rect.left,
         width: rect.width
       });
     }
@@ -142,7 +145,6 @@ export const MasterSearch = ({
     console.log("Input changed:", value);
     setSearchQuery(value);
     
-    // Show results immediately if we have a query and existing results
     if (value.trim() && (results.length > 0 || loading)) {
       setShowResults(true);
     }
@@ -156,7 +158,8 @@ export const MasterSearch = ({
     hasQuery: !!searchQuery.trim(),
     loading,
     resultsCount: results.length,
-    error: !!error
+    error: !!error,
+    dropdownPosition
   });
 
   return (

@@ -22,23 +22,33 @@ export const MasterSearchResults = ({
     loading, 
     error,
     position,
-    results: results.slice(0, 3) // Log first 3 results for debugging
+    results: results.slice(0, 3)
   });
 
-  // Calculate if dropdown should open upward to stay within viewport
+  // Calculate if dropdown should open upward using proper viewport coordinates
   const viewportHeight = window.innerHeight;
-  const maxDropdownHeight = Math.min(400, viewportHeight * 0.7); // 70vh max or 400px
-  const spaceBelow = viewportHeight - (position.top - window.scrollY);
-  const shouldOpenUpward = spaceBelow < maxDropdownHeight && position.top - window.scrollY > maxDropdownHeight;
+  const maxDropdownHeight = Math.min(400, viewportHeight * 0.7);
+  const spaceBelow = viewportHeight - position.top; // Simple viewport calculation
+  const shouldOpenUpward = spaceBelow < maxDropdownHeight && position.top > maxDropdownHeight;
+
+  console.log("Dropdown positioning:", {
+    viewportHeight,
+    maxDropdownHeight,
+    spaceBelow,
+    shouldOpenUpward,
+    positionTop: position.top
+  });
 
   const dropdownStyle = {
     position: 'fixed' as const,
     top: shouldOpenUpward ? position.top - maxDropdownHeight - 8 : position.top,
     left: position.left,
-    width: Math.max(position.width, 400), // Minimum width of 400px
+    width: Math.max(position.width, 400),
     maxHeight: maxDropdownHeight,
     zIndex: 9999
   };
+
+  console.log("Final dropdown style:", dropdownStyle);
 
   if (loading) {
     return (
