@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Users, MapPin, Globe, AlertCircle } from "lucide-react";
 import { useCommunityMembers } from "@/hooks/useCommunityMembers";
-import { PersonCard, Person } from "@/components/PersonCard";
-import { PersonModal } from "@/components/PersonModal";
+import PersonCard, { Person } from "@/components/PersonCard";
+import PersonModal from "@/components/PersonModal";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { UsageBanner } from "@/components/UsageBanner";
 

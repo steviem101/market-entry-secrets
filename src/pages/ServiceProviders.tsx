@@ -6,13 +6,17 @@ import { ServiceProvidersDataProvider } from "@/components/service-providers/Ser
 import { ServiceProvidersHeader } from "@/components/service-providers/ServiceProvidersHeader";
 import { ServiceProvidersFilters } from "@/components/service-providers/ServiceProvidersFilters";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
-import { CompanyModal } from "@/components/CompanyModal";
+import CompanyModal from "@/components/CompanyModal";
 import { Company } from "@/components/CompanyCard";
 import { UsageBanner } from "@/components/UsageBanner";
 
 const ServiceProviders = () => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   const handleViewProfile = (company: Company) => {
     setSelectedCompany(company);
@@ -27,12 +31,21 @@ const ServiceProviders = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <ServiceProvidersDataProvider>
-        {({ companies, loading, error, searchQuery, onSearchChange, filters, onFiltersChange }) => (
+      <ServiceProvidersDataProvider
+        selectedCategories={selectedCategories}
+        selectedLocations={selectedLocations}
+        searchTerm={searchTerm}
+        serviceCategories={[]}
+        categoryGroups={[]}
+      >
+        {({ companies, loading, filteredCompanies }) => (
           <>
             <ServiceProvidersHeader 
-              searchQuery={searchQuery}
-              onSearchChange={onSearchChange}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              showFilters={showFilters}
+              onToggleFilters={() => setShowFilters(!showFilters)}
+              filteredCount={filteredCompanies.length}
             />
             
             <div className="container mx-auto px-4 py-8">
@@ -42,13 +55,20 @@ const ServiceProviders = () => {
             <ServiceProvidersLayout
               filters={
                 <ServiceProvidersFilters 
-                  filters={filters}
-                  onFiltersChange={onFiltersChange}
+                  categories={[]}
+                  categoryGroups={[]}
+                  selectedCategories={selectedCategories}
+                  onCategoryChange={setSelectedCategories}
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  selectedLocations={selectedLocations}
+                  onLocationChange={setSelectedLocations}
+                  showFilters={showFilters}
                 />
               }
               content={
                 <ServiceProvidersList
-                  companies={companies}
+                  companies={filteredCompanies}
                   onViewProfile={handleViewProfile}
                   onContact={handleContact}
                 />
@@ -63,6 +83,7 @@ const ServiceProviders = () => {
           company={selectedCompany}
           isOpen={showModal}
           onClose={() => setShowModal(false)}
+          onContact={handleContact}
         />
       )}
     </div>
