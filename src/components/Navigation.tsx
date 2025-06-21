@@ -58,7 +58,7 @@ const Navigation = () => {
           <div className="flex items-center space-x-2">
             <Link to="/" className="flex items-center space-x-2">
               <MarketEntryLogo className="h-8 w-8" />
-              <span className="font-bold text-lg">Market Entry Hub</span>
+              <span className="font-bold text-lg">Market Entry Secrets</span>
             </Link>
           </div>
 
@@ -158,7 +158,7 @@ const Navigation = () => {
                       onClick={() => setIsOpen(false)}
                     >
                       <MarketEntryLogo className="h-6 w-6" />
-                      <span className="font-bold">Market Entry Hub</span>
+                      <span className="font-bold">Market Entry Secrets</span>
                     </Link>
                   </div>
 
