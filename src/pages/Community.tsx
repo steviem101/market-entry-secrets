@@ -160,6 +160,8 @@ const Community = () => {
                 key={member.id}
                 contentType="community_members"
                 itemId={member.id}
+                contentTitle={member.name}
+                contentDescription={member.description}
               >
                 <PersonCard
                   person={member}

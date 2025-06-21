@@ -4,19 +4,23 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AuthDialog } from './auth/AuthDialog';
-import { Lock, Eye, Users, FileText } from 'lucide-react';
+import { Lock, Eye, Users, FileText, Database, TrendingUp } from 'lucide-react';
 
 interface PaywallModalProps {
   contentType: string;
+  contentTitle?: string;
+  contentDescription?: string;
 }
 
 const contentTypeInfo = {
   content: { icon: FileText, label: 'Content Articles', description: 'success stories and guides' },
   service_providers: { icon: Users, label: 'Service Providers', description: 'professional services' },
   community_members: { icon: Users, label: 'Community Members', description: 'mentors and experts' },
+  leads: { icon: Database, label: 'Lead Databases', description: 'premium databases and market intelligence' },
+  events: { icon: TrendingUp, label: 'Industry Events', description: 'networking opportunities' },
 };
 
-export const PaywallModal = ({ contentType }: PaywallModalProps) => {
+export const PaywallModal = ({ contentType, contentTitle, contentDescription }: PaywallModalProps) => {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const info = contentTypeInfo[contentType as keyof typeof contentTypeInfo] || contentTypeInfo.content;
   const Icon = info.icon;
@@ -33,6 +37,22 @@ export const PaywallModal = ({ contentType }: PaywallModalProps) => {
             <CardDescription>
               You've reached your limit of 3 free views. Sign up to get unlimited access to all {info.description}.
             </CardDescription>
+            
+            {/* Show specific content being blocked */}
+            {(contentTitle || contentDescription) && (
+              <div className="mt-4 p-3 bg-muted/30 rounded-lg border">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-muted-foreground">You're trying to view:</span>
+                </div>
+                {contentTitle && (
+                  <h4 className="text-sm font-semibold mb-1">{contentTitle}</h4>
+                )}
+                {contentDescription && (
+                  <p className="text-xs text-muted-foreground line-clamp-2">{contentDescription}</p>
+                )}
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-muted/50 rounded-lg p-4">

@@ -8,10 +8,19 @@ interface FreemiumGateProps {
   children: ReactNode;
   contentType: string;
   itemId: string;
+  contentTitle?: string;
+  contentDescription?: string;
   onView?: () => void;
 }
 
-export const FreemiumGate = ({ children, contentType, itemId, onView }: FreemiumGateProps) => {
+export const FreemiumGate = ({ 
+  children, 
+  contentType, 
+  itemId, 
+  contentTitle,
+  contentDescription,
+  onView 
+}: FreemiumGateProps) => {
   const { user } = useAuth();
   const { canView, trackView, hasReachedLimit } = useUsageTracking();
 
@@ -28,7 +37,13 @@ export const FreemiumGate = ({ children, contentType, itemId, onView }: Freemium
 
   // Show paywall if reached limit and not signed in
   if (hasReachedLimit && !user) {
-    return <PaywallModal contentType={contentType} />;
+    return (
+      <PaywallModal 
+        contentType={contentType} 
+        contentTitle={contentTitle}
+        contentDescription={contentDescription}
+      />
+    );
   }
 
   return <>{children}</>;

@@ -192,6 +192,8 @@ const Leads = () => {
                     key={lead.id}
                     contentType="leads"
                     itemId={lead.id}
+                    contentTitle={lead.name}
+                    contentDescription={lead.description}
                   >
                     <LeadCard lead={lead} onDownload={handleDownload} onPreview={handlePreview} />
                   </FreemiumGate>

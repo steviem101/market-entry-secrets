@@ -188,6 +188,8 @@ const Events = () => {
                 key={event.id}
                 contentType="events"
                 itemId={event.id}
+                contentTitle={event.title}
+                contentDescription={event.description}
               >
                 <EventCard event={event} />
               </FreemiumGate>
