@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import Navigation from "@/components/Navigation";
 import { useSectors, useFeaturedSectors } from "@/hooks/useSectors";
 import SectorsHero from "@/components/sectors/SectorsHero";
 import FeaturedSectorsSection from "@/components/sectors/FeaturedSectorsSection";
@@ -27,7 +26,6 @@ const Sectors = () => {
   if (sectorsLoading || featuredLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navigation />
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -40,8 +38,6 @@ const Sectors = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
-      
       <SectorsHero 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

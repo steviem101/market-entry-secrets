@@ -1,7 +1,6 @@
 
 import { useParams } from "react-router-dom";
 import { useSectorData } from "@/hooks/useSectorData";
-import Navigation from "@/components/Navigation";
 import SectorsHero from "@/components/sectors/SectorsHero";
 import SectorContent from "@/components/sectors/SectorContent";
 import SectorStats from "@/components/sectors/SectorStats";
@@ -26,7 +25,6 @@ const SectorPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navigation />
         <SectorsHero 
           searchQuery=""
           onSearchChange={() => {}}
@@ -48,7 +46,6 @@ const SectorPage = () => {
   if (!sector) {
     return (
       <div className="min-h-screen bg-background">
-        <Navigation />
         <SectorsHero 
           searchQuery=""
           onSearchChange={() => {}}
@@ -67,8 +64,6 @@ const SectorPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
-      
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20">
         <div className="container mx-auto px-4">
