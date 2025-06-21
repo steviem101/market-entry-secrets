@@ -9,7 +9,7 @@ import { useSectorTradeAgencies } from "@/hooks/useSectorTradeAgencies";
 import { useSectorContent } from "@/hooks/useSectorContent";
 
 // Main hook that combines all sector data
-export const useSectorData = (sectorId: string | undefined) => {
+export function useSectorData(sectorId: string | undefined) {
   const sectorSlug = sectorId || '';
   const { data: sector, isLoading: sectorLoading } = useSectorBySlug(sectorSlug);
   
@@ -32,4 +32,4 @@ export const useSectorData = (sectorId: string | undefined) => {
     contentItems,
     isLoading: sectorLoading
   };
-};
+}
