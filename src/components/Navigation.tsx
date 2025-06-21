@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Home, Users, FileText, Calendar, Building2, TrendingUp, Phone, Info, HelpCircle } from "lucide-react";
-import { MarketEntryLogo } from "./MarketEntryLogo";
+import MarketEntryLogo from "./MarketEntryLogo";
 import { AuthButton } from "./auth/AuthButton";
 
 const Navigation = () => {

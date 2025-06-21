@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Navigation } from "@/components/Navigation";
+import Navigation from "@/components/Navigation";
 import { User, Mail, MapPin, Globe, Calendar, Shield, Settings, BookOpen, MessageSquare, TrendingUp } from "lucide-react";
 
 const Dashboard = () => {
