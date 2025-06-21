@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import Navigation from "@/components/Navigation";
 import { ServiceProvidersLayout } from "@/components/service-providers/ServiceProvidersLayout";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
 import { ServiceProvidersHeader } from "@/components/service-providers/ServiceProvidersHeader";
@@ -28,6 +29,8 @@ const ServiceProviders = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
+      
       <ServiceProvidersDataProvider
         selectedCategories={selectedCategories}
         selectedLocations={selectedLocations}

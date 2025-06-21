@@ -1,3 +1,4 @@
+
 import { Database, Map, Users, TrendingUp, Download, Eye, Star, Calendar, MapPin, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,11 +16,11 @@ export const LeadCard = ({ lead, onDownload, onPreview }: LeadCardProps) => {
   const getTypeIcon = () => {
     switch (lead.type) {
       case 'csv_list':
-        return <Database className="w-5 h-5 text-blue-500" />;
+        return <Database className="w-5 h-5 text-blue-600" />;
       case 'tam_map':
         return <Map className="w-5 h-5 text-green-600" />;
       default:
-        return <Database className="w-5 h-5 text-blue-500" />;
+        return <TrendingUp className="w-5 h-5 text-purple-600" />;
     }
   };
 

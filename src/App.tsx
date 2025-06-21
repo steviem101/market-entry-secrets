@@ -1,11 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AIChatSearch } from "@/components/AIChatSearch";
-import Navigation from "./components/Navigation";
 import Index from "./pages/Index";
 import ServiceProviders from "./pages/ServiceProviders";
 import Community from "./pages/Community";
@@ -36,9 +34,6 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <div className="relative min-h-screen">
-          {/* Navigation persists across all routes */}
-          <Navigation />
-          
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/service-providers" element={<ServiceProviders />} />

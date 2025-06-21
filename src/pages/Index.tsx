@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import Navigation from "@/components/Navigation";
 import { BookmarksSection } from "@/components/BookmarksSection";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { StatsSection } from "@/components/sections/StatsSection";
@@ -44,6 +45,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
+
       {/* Hero Section */}
       <HeroSection 
         totalResources={totalResources}

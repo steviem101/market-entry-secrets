@@ -8,17 +8,16 @@ import {
   popularNavItems, 
   infoNavItems 
 } from "./NavigationItems";
-import { useMemo } from "react";
 
 export const DesktopNavigation = () => {
   const location = useLocation();
 
-  const isActivePath = useMemo(() => (path: string) => {
+  const isActivePath = (path: string) => {
     if (path === "/") {
       return location.pathname === "/";
     }
     return location.pathname.startsWith(path);
-  }, [location.pathname]);
+  };
 
   return (
     <nav className="hidden lg:flex items-center space-x-4">
@@ -31,11 +30,12 @@ export const DesktopNavigation = () => {
 
       {/* Primary Navigation Items */}
       {primaryNavItems.map((item) => {
+        const Icon = item.icon;
         const isActive = isActivePath(item.href);
         
         return (
           <Link
-            key={`primary-${item.href}`}
+            key={item.href}
             to={item.href}
             className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors hover:text-primary ${
               isActive 
@@ -43,7 +43,7 @@ export const DesktopNavigation = () => {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <item.icon className="h-4 w-4" />
+            <Icon className="h-4 w-4" />
             {item.label}
           </Link>
         );

@@ -1,4 +1,5 @@
-import { FileText, TrendingUp, Building2, Globe, Users, Network, Database } from "lucide-react";
+
+import { FileText, TrendingUp, Building2, Globe, Users, Network } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -9,7 +10,7 @@ export interface NavItem {
 // Primary navigation items (always visible on desktop)
 export const primaryNavItems: NavItem[] = [
   { href: "/content", label: "Content", icon: FileText },
-  { href: "/leads", label: "Leads", icon: Database },
+  { href: "/leads", label: "Leads", icon: TrendingUp },
 ];
 
 // Ecosystem dropdown items

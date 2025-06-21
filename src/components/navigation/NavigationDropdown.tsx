@@ -9,7 +9,6 @@ import {
 import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavItem } from "./NavigationItems";
-import { memo } from "react";
 
 interface NavigationDropdownProps {
   label: string;
@@ -17,7 +16,7 @@ interface NavigationDropdownProps {
   items: NavItem[];
 }
 
-export const NavigationDropdown = memo(({ label, icon: Icon, items }: NavigationDropdownProps) => {
+export const NavigationDropdown = ({ label, icon: Icon, items }: NavigationDropdownProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -28,17 +27,18 @@ export const NavigationDropdown = memo(({ label, icon: Icon, items }: Navigation
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        {items.map((item) => (
-          <DropdownMenuItem key={`dropdown-${item.href}`} asChild>
-            <Link to={item.href} className="flex items-center gap-2">
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          </DropdownMenuItem>
-        ))}
+        {items.map((item) => {
+          const ItemIcon = item.icon;
+          return (
+            <DropdownMenuItem key={item.href} asChild>
+              <Link to={item.href} className="flex items-center gap-2">
+                <ItemIcon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );
-});
-
-NavigationDropdown.displayName = "NavigationDropdown";
+};
