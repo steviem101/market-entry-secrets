@@ -94,7 +94,7 @@ const Community = () => {
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Get guidance from experienced entrepreneurs and business leaders who have successfully entered new markets
           </p>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground justify-center">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               <span>{members.length} Members</span>

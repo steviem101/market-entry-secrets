@@ -16,13 +16,18 @@ export const FreemiumGate = ({ children, contentType, itemId, onView }: Freemium
   const { canView, trackView, hasReachedLimit } = useUsageTracking();
 
   useEffect(() => {
-    if (canView) {
+    // Only track if user can view and is not signed in
+    if (canView && !user) {
       trackView(contentType, itemId);
       onView?.();
+    } else if (user && onView) {
+      // Still call onView for signed-in users for any analytics
+      onView();
     }
-  }, [canView, contentType, itemId, trackView, onView]);
+  }, [canView, contentType, itemId, trackView, onView, user]);
 
-  if (!canView && !user) {
+  // Show paywall if reached limit and not signed in
+  if (hasReachedLimit && !user) {
     return <PaywallModal contentType={contentType} />;
   }
 

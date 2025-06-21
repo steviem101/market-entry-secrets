@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,8 +37,11 @@ export const useAuth = () => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserProfile(session.user.id);
-        fetchUserRoles(session.user.id);
+        // Use setTimeout to avoid blocking the auth state update
+        setTimeout(() => {
+          fetchUserProfile(session.user.id);
+          fetchUserRoles(session.user.id);
+        }, 0);
       }
       setLoading(false);
     });
@@ -51,8 +53,11 @@ export const useAuth = () => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await fetchUserProfile(session.user.id);
-          await fetchUserRoles(session.user.id);
+          // Use setTimeout to defer Supabase calls and prevent deadlocks
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+            fetchUserRoles(session.user.id);
+          }, 0);
         } else {
           setProfile(null);
           setRoles([]);
@@ -101,6 +106,16 @@ export const useAuth = () => {
     }
   };
 
+  const clearUsageTracking = () => {
+    // Clear usage tracking when user signs in/up
+    localStorage.removeItem('view_count');
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('viewed_')) {
+        localStorage.removeItem(key);
+      }
+    });
+  };
+
   const signInWithEmail = async (email: string, password: string) => {
     setLoading(true);
     try {
@@ -118,13 +133,8 @@ export const useAuth = () => {
         return { error };
       }
 
-      // Clear usage tracking when user signs in
-      localStorage.removeItem('view_count');
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('viewed_')) {
-          localStorage.removeItem(key);
-        }
-      });
+      // Clear usage tracking after successful sign in
+      setTimeout(clearUsageTracking, 100);
 
       toast({
         title: "Welcome back!",
@@ -165,13 +175,8 @@ export const useAuth = () => {
         return { error };
       }
 
-      // Clear usage tracking when user signs up
-      localStorage.removeItem('view_count');
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('viewed_')) {
-          localStorage.removeItem(key);
-        }
-      });
+      // Clear usage tracking after successful sign up
+      setTimeout(clearUsageTracking, 100);
 
       toast({
         title: "Account Created!",
