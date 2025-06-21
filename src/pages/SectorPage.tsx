@@ -1,6 +1,6 @@
 
 import { useParams } from "react-router-dom";
-import { getSectorConfig } from "@/config/sectors";
+import { useSectorBySlug } from "@/hooks/useSectors";
 import Navigation from "@/components/Navigation";
 import { 
   useSectorServiceProviders, 
@@ -18,7 +18,7 @@ import SectorContent from "@/components/sectors/SectorContent";
 
 const SectorPage = () => {
   const { sectorId } = useParams<{ sectorId: string }>();
-  const sectorConfig = getSectorConfig(sectorId || '');
+  const { data: sectorConfig, isLoading: sectorLoading, error } = useSectorBySlug(sectorId || '');
 
   const { data: serviceProviders = [], isLoading: providersLoading } = useSectorServiceProviders(sectorId || '');
   const { data: events = [], isLoading: eventsLoading } = useSectorEvents(sectorId || '');
@@ -28,7 +28,21 @@ const SectorPage = () => {
   const { data: tradeAgencies = [], isLoading: tradeLoading } = useSectorTradeAgencies(sectorId || '');
   const { data: contentItems = [], isLoading: contentLoading } = useSectorContent(sectorId || '');
 
-  if (!sectorConfig) {
+  if (sectorLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-4">Loading sector...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !sectorConfig) {
     return <NotFound />;
   }
 
@@ -40,8 +54,8 @@ const SectorPage = () => {
       
       {/* Hero Section */}
       <SectorHero 
-        title={sectorConfig.heroTitle}
-        description={sectorConfig.heroDescription}
+        title={sectorConfig.hero_title}
+        description={sectorConfig.hero_description}
       />
 
       {/* Stats and Content Section */}

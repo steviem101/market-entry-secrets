@@ -1,13 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getSectorConfig } from "@/config/sectors";
+import { useSectorBySlug } from "@/hooks/useSectors";
 
-export const useSectorServiceProviders = (sectorId: string) => {
-  const sectorConfig = getSectorConfig(sectorId);
+export const useSectorServiceProviders = (sectorSlug: string) => {
+  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
   
   return useQuery({
-    queryKey: ['sector-service-providers', sectorId],
+    queryKey: ['sector-service-providers', sectorSlug],
     queryFn: async () => {
       if (!sectorConfig) return [];
       
@@ -21,7 +21,7 @@ export const useSectorServiceProviders = (sectorId: string) => {
       // Filter based on sector keywords
       return data.filter(provider => {
         const searchText = `${provider.name} ${provider.description} ${provider.services?.join(' ')}`.toLowerCase();
-        return sectorConfig.serviceKeywords.some(keyword => 
+        return sectorConfig.service_keywords.some(keyword => 
           searchText.includes(keyword.toLowerCase())
         );
       });
@@ -30,11 +30,11 @@ export const useSectorServiceProviders = (sectorId: string) => {
   });
 };
 
-export const useSectorEvents = (sectorId: string) => {
-  const sectorConfig = getSectorConfig(sectorId);
+export const useSectorEvents = (sectorSlug: string) => {
+  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
   
   return useQuery({
-    queryKey: ['sector-events', sectorId],
+    queryKey: ['sector-events', sectorSlug],
     queryFn: async () => {
       if (!sectorConfig) return [];
       
@@ -48,7 +48,7 @@ export const useSectorEvents = (sectorId: string) => {
       // Filter based on sector keywords
       return data.filter(event => {
         const searchText = `${event.title} ${event.description} ${event.category}`.toLowerCase();
-        return sectorConfig.eventKeywords.some(keyword => 
+        return sectorConfig.event_keywords.some(keyword => 
           searchText.includes(keyword.toLowerCase())
         );
       });
@@ -57,11 +57,11 @@ export const useSectorEvents = (sectorId: string) => {
   });
 };
 
-export const useSectorLeads = (sectorId: string) => {
-  const sectorConfig = getSectorConfig(sectorId);
+export const useSectorLeads = (sectorSlug: string) => {
+  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
   
   return useQuery({
-    queryKey: ['sector-leads', sectorId],
+    queryKey: ['sector-leads', sectorSlug],
     queryFn: async () => {
       if (!sectorConfig) return [];
       
@@ -75,7 +75,7 @@ export const useSectorLeads = (sectorId: string) => {
       // Filter based on sector keywords and industries
       return data.filter(lead => {
         const searchText = `${lead.name} ${lead.description} ${lead.industry} ${lead.category}`.toLowerCase();
-        return sectorConfig.leadKeywords.some(keyword => 
+        return sectorConfig.lead_keywords.some(keyword => 
           searchText.includes(keyword.toLowerCase())
         ) || sectorConfig.industries.some(industry =>
           lead.industry?.toLowerCase().includes(industry.toLowerCase())
@@ -86,11 +86,11 @@ export const useSectorLeads = (sectorId: string) => {
   });
 };
 
-export const useSectorCommunityMembers = (sectorId: string) => {
-  const sectorConfig = getSectorConfig(sectorId);
+export const useSectorCommunityMembers = (sectorSlug: string) => {
+  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
   
   return useQuery({
-    queryKey: ['sector-community-members', sectorId],
+    queryKey: ['sector-community-members', sectorSlug],
     queryFn: async () => {
       if (!sectorConfig) return [];
       
@@ -113,11 +113,11 @@ export const useSectorCommunityMembers = (sectorId: string) => {
   });
 };
 
-export const useSectorInnovationEcosystem = (sectorId: string) => {
-  const sectorConfig = getSectorConfig(sectorId);
+export const useSectorInnovationEcosystem = (sectorSlug: string) => {
+  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
   
   return useQuery({
-    queryKey: ['sector-innovation-ecosystem', sectorId],
+    queryKey: ['sector-innovation-ecosystem', sectorSlug],
     queryFn: async () => {
       if (!sectorConfig) return [];
       
@@ -140,11 +140,11 @@ export const useSectorInnovationEcosystem = (sectorId: string) => {
   });
 };
 
-export const useSectorTradeAgencies = (sectorId: string) => {
-  const sectorConfig = getSectorConfig(sectorId);
+export const useSectorTradeAgencies = (sectorSlug: string) => {
+  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
   
   return useQuery({
-    queryKey: ['sector-trade-agencies', sectorId],
+    queryKey: ['sector-trade-agencies', sectorSlug],
     queryFn: async () => {
       if (!sectorConfig) return [];
       
@@ -167,11 +167,11 @@ export const useSectorTradeAgencies = (sectorId: string) => {
   });
 };
 
-export const useSectorContent = (sectorId: string) => {
-  const sectorConfig = getSectorConfig(sectorId);
+export const useSectorContent = (sectorSlug: string) => {
+  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
   
   return useQuery({
-    queryKey: ['sector-content', sectorId],
+    queryKey: ['sector-content', sectorSlug],
     queryFn: async () => {
       if (!sectorConfig) return [];
       
@@ -193,13 +193,13 @@ export const useSectorContent = (sectorId: string) => {
       // Filter based on sector tags or keywords in title/subtitle
       return data.filter(content => {
         // Check sector_tags array first
-        if (content.sector_tags?.includes(sectorId)) {
+        if (content.sector_tags?.includes(sectorSlug)) {
           return true;
         }
         
         // Fallback to keyword matching in title and subtitle
         const searchText = `${content.title} ${content.subtitle || ''}`.toLowerCase();
-        return sectorConfig.keywords.some(keyword => 
+        return sectorConfig.content_keywords.some(keyword => 
           searchText.includes(keyword.toLowerCase())
         );
       });

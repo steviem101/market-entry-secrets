@@ -541,6 +541,63 @@ export type Database = {
         }
         Relationships: []
       }
+      industry_sectors: {
+        Row: {
+          content_keywords: string[]
+          created_at: string
+          description: string
+          event_keywords: string[]
+          featured: boolean
+          hero_description: string
+          hero_title: string
+          id: string
+          industries: string[]
+          keywords: string[]
+          lead_keywords: string[]
+          name: string
+          service_keywords: string[]
+          slug: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          content_keywords?: string[]
+          created_at?: string
+          description: string
+          event_keywords?: string[]
+          featured?: boolean
+          hero_description: string
+          hero_title: string
+          id?: string
+          industries?: string[]
+          keywords?: string[]
+          lead_keywords?: string[]
+          name: string
+          service_keywords?: string[]
+          slug: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          content_keywords?: string[]
+          created_at?: string
+          description?: string
+          event_keywords?: string[]
+          featured?: boolean
+          hero_description?: string
+          hero_title?: string
+          id?: string
+          industries?: string[]
+          keywords?: string[]
+          lead_keywords?: string[]
+          name?: string
+          service_keywords?: string[]
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       innovation_ecosystem: {
         Row: {
           basic_info: string | null

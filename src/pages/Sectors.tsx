@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
-import { getAllSectors } from "@/config/sectors";
+import { useSectors, useFeaturedSectors } from "@/hooks/useSectors";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,10 +11,11 @@ import SectorHero from "@/components/sectors/SectorHero";
 
 const Sectors = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const sectors = getAllSectors();
+  const { data: allSectors = [], isLoading: sectorsLoading } = useSectors();
+  const { data: featuredSectors = [], isLoading: featuredLoading } = useFeaturedSectors();
 
   // Filter sectors based on search query
-  const filteredSectors = sectors.filter(sector =>
+  const filteredSectors = allSectors.filter(sector =>
     searchQuery === "" || 
     sector.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     sector.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -23,8 +24,19 @@ const Sectors = () => {
     )
   );
 
-  // Get featured sectors (first 2 for demo)
-  const featuredSectors = sectors.slice(0, 2);
+  if (sectorsLoading || featuredLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-4">Loading sectors...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -55,7 +67,7 @@ const Sectors = () => {
 
       <div className="container mx-auto px-4 py-12">
         {/* Featured Sectors Section */}
-        {!searchQuery && (
+        {!searchQuery && featuredSectors.length > 0 && (
           <section className="mb-12">
             <h2 className="text-2xl font-bold mb-6">Featured Sectors</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -118,7 +130,7 @@ const Sectors = () => {
                         </div>
                       </div>
 
-                      <Link to={`/sectors/${sector.id}`}>
+                      <Link to={`/sectors/${sector.slug}`}>
                         <Button className="w-full">
                           Explore {sector.name}
                         </Button>
@@ -206,7 +218,7 @@ const Sectors = () => {
                         </div>
                       </div>
 
-                      <Link to={`/sectors/${sector.id}`}>
+                      <Link to={`/sectors/${sector.slug}`}>
                         <Button className="w-full">
                           Explore {sector.name}
                         </Button>
