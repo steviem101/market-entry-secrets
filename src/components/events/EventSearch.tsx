@@ -5,21 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 
 interface EventSearchProps {
-  onSearch: (query: string) => void;
-  onClear: () => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
   isSearching: boolean;
 }
 
-export const EventSearch = ({ onSearch, onClear, isSearching }: EventSearchProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
-
+export const EventSearch = ({ searchQuery, onSearchChange, isSearching }: EventSearchProps) => {
   const handleSearch = () => {
-    onSearch(searchQuery.trim());
+    onSearchChange(searchQuery.trim());
   };
 
   const handleClear = () => {
-    setSearchQuery("");
-    onClear();
+    onSearchChange("");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -35,7 +32,7 @@ export const EventSearch = ({ onSearch, onClear, isSearching }: EventSearchProps
         <Input
           placeholder="Search events by title, description, or location..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => onSearchChange(e.target.value)}
           onKeyPress={handleKeyPress}
           className="pl-10 pr-10"
         />

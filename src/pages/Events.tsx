@@ -16,7 +16,6 @@ const Events = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
-  const [showSubmissionForm, setShowSubmissionForm] = useState(false);
 
   const { events, loading, error, searchEvents, clearSearch, isSearching } = useEvents();
 
@@ -92,7 +91,7 @@ const Events = () => {
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Connect with industry professionals and expand your network at upcoming events
           </p>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground justify-center">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               <span>{events.length} Events</span>
@@ -101,6 +100,9 @@ const Events = () => {
               <MapPin className="w-4 h-4" />
               <span>Multiple Locations</span>
             </div>
+          </div>
+          <div className="mt-6">
+            <EventSubmissionForm />
           </div>
         </div>
       </section>
@@ -193,12 +195,6 @@ const Events = () => {
           </div>
         )}
       </div>
-
-      {/* Event Submission Form Modal */}
-      <EventSubmissionForm
-        isOpen={showSubmissionForm}
-        onClose={() => setShowSubmissionForm(false)}
-      />
     </div>
   );
 };
