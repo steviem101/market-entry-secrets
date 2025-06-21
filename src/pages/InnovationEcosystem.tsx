@@ -236,6 +236,8 @@ const InnovationEcosystem = () => {
                     key={entity.id}
                     contentType="innovation_ecosystem"
                     itemId={entity.id}
+                    contentTitle={entity.name}
+                    contentDescription={entity.description}
                   >
                     <CompanyCard
                       company={entity}

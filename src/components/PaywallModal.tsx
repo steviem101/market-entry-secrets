@@ -18,6 +18,8 @@ const contentTypeInfo = {
   community_members: { icon: Users, label: 'Community Members', description: 'mentors and experts' },
   leads: { icon: Database, label: 'Lead Databases', description: 'premium databases and market intelligence' },
   events: { icon: TrendingUp, label: 'Industry Events', description: 'networking opportunities' },
+  trade_investment_agencies: { icon: Users, label: 'Trade & Investment Agencies', description: 'government agencies and chambers' },
+  innovation_ecosystem: { icon: Users, label: 'Innovation Ecosystem', description: 'accelerators, incubators, and funding partners' },
 };
 
 export const PaywallModal = ({ contentType, contentTitle, contentDescription }: PaywallModalProps) => {

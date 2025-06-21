@@ -33,6 +33,8 @@ export const ServiceProvidersList = ({
           key={company.id}
           contentType="service_providers"
           itemId={company.id}
+          contentTitle={company.name}
+          contentDescription={company.description}
         >
           <CompanyCard
             company={company}

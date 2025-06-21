@@ -226,6 +226,8 @@ const TradeInvestmentAgencies = () => {
                     key={agency.id}
                     contentType="trade_investment_agencies"
                     itemId={agency.id}
+                    contentTitle={agency.name}
+                    contentDescription={agency.description}
                   >
                     <CompanyCard
                       company={agency}
