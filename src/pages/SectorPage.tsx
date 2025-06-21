@@ -1,6 +1,6 @@
 
 import { useParams } from "react-router-dom";
-import { useSectorData } from "@/hooks/useSectorData";
+import useSectorData from "@/hooks/useSectorData";
 import SectorsHero from "@/components/sectors/SectorsHero";
 import SectorContent from "@/components/sectors/SectorContent";
 import SectorStats from "@/components/sectors/SectorStats";
