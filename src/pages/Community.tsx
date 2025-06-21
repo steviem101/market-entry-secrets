@@ -178,6 +178,7 @@ const Community = () => {
           person={selectedMember}
           isOpen={showModal}
           onClose={() => setShowModal(false)}
+          onContact={handleContact}
         />
       )}
     </div>
