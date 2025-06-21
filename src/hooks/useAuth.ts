@@ -118,6 +118,14 @@ export const useAuth = () => {
         return { error };
       }
 
+      // Clear usage tracking when user signs in
+      localStorage.removeItem('view_count');
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('viewed_')) {
+          localStorage.removeItem(key);
+        }
+      });
+
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
@@ -144,6 +152,7 @@ export const useAuth = () => {
         password,
         options: {
           data: metadata,
+          emailRedirectTo: `${window.location.origin}/`,
         },
       });
 
@@ -155,6 +164,14 @@ export const useAuth = () => {
         });
         return { error };
       }
+
+      // Clear usage tracking when user signs up
+      localStorage.removeItem('view_count');
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('viewed_')) {
+          localStorage.removeItem(key);
+        }
+      });
 
       toast({
         title: "Account Created!",

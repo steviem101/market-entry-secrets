@@ -8,6 +8,7 @@ import { ContentHero } from "@/components/content/ContentHero";
 import { ContentFilters } from "@/components/content/ContentFilters";
 import { FeaturedContent } from "@/components/content/FeaturedContent";
 import { ContentGrid } from "@/components/content/ContentGrid";
+import { UsageBanner } from "@/components/UsageBanner";
 
 const Content = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,6 +74,8 @@ const Content = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
+        <UsageBanner />
+        
         <ContentFilters 
           categories={categories}
           selectedCategory={selectedCategory}

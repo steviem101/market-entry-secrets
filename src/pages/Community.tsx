@@ -1,214 +1,82 @@
-import { useState, useEffect } from "react";
-import { Filter, Grid3X3 } from "lucide-react";
+
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import PersonCard, { Person } from "@/components/PersonCard";
-import PersonModal from "@/components/PersonModal";
-import SearchFilters from "@/components/SearchFilters";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, Users, MapPin, Globe, AlertCircle } from "lucide-react";
 import { useCommunityMembers } from "@/hooks/useCommunityMembers";
-import { useBookmarks } from "@/hooks/useBookmarks";
-import { toast } from "sonner";
-
-const mockPeople: Person[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    title: "Software Engineer",
-    description: "Passionate about building scalable web applications.",
-    location: "Sydney, NSW",
-    experience: "5+ years",
-    specialties: ["React", "Node.js", "GraphQL"],
-    website: "https://johndoe.com",
-    contact: "john.doe@example.com",
-    image: "/placeholder.svg",
-    experienceTiles: [
-      { id: "1", name: "Atlassian", logo: "/placeholder.svg" },
-      { id: "2", name: "Canva", logo: "/placeholder.svg" },
-      { id: "3", name: "Afterpay", logo: "/placeholder.svg" }
-    ],
-    company: "Atlassian"
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    title: "Data Scientist",
-    description: "Expert in machine learning and data analysis.",
-    location: "Melbourne, VIC",
-    experience: "3+ years",
-    specialties: ["Python", "TensorFlow", "Data Visualization"],
-    website: "https://janesmith.com",
-    contact: "jane.smith@example.com",
-    image: "/placeholder.svg",
-    experienceTiles: [
-      { id: "1", name: "Google", logo: "/placeholder.svg" },
-      { id: "2", name: "Amazon", logo: "/placeholder.svg" },
-      { id: "3", name: "Microsoft", logo: "/placeholder.svg" }
-    ],
-    company: "Google"
-  },
-  {
-    id: "3",
-    name: "Alice Johnson",
-    title: "Product Manager",
-    description: "Experienced in leading cross-functional teams to deliver successful products.",
-    location: "Brisbane, QLD",
-    experience: "7+ years",
-    specialties: ["Agile", "Scrum", "Product Strategy"],
-    website: "https://alicejohnson.com",
-    contact: "alice.johnson@example.com",
-    image: "/placeholder.svg",
-    experienceTiles: [
-      { id: "1", name: "Facebook", logo: "/placeholder.svg" },
-      { id: "2", name: "Instagram", logo: "/placeholder.svg" },
-      { id: "3", name: "WhatsApp", logo: "/placeholder.svg" }
-    ],
-    company: "Facebook"
-  },
-  {
-    id: "4",
-    name: "Bob Williams",
-    title: "UX Designer",
-    description: "Creating intuitive and user-friendly designs.",
-    location: "Perth, WA",
-    experience: "4+ years",
-    specialties: ["UI Design", "User Research", "Prototyping"],
-    website: "https://bobwilliams.com",
-    contact: "bob.williams@example.com",
-    image: "/placeholder.svg",
-    experienceTiles: [
-      { id: "1", name: "Apple", logo: "/placeholder.svg" },
-      { id: "2", name: "Samsung", logo: "/placeholder.svg" },
-      { id: "3", name: "LG", logo: "/placeholder.svg" }
-    ],
-    company: "Apple"
-  },
-  {
-    id: "5",
-    name: "Charlie Brown",
-    title: "Marketing Manager",
-    description: "Driving brand awareness and customer engagement.",
-    location: "Adelaide, SA",
-    experience: "6+ years",
-    specialties: ["Digital Marketing", "Social Media", "Content Creation"],
-    website: "https://charliebrown.com",
-    contact: "charlie.brown@example.com",
-    image: "/placeholder.svg",
-    experienceTiles: [
-      { id: "1", name: "Coca-Cola", logo: "/placeholder.svg" },
-      { id: "2", name: "Pepsi", logo: "/placeholder.svg" },
-      { id: "3", name: "Red Bull", logo: "/placeholder.svg" }
-    ],
-    company: "Coca-Cola"
-  },
-  {
-    id: "6",
-    name: "Diana Miller",
-    title: "Project Manager",
-    description: "Delivering projects on time and within budget.",
-    location: "Hobart, TAS",
-    experience: "8+ years",
-    specialties: ["Project Planning", "Risk Management", "Stakeholder Communication"],
-    website: "https://dianamiller.com",
-    contact: "diana.miller@example.com",
-    image: "/placeholder.svg",
-    experienceTiles: [
-      { id: "1", name: "IBM", logo: "/placeholder.svg" },
-      { id: "2", name: "Accenture", logo: "/placeholder.svg" },
-      { id: "3", name: "Deloitte", logo: "/placeholder.svg" }
-    ],
-    company: "IBM"
-  }
-];
-
-const serviceCategories = [
-  { id: "software", name: "Software Development", count: 12 },
-  { id: "data", name: "Data Science", count: 8 },
-  { id: "marketing", name: "Digital Marketing", count: 15 },
-  { id: "design", name: "UX/UI Design", count: 10 },
-  { id: "consulting", name: "Business Consulting", count: 18 },
-  { id: "finance", name: "Financial Services", count: 6 }
-];
-
-const categoryGroups = [
-  {
-    id: "tech",
-    name: "Technology",
-    totalCount: 25,
-    categories: [
-      { id: "software", name: "Software Development", count: 12 },
-      { id: "data", name: "Data Science", count: 8 },
-      { id: "cloud", name: "Cloud Computing", count: 5 }
-    ]
-  },
-  {
-    id: "business",
-    name: "Business Services",
-    totalCount: 30,
-    categories: [
-      { id: "marketing", name: "Digital Marketing", count: 15 },
-      { id: "consulting", name: "Business Consulting", count: 10 },
-      { id: "finance", name: "Financial Services", count: 5 }
-    ]
-  }
-];
+import { PersonCard, Person } from "@/components/PersonCard";
+import { PersonModal } from "@/components/PersonModal";
+import { FreemiumGate } from "@/components/FreemiumGate";
+import { UsageBanner } from "@/components/UsageBanner";
 
 const Community = () => {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
-  const { data: communityMembers, isLoading, error } = useCommunityMembers();
-  const { fetchBookmarks } = useBookmarks();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Person | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    fetchBookmarks();
-  }, [fetchBookmarks]);
+  const { data: members = [], isLoading, error } = useCommunityMembers();
 
-  const filteredPeople = (communityMembers || mockPeople).filter(person => {
-    const matchesSearch = person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         person.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         person.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         person.specialties.some(specialty => specialty.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Get all unique specialties
+  const allSpecialties = Array.from(
+    new Set(members.flatMap(member => member.specialties))
+  ).sort();
+
+  // Filter members based on search and specialty
+  const filteredMembers = members.filter(member => {
+    const matchesSearch = searchQuery === "" || 
+      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.location.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesCategories = selectedCategories.length === 0 || 
-                             person.specialties.some(specialty => 
-                               selectedCategories.some(catId => {
-                                 const category = serviceCategories.find(c => c.id === catId) ||
-                                                categoryGroups.flatMap(g => g.categories).find(c => c.id === catId);
-                                 return category && specialty.toLowerCase().includes(category?.name.toLowerCase() || '');
-                               })
-                             );
-
-    const matchesLocation = selectedLocations.length === 0 || 
-                           selectedLocations.includes(person.location);
+    const matchesSpecialty = selectedSpecialty === null || 
+      member.specialties.includes(selectedSpecialty);
     
-    return matchesSearch && matchesCategories && matchesLocation;
+    return matchesSearch && matchesSpecialty;
   });
 
-  const handleViewProfile = (person: Person) => {
-    setSelectedPerson(person);
-    setIsModalOpen(true);
+  const handleViewProfile = (member: Person) => {
+    setSelectedMember(member);
+    setShowModal(true);
   };
 
-  const handleContact = (person: Person) => {
-    toast.success(`Contact request sent to ${person.isAnonymous ? person.title : person.name}!`);
-    setIsModalOpen(false);
+  const handleContact = (member: Person) => {
+    console.log('Contact member:', member.name);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-lg text-muted-foreground">Loading community members...</p>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-4">Loading community members...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-lg text-red-500">Error: {error.message}</p>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-4">Error Loading Community</h2>
+            <p className="text-muted-foreground mb-6">
+              {error.message || 'Failed to load community members'}
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -216,91 +84,102 @@ const Community = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-
-      {/* Filters Toggle Header */}
-      <div className="bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Community</h1>
-              <p className="text-muted-foreground">
-                {filteredPeople.length} community members found
-              </p>
+      
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-background py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Connect with <span className="text-primary">Market Entry</span> Experts
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Get guidance from experienced entrepreneurs and business leaders who have successfully entered new markets
+          </p>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span>{members.length} Members</span>
             </div>
             <div className="flex items-center gap-2">
-              <SearchFilters
-                categories={[]}
-                categoryGroups={[]}
-                selectedCategories={[]}
-                onCategoryChange={() => {}}
-                searchTerm=""
-                onSearchChange={() => {}}
-                selectedLocations={selectedLocations}
-                onLocationChange={setSelectedLocations}
-                showLocationFilter={true}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className="lg:hidden"
-              >
-                <Filter className="w-4 h-4" />
-              </Button>
+              <Globe className="w-4 h-4" />
+              <span>Global Network</span>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          {/* Filters Sidebar */}
-          <aside className={`w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden'} lg:block`}>
-            <SearchFilters
-              categories={serviceCategories}
-              categoryGroups={categoryGroups}
-              selectedCategories={selectedCategories}
-              onCategoryChange={setSelectedCategories}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedLocations={selectedLocations}
-              onLocationChange={setSelectedLocations}
+        <UsageBanner />
+        
+        {/* Search and Filters */}
+        <div className="mb-8 space-y-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search mentors by name, title, or location..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
             />
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1">
-            {filteredPeople.length === 0 ? (
-              <div className="text-center py-12">
-                <Grid3X3 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No community members found</h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search criteria or filters to find more members.
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {filteredPeople.map((person) => (
-                  <PersonCard
-                    key={person.id}
-                    person={person}
-                    onViewProfile={handleViewProfile}
-                    onContact={handleContact}
-                  />
-                ))}
-              </div>
-            )}
-          </main>
+          </div>
+          
+          {/* Specialty Filter */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={selectedSpecialty === null ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedSpecialty(null)}
+            >
+              All Specialties
+            </Button>
+            {allSpecialties.map((specialty) => (
+              <Button
+                key={specialty}
+                variant={selectedSpecialty === specialty ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedSpecialty(specialty)}
+              >
+                {specialty}
+              </Button>
+            ))}
+          </div>
         </div>
+
+        {/* Members Grid */}
+        {filteredMembers.length === 0 ? (
+          <div className="text-center py-12">
+            <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No members found</h3>
+            <p className="text-muted-foreground">
+              Try adjusting your search criteria to find more community members.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredMembers.map((member) => (
+              <FreemiumGate
+                key={member.id}
+                contentType="community_members"
+                itemId={member.id}
+              >
+                <PersonCard
+                  person={member}
+                  onViewProfile={handleViewProfile}
+                  onContact={handleContact}
+                />
+              </FreemiumGate>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Person Modal */}
-      <PersonModal
-        person={selectedPerson}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onContact={handleContact}
-      />
+      {/* Member Modal */}
+      {selectedMember && (
+        <PersonModal
+          person={selectedMember}
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </div>
   );
 };

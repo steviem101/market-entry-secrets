@@ -1,6 +1,7 @@
 
 import { Grid3X3 } from "lucide-react";
 import CompanyCard, { Company } from "@/components/CompanyCard";
+import { FreemiumGate } from "../FreemiumGate";
 
 interface ServiceProvidersListProps {
   companies: Company[];
@@ -28,12 +29,17 @@ export const ServiceProvidersList = ({
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
       {companies.map((company) => (
-        <CompanyCard
+        <FreemiumGate
           key={company.id}
-          company={company}
-          onViewProfile={onViewProfile}
-          onContact={onContact}
-        />
+          contentType="service_providers"
+          itemId={company.id}
+        >
+          <CompanyCard
+            company={company}
+            onViewProfile={onViewProfile}
+            onContact={onContact}
+          />
+        </FreemiumGate>
       ))}
     </div>
   );

@@ -838,6 +838,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          created_at: string | null
+          id: string
+          tier: Database["public"]["Enums"]["subscription_tier"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_usage: {
+        Row: {
+          content_type: string
+          id: string
+          item_id: string
+          session_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          content_type: string
+          id?: string
+          item_id: string
+          session_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          content_type?: string
+          id?: string
+          item_id?: string
+          session_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -853,6 +901,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      subscription_tier: "free" | "premium" | "concierge"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -969,6 +1018,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      subscription_tier: ["free", "premium", "concierge"],
     },
   },
 } as const
