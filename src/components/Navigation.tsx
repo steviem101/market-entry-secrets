@@ -3,7 +3,13 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Home, Users, FileText, Calendar, Building2, TrendingUp, Phone, Info, HelpCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu, Home, Users, FileText, Calendar, Building2, TrendingUp, Phone, Info, HelpCircle, ChevronDown } from "lucide-react";
 import MarketEntryLogo from "./MarketEntryLogo";
 import { AuthButton } from "./auth/AuthButton";
 
@@ -11,19 +17,31 @@ const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
-  const navigationItems = [
+  // Primary navigation items (always visible on desktop)
+  const primaryNavItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/service-providers", label: "Service Providers", icon: Building2 },
     { href: "/mentors", label: "Community", icon: Users },
     { href: "/content", label: "Content", icon: FileText },
+  ];
+
+  // Secondary navigation items (in dropdown on desktop)
+  const secondaryNavItems = [
     { href: "/events", label: "Events", icon: Calendar },
     { href: "/innovation-ecosystem", label: "Innovation Ecosystem", icon: TrendingUp },
     { href: "/trade-investment-agencies", label: "Trade & Investment", icon: Building2 },
     { href: "/leads", label: "Leads", icon: TrendingUp },
+  ];
+
+  // Footer/info items (in dropdown on desktop)
+  const infoNavItems = [
     { href: "/about", label: "About", icon: Info },
     { href: "/contact", label: "Contact", icon: Phone },
     { href: "/faq", label: "FAQ", icon: HelpCircle },
   ];
+
+  // All items for mobile menu
+  const allNavItems = [...primaryNavItems, ...secondaryNavItems, ...infoNavItems];
 
   const isActivePath = (path: string) => {
     if (path === "/") {
@@ -44,9 +62,10 @@ const Navigation = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-6">
-            {navigationItems.map((item) => {
+          {/* Desktop Navigation - Compact */}
+          <nav className="hidden lg:flex items-center space-x-4">
+            {/* Primary Navigation Items */}
+            {primaryNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = isActivePath(item.href);
               
@@ -65,9 +84,57 @@ const Navigation = () => {
                 </Link>
               );
             })}
+
+            {/* Business Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Business
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {secondaryNavItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link to={item.href} className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Info Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Info className="h-4 w-4" />
+                  Info
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {infoNavItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link to={item.href} className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
-          {/* Auth Section */}
+          {/* Sign In Section */}
           <div className="flex items-center space-x-4">
             <div className="hidden md:block">
               <AuthButton />
@@ -98,7 +165,7 @@ const Navigation = () => {
                   {/* Mobile Navigation */}
                   <nav className="flex-1 py-4">
                     <div className="space-y-2">
-                      {navigationItems.map((item) => {
+                      {allNavItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = isActivePath(item.href);
                         
