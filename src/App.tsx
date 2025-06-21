@@ -21,6 +21,7 @@ import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import SectorPage from "./pages/SectorPage";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
             <Route path="/leads" element={<Leads />} />
             <Route path="/partner-with-us" element={<PartnerWithUs />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />

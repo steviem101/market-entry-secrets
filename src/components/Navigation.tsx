@@ -1,209 +1,100 @@
 
-import { Link } from "react-router-dom";
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import MarketEntryLogo from "./MarketEntryLogo";
-import { getAllSectors } from "@/config/sectors";
+import { Link, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, Home, Users, FileText, Calendar, Building2, TrendingUp, Phone, Info, HelpCircle } from "lucide-react";
+import { MarketEntryLogo } from "./MarketEntryLogo";
+import { AuthButton } from "./auth/AuthButton";
 
 const Navigation = () => {
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const sectors = getAllSectors();
+  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
 
-  const handleMouseEnter = (dropdownName: string) => {
-    setOpenDropdown(dropdownName);
+  const navigationItems = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/service-providers", label: "Service Providers", icon: Building2 },
+    { href: "/mentors", label: "Community", icon: Users },
+    { href: "/content", label: "Content", icon: FileText },
+    { href: "/events", label: "Events", icon: Calendar },
+    { href: "/innovation-ecosystem", label: "Innovation Ecosystem", icon: TrendingUp },
+    { href: "/trade-investment-agencies", label: "Trade & Investment", icon: Building2 },
+    { href: "/leads", label: "Leads", icon: TrendingUp },
+    { href: "/about", label: "About", icon: Info },
+    { href: "/contact", label: "Contact", icon: Phone },
+    { href: "/faq", label: "FAQ", icon: HelpCircle },
+  ];
+
+  const isActivePath = (path: string) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    return location.pathname.startsWith(path);
   };
 
-  const handleMouseLeave = () => {
-    setOpenDropdown(null);
-  };
+  const NavItems = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <>
+      {navigationItems.map((item) => {
+        const Icon = item.icon;
+        const isActive = isActivePath(item.href);
+        
+        return (
+          <Link
+            key={item.href}
+            to={item.href}
+            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors hover:text-primary ${
+              isActive 
+                ? "text-primary border-b-2 border-primary" 
+                : "text-muted-foreground"
+            } ${isMobile ? "w-full justify-start" : ""}`}
+            onClick={() => isMobile && setIsOpen(false)}
+          >
+            <Icon className="h-4 w-4" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </>
+  );
 
   return (
-    <nav className="bg-card border-b border-border">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo and Brand */}
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <MarketEntryLogo />
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Market Entry Secrets</h1>
-              <p className="text-muted-foreground text-sm">Your One Stop Shop for Australian Market Entry</p>
-            </div>
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-2">
+            <MarketEntryLogo className="h-8 w-8" />
+            <span className="hidden font-bold sm:inline-block">
+              Market Entry Hub
+            </span>
           </Link>
-
-          {/* Navigation Menu */}
-          <div className="flex items-center space-x-1">
-            {/* Sectors Dropdown */}
-            <div 
-              className="relative"
-              onMouseEnter={() => handleMouseEnter('sectors')}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
-                Sectors
-                <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform duration-200", openDropdown === 'sectors' && "rotate-180")} />
-              </button>
-              
-              {openDropdown === 'sectors' && (
-                <div className="absolute top-full left-0 mt-1 w-[400px] bg-popover border border-border rounded-md shadow-lg z-50">
-                  <div className="grid gap-3 p-6">
-                    {sectors.map((sector) => (
-                      <Link 
-                        key={sector.id}
-                        to={`/sectors/${sector.id}`}
-                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                      >
-                        <div className="text-sm font-medium leading-none">{sector.name}</div>
-                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          {sector.description}
-                        </p>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Ecosystem Dropdown */}
-            <div 
-              className="relative"
-              onMouseEnter={() => handleMouseEnter('ecosystem')}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
-                Ecosystem
-                <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform duration-200", openDropdown === 'ecosystem' && "rotate-180")} />
-              </button>
-              
-              {openDropdown === 'ecosystem' && (
-                <div className="absolute top-full left-0 mt-1 w-[450px] bg-popover border border-border rounded-md shadow-lg z-50">
-                  <div className="grid gap-3 p-6">
-                    <Link 
-                      to="/service-providers" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">Service Providers</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Browse all market entry service providers
-                      </p>
-                    </Link>
-                    <Link 
-                      to="/innovation-ecosystem" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">Innovation Ecosystem</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Connect with Australia's innovation landscape
-                      </p>
-                    </Link>
-                    <Link 
-                      to="/trade-investment-agencies" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">Trade & Investment Agencies</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Government agencies and chambers of commerce
-                      </p>
-                    </Link>
-                    <Link 
-                      to="/mentors" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">Mentors</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Connect with experienced mentors and advisors
-                      </p>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Link to="/leads" className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
-              Leads
-            </Link>
-
-            <Link to="/events" className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
-              Events
-            </Link>
-
-            <Link to="/content" className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
-              Content
-            </Link>
-
-            {/* About Dropdown */}
-            <div 
-              className="relative"
-              onMouseEnter={() => handleMouseEnter('about')}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
-                About
-                <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform duration-200", openDropdown === 'about' && "rotate-180")} />
-              </button>
-              
-              {openDropdown === 'about' && (
-                <div className="absolute top-full right-0 mt-1 w-[350px] bg-popover border border-border rounded-md shadow-lg z-50">
-                  <div className="grid gap-3 p-6">
-                    <Link 
-                      to="/about" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">About Us</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Our mission, story, and team
-                      </p>
-                    </Link>
-                    <Link 
-                      to="/partner-with-us" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">Partner With Us</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Join our ecosystem and collaborate with us
-                      </p>
-                    </Link>
-                    <Link 
-                      to="/contact" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">Contact</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Get in touch with our team
-                      </p>
-                    </Link>
-                    <Link 
-                      to="/faq" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">FAQ</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Frequently asked questions
-                      </p>
-                    </Link>
-                    <Link 
-                      to="/privacy-policy" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">Privacy Policy</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        How we protect your privacy
-                      </p>
-                    </Link>
-                    <Link 
-                      to="/terms-of-service" 
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <div className="text-sm font-medium leading-none">Terms of Service</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Terms and conditions
-                      </p>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
+            <NavItems />
           </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Auth Button */}
+          <AuthButton />
+          
+          {/* Mobile Navigation */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+              >
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="pr-0">
+              <div className="flex flex-col space-y-4 mt-8">
+                <NavItems isMobile />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>
