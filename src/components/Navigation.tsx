@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Home, Users, FileText, Calendar, Building2, TrendingUp, Phone, Info, HelpCircle, ChevronDown } from "lucide-react";
+import { Menu, Users, FileText, TrendingUp, Building2, Globe, ChevronDown, Network } from "lucide-react";
 import MarketEntryLogo from "./MarketEntryLogo";
 import { AuthButton } from "./auth/AuthButton";
 
@@ -19,29 +19,38 @@ const Navigation = () => {
 
   // Primary navigation items (always visible on desktop)
   const primaryNavItems = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/service-providers", label: "Service Providers", icon: Building2 },
-    { href: "/mentors", label: "Community", icon: Users },
     { href: "/content", label: "Content", icon: FileText },
+    { href: "/leads", label: "Leads", icon: TrendingUp },
   ];
 
-  // Secondary navigation items (in dropdown on desktop)
-  const secondaryNavItems = [
-    { href: "/events", label: "Events", icon: Calendar },
-    { href: "/innovation-ecosystem", label: "Innovation Ecosystem", icon: TrendingUp },
+  // Ecosystem dropdown items
+  const ecosystemNavItems = [
+    { href: "/service-providers", label: "Service Providers", icon: Building2 },
     { href: "/trade-investment-agencies", label: "Trade & Investment", icon: Building2 },
-    { href: "/leads", label: "Leads", icon: TrendingUp },
+    { href: "/innovation-ecosystem", label: "Innovation Ecosystem", icon: Network },
+    { href: "/mentors", label: "Mentors", icon: Users },
+  ];
+
+  // Popular dropdown items
+  const popularNavItems = [
+    { href: "/sectors", label: "Sectors", icon: TrendingUp },
+    { href: "/countries", label: "Countries", icon: Globe },
+  ];
+
+  // Secondary navigation items (remaining items for mobile)
+  const secondaryNavItems = [
+    { href: "/events", label: "Events", icon: TrendingUp },
   ];
 
   // Footer/info items (in dropdown on desktop)
   const infoNavItems = [
-    { href: "/about", label: "About", icon: Info },
-    { href: "/contact", label: "Contact", icon: Phone },
-    { href: "/faq", label: "FAQ", icon: HelpCircle },
+    { href: "/about", label: "About", icon: FileText },
+    { href: "/contact", label: "Contact", icon: FileText },
+    { href: "/faq", label: "FAQ", icon: FileText },
   ];
 
   // All items for mobile menu
-  const allNavItems = [...primaryNavItems, ...secondaryNavItems, ...infoNavItems];
+  const allNavItems = [...primaryNavItems, ...ecosystemNavItems, ...popularNavItems, ...secondaryNavItems, ...infoNavItems];
 
   const isActivePath = (path: string) => {
     if (path === "/") {
@@ -64,6 +73,30 @@ const Navigation = () => {
 
           {/* Desktop Navigation - Compact */}
           <nav className="hidden lg:flex items-center space-x-4">
+            {/* Ecosystem Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Network className="h-4 w-4" />
+                  Ecosystem
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {ecosystemNavItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link to={item.href} className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* Primary Navigation Items */}
             {primaryNavItems.map((item) => {
               const Icon = item.icon;
@@ -85,17 +118,17 @@ const Navigation = () => {
               );
             })}
 
-            {/* Business Dropdown */}
+            {/* Popular Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  Business
+                  Popular
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                {secondaryNavItems.map((item) => {
+                {popularNavItems.map((item) => {
                   const Icon = item.icon;
                   return (
                     <DropdownMenuItem key={item.href} asChild>
@@ -113,7 +146,7 @@ const Navigation = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <Info className="h-4 w-4" />
+                  <FileText className="h-4 w-4" />
                   Info
                   <ChevronDown className="h-4 w-4" />
                 </Button>
