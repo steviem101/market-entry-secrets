@@ -4,7 +4,8 @@ import { getAllSectors } from "@/config/sectors";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { TrendingUp, Users, Building2, Calendar, FileText, Network } from "lucide-react";
+import { TrendingUp, Users, Building2, Calendar, FileText } from "lucide-react";
+import SectorHero from "@/components/sectors/SectorHero";
 
 const Sectors = () => {
   const sectors = getAllSectors();
@@ -14,18 +15,10 @@ const Sectors = () => {
       <Navigation />
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Industry Sectors
-            </h1>
-            <p className="text-xl text-blue-100 mb-8">
-              Explore specialized market entry solutions across different industries
-            </p>
-          </div>
-        </div>
-      </div>
+      <SectorHero 
+        title="Industry Sectors"
+        description="Explore specialized market entry solutions across different industries"
+      />
 
       {/* Sectors Grid */}
       <div className="container mx-auto px-4 py-12">

@@ -6,18 +6,16 @@ interface SectorHeroProps {
 
 const SectorHero = ({ title, description }: SectorHeroProps) => {
   return (
-    <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background">
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            {title}
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8">
-            {description}
-          </p>
-        </div>
+    <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20">
+      <div className="container mx-auto px-4 text-center">
+        <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+          Industry <span className="text-primary">Sectors</span>
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+          {description}
+        </p>
       </div>
-    </div>
+    </section>
   );
 };
 
