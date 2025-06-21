@@ -655,6 +655,45 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_submissions: {
+        Row: {
+          company_website: string | null
+          created_at: string
+          email: string
+          id: string
+          notes: string | null
+          phone: string
+          sector: string
+          status: string | null
+          target_market: string
+          updated_at: string
+        }
+        Insert: {
+          company_website?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          notes?: string | null
+          phone: string
+          sector: string
+          status?: string | null
+          target_market: string
+          updated_at?: string
+        }
+        Update: {
+          company_website?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          notes?: string | null
+          phone?: string
+          sector?: string
+          status?: string | null
+          target_market?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           category: string
