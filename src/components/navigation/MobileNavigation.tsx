@@ -45,7 +45,7 @@ export const MobileNavigation = () => {
           <nav className="flex-1 py-4">
             <div className="space-y-2">
               {allNavItems.map((item) => {
-                const Icon = item.icon;
+                const IconComponent = item.icon;
                 const isActive = isActivePath(item.href);
                 
                 return (
@@ -59,7 +59,7 @@ export const MobileNavigation = () => {
                     }`}
                     onClick={() => setIsOpen(false)}
                   >
-                    <Icon className="h-5 w-5" />
+                    <IconComponent className="h-5 w-5" />
                     {item.label}
                   </Link>
                 );

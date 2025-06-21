@@ -30,7 +30,7 @@ export const DesktopNavigation = () => {
 
       {/* Primary Navigation Items */}
       {primaryNavItems.map((item) => {
-        const Icon = item.icon;
+        const IconComponent = item.icon;
         const isActive = isActivePath(item.href);
         
         return (
@@ -43,7 +43,7 @@ export const DesktopNavigation = () => {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Icon className="h-4 w-4" />
+            <IconComponent className="h-4 w-4" />
             {item.label}
           </Link>
         );
