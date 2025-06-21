@@ -9,6 +9,8 @@ import CompanyModal from "@/components/CompanyModal";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { FreemiumGate } from "@/components/FreemiumGate";
+import { UsageBanner } from "@/components/UsageBanner";
 
 // Use the Supabase-generated type
 import { Tables } from "@/integrations/supabase/types";
@@ -200,6 +202,8 @@ const InnovationEcosystem = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        <UsageBanner />
+        
         <div className="flex gap-8">
           {/* Filters Sidebar */}
           <aside className={`w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden'} lg:block`}>
@@ -228,12 +232,17 @@ const InnovationEcosystem = () => {
             ) : (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredEntities.map((entity) => (
-                  <CompanyCard
+                  <FreemiumGate
                     key={entity.id}
-                    company={entity}
-                    onViewProfile={handleViewProfile}
-                    onContact={handleContact}
-                  />
+                    contentType="innovation_ecosystem"
+                    itemId={entity.id}
+                  >
+                    <CompanyCard
+                      company={entity}
+                      onViewProfile={handleViewProfile}
+                      onContact={handleContact}
+                    />
+                  </FreemiumGate>
                 ))}
               </div>
             )}

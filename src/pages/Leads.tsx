@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, TrendingUp, Database, Map, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { FreemiumGate } from "@/components/FreemiumGate";
+import { UsageBanner } from "@/components/UsageBanner";
+
 export interface Lead {
   id: string;
   name: string;
@@ -29,6 +33,7 @@ export interface Lead {
   created_at: string;
   updated_at: string;
 }
+
 const Leads = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -36,6 +41,7 @@ const Leads = () => {
   const [selectedIndustry, setSelectedIndustry] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+
   const {
     data: leads,
     isLoading,
@@ -58,6 +64,7 @@ const Leads = () => {
       return data as Lead[];
     }
   });
+
   const filteredLeads = leads?.filter(lead => {
     const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || lead.description.toLowerCase().includes(searchTerm.toLowerCase()) || lead.industry.toLowerCase().includes(searchTerm.toLowerCase()) || lead.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesType = selectedType === "all" || lead.type === selectedType;
@@ -66,6 +73,7 @@ const Leads = () => {
     const matchesLocation = selectedLocation === "all" || lead.location === selectedLocation;
     return matchesSearch && matchesType && matchesCategory && matchesIndustry && matchesLocation;
   });
+
   const handleDownload = (lead: Lead) => {
     console.log('Download lead:', lead.name);
     // In a real implementation, this would handle the download/purchase process
@@ -75,12 +83,14 @@ const Leads = () => {
       window.open(lead.preview_url, '_blank');
     }
   };
+
   const handlePreview = (lead: Lead) => {
     console.log('Preview lead:', lead.name);
     if (lead.preview_url) {
       window.open(lead.preview_url, '_blank');
     }
   };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'csv_list':
@@ -91,8 +101,10 @@ const Leads = () => {
         return <TrendingUp className="w-4 h-4" />;
     }
   };
+
   const csvListsCount = leads?.filter(lead => lead.type === 'csv_list').length || 0;
   const tamMapsCount = leads?.filter(lead => lead.type === 'tam_map').length || 0;
+
   if (error) {
     return <div className="min-h-screen bg-background">
         <Navigation />
@@ -103,6 +115,7 @@ const Leads = () => {
         </div>
       </div>;
   }
+
   return <div className="min-h-screen bg-background">
       <Navigation />
       
@@ -128,9 +141,11 @@ const Leads = () => {
         </div>
       </section>
 
-      {/* Search and Filters */}
-      <section className="py-8 border-b border-border">
-        <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 py-8">
+        <UsageBanner />
+
+        {/* Search and Filters */}
+        <section className="py-8 border-b border-border">
           <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -153,12 +168,10 @@ const Leads = () => {
             setSearchTerm("");
           }} />
             </div>}
-        </div>
-      </section>
+        </section>
 
-      {/* Results */}
-      <section className="py-8">
-        <div className="container mx-auto px-4">
+        {/* Results */}
+        <section className="py-8">
           {isLoading ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />)}
             </div> : filteredLeads && filteredLeads.length > 0 ? <>
@@ -174,7 +187,15 @@ const Leads = () => {
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredLeads.map(lead => <LeadCard key={lead.id} lead={lead} onDownload={handleDownload} onPreview={handlePreview} />)}
+                {filteredLeads.map(lead => 
+                  <FreemiumGate
+                    key={lead.id}
+                    contentType="leads"
+                    itemId={lead.id}
+                  >
+                    <LeadCard lead={lead} onDownload={handleDownload} onPreview={handlePreview} />
+                  </FreemiumGate>
+                )}
               </div>
             </> : <div className="text-center py-16">
               <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -192,8 +213,9 @@ const Leads = () => {
                 Clear all filters
               </Button>
             </div>}
-        </div>
-      </section>
+        </section>
+      </div>
     </div>;
 };
+
 export default Leads;

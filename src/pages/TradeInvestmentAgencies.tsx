@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Filter, Grid3X3 } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -9,6 +10,8 @@ import { useBookmarks } from "@/hooks/useBookmarks";
 import { useEnterpriseIrelandLogo } from "@/hooks/useEnterpriseIrelandLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { FreemiumGate } from "@/components/FreemiumGate";
+import { UsageBanner } from "@/components/UsageBanner";
 
 // Use the Supabase-generated type directly
 import { Tables } from "@/integrations/supabase/types";
@@ -189,6 +192,8 @@ const TradeInvestmentAgencies = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        <UsageBanner />
+        
         <div className="flex gap-8">
           {/* Filters Sidebar */}
           <aside className={`w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden'} lg:block`}>
@@ -217,12 +222,17 @@ const TradeInvestmentAgencies = () => {
             ) : (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredAgencies.map((agency) => (
-                  <CompanyCard
+                  <FreemiumGate
                     key={agency.id}
-                    company={agency}
-                    onViewProfile={handleViewProfile}
-                    onContact={handleContact}
-                  />
+                    contentType="trade_investment_agencies"
+                    itemId={agency.id}
+                  >
+                    <CompanyCard
+                      company={agency}
+                      onViewProfile={handleViewProfile}
+                      onContact={handleContact}
+                    />
+                  </FreemiumGate>
                 ))}
               </div>
             )}
