@@ -2,15 +2,13 @@
 import { useParams } from "react-router-dom";
 import { useSectorBySlug } from "@/hooks/useSectors";
 import Navigation from "@/components/Navigation";
-import { 
-  useSectorServiceProviders, 
-  useSectorEvents, 
-  useSectorLeads, 
-  useSectorCommunityMembers,
-  useSectorInnovationEcosystem,
-  useSectorTradeAgencies,
-  useSectorContent
-} from "@/hooks/useSectorData";
+import { useSectorServiceProviders } from "@/hooks/useSectorServiceProviders";
+import { useSectorEvents } from "@/hooks/useSectorEvents";
+import { useSectorLeads } from "@/hooks/useSectorLeads";
+import { useSectorCommunityMembers } from "@/hooks/useSectorCommunityMembers";
+import { useSectorInnovationEcosystem } from "@/hooks/useSectorInnovationEcosystem";
+import { useSectorTradeAgencies } from "@/hooks/useSectorTradeAgencies";
+import { useSectorContent } from "@/hooks/useSectorContent";
 import NotFound from "./NotFound";
 import SectorHero from "@/components/sectors/SectorHero";
 import SectorStats from "@/components/sectors/SectorStats";
