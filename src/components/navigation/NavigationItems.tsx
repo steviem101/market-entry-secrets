@@ -1,4 +1,4 @@
-import { FileText, TrendingUp, Building2, Globe, Users, Network, Database } from "lucide-react";
+import { FileText, Calendar, Building2, Globe, Users, Network, Database } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -10,7 +10,7 @@ export interface NavItem {
 export const primaryNavItems: NavItem[] = [
   { href: "/content", label: "Content", icon: FileText },
   { href: "/leads", label: "Leads", icon: Database },
-  { href: "/events", label: "Events", icon: TrendingUp },
+  { href: "/events", label: "Events", icon: Calendar },
 ];
 
 // Ecosystem dropdown items
