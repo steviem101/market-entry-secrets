@@ -39,9 +39,7 @@ const InnovationEcosystem = () => {
   const filteredOrganizations = organizations?.filter(org => {
     const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          org.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         org.services?.some((service: string) => service.toLowerCase().includes(s
-
-earchTerm.toLowerCase()));
+                         org.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = selectedLocation === "all" || org.location.toLowerCase().includes(selectedLocation.toLowerCase());
     return matchesSearch && matchesLocation;
   });
