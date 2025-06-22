@@ -26,14 +26,8 @@ export const useLocationContent = (locationSlug: string) => {
 
       if (error) throw error;
 
-      // Filter based on location tags or keywords in title/subtitle
+      // Filter based on keyword matching in title and subtitle
       return data.filter(content => {
-        // Check location_tags array first if it exists
-        if (content.location_tags?.includes(locationSlug)) {
-          return true;
-        }
-        
-        // Fallback to keyword matching in title and subtitle
         const searchText = `${content.title} ${content.subtitle || ''}`.toLowerCase();
         return locationConfig.content_keywords.some(keyword => 
           searchText.includes(keyword.toLowerCase())
