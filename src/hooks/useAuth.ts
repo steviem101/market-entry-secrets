@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -30,17 +31,22 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const { toast } = useToast();
+  
+  // Add refs to prevent duplicate API calls
+  const fetchingProfile = useRef(false);
+  const fetchingRoles = useRef(false);
+  const currentUserId = useRef<string | null>(null);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
+      if (session?.user && session.user.id !== currentUserId.current) {
+        currentUserId.current = session.user.id;
         // Use setTimeout to avoid blocking the auth state update
         setTimeout(() => {
-          fetchUserProfile(session.user.id);
-          fetchUserRoles(session.user.id);
+          fetchUserData(session.user.id);
         }, 0);
       }
       setLoading(false);
@@ -52,15 +58,18 @@ export const useAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
+        if (session?.user && session.user.id !== currentUserId.current) {
+          currentUserId.current = session.user.id;
           // Use setTimeout to defer Supabase calls and prevent deadlocks
           setTimeout(() => {
-            fetchUserProfile(session.user.id);
-            fetchUserRoles(session.user.id);
+            fetchUserData(session.user.id);
           }, 0);
-        } else {
+        } else if (!session) {
+          currentUserId.current = null;
           setProfile(null);
           setRoles([]);
+          fetchingProfile.current = false;
+          fetchingRoles.current = false;
         }
         setLoading(false);
       }
@@ -69,7 +78,19 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const fetchUserData = async (userId: string) => {
+    // Fetch profile and roles concurrently but prevent duplicates
+    await Promise.all([
+      fetchUserProfile(userId),
+      fetchUserRoles(userId)
+    ]);
+  };
+
   const fetchUserProfile = async (userId: string) => {
+    // Prevent duplicate calls
+    if (fetchingProfile.current) return;
+    fetchingProfile.current = true;
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -85,10 +106,16 @@ export const useAuth = () => {
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
+    } finally {
+      fetchingProfile.current = false;
     }
   };
 
   const fetchUserRoles = async (userId: string) => {
+    // Prevent duplicate calls
+    if (fetchingRoles.current) return;
+    fetchingRoles.current = true;
+
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -103,6 +130,8 @@ export const useAuth = () => {
       setRoles(data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
+    } finally {
+      fetchingRoles.current = false;
     }
   };
 
