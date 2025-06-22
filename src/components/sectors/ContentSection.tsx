@@ -22,6 +22,8 @@ const ContentSection = ({ contentItems }: ContentSectionProps) => {
           key={content.id}
           contentType="content"
           itemId={content.id}
+          contentTitle={content.title}
+          contentDescription={content.subtitle || content.description}
         >
           <ContentCard content={content} />
         </FreemiumGate>
