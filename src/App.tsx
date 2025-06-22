@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +22,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import SectorPage from "./pages/SectorPage";
 import Sectors from "./pages/Sectors";
+import Locations from "./pages/Locations";
+import LocationPage from "./pages/LocationPage";
 import Dashboard from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
@@ -67,6 +68,8 @@ const App = () => (
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/sectors" element={<Sectors />} />
               <Route path="/sectors/:sectorId" element={<SectorPage />} />
+              <Route path="/locations" element={<Locations />} />
+              <Route path="/locations/:locationSlug" element={<LocationPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

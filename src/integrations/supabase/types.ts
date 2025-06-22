@@ -760,6 +760,90 @@ export type Database = {
         }
         Relationships: []
       }
+      locations: {
+        Row: {
+          business_environment_score: number | null
+          content_keywords: string[]
+          created_at: string
+          description: string
+          economic_indicators: Json | null
+          event_keywords: string[]
+          featured: boolean
+          government_agency_contact: string | null
+          government_agency_name: string | null
+          government_agency_website: string | null
+          hero_description: string
+          hero_title: string
+          id: string
+          key_industries: string[]
+          keywords: string[]
+          lead_keywords: string[]
+          location_type: string
+          name: string
+          parent_location: string | null
+          population: number | null
+          service_keywords: string[]
+          slug: string
+          sort_order: number | null
+          startup_ecosystem_strength: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_environment_score?: number | null
+          content_keywords?: string[]
+          created_at?: string
+          description: string
+          economic_indicators?: Json | null
+          event_keywords?: string[]
+          featured?: boolean
+          government_agency_contact?: string | null
+          government_agency_name?: string | null
+          government_agency_website?: string | null
+          hero_description: string
+          hero_title: string
+          id?: string
+          key_industries?: string[]
+          keywords?: string[]
+          lead_keywords?: string[]
+          location_type: string
+          name: string
+          parent_location?: string | null
+          population?: number | null
+          service_keywords?: string[]
+          slug: string
+          sort_order?: number | null
+          startup_ecosystem_strength?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_environment_score?: number | null
+          content_keywords?: string[]
+          created_at?: string
+          description?: string
+          economic_indicators?: Json | null
+          event_keywords?: string[]
+          featured?: boolean
+          government_agency_contact?: string | null
+          government_agency_name?: string | null
+          government_agency_website?: string | null
+          hero_description?: string
+          hero_title?: string
+          id?: string
+          key_industries?: string[]
+          keywords?: string[]
+          lead_keywords?: string[]
+          location_type?: string
+          name?: string
+          parent_location?: string | null
+          population?: number | null
+          service_keywords?: string[]
+          slug?: string
+          sort_order?: number | null
+          startup_ecosystem_strength?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

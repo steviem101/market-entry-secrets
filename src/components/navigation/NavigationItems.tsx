@@ -1,4 +1,5 @@
-import { FileText, Calendar, Building2, Globe, Users, Network, Database, TrendingUp } from "lucide-react";
+
+import { FileText, Calendar, Building2, Globe, Users, Network, Database, TrendingUp, MapPin } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -24,6 +25,7 @@ export const ecosystemNavItems: NavItem[] = [
 // Popular dropdown items
 export const popularNavItems: NavItem[] = [
   { href: "/sectors", label: "Sectors", icon: TrendingUp },
+  { href: "/locations", label: "Locations", icon: MapPin },
   { href: "/countries", label: "Countries", icon: Globe },
 ];
 
