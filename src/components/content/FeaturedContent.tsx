@@ -1,5 +1,6 @@
 
 import { ContentCard } from "./ContentCard";
+import { FreemiumGate } from "@/components/FreemiumGate";
 
 interface FeaturedContentProps {
   featuredContent: any[];
@@ -16,7 +17,15 @@ export const FeaturedContent = ({ featuredContent, selectedCategory }: FeaturedC
       <h2 className="text-2xl font-bold mb-6">Featured Success Stories</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {featuredContent.slice(0, 2).map((content) => (
-          <ContentCard key={content.id} content={content} featured />
+          <FreemiumGate
+            key={content.id}
+            contentType="content"
+            itemId={content.id}
+            contentTitle={content.title}
+            contentDescription={content.subtitle || content.description}
+          >
+            <ContentCard content={content} featured />
+          </FreemiumGate>
         ))}
       </div>
     </section>
