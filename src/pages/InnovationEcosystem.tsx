@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,21 @@ const InnovationEcosystem = () => {
   });
 
   const uniqueLocations = [...new Set(organizations?.map(org => org.location) || [])];
+
+  // Helper function to safely parse JSONB arrays
+  const parseJsonArray = (jsonData: any): any[] => {
+    if (!jsonData) return [];
+    if (Array.isArray(jsonData)) return jsonData;
+    if (typeof jsonData === 'string') {
+      try {
+        const parsed = JSON.parse(jsonData);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
 
   if (error) {
     return (
@@ -186,8 +202,8 @@ const InnovationEcosystem = () => {
                       logo: org.logo,
                       basic_info: org.basic_info,
                       why_work_with_us: org.why_work_with_us,
-                      contact_persons: org.contact_persons,
-                      experience_tiles: org.experience_tiles
+                      contact_persons: parseJsonArray(org.contact_persons),
+                      experience_tiles: parseJsonArray(org.experience_tiles)
                     }}
                     onViewProfile={() => setSelectedCompany(org)}
                     onContact={() => setSelectedCompany(org)}
@@ -232,8 +248,8 @@ const InnovationEcosystem = () => {
             logo: selectedCompany.logo,
             basic_info: selectedCompany.basic_info,
             why_work_with_us: selectedCompany.why_work_with_us,
-            contact_persons: selectedCompany.contact_persons,
-            experience_tiles: selectedCompany.experience_tiles
+            contact_persons: parseJsonArray(selectedCompany.contact_persons),
+            experience_tiles: parseJsonArray(selectedCompany.experience_tiles)
           }}
           isOpen={!!selectedCompany}
           onClose={() => setSelectedCompany(null)}

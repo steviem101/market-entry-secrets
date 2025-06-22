@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,21 @@ const TradeInvestmentAgencies = () => {
   });
 
   const uniqueLocations = [...new Set(agencies?.map(agency => agency.location) || [])];
+
+  // Helper function to safely parse JSONB arrays
+  const parseJsonArray = (jsonData: any): any[] => {
+    if (!jsonData) return [];
+    if (Array.isArray(jsonData)) return jsonData;
+    if (typeof jsonData === 'string') {
+      try {
+        const parsed = JSON.parse(jsonData);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
 
   if (error) {
     return (
@@ -186,8 +202,8 @@ const TradeInvestmentAgencies = () => {
                       logo: agency.logo,
                       basic_info: agency.basic_info,
                       why_work_with_us: agency.why_work_with_us,
-                      contact_persons: agency.contact_persons,
-                      experience_tiles: agency.experience_tiles
+                      contact_persons: parseJsonArray(agency.contact_persons),
+                      experience_tiles: parseJsonArray(agency.experience_tiles)
                     }}
                     onViewProfile={() => setSelectedAgency(agency)}
                     onContact={() => setSelectedAgency(agency)}
@@ -232,8 +248,8 @@ const TradeInvestmentAgencies = () => {
             logo: selectedAgency.logo,
             basic_info: selectedAgency.basic_info,
             why_work_with_us: selectedAgency.why_work_with_us,
-            contact_persons: selectedAgency.contact_persons,
-            experience_tiles: selectedAgency.experience_tiles
+            contact_persons: parseJsonArray(selectedAgency.contact_persons),
+            experience_tiles: parseJsonArray(selectedAgency.experience_tiles)
           }}
           isOpen={!!selectedAgency}
           onClose={() => setSelectedAgency(null)}
