@@ -121,6 +121,7 @@ export type Database = {
       }
       community_members: {
         Row: {
+          associated_countries: string[] | null
           company: string | null
           contact: string | null
           created_at: string
@@ -132,12 +133,14 @@ export type Database = {
           is_anonymous: boolean
           location: string
           name: string
+          origin_country: string | null
           specialties: string[]
           title: string
           updated_at: string
           website: string | null
         }
         Insert: {
+          associated_countries?: string[] | null
           company?: string | null
           contact?: string | null
           created_at?: string
@@ -149,12 +152,14 @@ export type Database = {
           is_anonymous?: boolean
           location: string
           name: string
+          origin_country?: string | null
           specialties?: string[]
           title: string
           updated_at?: string
           website?: string | null
         }
         Update: {
+          associated_countries?: string[] | null
           company?: string | null
           contact?: string | null
           created_at?: string
@@ -166,6 +171,7 @@ export type Database = {
           is_anonymous?: boolean
           location?: string
           name?: string
+          origin_country?: string | null
           specialties?: string[]
           title?: string
           updated_at?: string
@@ -492,6 +498,143 @@ export type Database = {
             columns: ["content_id"]
             isOneToOne: false
             referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      countries: {
+        Row: {
+          content_keywords: string[]
+          created_at: string
+          description: string
+          economic_indicators: Json | null
+          event_keywords: string[]
+          featured: boolean
+          hero_description: string
+          hero_title: string
+          id: string
+          key_industries: string[]
+          keywords: string[]
+          lead_keywords: string[]
+          location_type: string
+          name: string
+          service_keywords: string[]
+          slug: string
+          sort_order: number | null
+          trade_relationship_strength: string | null
+          updated_at: string
+        }
+        Insert: {
+          content_keywords?: string[]
+          created_at?: string
+          description: string
+          economic_indicators?: Json | null
+          event_keywords?: string[]
+          featured?: boolean
+          hero_description: string
+          hero_title: string
+          id?: string
+          key_industries?: string[]
+          keywords?: string[]
+          lead_keywords?: string[]
+          location_type?: string
+          name: string
+          service_keywords?: string[]
+          slug: string
+          sort_order?: number | null
+          trade_relationship_strength?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content_keywords?: string[]
+          created_at?: string
+          description?: string
+          economic_indicators?: Json | null
+          event_keywords?: string[]
+          featured?: boolean
+          hero_description?: string
+          hero_title?: string
+          id?: string
+          key_industries?: string[]
+          keywords?: string[]
+          lead_keywords?: string[]
+          location_type?: string
+          name?: string
+          service_keywords?: string[]
+          slug?: string
+          sort_order?: number | null
+          trade_relationship_strength?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      country_trade_organizations: {
+        Row: {
+          basic_info: string | null
+          contact: string | null
+          contact_persons: Json | null
+          country_id: string | null
+          created_at: string
+          description: string
+          employees: string
+          experience_tiles: Json | null
+          founded: string
+          id: string
+          location: string
+          logo: string | null
+          name: string
+          organization_type: string
+          services: string[]
+          updated_at: string
+          website: string | null
+          why_work_with_us: string | null
+        }
+        Insert: {
+          basic_info?: string | null
+          contact?: string | null
+          contact_persons?: Json | null
+          country_id?: string | null
+          created_at?: string
+          description: string
+          employees: string
+          experience_tiles?: Json | null
+          founded: string
+          id?: string
+          location: string
+          logo?: string | null
+          name: string
+          organization_type?: string
+          services?: string[]
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
+        }
+        Update: {
+          basic_info?: string | null
+          contact?: string | null
+          contact_persons?: Json | null
+          country_id?: string | null
+          created_at?: string
+          description?: string
+          employees?: string
+          experience_tiles?: Json | null
+          founded?: string
+          id?: string
+          location?: string
+          logo?: string | null
+          name?: string
+          organization_type?: string
+          services?: string[]
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_trade_organizations_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
         ]
