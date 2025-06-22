@@ -1,8 +1,4 @@
 
-import { Card, CardContent } from "@/components/ui/card";
-import { useCountUp } from "@/hooks/useCountUp";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
-
 interface SectorStatsProps {
   serviceProviders: any[];
   events: any[];
@@ -22,84 +18,60 @@ const SectorStats = ({
   tradeAgencies,
   contentItems
 }: SectorStatsProps) => {
-  const { elementRef: statsRef, isVisible } = useIntersectionObserver({ threshold: 0.1 });
-
-  // Use consistent hook calling order by calculating all counts first
-  const serviceProviderCount = serviceProviders.length;
-  const eventCount = events.length;
-  const leadCount = leads.length;
-  const communityMemberCount = communityMembers.length;
-  const innovationEcosystemCount = innovationEcosystem.length;
-  const tradeAgencyCount = tradeAgencies.length;
-  const contentItemCount = contentItems.length;
-
-  // Now call all hooks in consistent order
-  const providersCount = useCountUp({ end: serviceProviderCount, isVisible, duration: 2000 });
-  const upcomingEvents = useCountUp({ end: eventCount, isVisible, duration: 2200 });
-  const availableLeads = useCountUp({ end: leadCount, isVisible, duration: 2400 });
-  const expertMembers = useCountUp({ end: communityMemberCount, isVisible, duration: 2600 });
-  const innovationPartners = useCountUp({ end: innovationEcosystemCount, isVisible, duration: 2800 });
-  const tradePartners = useCountUp({ end: tradeAgencyCount, isVisible, duration: 3000 });
-  const contentArticles = useCountUp({ end: contentItemCount, isVisible, duration: 3200 });
-
   const stats = [
-    { 
-      label: "Service Providers", 
-      value: providersCount,
-      description: "Specialized companies"
+    {
+      label: "Service Providers",
+      value: serviceProviders.length,
+      color: "text-blue-600"
     },
-    { 
-      label: "Innovation Partners", 
-      value: innovationPartners,
-      description: "Ecosystem entities"
+    {
+      label: "Events",
+      value: events.length,
+      color: "text-green-600"
     },
-    { 
-      label: "Trade Agencies", 
-      value: tradePartners,
-      description: "Investment agencies"
+    {
+      label: "Market Data",
+      value: leads.length,
+      color: "text-purple-600"
     },
-    { 
-      label: "Content Articles", 
-      value: contentArticles,
-      description: "Industry insights"
+    {
+      label: "Community Members",
+      value: communityMembers.length,
+      color: "text-orange-600"
     },
-    { 
-      label: "Upcoming Events", 
-      value: upcomingEvents,
-      description: "Industry gatherings"
+    {
+      label: "Innovation Partners",
+      value: innovationEcosystem.length,
+      color: "text-teal-600"
     },
-    { 
-      label: "Market Data", 
-      value: availableLeads,
-      description: "Available datasets"
+    {
+      label: "Trade Agencies",
+      value: tradeAgencies.length,
+      color: "text-red-600"
     },
-    { 
-      label: "Industry Experts", 
-      value: expertMembers,
-      description: "Available mentors"
+    {
+      label: "Content Items",
+      value: contentItems.length,
+      color: "text-indigo-600"
     }
   ];
 
-  console.log('SectorStats render:', { isVisible, stats: stats.map(s => ({ label: s.label, value: s.value })) });
-
   return (
-    <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-12">
-      {stats.map((stat, index) => (
-        <Card key={index} className="text-center">
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold text-primary mb-1">
+    <section className="mb-12">
+      <h2 className="text-2xl font-bold mb-6 text-center">Sector Overview</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="text-center p-4 bg-card rounded-lg border">
+            <div className={`text-3xl font-bold ${stat.color} mb-2`}>
               {stat.value}
             </div>
-            <div className="text-sm font-medium text-foreground mb-1">
+            <div className="text-sm text-muted-foreground">
               {stat.label}
             </div>
-            <div className="text-xs text-muted-foreground">
-              {stat.description}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 };
 
