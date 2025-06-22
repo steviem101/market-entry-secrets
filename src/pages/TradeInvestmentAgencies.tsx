@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, TrendingUp, Users, MapPin, Globe, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { CompanyCard } from "@/components/CompanyCard";
-import { CompanyModal } from "@/components/CompanyModal";
+import CompanyCard from "@/components/CompanyCard";
+import CompanyModal from "@/components/CompanyModal";
 
 const TradeInvestmentAgencies = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -190,7 +189,8 @@ const TradeInvestmentAgencies = () => {
                       contact_persons: agency.contact_persons,
                       experience_tiles: agency.experience_tiles
                     }}
-                    onClick={() => setSelectedAgency(agency)}
+                    onViewProfile={() => setSelectedAgency(agency)}
+                    onContact={() => setSelectedAgency(agency)}
                   />
                 ))}
               </div>
@@ -237,6 +237,7 @@ const TradeInvestmentAgencies = () => {
           }}
           isOpen={!!selectedAgency}
           onClose={() => setSelectedAgency(null)}
+          onContact={() => setSelectedAgency(null)}
         />
       )}
     </div>

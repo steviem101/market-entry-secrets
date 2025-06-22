@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Lightbulb, Users, MapPin, Globe, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { CompanyCard } from "@/components/CompanyCard";
-import { CompanyModal } from "@/components/CompanyModal";
+import CompanyCard from "@/components/CompanyCard";
+import CompanyModal from "@/components/CompanyModal";
 
 const InnovationEcosystem = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -190,7 +189,8 @@ const InnovationEcosystem = () => {
                       contact_persons: org.contact_persons,
                       experience_tiles: org.experience_tiles
                     }}
-                    onClick={() => setSelectedCompany(org)}
+                    onViewProfile={() => setSelectedCompany(org)}
+                    onContact={() => setSelectedCompany(org)}
                   />
                 ))}
               </div>
@@ -237,6 +237,7 @@ const InnovationEcosystem = () => {
           }}
           isOpen={!!selectedCompany}
           onClose={() => setSelectedCompany(null)}
+          onContact={() => setSelectedCompany(null)}
         />
       )}
     </div>
