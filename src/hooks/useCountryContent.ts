@@ -9,7 +9,13 @@ export const useCountryContent = (countrySlug: string) => {
   return useQuery({
     queryKey: ['country-content', countrySlug],
     queryFn: async () => {
-      if (!countryConfig) return [];
+      if (!countryConfig) {
+        console.log('No country config found for:', countrySlug);
+        return [];
+      }
+      
+      console.log('Fetching content for country:', countryConfig.name);
+      console.log('Content keywords:', countryConfig.content_keywords);
       
       const { data, error } = await supabase
         .from('content_items')
@@ -24,15 +30,25 @@ export const useCountryContent = (countrySlug: string) => {
         .eq('status', 'published')
         .order('publish_date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching content:', error);
+        throw error;
+      }
 
       // Filter based on keyword matching in title and subtitle
-      return data.filter(content => {
+      const filteredContent = data.filter(content => {
         const searchText = `${content.title} ${content.subtitle || ''}`.toLowerCase();
-        return countryConfig.content_keywords.some(keyword => 
+        const hasMatch = countryConfig.content_keywords.some(keyword => 
           searchText.includes(keyword.toLowerCase())
         );
+        if (hasMatch) {
+          console.log('Content match found:', content.title);
+        }
+        return hasMatch;
       });
+
+      console.log('Filtered content count:', filteredContent.length);
+      return filteredContent;
     },
     enabled: !!countryConfig
   });

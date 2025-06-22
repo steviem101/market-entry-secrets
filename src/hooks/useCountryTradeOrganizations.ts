@@ -27,15 +27,29 @@ export const useCountryTradeOrganizations = (countrySlug: string) => {
   return useQuery({
     queryKey: ['country-trade-organizations', countrySlug],
     queryFn: async () => {
+      // First get the country ID from the slug
+      const { data: country, error: countryError } = await supabase
+        .from('countries')
+        .select('id')
+        .eq('slug', countrySlug)
+        .single();
+
+      if (countryError || !country) {
+        console.error('Country not found:', countryError);
+        return [];
+      }
+
+      // Then get trade organizations for that country
       const { data, error } = await supabase
         .from('country_trade_organizations')
-        .select(`
-          *,
-          countries!inner(slug)
-        `)
-        .eq('countries.slug', countrySlug);
+        .select('*')
+        .eq('country_id', country.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching trade organizations:', error);
+        throw error;
+      }
+      
       return data as TradeOrganizationData[];
     },
     enabled: !!countrySlug
