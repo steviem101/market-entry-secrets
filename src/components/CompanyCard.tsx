@@ -1,4 +1,3 @@
-
 import { Building2, MapPin, Users, Calendar, Globe, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +28,10 @@ export interface Company {
   website?: string;
   contact?: string;
   logo?: string;
+  basic_info?: string;
+  why_work_with_us?: string;
+  contact_persons?: ContactPerson[];
+  experience_tiles?: ExperienceTile[];
   experienceTiles?: ExperienceTile[];
   contactPersons?: ContactPerson[];
 }
@@ -71,6 +74,10 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
       .toUpperCase()
       .slice(0, 2);
   };
+
+  // Use the correct property names from the database
+  const experienceTiles = company.experience_tiles || company.experienceTiles || [];
+  const contactPersons = company.contact_persons || company.contactPersons || [];
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
@@ -145,11 +152,11 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
         )}
       </div>
 
-      {company.experienceTiles && company.experienceTiles.length > 0 && (
+      {experienceTiles && experienceTiles.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-muted-foreground mb-2">Working with:</h4>
           <div className="flex gap-2 overflow-x-auto">
-            {company.experienceTiles.slice(0, 3).map((tile, index) => (
+            {experienceTiles.slice(0, 3).map((tile, index) => (
               <div key={tile.id} className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg p-1">
                 <img 
                   src={tile.logo || getExperienceTileImage(index)} 
@@ -158,20 +165,20 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
                 />
               </div>
             ))}
-            {company.experienceTiles.length > 3 && (
+            {experienceTiles.length > 3 && (
               <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                <span className="text-xs text-muted-foreground">+{company.experienceTiles.length - 3}</span>
+                <span className="text-xs text-muted-foreground">+{experienceTiles.length - 3}</span>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {company.contactPersons && company.contactPersons.length > 0 && (
+      {contactPersons && contactPersons.length > 0 && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-muted-foreground mb-2">Contact person(s):</h4>
           <div className="flex gap-2">
-            {company.contactPersons.slice(0, 3).map((person, index) => (
+            {contactPersons.slice(0, 3).map((person, index) => (
               <Avatar key={person.id} className="w-10 h-10">
                 <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
@@ -179,9 +186,9 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
                 </AvatarFallback>
               </Avatar>
             ))}
-            {company.contactPersons.length > 3 && (
+            {contactPersons.length > 3 && (
               <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                <span className="text-xs text-muted-foreground">+{company.contactPersons.length - 3}</span>
+                <span className="text-xs text-muted-foreground">+{contactPersons.length - 3}</span>
               </div>
             )}
           </div>
