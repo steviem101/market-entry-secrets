@@ -1,8 +1,10 @@
+
 import { Building2, MapPin, Users, Calendar, Globe, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import { Json } from "@/integrations/supabase/types";
 
 export interface ContactPerson {
   id: string;
@@ -30,8 +32,8 @@ export interface Company {
   logo?: string;
   basic_info?: string;
   why_work_with_us?: string;
-  contact_persons?: ContactPerson[];
-  experience_tiles?: ExperienceTile[];
+  contact_persons?: ContactPerson[] | Json;
+  experience_tiles?: ExperienceTile[] | Json;
   experienceTiles?: ExperienceTile[];
   contactPersons?: ContactPerson[];
 }
@@ -43,6 +45,21 @@ interface CompanyCardProps {
 }
 
 const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) => {
+  // Helper function to safely parse JSONB arrays
+  const parseJsonArray = (jsonData: any): any[] => {
+    if (!jsonData) return [];
+    if (Array.isArray(jsonData)) return jsonData;
+    if (typeof jsonData === 'string') {
+      try {
+        const parsed = JSON.parse(jsonData);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
   // Placeholder images for experience tiles (company logos/work samples)
   const getExperienceTileImage = (index: number) => {
     const images = [
@@ -75,9 +92,9 @@ const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) =>
       .slice(0, 2);
   };
 
-  // Use the correct property names from the database
-  const experienceTiles = company.experience_tiles || company.experienceTiles || [];
-  const contactPersons = company.contact_persons || company.contactPersons || [];
+  // Use the correct property names from the database with proper parsing
+  const experienceTiles = parseJsonArray(company.experience_tiles || company.experienceTiles || []);
+  const contactPersons = parseJsonArray(company.contact_persons || company.contactPersons || []);
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">

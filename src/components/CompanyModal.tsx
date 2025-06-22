@@ -1,3 +1,4 @@
+
 import { X, MapPin, Users, Calendar, Globe, Phone, Mail, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,21 @@ interface CompanyModalProps {
 
 const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps) => {
   if (!company) return null;
+
+  // Helper function to safely parse JSONB arrays
+  const parseJsonArray = (jsonData: any): any[] => {
+    if (!jsonData) return [];
+    if (Array.isArray(jsonData)) return jsonData;
+    if (typeof jsonData === 'string') {
+      try {
+        const parsed = JSON.parse(jsonData);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
 
   // Placeholder images for experience tiles (company logos/work samples)
   const getExperienceTileImage = (index: number) => {
@@ -38,9 +54,9 @@ const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps
     return images[index % images.length];
   };
 
-  // Use the correct property names from the database
-  const experienceTiles = company.experience_tiles || company.experienceTiles || [];
-  const contactPersons = company.contact_persons || company.contactPersons || [];
+  // Use the correct property names from the database with proper parsing
+  const experienceTiles = parseJsonArray(company.experience_tiles || company.experienceTiles || []);
+  const contactPersons = parseJsonArray(company.contact_persons || company.contactPersons || []);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
