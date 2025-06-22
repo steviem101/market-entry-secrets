@@ -23,20 +23,20 @@ export const EventCard = ({ event }: EventCardProps) => {
   };
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
+    <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg line-clamp-2 mb-2">
+            <CardTitle className="text-lg font-semibold line-clamp-2 mb-3 leading-tight">
               {event.title}
             </CardTitle>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-1">
               <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4 flex-shrink-0" />
                 <span>{new Date(event.date).toLocaleDateString()}</span>
               </div>
               <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
+                <Clock className="w-4 h-4 flex-shrink-0" />
                 <span>{event.time}</span>
               </div>
             </div>
@@ -55,17 +55,18 @@ export const EventCard = ({ event }: EventCardProps) => {
             }}
             size="sm"
             variant="ghost"
+            className="flex-shrink-0"
           />
         </div>
       </CardHeader>
       
-      <CardContent>
-        <CardDescription className="line-clamp-3 mb-4">
+      <CardContent className="flex-1 flex flex-col pt-0">
+        <CardDescription className="line-clamp-3 mb-4 flex-1">
           {event.description}
         </CardDescription>
         
-        <div className="flex items-center justify-between mb-3">
-          <Badge variant="secondary" className="text-xs">
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <Badge variant="secondary" className="text-xs font-medium">
             {event.category}
           </Badge>
           <Badge variant="outline" className="text-xs">
@@ -73,23 +74,27 @@ export const EventCard = ({ event }: EventCardProps) => {
           </Badge>
         </div>
         
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            <span className="truncate">{event.location}</span>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate flex-1">{event.location}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Avatar className="w-5 h-5">
-              <AvatarImage src={getOrganizerImage(parseInt(event.id) || 0)} alt={event.organizer} />
-              <AvatarFallback className="bg-primary/10 text-primary">
-                <User className="w-3 h-3" />
-              </AvatarFallback>
-            </Avatar>
-            <span className="truncate">{event.organizer}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="w-3 h-3" />
-            <span>{event.attendees} attending</span>
+          
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Avatar className="w-6 h-6 flex-shrink-0">
+                <AvatarImage src={getOrganizerImage(parseInt(event.id) || 0)} alt={event.organizer} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  <User className="w-3 h-3" />
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-muted-foreground truncate">{event.organizer}</span>
+            </div>
+            
+            <div className="flex items-center gap-1 text-sm text-muted-foreground flex-shrink-0">
+              <Users className="w-4 h-4" />
+              <span>{event.attendees}</span>
+            </div>
           </div>
         </div>
       </CardContent>
