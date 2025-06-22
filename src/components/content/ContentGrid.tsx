@@ -1,6 +1,7 @@
 
 import { BookOpen } from "lucide-react";
 import { ContentCard } from "./ContentCard";
+import { FreemiumGate } from "@/components/FreemiumGate";
 
 interface ContentGridProps {
   filteredContent: any[];
@@ -47,7 +48,15 @@ export const ContentGrid = ({
       <h2 className="text-2xl font-bold mb-6">{categoryName} Content</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredContent.map((content) => (
-          <ContentCard key={content.id} content={content} />
+          <FreemiumGate
+            key={content.id}
+            contentType="content"
+            itemId={content.id}
+            contentTitle={content.title}
+            contentDescription={content.subtitle || content.description}
+          >
+            <ContentCard content={content} />
+          </FreemiumGate>
         ))}
       </div>
     </section>
