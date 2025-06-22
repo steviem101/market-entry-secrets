@@ -9,11 +9,14 @@ import { AuthDialog } from './auth/AuthDialog';
 
 export const UsageBanner = () => {
   const { user } = useAuth();
-  const { remainingViews, hasReachedLimit } = useUsageTracking();
+  const { remainingViews, hasReachedLimit, isInitialized } = useUsageTracking();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   // Don't show banner for signed-in users
   if (user) return null;
+
+  // Don't show if not initialized yet (prevents flash)
+  if (!isInitialized) return null;
 
   // Don't show if user hasn't started viewing yet
   if (remainingViews === 3) return null;

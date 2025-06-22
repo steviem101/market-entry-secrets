@@ -10,14 +10,25 @@ interface UsageTrackingHook {
   canView: boolean;
   hasReachedLimit: boolean;
   remainingViews: number;
+  isInitialized: boolean;
   trackView: (contentType: string, itemId: string) => Promise<void>;
   resetUsage: () => void;
 }
 
 export const useUsageTracking = (): UsageTrackingHook => {
   const { user } = useAuth();
-  const [viewCount, setViewCount] = useState(0);
-  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Initialize synchronously from localStorage to prevent flashing
+  const getInitialViewCount = () => {
+    if (user) return 0;
+    const storedCount = localStorage.getItem('view_count');
+    const count = storedCount ? parseInt(storedCount, 10) : 0;
+    const viewedItems = Object.keys(localStorage).filter(key => key.startsWith('viewed_')).length;
+    return Math.min(count, viewedItems);
+  };
+
+  const [viewCount, setViewCount] = useState(getInitialViewCount);
+  const [isInitialized, setIsInitialized] = useState(true); // Start as initialized to prevent flash
   
   // Generate session ID once and persist it
   const [sessionId] = useState(() => {
@@ -33,25 +44,22 @@ export const useUsageTracking = (): UsageTrackingHook => {
   const hasReachedLimit = !user && viewCount >= FREE_TIER_LIMIT;
   const remainingViews = user ? Infinity : Math.max(0, FREE_TIER_LIMIT - viewCount);
 
-  // Initialize view count from localStorage
+  // Re-sync when user auth state changes
   useEffect(() => {
     if (!user) {
       const storedCount = localStorage.getItem('view_count');
       const count = storedCount ? parseInt(storedCount, 10) : 0;
-      // Validate the stored count by checking viewed items
       const viewedItems = Object.keys(localStorage).filter(key => key.startsWith('viewed_')).length;
-      const actualCount = Math.min(count, viewedItems); // Use the smaller of the two for safety
+      const actualCount = Math.min(count, viewedItems);
       setViewCount(actualCount);
     } else {
-      // User is signed in, reset to unlimited
       setViewCount(0);
     }
-    setIsInitialized(true);
   }, [user]);
 
   const trackView = useCallback(async (contentType: string, itemId: string) => {
-    // Don't track if user is signed in or not initialized yet
-    if (user || !isInitialized) return;
+    // Don't track if user is signed in
+    if (user) return;
 
     // Check if already viewed this item
     const viewKey = `viewed_${contentType}_${itemId}`;
@@ -78,7 +86,7 @@ export const useUsageTracking = (): UsageTrackingHook => {
     } catch (error) {
       console.error('Error tracking usage:', error);
     }
-  }, [user, isInitialized, viewCount, sessionId]);
+  }, [user, viewCount, sessionId]);
 
   const resetUsage = useCallback(() => {
     // Clear all tracking data (used when user signs up)
@@ -97,6 +105,7 @@ export const useUsageTracking = (): UsageTrackingHook => {
     canView,
     hasReachedLimit,
     remainingViews,
+    isInitialized,
     trackView,
     resetUsage,
   };
