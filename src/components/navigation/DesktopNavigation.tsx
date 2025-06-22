@@ -37,9 +37,9 @@ export const DesktopNavigation = () => {
           <Link
             key={item.href}
             to={item.href}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors hover:text-primary ${
+            className={`nav-link flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all duration-200 hover:text-primary hover:bg-accent/50 rounded-md ${
               isActive 
-                ? "text-primary" 
+                ? "text-primary bg-accent/30" 
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >

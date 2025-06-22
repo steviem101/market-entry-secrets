@@ -1,9 +1,11 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AIChatSearch } from "@/components/AIChatSearch";
+import { PageTransition } from "@/components/PageTransition";
 import Index from "./pages/Index";
 import ServiceProviders from "./pages/ServiceProviders";
 import Community from "./pages/Community";
@@ -25,7 +27,16 @@ import Dashboard from "./pages/Dashboard";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -34,29 +45,31 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <div className="relative min-h-screen">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/service-providers" element={<ServiceProviders />} />
-            <Route path="/mentors" element={<Community />} />
-            <Route path="/content" element={<Content />} />
-            <Route path="/content/:slug" element={<ContentDetail />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
-            <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
-            <Route path="/leads" element={<Leads />} />
-            <Route path="/partner-with-us" element={<PartnerWithUs />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/sectors" element={<Sectors />} />
-            <Route path="/sectors/:sectorId" element={<SectorPage />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <PageTransition>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/service-providers" element={<ServiceProviders />} />
+              <Route path="/mentors" element={<Community />} />
+              <Route path="/content" element={<Content />} />
+              <Route path="/content/:slug" element={<ContentDetail />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
+              <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
+              <Route path="/leads" element={<Leads />} />
+              <Route path="/partner-with-us" element={<PartnerWithUs />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/sectors" element={<Sectors />} />
+              <Route path="/sectors/:sectorId" element={<SectorPage />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </PageTransition>
           
           {/* AI Chat Assistant - available on all pages with improved positioning */}
           <div className="fixed bottom-6 right-6 z-[9999] pointer-events-none">

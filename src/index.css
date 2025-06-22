@@ -45,6 +45,10 @@
     --sidebar-accent-foreground: 220 15% 25%;
     --sidebar-border: 210 15% 90%;
     --sidebar-ring: 200 85% 55%;
+
+    /* Page transition variables */
+    --page-transition-duration: 200ms;
+    --page-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
@@ -95,6 +99,17 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Prevent layout shifts during navigation */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Optimize page transitions */
+  #root {
+    min-height: 100vh;
+    transition: opacity var(--page-transition-duration) var(--page-transition-timing);
+  }
 }
 
 /* Custom gradient utilities */
@@ -133,5 +148,67 @@
       hsla(var(--background), 0.5) 50%,
       hsla(var(--background), 1) 100%);
     z-index: 1;
+  }
+
+  /* Page transition utilities */
+  .page-enter {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity var(--page-transition-duration) var(--page-transition-timing),
+                transform var(--page-transition-duration) var(--page-transition-timing);
+  }
+
+  .page-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .page-exit-active {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity var(--page-transition-duration) var(--page-transition-timing),
+                transform var(--page-transition-duration) var(--page-transition-timing);
+  }
+
+  /* Loading skeleton utilities */
+  .skeleton-pulse {
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-pulse {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  /* Smooth navigation link transitions */
+  .nav-link {
+    transition: all var(--page-transition-duration) var(--page-transition-timing);
+  }
+
+  .nav-link:hover {
+    transform: translateY(-1px);
+  }
+
+  /* Prevent flash of unstyled content */
+  .page-content {
+    min-height: calc(100vh - 64px); /* Adjust for header height */
+    opacity: 1;
+    transition: opacity var(--page-transition-duration) var(--page-transition-timing);
+  }
+
+  .page-content.loading {
+    opacity: 0.7;
   }
 }

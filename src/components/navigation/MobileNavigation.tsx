@@ -19,6 +19,13 @@ export const MobileNavigation = () => {
     return location.pathname.startsWith(path);
   };
 
+  const handleLinkClick = () => {
+    // Add small delay to allow for smooth transition
+    setTimeout(() => {
+      setIsOpen(false);
+    }, 100);
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -34,7 +41,7 @@ export const MobileNavigation = () => {
             <Link
               to="/"
               className="flex items-center space-x-2"
-              onClick={() => setIsOpen(false)}
+              onClick={handleLinkClick}
             >
               <MarketEntryLogo className="h-6 w-6" />
               <span className="font-bold">Market Entry Secrets</span>
@@ -52,12 +59,12 @@ export const MobileNavigation = () => {
                   <Link
                     key={item.href}
                     to={item.href}
-                    className={`flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition-colors hover:bg-accent ${
+                    className={`nav-link flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition-all duration-200 hover:bg-accent ${
                       isActive 
                         ? "bg-accent text-accent-foreground" 
                         : "text-muted-foreground hover:text-foreground"
                     }`}
-                    onClick={() => setIsOpen(false)}
+                    onClick={handleLinkClick}
                   >
                     <Icon className="h-5 w-5" />
                     {item.label}
