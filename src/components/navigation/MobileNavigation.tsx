@@ -20,10 +20,7 @@ export const MobileNavigation = () => {
   };
 
   const handleLinkClick = () => {
-    // Add small delay to allow for smooth transition
-    setTimeout(() => {
-      setIsOpen(false);
-    }, 100);
+    setIsOpen(false);
   };
 
   return (
@@ -59,10 +56,10 @@ export const MobileNavigation = () => {
                   <Link
                     key={item.href}
                     to={item.href}
-                    className={`nav-link flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition-all duration-200 hover:bg-accent ${
+                    className={`nav-link flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md ${
                       isActive 
                         ? "bg-accent text-accent-foreground" 
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
                     }`}
                     onClick={handleLinkClick}
                   >

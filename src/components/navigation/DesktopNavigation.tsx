@@ -37,10 +37,10 @@ export const DesktopNavigation = () => {
           <Link
             key={item.href}
             to={item.href}
-            className={`nav-link flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all duration-200 hover:text-primary hover:bg-accent/50 rounded-md ${
+            className={`nav-link flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
               isActive 
                 ? "text-primary bg-accent/30" 
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
             }`}
           >
             <Icon className="h-4 w-4" />
