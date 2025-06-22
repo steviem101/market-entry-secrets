@@ -10,6 +10,7 @@ export interface NavItem {
 export const primaryNavItems: NavItem[] = [
   { href: "/content", label: "Content", icon: FileText },
   { href: "/leads", label: "Leads", icon: Database },
+  { href: "/events", label: "Events", icon: TrendingUp },
 ];
 
 // Ecosystem dropdown items
@@ -28,7 +29,7 @@ export const popularNavItems: NavItem[] = [
 
 // Secondary navigation items (remaining items for mobile)
 export const secondaryNavItems: NavItem[] = [
-  { href: "/events", label: "Events", icon: TrendingUp },
+  // Events moved back to primary navigation
 ];
 
 // Footer/info items (in dropdown on desktop)
