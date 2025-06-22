@@ -1,4 +1,4 @@
-import { FileText, Calendar, Building2, Globe, Users, Network, Database } from "lucide-react";
+import { FileText, Calendar, Building2, Globe, Users, Network, Database, TrendingUp } from "lucide-react";
 
 export interface NavItem {
   href: string;
