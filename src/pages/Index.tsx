@@ -5,6 +5,7 @@ import { BookmarksSection } from "@/components/BookmarksSection";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { StatsSection } from "@/components/sections/StatsSection";
 import { CategoriesSection } from "@/components/sections/CategoriesSection";
+import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { ProvidersSection } from "@/components/sections/ProvidersSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { LeadGenPopup } from "@/components/LeadGenPopup";
@@ -65,6 +66,9 @@ const Index = () => {
 
       {/* Featured Categories */}
       <CategoriesSection />
+
+      {/* Client Testimonials Section */}
+      <TestimonialsSection />
 
       {/* Service Providers Section */}
       <ProvidersSection 
