@@ -1,5 +1,4 @@
 
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -181,3 +180,4 @@
     min-height: calc(100vh - 64px);
   }
 }
+</lov-utilities>
