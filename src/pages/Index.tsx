@@ -55,6 +55,9 @@ const Index = () => {
         onSearchModeChange={(value) => setSearchMode(value as 'database' | 'ai')}
       />
 
+      {/* Client Testimonials Section - moved directly after hero */}
+      <TestimonialsSection />
+
       {/* Stats Section */}
       <StatsSection />
 
@@ -66,9 +69,6 @@ const Index = () => {
 
       {/* Featured Categories */}
       <CategoriesSection />
-
-      {/* Client Testimonials Section */}
-      <TestimonialsSection />
 
       {/* Service Providers Section */}
       <ProvidersSection 
