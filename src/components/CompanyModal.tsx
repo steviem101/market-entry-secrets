@@ -1,11 +1,10 @@
 
-import { X, MapPin, Users, Calendar, Globe, Phone, Mail, ExternalLink } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { BookmarkButton } from "@/components/BookmarkButton";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Company } from "./CompanyCard";
+import { CompanyModalHeader } from "./company-modal/CompanyModalHeader";
+import { CompanyModalSections } from "./company-modal/CompanyModalSections";
+import { CompanyModalDetails } from "./company-modal/CompanyModalDetails";
+import { CompanyModalFooter } from "./company-modal/CompanyModalFooter";
 
 interface CompanyModalProps {
   company: Company | null;
@@ -62,169 +61,24 @@ const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <DialogTitle className="text-2xl font-bold mb-2">
-                {company.name}
-              </DialogTitle>
-              <div className="flex items-center gap-4 text-muted-foreground mb-4">
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {company.location}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  Founded {company.founded}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  {company.employees} employees
-                </div>
-              </div>
-            </div>
-            <BookmarkButton
-              contentType="community_member"
-              contentId={company.id}
-              title={company.name}
-              description={company.description}
-              metadata={{
-                location: company.location,
-                founded: company.founded,
-                employees: company.employees,
-                services: company.services
-              }}
-              size="default"
-              variant="outline"
-            />
-          </div>
+          <CompanyModalHeader company={company} />
         </DialogHeader>
 
-        <div className="space-y-6">
-          <section>
-            <h3 className="text-lg font-semibold mb-3">Basic Info</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              {company.basic_info || company.description}
-            </p>
-          </section>
+        <CompanyModalSections
+          company={company}
+          experienceTiles={experienceTiles}
+          contactPersons={contactPersons}
+          getExperienceTileImage={getExperienceTileImage}
+          getContactPersonImage={getContactPersonImage}
+        />
 
-          <section>
-            <h3 className="text-lg font-semibold mb-3">Why work with us</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              {company.why_work_with_us || `At ${company.name}, we streamline business solutions, 
-              enabling brands to connect globally through our unique and cost-effective platform. Partnering with us 
-              helps brands connect with clients who align with their values, elevating visibility, building trust, 
-              and enhancing growth through authentic engagement.`}
-            </p>
-          </section>
+        <CompanyModalDetails company={company} />
 
-          <section>
-            <h3 className="text-lg font-semibold mb-3">Services</h3>
-            <div className="flex flex-wrap gap-2">
-              {company.services.map((service) => (
-                <Badge key={service} variant="secondary">
-                  {service}
-                </Badge>
-              ))}
-            </div>
-          </section>
-
-          {experienceTiles && experienceTiles.length > 0 && (
-            <section>
-              <h3 className="text-lg font-semibold mb-3">Working with</h3>
-              <div className="flex flex-wrap gap-3">
-                {experienceTiles.map((tile, index) => (
-                  <div key={tile.id} className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
-                    <div className="w-12 h-12 bg-white border rounded-lg p-1">
-                      <img 
-                        src={tile.logo || getExperienceTileImage(index)} 
-                        alt={tile.name}
-                        className="w-full h-full object-cover rounded"
-                      />
-                    </div>
-                    <span className="text-sm font-medium">{tile.name}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {contactPersons && contactPersons.length > 0 && (
-            <section>
-              <h3 className="text-lg font-semibold mb-3">Contact person(s)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {contactPersons.map((person, index) => (
-                  <div key={person.id} className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{person.name}</div>
-                      {person.role && (
-                        <div className="text-sm text-muted-foreground">{person.role}</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section>
-            <h3 className="text-lg font-semibold mb-3">Company Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center">
-                <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
-                <div>
-                  <div className="text-sm text-muted-foreground">Year founded</div>
-                  <div className="font-medium">{company.founded}</div>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Users className="w-4 h-4 mr-2 text-muted-foreground" />
-                <div>
-                  <div className="text-sm text-muted-foreground">No of Employees</div>
-                  <div className="font-medium">{company.employees}</div>
-                </div>
-              </div>
-              {company.website && (
-                <div className="flex items-center">
-                  <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Website</div>
-                    <a 
-                      href={company.website} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="font-medium text-primary hover:underline flex items-center"
-                    >
-                      Visit Site <ExternalLink className="w-3 h-3 ml-1" />
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <div className="flex gap-3 pt-4 border-t">
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              className="flex-1"
-            >
-              Close
-            </Button>
-            <Button 
-              onClick={() => onContact(company)}
-              className="flex-1"
-            >
-              <Phone className="w-4 h-4 mr-2" />
-              Contact
-            </Button>
-          </div>
-        </div>
+        <CompanyModalFooter 
+          company={company}
+          onClose={onClose}
+          onContact={onContact}
+        />
       </DialogContent>
     </Dialog>
   );
