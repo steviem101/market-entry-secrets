@@ -16,7 +16,7 @@ export const TestimonialsSection = () => {
 
   if (isLoading) {
     return (
-      <section className="relative py-24 overflow-hidden">
+      <section className="relative pt-8 pb-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
         <div className="absolute inset-0 gradient-overlay" />
         
@@ -38,23 +38,15 @@ export const TestimonialsSection = () => {
   }
 
   return (
-    <section className="relative py-24 overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+    <section className="relative pt-8 pb-24 overflow-hidden -mt-12">
+      {/* Background gradients for seamless transition */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/0 via-primary/3 to-accent/5" />
       <div className="absolute inset-0 gradient-overlay" />
       
       <div className="relative container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            Success Stories from Market Entry
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block mt-2">
-              Secret Users
-            </span>
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Real companies, real results. See how our exclusive market entry intelligence helped these businesses thrive in Australia.
-          </p>
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/8 to-accent/8 border border-primary/15 rounded-xl px-6 py-3">
+        {/* Minimal credibility indicator */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/8 to-accent/8 border border-primary/15 rounded-xl px-6 py-3 backdrop-blur-sm">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
