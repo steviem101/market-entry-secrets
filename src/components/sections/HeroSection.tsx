@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
+import { RotatingText } from "@/components/RotatingText";
 
 interface HeroSectionProps {
   totalResources: number;
@@ -17,6 +18,8 @@ export const HeroSection = ({
 }: HeroSectionProps) => {
   const [count, setCount] = useState(0);
   const animationRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const rotatingWords = ["Secrets", "Events", "Mentors", "Vendors", "Leads", "Content", "Ecosystems"];
 
   // Count Up Animation Effect - starts immediately on mount
   useEffect(() => {
@@ -57,7 +60,13 @@ export const HeroSection = ({
       <div className="relative container mx-auto px-4 py-24">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-8 leading-tight">
-            Uncover the Secrets for
+            Uncover the{" "}
+            <RotatingText 
+              words={rotatingWords}
+              className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"
+              duration={2000}
+            />{" "}
+            for
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block mt-2">
               Australian Market Entry
             </span>
