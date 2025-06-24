@@ -169,6 +169,12 @@
     transform: translateY(-1px);
   }
 
+  /* Enhanced navigation pop-out effect */
+  .nav-popped {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 32px hsla(var(--primary), 0.15);
+  }
+
   /* Clean page content styling */
   .page-content {
     min-height: calc(100vh - 64px);
