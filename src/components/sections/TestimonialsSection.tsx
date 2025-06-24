@@ -9,72 +9,34 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useEffect } from "react";
-import type { CarouselApi } from "@/components/ui/carousel";
-
-const testimonials = [
-  {
-    name: "Sarah Chen",
-    title: "CEO",
-    company: "TechFlow Solutions",
-    countryFlag: "🇸🇬",
-    countryName: "Singapore",
-    testimonial: "The market entry secrets revealed exactly which regulatory hurdles we'd face and connected us with the right legal partners. What would have taken us 18 months took just 6 months.",
-    outcome: "Reduced market entry time by 12 months, saved $200K in consulting fees",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-  },
-  {
-    name: "Marcus Weber",
-    title: "Founder",
-    company: "GreenTech Industries",
-    countryFlag: "🇩🇪",
-    countryName: "Germany",
-    testimonial: "The insider knowledge about Australian energy regulations and the vetted supplier network was game-changing. We avoided costly mistakes and found our key partners within weeks.",
-    outcome: "Secured 3 major partnerships, achieved 40% faster revenue growth",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-  },
-  {
-    name: "Priya Sharma",
-    title: "International Director",
-    company: "DataBridge Analytics",
-    countryFlag: "🇮🇳",
-    countryName: "India",
-    testimonial: "The hidden strategies for navigating Australian procurement processes were invaluable. We won our first government contract within 4 months of entering the market.",
-    outcome: "Won $2.3M government contract, established market presence 60% faster",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-  },
-  {
-    name: "James Mitchell",
-    title: "VP of Expansion",
-    company: "FinanceFlow",
-    countryFlag: "🇺🇸",
-    countryName: "United States",
-    testimonial: "The exclusive access to Australian banking relationships and compliance shortcuts saved us months of research. The ROI on this knowledge was immediate.",
-    outcome: "Launched operations 8 months ahead of schedule, 25% under budget",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-  },
-  {
-    name: "Emma Thompson",
-    title: "Co-founder",
-    company: "EcoPackaging Solutions",
-    countryFlag: "🇬🇧",
-    countryName: "United Kingdom",
-    testimonial: "The sustainability sector insights and pre-vetted manufacturing contacts were exactly what we needed. We went from zero to profitable in our first year in Australia.",
-    outcome: "Achieved profitability in year 1, built distribution network 3x faster",
-    avatar: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=150&h=150&fit=crop&crop=face"
-  },
-  {
-    name: "Hiroshi Tanaka",
-    title: "Managing Director",
-    company: "Precision Robotics",
-    countryFlag: "🇯🇵",
-    countryName: "Japan",
-    testimonial: "The manufacturing sector secrets and supplier verification process helped us avoid unreliable partners. Our Australian operations now generate 30% of our global revenue.",
-    outcome: "30% of global revenue from Australia, zero supplier failures"
-  }
-];
+import { useTestimonials } from "@/hooks/useTestimonials";
 
 export const TestimonialsSection = () => {
+  const { data: testimonials = [], isLoading, error } = useTestimonials();
+
+  if (isLoading) {
+    return (
+      <section className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+        <div className="absolute inset-0 gradient-overlay" />
+        
+        <div className="relative container mx-auto px-4">
+          <div className="text-center">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/2 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    console.error('Error loading testimonials:', error);
+    return null;
+  }
+
   return (
     <section className="relative py-24 overflow-hidden">
       {/* Background gradients */}
@@ -105,25 +67,36 @@ export const TestimonialsSection = () => {
         </div>
         
         {/* Testimonials Carousel */}
-        <div className="mb-16">
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {testimonials.map((testimonial, index) => (
-                <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/3">
-                  <TestimonialCard {...testimonial} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-2" />
-            <CarouselNext className="right-2" />
-          </Carousel>
-        </div>
+        {testimonials.length > 0 && (
+          <div className="mb-16">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {testimonials.map((testimonial) => (
+                  <CarouselItem key={testimonial.id} className="pl-2 md:pl-4 md:basis-1/3">
+                    <TestimonialCard
+                      name={testimonial.name}
+                      title={testimonial.title}
+                      company={testimonial.company}
+                      countryFlag={testimonial.country_flag}
+                      countryName={testimonial.country_name}
+                      testimonial={testimonial.testimonial}
+                      outcome={testimonial.outcome}
+                      avatar={testimonial.avatar}
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-2" />
+              <CarouselNext className="right-2" />
+            </Carousel>
+          </div>
+        )}
 
         {/* CTA */}
         <div className="text-center">

@@ -1083,6 +1083,54 @@ export type Database = {
         }
         Relationships: []
       }
+      testimonials: {
+        Row: {
+          avatar: string | null
+          company: string
+          country_flag: string
+          country_name: string
+          created_at: string | null
+          id: string
+          is_featured: boolean | null
+          name: string
+          outcome: string
+          sort_order: number | null
+          testimonial: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar?: string | null
+          company: string
+          country_flag: string
+          country_name: string
+          created_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name: string
+          outcome: string
+          sort_order?: number | null
+          testimonial: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar?: string | null
+          company?: string
+          country_flag?: string
+          country_name?: string
+          created_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          name?: string
+          outcome?: string
+          sort_order?: number | null
+          testimonial?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       trade_investment_agencies: {
         Row: {
           basic_info: string | null
