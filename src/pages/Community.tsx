@@ -86,10 +86,15 @@ const Community = () => {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20">
+      <section className="bg-gradient-to-r from-purple-500/10 to-primary/10 py-20">
         <div className="container mx-auto px-4 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="p-3 bg-purple-500/20 rounded-full">
+              <Users className="w-12 h-12 text-purple-600" />
+            </div>
+          </div>
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            Market Entry <span className="text-primary">Experts</span>
+            Market Entry <span className="text-purple-600">Experts</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Learn from real businesses that successfully entered the Australian market. 
