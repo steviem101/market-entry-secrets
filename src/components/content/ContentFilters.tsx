@@ -50,7 +50,7 @@ export const ContentFilters = ({
         <div className="container mx-auto px-4 py-6">
           <div className="flex gap-4 items-center">
             {/* Search Bar */}
-            <div className="w-80 relative">
+            <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search success stories..."
