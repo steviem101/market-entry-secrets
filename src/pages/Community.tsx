@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Users } from "lucide-react";
 import { useCommunityMembers } from "@/hooks/useCommunityMembers";
 import PersonCard, { Person } from "@/components/PersonCard";
 import PersonModal from "@/components/PersonModal";

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -83,8 +82,6 @@ const Content = () => {
       <Navigation />
       
       <ContentHero 
-        searchQuery=""
-        onSearchChange={() => {}}
         totalContent={contentItems.length}
         totalCategories={categories.length}
       />
