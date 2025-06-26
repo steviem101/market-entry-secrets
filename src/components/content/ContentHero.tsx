@@ -1,19 +1,13 @@
 
 import { BookOpen, FileText, Users } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface ContentHeroProps {
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
   totalContent: number;
   totalCategories: number;
 }
 
 export const ContentHero = ({ 
-  searchQuery, 
-  onSearchChange, 
   totalContent, 
   totalCategories 
 }: ContentHeroProps) => {
@@ -42,17 +36,6 @@ export const ContentHero = ({
             <Users className="w-4 h-4" />
             {totalCategories} Categories
           </Badge>
-        </div>
-
-        {/* Search Bar */}
-        <div className="max-w-md mx-auto relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search success stories..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
         </div>
       </div>
     </section>

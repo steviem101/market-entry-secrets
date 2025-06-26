@@ -1,48 +1,38 @@
 
-import { BookOpen, TrendingUp, Users, FileText, Play, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
 
-const iconMap: Record<string, any> = {
-  TrendingUp,
-  BookOpen,
-  Users,
-  FileText,
-  Play,
-  Star
-};
-
-interface ContentFiltersProps {
+interface CommunityFiltersProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   selectedLocation: string;
-  selectedCategory: string | null;
+  selectedSpecialty: string | null;
   onLocationChange: (location: string) => void;
-  onCategoryChange: (categoryId: string | null) => void;
+  onSpecialtyChange: (specialty: string | null) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
-  categories: any[];
   locations: string[];
+  specialties: string[];
 }
 
-export const ContentFilters = ({
+export const CommunityFilters = ({
   searchTerm,
   onSearchChange,
   selectedLocation,
-  selectedCategory,
+  selectedSpecialty,
   onLocationChange,
-  onCategoryChange,
+  onSpecialtyChange,
   showFilters,
   onToggleFilters,
   onClearFilters,
   hasActiveFilters,
-  categories,
-  locations
-}: ContentFiltersProps) => {
+  locations,
+  specialties
+}: CommunityFiltersProps) => {
   return (
     <>
       {/* Search and Filters Bar */}
@@ -53,7 +43,7 @@ export const ContentFilters = ({
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search success stories..."
+                placeholder="Search experts, specialties, or locations..."
                 className="pl-10"
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
@@ -107,29 +97,24 @@ export const ContentFilters = ({
         <section className="bg-muted/50 border-b">
           <div className="container mx-auto px-4 py-6">
             <div className="flex flex-wrap gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Category:</span>
+              <span className="text-sm font-medium text-muted-foreground">Specialty:</span>
               <Button
-                variant={selectedCategory === null ? "default" : "outline"}
+                variant={selectedSpecialty === null ? "default" : "outline"}
                 size="sm"
-                onClick={() => onCategoryChange(null)}
+                onClick={() => onSpecialtyChange(null)}
               >
-                All Categories
+                All Specialties
               </Button>
-              {categories.map((category) => {
-                const IconComponent = iconMap[category.icon] || BookOpen;
-                return (
-                  <Button
-                    key={category.id}
-                    variant={selectedCategory === category.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => onCategoryChange(category.id)}
-                    className="gap-2"
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    {category.name}
-                  </Button>
-                );
-              })}
+              {specialties.map((specialty) => (
+                <Button
+                  key={specialty}
+                  variant={selectedSpecialty === specialty ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onSpecialtyChange(specialty)}
+                >
+                  {specialty}
+                </Button>
+              ))}
             </div>
           </div>
         </section>

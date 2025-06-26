@@ -2,29 +2,35 @@
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search, Users, MapPin, Globe, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useCommunityMembers } from "@/hooks/useCommunityMembers";
 import PersonCard, { Person } from "@/components/PersonCard";
 import PersonModal from "@/components/PersonModal";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { UsageBanner } from "@/components/UsageBanner";
+import { CommunityHero } from "@/components/community/CommunityHero";
+import { CommunityFilters } from "@/components/community/CommunityFilters";
 
 const Community = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedMember, setSelectedMember] = useState<Person | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data: members = [], isLoading, error } = useCommunityMembers();
 
-  // Get all unique specialties
+  // Get all unique specialties and locations
   const allSpecialties = Array.from(
     new Set(members.flatMap(member => member.specialties))
   ).sort();
 
-  // Filter members based on search and specialty
+  const allLocations = Array.from(
+    new Set(members.map(member => member.location))
+  ).sort();
+
+  // Filter members based on search, specialty, and location
   const filteredMembers = members.filter(member => {
     const matchesSearch = searchQuery === "" || 
       member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,8 +41,13 @@ const Community = () => {
     const matchesSpecialty = selectedSpecialty === null || 
       member.specialties.includes(selectedSpecialty);
     
-    return matchesSearch && matchesSpecialty;
+    const matchesLocation = selectedLocation === "all" || 
+      member.location === selectedLocation;
+    
+    return matchesSearch && matchesSpecialty && matchesLocation;
   });
+
+  const hasActiveFilters = selectedSpecialty !== null || selectedLocation !== "all";
 
   const handleViewProfile = (member: Person) => {
     setSelectedMember(member);
@@ -45,6 +56,11 @@ const Community = () => {
 
   const handleContact = (member: Person) => {
     console.log('Contact member:', member.name);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedSpecialty(null);
+    setSelectedLocation("all");
   };
 
   if (isLoading) {
@@ -85,67 +101,34 @@ const Community = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-purple-500/10 to-primary/10 py-20">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="p-3 bg-purple-500/20 rounded-full">
-              <Users className="w-12 h-12 text-purple-600" />
-            </div>
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            Market Entry <span className="text-purple-600">Experts</span>
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Learn from real businesses that successfully entered the Australian market. 
-            Get actionable insights, proven strategies, and expert guidance.
-          </p>
-          
-          {/* Search Bar */}
-          <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search success stories..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-      </section>
+      <CommunityHero 
+        totalExperts={members.length}
+        totalLocations={allLocations.length}
+      />
+
+      <CommunityFilters
+        searchTerm={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedLocation={selectedLocation}
+        selectedSpecialty={selectedSpecialty}
+        onLocationChange={setSelectedLocation}
+        onSpecialtyChange={setSelectedSpecialty}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        onClearFilters={handleClearFilters}
+        hasActiveFilters={hasActiveFilters}
+        locations={allLocations}
+        specialties={allSpecialties}
+      />
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
-        
-        {/* Filters */}
-        <div className="mb-8 space-y-4">
-          {/* Specialty Filter */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedSpecialty === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedSpecialty(null)}
-            >
-              All Specialties
-            </Button>
-            {allSpecialties.map((specialty) => (
-              <Button
-                key={specialty}
-                variant={selectedSpecialty === specialty ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedSpecialty(specialty)}
-              >
-                {specialty}
-              </Button>
-            ))}
-          </div>
-        </div>
 
         {/* Members Grid */}
         {filteredMembers.length === 0 ? (
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No members found</h3>
+            <h3 className="text-xl font-semibold mb-2">No experts found</h3>
             <p className="text-muted-foreground">
               Try adjusting your search criteria to find more community members.
             </p>

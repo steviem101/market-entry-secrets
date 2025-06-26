@@ -13,9 +13,14 @@ import { UsageBanner } from "@/components/UsageBanner";
 const Content = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems();
   const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useContentCategories();
+
+  // Mock locations for now - in a real app, this would come from content data
+  const mockLocations = ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"];
 
   const filteredContent = contentItems.filter(item => {
     const matchesSearch = searchQuery === "" || 
@@ -25,10 +30,19 @@ const Content = () => {
     const matchesCategory = selectedCategory === null || 
       item.category_id === selectedCategory;
     
+    // Location filtering would be implemented when location data is available
+    // const matchesLocation = selectedLocation === "all" || item.location === selectedLocation;
+    
     return matchesSearch && matchesCategory;
   });
 
   const featuredContent = contentItems.filter(item => item.featured);
+  const hasActiveFilters = selectedCategory !== null || selectedLocation !== "all";
+
+  const handleClearFilters = () => {
+    setSelectedCategory(null);
+    setSelectedLocation("all");
+  };
 
   if (itemsLoading || categoriesLoading) {
     return (
@@ -69,21 +83,30 @@ const Content = () => {
       <Navigation />
       
       <ContentHero 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        searchQuery=""
+        onSearchChange={() => {}}
         totalContent={contentItems.length}
         totalCategories={categories.length}
+      />
+
+      <ContentFilters
+        searchTerm={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedLocation={selectedLocation}
+        selectedCategory={selectedCategory}
+        onLocationChange={setSelectedLocation}
+        onCategoryChange={setSelectedCategory}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        onClearFilters={handleClearFilters}
+        hasActiveFilters={hasActiveFilters}
+        categories={categories}
+        locations={mockLocations}
       />
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
         
-        <ContentFilters 
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
-
         <FeaturedContent 
           featuredContent={featuredContent}
           selectedCategory={selectedCategory}
