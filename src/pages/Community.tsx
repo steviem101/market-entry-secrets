@@ -10,6 +10,7 @@ import PersonCard, { Person } from "@/components/PersonCard";
 import PersonModal from "@/components/PersonModal";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { UsageBanner } from "@/components/UsageBanner";
+import { CommunityStats } from "@/components/community/CommunityStats";
 
 const Community = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,6 +82,9 @@ const Community = () => {
     );
   }
 
+  // Calculate unique locations count
+  const uniqueLocations = new Set(members.map(member => member.location)).size;
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -113,6 +117,11 @@ const Community = () => {
           </div>
         </div>
       </section>
+
+      <CommunityStats 
+        memberCount={members.length}
+        locationCount={uniqueLocations}
+      />
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />

@@ -6,6 +6,7 @@ import { ServiceProvidersDataProvider } from "@/components/service-providers/Ser
 import { ServiceProvidersHeader } from "@/components/service-providers/ServiceProvidersHeader";
 import { ServiceProvidersFilters } from "@/components/service-providers/ServiceProvidersFilters";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
+import { ServiceProvidersStats } from "@/components/service-providers/ServiceProvidersStats";
 import CompanyModal from "@/components/CompanyModal";
 import { Company } from "@/components/CompanyCard";
 import { UsageBanner } from "@/components/UsageBanner";
@@ -38,53 +39,63 @@ const ServiceProviders = () => {
         serviceCategories={[]}
         categoryGroups={[]}
       >
-        {({ companies, loading, filteredCompanies }) => (
-          <>
-            <ServiceProvidersHeader 
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              showFilters={showFilters}
-              onToggleFilters={() => setShowFilters(!showFilters)}
-              filteredCount={filteredCompanies.length}
-              selectedLocations={selectedLocations}
-              onLocationChange={setSelectedLocations}
-            />
-            
-            <div className="container mx-auto px-4 py-8">
-              <UsageBanner />
+        {({ companies, loading, filteredCompanies }) => {
+          // Calculate unique locations count
+          const uniqueLocations = new Set(companies.map(company => company.location)).size;
+          
+          return (
+            <>
+              <ServiceProvidersHeader 
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                showFilters={showFilters}
+                onToggleFilters={() => setShowFilters(!showFilters)}
+                filteredCount={filteredCompanies.length}
+                selectedLocations={selectedLocations}
+                onLocationChange={setSelectedLocations}
+              />
               
-              {/* Results count */}
-              <div className="mb-6">
-                <p className="text-muted-foreground">
-                  {filteredCompanies.length} service providers found
-                </p>
+              <ServiceProvidersStats 
+                organizationCount={companies.length}
+                locationCount={uniqueLocations}
+              />
+              
+              <div className="container mx-auto px-4 py-8">
+                <UsageBanner />
+                
+                {/* Results count */}
+                <div className="mb-6">
+                  <p className="text-muted-foreground">
+                    {filteredCompanies.length} service providers found
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <ServiceProvidersLayout
-              filters={
-                <ServiceProvidersFilters 
-                  categories={[]}
-                  categoryGroups={[]}
-                  selectedCategories={selectedCategories}
-                  onCategoryChange={setSelectedCategories}
-                  searchTerm=""
-                  onSearchChange={() => {}}
-                  selectedLocations={selectedLocations}
-                  onLocationChange={setSelectedLocations}
-                  showFilters={showFilters}
-                />
-              }
-              content={
-                <ServiceProvidersList
-                  companies={filteredCompanies}
-                  onViewProfile={handleViewProfile}
-                  onContact={handleContact}
-                />
-              }
-            />
-          </>
-        )}
+              <ServiceProvidersLayout
+                filters={
+                  <ServiceProvidersFilters 
+                    categories={[]}
+                    categoryGroups={[]}
+                    selectedCategories={selectedCategories}
+                    onCategoryChange={setSelectedCategories}
+                    searchTerm=""
+                    onSearchChange={() => {}}
+                    selectedLocations={selectedLocations}
+                    onLocationChange={setSelectedLocations}
+                    showFilters={showFilters}
+                  />
+                }
+                content={
+                  <ServiceProvidersList
+                    companies={filteredCompanies}
+                    onViewProfile={handleViewProfile}
+                    onContact={handleContact}
+                  />
+                }
+              />
+            </>
+          );
+        }}
       </ServiceProvidersDataProvider>
 
       {selectedCompany && (
