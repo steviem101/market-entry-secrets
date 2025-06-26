@@ -1,46 +1,45 @@
 
-import { BookOpen, FileText, Users } from "lucide-react";
+import { Calendar, MapPin, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-interface ContentHeroProps {
+interface EventsHeroProps {
   searchQuery: string;
-  onSearchChange: (value: string) => void;
-  totalContent: number;
-  totalCategories: number;
+  onSearchChange: (query: string) => void;
+  totalEvents: number;
+  totalLocations: number;
 }
 
-export const ContentHero = ({ 
+export const EventsHero = ({ 
   searchQuery, 
   onSearchChange, 
-  totalContent, 
-  totalCategories 
-}: ContentHeroProps) => {
+  totalEvents, 
+  totalLocations 
+}: EventsHeroProps) => {
   return (
-    <section className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 py-20">
+    <section className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 py-20">
       <div className="container mx-auto px-4 text-center">
         <div className="flex justify-center mb-6">
-          <div className="p-3 bg-teal-500/20 rounded-full">
-            <BookOpen className="w-12 h-12 text-teal-600" />
+          <div className="p-3 bg-green-500/20 rounded-full">
+            <Calendar className="w-12 h-12 text-green-600" />
           </div>
         </div>
         <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-          Market Entry <span className="text-teal-600">Success Stories</span>
+          Industry <span className="text-green-600">Events</span>
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-          Learn from real businesses that successfully entered the Australian market. 
-          Get actionable insights, proven strategies, and expert guidance.
+          Connect with industry professionals and expand your network at upcoming events
         </p>
         
         <div className="flex flex-wrap justify-center gap-4 mb-8">
           <Badge variant="secondary" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            {totalContent} Success Stories
+            <Calendar className="w-4 h-4" />
+            {totalEvents} Events
           </Badge>
           <Badge variant="secondary" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            {totalCategories} Categories
+            <MapPin className="w-4 h-4" />
+            {totalLocations} Locations
           </Badge>
         </div>
 
@@ -48,7 +47,7 @@ export const ContentHero = ({
         <div className="max-w-md mx-auto relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search success stories..."
+            placeholder="Search events, locations, or organizers..."
             className="pl-10"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}

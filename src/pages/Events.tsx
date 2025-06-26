@@ -1,12 +1,11 @@
 
 import { useState } from "react";
-import { Search, Calendar, MapPin, Users, AlertCircle } from "lucide-react";
+import { Calendar, AlertCircle } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { EventCard } from "@/components/EventCard";
-import { EventSearch } from "@/components/events/EventSearch";
+import { EventsHero } from "@/components/events/EventsHero";
+import { EventsFilters } from "@/components/events/EventsFilters";
 import { EventSubmissionForm } from "@/components/events/EventSubmissionForm";
 import { useEvents } from "@/hooks/useEvents";
 import { FreemiumGate } from "@/components/FreemiumGate";
@@ -16,6 +15,7 @@ const Events = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const { events, loading, error, searchEvents, clearSearch, isSearching } = useEvents();
 
@@ -45,6 +45,8 @@ const Events = () => {
     setSelectedLocation("all");
     clearSearch();
   };
+
+  const hasActiveFilters = selectedCategory !== "all" || selectedLocation !== "all";
 
   if (loading) {
     return (
@@ -82,86 +84,32 @@ const Events = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-background py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Industry <span className="text-primary">Events</span>
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Connect with industry professionals and expand your network at upcoming events
-          </p>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground justify-center">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              <span>{events.length} Events</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              <span>Multiple Locations</span>
-            </div>
-          </div>
-          <div className="mt-6">
-            <EventSubmissionForm />
-          </div>
-        </div>
-      </section>
+      <EventsHero 
+        searchQuery={searchQuery}
+        onSearchChange={handleSearch}
+        totalEvents={events.length}
+        totalLocations={locations.length}
+      />
+
+      <EventsFilters 
+        categories={categories}
+        locations={locations}
+        selectedCategory={selectedCategory}
+        selectedLocation={selectedLocation}
+        onCategoryChange={setSelectedCategory}
+        onLocationChange={setSelectedLocation}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+        onClearFilters={handleClearFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
         
-        {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
-          <EventSearch 
-            searchQuery={searchQuery}
-            onSearchChange={handleSearch}
-            isSearching={isSearching}
-          />
-          
-          {/* Category and Location Filters */}
-          <div className="flex flex-wrap gap-4">
-            <div className="flex flex-wrap gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Category:</span>
-              <Button
-                variant={selectedCategory === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory("all")}
-              >
-                All Categories
-              </Button>
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Location:</span>
-              <Button
-                variant={selectedLocation === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedLocation("all")}
-              >
-                All Locations
-              </Button>
-              {locations.map((location) => (
-                <Button
-                  key={location}
-                  variant={selectedLocation === location ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedLocation(location)}
-                >
-                  {location}
-                </Button>
-              ))}
-            </div>
-          </div>
+        {/* Event Submission Form */}
+        <div className="mb-8">
+          <EventSubmissionForm />
         </div>
 
         {/* Events Grid */}
@@ -175,7 +123,7 @@ const Events = () => {
                 : "There are no events matching your current filters."
               }
             </p>
-            {(searchQuery || selectedCategory !== "all" || selectedLocation !== "all") && (
+            {(searchQuery || hasActiveFilters) && (
               <Button onClick={handleClearFilters} variant="outline">
                 Clear all filters
               </Button>

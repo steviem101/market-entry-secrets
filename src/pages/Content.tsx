@@ -71,6 +71,8 @@ const Content = () => {
       <ContentHero 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        totalContent={contentItems.length}
+        totalCategories={categories.length}
       />
 
       <div className="container mx-auto px-4 py-8">
