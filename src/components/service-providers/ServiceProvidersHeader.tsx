@@ -20,36 +20,27 @@ export const ServiceProvidersHeader = ({
   filteredCount
 }: ServiceProvidersHeaderProps) => {
   return (
-    <div className="bg-card border-b border-border">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Service Providers</h1>
-            <p className="text-muted-foreground">
-              {filteredCount} service providers found
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search providers..." 
-                value={searchTerm} 
-                onChange={e => onSearchChange(e.target.value)} 
-                className="pl-10 w-64" 
-              />
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggleFilters}
-              className="lg:hidden"
-            >
-              <Filter className="w-4 h-4" />
-            </Button>
-          </div>
+    <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20">
+      <div className="container mx-auto px-4 text-center">
+        <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+          Service <span className="text-primary">Providers</span>
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+          Connect with trusted service providers who specialize in helping businesses 
+          successfully enter and expand in new markets.
+        </p>
+        
+        {/* Search Bar */}
+        <div className="max-w-md mx-auto relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search service providers..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
         </div>
       </div>
-    </div>
+    </section>
   );
 };

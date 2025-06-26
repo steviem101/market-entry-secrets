@@ -50,6 +50,13 @@ const ServiceProviders = () => {
             
             <div className="container mx-auto px-4 py-8">
               <UsageBanner />
+              
+              {/* Results count */}
+              <div className="mb-6">
+                <p className="text-muted-foreground">
+                  {filteredCompanies.length} service providers found
+                </p>
+              </div>
             </div>
 
             <ServiceProvidersLayout
@@ -59,8 +66,8 @@ const ServiceProviders = () => {
                   categoryGroups={[]}
                   selectedCategories={selectedCategories}
                   onCategoryChange={setSelectedCategories}
-                  searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
+                  searchTerm=""
+                  onSearchChange={() => {}}
                   selectedLocations={selectedLocations}
                   onLocationChange={setSelectedLocations}
                   showFilters={showFilters}
