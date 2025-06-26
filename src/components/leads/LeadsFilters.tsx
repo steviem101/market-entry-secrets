@@ -176,7 +176,7 @@ export const LeadsFilters = ({
               </div>
             </div>
           </div>
-        </div>
+        </section>
       )}
     </>
   );
