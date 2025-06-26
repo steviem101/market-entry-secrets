@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Users } from "lucide-react";
 
 interface ServiceProvidersHeaderProps {
   searchTerm: string;
@@ -20,10 +20,15 @@ export const ServiceProvidersHeader = ({
   filteredCount
 }: ServiceProvidersHeaderProps) => {
   return (
-    <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20">
+    <section className="bg-gradient-to-r from-blue-500/10 to-indigo-500/10 py-20">
       <div className="container mx-auto px-4 text-center">
+        <div className="flex justify-center mb-6">
+          <div className="p-3 bg-blue-500/20 rounded-full">
+            <Users className="w-12 h-12 text-blue-600" />
+          </div>
+        </div>
         <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-          Service <span className="text-primary">Providers</span>
+          Service <span className="text-blue-600">Providers</span>
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
           Connect with trusted service providers who specialize in helping businesses 
