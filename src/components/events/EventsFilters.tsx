@@ -1,9 +1,12 @@
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, MapPin } from "lucide-react";
+import { Filter, Search } from "lucide-react";
 
 interface EventsFiltersProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
   categories: string[];
   locations: string[];
   selectedCategory: string;
@@ -17,6 +20,8 @@ interface EventsFiltersProps {
 }
 
 export const EventsFilters = ({
+  searchQuery,
+  onSearchChange,
   categories,
   locations,
   selectedCategory,
@@ -30,10 +35,21 @@ export const EventsFilters = ({
 }: EventsFiltersProps) => {
   return (
     <>
-      {/* Filters Bar */}
+      {/* Search and Filters Bar */}
       <section className="bg-background border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex gap-4 items-center">
+            {/* Search Bar */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search events, locations, or organizers..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+            </div>
+
             {/* Location Filter */}
             <div className="w-48">
               <Select value={selectedLocation} onValueChange={onLocationChange}>

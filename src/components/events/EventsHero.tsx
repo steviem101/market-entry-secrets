@@ -1,19 +1,13 @@
 
-import { Calendar, MapPin, Users } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface EventsHeroProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
   totalEvents: number;
   totalLocations: number;
 }
 
 export const EventsHero = ({ 
-  searchQuery, 
-  onSearchChange, 
   totalEvents, 
   totalLocations 
 }: EventsHeroProps) => {
@@ -41,17 +35,6 @@ export const EventsHero = ({
             <MapPin className="w-4 h-4" />
             {totalLocations} Locations
           </Badge>
-        </div>
-
-        {/* Search Bar */}
-        <div className="max-w-md mx-auto relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search events, locations, or organizers..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
         </div>
       </div>
     </section>

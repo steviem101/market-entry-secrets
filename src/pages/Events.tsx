@@ -85,13 +85,13 @@ const Events = () => {
       <Navigation />
       
       <EventsHero 
-        searchQuery={searchQuery}
-        onSearchChange={handleSearch}
         totalEvents={events.length}
         totalLocations={locations.length}
       />
 
       <EventsFilters 
+        searchQuery={searchQuery}
+        onSearchChange={handleSearch}
         categories={categories}
         locations={locations}
         selectedCategory={selectedCategory}
