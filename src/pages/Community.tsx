@@ -86,23 +86,25 @@ const Community = () => {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-background py-16">
+      <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Connect with <span className="text-primary">Market Entry</span> Experts
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+            Market Entry <span className="text-primary">Experts</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Get guidance from experienced entrepreneurs and business leaders who have successfully entered new markets
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            Learn from real businesses that successfully entered the Australian market. 
+            Get actionable insights, proven strategies, and expert guidance.
           </p>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground justify-center">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              <span>{members.length} Members</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4" />
-              <span>Global Network</span>
-            </div>
+          
+          {/* Search Bar */}
+          <div className="max-w-md mx-auto relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search success stories..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
       </section>
@@ -110,18 +112,8 @@ const Community = () => {
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
         
-        {/* Search and Filters */}
+        {/* Filters */}
         <div className="mb-8 space-y-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search mentors by name, title, or location..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
           {/* Specialty Filter */}
           <div className="flex flex-wrap gap-2">
             <Button
