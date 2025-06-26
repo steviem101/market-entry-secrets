@@ -11,6 +11,8 @@ import InnovationEcosystemResults from "@/components/innovation-ecosystem/Innova
 const InnovationEcosystem = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  const [selectedSector, setSelectedSector] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
 
   const {
@@ -41,10 +43,14 @@ const InnovationEcosystem = () => {
                          org.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          org.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = selectedLocation === "all" || org.location.toLowerCase().includes(selectedLocation.toLowerCase());
-    return matchesSearch && matchesLocation;
+    const matchesSector = selectedSector === "all" || org.sector?.toLowerCase().includes(selectedSector.toLowerCase());
+    const matchesType = selectedType === "all" || org.type?.toLowerCase().includes(selectedType.toLowerCase());
+    return matchesSearch && matchesLocation && matchesSector && matchesType;
   });
 
   const uniqueLocations = [...new Set(organizations?.map(org => org.location) || [])];
+  const uniqueSectors = [...new Set(organizations?.map(org => org.sector).filter(Boolean) || [])];
+  const uniqueTypes = [...new Set(organizations?.map(org => org.type).filter(Boolean) || [])];
 
   // Helper function to safely parse JSONB arrays
   const parseJsonArray = (jsonData: any): any[] => {
@@ -64,6 +70,8 @@ const InnovationEcosystem = () => {
   const clearAllFilters = () => {
     setSearchTerm("");
     setSelectedLocation("all");
+    setSelectedSector("all");
+    setSelectedType("all");
   };
 
   if (error) {
@@ -94,7 +102,13 @@ const InnovationEcosystem = () => {
           setSearchTerm={setSearchTerm}
           selectedLocation={selectedLocation}
           setSelectedLocation={setSelectedLocation}
+          selectedSector={selectedSector}
+          setSelectedSector={setSelectedSector}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
           uniqueLocations={uniqueLocations}
+          uniqueSectors={uniqueSectors}
+          uniqueTypes={uniqueTypes}
         />
 
         <InnovationEcosystemResults

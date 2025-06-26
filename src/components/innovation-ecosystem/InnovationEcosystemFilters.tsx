@@ -3,13 +3,20 @@ import { useState } from "react";
 import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface InnovationEcosystemFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   selectedLocation: string;
   setSelectedLocation: (location: string) => void;
+  selectedSector: string;
+  setSelectedSector: (sector: string) => void;
+  selectedType: string;
+  setSelectedType: (type: string) => void;
   uniqueLocations: string[];
+  uniqueSectors: string[];
+  uniqueTypes: string[];
 }
 
 const InnovationEcosystemFilters = ({
@@ -17,12 +24,20 @@ const InnovationEcosystemFilters = ({
   setSearchTerm,
   selectedLocation,
   setSelectedLocation,
-  uniqueLocations
+  selectedSector,
+  setSelectedSector,
+  selectedType,
+  setSelectedType,
+  uniqueLocations,
+  uniqueSectors,
+  uniqueTypes
 }: InnovationEcosystemFiltersProps) => {
   const [showFilters, setShowFilters] = useState(false);
 
   const clearAllFilters = () => {
     setSelectedLocation("all");
+    setSelectedSector("all");
+    setSelectedType("all");
     setSearchTerm("");
   };
 
@@ -55,18 +70,51 @@ const InnovationEcosystemFilters = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Location</label>
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="all">All Locations</option>
-                {uniqueLocations.map((location) => (
-                  <option key={location} value={location}>
-                    {location}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Locations" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Locations</SelectItem>
+                  {uniqueLocations.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Sector</label>
+              <Select value={selectedSector} onValueChange={setSelectedSector}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Sectors" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sectors</SelectItem>
+                  {uniqueSectors.map((sector) => (
+                    <SelectItem key={sector} value={sector}>
+                      {sector}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Type</label>
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {uniqueTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="mt-4 flex gap-2">
