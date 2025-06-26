@@ -46,6 +46,8 @@ const ServiceProviders = () => {
               showFilters={showFilters}
               onToggleFilters={() => setShowFilters(!showFilters)}
               filteredCount={filteredCompanies.length}
+              selectedLocations={selectedLocations}
+              onLocationChange={setSelectedLocations}
             />
             
             <div className="container mx-auto px-4 py-8">
