@@ -11,6 +11,8 @@ import TradeInvestmentAgenciesResults from "@/components/trade-investment-agenci
 const TradeInvestmentAgencies = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  const [selectedSector, setSelectedSector] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedAgency, setSelectedAgency] = useState<any>(null);
 
   const {
@@ -37,14 +39,19 @@ const TradeInvestmentAgencies = () => {
   });
 
   const filteredAgencies = agencies?.filter(agency => {
+    const agencyWithExtendedFields = agency as any;
     const matchesSearch = agency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          agency.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          agency.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = selectedLocation === "all" || agency.location.toLowerCase().includes(selectedLocation.toLowerCase());
-    return matchesSearch && matchesLocation;
+    const matchesSector = selectedSector === "all" || agencyWithExtendedFields.sector?.toLowerCase().includes(selectedSector.toLowerCase());
+    const matchesType = selectedType === "all" || agencyWithExtendedFields.type?.toLowerCase().includes(selectedType.toLowerCase());
+    return matchesSearch && matchesLocation && matchesSector && matchesType;
   });
 
   const uniqueLocations = [...new Set(agencies?.map(agency => agency.location) || [])];
+  const uniqueSectors = [...new Set(agencies?.map(agency => (agency as any).sector).filter(Boolean) || [])];
+  const uniqueTypes = [...new Set(agencies?.map(agency => (agency as any).type).filter(Boolean) || [])];
 
   // Helper function to safely parse JSONB arrays
   const parseJsonArray = (jsonData: any): any[] => {
@@ -64,6 +71,8 @@ const TradeInvestmentAgencies = () => {
   const clearAllFilters = () => {
     setSearchTerm("");
     setSelectedLocation("all");
+    setSelectedSector("all");
+    setSelectedType("all");
   };
 
   if (error) {
@@ -94,7 +103,13 @@ const TradeInvestmentAgencies = () => {
           setSearchTerm={setSearchTerm}
           selectedLocation={selectedLocation}
           setSelectedLocation={setSelectedLocation}
+          selectedSector={selectedSector}
+          setSelectedSector={setSelectedSector}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
           uniqueLocations={uniqueLocations}
+          uniqueSectors={uniqueSectors}
+          uniqueTypes={uniqueTypes}
         />
 
         <TradeInvestmentAgenciesResults

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,18 +38,19 @@ const InnovationEcosystem = () => {
   });
 
   const filteredOrganizations = organizations?.filter(org => {
+    const orgWithExtendedFields = org as any;
     const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          org.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          org.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = selectedLocation === "all" || org.location.toLowerCase().includes(selectedLocation.toLowerCase());
-    const matchesSector = selectedSector === "all" || org.sector?.toLowerCase().includes(selectedSector.toLowerCase());
-    const matchesType = selectedType === "all" || org.type?.toLowerCase().includes(selectedType.toLowerCase());
+    const matchesSector = selectedSector === "all" || orgWithExtendedFields.sector?.toLowerCase().includes(selectedSector.toLowerCase());
+    const matchesType = selectedType === "all" || orgWithExtendedFields.type?.toLowerCase().includes(selectedType.toLowerCase());
     return matchesSearch && matchesLocation && matchesSector && matchesType;
   });
 
   const uniqueLocations = [...new Set(organizations?.map(org => org.location) || [])];
-  const uniqueSectors = [...new Set(organizations?.map(org => org.sector).filter(Boolean) || [])];
-  const uniqueTypes = [...new Set(organizations?.map(org => org.type).filter(Boolean) || [])];
+  const uniqueSectors = [...new Set(organizations?.map(org => (org as any).sector).filter(Boolean) || [])];
+  const uniqueTypes = [...new Set(organizations?.map(org => (org as any).type).filter(Boolean) || [])];
 
   // Helper function to safely parse JSONB arrays
   const parseJsonArray = (jsonData: any): any[] => {
