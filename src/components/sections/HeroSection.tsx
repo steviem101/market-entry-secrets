@@ -52,12 +52,14 @@ export const HeroSection = ({
   }, [totalResources]);
 
   const rotatingWords = [
-    "Uncover the leads",
-    "Discover opportunities", 
-    "Find your partners",
-    "Access expert mentors",
-    "Navigate regulations",
-    "Scale your business"
+    "Discover game-changing case studies",
+    "Find proven vendors & partners", 
+    "Access thriving ecosystems",
+    "Investigate your total addressable market",
+    "Access government support programs",
+    "Connect with industry associations",
+    "Uncover high-value leads",
+    "Navigate complex regulations"
   ];
 
   return (
