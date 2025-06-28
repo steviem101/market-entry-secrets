@@ -6,15 +6,11 @@ import { SocialProofBanner } from "@/components/sections/SocialProofBanner";
 import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
 import { FeaturedSolutionsSection } from "@/components/sections/FeaturedSolutionsSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
-import { ProvidersSection } from "@/components/sections/ProvidersSection";
+import { FeaturedItemsSection } from "@/components/sections/FeaturedItemsSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { Footer } from "@/components/Footer";
 
 const Index = () => {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
   const [searchMode, setSearchMode] = useState<'database' | 'ai'>('database');
 
   // Calculate total resources count based on actual database tables
@@ -43,16 +39,8 @@ const Index = () => {
       {/* Condensed Testimonials Section - Social proof without heavy CTA */}
       <TestimonialsSection />
 
-      {/* Service Providers Section - Streamlined */}
-      <ProvidersSection 
-        selectedCategories={selectedCategories}
-        selectedLocations={selectedLocations}
-        searchTerm={searchTerm}
-        showFilters={showFilters}
-        onCategoryChange={setSelectedCategories}
-        onLocationChange={setSelectedLocations}
-        onShowFiltersChange={setShowFilters}
-      />
+      {/* Featured Items Section - Rotating cards from multiple directories */}
+      <FeaturedItemsSection />
 
       {/* Final Conversion CTA Section */}
       <CTASection />
