@@ -17,7 +17,6 @@ import {
   Info,
   UserCheck
 } from "lucide-react";
-import { Home } from 'lucide-react';
 
 export interface NavItem {
   label: string;
@@ -63,7 +62,7 @@ export const allNavItems: NavItem[] = [
   ...infoNavItems,
 ];
 
-// Updated navigation structure for dropdowns
+// Navigation structure for dropdowns - no Member Hub here
 export const navigationItems = [
   {
     name: "Browse",
@@ -87,15 +86,7 @@ export const navigationItems = [
   }
 ];
 
+// Same navigation for both authenticated and non-authenticated users
 export const getAuthenticatedNavigationItems = (isAdmin: boolean, isModerator: boolean) => {
-  const items = [...navigationItems];
-  
-  // Add Member Hub as the first item for authenticated users
-  items.unshift({
-    name: "Member Hub",
-    href: "/hub",
-    icon: Home,
-  });
-
-  return items;
+  return navigationItems;
 };

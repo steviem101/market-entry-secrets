@@ -29,36 +29,23 @@ export const MobileNavigation = () => {
           <div className="container mx-auto px-4 py-4">
             <nav className="space-y-2">
               {navItems.map((item) => (
-                <div key={item.name}>
-                  {item.subItems ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2 px-3 py-2 font-medium text-foreground">
-                        {item.icon && <item.icon className="w-4 h-4" />}
-                        <span>{item.name}</span>
-                      </div>
-                      <div className="pl-6 space-y-1">
-                        {item.subItems.map((subItem) => (
-                          <Link
-                            key={subItem.label}
-                            to={subItem.href}
-                            className="block px-3 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-md transition-colors"
-                            onClick={() => setIsOpen(false)}
-                          >
-                            {subItem.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <Link
-                      to={item.href}
-                      className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-md transition-colors"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.icon && <item.icon className="w-4 h-4" />}
-                      <span>{item.name}</span>
-                    </Link>
-                  )}
+                <div key={item.name} className="space-y-2">
+                  <div className="flex items-center space-x-2 px-3 py-2 font-medium text-foreground">
+                    {item.icon && <item.icon className="w-4 h-4" />}
+                    <span>{item.name}</span>
+                  </div>
+                  <div className="pl-6 space-y-1">
+                    {item.subItems.map((subItem) => (
+                      <Link
+                        key={subItem.label}
+                        to={subItem.href}
+                        className="block px-3 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-md transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {subItem.label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               ))}
             </nav>

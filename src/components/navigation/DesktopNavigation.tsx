@@ -14,23 +14,11 @@ export const DesktopNavigation = () => {
     <nav className="hidden md:flex items-center space-x-1">
       {navItems.map((item) => (
         <div key={item.name}>
-          {item.subItems ? (
-            <NavigationDropdown
-              name={item.name}
-              subItems={item.subItems}
-              icon={item.icon}
-            />
-          ) : (
-            <Link
-              to={item.href}
-              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-md hover:bg-accent/50"
-            >
-              <div className="flex items-center space-x-2">
-                {item.icon && <item.icon className="w-4 h-4" />}
-                <span>{item.name}</span>
-              </div>
-            </Link>
-          )}
+          <NavigationDropdown
+            name={item.name}
+            subItems={item.subItems}
+            icon={item.icon}
+          />
         </div>
       ))}
     </nav>
