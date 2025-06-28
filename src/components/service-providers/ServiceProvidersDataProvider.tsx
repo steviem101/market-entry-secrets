@@ -13,6 +13,8 @@ interface ServiceProvidersDataProviderProps {
     loading: boolean;
     filteredCompanies: Company[];
     uniqueTypes: string[];
+    totalCompanies: number;
+    uniqueLocations: number;
   }) => React.ReactNode;
   selectedLocations: string[];
   searchTerm: string;
@@ -109,5 +111,16 @@ export const ServiceProvidersDataProvider = ({
     return matchesSearch && matchesLocation && matchesType;
   });
 
-  return <>{children({ companies, loading, filteredCompanies, uniqueTypes })}</>;
+  // Calculate total counts
+  const totalCompanies = companies.length;
+  const uniqueLocations = [...new Set(companies.map(company => company.location))].length;
+
+  return <>{children({ 
+    companies, 
+    loading, 
+    filteredCompanies, 
+    uniqueTypes, 
+    totalCompanies, 
+    uniqueLocations 
+  })}</>;
 };

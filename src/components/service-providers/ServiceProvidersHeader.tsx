@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Users, X } from "lucide-react";
+import { Search, Filter, Users, X, MapPin } from "lucide-react";
 
 interface ServiceProvidersHeaderProps {
   searchTerm: string;
@@ -16,6 +16,8 @@ interface ServiceProvidersHeaderProps {
   selectedType: string;
   onTypeChange: (type: string) => void;
   uniqueTypes: string[];
+  totalCompanies: number;
+  uniqueLocations: number;
 }
 
 const australianCities = [
@@ -41,7 +43,9 @@ export const ServiceProvidersHeader = ({
   onLocationChange,
   selectedType,
   onTypeChange,
-  uniqueTypes
+  uniqueTypes,
+  totalCompanies,
+  uniqueLocations
 }: ServiceProvidersHeaderProps) => {
   const handleLocationChange = (value: string) => {
     if (value === "all") {
@@ -77,6 +81,24 @@ export const ServiceProvidersHeader = ({
             Connect with trusted service providers who specialize in helping businesses 
             successfully enter and expand in new markets.
           </p>
+          
+          {/* Database Counters */}
+          <div className="flex justify-center gap-8 mb-8">
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg border">
+              <Users className="w-5 h-5 text-blue-600" />
+              <div className="text-left">
+                <div className="text-2xl font-bold text-foreground">{totalCompanies}</div>
+                <div className="text-sm text-muted-foreground">Experts</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg border">
+              <MapPin className="w-5 h-5 text-blue-600" />
+              <div className="text-left">
+                <div className="text-2xl font-bold text-foreground">{uniqueLocations}</div>
+                <div className="text-sm text-muted-foreground">Locations</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

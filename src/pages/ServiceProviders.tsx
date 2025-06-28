@@ -34,7 +34,7 @@ const ServiceProviders = () => {
         searchTerm={searchTerm}
         selectedType={selectedType}
       >
-        {({ companies, loading, filteredCompanies, uniqueTypes }) => (
+        {({ companies, loading, filteredCompanies, uniqueTypes, totalCompanies, uniqueLocations }) => (
           <>
             <ServiceProvidersHeader 
               searchTerm={searchTerm}
@@ -47,6 +47,8 @@ const ServiceProviders = () => {
               selectedType={selectedType}
               onTypeChange={setSelectedType}
               uniqueTypes={uniqueTypes}
+              totalCompanies={totalCompanies}
+              uniqueLocations={uniqueLocations}
             />
             
             <div className="container mx-auto px-4 py-8">
