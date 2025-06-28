@@ -1,46 +1,107 @@
 
-import SearchFilters from "@/components/SearchFilters";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { X } from "lucide-react";
 
 interface ServiceProvidersFiltersProps {
-  categories: Array<{ id: string; name: string; count: number }>;
-  categoryGroups: Array<{
-    id: string;
-    name: string;
-    totalCount: number;
-    categories: Array<{ id: string; name: string; count: number }>;
-  }>;
-  selectedCategories: string[];
-  onCategoryChange: (categories: string[]) => void;
-  searchTerm: string;
-  onSearchChange: (term: string) => void;
   selectedLocations: string[];
   onLocationChange: (locations: string[]) => void;
-  showFilters: boolean;
+  selectedType: string;
+  onTypeChange: (type: string) => void;
+  uniqueTypes: string[];
+  hasActiveFilters: boolean;
+  onClearAllFilters: () => void;
 }
 
+const australianCities = [
+  "Sydney, NSW",
+  "Melbourne, VIC", 
+  "Brisbane, QLD",
+  "Perth, WA",
+  "Adelaide, SA",
+  "Canberra, ACT",
+  "Darwin, NT",
+  "Hobart, TAS",
+  "Gold Coast, QLD",
+  "Newcastle, NSW"
+];
+
 export const ServiceProvidersFilters = ({
-  categories,
-  categoryGroups,
-  selectedCategories,
-  onCategoryChange,
-  searchTerm,
-  onSearchChange,
   selectedLocations,
   onLocationChange,
-  showFilters
+  selectedType,
+  onTypeChange,
+  uniqueTypes,
+  hasActiveFilters,
+  onClearAllFilters
 }: ServiceProvidersFiltersProps) => {
+  const handleLocationChange = (value: string) => {
+    if (value === "all") {
+      onLocationChange([]);
+    } else {
+      onLocationChange([value]);
+    }
+  };
+
+  const selectedLocationValue = selectedLocations.length === 0 ? "all" : selectedLocations[0];
+
   return (
-    <aside className={`w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden'} lg:block`}>
-      <SearchFilters
-        categories={categories}
-        categoryGroups={categoryGroups}
-        selectedCategories={selectedCategories}
-        onCategoryChange={onCategoryChange}
-        searchTerm={searchTerm}
-        onSearchChange={onSearchChange}
-        selectedLocations={selectedLocations}
-        onLocationChange={onLocationChange}
-      />
-    </aside>
+    <div className="mt-6 p-4 bg-muted/30 rounded-lg border">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {/* Location Filter */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Location
+          </label>
+          <Select value={selectedLocationValue} onValueChange={handleLocationChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="All Locations" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Locations</SelectItem>
+              {australianCities.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Type Filter */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Type
+          </label>
+          <Select value={selectedType} onValueChange={onTypeChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {uniqueTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Clear All Button in Filter Section */}
+      {hasActiveFilters && (
+        <div className="flex justify-start">
+          <Button
+            variant="ghost"
+            onClick={onClearAllFilters}
+            className="gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-4 h-4" />
+            Clear all filters
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
