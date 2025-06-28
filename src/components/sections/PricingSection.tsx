@@ -1,8 +1,11 @@
 
 import { PricingCard } from "@/components/pricing/PricingCard";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 export const PricingSection = () => {
+  const { user } = useAuth();
+
   const pricingTiers = [
     {
       id: 'free' as const,
@@ -78,16 +81,30 @@ export const PricingSection = () => {
     // Handle tier selection based on tier type
     switch (tierId) {
       case 'free':
-        // Redirect to sign up or dashboard if already signed up
-        window.location.href = '/auth';
+        // If user is already signed in, redirect to dashboard, otherwise to auth
+        if (user) {
+          window.location.href = '/dashboard';
+          toast.success('Welcome! You already have free access.');
+        } else {
+          window.location.href = '/auth';
+        }
         break;
       case 'growth':
       case 'scale':
-        toast.info('Payment integration coming soon! Contact us for early access.');
+        toast.info('Payment integration coming soon! Contact us for early access.', {
+          description: 'We\'ll reach out within 24 hours to set up your plan.',
+          duration: 5000,
+        });
+        // Optionally redirect to contact with pre-filled inquiry
+        setTimeout(() => {
+          window.location.href = '/contact';
+        }, 2000);
         break;
       case 'enterprise':
-        toast.info('Redirecting to contact form...');
-        window.location.href = '/contact';
+        toast.success('Redirecting to contact our enterprise team...');
+        setTimeout(() => {
+          window.location.href = '/contact';
+        }, 1000);
         break;
       default:
         toast.error('Unknown pricing tier selected');

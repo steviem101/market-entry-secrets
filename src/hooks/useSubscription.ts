@@ -13,8 +13,8 @@ interface UserSubscription {
   updated_at: string;
 }
 
-// Database type mapping
-type DatabaseSubscriptionTier = 'free' | 'premium' | 'concierge';
+// Database type mapping - extended to handle potential future tiers
+type DatabaseSubscriptionTier = 'free' | 'premium' | 'scale' | 'concierge';
 
 interface DatabaseUserSubscription {
   id: string;
@@ -31,9 +31,12 @@ const mapDatabaseTier = (dbTier: DatabaseSubscriptionTier): SubscriptionTier => 
       return 'free';
     case 'premium':
       return 'growth';
+    case 'scale':
+      return 'scale';
     case 'concierge':
       return 'enterprise';
     default:
+      console.warn(`Unknown database tier: ${dbTier}, defaulting to free`);
       return 'free';
   }
 };
@@ -93,11 +96,22 @@ export const useSubscription = () => {
     return subscription?.tier === 'enterprise';
   };
 
+  const canAccessFeature = (feature: 'basic' | 'premium' | 'scale' | 'enterprise') => {
+    if (!subscription) return feature === 'basic';
+    
+    const tierHierarchy = ['free', 'growth', 'scale', 'enterprise'];
+    const currentTierIndex = tierHierarchy.indexOf(subscription.tier);
+    const requiredTierIndex = tierHierarchy.indexOf(feature === 'basic' ? 'free' : feature);
+    
+    return currentTierIndex >= requiredTierIndex;
+  };
+
   return {
     subscription,
     loading,
     isPremium,
     isScale,
     isEnterprise,
+    canAccessFeature,
   };
 };
