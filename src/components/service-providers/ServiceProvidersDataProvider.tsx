@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
 import { Company, ExperienceTile, ContactPerson } from "@/components/CompanyCard";
+import { useSectors } from "@/hooks/useSectors";
 
 type ServiceProvider = Tables<'service_providers'>;
 
@@ -13,6 +14,7 @@ interface ServiceProvidersDataProviderProps {
     loading: boolean;
     filteredCompanies: Company[];
     uniqueTypes: string[];
+    uniqueSectors: string[];
     totalCompanies: number;
     uniqueLocations: number;
     totalServices: number;
@@ -20,16 +22,19 @@ interface ServiceProvidersDataProviderProps {
   selectedLocations: string[];
   searchTerm: string;
   selectedType: string;
+  selectedSector: string;
 }
 
 export const ServiceProvidersDataProvider = ({
   children,
   selectedLocations,
   searchTerm,
-  selectedType
+  selectedType,
+  selectedSector
 }: ServiceProvidersDataProviderProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const { data: sectors } = useSectors();
 
   useEffect(() => {
     fetchServiceProviders();
@@ -98,6 +103,19 @@ export const ServiceProvidersDataProvider = ({
     })
   ))].filter(Boolean);
 
+  // Extract unique sectors by matching services with sector keywords
+  const uniqueSectors = sectors ? sectors
+    .filter(sector => 
+      companies.some(company => 
+        company.services.some(service => 
+          sector.service_keywords.some(keyword => 
+            service.toLowerCase().includes(keyword.toLowerCase())
+          )
+        )
+      )
+    )
+    .map(sector => sector.name) : [];
+
   const filteredCompanies = companies.filter(company => {
     const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          company.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,8 +126,18 @@ export const ServiceProvidersDataProvider = ({
 
     const matchesType = selectedType === "all" || 
                        company.services.some(service => service.toLowerCase().includes(selectedType.toLowerCase()));
+
+    const matchesSector = selectedSector === "all" || 
+                         (sectors && sectors.some(sector => 
+                           sector.name === selectedSector &&
+                           company.services.some(service => 
+                             sector.service_keywords.some(keyword => 
+                               service.toLowerCase().includes(keyword.toLowerCase())
+                             )
+                           )
+                         ));
     
-    return matchesSearch && matchesLocation && matchesType;
+    return matchesSearch && matchesLocation && matchesType && matchesSector;
   });
 
   // Calculate comprehensive counts
@@ -122,6 +150,7 @@ export const ServiceProvidersDataProvider = ({
     loading, 
     filteredCompanies, 
     uniqueTypes, 
+    uniqueSectors,
     totalCompanies, 
     uniqueLocations,
     totalServices

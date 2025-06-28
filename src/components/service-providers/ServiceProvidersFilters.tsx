@@ -8,7 +8,10 @@ interface ServiceProvidersFiltersProps {
   onLocationChange: (locations: string[]) => void;
   selectedType: string;
   onTypeChange: (type: string) => void;
+  selectedSector: string;
+  onSectorChange: (sector: string) => void;
   uniqueTypes: string[];
+  uniqueSectors: string[];
   hasActiveFilters: boolean;
   onClearAllFilters: () => void;
 }
@@ -31,7 +34,10 @@ export const ServiceProvidersFilters = ({
   onLocationChange,
   selectedType,
   onTypeChange,
+  selectedSector,
+  onSectorChange,
   uniqueTypes,
+  uniqueSectors,
   hasActiveFilters,
   onClearAllFilters
 }: ServiceProvidersFiltersProps) => {
@@ -47,7 +53,7 @@ export const ServiceProvidersFilters = ({
 
   return (
     <div className="mt-6 p-4 bg-muted/30 rounded-lg border">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         {/* Location Filter */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
@@ -82,6 +88,26 @@ export const ServiceProvidersFilters = ({
               {uniqueTypes.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Sector Filter */}
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Sector
+          </label>
+          <Select value={selectedSector} onValueChange={onSectorChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="All Sectors" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sectors</SelectItem>
+              {uniqueSectors.map((sector) => (
+                <SelectItem key={sector} value={sector}>
+                  {sector}
                 </SelectItem>
               ))}
             </SelectContent>

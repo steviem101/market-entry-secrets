@@ -13,7 +13,10 @@ interface ServiceProvidersHeaderProps {
   onLocationChange: (locations: string[]) => void;
   selectedType: string;
   onTypeChange: (type: string) => void;
+  selectedSector: string;
+  onSectorChange: (sector: string) => void;
   uniqueTypes: string[];
+  uniqueSectors: string[];
   totalCompanies: number;
   uniqueLocations: number;
   totalServices: number;
@@ -29,16 +32,20 @@ export const ServiceProvidersHeader = ({
   onLocationChange,
   selectedType,
   onTypeChange,
+  selectedSector,
+  onSectorChange,
   uniqueTypes,
+  uniqueSectors,
   totalCompanies,
   uniqueLocations,
   totalServices
 }: ServiceProvidersHeaderProps) => {
-  const hasActiveFilters = selectedLocations.length > 0 || selectedType !== "all";
+  const hasActiveFilters = selectedLocations.length > 0 || selectedType !== "all" || selectedSector !== "all";
 
   const clearAllFilters = () => {
     onLocationChange([]);
     onTypeChange("all");
+    onSectorChange("all");
   };
 
   return (
@@ -69,7 +76,10 @@ export const ServiceProvidersHeader = ({
               onLocationChange={onLocationChange}
               selectedType={selectedType}
               onTypeChange={onTypeChange}
+              selectedSector={selectedSector}
+              onSectorChange={onSectorChange}
               uniqueTypes={uniqueTypes}
+              uniqueSectors={uniqueSectors}
               hasActiveFilters={hasActiveFilters}
               onClearAllFilters={clearAllFilters}
             />

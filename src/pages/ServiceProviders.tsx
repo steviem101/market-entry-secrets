@@ -14,6 +14,7 @@ const ServiceProviders = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedSector, setSelectedSector] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
   const handleViewProfile = (company: Company) => {
@@ -33,8 +34,9 @@ const ServiceProviders = () => {
         selectedLocations={selectedLocations}
         searchTerm={searchTerm}
         selectedType={selectedType}
+        selectedSector={selectedSector}
       >
-        {({ companies, loading, filteredCompanies, uniqueTypes, totalCompanies, uniqueLocations, totalServices }) => (
+        {({ companies, loading, filteredCompanies, uniqueTypes, uniqueSectors, totalCompanies, uniqueLocations, totalServices }) => (
           <>
             <ServiceProvidersHeader 
               searchTerm={searchTerm}
@@ -46,7 +48,10 @@ const ServiceProviders = () => {
               onLocationChange={setSelectedLocations}
               selectedType={selectedType}
               onTypeChange={setSelectedType}
+              selectedSector={selectedSector}
+              onSectorChange={setSelectedSector}
               uniqueTypes={uniqueTypes}
+              uniqueSectors={uniqueSectors}
               totalCompanies={totalCompanies}
               uniqueLocations={uniqueLocations}
               totalServices={totalServices}
