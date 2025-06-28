@@ -60,35 +60,26 @@ export const AfterSection = () => {
         <p className="text-muted-foreground">Your streamlined path to success</p>
       </div>
 
-      <div className="relative">
-        {/* Central "WE TAKE CARE OF THAT" Badge */}
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-          <div className="bg-gradient-to-r from-primary to-accent text-white px-6 py-2 rounded-full font-bold text-sm shadow-lg">
-            WE TAKE CARE OF THAT
-          </div>
-        </div>
-
-        <div className="grid gap-4 pt-8">
-          {afterFeatures.map((feature, index) => (
-            <Link key={index} to={feature.link} className="group">
-              <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20 rounded-xl p-4 hover:from-primary/10 hover:to-accent/10 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg group-hover:from-primary/30 group-hover:to-accent/30 transition-all duration-300">
-                    <feature.icon className="w-5 h-5 text-primary group-hover:scale-110 transition-transform duration-300" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
-                      {feature.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors">
-                      {feature.description}
-                    </p>
-                  </div>
+      <div className="grid gap-4">
+        {afterFeatures.map((feature, index) => (
+          <Link key={index} to={feature.link} className="group">
+            <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20 rounded-xl p-4 hover:from-primary/10 hover:to-accent/10 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg group-hover:from-primary/30 group-hover:to-accent/30 transition-all duration-300">
+                  <feature.icon className="w-5 h-5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+                    {feature.title}
+                  </h4>
+                  <p className="text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors">
+                    {feature.description}
+                  </p>
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );
