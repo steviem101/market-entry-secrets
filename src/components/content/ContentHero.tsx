@@ -1,6 +1,5 @@
 
 import { BookOpen, FileText, Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { SubmissionButton } from "@/components/directory-submissions/SubmissionButton";
 
 interface ContentHeroProps {
@@ -32,15 +31,15 @@ export const ContentHero = ({
           <SubmissionButton submissionType="content" variant="hero" size="lg" />
         </div>
         
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            {totalContent} Success Stories
-          </Badge>
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            {totalCategories} Categories
-          </Badge>
+        <div className="flex flex-wrap justify-center gap-8 text-center">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+            <div className="text-3xl font-bold text-teal-600 mb-1">{totalContent}</div>
+            <div className="text-sm text-gray-600">Success Stories</div>
+          </div>
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+            <div className="text-3xl font-bold text-cyan-600 mb-1">{totalCategories}</div>
+            <div className="text-sm text-gray-600">Categories</div>
+          </div>
         </div>
       </div>
     </section>

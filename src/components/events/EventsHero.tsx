@@ -1,6 +1,5 @@
 
 import { Calendar, MapPin } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { SubmissionButton } from "@/components/directory-submissions/SubmissionButton";
 
 interface EventsHeroProps {
@@ -31,15 +30,15 @@ export const EventsHero = ({
           <SubmissionButton submissionType="event" variant="hero" size="lg" />
         </div>
         
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            {totalEvents} Events
-          </Badge>
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            {totalLocations} Locations
-          </Badge>
+        <div className="flex flex-wrap justify-center gap-8 text-center">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+            <div className="text-3xl font-bold text-green-600 mb-1">{totalEvents}</div>
+            <div className="text-sm text-gray-600">Events</div>
+          </div>
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+            <div className="text-3xl font-bold text-emerald-600 mb-1">{totalLocations}</div>
+            <div className="text-sm text-gray-600">Locations</div>
+          </div>
         </div>
       </div>
     </section>

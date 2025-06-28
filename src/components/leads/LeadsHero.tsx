@@ -1,6 +1,5 @@
 
 import { TrendingUp, Database, Map } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { SubmissionButton } from "@/components/directory-submissions/SubmissionButton";
 
 interface LeadsHeroProps {
@@ -28,15 +27,15 @@ export const LeadsHero = ({ csvListsCount, tamMapsCount }: LeadsHeroProps) => {
           <SubmissionButton submissionType="data_request" variant="hero" size="lg" />
         </div>
         
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <Database className="w-4 h-4" />
-            {csvListsCount} Lead Databases
-          </Badge>
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <Map className="w-4 h-4" />
-            {tamMapsCount} TAM Maps
-          </Badge>
+        <div className="flex flex-wrap justify-center gap-8 text-center">
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+            <div className="text-3xl font-bold text-purple-600 mb-1">{csvListsCount}</div>
+            <div className="text-sm text-gray-600">Lead Databases</div>
+          </div>
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+            <div className="text-3xl font-bold text-violet-600 mb-1">{tamMapsCount}</div>
+            <div className="text-sm text-gray-600">TAM Maps</div>
+          </div>
         </div>
       </div>
     </section>
