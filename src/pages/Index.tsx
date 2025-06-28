@@ -3,9 +3,10 @@ import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { BookmarksSection } from "@/components/BookmarksSection";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { SocialProofBanner } from "@/components/sections/SocialProofBanner";
 import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
 import { StatsSection } from "@/components/sections/StatsSection";
-import { CategoriesSection } from "@/components/sections/CategoriesSection";
+import { FeaturedSolutionsSection } from "@/components/sections/FeaturedSolutionsSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { ProvidersSection } from "@/components/sections/ProvidersSection";
 import { CTASection } from "@/components/sections/CTASection";
@@ -24,21 +25,27 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Hero Section */}
+      {/* Hero Section with Enhanced Search */}
       <HeroSection 
         totalResources={totalResources}
         searchMode={searchMode}
         onSearchModeChange={(value) => setSearchMode(value as 'database' | 'ai')}
       />
 
-      {/* Before vs. After Market Entry Section */}
+      {/* Immediate Social Proof Banner */}
+      <SocialProofBanner />
+
+      {/* Before vs. After Market Entry Section - Now the centerpiece */}
       <BeforeAfterSection />
 
-      {/* Client Testimonials Section */}
-      <TestimonialsSection />
-
-      {/* Stats Section */}
+      {/* Stats Section - Reinforces the Before/After claims */}
       <StatsSection />
+
+      {/* Featured Solutions Overview */}
+      <FeaturedSolutionsSection />
+
+      {/* Enhanced Client Testimonials Section */}
+      <TestimonialsSection />
 
       {/* Bookmarks Section with soft integration */}
       <div className="relative">
@@ -46,10 +53,7 @@ const Index = () => {
         <BookmarksSection />
       </div>
 
-      {/* Featured Categories */}
-      <CategoriesSection />
-
-      {/* Service Providers Section */}
+      {/* Service Providers Section - More focused */}
       <ProvidersSection 
         selectedCategories={selectedCategories}
         selectedLocations={selectedLocations}
@@ -60,7 +64,7 @@ const Index = () => {
         onShowFiltersChange={setShowFilters}
       />
 
-      {/* CTA Section */}
+      {/* Final CTA Section */}
       <CTASection />
     </div>
   );
