@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
 import { RotatingText } from "@/components/RotatingText";
-import { ArrowDown, Sparkles, Star, TrendingUp, Building2 } from "lucide-react";
+import { ArrowDown, Sparkles } from "lucide-react";
 
 interface HeroSectionProps {
   totalResources: number;
@@ -72,41 +72,9 @@ export const HeroSection = ({
       
       <div className="relative container mx-auto px-4 py-24">
         <div className="max-w-6xl mx-auto text-center">
-          {/* Enhanced Social Proof Banner */}
-          <div className="inline-flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-4 mb-8 soft-shadow backdrop-blur-sm hover:from-primary/15 hover:to-accent/15 transition-all duration-300">
-            {/* Rating */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <span className="text-sm font-medium text-muted-foreground">
-                4.9/5 from 247+ companies
-              </span>
-            </div>
-
-            {/* Separator */}
-            <div className="hidden md:block w-px h-6 bg-border/30" />
-
-            {/* Success Metric */}
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">
-                89% faster market entry
-              </span>
-            </div>
-
-            {/* Separator */}
-            <div className="hidden md:block w-px h-6 bg-border/30" />
-
-            {/* Trust Indicator */}
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">
-                Trusted by Fortune 500 companies
-              </span>
-            </div>
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-4 py-2 mb-8">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Trusted by 1,200+ successful companies</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-8 leading-tight">
