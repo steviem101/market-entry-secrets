@@ -9,6 +9,7 @@ import { FeaturedSolutionsSection } from "@/components/sections/FeaturedSolution
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { ProvidersSection } from "@/components/sections/ProvidersSection";
 import { CTASection } from "@/components/sections/CTASection";
+import { Footer } from "@/components/Footer";
 
 const Index = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -62,6 +63,9 @@ const Index = () => {
 
       {/* Final Conversion CTA Section */}
       <CTASection />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
