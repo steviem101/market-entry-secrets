@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Users } from "lucide-react";
+import { Search, Filter, Users, X } from "lucide-react";
 
 interface ServiceProvidersHeaderProps {
   searchTerm: string;
@@ -59,6 +59,14 @@ export const ServiceProvidersHeader = ({
 
   const selectedLocationValue = selectedLocations.length === 0 ? "all" : selectedLocations[0];
 
+  const hasActiveFilters = selectedLocations.length > 0 || selectedSector !== "all" || selectedType !== "all";
+
+  const clearAllFilters = () => {
+    onLocationChange([]);
+    onSectorChange("all");
+    onTypeChange("all");
+  };
+
   return (
     <>
       {/* Hero Section */}
@@ -84,7 +92,7 @@ export const ServiceProvidersHeader = ({
         <div className="container mx-auto px-4 py-6">
           <div className="flex gap-4 items-center">
             {/* Search Bar */}
-            <div className="flex-1 max-w-md relative">
+            <div className={`relative ${showFilters ? 'flex-1 max-w-md' : 'flex-1 max-w-2xl'}`}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search organizations, services, or locations..."
@@ -94,58 +102,63 @@ export const ServiceProvidersHeader = ({
               />
             </div>
 
-            {/* Location Filter */}
-            <div className="w-48">
-              <Select value={selectedLocationValue} onValueChange={handleLocationChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Locations" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  {australianCities.map((city) => (
-                    <SelectItem key={city} value={city}>
-                      {city}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Conditional Filter Dropdowns */}
+            {showFilters && (
+              <>
+                {/* Location Filter */}
+                <div className="w-48">
+                  <Select value={selectedLocationValue} onValueChange={handleLocationChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Locations" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Locations</SelectItem>
+                      {australianCities.map((city) => (
+                        <SelectItem key={city} value={city}>
+                          {city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Sector Filter */}
-            <div className="w-48">
-              <Select value={selectedSector} onValueChange={onSectorChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Sectors" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sectors</SelectItem>
-                  {uniqueSectors.map((sector) => (
-                    <SelectItem key={sector} value={sector}>
-                      {sector}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {/* Sector Filter */}
+                <div className="w-48">
+                  <Select value={selectedSector} onValueChange={onSectorChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Sectors" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sectors</SelectItem>
+                      {uniqueSectors.map((sector) => (
+                        <SelectItem key={sector} value={sector}>
+                          {sector}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Type Filter */}
-            <div className="w-48">
-              <Select value={selectedType} onValueChange={onTypeChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {uniqueTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {/* Type Filter */}
+                <div className="w-48">
+                  <Select value={selectedType} onValueChange={onTypeChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      {uniqueTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
 
-            {/* Filters Button */}
+            {/* Filters Toggle Button */}
             <Button
               variant="outline"
               onClick={onToggleFilters}
@@ -154,23 +167,19 @@ export const ServiceProvidersHeader = ({
               <Filter className="w-4 h-4" />
               Filters
             </Button>
-          </div>
 
-          {/* Clear all filters link */}
-          {(selectedLocations.length > 0 || selectedSector !== "all" || selectedType !== "all") && (
-            <div className="mt-4">
-              <button
-                onClick={() => {
-                  onLocationChange([]);
-                  onSectorChange("all");
-                  onTypeChange("all");
-                }}
-                className="text-sm text-primary hover:underline"
+            {/* Clear Filters Button - Only show when filters are active */}
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                onClick={clearAllFilters}
+                className="gap-2 text-muted-foreground hover:text-foreground"
               >
-                Clear all filters
-              </button>
-            </div>
-          )}
+                <X className="w-4 h-4" />
+                Clear all
+              </Button>
+            )}
+          </div>
         </div>
       </section>
     </>
