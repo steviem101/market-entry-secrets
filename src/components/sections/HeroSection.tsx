@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
+import { RotatingText } from "@/components/RotatingText";
 import { Sparkles, Star } from "lucide-react";
 
 interface HeroSectionProps {
@@ -50,6 +51,15 @@ export const HeroSection = ({
     };
   }, [totalResources]);
 
+  const rotatingWords = [
+    "Uncover the leads",
+    "Discover opportunities", 
+    "Find your partners",
+    "Access expert mentors",
+    "Navigate regulations",
+    "Scale your business"
+  ];
+
   return (
     <section className="relative overflow-hidden min-h-screen flex items-center">
       {/* Enhanced Background with soft gradients */}
@@ -79,13 +89,15 @@ export const HeroSection = ({
             </div>
           </div>
 
-          {/* Simplified, Direct Headline */}
+          {/* Dynamic Headline with Rotating Text */}
           <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight">
-            The Complete{" "}
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Australian Market Entry
-            </span>{" "}
-            <span className="text-foreground">Platform</span>
+            <RotatingText 
+              words={rotatingWords}
+              className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"
+              duration={3000}
+            />
+            {" "}you need to{" "}
+            <span className="text-foreground">dominate the Australian market</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-4xl mx-auto">
             Skip months of research and costly mistakes. Access vetted service providers, expert mentors, and proven strategies in one comprehensive platform.
