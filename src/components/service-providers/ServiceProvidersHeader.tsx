@@ -13,11 +13,8 @@ interface ServiceProvidersHeaderProps {
   filteredCount: number;
   selectedLocations: string[];
   onLocationChange: (locations: string[]) => void;
-  selectedSector: string;
-  onSectorChange: (sector: string) => void;
   selectedType: string;
   onTypeChange: (type: string) => void;
-  uniqueSectors: string[];
   uniqueTypes: string[];
 }
 
@@ -42,11 +39,8 @@ export const ServiceProvidersHeader = ({
   filteredCount,
   selectedLocations,
   onLocationChange,
-  selectedSector,
-  onSectorChange,
   selectedType,
   onTypeChange,
-  uniqueSectors,
   uniqueTypes
 }: ServiceProvidersHeaderProps) => {
   const handleLocationChange = (value: string) => {
@@ -59,11 +53,10 @@ export const ServiceProvidersHeader = ({
 
   const selectedLocationValue = selectedLocations.length === 0 ? "all" : selectedLocations[0];
 
-  const hasActiveFilters = selectedLocations.length > 0 || selectedSector !== "all" || selectedType !== "all";
+  const hasActiveFilters = selectedLocations.length > 0 || selectedType !== "all";
 
   const clearAllFilters = () => {
     onLocationChange([]);
-    onSectorChange("all");
     onTypeChange("all");
   };
 
@@ -128,7 +121,7 @@ export const ServiceProvidersHeader = ({
           {/* Collapsible Filter Section */}
           {showFilters && (
             <div className="mt-6 p-4 bg-muted/30 rounded-lg border">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* Location Filter */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
@@ -143,26 +136,6 @@ export const ServiceProvidersHeader = ({
                       {australianCities.map((city) => (
                         <SelectItem key={city} value={city}>
                           {city}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Sector Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Sector
-                  </label>
-                  <Select value={selectedSector} onValueChange={onSectorChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Sectors" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Sectors</SelectItem>
-                      {uniqueSectors.map((sector) => (
-                        <SelectItem key={sector} value={sector}>
-                          {sector}
                         </SelectItem>
                       ))}
                     </SelectContent>
