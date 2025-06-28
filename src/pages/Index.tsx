@@ -5,7 +5,6 @@ import { BookmarksSection } from "@/components/BookmarksSection";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { SocialProofBanner } from "@/components/sections/SocialProofBanner";
 import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
-import { StatsSection } from "@/components/sections/StatsSection";
 import { FeaturedSolutionsSection } from "@/components/sections/FeaturedSolutionsSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { ProvidersSection } from "@/components/sections/ProvidersSection";
@@ -37,9 +36,6 @@ const Index = () => {
 
       {/* Before vs. After Market Entry Section - Now the centerpiece */}
       <BeforeAfterSection />
-
-      {/* Stats Section - Reinforces the Before/After claims */}
-      <StatsSection />
 
       {/* Featured Solutions Overview */}
       <FeaturedSolutionsSection />
