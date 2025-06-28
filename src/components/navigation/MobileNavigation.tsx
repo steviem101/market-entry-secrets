@@ -1,10 +1,8 @@
+
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-import MarketEntryLogo from "@/components/MarketEntryLogo";
-import { AuthButton } from "@/components/auth/AuthButton";
 import { navigationItems, getAuthenticatedNavigationItems } from "./NavigationItems";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -41,12 +39,12 @@ export const MobileNavigation = () => {
                       <div className="pl-6 space-y-1">
                         {item.subItems.map((subItem) => (
                           <Link
-                            key={subItem.name}
+                            key={subItem.label}
                             to={subItem.href}
                             className="block px-3 py-2 text-sm text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-md transition-colors"
                             onClick={() => setIsOpen(false)}
                           >
-                            {subItem.name}
+                            {subItem.label}
                           </Link>
                         ))}
                       </div>

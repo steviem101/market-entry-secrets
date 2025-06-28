@@ -33,7 +33,23 @@ export const useMarketEntryReports = () => {
 
       if (error) throw error;
       
-      setReports(data || []);
+      // Transform the data to match our interface
+      const transformedReports: MarketEntryReport[] = (data || []).map(report => ({
+        id: report.id,
+        user_id: report.user_id,
+        title: report.title,
+        description: report.description,
+        report_type: report.report_type as MarketEntryReport['report_type'],
+        status: report.status as MarketEntryReport['status'],
+        created_by_team_member: report.created_by_team_member,
+        file_url: report.file_url,
+        metadata: typeof report.metadata === 'object' ? report.metadata : {},
+        created_at: report.created_at,
+        updated_at: report.updated_at,
+        delivered_at: report.delivered_at,
+      }));
+      
+      setReports(transformedReports);
     } catch (error) {
       console.error('Error fetching market entry reports:', error);
       toast({

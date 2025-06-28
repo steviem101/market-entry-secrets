@@ -1,3 +1,4 @@
+
 import { 
   Network, 
   Users, 
@@ -62,41 +63,27 @@ export const allNavItems: NavItem[] = [
   ...infoNavItems,
 ];
 
-// Legacy export for backward compatibility
+// Updated navigation structure for dropdowns
 export const navigationItems = [
   {
-    title: "Browse",
-    items: [
-      { name: "Events", href: "/events" },
-      { name: "Content", href: "/content" },
-      { name: "Leads", href: "/leads" },
-    ]
+    name: "Browse",
+    subItems: primaryNavItems,
+    icon: FileText,
   },
   {
-    title: "Ecosystem",
-    items: [
-      { name: "Innovation Ecosystem", href: "/innovation-ecosystem" },
-      { name: "Trade & Investment", href: "/trade-investment-agencies" },
-      { name: "Service Providers", href: "/service-providers" },
-      { name: "Mentors", href: "/community" },
-    ]
+    name: "Ecosystem", 
+    subItems: ecosystemNavItems,
+    icon: Network,
   },
   {
-    title: "Popular",
-    items: [
-      { name: "Locations", href: "/locations" },
-      { name: "Countries", href: "/countries" },
-      { name: "Sectors", href: "/sectors" },
-      { name: "Case Studies", href: "/case-studies" },
-    ]
+    name: "Popular",
+    subItems: popularNavItems,
+    icon: TrendingUp,
   },
   {
-    title: "Info",
-    items: [
-      { name: "About", href: "/about" },
-      { name: "FAQ", href: "/faq" },
-      { name: "Contact", href: "/contact" },
-    ]
+    name: "Info",
+    subItems: infoNavItems,
+    icon: Info,
   }
 ];
 
