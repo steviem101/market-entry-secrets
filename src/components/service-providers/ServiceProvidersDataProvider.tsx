@@ -14,27 +14,16 @@ interface ServiceProvidersDataProviderProps {
     filteredCompanies: Company[];
     uniqueTypes: string[];
   }) => React.ReactNode;
-  selectedCategories: string[];
   selectedLocations: string[];
   searchTerm: string;
   selectedType: string;
-  serviceCategories: Array<{ id: string; name: string; count: number }>;
-  categoryGroups: Array<{
-    id: string;
-    name: string;
-    totalCount: number;
-    categories: Array<{ id: string; name: string; count: number }>;
-  }>;
 }
 
 export const ServiceProvidersDataProvider = ({
   children,
-  selectedCategories,
   selectedLocations,
   searchTerm,
-  selectedType,
-  serviceCategories,
-  categoryGroups
+  selectedType
 }: ServiceProvidersDataProviderProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,22 +100,13 @@ export const ServiceProvidersDataProvider = ({
                          company.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          company.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesCategories = selectedCategories.length === 0 || 
-                             company.services.some(service => 
-                               selectedCategories.some(catId => {
-                                 const category = serviceCategories.find(c => c.id === catId) ||
-                                                categoryGroups.flatMap(g => g.categories).find(c => c.id === catId);
-                                 return category && service.toLowerCase().includes(category.name.toLowerCase());
-                               })
-                             );
-
     const matchesLocation = selectedLocations.length === 0 || 
                            selectedLocations.includes(company.location);
 
     const matchesType = selectedType === "all" || 
                        company.services.some(service => service.toLowerCase().includes(selectedType.toLowerCase()));
     
-    return matchesSearch && matchesCategories && matchesLocation && matchesType;
+    return matchesSearch && matchesLocation && matchesType;
   });
 
   return <>{children({ companies, loading, filteredCompanies, uniqueTypes })}</>;

@@ -1,10 +1,8 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
-import { ServiceProvidersLayout } from "@/components/service-providers/ServiceProvidersLayout";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
 import { ServiceProvidersHeader } from "@/components/service-providers/ServiceProvidersHeader";
-import { ServiceProvidersFilters } from "@/components/service-providers/ServiceProvidersFilters";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
 import CompanyModal from "@/components/CompanyModal";
 import { Company } from "@/components/CompanyCard";
@@ -14,7 +12,6 @@ const ServiceProviders = () => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
@@ -33,12 +30,9 @@ const ServiceProviders = () => {
       <Navigation />
       
       <ServiceProvidersDataProvider
-        selectedCategories={selectedCategories}
         selectedLocations={selectedLocations}
         searchTerm={searchTerm}
         selectedType={selectedType}
-        serviceCategories={[]}
-        categoryGroups={[]}
       >
         {({ companies, loading, filteredCompanies, uniqueTypes }) => (
           <>
@@ -64,30 +58,14 @@ const ServiceProviders = () => {
                   {filteredCompanies.length} service providers found
                 </p>
               </div>
-            </div>
 
-            <ServiceProvidersLayout
-              filters={
-                <ServiceProvidersFilters 
-                  categories={[]}
-                  categoryGroups={[]}
-                  selectedCategories={selectedCategories}
-                  onCategoryChange={setSelectedCategories}
-                  searchTerm=""
-                  onSearchChange={() => {}}
-                  selectedLocations={selectedLocations}
-                  onLocationChange={setSelectedLocations}
-                  showFilters={showFilters}
-                />
-              }
-              content={
-                <ServiceProvidersList
-                  companies={filteredCompanies}
-                  onViewProfile={handleViewProfile}
-                  onContact={handleContact}
-                />
-              }
-            />
+              {/* Service Providers List - No sidebar, full width */}
+              <ServiceProvidersList
+                companies={filteredCompanies}
+                onViewProfile={handleViewProfile}
+                onContact={handleContact}
+              />
+            </div>
           </>
         )}
       </ServiceProvidersDataProvider>
