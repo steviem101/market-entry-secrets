@@ -89,7 +89,7 @@ export const ServiceProvidersHeader = ({
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <Badge variant="secondary" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
-              {totalCompanies} Experts
+              {totalCompanies} Companies
             </Badge>
             <Badge variant="secondary" className="flex items-center gap-2">
               <MapPin className="w-4 h-4" />
