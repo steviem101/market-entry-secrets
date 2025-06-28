@@ -22,7 +22,7 @@ export const DesktopNavigation = () => {
             />
           ) : (
             <Link
-              to={item.href!}
+              to={item.href}
               className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors rounded-md hover:bg-accent/50"
             >
               <div className="flex items-center space-x-2">

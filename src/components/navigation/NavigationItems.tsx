@@ -25,13 +25,6 @@ export interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-export interface NavigationItem {
-  name: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href?: string; // For direct links
-  subItems?: NavItem[]; // For dropdown items
-}
-
 // Ecosystem navigation items
 export const ecosystemNavItems: NavItem[] = [
   { label: "Innovation Ecosystem", href: "/innovation-ecosystem", icon: Lightbulb },
@@ -71,7 +64,7 @@ export const allNavItems: NavItem[] = [
 ];
 
 // Updated navigation structure for dropdowns
-export const navigationItems: NavigationItem[] = [
+export const navigationItems = [
   {
     name: "Browse",
     subItems: primaryNavItems,
@@ -94,7 +87,7 @@ export const navigationItems: NavigationItem[] = [
   }
 ];
 
-export const getAuthenticatedNavigationItems = (isAdmin: boolean, isModerator: boolean): NavigationItem[] => {
+export const getAuthenticatedNavigationItems = (isAdmin: boolean, isModerator: boolean) => {
   const items = [...navigationItems];
   
   // Add Member Hub as the first item for authenticated users

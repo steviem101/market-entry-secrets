@@ -51,7 +51,7 @@ export const MobileNavigation = () => {
                     </div>
                   ) : (
                     <Link
-                      to={item.href!}
+                      to={item.href}
                       className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-md transition-colors"
                       onClick={() => setIsOpen(false)}
                     >
