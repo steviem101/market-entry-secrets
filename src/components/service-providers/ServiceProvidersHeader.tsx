@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Users, X, MapPin } from "lucide-react";
+import { Search, Filter, Users, X, MapPin, Briefcase } from "lucide-react";
 
 interface ServiceProvidersHeaderProps {
   searchTerm: string;
@@ -18,6 +19,7 @@ interface ServiceProvidersHeaderProps {
   uniqueTypes: string[];
   totalCompanies: number;
   uniqueLocations: number;
+  totalServices: number;
 }
 
 const australianCities = [
@@ -45,7 +47,8 @@ export const ServiceProvidersHeader = ({
   onTypeChange,
   uniqueTypes,
   totalCompanies,
-  uniqueLocations
+  uniqueLocations,
+  totalServices
 }: ServiceProvidersHeaderProps) => {
   const handleLocationChange = (value: string) => {
     if (value === "all") {
@@ -91,6 +94,10 @@ export const ServiceProvidersHeader = ({
             <Badge variant="secondary" className="flex items-center gap-2">
               <MapPin className="w-4 h-4" />
               {uniqueLocations} Locations
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              {totalServices} Services
             </Badge>
           </div>
         </div>
