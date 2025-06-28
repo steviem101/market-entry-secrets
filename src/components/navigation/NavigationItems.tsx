@@ -1,4 +1,3 @@
-
 import { 
   Network, 
   Users, 
@@ -17,6 +16,7 @@ import {
   Info,
   UserCheck
 } from "lucide-react";
+import { Home } from 'lucide-react';
 
 export interface NavItem {
   label: string;
@@ -99,3 +99,16 @@ export const navigationItems = [
     ]
   }
 ];
+
+export const getAuthenticatedNavigationItems = (isAdmin: boolean, isModerator: boolean) => {
+  const items = [...navigationItems];
+  
+  // Add Member Hub as the first item for authenticated users
+  items.unshift({
+    name: "Member Hub",
+    href: "/hub",
+    icon: Home,
+  });
+
+  return items;
+};
