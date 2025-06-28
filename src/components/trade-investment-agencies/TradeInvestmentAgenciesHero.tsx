@@ -42,10 +42,6 @@ export const TradeInvestmentAgenciesHero = ({
               <div className="text-3xl font-bold text-blue-600 mb-1">{locationCount}</div>
               <div className="text-sm text-gray-600">Countries & Regions</div>
             </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
-              <div className="text-3xl font-bold text-purple-600 mb-1">24/7</div>
-              <div className="text-sm text-gray-600">Support Available</div>
-            </div>
           </div>
         </div>
       </div>
