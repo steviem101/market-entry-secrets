@@ -1,6 +1,7 @@
 
 import { BookOpen, FileText, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { SubmissionButton } from "@/components/directory-submissions/SubmissionButton";
 
 interface ContentHeroProps {
   totalContent: number;
@@ -26,6 +27,10 @@ export const ContentHero = ({
           Learn from real businesses that successfully entered the Australian market. 
           Get actionable insights, proven strategies, and expert guidance.
         </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+          <SubmissionButton submissionType="content" variant="hero" size="lg" />
+        </div>
         
         <div className="flex flex-wrap justify-center gap-4 mb-8">
           <Badge variant="secondary" className="flex items-center gap-2">

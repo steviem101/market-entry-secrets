@@ -1,6 +1,7 @@
 
 import { TrendingUp, Database, Map } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { SubmissionButton } from "@/components/directory-submissions/SubmissionButton";
 
 interface LeadsHeroProps {
   csvListsCount: number;
@@ -22,6 +23,10 @@ export const LeadsHero = ({ csvListsCount, tamMapsCount }: LeadsHeroProps) => {
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
           Access premium databases and Total Addressable Market (TAM) maps to accelerate your market entry and sales strategy
         </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+          <SubmissionButton submissionType="data_request" variant="hero" size="lg" />
+        </div>
         
         <div className="flex flex-wrap justify-center gap-4 mb-8">
           <Badge variant="secondary" className="flex items-center gap-2">

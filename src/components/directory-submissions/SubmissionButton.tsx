@@ -1,11 +1,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Building, Globe, Lightbulb } from "lucide-react";
+import { Plus, Users, Building, Globe, Lightbulb, Calendar, FileText, Database } from "lucide-react";
 import { SubmissionModal } from "./SubmissionModal";
 
 interface SubmissionButtonProps {
-  submissionType: 'mentor' | 'service_provider' | 'trade_agency' | 'innovation_organization';
+  submissionType: 'mentor' | 'service_provider' | 'trade_agency' | 'innovation_organization' | 'event' | 'content' | 'data_request';
   variant?: 'hero' | 'inline';
   size?: 'sm' | 'default' | 'lg';
 }
@@ -39,6 +39,27 @@ const getSubmissionConfig = (type: SubmissionButtonProps['submissionType']) => {
         buttonText: 'Join the Ecosystem',
         icon: Lightbulb,
         modalTitle: 'Submit Your Innovation Organization'
+      };
+    case 'event':
+      return {
+        title: 'Submit Your Event',
+        buttonText: 'Submit Event',
+        icon: Calendar,
+        modalTitle: 'Submit Your Event'
+      };
+    case 'content':
+      return {
+        title: 'Share Your Success Story',
+        buttonText: 'Submit Content',
+        icon: FileText,
+        modalTitle: 'Submit Your Success Story'
+      };
+    case 'data_request':
+      return {
+        title: 'Request Custom Data',
+        buttonText: 'Request Data',
+        icon: Database,
+        modalTitle: 'Request Custom Market Data'
       };
   }
 };
