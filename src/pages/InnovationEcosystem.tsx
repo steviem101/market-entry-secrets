@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import CompanyModal from "@/components/CompanyModal";
-import InnovationEcosystemHero from "@/components/innovation-ecosystem/InnovationEcosystemHero";
+import { InnovationEcosystemHero } from "@/components/innovation-ecosystem/InnovationEcosystemHero";
 import InnovationEcosystemFilters from "@/components/innovation-ecosystem/InnovationEcosystemFilters";
 import InnovationEcosystemResults from "@/components/innovation-ecosystem/InnovationEcosystemResults";
 
