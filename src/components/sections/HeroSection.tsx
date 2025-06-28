@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -51,14 +52,12 @@ export const HeroSection = ({
   }, [totalResources]);
 
   const rotatingWords = [
-    "Discover game-changing case studies",
-    "Find proven vendors & partners", 
-    "Access thriving ecosystems",
-    "Investigate your total addressable market",
-    "Access government support programs",
-    "Connect with industry associations",
-    "Uncover high-value leads",
-    "Navigate complex regulations"
+    "Uncover the leads",
+    "Discover opportunities", 
+    "Find your partners",
+    "Access expert mentors",
+    "Navigate regulations",
+    "Scale your business"
   ];
 
   return (
@@ -97,8 +96,8 @@ export const HeroSection = ({
               className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"
               duration={3000}
             />
-            {" "}
-            <span className="text-foreground">to dominate the Australian market</span>
+            {" "}you need to{" "}
+            <span className="text-foreground">dominate the Australian market</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-4xl mx-auto">
             Skip months of research and costly mistakes. Access vetted service providers, expert mentors, and proven strategies in one comprehensive platform.
