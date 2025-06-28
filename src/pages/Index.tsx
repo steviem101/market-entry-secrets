@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { HeroSection } from "@/components/sections/HeroSection";
@@ -9,6 +8,7 @@ import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { FeaturedItemsSection } from "@/components/sections/FeaturedItemsSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { Footer } from "@/components/Footer";
+import { PricingSection } from "@/components/sections/PricingSection";
 
 const Index = () => {
   const [searchMode, setSearchMode] = useState<'database' | 'ai'>('database');
@@ -38,6 +38,9 @@ const Index = () => {
 
       {/* Condensed Testimonials Section - Social proof without heavy CTA */}
       <TestimonialsSection />
+
+      {/* Pricing Section - Clear value and pricing tiers */}
+      <PricingSection />
 
       {/* Featured Items Section - Rotating cards from multiple directories */}
       <FeaturedItemsSection />

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-export type SubscriptionTier = 'free' | 'premium' | 'concierge';
+export type SubscriptionTier = 'free' | 'growth' | 'scale' | 'enterprise';
 
 interface UserSubscription {
   id: string;
@@ -49,17 +49,22 @@ export const useSubscription = () => {
   }, [user]);
 
   const isPremium = () => {
-    return subscription?.tier === 'premium' || subscription?.tier === 'concierge';
+    return subscription?.tier === 'growth' || subscription?.tier === 'scale' || subscription?.tier === 'enterprise';
   };
 
-  const isConcierge = () => {
-    return subscription?.tier === 'concierge';
+  const isScale = () => {
+    return subscription?.tier === 'scale' || subscription?.tier === 'enterprise';
+  };
+
+  const isEnterprise = () => {
+    return subscription?.tier === 'enterprise';
   };
 
   return {
     subscription,
     loading,
     isPremium,
-    isConcierge,
+    isScale,
+    isEnterprise,
   };
 };
