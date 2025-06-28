@@ -2,6 +2,8 @@
 import { Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyCard from "@/components/CompanyCard";
+import { FreemiumGate } from "@/components/FreemiumGate";
+import { useAuth } from "@/hooks/useAuth";
 
 interface InnovationEcosystemResultsProps {
   filteredOrganizations: any[] | undefined;
@@ -20,6 +22,8 @@ const InnovationEcosystemResults = ({
   onClearFilters,
   parseJsonArray
 }: InnovationEcosystemResultsProps) => {
+  const { user } = useAuth();
+
   if (isLoading) {
     return (
       <section className="py-8">
@@ -52,6 +56,9 @@ const InnovationEcosystemResults = ({
     );
   }
 
+  // Limit to 3 items for non-authenticated users
+  const displayedOrganizations = user ? filteredOrganizations : filteredOrganizations.slice(0, 3);
+
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
@@ -60,28 +67,35 @@ const InnovationEcosystemResults = ({
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredOrganizations.map((org) => (
-          <CompanyCard
+        {displayedOrganizations.map((org, index) => (
+          <FreemiumGate
             key={org.id}
-            company={{
-              id: org.id,
-              name: org.name,
-              description: org.description,
-              location: org.location,
-              founded: org.founded,
-              employees: org.employees,
-              services: org.services,
-              website: org.website,
-              contact: org.contact,
-              logo: org.logo,
-              basic_info: org.basic_info,
-              why_work_with_us: org.why_work_with_us,
-              contact_persons: parseJsonArray(org.contact_persons),
-              experience_tiles: parseJsonArray(org.experience_tiles)
-            }}
-            onViewProfile={() => onViewProfile(org)}
-            onContact={() => onContact(org)}
-          />
+            contentType="innovation_ecosystem"
+            itemId={org.id}
+            contentTitle={org.name}
+            contentDescription={org.description}
+          >
+            <CompanyCard
+              company={{
+                id: org.id,
+                name: org.name,
+                description: org.description,
+                location: org.location,
+                founded: org.founded,
+                employees: org.employees,
+                services: org.services,
+                website: org.website,
+                contact: org.contact,
+                logo: org.logo,
+                basic_info: org.basic_info,
+                why_work_with_us: org.why_work_with_us,
+                contact_persons: parseJsonArray(org.contact_persons),
+                experience_tiles: parseJsonArray(org.experience_tiles)
+              }}
+              onViewProfile={() => onViewProfile(org)}
+              onContact={() => onContact(org)}
+            />
+          </FreemiumGate>
         ))}
       </div>
     </section>

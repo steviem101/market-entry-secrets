@@ -2,6 +2,8 @@
 import { TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyCard from "@/components/CompanyCard";
+import { FreemiumGate } from "@/components/FreemiumGate";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TradeInvestmentAgenciesResultsProps {
   filteredAgencies: any[] | undefined;
@@ -20,6 +22,8 @@ const TradeInvestmentAgenciesResults = ({
   onClearFilters,
   parseJsonArray
 }: TradeInvestmentAgenciesResultsProps) => {
+  const { user } = useAuth();
+
   if (isLoading) {
     return (
       <section className="py-8">
@@ -49,6 +53,9 @@ const TradeInvestmentAgenciesResults = ({
     );
   }
 
+  // Limit to 3 items for non-authenticated users
+  const displayedAgencies = user ? filteredAgencies : filteredAgencies.slice(0, 3);
+
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
@@ -57,28 +64,35 @@ const TradeInvestmentAgenciesResults = ({
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAgencies.map((agency) => (
-          <CompanyCard
+        {displayedAgencies.map((agency, index) => (
+          <FreemiumGate
             key={agency.id}
-            company={{
-              id: agency.id,
-              name: agency.name,
-              description: agency.description,
-              location: agency.location,
-              founded: agency.founded,
-              employees: agency.employees,
-              services: agency.services,
-              website: agency.website,
-              contact: agency.contact,
-              logo: agency.logo,
-              basic_info: agency.basic_info,
-              why_work_with_us: agency.why_work_with_us,
-              contact_persons: parseJsonArray(agency.contact_persons),
-              experience_tiles: parseJsonArray(agency.experience_tiles)
-            }}
-            onViewProfile={() => onViewProfile(agency)}
-            onContact={() => onContact(agency)}
-          />
+            contentType="trade_investment_agency"
+            itemId={agency.id}
+            contentTitle={agency.name}
+            contentDescription={agency.description}
+          >
+            <CompanyCard
+              company={{
+                id: agency.id,
+                name: agency.name,
+                description: agency.description,
+                location: agency.location,
+                founded: agency.founded,
+                employees: agency.employees,
+                services: agency.services,
+                website: agency.website,
+                contact: agency.contact,
+                logo: agency.logo,
+                basic_info: agency.basic_info,
+                why_work_with_us: agency.why_work_with_us,
+                contact_persons: parseJsonArray(agency.contact_persons),
+                experience_tiles: parseJsonArray(agency.experience_tiles)
+              }}
+              onViewProfile={() => onViewProfile(agency)}
+              onContact={() => onContact(agency)}
+            />
+          </FreemiumGate>
         ))}
       </div>
     </section>
