@@ -10,18 +10,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 
 import Navigation from "./components/Navigation";
-import { HomePage } from "./pages/Index";
-import { AboutPage } from "./pages/About";
-import { ContactPage } from "./pages/Contact";
-import { ServiceProvidersPage } from "./pages/ServiceProviders";
-import { TradeAgenciesPage } from "./pages/TradeInvestmentAgencies";
-import { InnovationOrganizationsPage } from "./pages/InnovationEcosystem";
-import { EventsPage } from "./pages/Events";
-import { ContentPage } from "./pages/Content";
-import { CaseStudiesPage } from "./pages/CaseStudies";
-import { TermsOfServicePage } from "./pages/TermsOfService";
-import { PrivacyPolicyPage } from "./pages/PrivacyPolicy";
-import { NotFoundPage } from "./pages/NotFound";
+import Index from "./pages/Index";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import ServiceProviders from "./pages/ServiceProviders";
+import TradeInvestmentAgencies from "./pages/TradeInvestmentAgencies";
+import InnovationEcosystem from "./pages/InnovationEcosystem";
+import Events from "./pages/Events";
+import Content from "./pages/Content";
+import CaseStudies from "./pages/CaseStudies";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PageTransition } from "./components/PageTransition";
 import { MemberHub } from "./pages/MemberHub";
@@ -38,18 +38,18 @@ function App() {
             <Navigation />
             <main className="flex-1">
               <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/service-providers" element={<ServiceProvidersPage />} />
-                <Route path="/trade-investment-agencies" element={<TradeAgenciesPage />} />
-                <Route path="/innovation-ecosystem" element={<InnovationOrganizationsPage />} />
-                <Route path="/events" element={<EventsPage />} />
-                <Route path="/content" element={<ContentPage />} />
-                <Route path="/case-studies" element={<CaseStudiesPage />} />
-                <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                <Route path="*" element={<NotFoundPage />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/service-providers" element={<ServiceProviders />} />
+                <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
+                <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/content" element={<Content />} />
+                <Route path="/case-studies" element={<CaseStudies />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="*" element={<NotFound />} />
                 <Route 
                   path="/hub" 
                   element={
