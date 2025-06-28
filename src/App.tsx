@@ -1,10 +1,10 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
+import { LeadGenPopupProvider } from "@/components/LeadGenPopupProvider";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import ServiceProviders from "./pages/ServiceProviders";
@@ -39,39 +39,41 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/service-providers" element={<ServiceProviders />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/content" element={<Content />} />
-            <Route path="/content/:slug" element={<ContentDetail />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/locations" element={<Locations />} />
-            <Route path="/locations/:locationSlug" element={<LocationPage />} />
-            <Route path="/countries" element={<Countries />} />
-            <Route path="/countries/:countrySlug" element={<CountryPage />} />
-            <Route path="/sectors" element={<Sectors />} />
-            <Route path="/sectors/:sectorSlug" element={<SectorPage />} />
-            <Route path="/leads" element={<Leads />} />
-            <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
-            <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
-            <Route path="/case-studies" element={<CaseStudies />} />
-            <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/partner" element={<PartnerWithUs />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/bookmarks" element={<Bookmarks />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <LeadGenPopupProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/service-providers" element={<ServiceProviders />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/content" element={<Content />} />
+              <Route path="/content/:slug" element={<ContentDetail />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/locations" element={<Locations />} />
+              <Route path="/locations/:locationSlug" element={<LocationPage />} />
+              <Route path="/countries" element={<Countries />} />
+              <Route path="/countries/:countrySlug" element={<CountryPage />} />
+              <Route path="/sectors" element={<Sectors />} />
+              <Route path="/sectors/:sectorSlug" element={<SectorPage />} />
+              <Route path="/leads" element={<Leads />} />
+              <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
+              <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
+              <Route path="/case-studies" element={<CaseStudies />} />
+              <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/partner" element={<PartnerWithUs />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/bookmarks" element={<Bookmarks />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </LeadGenPopupProvider>
       </TooltipProvider>
     </HelmetProvider>
   </QueryClientProvider>
