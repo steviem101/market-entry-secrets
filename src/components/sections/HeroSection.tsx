@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -98,8 +97,8 @@ export const HeroSection = ({
               className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"
               duration={3000}
             />
-            {" "}you need to{" "}
-            <span className="text-foreground">dominate the Australian market</span>
+            {" "}
+            <span className="text-foreground">to dominate the Australian market</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-4xl mx-auto">
             Skip months of research and costly mistakes. Access vetted service providers, expert mentors, and proven strategies in one comprehensive platform.
