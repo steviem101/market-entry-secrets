@@ -70,47 +70,47 @@ export const FeaturedSolutionsSection = () => {
   ];
 
   return (
-    <section className="relative py-20 overflow-hidden">
+    <section className="relative py-16 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/2 to-accent/3" />
       <div className="absolute inset-0 gradient-overlay" />
       
       <div className="relative container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Everything You Need to{" "}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Succeed in Australia
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Access our comprehensive ecosystem of vetted resources, expert guidance, and proven strategies
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {solutions.map((solution, index) => (
             <Link key={index} to={solution.link} className="group">
-              <div className={`relative h-full p-8 rounded-2xl bg-gradient-to-br ${solution.color} border border-border/20 hover:border-primary/20 transition-all duration-500 hover:shadow-xl hover:-translate-y-1`}>
-                <div className="flex items-start justify-between mb-6">
+              <div className={`relative h-full p-6 rounded-2xl bg-gradient-to-br ${solution.color} border border-border/20 hover:border-primary/20 transition-all duration-500 hover:shadow-xl hover:-translate-y-1`}>
+                <div className="flex items-start justify-between mb-4">
                   <div className={`p-3 rounded-xl bg-gradient-to-br from-background/50 to-background/30 backdrop-blur-sm`}>
-                    <solution.icon className={`w-6 h-6 ${solution.iconColor}`} />
+                    <solution.icon className={`w-5 h-5 ${solution.iconColor}`} />
                   </div>
                   <div className="text-right">
-                    <div className={`text-2xl font-bold ${solution.iconColor}`}>
+                    <div className={`text-xl font-bold ${solution.iconColor}`}>
                       {solution.count}
                     </div>
                   </div>
                 </div>
                 
-                <h3 className="text-xl font-semibold mb-3 text-foreground">
+                <h3 className="text-lg font-semibold mb-2 text-foreground">
                   {solution.title}
                 </h3>
-                <p className="text-muted-foreground mb-6 leading-relaxed">
+                <p className="text-muted-foreground mb-4 leading-relaxed text-sm">
                   {solution.description}
                 </p>
                 
                 <div className="flex items-center text-primary group-hover:text-accent transition-colors">
-                  <span className="font-medium">Explore</span>
+                  <span className="font-medium text-sm">Explore</span>
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
@@ -118,14 +118,14 @@ export const FeaturedSolutionsSection = () => {
           ))}
         </div>
 
-        <div className="text-center mt-16">
+        <div className="text-center mt-12">
           <Button 
             size="lg" 
             asChild
             className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-4 text-lg rounded-xl"
           >
             <Link to="/service-providers">
-              Start Your Market Entry Journey
+              Explore All Resources
             </Link>
           </Button>
         </div>

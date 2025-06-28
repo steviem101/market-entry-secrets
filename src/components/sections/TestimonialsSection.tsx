@@ -1,7 +1,6 @@
 
-import { Star, Quote } from "lucide-react";
+import { Star } from "lucide-react";
 import { TestimonialCard } from "@/components/testimonials/TestimonialCard";
-import { Button } from "@/components/ui/button";
 import {
   Carousel,
   CarouselContent,
@@ -61,7 +60,7 @@ export const TestimonialsSection = () => {
 
   if (isLoading) {
     return (
-      <section className="relative py-24 overflow-hidden">
+      <section className="relative py-16 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5" />
         <div className="absolute inset-0 gradient-overlay" />
         
@@ -82,47 +81,39 @@ export const TestimonialsSection = () => {
   }
 
   return (
-    <section className="relative py-24 overflow-hidden">
-      {/* Enhanced background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/8 via-primary/3 to-background" />
+    <section className="relative py-16 overflow-hidden">
+      {/* Simplified background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/3" />
       <div className="absolute inset-0 gradient-overlay" />
       
-      {/* Decorative quote marks */}
-      <div className="absolute top-20 left-10 opacity-10">
-        <Quote className="w-32 h-32 text-primary" />
-      </div>
-      <div className="absolute bottom-20 right-10 opacity-10 rotate-180">
-        <Quote className="w-24 h-24 text-accent" />
-      </div>
-      
       <div className="relative container mx-auto px-4">
-        {/* Enhanced section header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/15 rounded-xl px-6 py-3 backdrop-blur-sm mb-6">
+        {/* Condensed section header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/15 rounded-xl px-4 py-2 backdrop-blur-sm mb-4">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               ))}
             </div>
             <span className="text-sm font-medium text-muted-foreground">
-              4.9/5 from 247+ successful market entries
+              4.9/5 from 247+ companies
             </span>
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Join Companies That{" "}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Chose Success
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            See how businesses like yours transformed their market entry experience with our proven resources and expert guidance
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            See how businesses transformed their market entry with our proven resources
           </p>
         </div>
         
-        {/* Enhanced Testimonials Carousel */}
+        {/* Streamlined Testimonials Carousel */}
         {displayTestimonials.length > 0 && (
-          <div className="mb-16">
+          <div>
             <Carousel
               opts={{
                 align: "start",
@@ -153,29 +144,6 @@ export const TestimonialsSection = () => {
             </Carousel>
           </div>
         )}
-
-        {/* Enhanced CTA */}
-        <div className="text-center bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10 rounded-2xl p-12 backdrop-blur-sm">
-          <h3 className="text-3xl font-bold mb-4">Ready to Write Your Success Story?</h3>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto text-lg">
-            Join 1,200+ companies that chose the proven path to Australian market success with our comprehensive resources and expert network.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-4 text-lg rounded-xl soft-shadow hover:shadow-lg transition-all duration-300"
-            >
-              Start Your Success Story
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="bg-background/60 backdrop-blur-sm border-primary/30 text-foreground hover:bg-background/80 hover:border-primary/50 px-8 py-4 text-lg rounded-xl soft-shadow hover:shadow-lg transition-all duration-300"
-            >
-              View All Success Stories
-            </Button>
-          </div>
-        </div>
       </div>
     </section>
   );

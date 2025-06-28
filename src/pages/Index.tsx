@@ -24,32 +24,32 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Hero Section with Enhanced Search */}
+      {/* Streamlined Hero Section */}
       <HeroSection 
         totalResources={totalResources}
         searchMode={searchMode}
         onSearchModeChange={(value) => setSearchMode(value as 'database' | 'ai')}
       />
 
-      {/* Enhanced Client Testimonials Section - Now second section */}
-      <TestimonialsSection />
-
       {/* Immediate Social Proof Banner */}
       <SocialProofBanner />
 
-      {/* Before vs. After Market Entry Section */}
+      {/* Before vs. After Market Entry Section - Core value proposition */}
       <BeforeAfterSection />
 
-      {/* Featured Solutions Overview */}
+      {/* Featured Solutions Overview - What they get access to */}
       <FeaturedSolutionsSection />
 
-      {/* Bookmarks Section with soft integration */}
+      {/* Condensed Testimonials Section - Social proof without heavy CTA */}
+      <TestimonialsSection />
+
+      {/* Combined Resource Sections */}
       <div className="relative">
         <div className="absolute inset-0 gradient-overlay" />
         <BookmarksSection />
       </div>
 
-      {/* Service Providers Section - More focused */}
+      {/* Service Providers Section - Streamlined */}
       <ProvidersSection 
         selectedCategories={selectedCategories}
         selectedLocations={selectedLocations}
@@ -60,7 +60,7 @@ const Index = () => {
         onShowFiltersChange={setShowFilters}
       />
 
-      {/* Final CTA Section */}
+      {/* Final Conversion CTA Section */}
       <CTASection />
     </div>
   );
