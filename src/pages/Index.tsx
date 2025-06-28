@@ -3,6 +3,7 @@ import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { BookmarksSection } from "@/components/BookmarksSection";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
 import { StatsSection } from "@/components/sections/StatsSection";
 import { CategoriesSection } from "@/components/sections/CategoriesSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
@@ -29,6 +30,9 @@ const Index = () => {
         searchMode={searchMode}
         onSearchModeChange={(value) => setSearchMode(value as 'database' | 'ai')}
       />
+
+      {/* Before vs After Section - New addition */}
+      <BeforeAfterSection />
 
       {/* Client Testimonials Section - moved directly after hero */}
       <TestimonialsSection />
