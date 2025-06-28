@@ -33,7 +33,7 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
         .insert({
           submission_type: submissionType,
           contact_email: formData.email,
-          form_data: formData
+          form_data: formData as any // Type assertion to handle Json compatibility
         });
 
       if (error) throw error;

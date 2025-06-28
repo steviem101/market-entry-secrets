@@ -23,6 +23,7 @@ export interface FormData {
   targetMarket: string;
   dataRequirements: string;
   useCase: string;
+  [key: string]: string; // Add index signature for Json compatibility
 }
 
 export const initialFormData: FormData = {
