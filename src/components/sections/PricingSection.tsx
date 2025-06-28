@@ -1,4 +1,3 @@
-
 import { PricingCard } from "@/components/pricing/PricingCard";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -136,13 +135,6 @@ export const PricingSection = () => {
               onSelectTier={handleSelectTier}
             />
           ))}
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <p className="text-sm text-muted-foreground">
-            All plans include our core directories and community access. Upgrade or downgrade anytime.
-          </p>
         </div>
       </div>
     </section>
