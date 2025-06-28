@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { User, Settings, LogOut, UserCircle, Shield } from 'lucide-react';
+import { User, Settings, LogOut, UserCircle, Shield, Heart } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { ProfileDialog } from './ProfileDialog';
+import { Link } from 'react-router-dom';
 
 export const UserDropdown = () => {
   const { user, profile, signOut, isAdmin, isModerator } = useAuth();
@@ -76,6 +77,12 @@ export const UserDropdown = () => {
           <DropdownMenuItem onClick={() => setShowProfile(true)}>
             <UserCircle className="mr-2 h-4 w-4" />
             <span>Profile</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/member-hub">
+              <Heart className="mr-2 h-4 w-4" />
+              <span>Member Hub</span>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />

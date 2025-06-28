@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
-import { BookmarksSection } from "@/components/BookmarksSection";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { SocialProofBanner } from "@/components/sections/SocialProofBanner";
 import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
@@ -43,12 +42,6 @@ const Index = () => {
 
       {/* Condensed Testimonials Section - Social proof without heavy CTA */}
       <TestimonialsSection />
-
-      {/* Combined Resource Sections */}
-      <div className="relative">
-        <div className="absolute inset-0 gradient-overlay" />
-        <BookmarksSection />
-      </div>
 
       {/* Service Providers Section - Streamlined */}
       <ProvidersSection 

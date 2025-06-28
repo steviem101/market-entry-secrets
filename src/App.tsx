@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,6 +31,7 @@ import TermsOfService from "./pages/TermsOfService";
 import PartnerWithUs from "./pages/PartnerWithUs";
 import Dashboard from "./pages/Dashboard";
 import Bookmarks from "./pages/Bookmarks";
+import MemberHub from "./pages/MemberHub";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
@@ -69,6 +71,7 @@ const App = () => (
               <Route path="/partner" element={<PartnerWithUs />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/bookmarks" element={<Bookmarks />} />
+              <Route path="/member-hub" element={<MemberHub />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
