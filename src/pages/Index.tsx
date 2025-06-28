@@ -31,17 +31,17 @@ const Index = () => {
         onSearchModeChange={(value) => setSearchMode(value as 'database' | 'ai')}
       />
 
+      {/* Enhanced Client Testimonials Section - Now second section */}
+      <TestimonialsSection />
+
       {/* Immediate Social Proof Banner */}
       <SocialProofBanner />
 
-      {/* Before vs. After Market Entry Section - Now the centerpiece */}
+      {/* Before vs. After Market Entry Section */}
       <BeforeAfterSection />
 
       {/* Featured Solutions Overview */}
       <FeaturedSolutionsSection />
-
-      {/* Enhanced Client Testimonials Section */}
-      <TestimonialsSection />
 
       {/* Bookmarks Section with soft integration */}
       <div className="relative">
