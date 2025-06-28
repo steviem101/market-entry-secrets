@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { EventsHero } from "@/components/events/EventsHero";
 import { EventsFilters } from "@/components/events/EventsFilters";
-import { EventSubmissionForm } from "@/components/events/EventSubmissionForm";
 import { useEvents } from "@/hooks/useEvents";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { UsageBanner } from "@/components/UsageBanner";
@@ -106,11 +105,6 @@ const Events = () => {
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
-        
-        {/* Event Submission Form */}
-        <div className="mb-8">
-          <EventSubmissionForm />
-        </div>
 
         {/* Events Grid */}
         {filteredEvents.length === 0 ? (
