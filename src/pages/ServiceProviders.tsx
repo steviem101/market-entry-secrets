@@ -16,6 +16,8 @@ const ServiceProviders = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [selectedSector, setSelectedSector] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
   const handleViewProfile = (company: Company) => {
@@ -35,10 +37,12 @@ const ServiceProviders = () => {
         selectedCategories={selectedCategories}
         selectedLocations={selectedLocations}
         searchTerm={searchTerm}
+        selectedSector={selectedSector}
+        selectedType={selectedType}
         serviceCategories={[]}
         categoryGroups={[]}
       >
-        {({ companies, loading, filteredCompanies }) => (
+        {({ companies, loading, filteredCompanies, uniqueSectors, uniqueTypes }) => (
           <>
             <ServiceProvidersHeader 
               searchTerm={searchTerm}
@@ -48,6 +52,12 @@ const ServiceProviders = () => {
               filteredCount={filteredCompanies.length}
               selectedLocations={selectedLocations}
               onLocationChange={setSelectedLocations}
+              selectedSector={selectedSector}
+              onSectorChange={setSelectedSector}
+              selectedType={selectedType}
+              onTypeChange={setSelectedType}
+              uniqueSectors={uniqueSectors}
+              uniqueTypes={uniqueTypes}
             />
             
             <div className="container mx-auto px-4 py-8">

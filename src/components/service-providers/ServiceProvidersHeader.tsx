@@ -13,6 +13,12 @@ interface ServiceProvidersHeaderProps {
   filteredCount: number;
   selectedLocations: string[];
   onLocationChange: (locations: string[]) => void;
+  selectedSector: string;
+  onSectorChange: (sector: string) => void;
+  selectedType: string;
+  onTypeChange: (type: string) => void;
+  uniqueSectors: string[];
+  uniqueTypes: string[];
 }
 
 const australianCities = [
@@ -35,7 +41,13 @@ export const ServiceProvidersHeader = ({
   onToggleFilters,
   filteredCount,
   selectedLocations,
-  onLocationChange
+  onLocationChange,
+  selectedSector,
+  onSectorChange,
+  selectedType,
+  onTypeChange,
+  uniqueSectors,
+  uniqueTypes
 }: ServiceProvidersHeaderProps) => {
   const handleLocationChange = (value: string) => {
     if (value === "all") {
@@ -99,6 +111,40 @@ export const ServiceProvidersHeader = ({
               </Select>
             </div>
 
+            {/* Sector Filter */}
+            <div className="w-48">
+              <Select value={selectedSector} onValueChange={onSectorChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Sectors" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sectors</SelectItem>
+                  {uniqueSectors.map((sector) => (
+                    <SelectItem key={sector} value={sector}>
+                      {sector}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Type Filter */}
+            <div className="w-48">
+              <Select value={selectedType} onValueChange={onTypeChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {uniqueTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Filters Button */}
             <Button
               variant="outline"
@@ -111,10 +157,14 @@ export const ServiceProvidersHeader = ({
           </div>
 
           {/* Clear all filters link */}
-          {(selectedLocations.length > 0) && (
+          {(selectedLocations.length > 0 || selectedSector !== "all" || selectedType !== "all") && (
             <div className="mt-4">
               <button
-                onClick={() => onLocationChange([])}
+                onClick={() => {
+                  onLocationChange([]);
+                  onSectorChange("all");
+                  onTypeChange("all");
+                }}
                 className="text-sm text-primary hover:underline"
               >
                 Clear all filters

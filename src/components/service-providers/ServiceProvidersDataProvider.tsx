@@ -12,10 +12,14 @@ interface ServiceProvidersDataProviderProps {
     companies: Company[];
     loading: boolean;
     filteredCompanies: Company[];
+    uniqueSectors: string[];
+    uniqueTypes: string[];
   }) => React.ReactNode;
   selectedCategories: string[];
   selectedLocations: string[];
   searchTerm: string;
+  selectedSector: string;
+  selectedType: string;
   serviceCategories: Array<{ id: string; name: string; count: number }>;
   categoryGroups: Array<{
     id: string;
@@ -30,6 +34,8 @@ export const ServiceProvidersDataProvider = ({
   selectedCategories,
   selectedLocations,
   searchTerm,
+  selectedSector,
+  selectedType,
   serviceCategories,
   categoryGroups
 }: ServiceProvidersDataProviderProps) => {
@@ -93,6 +99,25 @@ export const ServiceProvidersDataProvider = ({
     }
   };
 
+  // Extract unique sectors and types from services
+  const uniqueSectors = [...new Set(companies.flatMap(company => 
+    company.services.map(service => {
+      // Extract sector-like keywords from services
+      const sectorKeywords = ['Technology', 'Finance', 'Healthcare', 'Education', 'Manufacturing', 'Retail', 'Construction', 'Agriculture', 'Energy', 'Transportation'];
+      const foundSector = sectorKeywords.find(keyword => service.toLowerCase().includes(keyword.toLowerCase()));
+      return foundSector || 'Other';
+    })
+  ))].filter(Boolean);
+
+  const uniqueTypes = [...new Set(companies.flatMap(company => 
+    company.services.map(service => {
+      // Extract type-like keywords from services
+      const typeKeywords = ['Consulting', 'Advisory', 'Implementation', 'Support', 'Training', 'Development', 'Management', 'Strategy', 'Analysis', 'Design'];
+      const foundType = typeKeywords.find(keyword => service.toLowerCase().includes(keyword.toLowerCase()));
+      return foundType || 'Service';
+    })
+  ))].filter(Boolean);
+
   const filteredCompanies = companies.filter(company => {
     const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          company.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,9 +134,15 @@ export const ServiceProvidersDataProvider = ({
 
     const matchesLocation = selectedLocations.length === 0 || 
                            selectedLocations.includes(company.location);
+
+    const matchesSector = selectedSector === "all" || 
+                         company.services.some(service => service.toLowerCase().includes(selectedSector.toLowerCase()));
+
+    const matchesType = selectedType === "all" || 
+                       company.services.some(service => service.toLowerCase().includes(selectedType.toLowerCase()));
     
-    return matchesSearch && matchesCategories && matchesLocation;
+    return matchesSearch && matchesCategories && matchesLocation && matchesSector && matchesType;
   });
 
-  return <>{children({ companies, loading, filteredCompanies })}</>;
+  return <>{children({ companies, loading, filteredCompanies, uniqueSectors, uniqueTypes })}</>;
 };
