@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Users, X, MapPin } from "lucide-react";
 
 interface ServiceProvidersHeaderProps {
@@ -83,21 +83,15 @@ export const ServiceProvidersHeader = ({
           </p>
           
           {/* Database Counters */}
-          <div className="flex justify-center gap-8 mb-8">
-            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg border">
-              <Users className="w-5 h-5 text-blue-600" />
-              <div className="text-left">
-                <div className="text-2xl font-bold text-foreground">{totalCompanies}</div>
-                <div className="text-sm text-muted-foreground">Experts</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-lg border">
-              <MapPin className="w-5 h-5 text-blue-600" />
-              <div className="text-left">
-                <div className="text-2xl font-bold text-foreground">{uniqueLocations}</div>
-                <div className="text-sm text-muted-foreground">Locations</div>
-              </div>
-            </div>
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <Badge variant="secondary" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              {totalCompanies} Experts
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              {uniqueLocations} Locations
+            </Badge>
           </div>
         </div>
       </section>
