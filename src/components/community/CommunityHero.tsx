@@ -1,6 +1,6 @@
 
-import { Users, MapPin, Star } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Users } from "lucide-react";
+import { SubmissionButton } from "@/components/directory-submissions/SubmissionButton";
 
 interface CommunityHeroProps {
   totalExperts: number;
@@ -9,29 +9,41 @@ interface CommunityHeroProps {
 
 export const CommunityHero = ({ totalExperts, totalLocations }: CommunityHeroProps) => {
   return (
-    <section className="bg-gradient-to-r from-purple-500/10 to-violet-500/10 py-20">
-      <div className="container mx-auto px-4 text-center">
-        <div className="flex justify-center mb-6">
-          <div className="p-3 bg-purple-500/20 rounded-full">
-            <Users className="w-12 h-12 text-purple-600" />
+    <section className="bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 py-20">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex justify-center mb-6">
+            <div className="bg-purple-100 p-4 rounded-full">
+              <Users className="w-12 h-12 text-purple-600" />
+            </div>
           </div>
-        </div>
-        <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-          Market Entry <span className="text-purple-600">Experts</span>
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-          Connect with experienced professionals who have successfully navigated market entry challenges. Get expert guidance from those who've been there before.
-        </p>
-        
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            {totalExperts} Experts
-          </Badge>
-          <Badge variant="secondary" className="flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            {totalLocations} Locations
-          </Badge>
+          
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Connect with Market Entry <span className="text-purple-600">Experts</span>
+          </h1>
+          
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Get personalized guidance from experienced professionals who have successfully navigated international markets. Connect with mentors, advisors, and industry experts ready to help you succeed.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <SubmissionButton submissionType="mentor" variant="hero" size="lg" />
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-8 text-center">
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+              <div className="text-3xl font-bold text-purple-600 mb-1">{totalExperts}</div>
+              <div className="text-sm text-gray-600">Expert Mentors</div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+              <div className="text-3xl font-bold text-blue-600 mb-1">{totalLocations}</div>
+              <div className="text-sm text-gray-600">Global Locations</div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+              <div className="text-3xl font-bold text-green-600 mb-1">24/7</div>
+              <div className="text-sm text-gray-600">Support Available</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

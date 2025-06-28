@@ -639,6 +639,36 @@ export type Database = {
           },
         ]
       }
+      directory_submissions: {
+        Row: {
+          contact_email: string
+          created_at: string
+          form_data: Json
+          id: string
+          status: string
+          submission_type: string
+          updated_at: string
+        }
+        Insert: {
+          contact_email: string
+          created_at?: string
+          form_data?: Json
+          id?: string
+          status?: string
+          submission_type: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string
+          created_at?: string
+          form_data?: Json
+          id?: string
+          status?: string
+          submission_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           attendees: number
