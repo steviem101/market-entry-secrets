@@ -62,31 +62,40 @@ export const allNavItems: NavItem[] = [
   ...infoNavItems,
 ];
 
-// Navigation structure for dropdowns - no Member Hub here
+// Legacy export for backward compatibility
 export const navigationItems = [
   {
-    name: "Browse",
-    subItems: primaryNavItems,
-    icon: FileText,
+    title: "Browse",
+    items: [
+      { name: "Events", href: "/events" },
+      { name: "Content", href: "/content" },
+      { name: "Leads", href: "/leads" },
+    ]
   },
   {
-    name: "Ecosystem", 
-    subItems: ecosystemNavItems,
-    icon: Network,
+    title: "Ecosystem",
+    items: [
+      { name: "Innovation Ecosystem", href: "/innovation-ecosystem" },
+      { name: "Trade & Investment", href: "/trade-investment-agencies" },
+      { name: "Service Providers", href: "/service-providers" },
+      { name: "Mentors", href: "/community" },
+    ]
   },
   {
-    name: "Popular",
-    subItems: popularNavItems,
-    icon: TrendingUp,
+    title: "Popular",
+    items: [
+      { name: "Locations", href: "/locations" },
+      { name: "Countries", href: "/countries" },
+      { name: "Sectors", href: "/sectors" },
+      { name: "Case Studies", href: "/case-studies" },
+    ]
   },
   {
-    name: "Info",
-    subItems: infoNavItems,
-    icon: Info,
+    title: "Info",
+    items: [
+      { name: "About", href: "/about" },
+      { name: "FAQ", href: "/faq" },
+      { name: "Contact", href: "/contact" },
+    ]
   }
 ];
-
-// Same navigation for both authenticated and non-authenticated users
-export const getAuthenticatedNavigationItems = (isAdmin: boolean, isModerator: boolean) => {
-  return navigationItems;
-};

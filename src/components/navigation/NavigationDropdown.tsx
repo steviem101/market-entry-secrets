@@ -11,23 +11,23 @@ import { Link } from "react-router-dom";
 import { NavItem } from "./NavigationItems";
 
 interface NavigationDropdownProps {
-  name: string;
+  label: string;
   icon: React.ComponentType<{ className?: string }>;
-  subItems: NavItem[];
+  items: NavItem[];
 }
 
-export const NavigationDropdown = ({ name, icon: Icon, subItems }: NavigationDropdownProps) => {
+export const NavigationDropdown = ({ label, icon: Icon, items }: NavigationDropdownProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="nav-link flex items-center gap-2">
           <Icon className="h-4 w-4" />
-          {name}
+          {label}
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        {subItems.map((item) => {
+        {items.map((item) => {
           const ItemIcon = item.icon;
           return (
             <DropdownMenuItem key={item.href} asChild>

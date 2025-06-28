@@ -1017,51 +1017,6 @@ export type Database = {
         }
         Relationships: []
       }
-      market_entry_reports: {
-        Row: {
-          created_at: string
-          created_by_team_member: string | null
-          delivered_at: string | null
-          description: string | null
-          file_url: string | null
-          id: string
-          metadata: Json | null
-          report_type: string
-          status: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          created_by_team_member?: string | null
-          delivered_at?: string | null
-          description?: string | null
-          file_url?: string | null
-          id?: string
-          metadata?: Json | null
-          report_type?: string
-          status?: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          created_by_team_member?: string | null
-          delivered_at?: string | null
-          description?: string | null
-          file_url?: string | null
-          id?: string
-          metadata?: Json | null
-          report_type?: string
-          status?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
