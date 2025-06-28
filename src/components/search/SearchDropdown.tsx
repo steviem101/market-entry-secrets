@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MasterSearchResults } from "@/components/MasterSearchResults";
 import { SearchResult } from "@/hooks/useMasterSearch";
 
@@ -44,7 +44,7 @@ export const SearchDropdown = ({
     return { top: 0, left: 0, width: 0 };
   };
 
-  const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, left: 0, width: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   // Update position when showing results
   useEffect(() => {
