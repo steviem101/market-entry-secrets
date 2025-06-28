@@ -1,105 +1,91 @@
 
 import { 
   Search, 
+  Phone, 
   DollarSign, 
-  Clock,
   AlertTriangle,
-  TrendingDown
+  Clock,
+  Target,
+  FileText,
+  TrendingUp
 } from "lucide-react";
-import { PainPoint } from "./types";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 export const BeforeSection = () => {
-  const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.2 });
-
-  const painPoints: PainPoint[] = [
+  const beforeItems = [
     {
       icon: Search,
-      title: "Endless Research",
-      description: "6-12 months of manual research across fragmented sources",
-      metric: "500+ hours wasted",
-      color: "text-red-500"
+      title: "Manual Research",
+      description: "Months of Google searches and outdated reports",
+      color: "text-red-400"
+    },
+    {
+      icon: Phone,
+      title: "Cold Outreach",
+      description: "Random calls to unvetted service providers",
+      color: "text-orange-400"
     },
     {
       icon: DollarSign,
-      title: "Expensive Consultants",
-      description: "Pay $50K+ for basic market analysis from big consulting firms",
-      metric: "$50K+ per report",
-      color: "text-orange-500"
+      title: "Expensive Consulting",
+      description: "$50K+ for basic market analysis and TAM reports",
+      color: "text-red-400"
     },
     {
       icon: AlertTriangle,
-      title: "Compliance Risks",
-      description: "Navigate complex regulations without local expertise",
-      metric: "60% failure rate",
-      color: "text-red-600"
+      title: "Legal Risks",
+      description: "Hiring untested lawyers, compliance mistakes",
+      color: "text-orange-400"
     },
     {
       icon: Clock,
-      title: "Slow Market Entry",
-      description: "18-24 month timeline from decision to market presence",
-      metric: "2+ years delayed",
-      color: "text-orange-600"
+      title: "Regulatory Maze",
+      description: "Complex compliance, missed requirements, delays",
+      color: "text-red-400"
     },
     {
-      icon: TrendingDown,
-      title: "Low Success Rate",
-      description: "70% of international expansions fail within first 2 years",
-      metric: "70% fail",
-      color: "text-red-700"
+      icon: Target,
+      title: "Random Networking",
+      description: "Trial and error finding the right connections",
+      color: "text-orange-400"
+    },
+    {
+      icon: FileText,
+      title: "Cultural Missteps",
+      description: "Expensive mistakes from lack of local knowledge",
+      color: "text-red-400"
+    },
+    {
+      icon: TrendingUp,
+      title: "Guesswork Strategy",
+      description: "No proven playbook, making it up as you go",
+      color: "text-orange-400"
     }
   ];
 
   return (
-    <div ref={elementRef} className="space-y-8">
-      <div className="text-center lg:text-left">
-        <div className="inline-flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-6 py-3 mb-6">
-          <AlertTriangle className="w-6 h-6 text-red-500" />
-          <div>
-            <h3 className="text-2xl font-bold text-red-600">The Traditional Way</h3>
-            <p className="text-red-500/80 text-sm">Complex, expensive, risky</p>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <div className="text-center lg:text-left mb-8">
+        <h3 className="text-2xl font-bold text-red-400 mb-2 flex items-center justify-center lg:justify-start gap-2">
+          <AlertTriangle className="w-6 h-6" />
+          Before Market Entry Secrets
+        </h3>
+        <p className="text-muted-foreground">The painful traditional approach</p>
       </div>
 
-      <div className="space-y-4">
-        {painPoints.map((point, index) => (
-          <div 
-            key={index} 
-            className={`
-              bg-gradient-to-r from-red-50/80 to-orange-50/60 
-              border border-red-200/40 rounded-2xl p-6 
-              hover:border-red-300/60 transition-all duration-500
-              ${isVisible ? 'animate-fade-in opacity-100' : 'opacity-0'}
-            `}
-            style={{ animationDelay: `${index * 150}ms` }}
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-orange-100 rounded-xl flex items-center justify-center">
-                  <point.icon className={`w-6 h-6 ${point.color}`} />
-                </div>
+      <div className="grid gap-4">
+        {beforeItems.map((item, index) => (
+          <div key={index} className="bg-background/60 backdrop-blur-sm border border-red-200/20 rounded-xl p-4 hover:border-red-300/30 transition-all duration-300">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <item.icon className={`w-5 h-5 ${item.color}`} />
               </div>
               <div className="flex-1">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="text-lg font-semibold text-gray-900">{point.title}</h4>
-                  {point.metric && (
-                    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {point.metric}
-                    </span>
-                  )}
-                </div>
-                <p className="text-gray-600 leading-relaxed">{point.description}</p>
+                <h4 className="font-semibold text-foreground mb-1">{item.title}</h4>
+                <p className="text-sm text-muted-foreground">{item.description}</p>
               </div>
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Bottom Impact Statement */}
-      <div className="text-center mt-8 p-6 bg-gradient-to-r from-red-100/50 to-orange-100/50 rounded-2xl border border-red-200/30">
-        <p className="text-lg font-medium text-red-800 mb-2">Result: Market Entry Failure</p>
-        <p className="text-red-600/80">Most companies give up or fail within the first 18 months</p>
       </div>
     </div>
   );
