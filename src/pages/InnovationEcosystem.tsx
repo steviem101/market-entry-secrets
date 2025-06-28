@@ -7,13 +7,14 @@ import CompanyModal from "@/components/CompanyModal";
 import { InnovationEcosystemHero } from "@/components/innovation-ecosystem/InnovationEcosystemHero";
 import InnovationEcosystemFilters from "@/components/innovation-ecosystem/InnovationEcosystemFilters";
 import InnovationEcosystemResults from "@/components/innovation-ecosystem/InnovationEcosystemResults";
+import { UsageBanner } from "@/components/UsageBanner";
 
 const InnovationEcosystem = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [selectedOrganization, setSelectedOrganization] = useState<any>(null);
 
   const {
     data: organizations,
@@ -98,6 +99,8 @@ const InnovationEcosystem = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
+        <UsageBanner />
+        
         <InnovationEcosystemFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -115,35 +118,35 @@ const InnovationEcosystem = () => {
         <InnovationEcosystemResults
           filteredOrganizations={filteredOrganizations}
           isLoading={isLoading}
-          onViewProfile={setSelectedCompany}
-          onContact={setSelectedCompany}
+          onViewProfile={setSelectedOrganization}
+          onContact={setSelectedOrganization}
           onClearFilters={clearAllFilters}
           parseJsonArray={parseJsonArray}
         />
       </div>
 
-      {/* Company Modal */}
-      {selectedCompany && (
+      {/* Organization Modal */}
+      {selectedOrganization && (
         <CompanyModal
           company={{
-            id: selectedCompany.id,
-            name: selectedCompany.name,
-            description: selectedCompany.description,
-            location: selectedCompany.location,
-            founded: selectedCompany.founded,
-            employees: selectedCompany.employees,
-            services: selectedCompany.services,
-            website: selectedCompany.website,
-            contact: selectedCompany.contact,
-            logo: selectedCompany.logo,
-            basic_info: selectedCompany.basic_info,
-            why_work_with_us: selectedCompany.why_work_with_us,
-            contact_persons: parseJsonArray(selectedCompany.contact_persons),
-            experience_tiles: parseJsonArray(selectedCompany.experience_tiles)
+            id: selectedOrganization.id,
+            name: selectedOrganization.name,
+            description: selectedOrganization.description,
+            location: selectedOrganization.location,
+            founded: selectedOrganization.founded,
+            employees: selectedOrganization.employees,
+            services: selectedOrganization.services,
+            website: selectedOrganization.website,
+            contact: selectedOrganization.contact,
+            logo: selectedOrganization.logo,
+            basic_info: selectedOrganization.basic_info,
+            why_work_with_us: selectedOrganization.why_work_with_us,
+            contact_persons: parseJsonArray(selectedOrganization.contact_persons),
+            experience_tiles: parseJsonArray(selectedOrganization.experience_tiles)
           }}
-          isOpen={!!selectedCompany}
-          onClose={() => setSelectedCompany(null)}
-          onContact={() => setSelectedCompany(null)}
+          isOpen={!!selectedOrganization}
+          onClose={() => setSelectedOrganization(null)}
+          onContact={() => setSelectedOrganization(null)}
         />
       )}
     </div>

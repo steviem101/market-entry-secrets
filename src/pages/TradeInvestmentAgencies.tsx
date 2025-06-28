@@ -7,6 +7,7 @@ import CompanyModal from "@/components/CompanyModal";
 import { TradeInvestmentAgenciesHero } from "@/components/trade-investment-agencies/TradeInvestmentAgenciesHero";
 import TradeInvestmentAgenciesFilters from "@/components/trade-investment-agencies/TradeInvestmentAgenciesFilters";
 import TradeInvestmentAgenciesResults from "@/components/trade-investment-agencies/TradeInvestmentAgenciesResults";
+import { UsageBanner } from "@/components/UsageBanner";
 
 const TradeInvestmentAgencies = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -98,6 +99,8 @@ const TradeInvestmentAgencies = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
+        <UsageBanner />
+        
         <TradeInvestmentAgenciesFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
