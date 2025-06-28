@@ -13,6 +13,31 @@ interface UserSubscription {
   updated_at: string;
 }
 
+// Database type mapping
+type DatabaseSubscriptionTier = 'free' | 'premium' | 'concierge';
+
+interface DatabaseUserSubscription {
+  id: string;
+  user_id: string;
+  tier: DatabaseSubscriptionTier;
+  created_at: string;
+  updated_at: string;
+}
+
+// Map database tiers to our new tier structure
+const mapDatabaseTier = (dbTier: DatabaseSubscriptionTier): SubscriptionTier => {
+  switch (dbTier) {
+    case 'free':
+      return 'free';
+    case 'premium':
+      return 'growth';
+    case 'concierge':
+      return 'enterprise';
+    default:
+      return 'free';
+  }
+};
+
 export const useSubscription = () => {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
@@ -35,8 +60,16 @@ export const useSubscription = () => {
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error fetching subscription:', error);
-        } else {
-          setSubscription(data);
+        } else if (data) {
+          // Map the database subscription to our new type structure
+          const mappedSubscription: UserSubscription = {
+            id: data.id,
+            user_id: data.user_id,
+            tier: mapDatabaseTier(data.tier),
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+          };
+          setSubscription(mappedSubscription);
         }
       } catch (error) {
         console.error('Error fetching subscription:', error);
