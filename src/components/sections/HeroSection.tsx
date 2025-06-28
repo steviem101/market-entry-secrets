@@ -96,7 +96,7 @@ export const HeroSection = ({
               className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"
               duration={3000}
             />
-            {" "}you need to{" "}
+            {" "}to{" "}
             <span className="text-foreground">dominate the Australian market</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-4xl mx-auto">
