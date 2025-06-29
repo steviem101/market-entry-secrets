@@ -1,54 +1,171 @@
 
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from "react";
+import { Search, Sparkles, Users, Building2, Calendar, MapPin, TrendingUp } from "lucide-react";
 import { MasterSearch } from "@/components/MasterSearch";
-import { AIChatSearch } from "@/components/AIChatSearch";
-import { Search, MessageCircle } from "lucide-react";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
-export const SearchSection = () => {
-  const [searchMode, setSearchMode] = useState<'database' | 'ai'>('database');
+interface SearchSectionProps {
+  totalResources?: number;
+}
+
+export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => {
+  const [activeTab, setActiveTab] = useState("all");
+  const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.2 });
+  const [animationComplete, setAnimationComplete] = useState(false);
+
+  useEffect(() => {
+    if (isVisible && !animationComplete) {
+      const timer = setTimeout(() => setAnimationComplete(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, animationComplete]);
+
+  const searchTabs = [
+    { id: "all", label: "All Resources", icon: Search, count: totalResources },
+    { id: "companies", label: "Companies", icon: Building2, count: 850 },
+    { id: "people", label: "People", icon: Users, count: 620 },
+    { id: "events", label: "Events", icon: Calendar, count: 340 },
+    { id: "locations", label: "Locations", icon: MapPin, count: 265 }
+  ];
 
   return (
-    <section className="py-16 bg-gradient-to-b from-background to-muted/20">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Section Header */}
-          <div className="mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Find What You Need
+    <section 
+      ref={elementRef}
+      className="relative py-24 overflow-hidden bg-gradient-to-br from-background via-primary/3 to-accent/5"
+    >
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        {/* Floating Orbs */}
+        <div className={`absolute top-20 left-[10%] w-32 h-32 bg-primary/8 rounded-full blur-2xl transition-all duration-1000 ${isVisible ? 'animate-pulse opacity-100' : 'opacity-0'}`} />
+        <div className={`absolute bottom-32 right-[15%] w-24 h-24 bg-accent/10 rounded-full blur-xl transition-all duration-1000 delay-300 ${isVisible ? 'animate-pulse opacity-100' : 'opacity-0'}`} />
+        <div className={`absolute top-1/2 left-[80%] w-20 h-20 bg-primary/6 rounded-full blur-lg transition-all duration-1000 delay-500 ${isVisible ? 'animate-pulse opacity-100' : 'opacity-0'}`} />
+        
+        {/* Geometric Shapes */}
+        <div className={`absolute top-16 right-[20%] w-2 h-2 bg-primary rounded-full transition-all duration-1000 delay-700 ${isVisible ? 'opacity-100 animate-ping' : 'opacity-0'}`} />
+        <div className={`absolute bottom-20 left-[25%] w-1 h-1 bg-accent rounded-full transition-all duration-1000 delay-900 ${isVisible ? 'opacity-100 animate-ping' : 'opacity-0'}`} />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.02] via-transparent to-accent/[0.03]" />
+      </div>
+
+      <div className="relative container mx-auto px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Enhanced Header */}
+          <div className={`text-center mb-16 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-3 mb-6">
+              <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+              <span className="text-sm font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Comprehensive Market Intelligence
+              </span>
+            </div>
+            
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              <span className="text-foreground">Discover Everything You Need</span>
+              <br />
+              <span className="bg-gradient-to-r from-primary via-primary/90 to-accent bg-clip-text text-transparent">
+                In One Powerful Search
+              </span>
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Search our comprehensive database or ask our AI assistant to find the exact resources for your market entry needs
+            
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Access our comprehensive database of vetted companies, industry experts, 
+              events, and market insights to accelerate your Australian market entry.
             </p>
           </div>
 
-          {/* Search Interface */}
-          <div className="max-w-4xl mx-auto">
-            <Tabs value={searchMode} onValueChange={(value) => setSearchMode(value as 'database' | 'ai')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-background/60 backdrop-blur-md border border-border/50 soft-shadow max-w-md mx-auto">
-                <TabsTrigger value="database" className="text-sm font-medium flex items-center gap-2">
-                  <Search className="w-4 h-4" />
-                  Search Database
-                </TabsTrigger>
-                <TabsTrigger value="ai" className="text-sm font-medium flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4" />
-                  Ask AI Assistant
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="database" className="space-y-2 mt-0">
-                <MasterSearch placeholder="Search for service providers, mentors, leads, events..." />
-              </TabsContent>
-              
-              <TabsContent value="ai" className="space-y-2 mt-0">
-                <div className="max-w-3xl mx-auto">
-                  <AIChatSearch placeholder="Ask me: 'How do I find legal partners for Australian market entry?'" />
+          {/* Enhanced Search Tabs */}
+          <div className={`mb-12 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="flex flex-wrap justify-center gap-3 mb-8">
+              {searchTabs.map((tab, index) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`group relative px-6 py-4 rounded-2xl border transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                      isActive
+                        ? 'bg-gradient-to-r from-primary to-primary/90 text-white border-primary shadow-lg shadow-primary/25'
+                        : 'bg-white/80 backdrop-blur-sm border-border/30 text-foreground hover:bg-white/90 hover:border-primary/30'
+                    } ${animationComplete ? `animate-fade-in` : ''}`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : 'text-primary group-hover:text-primary'}`} />
+                      <div className="text-left">
+                        <div className={`font-semibold text-sm ${isActive ? 'text-white' : 'text-foreground'}`}>
+                          {tab.label}
+                        </div>
+                        <div className={`text-xs ${isActive ? 'text-white/80' : 'text-muted-foreground'}`}>
+                          {tab.count.toLocaleString()} resources
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Hover glow effect */}
+                    {!isActive && (
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/0 to-accent/0 group-hover:from-primary/5 group-hover:to-accent/5 transition-all duration-300" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Enhanced Search Interface */}
+          <div className={`transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="relative max-w-4xl mx-auto">
+              {/* Background Card with Glassmorphism */}
+              <div className="relative bg-white/60 backdrop-blur-xl border border-white/30 rounded-3xl p-8 shadow-2xl shadow-primary/10">
+                {/* Gradient Border Effect */}
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-primary/20 via-transparent to-accent/20 p-[2px]">
+                  <div className="w-full h-full bg-white/60 backdrop-blur-xl rounded-3xl" />
                 </div>
-              </TabsContent>
-            </Tabs>
+                
+                <div className="relative z-10">
+                  <MasterSearch />
+                </div>
+                
+                {/* Floating Search Icon */}
+                <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-2xl shadow-lg flex items-center justify-center animate-bounce">
+                  <Search className="w-6 h-6 text-white" />
+                </div>
+              </div>
+
+              {/* Stats Bar */}
+              <div className="mt-8 flex flex-wrap justify-center gap-8 text-center">
+                {[
+                  { label: "Active Companies", value: "850+", icon: Building2 },
+                  { label: "Industry Experts", value: "620+", icon: Users },
+                  { label: "Monthly Events", value: "40+", icon: Calendar },
+                  { label: "Success Rate", value: "94%", icon: TrendingUp }
+                ].map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div 
+                      key={stat.label}
+                      className={`flex items-center gap-3 px-4 py-2 rounded-xl bg-white/40 backdrop-blur-sm border border-white/30 transition-all duration-500 hover:scale-105 ${
+                        animationComplete ? 'animate-fade-in' : 'opacity-0'
+                      }`}
+                      style={{ animationDelay: `${600 + index * 150}ms` }}
+                    >
+                      <Icon className="w-5 h-5 text-primary" />
+                      <div>
+                        <div className="font-bold text-primary text-lg">{stat.value}</div>
+                        <div className="text-xs text-muted-foreground">{stat.label}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Bottom Fade Effect */}
+      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background/80 to-transparent" />
     </section>
   );
 };
