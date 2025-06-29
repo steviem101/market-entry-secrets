@@ -1,11 +1,10 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
 import { RotatingText } from "@/components/RotatingText";
-import { Sparkles, Star, TrendingUp, Building2 } from "lucide-react";
+import { Sparkles, Star, Building2 } from "lucide-react";
 
 interface HeroSectionProps {
   totalResources: number;
@@ -72,7 +71,7 @@ export const HeroSection = ({
       
       <div className="relative container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto text-center">
-          {/* Enhanced Social Proof Header with all metrics */}
+          {/* Enhanced Social Proof Header with remaining metrics */}
           <div className="inline-flex flex-wrap items-center justify-center gap-4 md:gap-6 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-3 mb-8">
             <div className="flex items-center gap-2">
               <div className="flex items-center">
@@ -81,13 +80,6 @@ export const HeroSection = ({
                 ))}
               </div>
               <span className="text-sm font-medium text-muted-foreground">4.9/5 from 247+ companies</span>
-            </div>
-            
-            <div className="hidden sm:block w-px h-4 bg-border/30" />
-            
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">89% faster market entry</span>
             </div>
             
             <div className="hidden sm:block w-px h-4 bg-border/30" />
