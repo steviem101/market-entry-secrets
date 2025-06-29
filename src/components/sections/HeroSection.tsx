@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
 import { RotatingText } from "@/components/RotatingText";
+import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 import { Sparkles, Star, TrendingUp } from "lucide-react";
 
 interface HeroSectionProps {
@@ -64,6 +64,16 @@ export const HeroSection = ({
     "Investors",
     "Partners"
   ];
+
+  const handleEmailSubmit = async (email: string) => {
+    // Handle email submission - can integrate with existing lead generation system
+    console.log('Processing email submission:', email);
+    
+    // Add any additional logic here like:
+    // - API calls to save the email
+    // - Analytics tracking
+    // - Integration with email marketing services
+  };
 
   return (
     <section className="relative overflow-hidden min-h-screen flex items-center">
@@ -153,13 +163,11 @@ export const HeroSection = ({
             </Tabs>
           </div>
 
-          {/* Single, Focused CTA */}
-          <Button 
-            size="lg" 
-            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-4 text-lg rounded-xl soft-shadow hover:shadow-lg transition-all duration-300"
-          >
-            Start Your Market Entry Journey
-          </Button>
+          {/* Email Capture Form */}
+          <EmailCaptureForm 
+            onSubmit={handleEmailSubmit}
+            className="mb-4"
+          />
         </div>
       </div>
     </section>
