@@ -669,6 +669,30 @@ export type Database = {
         }
         Relationships: []
       }
+      email_leads: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           attendees: number

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, ArrowRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface EmailCaptureFormProps {
   onSubmit?: (email: string) => void;
@@ -13,24 +15,56 @@ export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormP
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !email.includes('@')) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsLoading(true);
     
     try {
+      // Save email to Supabase
+      const { error } = await supabase
+        .from('email_leads')
+        .insert([
+          {
+            email: email,
+            source: 'homepage_hero'
+          }
+        ]);
+
+      if (error) {
+        console.error('Error saving email lead:', error);
+        toast({
+          title: "Submission Error",
+          description: "There was an issue saving your email. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Call the onSubmit callback if provided
       if (onSubmit) {
         await onSubmit(email);
       }
       
-      console.log('Email captured:', email);
+      console.log('Email captured successfully:', email);
       setIsSubmitted(true);
+      
+      // Show success toast
+      toast({
+        title: "Success!",
+        description: "Thank you for joining our community. We'll be in touch soon!",
+      });
       
       // Reset form after 3 seconds
       setTimeout(() => {
@@ -40,6 +74,11 @@ export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormP
       
     } catch (error) {
       console.error('Error submitting email:', error);
+      toast({
+        title: "Submission Error",
+        description: "There was an unexpected error. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
