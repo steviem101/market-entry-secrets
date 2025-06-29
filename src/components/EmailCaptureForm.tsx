@@ -47,10 +47,10 @@ export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormP
 
   if (isSubmitted) {
     return (
-      <div className={`flex items-center justify-center bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-2xl px-8 py-6 ${className}`}>
-        <div className="flex items-center gap-3 text-green-700">
-          <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
-            <Mail className="w-5 h-5" />
+      <div className={`flex items-center justify-center bg-gradient-to-r from-primary/10 to-primary/20 border-2 border-primary/30 rounded-2xl px-8 py-6 ${className}`}>
+        <div className="flex items-center gap-3 text-primary">
+          <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+            <Mail className="w-5 h-5 text-primary" />
           </div>
           <div>
             <div className="font-semibold">Thank you!</div>
@@ -78,7 +78,7 @@ export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormP
           type="submit"
           disabled={isLoading || !email}
           size="lg"
-          className="h-14 px-8 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-lg font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-3 whitespace-nowrap"
+          className="h-14 px-8 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white text-lg font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-3 whitespace-nowrap"
         >
           {isLoading ? (
             "Joining..."
