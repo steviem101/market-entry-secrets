@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Search, Sparkles, Users, Building2, Calendar, MapPin } from "lucide-react";
 import { MasterSearch } from "@/components/MasterSearch";
@@ -31,10 +30,11 @@ export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => 
   return (
     <section 
       ref={elementRef}
-      className="relative py-24 overflow-hidden bg-gradient-to-br from-background via-primary/3 to-accent/5"
+      className="relative py-24 bg-gradient-to-br from-background via-primary/3 to-accent/5"
+      style={{ overflow: 'visible' }}
     >
       {/* Animated Background Elements */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         {/* Floating Orbs */}
         <div className={`absolute top-20 left-[10%] w-32 h-32 bg-primary/8 rounded-full blur-2xl transition-all duration-1000 ${isVisible ? 'animate-pulse opacity-100' : 'opacity-0'}`} />
         <div className={`absolute bottom-32 right-[15%] w-24 h-24 bg-accent/10 rounded-full blur-xl transition-all duration-1000 delay-300 ${isVisible ? 'animate-pulse opacity-100' : 'opacity-0'}`} />
@@ -103,7 +103,6 @@ export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => 
                       </div>
                     </div>
                     
-                    {/* Hover glow effect */}
                     {!isActive && (
                       <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/0 to-accent/0 group-hover:from-primary/5 group-hover:to-accent/5 transition-all duration-300" />
                     )}
@@ -138,7 +137,7 @@ export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => 
       </div>
 
       {/* Bottom Fade Effect */}
-      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background/80 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background/80 to-transparent pointer-events-none" />
     </section>
   );
 };

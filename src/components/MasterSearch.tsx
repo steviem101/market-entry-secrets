@@ -24,24 +24,43 @@ export const MasterSearch = ({
     handleInputChange,
     handleClearSearch,
     handleInputFocus,
-    handleResultClick
+    handleResultClick,
+    setShowResults
   } = useSearchState();
 
-  // Handle clicks outside to close results
+  // Enhanced click-outside handling
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside the search container
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        // Note: We would need to expose setShowResults from useSearchState to handle this
-        // For now, clicking outside will be handled by the existing logic
+        // Also check if click is not on the dropdown (which is now portaled)
+        const target = event.target as Element;
+        const isClickOnDropdown = target.closest('[data-search-dropdown]');
+        
+        if (!isClickOnDropdown) {
+          setShowResults(false);
+        }
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (showResults) {
+      // Add slight delay to prevent immediate closure on initial show
+      const timer = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 100);
+
+      return () => {
+        clearTimeout(timer);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showResults, setShowResults]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle any keyboard events if needed
+    if (e.key === 'Escape' && showResults) {
+      setShowResults(false);
+      inputRef.current?.blur();
+    }
   };
 
   return (

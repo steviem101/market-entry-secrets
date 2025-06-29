@@ -40,13 +40,10 @@ export const useSearchState = () => {
       error: !!error
     });
     
-    // Show dropdown if we have a query AND (loading OR has results OR has error)
-    // This ensures "no results found" is shown when search completes with 0 results
     if (searchQuery.trim() && (loading || results.length > 0 || error)) {
       console.log("Setting showResults to true");
       setShowResults(true);
     } else if (searchQuery.trim() && !loading && results.length === 0 && !error) {
-      // Special case: search completed but no results and no error - still show dropdown for "no results" message
       console.log("Setting showResults to true for no results case");
       setShowResults(true);
     } else {
@@ -64,7 +61,6 @@ export const useSearchState = () => {
 
   const handleInputFocus = () => {
     console.log("Input focused:", { searchQuery, resultsLength: results.length, loading, error });
-    // Show results on focus if we have a query and any relevant state
     if (searchQuery.trim() && (results.length > 0 || loading || error)) {
       setShowResults(true);
     }
@@ -77,9 +73,6 @@ export const useSearchState = () => {
   const handleInputChange = (value: string) => {
     console.log("Input changed:", value);
     setSearchQuery(value);
-    
-    // Don't immediately show results on input change - let the search effect handle it
-    // This prevents flickering and ensures proper state management
   };
 
   return {
@@ -91,6 +84,7 @@ export const useSearchState = () => {
     handleInputChange,
     handleClearSearch,
     handleInputFocus,
-    handleResultClick
+    handleResultClick,
+    setShowResults
   };
 };
