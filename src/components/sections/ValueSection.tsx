@@ -1,7 +1,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Users, FileText, Calendar, Zap, Target, TrendingUp, Globe } from "lucide-react";
+import { Building2, Users, FileText, Calendar, Target, Globe } from "lucide-react";
 
 const valueItems = [
   {
@@ -87,21 +87,6 @@ export const ValueSection = () => {
                 </CardContent>
               </Card>
             ))}
-          </div>
-
-          {/* Bottom Stats */}
-          <div className="mt-16 text-center">
-            <div className="inline-flex items-center gap-8 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-2xl px-8 py-6">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                <span className="text-sm font-medium text-muted-foreground">89% faster market entry</span>
-              </div>
-              <div className="hidden sm:block w-px h-6 bg-border/30" />
-              <div className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-primary" />
-                <span className="text-sm font-medium text-muted-foreground">Save 6+ months of research</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
