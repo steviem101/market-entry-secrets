@@ -22,7 +22,7 @@ export const MasterSearchResults = ({
     loading, 
     error,
     position,
-    results: results.slice(0, 3)
+    sampleResults: results.slice(0, 3).map(r => ({ title: r.title, type: r.type }))
   });
 
   // Calculate if dropdown should open upward - be more conservative
@@ -34,30 +34,24 @@ export const MasterSearchResults = ({
   // Only open upward if there's significantly more space above AND very little space below
   const shouldOpenUpward = spaceBelow < 200 && spaceAbove > maxDropdownHeight + 50;
 
-  console.log("Dropdown positioning:", {
-    viewportHeight,
-    maxDropdownHeight,
-    spaceBelow,
-    spaceAbove,
-    shouldOpenUpward,
-    positionTop: position.top
-  });
-
   const dropdownStyle = {
     position: 'fixed' as const,
     top: shouldOpenUpward ? position.top - maxDropdownHeight - 8 : position.top,
     left: position.left,
     width: Math.max(position.width, 400),
     maxHeight: maxDropdownHeight,
-    zIndex: 9999
+    zIndex: 50,
+    backgroundColor: 'white',
+    border: '1px solid #e5e7eb',
+    borderRadius: '0.5rem',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    overflow: 'hidden'
   };
-
-  console.log("Final dropdown style:", dropdownStyle);
 
   if (loading) {
     return (
       <div 
-        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
         style={dropdownStyle}
       >
         <div className="flex items-center justify-center py-6">
@@ -71,7 +65,7 @@ export const MasterSearchResults = ({
   if (error) {
     return (
       <div 
-        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
         style={dropdownStyle}
       >
         <div className="text-red-500 text-center py-6 px-4">
@@ -85,7 +79,7 @@ export const MasterSearchResults = ({
   if (results.length === 0) {
     return (
       <div 
-        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
         style={dropdownStyle}
       >
         <div className="text-center py-6 px-4">
@@ -97,10 +91,7 @@ export const MasterSearchResults = ({
   }
 
   return (
-    <div 
-      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
-      style={dropdownStyle}
-    >
+    <div style={dropdownStyle}>
       <SearchResultsContainer results={results} onResultClick={onResultClick} />
     </div>
   );

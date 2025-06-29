@@ -9,6 +9,11 @@ interface SearchResultsContainerProps {
 }
 
 export const SearchResultsContainer = ({ results, onResultClick }: SearchResultsContainerProps) => {
+  console.log("SearchResultsContainer rendering:", { 
+    resultsCount: results.length,
+    resultIds: results.map(r => ({ id: r.id, type: r.type, title: r.title }))
+  });
+
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-3">
@@ -20,13 +25,18 @@ export const SearchResultsContainer = ({ results, onResultClick }: SearchResults
       
       <ScrollArea className="w-full max-h-80">
         <div className="space-y-2 pr-4">
-          {results.slice(0, 15).map((result) => (
-            <SearchResultCard
-              key={`${result.type}-${result.id}`}
-              result={result}
-              onResultClick={onResultClick}
-            />
-          ))}
+          {results.slice(0, 15).map((result, index) => {
+            const uniqueKey = `${result.type}-${result.id}-${index}`;
+            console.log("Rendering result:", { uniqueKey, title: result.title, type: result.type });
+            
+            return (
+              <SearchResultCard
+                key={uniqueKey}
+                result={result}
+                onResultClick={onResultClick}
+              />
+            );
+          })}
         </div>
       </ScrollArea>
     </div>

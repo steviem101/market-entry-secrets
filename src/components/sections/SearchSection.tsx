@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Search, Sparkles, Users, Building2, Calendar, MapPin, TrendingUp } from "lucide-react";
+import { Search, Sparkles, Users, Building2, Calendar, MapPin } from "lucide-react";
 import { MasterSearch } from "@/components/MasterSearch";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
@@ -131,33 +131,6 @@ export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => 
                 <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-2xl shadow-lg flex items-center justify-center animate-bounce">
                   <Search className="w-6 h-6 text-white" />
                 </div>
-              </div>
-
-              {/* Stats Bar */}
-              <div className="mt-8 flex flex-wrap justify-center gap-8 text-center">
-                {[
-                  { label: "Active Companies", value: "850+", icon: Building2 },
-                  { label: "Industry Experts", value: "620+", icon: Users },
-                  { label: "Monthly Events", value: "40+", icon: Calendar },
-                  { label: "Success Rate", value: "94%", icon: TrendingUp }
-                ].map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div 
-                      key={stat.label}
-                      className={`flex items-center gap-3 px-4 py-2 rounded-xl bg-white/40 backdrop-blur-sm border border-white/30 transition-all duration-500 hover:scale-105 ${
-                        animationComplete ? 'animate-fade-in' : 'opacity-0'
-                      }`}
-                      style={{ animationDelay: `${600 + index * 150}ms` }}
-                    >
-                      <Icon className="w-5 h-5 text-primary" />
-                      <div>
-                        <div className="font-bold text-primary text-lg">{stat.value}</div>
-                        <div className="text-xs text-muted-foreground">{stat.label}</div>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             </div>
           </div>
