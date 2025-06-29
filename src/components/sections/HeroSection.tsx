@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MasterSearch } from "@/components/MasterSearch";
 import { AIChatSearch } from "@/components/AIChatSearch";
 import { RotatingText } from "@/components/RotatingText";
-import { Sparkles, Star } from "lucide-react";
+import { Sparkles, Star, TrendingUp, Building2 } from "lucide-react";
 
 interface HeroSectionProps {
   totalResources: number;
@@ -72,17 +72,33 @@ export const HeroSection = ({
       
       <div className="relative container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto text-center">
-          {/* Consolidated Social Proof Header */}
-          <div className="inline-flex items-center gap-6 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-3 mb-8">
+          {/* Enhanced Social Proof Header with all metrics */}
+          <div className="inline-flex flex-wrap items-center justify-center gap-4 md:gap-6 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-3 mb-8">
             <div className="flex items-center gap-2">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <span className="text-sm font-medium text-muted-foreground">4.9/5</span>
+              <span className="text-sm font-medium text-muted-foreground">4.9/5 from 247+ companies</span>
             </div>
-            <div className="w-px h-4 bg-border/30" />
+            
+            <div className="hidden sm:block w-px h-4 bg-border/30" />
+            
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-muted-foreground">89% faster market entry</span>
+            </div>
+            
+            <div className="hidden sm:block w-px h-4 bg-border/30" />
+            
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-muted-foreground">Trusted by Fortune 500 companies</span>
+            </div>
+            
+            <div className="hidden sm:block w-px h-4 bg-border/30" />
+            
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium text-primary">1,200+ successful companies</span>

@@ -1,7 +1,7 @@
+
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { HeroSection } from "@/components/sections/HeroSection";
-import { SocialProofBanner } from "@/components/sections/SocialProofBanner";
 import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
 import { FeaturedSolutionsSection } from "@/components/sections/FeaturedSolutionsSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
@@ -26,9 +26,6 @@ const Index = () => {
         searchMode={searchMode}
         onSearchModeChange={(value) => setSearchMode(value as 'database' | 'ai')}
       />
-
-      {/* Immediate Social Proof Banner */}
-      <SocialProofBanner />
 
       {/* Before vs. After Market Entry Section - Core value proposition */}
       <BeforeAfterSection />
