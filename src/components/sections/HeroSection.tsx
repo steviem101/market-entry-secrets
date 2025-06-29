@@ -1,21 +1,15 @@
+
 import { useState, useEffect, useRef } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MasterSearch } from "@/components/MasterSearch";
-import { AIChatSearch } from "@/components/AIChatSearch";
 import { RotatingText } from "@/components/RotatingText";
 import { EmailCaptureForm } from "@/components/EmailCaptureForm";
-import { Sparkles, Star, TrendingUp } from "lucide-react";
+import { Star } from "lucide-react";
 
 interface HeroSectionProps {
   totalResources: number;
-  searchMode: 'database' | 'ai';
-  onSearchModeChange: (mode: 'database' | 'ai') => void;
 }
 
 export const HeroSection = ({
-  totalResources,
-  searchMode,
-  onSearchModeChange
+  totalResources
 }: HeroSectionProps) => {
   const [count, setCount] = useState(0);
   const animationRef = useRef<ReturnType<typeof setTimeout>>();
@@ -87,29 +81,15 @@ export const HeroSection = ({
       
       <div className="relative container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto text-center">
-          {/* Enhanced Social Proof Header with remaining metrics */}
-          <div className="inline-flex flex-wrap items-center justify-center gap-4 md:gap-6 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-3 mb-8">
+          {/* Simplified Social Proof - Star Rating Only */}
+          <div className="inline-flex items-center justify-center bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-3 mb-8">
             <div className="flex items-center gap-2">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <span className="text-sm font-medium text-muted-foreground">4.9/5 from 247+ companies</span>
-            </div>
-            
-            <div className="hidden sm:block w-px h-4 bg-border/30" />
-            
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">89% faster market entry</span>
-            </div>
-            
-            <div className="hidden sm:block w-px h-4 bg-border/30" />
-            
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">1,200+ successful companies</span>
+              <span className="text-sm font-medium text-muted-foreground">4.9/5 from 1,200+ successful companies</span>
             </div>
           </div>
 
@@ -129,45 +109,21 @@ export const HeroSection = ({
             Skip months of research and costly mistakes. Access vetted service providers, expert mentors, and proven strategies in one comprehensive platform.
           </p>
 
-          {/* Streamlined Resource Counter */}
-          <div className="inline-flex items-center justify-center bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl px-6 py-4 mb-10 soft-shadow backdrop-blur-sm">
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {count.toLocaleString()}+
-              </div>
-              <div className="text-sm text-muted-foreground font-medium">Resources Available</div>
-            </div>
-          </div>
+          {/* Supporting Text for Email Capture */}
+          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Join our database of <span className="font-semibold text-primary">{count.toLocaleString()}+ resources</span> and community of successful founders entering the Australian market
+          </p>
           
-          {/* Streamlined Search Interface */}
-          <div className="max-w-4xl mx-auto mb-10">
-            <Tabs value={searchMode} onValueChange={onSearchModeChange} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-background/60 backdrop-blur-md border border-border/50 soft-shadow max-w-md mx-auto">
-                <TabsTrigger value="database" className="text-sm font-medium">🔍 Search Database</TabsTrigger>
-                <TabsTrigger value="ai" className="text-sm font-medium">🤖 Ask AI Assistant</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="database" className="space-y-2 mt-0">
-                {searchMode === 'database' && (
-                  <MasterSearch placeholder="Search for service providers, mentors, leads, events..." />
-                )}
-              </TabsContent>
-              
-              <TabsContent value="ai" className="space-y-2 mt-0">
-                {searchMode === 'ai' && (
-                  <div className="max-w-3xl mx-auto">
-                    <AIChatSearch placeholder="Ask me: 'How do I find legal partners for Australian market entry?'" />
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Email Capture Form */}
+          {/* Email Capture Form - Primary CTA */}
           <EmailCaptureForm 
             onSubmit={handleEmailSubmit}
-            className="mb-4"
+            className="mb-8 max-w-lg mx-auto"
           />
+
+          {/* Trust indicators */}
+          <p className="text-sm text-muted-foreground">
+            Free access • No spam • Join 1,200+ companies
+          </p>
         </div>
       </div>
     </section>

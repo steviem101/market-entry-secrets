@@ -47,42 +47,49 @@ export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormP
 
   if (isSubmitted) {
     return (
-      <div className={`flex items-center justify-center bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl px-6 py-4 ${className}`}>
-        <div className="flex items-center gap-2 text-primary">
-          <Mail className="w-5 h-5" />
-          <span className="font-medium">Thank you! We'll be in touch soon.</span>
+      <div className={`flex items-center justify-center bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-2xl px-8 py-6 ${className}`}>
+        <div className="flex items-center gap-3 text-green-700">
+          <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
+            <Mail className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-semibold">Thank you!</div>
+            <div className="text-sm">We'll be in touch soon with exclusive access.</div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`flex flex-col sm:flex-row gap-3 max-w-md mx-auto ${className}`}>
-      <div className="flex-1">
-        <Input
-          type="email"
-          placeholder="Your email here"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="h-12 px-4 bg-background/80 backdrop-blur-sm border-border/50 focus:border-primary/50 rounded-xl"
-        />
+    <form onSubmit={handleSubmit} className={`${className}`}>
+      <div className="flex flex-col sm:flex-row gap-3 p-2 bg-white/90 backdrop-blur-sm border-2 border-border/20 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="flex-1">
+          <Input
+            type="email"
+            placeholder="Enter your email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="h-14 px-6 text-lg border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
+          />
+        </div>
+        <Button
+          type="submit"
+          disabled={isLoading || !email}
+          size="lg"
+          className="h-14 px-8 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-lg font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-3 whitespace-nowrap"
+        >
+          {isLoading ? (
+            "Joining..."
+          ) : (
+            <>
+              Join Our Community
+              <ArrowRight className="w-5 h-5" />
+            </>
+          )}
+        </Button>
       </div>
-      <Button
-        type="submit"
-        disabled={isLoading || !email}
-        size="lg"
-        className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-6 py-3 rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 flex items-center gap-2"
-      >
-        {isLoading ? (
-          "Joining..."
-        ) : (
-          <>
-            Join Our Community
-            <ArrowRight className="w-4 h-4" />
-          </>
-        )}
-      </Button>
     </form>
   );
 };
