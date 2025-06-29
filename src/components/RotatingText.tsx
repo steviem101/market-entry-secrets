@@ -16,9 +16,10 @@ export const RotatingText = ({
   const [isVisible, setIsVisible] = useState(true);
   const [cycleCount, setCycleCount] = useState(0);
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  const [showFinalWord, setShowFinalWord] = useState(false);
 
   useEffect(() => {
-    if (isAnimationComplete) return;
+    if (isAnimationComplete && showFinalWord) return;
 
     const interval = setInterval(() => {
       setIsVisible(false);
@@ -31,9 +32,13 @@ export const RotatingText = ({
           if (nextIndex === 0) {
             setCycleCount(prev => {
               const newCycleCount = prev + 1;
-              // Stop after 3 complete cycles
-              if (newCycleCount >= 3) {
+              // After 2 complete cycles, show "Secrets"
+              if (newCycleCount >= 2) {
                 setIsAnimationComplete(true);
+                // Small delay before showing final word
+                setTimeout(() => {
+                  setShowFinalWord(true);
+                }, 300);
               }
               return newCycleCount;
             });
@@ -46,7 +51,10 @@ export const RotatingText = ({
     }, duration);
 
     return () => clearInterval(interval);
-  }, [words.length, duration, isAnimationComplete]);
+  }, [words.length, duration, isAnimationComplete, showFinalWord]);
+
+  // Show "Secrets" as the final word after cycling
+  const displayWord = showFinalWord ? "Secrets" : words[currentWordIndex];
 
   return (
     <span 
@@ -54,7 +62,7 @@ export const RotatingText = ({
         isVisible ? 'opacity-100 transform scale-100' : 'opacity-0 transform scale-95'
       } ${className}`}
     >
-      {words[currentWordIndex]}
+      {displayWord}
     </span>
   );
 };

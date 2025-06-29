@@ -51,12 +51,18 @@ export const HeroSection = ({
   }, [totalResources]);
 
   const rotatingWords = [
-    "Uncover the leads",
-    "Discover opportunities", 
-    "Find your partners",
-    "Access expert mentors",
-    "Navigate regulations",
-    "Scale your business"
+    "Leads",
+    "Mentors", 
+    "Vendors",
+    "Events",
+    "Communities",
+    "Content",
+    "Case Studies",
+    "Ecosystem's",
+    "Supports",
+    "Accelerators",
+    "Investors",
+    "Partners"
   ];
 
   return (
@@ -99,13 +105,15 @@ export const HeroSection = ({
 
           {/* Dynamic Headline with Rotating Text */}
           <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight">
+            <span className="text-foreground">Unlock the </span>
             <RotatingText 
               words={rotatingWords}
               className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"
-              duration={3000}
+              duration={2000}
             />
-            {" "}to{" "}
-            <span className="text-foreground">dominate the Australian market</span>
+            <span className="text-foreground"> to</span>
+            <br />
+            <span className="text-foreground">Australian Market Success</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-4xl mx-auto">
             Skip months of research and costly mistakes. Access vetted service providers, expert mentors, and proven strategies in one comprehensive platform.
