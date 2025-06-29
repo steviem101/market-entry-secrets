@@ -20,22 +20,22 @@ export const SearchResultCard = ({ result, onResultClick }: SearchResultCardProp
       className="block w-full"
     >
       <Card className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-gray-200 dark:border-gray-600 w-full">
-        <CardHeader className="pb-2 pt-3 px-4">
+        <CardHeader className="pb-1 pt-2.5 px-3">
           <div className="flex items-start justify-between w-full">
-            <div className="flex items-start gap-3 flex-1 min-w-0">
-              <div className="flex items-center gap-1 mt-1 flex-shrink-0">
+            <div className="flex items-start gap-2.5 flex-1 min-w-0">
+              <div className="flex items-center gap-1 mt-0.5 flex-shrink-0">
                 {getTypeIcon(result)}
               </div>
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-sm line-clamp-1 text-gray-900 dark:text-gray-100">
+                <CardTitle className="text-sm line-clamp-1 text-gray-900 dark:text-gray-100 leading-tight">
                   {result.title}
                 </CardTitle>
-                <CardDescription className="text-xs line-clamp-2 mt-1 text-gray-600 dark:text-gray-300">
+                <CardDescription className="text-xs line-clamp-1 mt-0.5 text-gray-600 dark:text-gray-300">
                   {result.description}
                 </CardDescription>
               </div>
             </div>
-            <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+            <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
               <BookmarkButton
                 contentType={result.type === 'service_provider' || result.type === 'innovation_hub' || result.type === 'lead' ? 'content' : result.type}
                 contentId={result.id}
@@ -45,7 +45,7 @@ export const SearchResultCard = ({ result, onResultClick }: SearchResultCardProp
                 size="sm"
                 variant="ghost"
               />
-              <Badge variant={getTypeBadgeVariant(result)} className="text-xs">
+              <Badge variant={getTypeBadgeVariant(result)} className="text-xs px-1.5 py-0.5">
                 {getTypeLabel(result)}
               </Badge>
             </div>
@@ -53,18 +53,18 @@ export const SearchResultCard = ({ result, onResultClick }: SearchResultCardProp
         </CardHeader>
         
         {result.metadata && (
-          <CardContent className="pt-0 pb-3 px-4">
-            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
+          <CardContent className="pt-0 pb-2.5 px-3">
+            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
               {result.metadata.location && (
                 <div className="flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
-                  <span className="truncate">{result.metadata.location}</span>
+                  <span className="truncate max-w-[120px]">{result.metadata.location}</span>
                 </div>
               )}
               {result.metadata.company && (
                 <div className="flex items-center gap-1">
                   <Building className="w-3 h-3" />
-                  <span className="truncate">{result.metadata.company}</span>
+                  <span className="truncate max-w-[120px]">{result.metadata.company}</span>
                 </div>
               )}
               {result.metadata.date && (
@@ -79,16 +79,10 @@ export const SearchResultCard = ({ result, onResultClick }: SearchResultCardProp
                   <span>Est. {result.metadata.founded}</span>
                 </div>
               )}
-              {result.metadata.category && (
+              {result.metadata.category && !result.metadata.location && !result.metadata.company && (
                 <div className="flex items-center gap-1">
                   <FileText className="w-3 h-3" />
-                  <span className="truncate">{result.metadata.category}</span>
-                </div>
-              )}
-              {result.metadata.industry && (
-                <div className="flex items-center gap-1">
-                  <Building className="w-3 h-3" />
-                  <span className="truncate">{result.metadata.industry}</span>
+                  <span className="truncate max-w-[120px]">{result.metadata.category}</span>
                 </div>
               )}
             </div>
