@@ -1,16 +1,18 @@
 
-import { Calendar, MapPin, Users, Clock, Building, User } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Building, User, Eye, Mail } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Event } from "@/hooks/useEvents";
 
 interface EventCardProps {
   event: Event;
+  onViewDetails?: (event: Event) => void;
 }
 
-export const EventCard = ({ event }: EventCardProps) => {
+export const EventCard = ({ event, onViewDetails }: EventCardProps) => {
   // Placeholder images for event organizers
   const getOrganizerImage = (index: number) => {
     const images = [
@@ -20,6 +22,20 @@ export const EventCard = ({ event }: EventCardProps) => {
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
     ];
     return images[index % images.length];
+  };
+
+  const handleContactOrganizer = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const subject = encodeURIComponent(`Inquiry about ${event.title}`);
+    const body = encodeURIComponent(`Hi,\n\nI'm interested in learning more about the event "${event.title}" scheduled for ${new Date(event.date).toLocaleDateString()} at ${event.time}.\n\nPlease provide more details.\n\nBest regards`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+  };
+
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onViewDetails?.(event);
   };
 
   return (
@@ -74,7 +90,7 @@ export const EventCard = ({ event }: EventCardProps) => {
           </Badge>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-3 mb-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="w-4 h-4 flex-shrink-0" />
             <span className="truncate flex-1">{event.location}</span>
@@ -96,6 +112,28 @@ export const EventCard = ({ event }: EventCardProps) => {
               <span>{event.attendees}</span>
             </div>
           </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 mt-auto">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1"
+            onClick={handleViewDetails}
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            View Details
+          </Button>
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="flex-1"
+            onClick={handleContactOrganizer}
+          >
+            <Mail className="w-4 h-4 mr-1" />
+            Contact
+          </Button>
         </div>
       </CardContent>
     </Card>

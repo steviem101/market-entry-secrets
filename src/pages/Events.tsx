@@ -1,12 +1,12 @@
-
 import { useState } from "react";
 import { Calendar, AlertCircle } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
+import { EventModal } from "@/components/EventModal";
 import { EventsHero } from "@/components/events/EventsHero";
 import { EventsFilters } from "@/components/events/EventsFilters";
-import { useEvents } from "@/hooks/useEvents";
+import { useEvents, Event } from "@/hooks/useEvents";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { UsageBanner } from "@/components/UsageBanner";
 
@@ -15,6 +15,8 @@ const Events = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { events, loading, error, searchEvents, clearSearch, isSearching } = useEvents();
 
@@ -43,6 +45,16 @@ const Events = () => {
     setSelectedCategory("all");
     setSelectedLocation("all");
     clearSearch();
+  };
+
+  const handleViewEventDetails = (event: Event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
   };
 
   const hasActiveFilters = selectedCategory !== "all" || selectedLocation !== "all";
@@ -133,12 +145,22 @@ const Events = () => {
                 contentTitle={event.title}
                 contentDescription={event.description}
               >
-                <EventCard event={event} />
+                <EventCard 
+                  event={event} 
+                  onViewDetails={handleViewEventDetails}
+                />
               </FreemiumGate>
             ))}
           </div>
         )}
       </div>
+
+      {/* Event Modal */}
+      <EventModal
+        event={selectedEvent}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };

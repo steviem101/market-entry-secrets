@@ -5,9 +5,10 @@ import SectorSection from "./SectorSection";
 
 interface EventsSectionProps {
   events: any[];
+  onViewEventDetails?: (event: any) => void;
 }
 
-const EventsSection = ({ events }: EventsSectionProps) => {
+const EventsSection = ({ events, onViewEventDetails }: EventsSectionProps) => {
   if (events.length === 0) return null;
 
   return (
@@ -23,7 +24,10 @@ const EventsSection = ({ events }: EventsSectionProps) => {
           contentType="events"
           itemId={event.id}
         >
-          <EventCard event={event} />
+          <EventCard 
+            event={event} 
+            onViewDetails={onViewEventDetails}
+          />
         </FreemiumGate>
       ))}
     </SectorSection>
