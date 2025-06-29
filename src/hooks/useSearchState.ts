@@ -14,7 +14,8 @@ export const useSearchState = () => {
     debouncedSearchQuery, 
     results: results.length, 
     loading, 
-    showResults 
+    showResults,
+    error 
   });
 
   // Perform search when debounced query changes
@@ -30,16 +31,23 @@ export const useSearchState = () => {
     }
   }, [debouncedSearchQuery, searchAll, clearSearch]);
 
-  // Show results when we have a query and results are available
+  // Show results when we have a query and any of: results, loading, or error
   useEffect(() => {
     console.log("Results effect:", { 
       hasQuery: searchQuery.trim().length > 0,
       hasResults: results.length > 0, 
-      loading 
+      loading,
+      error: !!error
     });
     
-    if (searchQuery.trim() && (results.length > 0 || loading || error)) {
+    // Show dropdown if we have a query AND (loading OR has results OR has error)
+    // This ensures "no results found" is shown when search completes with 0 results
+    if (searchQuery.trim() && (loading || results.length > 0 || error)) {
       console.log("Setting showResults to true");
+      setShowResults(true);
+    } else if (searchQuery.trim() && !loading && results.length === 0 && !error) {
+      // Special case: search completed but no results and no error - still show dropdown for "no results" message
+      console.log("Setting showResults to true for no results case");
       setShowResults(true);
     } else {
       console.log("Setting showResults to false");
@@ -55,7 +63,8 @@ export const useSearchState = () => {
   };
 
   const handleInputFocus = () => {
-    console.log("Input focused:", { searchQuery, resultsLength: results.length });
+    console.log("Input focused:", { searchQuery, resultsLength: results.length, loading, error });
+    // Show results on focus if we have a query and any relevant state
     if (searchQuery.trim() && (results.length > 0 || loading || error)) {
       setShowResults(true);
     }
@@ -69,9 +78,8 @@ export const useSearchState = () => {
     console.log("Input changed:", value);
     setSearchQuery(value);
     
-    if (value.trim() && (results.length > 0 || loading)) {
-      setShowResults(true);
-    }
+    // Don't immediately show results on input change - let the search effect handle it
+    // This prevents flickering and ensures proper state management
   };
 
   return {

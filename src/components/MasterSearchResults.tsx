@@ -60,9 +60,9 @@ export const MasterSearchResults = ({
         className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
         style={dropdownStyle}
       >
-        <div className="flex items-center justify-center py-4">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-          <span className="ml-2 text-muted-foreground text-sm">Searching...</span>
+        <div className="flex items-center justify-center py-6">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+          <span className="ml-3 text-muted-foreground text-sm">Searching across all databases...</span>
         </div>
       </div>
     );
@@ -74,8 +74,9 @@ export const MasterSearchResults = ({
         className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
         style={dropdownStyle}
       >
-        <div className="text-red-500 text-center py-4 text-sm">
-          Error: {error}
+        <div className="text-red-500 text-center py-6 px-4">
+          <div className="text-sm font-medium mb-1">Search Error</div>
+          <div className="text-xs text-red-400">{error}</div>
         </div>
       </div>
     );
@@ -87,8 +88,9 @@ export const MasterSearchResults = ({
         className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden"
         style={dropdownStyle}
       >
-        <div className="text-gray-500 text-center py-4 text-sm">
-          No results found
+        <div className="text-center py-6 px-4">
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">No results found</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Try adjusting your search terms or browse our categories</div>
         </div>
       </div>
     );

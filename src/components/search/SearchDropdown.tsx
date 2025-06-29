@@ -22,7 +22,13 @@ export const SearchDropdown = ({
   inputRef,
   onResultClick
 }: SearchDropdownProps) => {
-  const shouldShowResults = showResults && searchQuery.trim() && (loading || results.length > 0 || error);
+  // Show dropdown if we have a query AND (loading OR results OR error OR completed search with no results)
+  const shouldShowResults = showResults && searchQuery.trim() && (
+    loading || 
+    results.length > 0 || 
+    error ||
+    (!loading && results.length === 0) // This handles the "no results found" case
+  );
 
   // Calculate dropdown position
   const calculateDropdownPosition = () => {
