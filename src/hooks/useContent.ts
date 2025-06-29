@@ -35,7 +35,8 @@ export const useContentItem = (slug: string) => {
   return useQuery({
     queryKey: ['content-item', slug],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get the content item
+      const { data: contentItem, error: contentError } = await supabase
         .from('content_items')
         .select(`
           *,
@@ -45,38 +46,45 @@ export const useContentItem = (slug: string) => {
             color
           ),
           content_company_profiles (*),
-          content_founders (*),
-          content_sections (
-            id,
-            title,
-            slug,
-            sort_order,
-            is_active
-          ),
-          content_bodies (
-            id,
-            section_id,
-            question,
-            body_text,
-            sort_order,
-            content_type
-          )
+          content_founders (*)
         `)
         .eq('slug', slug)
         .eq('status', 'published')
         .single();
 
-      if (error) throw error;
+      if (contentError) throw contentError;
 
-      // Sort sections and bodies by sort_order
-      if (data.content_sections) {
-        data.content_sections.sort((a: any, b: any) => a.sort_order - b.sort_order);
-      }
-      if (data.content_bodies) {
-        data.content_bodies.sort((a: any, b: any) => a.sort_order - b.sort_order);
-      }
+      // Get sections for this content item
+      const { data: sections, error: sectionsError } = await supabase
+        .from('content_sections')
+        .select('*')
+        .eq('content_id', contentItem.id)
+        .eq('is_active', true)
+        .order('sort_order');
 
-      return data;
+      if (sectionsError) throw sectionsError;
+
+      // Get all content bodies for this content item (both sectioned and non-sectioned)
+      const { data: bodies, error: bodiesError } = await supabase
+        .from('content_bodies')
+        .select('*')
+        .or(`content_id.eq.${contentItem.id},section_id.in.(${sections?.map(s => s.id).join(',') || 'null'})`)
+        .order('sort_order');
+
+      if (bodiesError) throw bodiesError;
+
+      // Combine the data
+      const result = {
+        ...contentItem,
+        content_sections: sections || [],
+        content_bodies: bodies || []
+      };
+
+      console.log('Fetched content item:', result);
+      console.log('Sections:', sections);
+      console.log('Bodies:', bodies);
+
+      return result;
     },
     enabled: !!slug
   });

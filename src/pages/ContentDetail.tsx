@@ -122,21 +122,23 @@ const ContentDetail = () => {
                 </h3>
               </div>
               
-              <nav className="space-y-2">
-                {sections.map((section) => (
-                  <button
-                    key={section.id}
-                    onClick={() => scrollToSection(section.slug)}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      section.isActive
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {section.title}
-                  </button>
-                ))}
-              </nav>
+              {sections.length > 0 && (
+                <nav className="space-y-2">
+                  {sections.map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => scrollToSection(section.slug)}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                        section.isActive
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {section.title}
+                    </button>
+                  ))}
+                </nav>
+              )}
             </div>
           </aside>
 
