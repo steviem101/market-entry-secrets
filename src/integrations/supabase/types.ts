@@ -1086,6 +1086,33 @@ export type Database = {
         }
         Relationships: []
       }
+      MES: {
+        Row: {
+          archived: boolean | null
+          attrs: Json | null
+          created_time: string | null
+          id: string | null
+          last_edited_time: string | null
+          url: string | null
+        }
+        Insert: {
+          archived?: boolean | null
+          attrs?: Json | null
+          created_time?: string | null
+          id?: string | null
+          last_edited_time?: string | null
+          url?: string | null
+        }
+        Update: {
+          archived?: boolean | null
+          attrs?: Json | null
+          created_time?: string | null
+          id?: string | null
+          last_edited_time?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
