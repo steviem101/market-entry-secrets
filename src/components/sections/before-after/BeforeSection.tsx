@@ -1,4 +1,3 @@
-
 import { 
   Search, 
   Phone, 
@@ -21,7 +20,7 @@ export const BeforeSection = () => {
     {
       icon: Phone,
       title: "Cold Outreach",
-      description: "Random calls to unvetted service providers",
+      description: "Spray and pray to unvetted service providers, advisors and partners",
       color: "text-orange-400"
     },
     {
