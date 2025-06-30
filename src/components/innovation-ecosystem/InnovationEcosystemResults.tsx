@@ -63,7 +63,7 @@ const InnovationEcosystemResults = ({
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold text-foreground">
-          {filteredOrganizations.length} Organization{filteredOrganizations.length !== 1 ? 's' : ''} Found
+          {filteredOrganizations.length} Innovator{filteredOrganizations.length !== 1 ? 's' : ''} Found
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
