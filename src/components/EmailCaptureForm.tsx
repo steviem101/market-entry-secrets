@@ -106,7 +106,7 @@ export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormP
         <div className="flex-[2] min-w-[280px]">
           <Input
             type="email"
-            placeholder="Enter your email address"
+            placeholder="Your email here"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
