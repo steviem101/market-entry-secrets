@@ -1,6 +1,8 @@
+
 import { useState, useEffect, useRef } from "react";
 import { RotatingText } from "@/components/RotatingText";
 import { EmailCaptureForm } from "@/components/EmailCaptureForm";
+import { SocialProofAvatars } from "@/components/SocialProofAvatars";
 import { Star } from "lucide-react";
 
 interface HeroSectionProps {
@@ -80,15 +82,18 @@ export const HeroSection = ({
       
       <div className="relative container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto text-center">
-          {/* Simplified Social Proof - Star Rating Only */}
-          <div className="inline-flex items-center justify-center bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-3 mb-8">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                ))}
+          {/* Enhanced Social Proof with Avatars */}
+          <div className="mb-8">
+            <SocialProofAvatars className="mb-4" />
+            <div className="inline-flex items-center justify-center bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-3">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">Trusted by 1,200+ companies entering Australia</span>
               </div>
-              <span className="text-sm font-medium text-muted-foreground">4.9/5 from 1,200+ successful companies</span>
             </div>
           </div>
 
