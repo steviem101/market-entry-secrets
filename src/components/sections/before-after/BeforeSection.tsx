@@ -26,7 +26,7 @@ export const BeforeSection = () => {
     {
       icon: DollarSign,
       title: "Expensive Consultants",
-      description: "$50K+ for basic market analysis and TAM reports",
+      description: "$000's for generic market analysis reports",
       color: "text-red-400"
     },
     {
