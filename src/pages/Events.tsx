@@ -22,13 +22,9 @@ const Events = () => {
   const { events, loading, error, searchEvents, clearSearch, isSearching } = useEvents();
 
   // Get unique categories, types and locations for filters
-  console.log('Events in component:', events);
   const categories = Array.from(new Set(events.map(event => event.category))).sort();
   const types = Array.from(new Set(events.map(event => event.type))).sort();
   const locations = Array.from(new Set(events.map(event => event.location))).sort();
-  
-  console.log('Available types:', types);
-  console.log('Available categories:', categories);
 
   // Filter events based on selected filters
   const filteredEvents = events.filter(event => {
@@ -37,9 +33,6 @@ const Events = () => {
     const matchesLocation = selectedLocation === "all" || event.location === selectedLocation;
     return matchesCategory && matchesType && matchesLocation;
   });
-
-  console.log('Filtered events count:', filteredEvents.length);
-  console.log('Selected filters:', { selectedType, selectedCategory, selectedLocation });
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
