@@ -42,10 +42,6 @@ export const InnovationEcosystemHero = ({
               <div className="text-3xl font-bold text-blue-600 mb-1">{locationCount}</div>
               <div className="text-sm text-gray-600">Global Locations</div>
             </div>
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
-              <div className="text-3xl font-bold text-green-600 mb-1">500+</div>
-              <div className="text-sm text-gray-600">Startups Supported</div>
-            </div>
           </div>
         </div>
       </div>
