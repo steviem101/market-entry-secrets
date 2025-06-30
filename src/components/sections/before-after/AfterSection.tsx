@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { 
   Building2,
@@ -14,7 +13,7 @@ export const AfterSection = () => {
   const afterFeatures = [
     {
       icon: Building2,
-      title: "500+ Vetted Service Providers",
+      title: "120+ Vetted Service Providers",
       description: "Pre-screened legal, accounting, marketing partners",
       link: "/service-providers"
     },
