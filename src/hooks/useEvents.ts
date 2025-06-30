@@ -24,6 +24,8 @@ export const useEvents = () => {
   const fetchEvents = useCallback(async (query?: string) => {
     try {
       setLoading(true);
+      console.log('Fetching events...');
+      
       let queryBuilder = supabase
         .from('events')
         .select('*')
@@ -40,6 +42,17 @@ export const useEvents = () => {
 
       if (error) {
         throw error;
+      }
+
+      console.log('Fetched events:', data);
+      console.log('Total events count:', data?.length);
+      
+      // Log event types to debug
+      if (data) {
+        const eventTypes = data.map(event => event.type);
+        console.log('Event types found:', eventTypes);
+        const uniqueTypes = Array.from(new Set(eventTypes));
+        console.log('Unique event types:', uniqueTypes);
       }
 
       setEvents(data || []);
