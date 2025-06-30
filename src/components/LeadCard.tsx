@@ -1,5 +1,5 @@
 
-import { Database, Map, Users, TrendingUp, Download, Eye, Star, Calendar, MapPin, Tag } from "lucide-react";
+import { Database, Map, Users, TrendingUp, Eye, Star, Calendar, MapPin, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -33,11 +33,6 @@ export const LeadCard = ({ lead, onDownload, onPreview }: LeadCardProps) => {
       default:
         return 'Market Data';
     }
-  };
-
-  const formatPrice = () => {
-    if (!lead.price) return 'Contact for pricing';
-    return `${lead.currency || 'AUD'} $${lead.price.toLocaleString()}`;
   };
 
   const formatLastUpdated = () => {
@@ -139,32 +134,25 @@ export const LeadCard = ({ lead, onDownload, onPreview }: LeadCardProps) => {
       </CardContent>
 
       <CardFooter className="pt-0">
-        <div className="w-full space-y-3">
-          <div className="text-lg font-semibold text-foreground">
-            {formatPrice()}
-          </div>
-          
-          <div className="flex gap-2 w-full">
-            {lead.preview_url && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onPreview(lead)}
-                className="flex-1"
-              >
-                <Eye className="w-4 h-4 mr-1" />
-                Preview
-              </Button>
-            )}
+        <div className="flex gap-2 w-full">
+          {lead.preview_url && (
             <Button
+              variant="outline"
               size="sm"
-              onClick={() => onDownload(lead)}
+              onClick={() => onPreview(lead)}
               className="flex-1"
             >
-              <Download className="w-4 h-4 mr-1" />
-              {lead.type === 'tam_map' ? 'View' : 'Download'}
+              <Eye className="w-4 h-4 mr-1" />
+              Preview
             </Button>
-          </div>
+          )}
+          <Button
+            size="sm"
+            onClick={() => onDownload(lead)}
+            className="flex-1"
+          >
+            Request
+          </Button>
         </div>
       </CardFooter>
     </Card>
