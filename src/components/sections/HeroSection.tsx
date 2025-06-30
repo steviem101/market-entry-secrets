@@ -72,7 +72,8 @@ export const HeroSection = ({
 
   return (
     <section className="relative overflow-hidden min-h-screen flex items-center">
-      {/* Enhanced Background with soft gradients */}
+      {/* Enhanced Background with light blue tinge */}
+      <div className="absolute inset-0 bg-gradient-to-b from-sky-50/60 via-sky-25/40 to-background" />
       <div className="absolute inset-0 gradient-overlay" />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-accent/8" />
       
