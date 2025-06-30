@@ -14,7 +14,7 @@ export const SocialProofAvatars = ({ className = "" }: SocialProofAvatarsProps) 
       fallback: "JD"
     },
     {
-      src: "https://images.unsplash.com/photo-1494790108755-2616b612b1f9?w=100&h=100&fit=crop&crop=face",
+      src: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&h=100&fit=crop&crop=face",
       alt: "User testimonial", 
       fallback: "SM"
     },
