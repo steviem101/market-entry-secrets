@@ -32,6 +32,10 @@ export const CommunityHero = ({ totalExperts, totalLocations }: CommunityHeroPro
 
           <div className="flex flex-wrap justify-center gap-8 text-center">
             <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
+              <div className="text-3xl font-bold text-purple-600 mb-1">{totalExperts}</div>
+              <div className="text-sm text-gray-600">Expert Mentors</div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
               <div className="text-3xl font-bold text-blue-600 mb-1">{totalLocations}</div>
               <div className="text-sm text-gray-600">Global Locations</div>
             </div>

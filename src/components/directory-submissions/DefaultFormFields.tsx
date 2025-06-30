@@ -6,23 +6,24 @@ import { FormData } from "./types";
 import { SubmissionType } from "./submissionConfig";
 import { BaseFormFields } from "./BaseFormFields";
 
-// Exclude 'mentor' from the submission types since DefaultFormFields doesn't handle mentors
-type NonMentorSubmissionType = Exclude<SubmissionType, 'mentor'>;
-
 interface DefaultFormFieldsProps {
   formData: FormData;
   onInputChange: (field: string, value: string) => void;
-  submissionType: NonMentorSubmissionType;
+  submissionType: SubmissionType;
 }
 
 export const DefaultFormFields = ({ formData, onInputChange, submissionType }: DefaultFormFieldsProps) => {
+  const isMentor = submissionType === 'mentor';
+  const isServiceProvider = submissionType === 'service_provider';
+  const isTradeAgency = submissionType === 'trade_agency';
+  
   return (
     <div className="space-y-8">
       {/* Personal Information Section */}
       <div className="space-y-6">
-        <div className="border-b border-gray-200 pb-2">
-          <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
-          <p className="text-sm text-gray-600 mt-1">Tell us about yourself</p>
+        <div className="border-b border-gray-200 pb-3">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Personal Information</h3>
+          <p className="text-gray-600">Tell us about yourself</p>
         </div>
         
         <BaseFormFields formData={formData} onInputChange={onInputChange} />
@@ -30,29 +31,52 @@ export const DefaultFormFields = ({ formData, onInputChange, submissionType }: D
 
       {/* Professional Information Section */}
       <div className="space-y-6">
-        <div className="border-b border-gray-200 pb-2">
-          <h3 className="text-lg font-semibold text-gray-900">Organization Details</h3>
-          <p className="text-sm text-gray-600 mt-1">Information about your organization</p>
+        <div className="border-b border-gray-200 pb-3">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            {isMentor ? 'Professional Background' : 'Organization Details'}
+          </h3>
+          <p className="text-gray-600">
+            {isMentor 
+              ? 'Share your professional experience and expertise' 
+              : 'Information about your organization'}
+          </p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="organization" className="text-base font-medium text-gray-700">
-            {submissionType === 'service_provider' ? 'Company Name' : 
-             submissionType === 'trade_agency' ? 'Agency Name' :
-             'Organization Name'} *
-          </Label>
-          <Input
-            id="organization"
-            value={formData.organization}
-            onChange={(e) => onInputChange('organization', e.target.value)}
-            required
-            className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            placeholder={`Enter your ${submissionType === 'service_provider' ? 'company' : 'organization'} name`}
-          />
-        </div>
+        {!isMentor && (
+          <div className="space-y-3">
+            <Label htmlFor="organization" className="text-lg font-semibold text-gray-800">
+              {isServiceProvider ? 'Company Name' : 
+               isTradeAgency ? 'Agency Name' :
+               'Organization Name'} *
+            </Label>
+            <Input
+              id="organization"
+              value={formData.organization}
+              onChange={(e) => onInputChange('organization', e.target.value)}
+              required={!isMentor}
+              className="h-14 text-lg border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg"
+              placeholder={`Enter your ${isServiceProvider ? 'company' : 'organization'} name`}
+            />
+          </div>
+        )}
 
-        <div className="space-y-2">
-          <Label htmlFor="website" className="text-base font-medium text-gray-700">
+        {isMentor && (
+          <div className="space-y-3">
+            <Label htmlFor="organization" className="text-lg font-semibold text-gray-800">
+              Current Organization
+            </Label>
+            <Input
+              id="organization"
+              value={formData.organization}
+              onChange={(e) => onInputChange('organization', e.target.value)}
+              className="h-14 text-lg border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg"
+              placeholder="Where do you currently work? (Optional)"
+            />
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <Label htmlFor="website" className="text-lg font-semibold text-gray-800">
             Website
           </Label>
           <Input
@@ -61,45 +85,73 @@ export const DefaultFormFields = ({ formData, onInputChange, submissionType }: D
             value={formData.website}
             onChange={(e) => onInputChange('website', e.target.value)}
             placeholder="https://www.example.com"
-            className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            className="h-14 text-lg border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-lg"
           />
         </div>
       </div>
 
       {/* Expertise/Services Section */}
       <div className="space-y-6">
-        <div className="border-b border-gray-200 pb-2">
-          <h3 className="text-lg font-semibold text-gray-900">Services & Offerings</h3>
-          <p className="text-sm text-gray-600 mt-1">What services do you offer?</p>
+        <div className="border-b border-gray-200 pb-3">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            {isMentor ? 'Areas of Expertise' : 'Services & Offerings'}
+          </h3>
+          <p className="text-gray-600">
+            {isMentor 
+              ? 'What areas can you provide mentorship in?' 
+              : 'What services do you offer?'}
+          </p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="services" className="text-base font-medium text-gray-700">
-            {submissionType === 'service_provider' ? 'Services Offered' :
-             submissionType === 'trade_agency' ? 'Services Provided' :
-             'Services/Programs Offered'} *
+        <div className="space-y-3">
+          <Label htmlFor="services" className="text-lg font-semibold text-gray-800">
+            {isMentor ? 'Expertise Areas' :
+             isServiceProvider ? 'Services Offered' :
+             isTradeAgency ? 'Services Provided' :
+             'Services/Programs Offered'} {!isMentor && '*'}
           </Label>
           <Textarea
             id="services"
             value={formData.services}
             onChange={(e) => onInputChange('services', e.target.value)}
-            placeholder="Please describe your services, expertise, or programs in detail..."
-            required
-            rows={4}
-            className="text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none"
+            placeholder={
+              isMentor 
+                ? "e.g., Market entry strategy, Regulatory compliance, Business development, Sales & marketing..."
+                : "Please describe your services, expertise, or programs in detail..."
+            }
+            required={!isMentor}
+            rows={5}
+            className="text-lg border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 resize-none rounded-lg p-4"
           />
         </div>
+
+        {isMentor && (
+          <div className="space-y-3">
+            <Label htmlFor="experience" className="text-lg font-semibold text-gray-800">
+              Experience & Background *
+            </Label>
+            <Textarea
+              id="experience"
+              value={formData.experience}
+              onChange={(e) => onInputChange('experience', e.target.value)}
+              placeholder="Tell us about your professional background, years of experience, key achievements, and why you'd be a great mentor for businesses entering Australia..."
+              rows={6}
+              className="text-lg border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 resize-none rounded-lg p-4"
+              required
+            />
+          </div>
+        )}
       </div>
 
       {/* Additional Information Section */}
       <div className="space-y-6">
-        <div className="border-b border-gray-200 pb-2">
-          <h3 className="text-lg font-semibold text-gray-900">Additional Information</h3>
-          <p className="text-sm text-gray-600 mt-1">Anything else you'd like us to know?</p>
+        <div className="border-b border-gray-200 pb-3">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Additional Information</h3>
+          <p className="text-gray-600">Anything else you'd like us to know?</p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description" className="text-base font-medium text-gray-700">
+        <div className="space-y-3">
+          <Label htmlFor="description" className="text-lg font-semibold text-gray-800">
             Additional Details
           </Label>
           <Textarea
@@ -107,8 +159,8 @@ export const DefaultFormFields = ({ formData, onInputChange, submissionType }: D
             value={formData.description}
             onChange={(e) => onInputChange('description', e.target.value)}
             placeholder="Any additional information, special requirements, or questions you'd like to share..."
-            rows={3}
-            className="text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none"
+            rows={4}
+            className="text-lg border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 resize-none rounded-lg p-4"
           />
         </div>
       </div>
