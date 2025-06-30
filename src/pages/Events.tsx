@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Calendar, AlertCircle } from "lucide-react";
 import Navigation from "@/components/Navigation";
@@ -13,6 +14,7 @@ import { UsageBanner } from "@/components/UsageBanner";
 const Events = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -20,15 +22,17 @@ const Events = () => {
 
   const { events, loading, error, searchEvents, clearSearch, isSearching } = useEvents();
 
-  // Get unique categories and locations for filters
+  // Get unique categories, types and locations for filters
   const categories = Array.from(new Set(events.map(event => event.category))).sort();
+  const types = Array.from(new Set(events.map(event => event.type))).sort();
   const locations = Array.from(new Set(events.map(event => event.location))).sort();
 
   // Filter events based on selected filters
   const filteredEvents = events.filter(event => {
     const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
+    const matchesType = selectedType === "all" || event.type === selectedType;
     const matchesLocation = selectedLocation === "all" || event.location === selectedLocation;
-    return matchesCategory && matchesLocation;
+    return matchesCategory && matchesType && matchesLocation;
   });
 
   const handleSearch = (query: string) => {
@@ -43,6 +47,7 @@ const Events = () => {
   const handleClearFilters = () => {
     setSearchQuery("");
     setSelectedCategory("all");
+    setSelectedType("all");
     setSelectedLocation("all");
     clearSearch();
   };
@@ -57,7 +62,7 @@ const Events = () => {
     setSelectedEvent(null);
   };
 
-  const hasActiveFilters = selectedCategory !== "all" || selectedLocation !== "all";
+  const hasActiveFilters = selectedCategory !== "all" || selectedType !== "all" || selectedLocation !== "all";
 
   if (loading) {
     return (
@@ -104,10 +109,13 @@ const Events = () => {
         searchQuery={searchQuery}
         onSearchChange={handleSearch}
         categories={categories}
+        types={types}
         locations={locations}
         selectedCategory={selectedCategory}
+        selectedType={selectedType}
         selectedLocation={selectedLocation}
         onCategoryChange={setSelectedCategory}
+        onTypeChange={setSelectedType}
         onLocationChange={setSelectedLocation}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}

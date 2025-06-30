@@ -8,10 +8,13 @@ interface EventsFiltersProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   categories: string[];
+  types: string[];
   locations: string[];
   selectedCategory: string;
+  selectedType: string;
   selectedLocation: string;
   onCategoryChange: (category: string) => void;
+  onTypeChange: (type: string) => void;
   onLocationChange: (location: string) => void;
   showFilters: boolean;
   onToggleFilters: () => void;
@@ -23,10 +26,13 @@ export const EventsFilters = ({
   searchQuery,
   onSearchChange,
   categories,
+  types,
   locations,
   selectedCategory,
+  selectedType,
   selectedLocation,
   onCategoryChange,
+  onTypeChange,
   onLocationChange,
   showFilters,
   onToggleFilters,
@@ -48,6 +54,23 @@ export const EventsFilters = ({
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
               />
+            </div>
+
+            {/* Type Filter */}
+            <div className="w-40">
+              <Select value={selectedType} onValueChange={onTypeChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {types.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Location Filter */}
@@ -97,6 +120,28 @@ export const EventsFilters = ({
         <section className="bg-muted/50 border-b">
           <div className="container mx-auto px-4 py-6">
             <div className="flex flex-wrap gap-4">
+              {/* Type Filters */}
+              <div className="flex flex-wrap gap-2">
+                <span className="text-sm font-medium text-muted-foreground">Type:</span>
+                <Button
+                  variant={selectedType === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onTypeChange("all")}
+                >
+                  All Types
+                </Button>
+                {types.map((type) => (
+                  <Button
+                    key={type}
+                    variant={selectedType === type ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => onTypeChange(type)}
+                  >
+                    {type}
+                  </Button>
+                ))}
+              </div>
+
               {/* Category Filters */}
               <div className="flex flex-wrap gap-2">
                 <span className="text-sm font-medium text-muted-foreground">Category:</span>

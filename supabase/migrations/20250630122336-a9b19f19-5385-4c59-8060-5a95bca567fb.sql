@@ -26,4 +26,25 @@ INSERT INTO public.events (id, title, description, date, time, location, type, c
 
 ('e1b6c3d4-7a4f-4e16-9b3e-2f1a0c4d5e6f', 'Cyber Security Summit Australia', 'An invitation-only gathering of CISOs, security architects and risk leaders to tackle emerging cyber-threats and best practices.', '2024-07-18', '8:30 AM - 4:30 PM', 'Sheraton on the Park, Sydney', 'Summit', 'Cybersecurity', 600, 'CyberRisk Alliance'),
 
-('f2c7d4e5-8b5a-5f27-0c4f-3a2b1d5e6f7a', 'AgriFutures National Conference', 'Australia''s peak agribusiness conference focused on future-proofing agriculture through innovation and sustainability.', '2024-11-02', '9:00 AM - 5:00 PM', 'Brisbane Convention and Exhibition Centre', 'Conference', 'Agribusiness', 400, 'AgriFutures Australia');
+('f2c7d4e5-8b5a-5f27-0c4f-3a2b1d5e6f7a', 'AgriFutures National Conference', 'Australia''s peak agribusiness conference focused on future-proofing agriculture through innovation and sustainability.', '2024-11-02', '9:00 AM - 5:00 PM', 'Brisbane Convention and Exhibition Centre', 'Conference', 'Agribusiness', 400, 'AgriFutures Australia'),
+
+-- Insert the 10 new B2B meetup events with proper UUIDs
+('12345678-1234-5678-9abc-123456789abc', 'Bridging Blockchains 2025', 'A Brisbane blockchain meetup focused on interoperability, crypto insights and enterprise use cases, with keynotes and panel discussions.', '2025-03-28', '5:00 PM - 9:00 PM', 'The Precinct, 315 Brunswick St, Fortitude Valley, Brisbane QLD', 'Meetup', 'Blockchain', 150, 'XDC Australia'),
+
+('23456789-2345-6789-abcd-23456789abcd', 'SaaS Growth Meetup', 'An intimate breakfast with Australia''s leading SaaS founders sharing growth tactics to break the $5M revenue ceiling.', '2025-06-18', '7:30 AM - 9:00 AM', 'St Ali, 12-18 Yarra Pl, South Melbourne VIC', 'Meetup', 'SaaS', 50, 'Growth Forum'),
+
+('3456789a-3456-789a-bcde-3456789abcde', 'All Things Blockchain Meetup', 'Expert panel on 2025 crypto trends—Bitcoin reserves, institutional adoption and Aussie regulation—plus networking over food and drinks.', '2025-02-04', '6:00 PM - 8:00 PM', 'Stair Stadium, The Precinct, Brisbane QLD', 'Meetup', 'Blockchain', 300, 'Binance Australia'),
+
+('456789ab-4567-89ab-cdef-456789abcdef', 'Let''s Talk Shopify: Connect, Learn, Grow', 'An ecommerce meetup exploring Shopify apps, integrations and growth hacks, with peer networking over drinks.', '2025-06-04', '5:45 PM - 7:45 PM', 'The Oxford Scholar, 427 Swanston St, Melbourne VIC', 'Meetup', 'eCommerce', 100, 'Shopify Community Melbourne'),
+
+('56789abc-5678-9abc-def0-56789abcdef0', 'AI and Cybersecurity', 'Deep dive on how AI is transforming cyber-defence—threat detection, automated response and human-centric security practices.', '2025-07-09', '5:00 PM - 8:00 PM', 'The Platform, 256 Adelaide Terrace, Perth WA', 'Meetup', 'Cybersecurity', 100, 'Perth AI Innovators'),
+
+('6789abcd-6789-abcd-ef01-6789abcdef01', 'GDG Sydney Meetup July 2025', 'Monthly Google Developer Group gathering featuring talks on AI, Cloud, Data and recruitment pitches from tech companies.', '2025-07-02', '5:30 PM - 8:30 PM', 'Mantel Group, 580 George St, Sydney NSW', 'Meetup', 'Technology', 127, 'GDG Cloud Sydney'),
+
+('789abcde-789a-bcde-f012-789abcdef012', 'Tech & Business Networking Sydney', 'Cocktail-style networking with startups, VCs and corporates—pitch sessions, industry insights and deal-flow conversations.', '2025-07-25', '6:00 PM - 9:00 PM', 'Humphrey''s Hotel, 1/288 Forest Rd, Hurstville NSW', 'Meetup', 'Startups', 80, 'Startup Valley Team'),
+
+('89abcdef-89ab-cdef-0123-89abcdef0123', 'Data Science & Analytics Meetup', 'Peer-led discussions on data science, ML, AI tools and career-building, plus job-market networking over coffee.', '2025-12-19', '6:00 PM - 8:00 PM', 'Barracks On Barrack, 181 Barrack St, Sydney NSW', 'Meetup', 'Data & Analytics', 100, 'IT Social Sydney'),
+
+('9abcdef0-9abc-def0-1234-9abcdef01234', 'Dealing with Complexity', 'An engineering-leadership meetup exploring systems complexity, CTO lessons and fault-tolerant design patterns.', '2025-07-03', '5:30 PM - 8:30 PM', 'Lvl 10/11, 101 York St, Sydney NSW', 'Meetup', 'Technology', 110, 'Sydney Technology Leaders'),
+
+('abcdef01-abcd-ef01-2345-abcdef012345', 'Global Startup Forum Sydney 2025', 'Pitch night and networking with entrepreneurs and investors, plus strategy sessions for scaling ventures.', '2025-06-21', '9:30 AM - 11:30 AM', 'The Walrus Sydney CBD, Shop 1/276 Pitt St, Sydney NSW', 'Meetup', 'Startups', 200, 'Global Startups Club');
