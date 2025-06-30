@@ -90,7 +90,7 @@ export const HeroSection = ({
 
           {/* Supporting Text for Email Capture */}
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Uncover our database of <span className="font-semibold text-primary">{count.toLocaleString()}+ resources</span> and community of successful founders entering the Australian market
+            Uncover our database of <span className="font-semibold text-primary">{count.toLocaleString()}+ resources</span> and community to successfully scale in the Australian market
           </p>
           
           {/* Email Capture Form - Primary CTA */}
