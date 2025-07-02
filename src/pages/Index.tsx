@@ -1,7 +1,7 @@
 
 import Navigation from "@/components/Navigation";
 import { HeroSection } from "@/components/sections/HeroSection";
-import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
+import { BeforeMESSection } from "@/components/sections/BeforeMESSection";
 import { SearchSection } from "@/components/sections/SearchSection";
 import { ValueSection } from "@/components/sections/ValueSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
@@ -20,8 +20,8 @@ const Index = () => {
       {/* Streamlined Hero Section - Email Capture Focus */}
       <HeroSection totalResources={totalResources} />
 
-      {/* Before vs. After Market Entry Section - Core value proposition */}
-      <BeforeAfterSection />
+      {/* Before MES Section - Core value proposition */}
+      <BeforeMESSection />
 
       {/* Search Section - Moved from Hero */}
       <SearchSection />
