@@ -97,7 +97,7 @@ export const HeroSection = ({
           <EmailCaptureForm onSubmit={handleEmailSubmit} className="mb-8 max-w-lg mx-auto" />
 
           {/* Trust indicators */}
-          <p className="text-sm text-muted-foreground">Free access • Vendor Discounts • Join 1,200+ companies</p>
+          <p className="text-sm text-muted-foreground">Free access ✅ • Vendor Discounts ✅ • Australian Ecosystem Mapped ✅</p>
         </div>
       </div>
     </section>;
