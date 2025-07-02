@@ -123,7 +123,7 @@ export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormP
             "Joining..."
           ) : (
             <>
-              Join Our Community
+              Uncover Secrets
               <ArrowRight className="w-4 h-4" />
             </>
           )}
