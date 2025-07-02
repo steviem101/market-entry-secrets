@@ -24,7 +24,7 @@ export const PricingSection = () => {
     },
     {
       id: 'growth' as const,
-      price: '$499',
+      price: '$1',
       description: 'Ideal for small teams building their ANZ playbook.',
       features: [
         'Everything in Free, plus:',
@@ -42,7 +42,7 @@ export const PricingSection = () => {
     },
     {
       id: 'scale' as const,
-      price: '$1,999',
+      price: '$1',
       description: 'Built for companies accelerating into ANZ with full guidance.',
       features: [
         'Everything in Growth, plus:',
