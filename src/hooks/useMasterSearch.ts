@@ -29,110 +29,110 @@ export const useMasterSearch = () => {
       setError(null);
       console.log("🚀 Starting comprehensive search...");
 
-      const searchTerm = `%${query.trim()}%`;
-      console.log("Search term pattern:", searchTerm);
+      const searchTerm = query.trim().toLowerCase();
+      console.log("Search term:", searchTerm);
       
       // Search events
       console.log("📅 Searching events...");
       const { data: events, error: eventsError } = await supabase
         .from('events')
         .select('*')
-        .or(`title.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},organizer.ilike.${searchTerm},category.ilike.${searchTerm},type.ilike.${searchTerm}`);
+        .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,organizer.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,type.ilike.%${searchTerm}%`);
 
       if (eventsError) {
         console.error("❌ Events search error:", eventsError);
-        throw eventsError;
+      } else {
+        console.log(`✅ Events found: ${events?.length || 0}`, events?.slice(0, 2));
       }
-      console.log(`✅ Events found: ${events?.length || 0}`);
 
       // Search community members
       console.log("👥 Searching community members...");
       const { data: members, error: membersError } = await supabase
         .from('community_members')
         .select('*')
-        .or(`name.ilike.${searchTerm},title.ilike.${searchTerm},description.ilike.${searchTerm},company.ilike.${searchTerm},location.ilike.${searchTerm},experience.ilike.${searchTerm}`);
+        .or(`name.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,experience.ilike.%${searchTerm}%`);
 
       if (membersError) {
         console.error("❌ Members search error:", membersError);
-        throw membersError;
+      } else {
+        console.log(`✅ Members found: ${members?.length || 0}`);
       }
-      console.log(`✅ Members found: ${members?.length || 0}`);
 
       // Search trade & investment agencies
       console.log("🏛️ Searching trade agencies...");
       const { data: agencies, error: agenciesError } = await supabase
         .from('trade_investment_agencies')
         .select('*')
-        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
+        .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,founded.ilike.%${searchTerm}%,basic_info.ilike.%${searchTerm}%,why_work_with_us.ilike.%${searchTerm}%`);
 
       if (agenciesError) {
         console.error("❌ Agencies search error:", agenciesError);
-        throw agenciesError;
+      } else {
+        console.log(`✅ Agencies found: ${agencies?.length || 0}`);
       }
-      console.log(`✅ Agencies found: ${agencies?.length || 0}`);
 
       // Search service providers
       console.log("🔧 Searching service providers...");
       const { data: serviceProviders, error: serviceProvidersError } = await supabase
         .from('service_providers')
         .select('*')
-        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
+        .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,founded.ilike.%${searchTerm}%,basic_info.ilike.%${searchTerm}%,why_work_with_us.ilike.%${searchTerm}%`);
 
       if (serviceProvidersError) {
         console.error("❌ Service providers search error:", serviceProvidersError);
-        throw serviceProvidersError;
+      } else {
+        console.log(`✅ Service providers found: ${serviceProviders?.length || 0}`);
       }
-      console.log(`✅ Service providers found: ${serviceProviders?.length || 0}`);
 
       // Search innovation ecosystem
       console.log("💡 Searching innovation ecosystem...");
       const { data: innovationHubs, error: innovationError } = await supabase
         .from('innovation_ecosystem')
         .select('*')
-        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
+        .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,founded.ilike.%${searchTerm}%,basic_info.ilike.%${searchTerm}%,why_work_with_us.ilike.%${searchTerm}%`);
 
       if (innovationError) {
         console.error("❌ Innovation ecosystem search error:", innovationError);
-        throw innovationError;
+      } else {
+        console.log(`✅ Innovation hubs found: ${innovationHubs?.length || 0}`);
       }
-      console.log(`✅ Innovation hubs found: ${innovationHubs?.length || 0}`);
 
       // Search leads
       console.log("📊 Searching leads...");
       const { data: leads, error: leadsError } = await supabase
         .from('leads')
         .select('*')
-        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},type.ilike.${searchTerm},category.ilike.${searchTerm},industry.ilike.${searchTerm},location.ilike.${searchTerm},provider_name.ilike.${searchTerm}`);
+        .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,type.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%,industry.ilike.%${searchTerm}%,location.ilike.%${searchTerm}%,provider_name.ilike.%${searchTerm}%`);
 
       if (leadsError) {
         console.error("❌ Leads search error:", leadsError);
-        throw leadsError;
+      } else {
+        console.log(`✅ Leads found: ${leads?.length || 0}`);
       }
-      console.log(`✅ Leads found: ${leads?.length || 0}`);
 
       // Search content items
       console.log("📝 Searching content items...");
       const { data: contentItems, error: contentError } = await supabase
         .from('content_items')
         .select('*, content_categories(name)')
-        .or(`title.ilike.${searchTerm},subtitle.ilike.${searchTerm},meta_description.ilike.${searchTerm}`);
+        .or(`title.ilike.%${searchTerm}%,subtitle.ilike.%${searchTerm}%,meta_description.ilike.%${searchTerm}%`);
 
       if (contentError) {
         console.error("❌ Content items search error:", contentError);
-        throw contentError;
+      } else {
+        console.log(`✅ Content items found: ${contentItems?.length || 0}`);
       }
-      console.log(`✅ Content items found: ${contentItems?.length || 0}`);
 
       // Combine results
       const allResults: SearchResult[] = [];
 
       // Add events
-      if (events) {
+      if (events && !eventsError) {
         events.forEach(event => {
           allResults.push({
             id: event.id,
             title: event.title,
-            description: event.description,
+            description: event.description || 'Event',
             type: 'event',
             url: `/events`,
             metadata: {
@@ -149,14 +149,14 @@ export const useMasterSearch = () => {
       }
 
       // Add community members
-      if (members) {
+      if (members && !membersError) {
         members.forEach(member => {
           allResults.push({
             id: member.id,
             title: member.name,
-            description: member.description,
+            description: member.description || 'Community member',
             type: 'community_member',
-            url: `/mentors`,
+            url: `/community`,
             metadata: {
               title: member.title,
               company: member.company,
@@ -170,12 +170,12 @@ export const useMasterSearch = () => {
       }
 
       // Add trade & investment agencies
-      if (agencies) {
+      if (agencies && !agenciesError) {
         agencies.forEach(agency => {
           allResults.push({
             id: agency.id,
             title: agency.name,
-            description: agency.description,
+            description: agency.description || 'Trade & Investment Agency',
             type: 'content', // For bookmarking compatibility
             url: `/trade-investment-agencies`,
             metadata: {
@@ -192,12 +192,12 @@ export const useMasterSearch = () => {
       }
 
       // Add service providers
-      if (serviceProviders) {
+      if (serviceProviders && !serviceProvidersError) {
         serviceProviders.forEach(provider => {
           allResults.push({
             id: provider.id,
             title: provider.name,
-            description: provider.description,
+            description: provider.description || 'Service Provider',
             type: 'service_provider',
             url: `/service-providers`,
             metadata: {
@@ -213,12 +213,12 @@ export const useMasterSearch = () => {
       }
 
       // Add innovation hubs
-      if (innovationHubs) {
+      if (innovationHubs && !innovationError) {
         innovationHubs.forEach(hub => {
           allResults.push({
             id: hub.id,
             title: hub.name,
-            description: hub.description,
+            description: hub.description || 'Innovation Hub',
             type: 'innovation_hub',
             url: `/innovation-ecosystem`,
             metadata: {
@@ -234,12 +234,12 @@ export const useMasterSearch = () => {
       }
 
       // Add leads
-      if (leads) {
+      if (leads && !leadsError) {
         leads.forEach(lead => {
           allResults.push({
             id: lead.id,
             title: lead.name,
-            description: lead.description,
+            description: lead.description || 'Lead',
             type: 'lead',
             url: `/leads`,
             metadata: {
@@ -257,7 +257,7 @@ export const useMasterSearch = () => {
       }
 
       // Add content items
-      if (contentItems) {
+      if (contentItems && !contentError) {
         contentItems.forEach(content => {
           allResults.push({
             id: content.id,
@@ -284,6 +284,7 @@ export const useMasterSearch = () => {
     } catch (err) {
       console.error('💥 Search error:', err);
       setError(err instanceof Error ? err.message : 'Search failed');
+      setResults([]); // Clear results on error
     } finally {
       setLoading(false);
       console.log("🏁 Search completed");
