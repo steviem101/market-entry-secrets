@@ -6,9 +6,14 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import MarketEntryLogo from "@/components/MarketEntryLogo";
 import { AuthButton } from "@/components/auth/AuthButton";
+import { CTAButton } from "@/components/CTAButton";
 import { allNavItems } from "./NavigationItems";
 
-export const MobileNavigation = () => {
+interface MobileNavigationProps {
+  onReportModalOpen: () => void;
+}
+
+export const MobileNavigation = ({ onReportModalOpen }: MobileNavigationProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -43,6 +48,17 @@ export const MobileNavigation = () => {
               <MarketEntryLogo className="h-6 w-6" />
               <span className="font-bold">Market Entry Secrets</span>
             </Link>
+          </div>
+
+          {/* Mobile CTA Button */}
+          <div className="py-4 border-b">
+            <CTAButton 
+              onClick={() => {
+                onReportModalOpen();
+                handleLinkClick();
+              }}
+              className="w-full justify-center"
+            />
           </div>
 
           {/* Mobile Navigation */}
