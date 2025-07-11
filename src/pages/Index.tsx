@@ -26,7 +26,7 @@ const Index = () => {
       <HeroSection totalResources={totalResources} />
 
       {/* Before vs. After Market Entry Section - Core value proposition */}
-      <BeforeAfterSection onGetReport={() => setIsReportModalOpen(true)} />
+      <BeforeAfterSection />
 
       {/* Search Section - Moved from Hero */}
       <SearchSection />
