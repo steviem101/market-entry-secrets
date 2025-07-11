@@ -38,6 +38,8 @@ export const EventCard = ({ event, onViewDetails }: EventCardProps) => {
     onViewDetails?.(event);
   };
 
+  console.log('EventCard event data:', { id: event.id, title: event.title, event_logo_url: event.event_logo_url }); // Debug
+
   return (
     <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <CardHeader className="pb-4">

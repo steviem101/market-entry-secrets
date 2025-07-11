@@ -45,6 +45,7 @@ export const useEvents = () => {
       }
 
       setEvents(data || []);
+      console.log('Events fetched:', data?.slice(0, 2)); // Debug: check first 2 events
       setSearchQuery(query || "");
     } catch (err) {
       console.error('Error fetching events:', err);
