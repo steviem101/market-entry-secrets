@@ -23,6 +23,7 @@ const eventFormSchema = z.object({
   category: z.string().min(1, 'Category is required'),
   attendees: z.number().min(0, 'Attendees must be 0 or greater').default(0),
   organizer: z.string().min(1, 'Organizer is required'),
+  event_logo_url: z.string().url().optional().or(z.literal('')),
 });
 
 type EventFormData = z.infer<typeof eventFormSchema>;
@@ -49,6 +50,7 @@ export const EventSubmissionForm: React.FC<EventSubmissionFormProps> = ({ onEven
       category: '',
       attendees: 0,
       organizer: '',
+      event_logo_url: '',
     },
   });
 
@@ -67,6 +69,7 @@ export const EventSubmissionForm: React.FC<EventSubmissionFormProps> = ({ onEven
         category: data.category,
         attendees: data.attendees,
         organizer: data.organizer,
+        event_logo_url: data.event_logo_url || null,
       };
 
       const { error } = await supabase
@@ -223,6 +226,24 @@ export const EventSubmissionForm: React.FC<EventSubmissionFormProps> = ({ onEven
                     <FormLabel>Category</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Finance, Telecoms, Technology" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="event_logo_url"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Event Logo URL</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="url"
+                        placeholder="https://example.com/logo.png"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

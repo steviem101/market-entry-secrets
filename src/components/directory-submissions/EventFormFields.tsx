@@ -92,6 +92,16 @@ export const EventFormFields = ({ formData, onInputChange }: EventFormFieldsProp
         />
       </div>
       <div>
+        <Label htmlFor="eventLogoUrl">Event Logo URL</Label>
+        <Input
+          id="eventLogoUrl"
+          type="url"
+          value={formData.eventLogoUrl}
+          onChange={(e) => onInputChange('eventLogoUrl', e.target.value)}
+          placeholder="https://example.com/logo.png"
+        />
+      </div>
+      <div>
         <Label htmlFor="description">Event Description *</Label>
         <Textarea
           id="description"

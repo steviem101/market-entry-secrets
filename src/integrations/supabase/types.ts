@@ -705,6 +705,7 @@ export type Database = {
           created_at: string
           date: string
           description: string
+          event_logo_url: string | null
           id: string
           location: string
           organizer: string
@@ -719,6 +720,7 @@ export type Database = {
           created_at?: string
           date: string
           description: string
+          event_logo_url?: string | null
           id?: string
           location: string
           organizer: string
@@ -733,6 +735,7 @@ export type Database = {
           created_at?: string
           date?: string
           description?: string
+          event_logo_url?: string | null
           id?: string
           location?: string
           organizer?: string

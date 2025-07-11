@@ -42,18 +42,36 @@ export const EventCard = ({ event, onViewDetails }: EventCardProps) => {
     <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-semibold line-clamp-2 mb-3 leading-tight">
-              {event.title}
-            </CardTitle>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-1">
-              <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4 flex-shrink-0" />
-                <span>{new Date(event.date).toLocaleDateString()}</span>
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div className="flex-shrink-0">
+              {event.event_logo_url ? (
+                <img 
+                  src={event.event_logo_url} 
+                  alt={`${event.title} logo`}
+                  className="w-12 h-12 rounded-lg object-cover border border-border"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <div className={`w-12 h-12 rounded-lg bg-muted flex items-center justify-center ${event.event_logo_url ? 'hidden' : ''}`}>
+                <Calendar className="w-6 h-6 text-muted-foreground" />
               </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4 flex-shrink-0" />
-                <span>{event.time}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-lg font-semibold line-clamp-2 mb-3 leading-tight">
+                {event.title}
+              </CardTitle>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground mb-1">
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4 flex-shrink-0" />
+                  <span>{new Date(event.date).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4 flex-shrink-0" />
+                  <span>{event.time}</span>
+                </div>
               </div>
             </div>
           </div>

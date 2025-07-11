@@ -13,6 +13,7 @@ export interface Event {
   attendees: number;
   description: string;
   organizer: string;
+  event_logo_url?: string;
 }
 
 export const useEvents = () => {
