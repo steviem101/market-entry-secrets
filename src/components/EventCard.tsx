@@ -45,19 +45,26 @@ export const EventCard = ({ event, onViewDetails }: EventCardProps) => {
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className="flex-shrink-0">
               {event.event_logo_url ? (
-                <img 
-                  src={event.event_logo_url} 
-                  alt={`${event.title} logo`}
-                  className="w-12 h-12 rounded-lg object-cover border border-border"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                  }}
-                />
-              ) : null}
-              <div className={`w-12 h-12 rounded-lg bg-muted flex items-center justify-center ${event.event_logo_url ? 'hidden' : ''}`}>
-                <Calendar className="w-6 h-6 text-muted-foreground" />
-              </div>
+                <>
+                  <img 
+                    src={event.event_logo_url} 
+                    alt={`${event.title} logo`}
+                    className="w-12 h-12 rounded-lg object-cover border border-border"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div className="w-12 h-12 rounded-lg bg-muted items-center justify-center hidden">
+                    <Calendar className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                </>
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-muted-foreground" />
+                </div>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <CardTitle className="text-lg font-semibold line-clamp-2 mb-3 leading-tight">
