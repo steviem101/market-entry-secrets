@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { User, Settings, LogOut, UserCircle, Shield, Heart } from 'lucide-react';
+import { User, Settings, LogOut, UserCircle, Shield, Heart, FileText } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { ProfileDialog } from './ProfileDialog';
 import { Link } from 'react-router-dom';
 
-export const UserDropdown = () => {
+interface UserDropdownProps {
+  onReportModalOpen?: () => void;
+}
+
+export const UserDropdown = ({ onReportModalOpen }: UserDropdownProps) => {
   const { user, profile, signOut, isAdmin, isModerator } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
 
@@ -84,6 +88,12 @@ export const UserDropdown = () => {
               <span>Member Hub</span>
             </Link>
           </DropdownMenuItem>
+          {onReportModalOpen && (
+            <DropdownMenuItem onClick={onReportModalOpen}>
+              <FileText className="mr-2 h-4 w-4" />
+              <span>Free Market Entry Report</span>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>

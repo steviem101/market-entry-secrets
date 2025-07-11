@@ -5,51 +5,46 @@ import MarketEntryLogo from "./MarketEntryLogo";
 import { AuthButton } from "./auth/AuthButton";
 import { DesktopNavigation } from "./navigation/DesktopNavigation";
 import { MobileNavigation } from "./navigation/MobileNavigation";
-import { CTAButton } from "./CTAButton";
 import { MarketEntryReportModal } from "./MarketEntryReportModal";
 
 const Navigation = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo and Brand */}
-          <div className="flex items-center space-x-2">
-            <Link to="/" className="flex items-center space-x-2">
-              <MarketEntryLogo className="h-8 w-8" />
-              <span className="font-bold text-lg">Market Entry Secrets</span>
-            </Link>
-          </div>
-
-          {/* Desktop Navigation */}
-          <DesktopNavigation />
-
-          {/* CTA and Auth Section */}
-          <div className="flex items-center space-x-3">
-            {/* CTA Button */}
-            <CTAButton 
-              onClick={() => setIsReportModalOpen(true)}
-              className="hidden sm:flex"
-            />
-            
-            <div className="hidden md:block">
-              <AuthButton />
+    <>
+      <header className="sticky top-0 z-50 w-full border-b bg-background">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            {/* Logo and Brand */}
+            <div className="flex items-center space-x-2">
+              <Link to="/" className="flex items-center space-x-2">
+                <MarketEntryLogo className="h-8 w-8" />
+                <span className="font-bold text-lg">Market Entry Secrets</span>
+              </Link>
             </div>
 
-            {/* Mobile Menu */}
-            <MobileNavigation onReportModalOpen={() => setIsReportModalOpen(true)} />
+            {/* Desktop Navigation */}
+            <DesktopNavigation />
+
+            {/* Auth Section */}
+            <div className="flex items-center space-x-3">
+              <div className="hidden md:block">
+                <AuthButton onReportModalOpen={() => setIsReportModalOpen(true)} />
+              </div>
+
+              {/* Mobile Menu */}
+              <MobileNavigation />
+            </div>
           </div>
         </div>
-      </div>
+      </header>
       
       {/* Market Entry Report Modal */}
       <MarketEntryReportModal 
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
       />
-    </header>
+    </>
   );
 };
 
