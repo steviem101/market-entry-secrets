@@ -12,7 +12,7 @@ import { UsageBanner } from "@/components/UsageBanner";
 import { getStandardTypes, STANDARD_SECTORS } from "@/utils/sectorMapping";
 
 const Events = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [localSearchQuery, setLocalSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
@@ -21,7 +21,7 @@ const Events = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { events, loading, error, searchEvents, clearSearch, isSearching } = useEvents();
+  const { events, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
 
   // Get unique categories, types, locations, and sectors for filters
   const categories = Array.from(new Set(events.map(event => event.category))).sort();
@@ -39,16 +39,12 @@ const Events = () => {
   });
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim()) {
-      searchEvents(query);
-    } else {
-      clearSearch();
-    }
+    setLocalSearchQuery(query);
+    setSearchTerm(query);
   };
 
   const handleClearFilters = () => {
-    setSearchQuery("");
+    setLocalSearchQuery("");
     setSelectedCategory("all");
     setSelectedType("all");
     setSelectedLocation("all");
@@ -111,7 +107,7 @@ const Events = () => {
       />
 
       <StandardDirectoryFilters
-        searchTerm={searchQuery}
+        searchTerm={localSearchQuery}
         onSearchChange={handleSearch}
         selectedLocation={selectedLocation}
         onLocationChange={setSelectedLocation}
@@ -127,6 +123,7 @@ const Events = () => {
         types={types}
         sectors={sectors}
         searchPlaceholder="Search events, locations, or organizers..."
+        searchLoading={searchLoading}
       >
         {/* Advanced Filters - Categories */}
         <div className="flex flex-wrap gap-2">
@@ -165,7 +162,7 @@ const Events = () => {
                 : "There are no events matching your current filters."
               }
             </p>
-            {(searchQuery || hasActiveFilters) && (
+            {(localSearchQuery || hasActiveFilters) && (
               <Button onClick={handleClearFilters} variant="outline">
                 Clear all filters
               </Button>

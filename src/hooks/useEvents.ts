@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export interface Event {
   id: string;
@@ -20,12 +21,18 @@ export interface Event {
 export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  const fetchEvents = useCallback(async (query?: string) => {
+  const fetchEvents = useCallback(async (query?: string, isSearch = false) => {
     try {
-      setLoading(true);
+      if (isSearch) {
+        setSearchLoading(true);
+      } else {
+        setLoading(true);
+      }
       
       let queryBuilder = supabase
         .from('events')
@@ -47,12 +54,15 @@ export const useEvents = () => {
 
       setEvents(data || []);
       console.log('Events fetched:', data?.slice(0, 2)); // Debug: check first 2 events
-      setSearchQuery(query || "");
     } catch (err) {
       console.error('Error fetching events:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch events');
     } finally {
-      setLoading(false);
+      if (isSearch) {
+        setSearchLoading(false);
+      } else {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -60,21 +70,35 @@ export const useEvents = () => {
     fetchEvents();
   }, [fetchEvents]);
 
-  const searchEvents = useCallback((query: string) => {
-    fetchEvents(query);
-  }, [fetchEvents]);
+  useEffect(() => {
+    if (debouncedSearchQuery !== searchQuery) {
+      return; // Don't search if debounce hasn't finished
+    }
+    
+    if (debouncedSearchQuery.trim()) {
+      fetchEvents(debouncedSearchQuery, true);
+    } else if (searchQuery === "") {
+      fetchEvents("", false);
+    }
+  }, [debouncedSearchQuery, fetchEvents]);
+
+  const setSearchTerm = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
 
   const clearSearch = useCallback(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    setSearchQuery("");
+  }, []);
 
   return { 
     events, 
     loading, 
+    searchLoading,
     error, 
     refetch: fetchEvents,
-    searchEvents,
+    setSearchTerm,
     clearSearch,
-    isSearching: !!searchQuery
+    searchQuery,
+    isSearching: !!debouncedSearchQuery
   };
 };

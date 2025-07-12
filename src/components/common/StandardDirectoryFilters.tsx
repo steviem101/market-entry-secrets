@@ -24,6 +24,7 @@ export interface StandardDirectoryFiltersProps {
   
   // Customization
   searchPlaceholder?: string;
+  searchLoading?: boolean;
   children?: React.ReactNode; // For directory-specific advanced filters
 }
 
@@ -44,6 +45,7 @@ export const StandardDirectoryFilters = ({
   types,
   sectors,
   searchPlaceholder = "Search...",
+  searchLoading = false,
   children
 }: StandardDirectoryFiltersProps) => {
   return (
@@ -61,6 +63,11 @@ export const StandardDirectoryFilters = ({
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
               />
+              {searchLoading && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                </div>
+              )}
             </div>
 
             {/* Location Filter */}
