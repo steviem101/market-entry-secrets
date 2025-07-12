@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
+import { ServiceProvidersHero } from "@/components/service-providers/ServiceProvidersHero";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
@@ -55,6 +56,12 @@ const ServiceProviders = () => {
           
           return (
             <>
+              <ServiceProvidersHero 
+                totalCompanies={totalCompanies}
+                uniqueLocations={uniqueLocations}
+                totalServices={totalServices}
+              />
+              
               <StandardDirectoryFilters
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
