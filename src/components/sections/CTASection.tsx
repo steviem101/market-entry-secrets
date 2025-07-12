@@ -1,7 +1,11 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { AuthDialog } from "@/components/auth/AuthDialog";
 
 export const CTASection = () => {
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+
   return (
     <section className="relative py-20 overflow-hidden">
       {/* Background gradients */}
@@ -23,6 +27,7 @@ export const CTASection = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
+              onClick={() => setShowAuthDialog(true)}
               className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-4 text-lg rounded-xl soft-shadow hover:shadow-lg transition-all duration-300"
             >
               Get Started Today
@@ -37,6 +42,12 @@ export const CTASection = () => {
           </div>
         </div>
       </div>
+      
+      <AuthDialog 
+        open={showAuthDialog} 
+        onOpenChange={setShowAuthDialog}
+        defaultTab="signup"
+      />
     </section>
   );
 };

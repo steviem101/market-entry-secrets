@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,18 +12,26 @@ import { useAuth } from '@/hooks/useAuth';
 interface AuthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultTab?: 'signin' | 'signup' | 'reset';
 }
 
-export const AuthDialog = ({ open, onOpenChange }: AuthDialogProps) => {
+export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDialogProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [resetEmail, setResetEmail] = useState('');
-  const [activeTab, setActiveTab] = useState('signin');
+  const [activeTab, setActiveTab] = useState(defaultTab);
   
   const { signInWithEmail, signUpWithEmail, signInWithProvider, resetPassword, loading } = useAuth();
+
+  // Set the active tab to defaultTab when dialog opens
+  useEffect(() => {
+    if (open) {
+      setActiveTab(defaultTab);
+    }
+  }, [open, defaultTab]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +68,12 @@ export const AuthDialog = ({ open, onOpenChange }: AuthDialogProps) => {
     await signInWithProvider(provider);
   };
 
+  const handleTabChange = (value: string) => {
+    if (value === 'signin' || value === 'signup' || value === 'reset') {
+      setActiveTab(value);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -67,7 +81,7 @@ export const AuthDialog = ({ open, onOpenChange }: AuthDialogProps) => {
           <DialogTitle>Access Your Account</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
