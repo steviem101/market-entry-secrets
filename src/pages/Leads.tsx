@@ -5,11 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { LeadCard } from "@/components/LeadCard";
 import { LeadsHero } from "@/components/leads/LeadsHero";
-import { LeadsFilters } from "@/components/leads/LeadsFilters";
+import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { Button } from "@/components/ui/button";
 import { TrendingUp } from "lucide-react";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { UsageBanner } from "@/components/UsageBanner";
+import { mapIndustryToSector, getStandardTypes } from "@/utils/sectorMapping";
 
 export interface Lead {
   id: string;
@@ -39,6 +40,7 @@ const Leads = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedIndustry, setSelectedIndustry] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  const [selectedSector, setSelectedSector] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
   const {
@@ -73,14 +75,16 @@ const Leads = () => {
     const matchesCategory = selectedCategory === "all" || lead.category === selectedCategory;
     const matchesIndustry = selectedIndustry === "all" || lead.industry === selectedIndustry;
     const matchesLocation = selectedLocation === "all" || lead.location === selectedLocation;
-    return matchesSearch && matchesType && matchesCategory && matchesIndustry && matchesLocation;
+    const matchesSector = selectedSector === "all" || mapIndustryToSector(lead.industry) === selectedSector;
+    return matchesSearch && matchesType && matchesCategory && matchesIndustry && matchesLocation && matchesSector;
   });
 
   // Get unique values for filters
-  const types = Array.from(new Set(leads?.map(lead => lead.type) || []));
+  const types = getStandardTypes.leads;
   const categories = Array.from(new Set(leads?.map(lead => lead.category) || []));
   const industries = Array.from(new Set(leads?.map(lead => lead.industry) || []));
   const locations = Array.from(new Set(leads?.map(lead => lead.location) || []));
+  const sectors = Array.from(new Set(leads?.map(lead => mapIndustryToSector(lead.industry)) || [])).sort();
 
   const handleDownload = (lead: Lead) => {
     console.log('Download lead:', lead.name);
@@ -103,11 +107,12 @@ const Leads = () => {
     setSelectedCategory("all");
     setSelectedIndustry("all");
     setSelectedLocation("all");
+    setSelectedSector("all");
     setSearchTerm("");
   };
 
   const hasActiveFilters = selectedType !== "all" || selectedCategory !== "all" || 
-    selectedIndustry !== "all" || selectedLocation !== "all" || searchTerm !== "";
+    selectedIndustry !== "all" || selectedLocation !== "all" || selectedSector !== "all" || searchTerm !== "";
 
   const csvListsCount = leads?.filter(lead => lead.type === 'csv_list').length || 0;
   const tamMapsCount = leads?.filter(lead => lead.type === 'tam_map').length || 0;
@@ -134,26 +139,71 @@ const Leads = () => {
         tamMapsCount={tamMapsCount}
       />
 
-      <LeadsFilters 
+      <StandardDirectoryFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        selectedType={selectedType}
-        selectedCategory={selectedCategory}
-        selectedIndustry={selectedIndustry}
         selectedLocation={selectedLocation}
-        onTypeChange={setSelectedType}
-        onCategoryChange={setSelectedCategory}
-        onIndustryChange={setSelectedIndustry}
         onLocationChange={setSelectedLocation}
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+        selectedSector={selectedSector}
+        onSectorChange={setSelectedSector}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         onClearFilters={handleClearFilters}
         hasActiveFilters={hasActiveFilters}
-        types={types}
-        categories={categories}
-        industries={industries}
         locations={locations}
-      />
+        types={types}
+        sectors={sectors}
+        searchPlaceholder="Search leads, industries, or tags..."
+      >
+        {/* Advanced Filters */}
+        <div className="space-y-4">
+          {/* Category Filter */}
+          <div className="flex flex-wrap gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Category:</span>
+            <Button
+              variant={selectedCategory === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory("all")}
+            >
+              All Categories
+            </Button>
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+
+          {/* Industry Filter */}
+          <div className="flex flex-wrap gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Industry:</span>
+            <Button
+              variant={selectedIndustry === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedIndustry("all")}
+            >
+              All Industries
+            </Button>
+            {industries.map((industry) => (
+              <Button
+                key={industry}
+                variant={selectedIndustry === industry ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedIndustry(industry)}
+              >
+                {industry}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </StandardDirectoryFilters>
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />

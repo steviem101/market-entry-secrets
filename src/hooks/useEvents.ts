@@ -14,6 +14,7 @@ export interface Event {
   description: string;
   organizer: string;
   event_logo_url?: string;
+  sector?: string;
 }
 
 export const useEvents = () => {

@@ -709,6 +709,7 @@ export type Database = {
           id: string
           location: string
           organizer: string
+          sector: string | null
           time: string
           title: string
           type: string
@@ -724,6 +725,7 @@ export type Database = {
           id?: string
           location: string
           organizer: string
+          sector?: string | null
           time: string
           title: string
           type: string
@@ -739,6 +741,7 @@ export type Database = {
           id?: string
           location?: string
           organizer?: string
+          sector?: string | null
           time?: string
           title?: string
           type?: string

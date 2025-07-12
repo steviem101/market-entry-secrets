@@ -9,19 +9,22 @@ import PersonModal from "@/components/PersonModal";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { CommunityHero } from "@/components/community/CommunityHero";
-import { CommunityFilters } from "@/components/community/CommunityFilters";
+import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
+import { mapSpecialtiesToSectors, getStandardTypes, STANDARD_SECTORS } from "@/utils/sectorMapping";
 
 const Community = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedSector, setSelectedSector] = useState("all");
   const [selectedMember, setSelectedMember] = useState<Person | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: members = [], isLoading, error } = useCommunityMembers();
 
-  // Get all unique specialties and locations
+  // Get all unique specialties, locations, types, and sectors
   const allSpecialties = Array.from(
     new Set(members.flatMap(member => member.specialties))
   ).sort();
@@ -30,7 +33,13 @@ const Community = () => {
     new Set(members.map(member => member.location))
   ).sort();
 
-  // Filter members based on search, specialty, and location
+  const allTypes = getStandardTypes.community;
+
+  const allSectors = Array.from(
+    new Set(members.flatMap(member => mapSpecialtiesToSectors(member.specialties)))
+  ).sort();
+
+  // Filter members based on search, specialty, location, type, and sector
   const filteredMembers = members.filter(member => {
     const matchesSearch = searchQuery === "" || 
       member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -43,11 +52,23 @@ const Community = () => {
     
     const matchesLocation = selectedLocation === "all" || 
       member.location === selectedLocation;
+
+    // Map member specialties to type (using first specialty as primary type)
+    const memberType = member.specialties[0] || 'Expert';
+    const matchesType = selectedType === "all" || 
+      memberType === selectedType || 
+      member.specialties.includes(selectedType);
+
+    // Map member specialties to sectors
+    const memberSectors = mapSpecialtiesToSectors(member.specialties);
+    const matchesSector = selectedSector === "all" || 
+      memberSectors.includes(selectedSector);
     
-    return matchesSearch && matchesSpecialty && matchesLocation;
+    return matchesSearch && matchesSpecialty && matchesLocation && matchesType && matchesSector;
   });
 
-  const hasActiveFilters = selectedSpecialty !== null || selectedLocation !== "all";
+  const hasActiveFilters = selectedSpecialty !== null || selectedLocation !== "all" || 
+    selectedType !== "all" || selectedSector !== "all";
 
   const handleViewProfile = (member: Person) => {
     setSelectedMember(member);
@@ -61,6 +82,8 @@ const Community = () => {
   const handleClearFilters = () => {
     setSelectedSpecialty(null);
     setSelectedLocation("all");
+    setSelectedType("all");
+    setSelectedSector("all");
   };
 
   if (isLoading) {
@@ -106,20 +129,46 @@ const Community = () => {
         totalLocations={allLocations.length}
       />
 
-      <CommunityFilters
+      <StandardDirectoryFilters
         searchTerm={searchQuery}
         onSearchChange={setSearchQuery}
         selectedLocation={selectedLocation}
-        selectedSpecialty={selectedSpecialty}
         onLocationChange={setSelectedLocation}
-        onSpecialtyChange={setSelectedSpecialty}
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+        selectedSector={selectedSector}
+        onSectorChange={setSelectedSector}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         onClearFilters={handleClearFilters}
         hasActiveFilters={hasActiveFilters}
         locations={allLocations}
-        specialties={allSpecialties}
-      />
+        types={allTypes}
+        sectors={allSectors}
+        searchPlaceholder="Search experts, specialties, or locations..."
+      >
+        {/* Advanced Filters - Specialties */}
+        <div className="flex flex-wrap gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Specialty:</span>
+          <Button
+            variant={selectedSpecialty === null ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedSpecialty(null)}
+          >
+            All Specialties
+          </Button>
+          {allSpecialties.map((specialty) => (
+            <Button
+              key={specialty}
+              variant={selectedSpecialty === specialty ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedSpecialty(specialty)}
+            >
+              {specialty}
+            </Button>
+          ))}
+        </div>
+      </StandardDirectoryFilters>
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />

@@ -4,15 +4,18 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { useContentItems, useContentCategories } from "@/hooks/useContent";
 import { ContentHero } from "@/components/content/ContentHero";
-import { ContentFilters } from "@/components/content/ContentFilters";
+import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { FeaturedContent } from "@/components/content/FeaturedContent";
 import { ContentGrid } from "@/components/content/ContentGrid";
 import { UsageBanner } from "@/components/UsageBanner";
+import { getStandardTypes, STANDARD_SECTORS } from "@/utils/sectorMapping";
 
 const Content = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedSector, setSelectedSector] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems();
@@ -20,6 +23,12 @@ const Content = () => {
 
   // Mock locations for now - in a real app, this would come from content data
   const mockLocations = ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"];
+  
+  // Get types and sectors
+  const allTypes = getStandardTypes.content;
+  const allSectors = Array.from(
+    new Set(contentItems.flatMap(item => item.sector_tags || []))
+  ).sort();
 
   const filteredContent = contentItems.filter(item => {
     const matchesSearch = searchQuery === "" || 
@@ -29,18 +38,27 @@ const Content = () => {
     const matchesCategory = selectedCategory === null || 
       item.category_id === selectedCategory;
     
+    const matchesType = selectedType === "all" || 
+      item.content_type === selectedType;
+      
+    const matchesSector = selectedSector === "all" || 
+      (item.sector_tags && item.sector_tags.includes(selectedSector));
+    
     // Location filtering would be implemented when location data is available
     // const matchesLocation = selectedLocation === "all" || item.location === selectedLocation;
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && matchesType && matchesSector;
   });
 
   const featuredContent = contentItems.filter(item => item.featured);
-  const hasActiveFilters = selectedCategory !== null || selectedLocation !== "all";
+  const hasActiveFilters = selectedCategory !== null || selectedLocation !== "all" || 
+    selectedType !== "all" || selectedSector !== "all";
 
   const handleClearFilters = () => {
     setSelectedCategory(null);
     setSelectedLocation("all");
+    setSelectedType("all");
+    setSelectedSector("all");
   };
 
   if (itemsLoading || categoriesLoading) {
@@ -86,20 +104,47 @@ const Content = () => {
         totalCategories={categories.length}
       />
 
-      <ContentFilters
+      <StandardDirectoryFilters
         searchTerm={searchQuery}
         onSearchChange={setSearchQuery}
         selectedLocation={selectedLocation}
-        selectedCategory={selectedCategory}
         onLocationChange={setSelectedLocation}
-        onCategoryChange={setSelectedCategory}
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+        selectedSector={selectedSector}
+        onSectorChange={setSelectedSector}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         onClearFilters={handleClearFilters}
         hasActiveFilters={hasActiveFilters}
-        categories={categories}
         locations={mockLocations}
-      />
+        types={allTypes}
+        sectors={allSectors}
+        searchPlaceholder="Search success stories..."
+      >
+        {/* Advanced Filters - Categories */}
+        <div className="flex flex-wrap gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Category:</span>
+          <Button
+            variant={selectedCategory === null ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCategory(null)}
+          >
+            All Categories
+          </Button>
+          {categories.map((category) => (
+            <Button
+              key={category.id}
+              variant={selectedCategory === category.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory(category.id)}
+              className="gap-2"
+            >
+              {category.name}
+            </Button>
+          ))}
+        </div>
+      </StandardDirectoryFilters>
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />

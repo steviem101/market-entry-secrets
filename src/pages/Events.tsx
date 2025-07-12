@@ -5,33 +5,37 @@ import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { EventModal } from "@/components/EventModal";
 import { EventsHero } from "@/components/events/EventsHero";
-import { EventsFilters } from "@/components/events/EventsFilters";
+import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { useEvents, Event } from "@/hooks/useEvents";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { UsageBanner } from "@/components/UsageBanner";
+import { getStandardTypes, STANDARD_SECTORS } from "@/utils/sectorMapping";
 
 const Events = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
+  const [selectedSector, setSelectedSector] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { events, loading, error, searchEvents, clearSearch, isSearching } = useEvents();
 
-  // Get unique categories, types and locations for filters
+  // Get unique categories, types, locations, and sectors for filters
   const categories = Array.from(new Set(events.map(event => event.category))).sort();
   const types = Array.from(new Set(events.map(event => event.type))).sort();
   const locations = Array.from(new Set(events.map(event => event.location))).sort();
+  const sectors = Array.from(new Set(events.map(event => event.sector).filter(Boolean))).sort();
 
   // Filter events based on selected filters
   const filteredEvents = events.filter(event => {
     const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
     const matchesType = selectedType === "all" || event.type === selectedType;
     const matchesLocation = selectedLocation === "all" || event.location === selectedLocation;
-    return matchesCategory && matchesType && matchesLocation;
+    const matchesSector = selectedSector === "all" || event.sector === selectedSector;
+    return matchesCategory && matchesType && matchesLocation && matchesSector;
   });
 
   const handleSearch = (query: string) => {
@@ -48,6 +52,7 @@ const Events = () => {
     setSelectedCategory("all");
     setSelectedType("all");
     setSelectedLocation("all");
+    setSelectedSector("all");
     clearSearch();
   };
 
@@ -61,7 +66,8 @@ const Events = () => {
     setSelectedEvent(null);
   };
 
-  const hasActiveFilters = selectedCategory !== "all" || selectedType !== "all" || selectedLocation !== "all";
+  const hasActiveFilters = selectedCategory !== "all" || selectedType !== "all" || 
+    selectedLocation !== "all" || selectedSector !== "all";
 
   if (loading) {
     return (
@@ -104,23 +110,46 @@ const Events = () => {
         totalLocations={locations.length}
       />
 
-      <EventsFilters 
-        searchQuery={searchQuery}
+      <StandardDirectoryFilters
+        searchTerm={searchQuery}
         onSearchChange={handleSearch}
-        categories={categories}
-        types={types}
-        locations={locations}
-        selectedCategory={selectedCategory}
-        selectedType={selectedType}
         selectedLocation={selectedLocation}
-        onCategoryChange={setSelectedCategory}
-        onTypeChange={setSelectedType}
         onLocationChange={setSelectedLocation}
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+        selectedSector={selectedSector}
+        onSectorChange={setSelectedSector}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         onClearFilters={handleClearFilters}
         hasActiveFilters={hasActiveFilters}
-      />
+        locations={locations}
+        types={types}
+        sectors={sectors}
+        searchPlaceholder="Search events, locations, or organizers..."
+      >
+        {/* Advanced Filters - Categories */}
+        <div className="flex flex-wrap gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Category:</span>
+          <Button
+            variant={selectedCategory === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCategory("all")}
+          >
+            All Categories
+          </Button>
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={selectedCategory === category ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
+            </Button>
+          ))}
+        </div>
+      </StandardDirectoryFilters>
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
