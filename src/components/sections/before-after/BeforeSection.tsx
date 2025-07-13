@@ -2,11 +2,10 @@ import {
   Search, 
   Phone, 
   DollarSign, 
-  AlertTriangle,
-  Clock,
   Target,
   FileText,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle
 } from "lucide-react";
 
 export const BeforeSection = () => {
@@ -27,18 +26,6 @@ export const BeforeSection = () => {
       icon: DollarSign,
       title: "Expensive Consultants",
       description: "$000's for generic market analysis reports",
-      color: "text-red-400"
-    },
-    {
-      icon: AlertTriangle,
-      title: "Legal Risks",
-      description: "Hiring untested lawyers, compliance mistakes",
-      color: "text-orange-400"
-    },
-    {
-      icon: Clock,
-      title: "Regulatory Maze",
-      description: "Complex compliance, missed requirements, delays",
       color: "text-red-400"
     },
     {
