@@ -13,22 +13,22 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// Pricing tier configuration
+// Pricing tier configuration with Stripe price IDs
 const PRICING_TIERS = {
   basic: {
     name: "Basic Plan",
-    price: 999, // $9.99 in cents
-    currency: "usd"
+    priceId: "price_basic_one_time", // Replace with actual Stripe price ID
+    amount: 999, // $9.99 in cents (for display/logging)
   },
   growth: {
     name: "Growth Plan", 
-    price: 2999, // $29.99 in cents
-    currency: "usd"
+    priceId: "price_growth_one_time", // Replace with actual Stripe price ID
+    amount: 2999, // $29.99 in cents (for display/logging)
   },
   enterprise: {
     name: "Enterprise Plan",
-    price: 9999, // $99.99 in cents
-    currency: "usd"
+    priceId: "price_enterprise_one_time", // Replace with actual Stripe price ID
+    amount: 9999, // $99.99 in cents (for display/logging)
   }
 };
 
@@ -95,25 +95,17 @@ serve(async (req) => {
     // Get the origin for redirect URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session for one-time payment
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price_data: {
-            currency: selectedTier.currency,
-            product_data: { 
-              name: selectedTier.name,
-              description: `Subscription to ${selectedTier.name}`
-            },
-            unit_amount: selectedTier.price,
-            recurring: { interval: "month" },
-          },
+          price: selectedTier.priceId,
           quantity: 1,
         },
       ],
-      mode: "subscription",
+      mode: "payment",
       success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing?canceled=true`,
       metadata: {
@@ -121,19 +113,13 @@ serve(async (req) => {
         user_email: user.email,
         tier: tier,
       },
-      subscription_data: {
-        metadata: {
-          user_id: user.id,
-          tier: tier,
-        },
-      },
     });
 
     logStep("Checkout session created", { 
       sessionId: session.id, 
       url: session.url,
       tier: tier,
-      amount: selectedTier.price 
+      amount: selectedTier.amount 
     });
 
     return new Response(JSON.stringify({ 
