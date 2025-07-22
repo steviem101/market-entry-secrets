@@ -13,22 +13,67 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// Pricing tier configuration with Stripe price IDs
-const PRICING_TIERS = {
-  basic: {
-    name: "Basic Plan",
-    priceId: "price_basic_one_time", // Replace with actual Stripe price ID
-    amount: 999, // $9.99 in cents (for display/logging)
-  },
-  growth: {
-    name: "Growth Plan", 
-    priceId: "price_growth_one_time", // Replace with actual Stripe price ID
-    amount: 2999, // $29.99 in cents (for display/logging)
-  },
-  enterprise: {
-    name: "Enterprise Plan",
-    priceId: "price_enterprise_one_time", // Replace with actual Stripe price ID
-    amount: 9999, // $99.99 in cents (for display/logging)
+// Function to get Stripe configuration based on user email
+// GitHub issue #16: Support test/live mode configuration
+const getStripeConfig = (userEmail: string) => {
+  const isTestUser = userEmail === 'dannymullan17@gmail.com';
+  
+  logStep("Determining Stripe configuration", { userEmail, isTestUser });
+  
+  if (isTestUser) {
+    // Test environment configuration
+    return {
+      secretKey: Deno.env.get("STRIPE_TEST_SECRET_KEY"),
+      pricingTiers: {
+        free: {
+          name: "Free Plan",
+          priceId: Deno.env.get("STRIPE_TEST_PRICE_ID_FREE"),
+          amount: 0
+        },
+        growth: {
+          name: "Growth Plan",
+          priceId: Deno.env.get("STRIPE_TEST_PRICE_ID_GROWTH"), 
+          amount: 2900 // $29 in cents
+        },
+        scale: {
+          name: "Scale Plan",
+          priceId: Deno.env.get("STRIPE_TEST_PRICE_ID_SCALE"),
+          amount: 9900 // $99 in cents
+        },
+        enterprise: {
+          name: "Enterprise Plan",
+          priceId: Deno.env.get("STRIPE_TEST_PRICE_ID_ENTERPRISE"),
+          amount: 49900 // $499 in cents
+        }
+      }
+    };
+  } else {
+    // Live environment configuration
+    return {
+      secretKey: Deno.env.get("STRIPE_LIVE_SECRET_KEY"),
+      pricingTiers: {
+        free: {
+          name: "Free Plan",
+          priceId: Deno.env.get("STRIPE_LIVE_PRICE_ID_FREE"),
+          amount: 0
+        },
+        growth: {
+          name: "Growth Plan",
+          priceId: Deno.env.get("STRIPE_LIVE_PRICE_ID_GROWTH"), 
+          amount: 2900 // $29 in cents
+        },
+        scale: {
+          name: "Scale Plan",
+          priceId: Deno.env.get("STRIPE_LIVE_PRICE_ID_SCALE"),
+          amount: 9900 // $99 in cents
+        },
+        enterprise: {
+          name: "Enterprise Plan",
+          priceId: Deno.env.get("STRIPE_LIVE_PRICE_ID_ENTERPRISE"),
+          amount: 49900 // $499 in cents
+        }
+      }
+    };
   }
 };
 
@@ -40,13 +85,6 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      logStep("ERROR: STRIPE_SECRET_KEY not configured");
-      throw new Error("Stripe configuration missing. Please add your Stripe secret key.");
-    }
-    logStep("Stripe key verified");
 
     // Create Supabase client using anon key for user authentication
     const supabaseClient = createClient(
@@ -71,16 +109,32 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Get Stripe configuration based on user email (GitHub issue #16)
+    const stripeConfig = getStripeConfig(user.email);
+    if (!stripeConfig.secretKey) {
+      logStep("ERROR: Stripe secret key not configured for user type");
+      throw new Error("Stripe configuration missing. Please add your Stripe secret keys.");
+    }
+    logStep("Stripe configuration loaded", { 
+      isTestMode: user.email === 'dannymullan17@gmail.com',
+      availableTiers: Object.keys(stripeConfig.pricingTiers)
+    });
+
     // Parse request body to get selected tier
     const { tier } = await req.json();
-    if (!tier || !PRICING_TIERS[tier as keyof typeof PRICING_TIERS]) {
-      throw new Error(`Invalid pricing tier: ${tier}`);
+    if (!tier || !stripeConfig.pricingTiers[tier as keyof typeof stripeConfig.pricingTiers]) {
+      throw new Error(`Invalid pricing tier: ${tier}. Available tiers: ${Object.keys(stripeConfig.pricingTiers).join(', ')}`);
     }
-    const selectedTier = PRICING_TIERS[tier as keyof typeof PRICING_TIERS];
+    const selectedTier = stripeConfig.pricingTiers[tier as keyof typeof stripeConfig.pricingTiers];
+    
+    if (!selectedTier.priceId) {
+      throw new Error(`Price ID not configured for tier: ${tier}`);
+    }
+    
     logStep("Pricing tier selected", { tier, selectedTier });
 
-    // Initialize Stripe
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    // Initialize Stripe with dynamic key
+    const stripe = new Stripe(stripeConfig.secretKey, { apiVersion: "2023-10-16" });
 
     // Check if a Stripe customer exists for this user
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
