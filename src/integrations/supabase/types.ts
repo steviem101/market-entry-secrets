@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1124,6 +1124,30 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_webhook_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          parsed: Json | null
+          stripe_event_id: string
+          stripe_payload: Json
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          parsed?: Json | null
+          stripe_event_id: string
+          stripe_payload: Json
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          parsed?: Json | null
+          stripe_event_id?: string
+          stripe_payload?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1401,8 +1425,8 @@ export type Database = {
     Functions: {
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
