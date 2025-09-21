@@ -1,9 +1,9 @@
 
 import { useRef, useEffect } from "react";
 import { SearchInput } from "./search/SearchInput";
-import { SearchDropdown } from "./search/SearchDropdown";
 import { SimpleSearchDropdown } from "./search/SimpleSearchDropdown";
 import { useSearchState } from "@/hooks/useSearchState";
+import { cn } from "@/lib/utils";
 
 interface MasterSearchProps {
   placeholder?: string;
@@ -84,6 +84,7 @@ export const MasterSearch = ({
           searchQuery={searchQuery}
           showResults={showResults}
           onResultClick={handleResultClick}
+          inputRef={inputRef}
         />
       </div>
     </div>

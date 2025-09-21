@@ -1,5 +1,6 @@
 import { SearchResult } from "@/hooks/useMasterSearch";
 import { SearchResultsContainer } from "./SearchResultsContainer";
+import { Portal } from "@/components/ui/portal";
 
 interface SimpleSearchDropdownProps {
   results: SearchResult[];
@@ -8,6 +9,7 @@ interface SimpleSearchDropdownProps {
   searchQuery: string;
   showResults: boolean;
   onResultClick: () => void;
+  inputRef: React.RefObject<HTMLInputElement>;
 }
 
 export const SimpleSearchDropdown = ({
@@ -16,8 +18,22 @@ export const SimpleSearchDropdown = ({
   error,
   searchQuery,
   showResults,
-  onResultClick
+  onResultClick,
+  inputRef
 }: SimpleSearchDropdownProps) => {
+  // Calculate dropdown position
+  const getDropdownPosition = () => {
+    if (!inputRef.current) return { top: 0, left: 0, width: 300 };
+    
+    const rect = inputRef.current.getBoundingClientRect();
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+    
+    return {
+      top: rect.bottom + scrollY + 8,
+      left: rect.left,
+      width: rect.width
+    };
+  };
   // Show dropdown if we have a query AND (loading OR results OR error OR completed search with no results)
   const shouldShowResults = showResults && searchQuery.trim() && (
     loading || 
@@ -26,18 +42,11 @@ export const SimpleSearchDropdown = ({
     (!loading && results.length === 0)
   );
 
-  console.log("SimpleSearchDropdown render:", { 
-    shouldShowResults,
-    showResults,
-    hasQuery: !!searchQuery.trim(),
-    loading,
-    resultsCount: results.length,
-    error: !!error
-  });
-
   if (!shouldShowResults) {
     return null;
   }
+
+  const position = getDropdownPosition();
 
   const content = (() => {
     if (loading) {
@@ -71,18 +80,20 @@ export const SimpleSearchDropdown = ({
   })();
 
   return (
-    <div 
-      className="absolute top-full left-0 right-0 mt-2 bg-yellow-400 border-4 border-red-500 rounded-xl shadow-2xl z-[999999] max-h-[500px] overflow-hidden"
-      style={{
-        position: 'absolute',
-        zIndex: 999999,
-        isolation: 'isolate'
-      }}
-    >
-      <div className="p-4 bg-green-300 text-black font-bold">
-        DEBUG: Simple Dropdown Visible! Results: {results.length}
+    <Portal>
+      <div 
+        data-search-dropdown
+        className="bg-background/95 backdrop-blur-sm border border-border rounded-xl shadow-2xl max-h-[500px] overflow-hidden"
+        style={{
+          position: 'fixed',
+          top: position.top,
+          left: position.left,
+          width: position.width,
+          zIndex: 50
+        }}
+      >
+        {content}
       </div>
-      {content}
-    </div>
+    </Portal>
   );
 };
