@@ -14,6 +14,7 @@ interface PaywallModalProps {
 
 const contentTypeInfo = {
   content: { icon: FileText, label: 'Content Articles', description: 'success stories and guides' },
+  'case-study': { icon: FileText, label: 'Case Studies', description: 'real market entry stories and lessons learned' },
   service_providers: { icon: Users, label: 'Service Providers', description: 'professional services' },
   community_members: { icon: Users, label: 'Community Members', description: 'mentors and experts' },
   leads: { icon: Database, label: 'Lead Databases', description: 'premium databases and market intelligence' },

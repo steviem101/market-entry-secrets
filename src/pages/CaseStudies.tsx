@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { FreemiumGate } from "@/components/FreemiumGate";
+import { UsageBanner } from "@/components/UsageBanner";
 
 interface CaseStudy {
   id: string;
@@ -191,6 +193,7 @@ const CaseStudies = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        <UsageBanner />
         <div className="flex gap-8">
           {/* Filters Sidebar */}
           <aside className="w-80 flex-shrink-0">
@@ -431,8 +434,15 @@ const CaseStudies = () => {
           <main className="flex-1">
             <div className="space-y-6">
               {filteredCaseStudies.map((caseStudy) => (
-                <Link key={caseStudy.id} to={`/case-studies/${caseStudy.slug}`}>
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <FreemiumGate
+                  key={caseStudy.id}
+                  contentType="case-study"
+                  itemId={caseStudy.id}
+                  contentTitle={caseStudy.title}
+                  contentDescription={caseStudy.description}
+                >
+                  <Link to={`/case-studies/${caseStudy.slug}`}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardHeader>
                       <div className="flex items-start gap-4">
                         <Avatar className="w-12 h-12">
@@ -486,6 +496,7 @@ const CaseStudies = () => {
                     </CardContent>
                   </Card>
                 </Link>
+                </FreemiumGate>
               ))}
             </div>
           </main>
