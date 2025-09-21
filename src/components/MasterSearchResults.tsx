@@ -41,12 +41,11 @@ export const MasterSearchResults = ({
     left: position.left,
     width: Math.max(position.width, 420),
     maxHeight: maxDropdownHeight,
-    zIndex: 9999,
-    backgroundColor: 'white',
-    border: '1px solid #e5e7eb',
-    borderRadius: '0.75rem',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
-    overflow: 'hidden'
+    zIndex: 99999, // Increased z-index significantly
+    overflow: 'hidden',
+    // Remove hardcoded styles to let Tailwind handle them
+    transform: 'translateZ(0)', // Force hardware acceleration
+    willChange: 'transform', // Optimize for changes
   };
 
   const content = (() => {
@@ -85,7 +84,7 @@ export const MasterSearchResults = ({
       <div 
         data-search-dropdown
         style={dropdownStyle} 
-        className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 animate-in fade-in-0 zoom-in-95 duration-200"
+        className="bg-background border border-border rounded-xl shadow-2xl backdrop-blur-xl animate-in fade-in-0 zoom-in-95 duration-200"
       >
         {content}
       </div>
