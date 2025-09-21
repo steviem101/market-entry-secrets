@@ -4,6 +4,7 @@ import { Network, TrendingUp, FileText } from "lucide-react";
 import { NavigationDropdown } from "./NavigationDropdown";
 import { 
   primaryNavItems, 
+  contentNavItems,
   ecosystemNavItems, 
   popularNavItems, 
   infoNavItems 
@@ -26,6 +27,13 @@ export const DesktopNavigation = () => {
         label="Ecosystem"
         icon={Network}
         items={ecosystemNavItems}
+      />
+
+      {/* Content Dropdown */}
+      <NavigationDropdown
+        label="Content"
+        icon={FileText}
+        items={contentNavItems}
       />
 
       {/* Primary Navigation Items */}
