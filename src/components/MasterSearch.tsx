@@ -2,6 +2,7 @@
 import { useRef, useEffect } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { SearchDropdown } from "./search/SearchDropdown";
+import { SimpleSearchDropdown } from "./search/SimpleSearchDropdown";
 import { useSearchState } from "@/hooks/useSearchState";
 
 interface MasterSearchProps {
@@ -76,13 +77,12 @@ export const MasterSearch = ({
           onKeyDown={handleKeyDown}
         />
 
-        <SearchDropdown
+        <SimpleSearchDropdown
           results={results}
           loading={loading}
           error={error}
           searchQuery={searchQuery}
           showResults={showResults}
-          inputRef={inputRef}
           onResultClick={handleResultClick}
         />
       </div>

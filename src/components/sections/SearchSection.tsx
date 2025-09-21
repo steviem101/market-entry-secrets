@@ -31,7 +31,7 @@ export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => 
     <section 
       ref={elementRef}
       className="relative py-24 bg-gradient-to-br from-background via-primary/3 to-accent/5"
-      style={{ overflow: 'visible', isolation: 'isolate' }}
+      style={{ overflow: 'visible' }}
     >
       {/* Animated Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
@@ -116,13 +116,13 @@ export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => 
           <div className={`transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="relative max-w-4xl mx-auto">
               {/* Background Card with Glassmorphism */}
-              <div className="relative bg-white/60 backdrop-blur-xl border border-white/30 rounded-3xl p-8 shadow-2xl shadow-primary/10" style={{ isolation: 'isolate' }}>
+              <div className="relative bg-white/60 backdrop-blur-xl border border-white/30 rounded-3xl p-8 shadow-2xl shadow-primary/10">
                 {/* Gradient Border Effect */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-primary/20 via-transparent to-accent/20 p-[2px]">
                   <div className="w-full h-full bg-white/60 backdrop-blur-xl rounded-3xl" />
                 </div>
                 
-                <div className="relative z-10" style={{ isolation: 'isolate' }}>
+                <div className="relative z-10">
                   <MasterSearch />
                 </div>
                 
