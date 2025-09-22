@@ -9,7 +9,7 @@ export const StatsSection = () => {
     { icon: Database, label: "Lead Lists", value: "100+", link: "/leads" },
     { icon: Users, label: "Success Stories", value: "1,200+", link: "/mentors" },
     { icon: Calendar, label: "Monthly Events", value: "50+", link: "/events" },
-    { icon: Award, label: "Expert Mentors", value: "200+", link: "/mentors" }
+    { icon: Award, label: "Expert Mentors", value: "200+", link: "/community" }
   ];
 
   return (

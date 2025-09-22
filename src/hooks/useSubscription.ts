@@ -14,7 +14,7 @@ interface UserSubscription {
 }
 
 // Database type mapping - extended to handle potential future tiers
-type DatabaseSubscriptionTier = 'free' | 'premium' | 'scale' | 'concierge';
+type DatabaseSubscriptionTier = 'free' | 'premium' | 'concierge' | 'growth' | 'scale' | 'enterprise';
 
 interface DatabaseUserSubscription {
   id: string;
@@ -31,8 +31,12 @@ const mapDatabaseTier = (dbTier: DatabaseSubscriptionTier): SubscriptionTier => 
       return 'free';
     case 'premium':
       return 'growth';
+    case 'growth':
+      return 'growth';
     case 'scale':
       return 'scale';
+    case 'enterprise':
+      return 'enterprise';
     case 'concierge':
       return 'enterprise';
     default:

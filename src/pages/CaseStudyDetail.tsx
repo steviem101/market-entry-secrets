@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Globe, Twitter, Instagram, Youtube } from "lucide-react";
+import { FreemiumGate } from "@/components/FreemiumGate";
 
 interface CaseStudySection {
   id: string;
@@ -97,7 +98,13 @@ const CaseStudyDetail = () => {
 
           {/* Main Content */}
           <main className="flex-1">
-            <div className="mb-8">
+            <FreemiumGate
+              contentType="case-study"
+              itemId={id || ""}
+              contentTitle={caseStudy.title}
+              contentDescription={`A detailed case study of ${caseStudy.companyName}'s market entry from ${caseStudy.originCountry} to ${caseStudy.targetMarket}`}
+            >
+              <div className="mb-8">
               <div className="flex items-center gap-4 mb-6">
                 <img
                   src={caseStudy.founderImage}
@@ -242,6 +249,7 @@ const CaseStudyDetail = () => {
                 </p>
               </div>
             </div>
+            </FreemiumGate>
           </main>
 
           {/* Right Sidebar */}

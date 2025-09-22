@@ -21,7 +21,7 @@ export const AfterSection = () => {
       icon: Users,
       title: "200+ Expert Mentors",
       description: "Advisors who've successfully entered Australian market",
-      link: "/mentors"
+      link: "/community"
     },
     {
       icon: Database,

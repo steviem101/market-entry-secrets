@@ -32,10 +32,15 @@ export const ecosystemNavItems: NavItem[] = [
   { label: "Mentors", href: "/community", icon: UserCheck },
 ];
 
+// Content navigation items
+export const contentNavItems: NavItem[] = [
+  { label: "Market Entry Guides", href: "/content", icon: FileText },
+  { label: "Market Entry Case Studies", href: "/case-studies", icon: BookOpen },
+];
+
 // Primary navigation items (main nav links)
 export const primaryNavItems: NavItem[] = [
   { label: "Events", href: "/events", icon: Calendar },
-  { label: "Content", href: "/content", icon: FileText },
   { label: "Leads", href: "/leads", icon: Target },
 ];
 
@@ -44,7 +49,6 @@ export const popularNavItems: NavItem[] = [
   { label: "Locations", href: "/locations", icon: MapPin },
   { label: "Countries", href: "/countries", icon: Globe },
   { label: "Sectors", href: "/sectors", icon: Building2 },
-  { label: "Case Studies", href: "/case-studies", icon: BookOpen },
 ];
 
 // Info navigation items
@@ -57,6 +61,7 @@ export const infoNavItems: NavItem[] = [
 // All navigation items combined (for mobile)
 export const allNavItems: NavItem[] = [
   ...primaryNavItems,
+  ...contentNavItems,
   ...ecosystemNavItems,
   ...popularNavItems,
   ...infoNavItems,
@@ -68,8 +73,14 @@ export const navigationItems = [
     title: "Browse",
     items: [
       { name: "Events", href: "/events" },
-      { name: "Content", href: "/content" },
       { name: "Leads", href: "/leads" },
+    ]
+  },
+  {
+    title: "Content",
+    items: [
+      { name: "Market Entry Guides", href: "/content" },
+      { name: "Market Entry Case Studies", href: "/case-studies" },
     ]
   },
   {
@@ -87,7 +98,6 @@ export const navigationItems = [
       { name: "Locations", href: "/locations" },
       { name: "Countries", href: "/countries" },
       { name: "Sectors", href: "/sectors" },
-      { name: "Case Studies", href: "/case-studies" },
     ]
   },
   {
