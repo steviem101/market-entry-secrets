@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from 'react';
 import { AuthDialog } from "@/components/auth/AuthDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 export const PricingSection = () => {
   const { user, session } = useAuth();
@@ -99,23 +100,14 @@ export const PricingSection = () => {
           return;
         }
 
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_FUNCTION_URL}/create-checkout`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({
-              tier: tierId,
-              supabase_user_id: user.id, // required
-            }),
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+          body: {
+            tier: tierId,
+            supabase_user_id: user.id, // required
           }
-        );
+        });
 
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && data.url) {
+        if (!error && data?.url) {
           window.location.href = data.url;
         } else {
           toast.error(data.error || "Unable to start checkout");
