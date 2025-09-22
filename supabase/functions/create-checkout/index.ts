@@ -1,196 +1,87 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+// supabase/functions/create-checkout/index.ts
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@12?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { log, logError } from "../_shared/log.ts";
+import { corsHeaders } from "../_shared/http.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const STRIPE_SECRET = Deno.env.get("STRIPE_SECRET")!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const FRONTEND_URL = Deno.env.get("FRONTEND_URL");
+
+const PRICE_IDS: Record<string, string> = {
+  growth: Deno.env.get("STRIPE_GROWTH_PRICE_ID")!,
+  scale: Deno.env.get("STRIPE_SCALE_PRICE_ID")!,
 };
 
-// Helper logging function for debugging
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
-};
+const stripe = new Stripe(STRIPE_SECRET);
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Function to get Stripe configuration based on user email
-// GitHub issue #16: Support test/live mode configuration
-const getStripeConfig = (userEmail: string) => {
-  const isTestUser = userEmail === 'dannymullan17@gmail.com';
-  
-  logStep("Determining Stripe configuration", { userEmail, isTestUser });
-  
-  if (isTestUser) {
-    // Test environment configuration
-    return {
-      secretKey: Deno.env.get("STRIPE_TEST_SECRET_KEY"),
-      pricingTiers: {
-        free: {
-          name: "Free Plan",
-          priceId: Deno.env.get("STRIPE_TEST_PRICE_ID_FREE"),
-          amount: 0
-        },
-        growth: {
-          name: "Growth Plan",
-          priceId: Deno.env.get("STRIPE_TEST_PRICE_ID_GROWTH"), 
-          amount: 2900 // $29 in cents
-        },
-        scale: {
-          name: "Scale Plan",
-          priceId: Deno.env.get("STRIPE_TEST_PRICE_ID_SCALE"),
-          amount: 9900 // $99 in cents
-        },
-        enterprise: {
-          name: "Enterprise Plan",
-          priceId: Deno.env.get("STRIPE_TEST_PRICE_ID_ENTERPRISE"),
-          amount: 49900 // $499 in cents
-        }
-      }
-    };
-  } else {
-    // Live environment configuration
-    return {
-      secretKey: Deno.env.get("STRIPE_LIVE_SECRET_KEY"),
-      pricingTiers: {
-        free: {
-          name: "Free Plan",
-          priceId: Deno.env.get("STRIPE_LIVE_PRICE_ID_FREE"),
-          amount: 0
-        },
-        growth: {
-          name: "Growth Plan",
-          priceId: Deno.env.get("STRIPE_LIVE_PRICE_ID_GROWTH"), 
-          amount: 2900 // $29 in cents
-        },
-        scale: {
-          name: "Scale Plan",
-          priceId: Deno.env.get("STRIPE_LIVE_PRICE_ID_SCALE"),
-          amount: 9900 // $99 in cents
-        },
-        enterprise: {
-          name: "Enterprise Plan",
-          priceId: Deno.env.get("STRIPE_LIVE_PRICE_ID_ENTERPRISE"),
-          amount: 49900 // $499 in cents
-        }
-      }
-    };
-  }
-};
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    logStep("Function started");
+    if (req.method !== "POST")
+      return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
-    // Create Supabase client using anon key for user authentication
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
+    const body = await req.json();
+    log("create-checkout", "incoming body", body);
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header provided");
-    }
-    logStep("Authorization header found");
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) {
-      throw new Error(`Authentication error: ${userError.message}`);
-    }
-    const user = userData.user;
-    if (!user?.email) {
-      throw new Error("User not authenticated or email not available");
-    }
-    logStep("User authenticated", { userId: user.id, email: user.email });
-
-    // Get Stripe configuration based on user email (GitHub issue #16)
-    const stripeConfig = getStripeConfig(user.email);
-    if (!stripeConfig.secretKey) {
-      logStep("ERROR: Stripe secret key not configured for user type");
-      throw new Error("Stripe configuration missing. Please add your Stripe secret keys.");
-    }
-    logStep("Stripe configuration loaded", { 
-      isTestMode: user.email === 'dannymullan17@gmail.com',
-      availableTiers: Object.keys(stripeConfig.pricingTiers)
-    });
-
-    // Parse request body to get selected tier
-    const { tier } = await req.json();
-    if (!tier || !stripeConfig.pricingTiers[tier as keyof typeof stripeConfig.pricingTiers]) {
-      throw new Error(`Invalid pricing tier: ${tier}. Available tiers: ${Object.keys(stripeConfig.pricingTiers).join(', ')}`);
-    }
-    const selectedTier = stripeConfig.pricingTiers[tier as keyof typeof stripeConfig.pricingTiers];
-    
-    if (!selectedTier.priceId) {
-      throw new Error(`Price ID not configured for tier: ${tier}`);
-    }
-    
-    logStep("Pricing tier selected", { tier, selectedTier });
-
-    // Initialize Stripe with dynamic key
-    const stripe = new Stripe(stripeConfig.secretKey, { apiVersion: "2023-10-16" });
-
-    // Check if a Stripe customer exists for this user
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Existing Stripe customer found", { customerId });
-    } else {
-      logStep("No existing Stripe customer found");
+    const tier = String(body.tier ?? "").toLowerCase();
+    const priceId = PRICE_IDS[tier];
+    if (!priceId) {
+      logError("create-checkout", "Invalid tier provided", { tier });
+      return new Response(JSON.stringify({ error: "Invalid tier" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Get the origin for redirect URLs
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const authHeader = req.headers.get("authorization") ?? "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+    if (!token || !body.supabase_user_id) {
+      logError("create-checkout", "Authentication required: missing token or supabase_user_id", null);
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // Create Stripe checkout session for one-time payment
+    const { data: userData, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !userData?.user || userData.user.id !== body.supabase_user_id) {
+      logError("create-checkout", "Invalid/unauthorized user token", { error });
+      return new Response(JSON.stringify({ error: "Invalid user token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUserId = userData.user.id;
+
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price: selectedTier.priceId,
-          quantity: 1,
-        },
-      ],
       mode: "payment",
-      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/pricing?canceled=true`,
-      metadata: {
-        user_id: user.id,
-        user_email: user.email,
-        tier: tier,
-      },
+      line_items: [{ price: priceId, quantity: 1 }],
+      metadata: { tier, supabase_user_id: supabaseUserId },
+      client_reference_id: supabaseUserId,
+      success_url: `${FRONTEND_URL}/pricing?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
+      cancel_url: `${FRONTEND_URL}/pricing?stripe_status=cancel`,
     });
 
-    logStep("Checkout session created", { 
-      sessionId: session.id, 
-      url: session.url,
-      tier: tier,
-      amount: selectedTier.amount 
-    });
+    log("create-checkout", "created Stripe session", session);
 
-    return new Response(JSON.stringify({ 
-      url: session.url,
-      session_id: session.id 
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ url: session.url }), {
       status: 200,
-    });
-
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-checkout", { message: errorMessage });
-    
-    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    logError("create-checkout", "Unhandled exception", err);
+    return new Response(JSON.stringify({ error: "Internal error" }), {
       status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}, { port: Number(Deno.env.get("PORT") ?? 8000) });
+
+
+
