@@ -1,10 +1,4 @@
 // // supabase/functions/_shared/http.ts
-// export const corsHeaders = {
-//   "Access-Control-Allow-Origin": Deno.env.get("FRONTEND_URL") ?? "http://localhost:8080",
-//   "Access-Control-Allow-Methods": "POST, OPTIONS",
-//   "Access-Control-Allow-Headers": "Content-Type, Authorization",
-// };
-
 export function buildCorsHeaders(req: Request): Record<string, string> {
   // Read allowed origins from env (comma-separated)
   const allowed = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map(s => s.trim());
@@ -23,6 +17,6 @@ export function buildCorsHeaders(req: Request): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info",
   };
 }
