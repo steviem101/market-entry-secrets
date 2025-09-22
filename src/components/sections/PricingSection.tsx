@@ -1,9 +1,12 @@
 import { PricingCard } from "@/components/pricing/PricingCard";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useState } from 'react';
+import { AuthDialog } from "@/components/auth/AuthDialog";
 
 export const PricingSection = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const pricingTiers = [
     {
@@ -76,11 +79,10 @@ export const PricingSection = () => {
     }
   ];
 
-  const handleSelectTier = (tierId: string) => {
-    // Handle tier selection based on tier type
+  const handleSelectTier = async (tierId: string) => {
+    // console.log('Selected tier:', tierId);
     switch (tierId) {
-      case 'free':
-        // If user is already signed in, redirect to dashboard, otherwise to auth
+      case 'free': {
         if (user) {
           window.location.href = '/dashboard';
           toast.success('Welcome! You already have free access.');
@@ -88,25 +90,50 @@ export const PricingSection = () => {
           window.location.href = '/auth';
         }
         break;
+      }
       case 'growth':
-      case 'scale':
-        toast.info('Payment integration coming soon! Contact us for early access.', {
-          description: 'We\'ll reach out within 24 hours to set up your plan.',
-          duration: 5000,
-        });
-        // Optionally redirect to contact with pre-filled inquiry
-        setTimeout(() => {
-          window.location.href = '/contact';
-        }, 2000);
+      case 'scale': {
+        if (!user || !session?.access_token) {
+          toast.error("Please login or register first in order to subscribe to a plan.");
+          setShowAuthDialog(true)
+          return;
+        }
+
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_FUNCTION_URL}/create-checkout`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              tier: tierId,
+              supabase_user_id: user.id, // required
+            }),
+          }
+        );
+
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.url) {
+          window.location.href = data.url;
+        } else {
+          toast.error(data.error || "Unable to start checkout");
+        }
         break;
-      case 'enterprise':
+      }
+      case 'enterprise': {
         toast.success('Redirecting to contact our enterprise team...');
         setTimeout(() => {
           window.location.href = '/contact';
         }, 1000);
         break;
-      default:
-        toast.error('Unknown pricing tier selected');
+      }
+      default: {
+        // handle unknown tier
+        toast.error("Unknown tier selected");
+        break;
+      }
     }
   };
 
@@ -137,6 +164,12 @@ export const PricingSection = () => {
           ))}
         </div>
       </div>
+
+      <AuthDialog 
+        open={showAuthDialog} 
+        onOpenChange={setShowAuthDialog}
+        defaultTab="signup"
+      />
     </section>
   );
 };
