@@ -18,16 +18,21 @@ serve(async (req: Request) => {
   try {
     if (req.method !== "POST") return new Response("method not allowed", { status: 405, headers: corsHeaders });
 
-    const rawBody = await req.text();
+    // Grab raw body as ArrayBuffer to preserve exact bytes
+    const body = await req.arrayBuffer();
+    const rawBody = new TextDecoder("utf-8").decode(body);
+
     const sig = req.headers.get("stripe-signature");
-    if (!sig) return new Response("Missing stripe-signature header", { status: 400, headers: corsHeaders });
+    if (!sig) {
+      return new Response("Missing stripe-signature header", { status: 400, headers: corsHeaders });
+    }
 
     let event: Stripe.Event;
     try {
       event = await stripe.webhooks.constructEventAsync(rawBody, sig, STRIPE_WEBHOOK_SECRET);
-    } catch (err) {
+    } catch (err: Error | any) {
       logError("stripe-webhook", "Webhook signature verification failed", err);
-      return new Response("Webhook signature verification failed", { status: 400, headers: corsHeaders });
+      return new Response(`Webhook signature verification failed: ${err.message}`, { status: 400, headers: corsHeaders });
     }
 
     log("stripe-webhook", "Received Stripe event", { eventId: event.id, type: event.type });
