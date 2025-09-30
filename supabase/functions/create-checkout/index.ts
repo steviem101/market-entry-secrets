@@ -57,17 +57,49 @@ serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
+    
     const supabaseUserId = userData.user.id;
+
+    // First fetch user profile (with stripe_customer_id) from Supabase
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("stripe_customer_id, first_name, last_name")
+      .eq("id", supabaseUserId)
+      .single();
+
+    if (profileError) {
+      throw new Error("Could not fetch user profile");
+    }
+
+    let stripeCustomerId = profile?.stripe_customer_id;
+
+    if (!stripeCustomerId) {
+      // Create customer on Stripe only at the moment of purchase
+      const customer = await stripe.customers.create({
+        email: userData.user.email,
+        name: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
+        metadata: { supabase_user_id: supabaseUserId },
+      });
+
+      stripeCustomerId = customer.id;
+
+      // Save customerId back in Supabase
+      await supabaseAdmin
+        .from("profiles")
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq("id", supabaseUserId);
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [{ price: priceId, quantity: 1 }],
+      customer: stripeCustomerId,
       metadata: { tier, supabase_user_id: supabaseUserId },
       client_reference_id: supabaseUserId,
       success_url: `${FRONTEND_URL}/pricing?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
       cancel_url: `${FRONTEND_URL}/pricing?stripe_status=cancel`,
     });
+
 
     log("create-checkout", "created Stripe session", session);
 
