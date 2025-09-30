@@ -1157,6 +1157,7 @@ export type Database = {
           id: string
           last_name: string | null
           location: string | null
+          stripe_customer_id: string | null
           updated_at: string
           username: string | null
           website: string | null
@@ -1169,6 +1170,7 @@ export type Database = {
           id: string
           last_name?: string | null
           location?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string
           username?: string | null
           website?: string | null
@@ -1181,6 +1183,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           location?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string
           username?: string | null
           website?: string | null

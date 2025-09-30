@@ -34,6 +34,7 @@ import Dashboard from "./pages/Dashboard";
 import Bookmarks from "./pages/Bookmarks";
 import MemberHub from "./pages/MemberHub";
 import AuthCallback from "./pages/AuthCallback";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/bookmarks" element={<Bookmarks />} />
               <Route path="/member-hub" element={<MemberHub />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
