@@ -56,10 +56,7 @@ export const PricingSection = () => {
         'Mentor Sessions: 5 one-on-one meetings with sector-specialist advisors',
         'Sales Leads Databases: 2×250 contacts (500 total)',
         'TAM Mapping Report: Detailed Total Addressable Market analysis',
-        'Market Entry Strategy Report & Plan: Full, custom strategic blueprint',
-        'AI-Powered Planner (Full Beta): Dedicated onboarding session',
-        'Data & Integrations: One custom Zapier or API integration; unlimited CSV exports',
-        'Support: Priority email support + monthly strategy calls with your CSM'
+        'Market Entry Strategy Report & Plan: Full, custom strategic blueprint'
       ],
       cta: 'Access Scale Package',
       isPopular: false
