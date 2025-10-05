@@ -28,7 +28,7 @@ export const PricingSection = () => {
     },
     {
       id: 'growth' as const,
-      price: '$1',
+      price: '$99',
       description: 'Ideal for small teams building their ANZ playbook.',
       features: [
         'Everything in Free, plus:',
