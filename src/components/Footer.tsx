@@ -128,14 +128,13 @@ export const Footer = () => {
             <div 
               dangerouslySetInnerHTML={{
                 __html: `
-                  <script async src="https://subscribe-forms.beehiiv.com/embed.js"></script>
                   <iframe 
                     src="https://subscribe-forms.beehiiv.com/570e944b-c9cb-436b-a319-f1c04b8048cf" 
                     class="beehiiv-embed" 
                     data-test-id="beehiiv-embed" 
                     frameborder="0" 
                     scrolling="no" 
-                    style="width: 100%; height: 280px; margin: 0; border-radius: 0px; background-color: transparent; box-shadow: 0 0 #0000; max-width: 100%;">
+                    style="width: 100%; height: 450px; margin: 0; border-radius: 0px; background-color: transparent;">
                   </iframe>
                 `
               }}
