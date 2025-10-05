@@ -133,8 +133,8 @@ export const Footer = () => {
                     class="beehiiv-embed" 
                     data-test-id="beehiiv-embed" 
                     frameborder="0" 
-                    scrolling="no" 
-                    style="width: 100%; height: 450px; margin: 0; border-radius: 0px; background-color: transparent;">
+                    scrolling="auto" 
+                    style="width: 100%; height: 520px; margin: 0; border-radius: 0px; background-color: transparent;">
                   </iframe>
                 `
               }}
