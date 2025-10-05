@@ -1,44 +1,16 @@
 
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/sonner";
 import MarketEntryLogo from "./MarketEntryLogo";
 import { 
   Mail, 
   MapPin, 
-  Phone, 
   Facebook, 
   Linkedin, 
-  Instagram,
-  ArrowRight,
-  CheckCircle
+  Instagram
 } from "lucide-react";
 
 export const Footer = () => {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleNewsletterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !email.includes("@")) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    // Simulate API call - replace with actual newsletter service integration
-    setTimeout(() => {
-      toast.success("Successfully subscribed to our newsletter!");
-      setEmail("");
-      setIsSubmitting(false);
-    }, 1000);
-  };
-
   const quickLinks = [
     { label: "Service Providers", href: "/service-providers" },
     { label: "Events", href: "/events" },
@@ -152,53 +124,7 @@ export const Footer = () => {
               Get the latest market insights, new service provider listings, and exclusive content delivered to your inbox.
             </p>
             
-            <form onSubmit={handleNewsletterSubmit} className="space-y-4">
-              <div className="relative">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pr-12 bg-background/50 border-border/50 focus:border-primary"
-                  required
-                />
-                <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Subscribing...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    Subscribe Now
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                )}
-              </Button>
-            </form>
-
-            {/* Newsletter Benefits */}
-            <div className="mt-6 space-y-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <CheckCircle className="w-3 h-3 text-green-500" />
-                <span>Weekly market insights</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <CheckCircle className="w-3 h-3 text-green-500" />
-                <span>New provider alerts</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <CheckCircle className="w-3 h-3 text-green-500" />
-                <span>Exclusive content access</span>
-              </div>
-            </div>
+            <script type="text/javascript" async src="https://subscribe-forms.beehiiv.com/attribution.js"></script>
           </div>
         </div>
 
