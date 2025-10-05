@@ -46,7 +46,7 @@ export const PricingSection = () => {
     },
     {
       id: 'scale' as const,
-      price: '$1',
+      price: '$999',
       description: 'Built for companies accelerating into ANZ with full guidance.',
       features: [
         'Everything in Growth, plus:',
