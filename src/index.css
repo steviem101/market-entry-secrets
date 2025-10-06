@@ -240,9 +240,4 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
-  /* Beehiiv Embed Override */
-  .beehiiv-embed {
-    min-height: 520px !important;
-    height: 520px !important;
-  }
 }

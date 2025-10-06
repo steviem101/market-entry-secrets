@@ -125,20 +125,22 @@ export const Footer = () => {
             </p>
             
             {/* Beehiiv Newsletter Embed */}
-            <div 
-              dangerouslySetInnerHTML={{
-                __html: `
-                  <iframe 
-                    src="https://subscribe-forms.beehiiv.com/570e944b-c9cb-436b-a319-f1c04b8048cf" 
-                    class="beehiiv-embed" 
-                    data-test-id="beehiiv-embed" 
-                    frameborder="0" 
-                    scrolling="auto" 
-                    style="width: 100%; height: 520px; margin: 0; border-radius: 0px; background-color: transparent;">
-                  </iframe>
-                `
-              }}
-            />
+            <div className="min-h-[200px] overflow-visible">
+              <div 
+                dangerouslySetInnerHTML={{
+                  __html: `
+                    <iframe 
+                      src="https://subscribe-forms.beehiiv.com/570e944b-c9cb-436b-a319-f1c04b8048cf" 
+                      class="beehiiv-embed" 
+                      data-test-id="beehiiv-embed" 
+                      frameborder="0" 
+                      scrolling="no" 
+                      style="width: 100%; margin: 0; border-radius: 0px; background-color: transparent; min-height: 180px;">
+                    </iframe>
+                  `
+                }}
+              />
+            </div>
           </div>
         </div>
 
