@@ -125,7 +125,7 @@ export const Footer = () => {
             </p>
             
             {/* Beehiiv Newsletter Embed */}
-            <div className="min-h-[200px] overflow-visible">
+            <div className="min-h-[207px] overflow-visible">
               <div 
                 dangerouslySetInnerHTML={{
                   __html: `
@@ -135,7 +135,7 @@ export const Footer = () => {
                       data-test-id="beehiiv-embed" 
                       frameborder="0" 
                       scrolling="no" 
-                      style="width: 100%; margin: 0; border-radius: 0px; background-color: transparent; min-height: 180px;">
+                      style="width: 440px; height: 207px; margin: 0; border-radius: 0px 0px 0px 0px !important; background-color: transparent; box-shadow: 0 0 #0000; max-width: 100%;">
                     </iframe>
                   `
                 }}
