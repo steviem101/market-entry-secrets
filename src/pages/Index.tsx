@@ -11,7 +11,6 @@ import { CTASection } from "@/components/sections/CTASection";
 import { Footer } from "@/components/Footer";
 import { FloatingCTAButton } from "@/components/FloatingCTAButton";
 import { MarketEntryReportModal } from "@/components/MarketEntryReportModal";
-import { DebugSearchDropdown } from "@/components/DebugSearchDropdown";
 
 const Index = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -55,9 +54,6 @@ const Index = () => {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
       />
-      
-      {/* Debug component for search dropdown testing */}
-      <DebugSearchDropdown />
     </div>
   );
 };
