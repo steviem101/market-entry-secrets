@@ -44,7 +44,7 @@ export const Footer = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
       
       <div className="relative container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-6">
           
           {/* Brand Section */}
           <div className="lg:col-span-1">
@@ -118,7 +118,7 @@ export const Footer = () => {
           </div>
 
           {/* Newsletter Signup */}
-          <div>
+          <div className="lg:col-span-2">
             <h3 className="font-semibold text-lg mb-6 text-foreground">Stay Updated</h3>
             <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
               Get the latest market insights, new service provider listings, and exclusive content delivered to your inbox.
