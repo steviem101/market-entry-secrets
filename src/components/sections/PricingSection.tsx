@@ -85,7 +85,7 @@ export const PricingSection = () => {
           window.location.href = '/dashboard';
           toast.success('Welcome! You already have free access.');
         } else {
-          window.location.href = '/auth';
+          setShowAuthDialog(true);
         }
         break;
       }
