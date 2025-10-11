@@ -34,14 +34,13 @@ export const MobileNavigation = () => {
       <SheetContent side="left" className="w-[300px] sm:w-[400px]">
         <div className="flex flex-col h-full">
           {/* Mobile Header */}
-          <div className="flex items-center space-x-2 pb-4 border-b">
+          <div className="flex items-center pb-4 border-b">
             <Link
               to="/"
-              className="flex items-center space-x-2"
+              className="flex items-center"
               onClick={handleLinkClick}
             >
-              <MarketEntryLogo className="h-6 w-6" />
-              <span className="font-bold">Market Entry Secrets</span>
+              <MarketEntryLogo size="sm" />
             </Link>
           </div>
 
