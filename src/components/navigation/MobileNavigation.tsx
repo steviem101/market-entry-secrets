@@ -40,7 +40,7 @@ export const MobileNavigation = () => {
               className="flex items-center"
               onClick={handleLinkClick}
             >
-              <MarketEntryLogo size="md" />
+              <MarketEntryLogo size="sm" />
             </Link>
           </div>
 
