@@ -12,13 +12,13 @@ const Navigation = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-background">
+      <header className="sticky top-0 z-50 w-full border-b bg-background overflow-visible">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             {/* Logo and Brand */}
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center">
-                <MarketEntryLogo size="md" />
+            <div className="flex items-center relative z-10">
+              <Link to="/" className="flex items-center py-2">
+                <MarketEntryLogo size="md" className="-my-2" />
               </Link>
             </div>
 

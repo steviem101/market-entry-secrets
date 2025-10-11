@@ -8,9 +8,9 @@ interface MarketEntryLogoProps {
 
 const MarketEntryLogo = ({ className = "", size = "md" }: MarketEntryLogoProps) => {
   const sizeClasses = {
-    sm: "h-10 w-auto",
-    md: "h-14 w-auto", 
-    lg: "h-20 w-auto"
+    sm: "h-12 w-auto",
+    md: "h-20 w-auto", 
+    lg: "h-24 w-auto"
   };
 
   return (
