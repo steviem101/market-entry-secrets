@@ -18,7 +18,7 @@ const Navigation = () => {
             {/* Logo and Brand */}
             <div className="flex items-center relative z-10">
               <Link to="/" className="flex items-center py-2">
-                <MarketEntryLogo size="md" className="-my-2" />
+                <MarketEntryLogo size="lg" className="-my-6" />
               </Link>
             </div>
 

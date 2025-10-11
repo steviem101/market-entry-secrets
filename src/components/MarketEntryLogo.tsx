@@ -10,7 +10,7 @@ const MarketEntryLogo = ({ className = "", size = "md" }: MarketEntryLogoProps) 
   const sizeClasses = {
     sm: "h-12 w-auto",
     md: "h-20 w-auto", 
-    lg: "h-24 w-auto"
+    lg: "h-28 w-auto"
   };
 
   return (
