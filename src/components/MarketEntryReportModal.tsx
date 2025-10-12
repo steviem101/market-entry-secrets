@@ -407,7 +407,7 @@ export const MarketEntryReportModal = ({ isOpen, onClose }: MarketEntryReportMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white shadow-2xl border-0 p-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white shadow-2xl border-0 p-0" aria-describedby="market-entry-description">
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-8">
           <DialogHeader>
