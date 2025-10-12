@@ -48,16 +48,16 @@ export const Footer = () => {
           
           {/* Brand Section */}
           <div className="lg:col-span-1">
-            <Link to="/" className="block mb-6">
+            <Link to="/" className="block mb-4">
               <MarketEntryLogo size="lg" className="h-32 w-auto" />
             </Link>
             
-            <p className="text-muted-foreground mb-6 leading-relaxed">
+            <p className="text-muted-foreground mb-4 leading-relaxed">
               Your comprehensive platform for dominating the Australian market. Connect with vetted service providers, access expert insights, and accelerate your business growth.
             </p>
             
             {/* Contact Info */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-4">
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <Mail className="w-4 h-4 text-primary" />
                 <span>hello@marketentrysecrets.com</span>
@@ -84,7 +84,7 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-6 text-foreground">Quick Links</h3>
+            <h3 className="font-semibold text-lg mb-4 text-foreground">Quick Links</h3>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.href}>
@@ -101,7 +101,7 @@ export const Footer = () => {
 
           {/* Resources */}
           <div>
-            <h3 className="font-semibold text-lg mb-6 text-foreground">Resources</h3>
+            <h3 className="font-semibold text-lg mb-4 text-foreground">Resources</h3>
             <ul className="space-y-3">
               {resourceLinks.map((link) => (
                 <li key={link.href}>
@@ -118,8 +118,8 @@ export const Footer = () => {
 
           {/* Newsletter Signup */}
           <div>
-            <h3 className="font-semibold text-lg mb-6 text-foreground">Stay Updated</h3>
-            <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+            <h3 className="font-semibold text-lg mb-4 text-foreground">Stay Updated</h3>
+            <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
               Get the latest market insights, new service provider listings, and exclusive content delivered to your inbox.
             </p>
             
@@ -144,9 +144,9 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Section */}
-        <Separator className="my-8 bg-border/50" />
+        <Separator className="my-4 bg-border/50" />
         
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-2">
           <div className="text-sm text-muted-foreground">
             © 2024 Market Entry Secrets. All rights reserved.
           </div>
