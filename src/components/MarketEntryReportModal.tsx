@@ -143,8 +143,8 @@ export const MarketEntryReportModal = ({ isOpen, onClose }: MarketEntryReportMod
       if (error) throw error;
 
       toast({
-        title: "Report Request Submitted!",
-        description: "We'll prepare your custom market entry report and deliver it within 3-5 business days.",
+        title: "Thanks for submitting.",
+        description: "We will be in touch soon to discuss your market entry report",
       });
 
       setFormData(initialFormData);
