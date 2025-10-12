@@ -2,6 +2,7 @@
 import { useParams } from "react-router-dom";
 import { useSectorBySlug } from "@/hooks/useSectors";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { useSectorServiceProviders } from "@/hooks/useSectorServiceProviders";
 import { useSectorEvents } from "@/hooks/useSectorEvents";
 import { useSectorLeads } from "@/hooks/useSectorLeads";
@@ -86,6 +87,8 @@ const SectorPage = () => {
           />
         )}
       </div>
+      
+      <Footer />
     </div>
   );
 };

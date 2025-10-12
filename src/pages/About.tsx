@@ -1,5 +1,6 @@
 
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, TrendingUp, Shield, Target, Lightbulb } from "lucide-react";
 
@@ -185,6 +186,8 @@ const About = () => {
           </div>
         </div>
       </section>
+      
+      <Footer />
     </div>
   );
 };

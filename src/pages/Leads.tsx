@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { LeadCard } from "@/components/LeadCard";
 import { LeadsHero } from "@/components/leads/LeadsHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
@@ -251,6 +252,8 @@ const Leads = () => {
           )}
         </section>
       </div>
+      
+      <Footer />
     </div>
   );
 };

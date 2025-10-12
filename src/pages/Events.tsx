@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Calendar, AlertCircle } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { EventModal } from "@/components/EventModal";
@@ -194,6 +195,8 @@ const Events = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       />
+      
+      <Footer />
     </div>
   );
 };

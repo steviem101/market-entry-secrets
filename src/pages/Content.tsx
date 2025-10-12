@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { useContentItems, useContentCategories } from "@/hooks/useContent";
@@ -161,6 +162,8 @@ const Content = () => {
           totalContent={contentItems.length}
         />
       </div>
+      
+      <Footer />
     </div>
   );
 };

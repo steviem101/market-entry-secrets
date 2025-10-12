@@ -1,6 +1,7 @@
 
 import { useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { useLocationBySlug } from "@/hooks/useLocations";
 import { LocationHero } from "@/components/locations/LocationHero";
 import { LocationStats } from "@/components/locations/LocationStats";
@@ -43,6 +44,8 @@ const LocationPage = () => {
         <GovernmentAgencySection location={location} />
         <LocationContent location={location} />
       </main>
+      
+      <Footer />
     </div>
   );
 };

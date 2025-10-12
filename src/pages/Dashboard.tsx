@@ -1,5 +1,6 @@
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
+import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,6 +15,8 @@ const Dashboard = () => {
       <ProtectedRoute fallbackMessage="Sign in to access your personal dashboard and manage your profile.">
         <DashboardContent />
       </ProtectedRoute>
+      
+      <Footer />
     </div>
   );
 };

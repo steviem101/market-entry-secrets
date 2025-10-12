@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { useSectors, useFeaturedSectors } from "@/hooks/useSectors";
 import SectorsHero from "@/components/sectors/SectorsHero";
 import FeaturedSectorsSection from "@/components/sectors/FeaturedSectorsSection";
@@ -61,6 +62,8 @@ const Sectors = () => {
 
         <SectorsCallToAction />
       </div>
+      
+      <Footer />
     </div>
   );
 };

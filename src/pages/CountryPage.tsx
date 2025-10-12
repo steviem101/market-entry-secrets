@@ -1,6 +1,7 @@
 
 import { useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { useCountryBySlug } from "@/hooks/useCountries";
 import { CountryHero } from "@/components/countries/CountryHero";
 import { CountryContent } from "@/components/countries/CountryContent";
@@ -39,6 +40,8 @@ const CountryPage = () => {
         <CountryHero country={country} />
         <CountryContent country={country} />
       </main>
+      
+      <Footer />
     </div>
   );
 };

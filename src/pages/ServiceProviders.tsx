@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { ServiceProvidersHero } from "@/components/service-providers/ServiceProvidersHero";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
@@ -125,6 +126,8 @@ const ServiceProviders = () => {
           onContact={handleContact}
         />
       )}
+      
+      <Footer />
     </div>
   );
 };

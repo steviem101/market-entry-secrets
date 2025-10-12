@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { LocationsHero } from "@/components/locations/LocationsHero";
 import { FeaturedLocationsSection } from "@/components/locations/FeaturedLocationsSection";
 import { AllLocationsSection } from "@/components/locations/AllLocationsSection";
@@ -60,6 +61,8 @@ const Locations = () => {
         
         <LocationsCallToAction />
       </main>
+      
+      <Footer />
     </div>
   );
 };

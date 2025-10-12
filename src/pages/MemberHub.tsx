@@ -1,6 +1,7 @@
 
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Footer } from "@/components/Footer";
 import { 
   Heart, 
   FileText, 
@@ -248,6 +249,8 @@ const MemberHub = () => {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </ProtectedRoute>
   );
 };

@@ -1,6 +1,7 @@
 
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Footer } from "@/components/Footer";
 import { Heart, Calendar, Users, FileText, MapPin, Building, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -174,6 +175,8 @@ const Bookmarks = () => {
           </div>
         )}
       </div>
+      
+      <Footer />
     </div>
   );
 };

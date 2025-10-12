@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import CountriesHero from "@/components/countries/CountriesHero";
 import FeaturedCountriesSection from "@/components/countries/FeaturedCountriesSection";
 import AllCountriesSection from "@/components/countries/AllCountriesSection";
@@ -25,6 +26,8 @@ const Countries = () => {
         
         <CountriesCallToAction />
       </main>
+      
+      <Footer />
     </div>
   );
 };

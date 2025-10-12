@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Users } from "lucide-react";
 import { useCommunityMembers } from "@/hooks/useCommunityMembers";
@@ -212,6 +213,8 @@ const Community = () => {
           onContact={handleContact}
         />
       )}
+      
+      <Footer />
     </div>
   );
 };

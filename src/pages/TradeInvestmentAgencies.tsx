@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import CompanyModal from "@/components/CompanyModal";
 import { TradeInvestmentAgenciesHero } from "@/components/trade-investment-agencies/TradeInvestmentAgenciesHero";
 import TradeInvestmentAgenciesFilters from "@/components/trade-investment-agencies/TradeInvestmentAgenciesFilters";
@@ -149,6 +150,8 @@ const TradeInvestmentAgencies = () => {
           onContact={() => setSelectedAgency(null)}
         />
       )}
+      
+      <Footer />
     </div>
   );
 };
