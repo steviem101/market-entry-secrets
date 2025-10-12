@@ -10,7 +10,7 @@ import { EventFormFields } from "./EventFormFields";
 import { ContentFormFields } from "./ContentFormFields";
 import { DataRequestFormFields } from "./DataRequestFormFields";
 import { DefaultFormFields } from "./DefaultFormFields";
-import { ArrowLeft, X } from "lucide-react";
+// Removed unused lucide-react imports
 
 interface SubmissionModalProps {
   isOpen: boolean;
@@ -104,22 +104,6 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
         {/* Header Section */}
         <div className="bg-white border-b border-gray-100 p-8 pb-6">
           <DialogHeader className="space-y-4">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={onClose}
-                className="flex items-center text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                <span className="text-sm font-medium">Back</span>
-              </button>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
             <div className="text-left">
               <DialogTitle className="text-3xl font-bold text-gray-900 mb-3">
                 {title}

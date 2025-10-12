@@ -411,15 +411,7 @@ export const MarketEntryReportModal = ({ isOpen, onClose }: MarketEntryReportMod
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-8">
           <DialogHeader>
-            <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={onClose}
-                className="flex items-center text-white/80 hover:text-white transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                <span className="text-sm font-medium">Back</span>
-              </button>
-              
+            <div className="flex items-center justify-end mb-4">
               <div className="flex items-center space-x-4">
                 {steps.map((step, index) => {
                   const Icon = step.icon;
