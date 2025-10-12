@@ -48,9 +48,8 @@ export const Footer = () => {
           
           {/* Brand Section */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center space-x-3 mb-6">
-              <MarketEntryLogo className="h-10 w-10" />
-              <span className="font-bold text-xl text-foreground">Market Entry Secrets</span>
+            <Link to="/" className="block mb-6">
+              <MarketEntryLogo size="lg" className="h-32 w-auto" />
             </Link>
             
             <p className="text-muted-foreground mb-6 leading-relaxed">
