@@ -85,6 +85,12 @@ const ContentDetail = () => {
 
   const companyProfile = content.content_company_profiles?.[0];
   const primaryFounder = content.content_founders?.find(f => f.is_primary) || content.content_founders?.[0];
+  // Group content bodies by section
+  const groupedContent = content.content_sections?.map(section => ({
+    ...section,
+    bodies: content.content_bodies?.filter(body => body.section_id === section.id) || []
+  })) || [];
+
   const sections: ContentSection[] = content.content_sections?.map(section => ({
     id: section.id,
     title: section.title,
@@ -92,10 +98,11 @@ const ContentDetail = () => {
     isActive: activeSection === section.slug
   })) || [];
 
-  // Group content bodies by section
-  const groupedContent = content.content_sections?.map(section => ({
-    ...section,
-    bodies: content.content_bodies?.filter(body => body.section_id === section.id) || []
+  // For enrichment button - track which sections have content
+  const sectionsWithContentStatus = content.content_sections?.map(section => ({
+    id: section.id,
+    title: section.title,
+    hasContent: (content.content_bodies?.filter(body => body.section_id === section.id) || []).length > 0
   })) || [];
 
   // Get content bodies that don't belong to any section
@@ -119,6 +126,7 @@ const ContentDetail = () => {
               contentId={content.id}
               contentTitle={content.title}
               sectionCount={sections.length}
+              sections={sectionsWithContentStatus}
               onEnrichmentComplete={() => {
                 queryClient.invalidateQueries({ queryKey: ['content-item', slug] });
               }}
