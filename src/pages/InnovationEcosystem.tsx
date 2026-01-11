@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -9,6 +8,7 @@ import { InnovationEcosystemHero } from "@/components/innovation-ecosystem/Innov
 import InnovationEcosystemFilters from "@/components/innovation-ecosystem/InnovationEcosystemFilters";
 import InnovationEcosystemResults from "@/components/innovation-ecosystem/InnovationEcosystemResults";
 import { UsageBanner } from "@/components/UsageBanner";
+import { EnrichEcosystemButton } from "@/components/innovation-ecosystem/EnrichEcosystemButton";
 
 const InnovationEcosystem = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,6 +16,7 @@ const InnovationEcosystem = () => {
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedOrganization, setSelectedOrganization] = useState<any>(null);
+  const queryClient = useQueryClient();
 
   const {
     data: organizations,
@@ -100,7 +101,13 @@ const InnovationEcosystem = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
-        <UsageBanner />
+        <div className="flex justify-between items-center mb-4">
+          <UsageBanner />
+          <EnrichEcosystemButton 
+            organizations={organizations || []}
+            onEnrichmentComplete={() => queryClient.invalidateQueries({ queryKey: ['innovation-ecosystem'] })}
+          />
+        </div>
         
         <InnovationEcosystemFilters
           searchTerm={searchTerm}
