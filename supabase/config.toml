@@ -2,3 +2,12 @@ project_id = "xhziwveaiuhzdoutpgrh"
 
 [functions.create-checkout]
 verify_jwt = true
+
+[functions.firecrawl-search]
+verify_jwt = false
+
+[functions.firecrawl-scrape]
+verify_jwt = false
+
+[functions.enrich-content]
+verify_jwt = false
