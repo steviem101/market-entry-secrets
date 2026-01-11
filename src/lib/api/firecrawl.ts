@@ -57,4 +57,16 @@ export const firecrawlApi = {
     }
     return data;
   },
+
+  // Enrich innovation ecosystem organizations
+  async enrichInnovationEcosystem(organizationId?: string, onlyMissing?: boolean): Promise<FirecrawlResponse> {
+    const { data, error } = await supabase.functions.invoke('enrich-innovation-ecosystem', {
+      body: { organization_id: organizationId, only_missing: onlyMissing },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return data;
+  },
 };

@@ -12,3 +12,7 @@ verify_jwt = false
 [functions.enrich-content]
 verify_jwt = false
 wall_clock_limit = 300
+
+[functions.enrich-innovation-ecosystem]
+verify_jwt = false
+wall_clock_limit = 300
