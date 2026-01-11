@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import Navigation from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Heart, Globe, Twitter, Instagram, Youtube, Clock, Calendar, Eye } from "lucide-react";
 import { useContentItem, useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
+import { useAuth } from "@/hooks/useAuth";
+import { ContentEnrichmentButton } from "@/components/content/ContentEnrichmentButton";
 
 interface ContentSection {
   id: string;
@@ -20,6 +23,8 @@ interface ContentSection {
 const ContentDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [savedStories, setSavedStories] = useState<string[]>([]);
+  const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: content, isLoading, error } = useContentItem(slug || '');
   const incrementViewCount = useIncrementViewCount();
@@ -101,13 +106,24 @@ const ContentDetail = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <Link to="/content">
             <Button variant="ghost" className="mb-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Content
             </Button>
           </Link>
+          
+          {isAdmin && sections.length > 0 && (
+            <ContentEnrichmentButton
+              contentId={content.id}
+              contentTitle={content.title}
+              sectionCount={sections.length}
+              onEnrichmentComplete={() => {
+                queryClient.invalidateQueries({ queryKey: ['content-item', slug] });
+              }}
+            />
+          )}
         </div>
 
         <div className="flex gap-8">
