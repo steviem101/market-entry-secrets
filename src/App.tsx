@@ -35,6 +35,9 @@ import Bookmarks from "./pages/Bookmarks";
 import MemberHub from "./pages/MemberHub";
 import AuthCallback from "./pages/AuthCallback";
 import Pricing from "./pages/Pricing";
+import ReportCreator from "./pages/ReportCreator";
+import ReportView from "./pages/ReportView";
+import MyReports from "./pages/MyReports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +79,9 @@ const App = () => (
               <Route path="/bookmarks" element={<Bookmarks />} />
               <Route path="/member-hub" element={<MemberHub />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/report-creator" element={<ReportCreator />} />
+              <Route path="/report/:reportId" element={<ReportView />} />
+              <Route path="/my-reports" element={<MyReports />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { User, Settings, LogOut, UserCircle, Shield, Heart, FileText } from 'lucide-react';
+import { User, Settings, LogOut, UserCircle, Shield, Heart, FileText, ClipboardList } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,6 +86,12 @@ export const UserDropdown = ({ onReportModalOpen }: UserDropdownProps) => {
             <Link to="/member-hub">
               <Heart className="mr-2 h-4 w-4" />
               <span>Member Hub</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/my-reports">
+              <ClipboardList className="mr-2 h-4 w-4" />
+              <span>My Reports</span>
             </Link>
           </DropdownMenuItem>
           {onReportModalOpen && (

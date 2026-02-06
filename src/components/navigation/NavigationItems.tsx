@@ -15,7 +15,8 @@ import {
   Phone,
   HelpCircle,
   Info,
-  UserCheck
+  UserCheck,
+  Sparkles
 } from "lucide-react";
 
 export interface NavItem {
@@ -40,6 +41,7 @@ export const contentNavItems: NavItem[] = [
 
 // Primary navigation items (main nav links)
 export const primaryNavItems: NavItem[] = [
+  { label: "Report Creator", href: "/report-creator", icon: Sparkles },
   { label: "Events", href: "/events", icon: Calendar },
   { label: "Leads", href: "/leads", icon: Target },
 ];
