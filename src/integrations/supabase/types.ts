@@ -1190,6 +1190,42 @@ export type Database = {
         }
         Relationships: []
       }
+      report_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          prompt_body: string
+          section_name: string
+          updated_at: string
+          variables: string[]
+          version: number
+          visibility_tier: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          prompt_body: string
+          section_name: string
+          updated_at?: string
+          variables?: string[]
+          version?: number
+          visibility_tier?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          prompt_body?: string
+          section_name?: string
+          updated_at?: string
+          variables?: string[]
+          version?: number
+          visibility_tier?: string
+        }
+        Relationships: []
+      }
       service_providers: {
         Row: {
           basic_info: string | null
@@ -1351,6 +1387,122 @@ export type Database = {
           why_work_with_us?: string | null
         }
         Relationships: []
+      }
+      user_intake_forms: {
+        Row: {
+          budget_level: string
+          company_name: string
+          company_stage: string
+          country_of_origin: string
+          created_at: string
+          employee_count: string
+          enriched_input: Json | null
+          id: string
+          industry_sector: string
+          key_challenges: string | null
+          primary_goals: string | null
+          raw_input: Json
+          services_needed: string[]
+          status: string
+          target_regions: string[]
+          timeline: string
+          updated_at: string
+          user_id: string | null
+          website_url: string
+        }
+        Insert: {
+          budget_level: string
+          company_name: string
+          company_stage: string
+          country_of_origin: string
+          created_at?: string
+          employee_count: string
+          enriched_input?: Json | null
+          id?: string
+          industry_sector: string
+          key_challenges?: string | null
+          primary_goals?: string | null
+          raw_input?: Json
+          services_needed?: string[]
+          status?: string
+          target_regions?: string[]
+          timeline: string
+          updated_at?: string
+          user_id?: string | null
+          website_url: string
+        }
+        Update: {
+          budget_level?: string
+          company_name?: string
+          company_stage?: string
+          country_of_origin?: string
+          created_at?: string
+          employee_count?: string
+          enriched_input?: Json | null
+          id?: string
+          industry_sector?: string
+          key_challenges?: string | null
+          primary_goals?: string | null
+          raw_input?: Json
+          services_needed?: string[]
+          status?: string
+          target_regions?: string[]
+          timeline?: string
+          updated_at?: string
+          user_id?: string | null
+          website_url?: string
+        }
+        Relationships: []
+      }
+      user_reports: {
+        Row: {
+          created_at: string
+          feedback_notes: string | null
+          feedback_score: number | null
+          id: string
+          intake_form_id: string | null
+          report_json: Json
+          sections_generated: string[] | null
+          status: string
+          tier_at_generation: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_notes?: string | null
+          feedback_score?: number | null
+          id?: string
+          intake_form_id?: string | null
+          report_json?: Json
+          sections_generated?: string[] | null
+          status?: string
+          tier_at_generation?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback_notes?: string | null
+          feedback_score?: number | null
+          id?: string
+          intake_form_id?: string | null
+          report_json?: Json
+          sections_generated?: string[] | null
+          status?: string
+          tier_at_generation?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reports_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

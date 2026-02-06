@@ -1,0 +1,179 @@
+import { useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import Navigation from '@/components/Navigation';
+import { Footer } from '@/components/Footer';
+import { ReportHeader } from '@/components/report/ReportHeader';
+import { ReportSidebar } from '@/components/report/ReportSidebar';
+import { ReportSection } from '@/components/report/ReportSection';
+import { ReportGatedSection } from '@/components/report/ReportGatedSection';
+import { ReportMatchCard } from '@/components/report/ReportMatchCard';
+import { ReportFeedback } from '@/components/report/ReportFeedback';
+import { useReport } from '@/hooks/useReport';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const SECTION_LABELS: Record<string, string> = {
+  executive_summary: 'Executive Summary',
+  swot_analysis: 'SWOT Analysis',
+  service_providers: 'Service Provider Recommendations',
+  mentor_recommendations: 'Mentor Recommendations',
+  events_resources: 'Events & Resources',
+  action_plan: 'Action Plan & Timeline',
+  lead_list: 'Lead List',
+};
+
+const SECTION_ORDER = [
+  'executive_summary', 'swot_analysis', 'service_providers',
+  'mentor_recommendations', 'events_resources', 'action_plan', 'lead_list',
+];
+
+const TIER_REQUIREMENTS: Record<string, string> = {
+  swot_analysis: 'growth',
+  mentor_recommendations: 'growth',
+  lead_list: 'scale',
+};
+
+const ReportView = () => {
+  const { reportId } = useParams<{ reportId: string }>();
+  const { data: report, isLoading, error } = useReport(reportId);
+
+  if (isLoading) {
+    return (
+      <>
+        <Navigation />
+        <main className="min-h-screen pt-20 pb-16 px-4">
+          <div className="container mx-auto max-w-4xl space-y-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48 w-full rounded-xl" />
+            ))}
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <>
+        <Navigation />
+        <main className="min-h-screen pt-20 pb-16 px-4">
+          <div className="container mx-auto text-center py-20">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Report Not Found</h1>
+            <p className="text-muted-foreground">This report doesn't exist or you don't have access.</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  const reportJson = report.report_json as any;
+  const sections = reportJson?.sections || {};
+  const companyName = reportJson?.company_name || 'Market Entry Report';
+  const matches = reportJson?.matches || {};
+
+  const sidebarSections = SECTION_ORDER
+    .filter((id) => sections[id] || TIER_REQUIREMENTS[id])
+    .map((id) => ({
+      id,
+      label: SECTION_LABELS[id] || id,
+      visible: sections[id]?.visible !== false,
+    }));
+
+  return (
+    <>
+      <Helmet>
+        <title>{companyName} - Market Entry Report | Market Entry Secrets</title>
+      </Helmet>
+
+      <Navigation />
+      <ReportHeader
+        companyName={companyName}
+        generatedAt={report.created_at}
+        tier={report.tier_at_generation}
+      />
+
+      <main className="min-h-screen pt-6 pb-16 px-4">
+        <div className="container mx-auto">
+          <div className="flex gap-8">
+            {/* Sidebar - desktop only */}
+            <aside className="hidden lg:block w-56 shrink-0">
+              <ReportSidebar sections={sidebarSections} />
+            </aside>
+
+            {/* Main content */}
+            <div className="flex-1 max-w-3xl space-y-6">
+              {SECTION_ORDER.map((sectionId) => {
+                const section = sections[sectionId];
+                const requiredTier = TIER_REQUIREMENTS[sectionId];
+
+                // If section not generated and has tier requirement, show gated
+                if (!section && requiredTier) {
+                  return (
+                    <ReportGatedSection
+                      key={sectionId}
+                      id={sectionId}
+                      title={SECTION_LABELS[sectionId]}
+                      requiredTier={requiredTier}
+                    />
+                  );
+                }
+
+                if (!section) return null;
+
+                // If section exists but is not visible (tier-gated)
+                if (section.visible === false) {
+                  return (
+                    <ReportGatedSection
+                      key={sectionId}
+                      id={sectionId}
+                      title={SECTION_LABELS[sectionId]}
+                      requiredTier={requiredTier || 'growth'}
+                    />
+                  );
+                }
+
+                const sectionMatches = section.matches || matches[sectionId] || [];
+
+                return (
+                  <ReportSection
+                    key={sectionId}
+                    id={sectionId}
+                    title={SECTION_LABELS[sectionId]}
+                    content={section.content || ''}
+                  >
+                    {sectionMatches.length > 0 && (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {sectionMatches.map((match: any, idx: number) => (
+                          <ReportMatchCard
+                            key={match.id || idx}
+                            name={match.name}
+                            subtitle={match.subtitle || match.category || match.location}
+                            tags={match.tags || match.services?.slice(0, 3)}
+                            link={match.link}
+                            linkLabel={match.linkLabel}
+                            blurred={match.blurred}
+                            upgradeCta={match.upgrade_cta}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </ReportSection>
+                );
+              })}
+
+              {/* Feedback */}
+              <ReportFeedback
+                reportId={report.id}
+                existingScore={report.feedback_score}
+              />
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </>
+  );
+};
+
+export default ReportView;
