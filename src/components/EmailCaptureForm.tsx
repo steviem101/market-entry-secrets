@@ -104,22 +104,20 @@ export const EmailCaptureForm = ({ onSubmit, className = "", source = "homepage_
 
   return (
     <form onSubmit={handleSubmit} className={`${className}`}>
-      <div className="flex flex-col sm:flex-row gap-2 p-3 bg-white/90 backdrop-blur-sm border-2 border-border/20 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
-        <div className="flex-[2] min-w-[280px]">
-          <Input
-            type="email"
-            placeholder="Your email here"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="h-12 px-4 text-base border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
-          />
-        </div>
+      <div className="flex flex-col gap-2">
+        <Input
+          type="email"
+          placeholder="Your email here"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="h-10 px-3 text-sm rounded-lg border border-border/40 bg-white/90 backdrop-blur-sm focus-visible:ring-1 focus-visible:ring-primary placeholder:text-muted-foreground/60"
+        />
         <Button
           type="submit"
           disabled={isLoading || !email}
-          size="lg"
-          className="h-12 px-4 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+          size="sm"
+          className="h-10 w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center gap-2"
         >
           {isLoading ? (
             "Joining..."
