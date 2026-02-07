@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.firecrawl-scrape]
 verify_jwt = false
 
+[functions.firecrawl-map]
+verify_jwt = false
+
 [functions.enrich-content]
 verify_jwt = false
 wall_clock_limit = 300
