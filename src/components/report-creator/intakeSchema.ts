@@ -42,7 +42,13 @@ export const BUDGET_OPTIONS = [
 
 export const step1Schema = z.object({
   company_name: z.string().min(1, 'Company name is required').max(200),
-  website_url: z.string().url('Please enter a valid URL').max(500),
+  website_url: z.string().max(500).transform((val) => {
+    const trimmed = val.trim();
+    if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      return `https://${trimmed}`;
+    }
+    return trimmed;
+  }).pipe(z.string().url('Please enter a valid URL')),
   country_of_origin: z.string().min(1, 'Country is required'),
   industry_sector: z.string().min(1, 'Industry is required'),
   company_stage: z.string().min(1, 'Company stage is required'),
