@@ -9,9 +9,11 @@ import { useToast } from "@/hooks/use-toast";
 interface EmailCaptureFormProps {
   onSubmit?: (email: string) => void;
   className?: string;
+  source?: string;
+  buttonText?: string;
 }
 
-export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormProps) => {
+export const EmailCaptureForm = ({ onSubmit, className = "", source = "homepage_hero", buttonText = "Uncover Secrets" }: EmailCaptureFormProps) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -38,7 +40,7 @@ export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormP
         .insert([
           {
             email: email,
-            source: 'homepage_hero'
+            source: source
           }
         ]);
 
@@ -123,7 +125,7 @@ export const EmailCaptureForm = ({ onSubmit, className = "" }: EmailCaptureFormP
             "Joining..."
           ) : (
             <>
-              Uncover Secrets
+              {buttonText}
               <ArrowRight className="w-4 h-4" />
             </>
           )}
