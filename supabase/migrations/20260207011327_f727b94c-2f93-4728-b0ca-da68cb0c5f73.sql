@@ -1,0 +1,23 @@
+-- Update executive_summary to use market research
+UPDATE report_templates
+SET prompt_body = E'You are Market Entry Secrets AI, an expert on international companies entering the Australian and ANZ market. Generate a concise executive summary (300 words max) for a {{company_stage}} {{industry_sector}} company called "{{company_name}}" from {{country_of_origin}} entering the Australian market targeting {{target_regions}}.\n\nCompany context: {{enriched_summary}}\nGoals: {{primary_goals}}\nChallenges: {{key_challenges}}\nTimeline: {{timeline}}\nBudget: {{budget_level}}\n\n--- REAL MARKET RESEARCH DATA ---\nThe following market intelligence has been gathered from current sources. Use this data to ground your analysis with specific facts, statistics, and trends:\n\n{{market_research_landscape}}\n\nInclude: key market opportunity with specific data points, recommended approach, and expected timeline. Be specific and actionable. Write in a professional consulting tone. Cite specific market data where possible.\n\nSources:\n{{market_research_citations}}',
+    variables = ARRAY['company_stage', 'industry_sector', 'company_name', 'country_of_origin', 'target_regions', 'enriched_summary', 'primary_goals', 'key_challenges', 'timeline', 'budget_level', 'market_research_landscape', 'market_research_citations'],
+    version = version + 1,
+    updated_at = now()
+WHERE section_name = 'executive_summary' AND is_active = true;
+
+-- Update swot_analysis to use market research
+UPDATE report_templates
+SET prompt_body = E'Generate a SWOT analysis for {{company_name}}, a {{company_stage}} {{industry_sector}} company from {{country_of_origin}} entering Australia targeting {{target_regions}}.\n\nCompany context: {{enriched_summary}}\n\n--- REAL MARKET RESEARCH DATA ---\nMarket Landscape:\n{{market_research_landscape}}\n\nRegulatory & Compliance:\n{{market_research_regulatory}}\n\nRecent News & Developments:\n{{market_research_news}}\n\nStrengths: based on company context and capabilities.\nWeaknesses: common challenges for {{country_of_origin}} companies in {{industry_sector}}.\nOpportunities: use the market landscape research above to identify specific, data-backed opportunities in the Australian market.\nThreats: use the regulatory research above to identify specific compliance risks, plus competitive and cultural factors from the news data.\n\nFormat as 4 sections with 3-4 bullet points each. Be specific to the company and market. Reference real data points from the research above.\n\nSources:\n{{market_research_citations}}',
+    variables = ARRAY['company_name', 'company_stage', 'industry_sector', 'country_of_origin', 'target_regions', 'enriched_summary', 'market_research_landscape', 'market_research_regulatory', 'market_research_news', 'market_research_citations'],
+    version = version + 1,
+    updated_at = now()
+WHERE section_name = 'swot_analysis' AND is_active = true;
+
+-- Update action_plan to use market research
+UPDATE report_templates
+SET prompt_body = E'Create a phased action plan for {{company_name}} to enter Australia within their {{timeline}} timeline on a {{budget_level}} budget.\n\nCompany: {{company_stage}} {{industry_sector}} from {{country_of_origin}}, targeting {{target_regions}}.\nServices needed: {{services_needed}}\nGoals: {{primary_goals}}\n\n--- REGULATORY & COMPLIANCE REQUIREMENTS ---\nUse the following real regulatory research to inform Phase 1 requirements:\n{{market_research_regulatory}}\n\n--- MARKET LANDSCAPE ---\nUse the following market data to inform Phase 3 go-to-market strategy:\n{{market_research_landscape}}\n\n--- RECENT DEVELOPMENTS ---\n{{market_research_news}}\n\nPhase 1 - Foundation (Month 1-2): Legal entity setup, banking, compliance, visa requirements. Reference specific regulatory requirements from the research above.\nPhase 2 - Establish (Month 2-4): Office space, initial team, partnerships, local network.\nPhase 3 - Launch (Month 4-6): Go-to-market strategy informed by market trends above, lead generation, PR, growth.\n\nInclude specific next steps. Reference the matched service providers where relevant: {{matched_providers_summary}}. Be specific and actionable with real regulatory and market data.\n\nSources:\n{{market_research_citations}}',
+    variables = ARRAY['company_name', 'timeline', 'budget_level', 'company_stage', 'industry_sector', 'country_of_origin', 'target_regions', 'services_needed', 'primary_goals', 'matched_providers_summary', 'market_research_regulatory', 'market_research_landscape', 'market_research_news', 'market_research_citations'],
+    version = version + 1,
+    updated_at = now()
+WHERE section_name = 'action_plan' AND is_active = true;
