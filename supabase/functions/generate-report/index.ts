@@ -6,6 +6,326 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Firecrawl helpers ──────────────────────────────────────────────────
+
+/** Scrape a single URL with a timeout. Returns markdown or null. */
+async function firecrawlScrape(
+  apiKey: string,
+  url: string,
+  timeoutMs = 10000
+): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    let formattedUrl = url.trim();
+    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+
+    const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ url: formattedUrl, formats: ["markdown"], onlyMainContent: true }),
+      signal: controller.signal,
+    });
+
+    if (!resp.ok) return null;
+
+    const data = await resp.json();
+    return data.data?.markdown || data.markdown || null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Use Firecrawl Map to discover URLs on a website. Returns array of URLs. */
+async function firecrawlMap(
+  apiKey: string,
+  url: string,
+  timeoutMs = 8000
+): Promise<string[]> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    let formattedUrl = url.trim();
+    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+
+    const resp = await fetch("https://api.firecrawl.dev/v1/map", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ url: formattedUrl, limit: 100, includeSubdomains: false }),
+      signal: controller.signal,
+    });
+
+    if (!resp.ok) return [];
+
+    const data = await resp.json();
+    return data.links || [];
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Use Firecrawl Search to find web results. Returns array of {url, title, description, markdown}. */
+async function firecrawlSearch(
+  apiKey: string,
+  query: string,
+  limit = 5,
+  timeoutMs = 15000
+): Promise<Array<{ url: string; title: string; description: string; markdown: string }>> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const resp = await fetch("https://api.firecrawl.dev/v1/search", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        limit,
+        lang: "en",
+        country: "au",
+        scrapeOptions: { formats: ["markdown"] },
+      }),
+      signal: controller.signal,
+    });
+
+    if (!resp.ok) return [];
+
+    const data = await resp.json();
+    return (data.data || []).map((r: any) => ({
+      url: r.url || "",
+      title: r.title || "",
+      description: r.description || "",
+      markdown: (r.markdown || "").slice(0, 1500),
+    }));
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ── Enhancement 3: Deep company scrape (map + multi-page) ─────────────
+
+const KEY_PAGE_PATTERNS = [
+  /about/i, /product/i, /service/i, /solution/i,
+  /team/i, /case.?stud/i, /client/i, /partner/i,
+];
+
+function isKeyPage(url: string): boolean {
+  return KEY_PAGE_PATTERNS.some((p) => p.test(url));
+}
+
+interface EnrichedCompanyProfile {
+  summary: string;
+  industry: string;
+  maturity: string;
+  products: string[];
+  key_clients: string[];
+  team_size_indicators: string;
+  unique_selling_points: string[];
+}
+
+async function enrichCompanyDeep(
+  firecrawlKey: string,
+  lovableKey: string,
+  websiteUrl: string,
+  companyName: string,
+  fallbackSummary: string
+): Promise<{ profile: EnrichedCompanyProfile; enrichedSummary: string }> {
+  const defaultProfile: EnrichedCompanyProfile = {
+    summary: fallbackSummary,
+    industry: "",
+    maturity: "",
+    products: [],
+    key_clients: [],
+    team_size_indicators: "",
+    unique_selling_points: [],
+  };
+
+  try {
+    // Step 1: Map the website to discover pages + scrape homepage in parallel
+    const [allUrls, homepageMarkdown] = await Promise.all([
+      firecrawlMap(firecrawlKey, websiteUrl),
+      firecrawlScrape(firecrawlKey, websiteUrl),
+    ]);
+
+    console.log(`Map found ${allUrls.length} URLs on ${websiteUrl}`);
+
+    // Step 2: Find key pages and scrape up to 3 additional ones
+    const keyPages = allUrls.filter(isKeyPage).slice(0, 3);
+    console.log(`Scraping ${keyPages.length} key pages:`, keyPages);
+
+    const additionalScrapes = await Promise.allSettled(
+      keyPages.map((url) => firecrawlScrape(firecrawlKey, url))
+    );
+
+    // Step 3: Concatenate all content (capped at 4000 chars)
+    const allContent: string[] = [];
+    if (homepageMarkdown) allContent.push(homepageMarkdown);
+    for (const result of additionalScrapes) {
+      if (result.status === "fulfilled" && result.value) {
+        allContent.push(result.value);
+      }
+    }
+
+    const combinedContent = allContent.join("\n\n---\n\n").slice(0, 4000);
+
+    if (combinedContent.length < 100) {
+      console.log("Insufficient website content for deep analysis");
+      return { profile: defaultProfile, enrichedSummary: fallbackSummary };
+    }
+
+    // Step 4: AI extraction of structured company profile
+    const enrichResp = await callAI(lovableKey, [
+      { role: "system", content: "You are an analyst. Return only valid JSON, no markdown fences." },
+      {
+        role: "user",
+        content: `Based on this website content for ${companyName}, provide a JSON object with:
+{
+  "summary": "3-4 sentence company summary covering what they do, their market position, and key strengths",
+  "industry": "standardized industry classification",
+  "maturity": "Seed|Growth|Enterprise",
+  "products": ["list of main products or services offered"],
+  "key_clients": ["notable clients or customer segments mentioned"],
+  "team_size_indicators": "any indicators of team size, leadership, or organizational scale",
+  "unique_selling_points": ["2-4 key differentiators or competitive advantages"]
+}
+
+Content from ${allContent.length} pages:
+${combinedContent}`,
+      },
+    ]);
+
+    const cleaned = enrichResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+    const profile = JSON.parse(cleaned) as EnrichedCompanyProfile;
+
+    return {
+      profile,
+      enrichedSummary: profile.summary || fallbackSummary,
+    };
+  } catch (e) {
+    console.error("Deep company enrichment failed (continuing):", e);
+    return { profile: defaultProfile, enrichedSummary: fallbackSummary };
+  }
+}
+
+// ── Enhancement 1: Enrich matched service providers ───────────────────
+
+async function enrichMatchedProviders(
+  firecrawlKey: string,
+  providers: any[]
+): Promise<any[]> {
+  if (!firecrawlKey || providers.length === 0) return providers;
+
+  console.log(`Enriching ${providers.length} service providers via Firecrawl...`);
+  const startTime = Date.now();
+
+  const enrichmentPromises = providers.map(async (provider) => {
+    if (!provider.website) return provider;
+
+    try {
+      const markdown = await firecrawlScrape(firecrawlKey, provider.website, 10000);
+      if (markdown && markdown.length > 50) {
+        return {
+          ...provider,
+          enriched_description: markdown.slice(0, 1500),
+        };
+      }
+    } catch {
+      // Best effort — return original provider
+    }
+    return provider;
+  });
+
+  const results = await Promise.allSettled(enrichmentPromises);
+  const enriched = results.map((r) =>
+    r.status === "fulfilled" ? r.value : providers[0]
+  );
+
+  const enrichedCount = enriched.filter((p) => p.enriched_description).length;
+  console.log(`Provider enrichment: ${enrichedCount}/${providers.length} enriched in ${Date.now() - startTime}ms`);
+
+  return enriched;
+}
+
+// ── Enhancement 2: Competitor landscape via Firecrawl Search ──────────
+
+interface CompetitorData {
+  name: string;
+  url: string;
+  description: string;
+  key_info: string;
+}
+
+async function searchCompetitors(
+  firecrawlKey: string,
+  lovableKey: string,
+  intake: any
+): Promise<{ competitors: CompetitorData[]; raw_results: any[] }> {
+  const empty = { competitors: [], raw_results: [] };
+  if (!firecrawlKey) return empty;
+
+  try {
+    const targetRegions = (intake.target_regions || []).join(", ") || "Australia";
+    const query = `${intake.industry_sector} companies in Australia ${targetRegions} competitors`;
+
+    console.log(`Searching competitors: "${query}"`);
+    const results = await firecrawlSearch(firecrawlKey, query, 5);
+
+    if (results.length === 0) {
+      console.log("No competitor results found");
+      return empty;
+    }
+
+    // Filter out the user's own website
+    const userDomain = new URL(
+      intake.website_url.startsWith("http") ? intake.website_url : `https://${intake.website_url}`
+    ).hostname.replace("www.", "");
+
+    const filtered = results.filter((r) => {
+      try {
+        const resultDomain = new URL(r.url).hostname.replace("www.", "");
+        return resultDomain !== userDomain;
+      } catch {
+        return true;
+      }
+    }).slice(0, 3);
+
+    // Use AI to extract structured competitor data
+    const competitorSummaries = await callAI(lovableKey, [
+      { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
+      {
+        role: "user",
+        content: `Analyze these search results about ${intake.industry_sector} companies in Australia. For each, extract competitor intelligence relevant to ${intake.company_name}.
+
+Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"}]
+
+Search results:
+${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.title}\nContent: ${r.markdown}`).join("\n\n")}`,
+      },
+    ]);
+
+    const cleanedResp = competitorSummaries.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+    const competitors = JSON.parse(cleanedResp) as CompetitorData[];
+
+    console.log(`Found ${competitors.length} competitors`);
+    return { competitors, raw_results: filtered };
+  } catch (e) {
+    console.error("Competitor search failed (continuing):", e);
+    return empty;
+  }
+}
+
 // ── Perplexity helper ──────────────────────────────────────────────────
 async function callPerplexity(
   apiKey: string,
@@ -249,6 +569,7 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
     case "mentor_recommendations": return matches.community_members || [];
     case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
     case "lead_list": return matches.leads || [];
+    case "competitor_landscape": return []; // competitors are embedded in the prompt, not as match cards
     default: return [];
   }
 }
@@ -266,7 +587,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
-    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY") || "";
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
@@ -281,45 +602,44 @@ serve(async (req) => {
 
     await supabase.from("user_intake_forms").update({ status: "processing" }).eq("id", intake_form_id);
 
-    // 2. Enrich via Firecrawl (best effort)
-    let enrichedSummary = `${intake.company_name} is a ${intake.company_stage} ${intake.industry_sector} company from ${intake.country_of_origin} with ${intake.employee_count} employees.`;
+    // 2. Run enrichment + research + matching ALL in parallel
+    const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${intake.industry_sector} company from ${intake.country_of_origin} with ${intake.employee_count} employees.`;
 
-    if (firecrawlKey && intake.website_url) {
-      try {
-        const scrapeResp = await fetch("https://api.firecrawl.dev/v1/scrape", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ url: intake.website_url, formats: ["markdown"], onlyMainContent: true }),
-        });
-        if (scrapeResp.ok) {
-          const scrapeData = await scrapeResp.json();
-          const markdown = (scrapeData.data?.markdown || scrapeData.markdown || "").slice(0, 2000);
+    console.log("Starting parallel pipeline: deep scrape + Perplexity + DB matching + competitor search...");
 
-          if (markdown.length > 100) {
-            const enrichResp = await callAI(lovableKey, [
-              { role: "system", content: "You are an analyst. Return only JSON." },
-              { role: "user", content: `Based on this website content for ${intake.company_name}, provide a JSON object with: {"summary": "2-3 sentence company summary", "industry": "standardized industry classification", "maturity": "Seed|Growth|Enterprise"}\n\nContent:\n${markdown}` },
-            ]);
-            try {
-              const cleaned = enrichResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
-              const enriched = JSON.parse(cleaned);
-              enrichedSummary = enriched.summary || enrichedSummary;
-              await supabase.from("user_intake_forms").update({ enriched_input: enriched }).eq("id", intake_form_id);
-            } catch { /* use default summary */ }
-          }
-        }
-      } catch (e) {
-        console.error("Firecrawl enrichment failed (continuing):", e);
-      }
-    }
-
-    // 3. Perplexity market research (best effort, parallel with DB matches)
-    const [marketResearch, matches] = await Promise.all([
+    const [companyEnrichResult, marketResearch, matches, competitorResult] = await Promise.all([
+      // Enhancement 3: Deep company scrape (map + multi-page)
+      firecrawlKey && intake.website_url
+        ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary)
+        : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary }),
+      // Perplexity market research
       runMarketResearch(intake),
+      // Database directory matching
       searchMatches(supabase, intake),
+      // Enhancement 2: Competitor landscape
+      firecrawlKey
+        ? searchCompetitors(firecrawlKey, lovableKey, intake)
+        : Promise.resolve({ competitors: [], raw_results: [] }),
     ]);
 
-    // 4. Get user subscription tier
+    const enrichedSummary = companyEnrichResult.enrichedSummary;
+    const companyProfile = companyEnrichResult.profile;
+
+    // Store enriched profile in DB
+    if (companyProfile) {
+      await supabase.from("user_intake_forms")
+        .update({ enriched_input: companyProfile })
+        .eq("id", intake_form_id);
+    }
+
+    // Enhancement 1: Enrich matched service providers with Firecrawl scrapes
+    const enrichedProviders = await enrichMatchedProviders(
+      firecrawlKey,
+      matches.service_providers || []
+    );
+    matches.service_providers = enrichedProviders;
+
+    // 3. Get user subscription tier
     let userTier = "free";
     if (intake.user_id) {
       const { data: sub } = await supabase
@@ -333,14 +653,14 @@ serve(async (req) => {
     const tierMap: Record<string, string> = { premium: "growth", concierge: "enterprise" };
     userTier = tierMap[userTier] || userTier;
 
-    // 5. Fetch report templates
+    // 4. Fetch report templates
     const { data: templates } = await supabase
       .from("report_templates")
       .select("*")
       .eq("is_active", true)
       .order("section_name");
 
-    // 6. Build template variables (including market research)
+    // 5. Build template variables (including market research + enriched data)
     const tierHierarchy = ["free", "growth", "scale", "enterprise"];
     const userTierIndex = tierHierarchy.indexOf(userTier);
 
@@ -356,22 +676,27 @@ serve(async (req) => {
       primary_goals: intake.primary_goals || "Not specified",
       key_challenges: intake.key_challenges || "Not specified",
       enriched_summary: enrichedSummary,
+      // Enhancement 3: Full enriched company profile for all sections
+      enriched_company_profile: companyProfile ? JSON.stringify(companyProfile) : "No enriched data available.",
+      // Enhancement 1: Enriched providers (with enriched_description field)
       matched_providers_json: JSON.stringify(matches.service_providers || []),
       matched_mentors_json: JSON.stringify(matches.community_members || []),
       matched_events_json: JSON.stringify(matches.events || []),
       matched_content_json: JSON.stringify(matches.content_items || []),
       matched_leads_json: JSON.stringify(matches.leads || []),
       matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
+      // Enhancement 2: Competitor analysis
+      competitor_analysis_json: JSON.stringify(competitorResult.competitors),
       // Perplexity market research variables
       market_research_landscape: marketResearch.landscape || "No market research data available.",
       market_research_regulatory: marketResearch.regulatory || "No regulatory research data available.",
       market_research_news: marketResearch.news || "No recent news data available.",
       market_research_citations: marketResearch.citations.length > 0
-        ? marketResearch.citations.map((url, i) => `[${i + 1}] ${url}`).join("\n")
+        ? marketResearch.citations.map((url: string, i: number) => `[${i + 1}] ${url}`).join("\n")
         : "",
     };
 
-    // 7. Generate sections
+    // 6. Generate sections
     const sections: Record<string, any> = {};
     const sectionsGenerated: string[] = [];
 
@@ -398,7 +723,7 @@ serve(async (req) => {
 
             try {
               const content = await callAI(lovableKey, [
-                { role: "system", content: "You are Market Entry Secrets AI, an expert consultant on international companies entering the Australian market. Write professional, actionable content grounded in real data when available." },
+                { role: "system", content: "You are Market Entry Secrets AI, an expert consultant on international companies entering the Australian market. Write professional, actionable content grounded in real data when available. Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps." },
                 { role: "user", content: prompt },
               ]);
 
@@ -429,7 +754,7 @@ serve(async (req) => {
       }
     }
 
-    // 8. Assemble and store report (with citations in metadata)
+    // 7. Assemble and store report (with citations + enrichment metadata)
     const reportJson = {
       company_name: intake.company_name,
       sections,
@@ -440,6 +765,9 @@ serve(async (req) => {
         generation_time_ms: Date.now() - startTime,
         perplexity_used: marketResearch.used,
         perplexity_citations: marketResearch.citations,
+        firecrawl_deep_scrape: !!companyProfile,
+        firecrawl_providers_enriched: enrichedProviders.filter((p: any) => p.enriched_description).length,
+        firecrawl_competitors_found: competitorResult.competitors.length,
       },
     };
 
@@ -459,6 +787,8 @@ serve(async (req) => {
     if (reportErr) throw reportErr;
 
     await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intake_form_id);
+
+    console.log(`Report generated in ${Date.now() - startTime}ms`);
 
     return new Response(
       JSON.stringify({ report_id: report.id, generation_time_ms: Date.now() - startTime }),

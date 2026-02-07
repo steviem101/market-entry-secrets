@@ -14,6 +14,12 @@ type ScrapeOptions = {
   waitFor?: number;
 };
 
+type MapOptions = {
+  search?: string;
+  limit?: number;
+  includeSubdomains?: boolean;
+};
+
 type SearchOptions = {
   limit?: number;
   lang?: string;
@@ -62,6 +68,18 @@ export const firecrawlApi = {
   async enrichInnovationEcosystem(organizationId?: string, onlyMissing?: boolean): Promise<FirecrawlResponse> {
     const { data, error } = await supabase.functions.invoke('enrich-innovation-ecosystem', {
       body: { organization_id: organizationId, only_missing: onlyMissing },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return data;
+  },
+
+  // Map a website to discover all URLs (fast sitemap)
+  async map(url: string, options?: MapOptions): Promise<FirecrawlResponse> {
+    const { data, error } = await supabase.functions.invoke('firecrawl-map', {
+      body: { url, options },
     });
 
     if (error) {
