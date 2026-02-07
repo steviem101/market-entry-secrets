@@ -1,369 +1,182 @@
 
 
-# AI-Powered Market Entry Report Creator
+# Integrate Perplexity API into Report Generation
 
-## Overview
+## What This Improves
 
-Build a complete AI report generation pipeline that collects company details via a multi-step form, enriches with web scraping, searches the existing MES database for relevant matches, generates a modular AI report, and displays it with tier-based gating.
+The current report pipeline has three data sources:
+1. **Firecrawl** -- scrapes the company's own website
+2. **Internal database** -- matches service providers, events, leads, etc.
+3. **Gemini AI** -- generates prose from templates (but with no external market data)
 
-## Important Adaptations from the Spec
+The gap: sections like Executive Summary, SWOT Analysis, and Action Plan are written by AI *without any real market research*. The AI is essentially guessing about the Australian market landscape for each industry.
 
-The following adjustments are made to align with the existing codebase:
+**With Perplexity**, the pipeline gains a grounded research step that fetches real, cited market data before generating each section.
 
-- **AI Provider**: The spec references "OpenAI GPT-4" but this project uses **Lovable AI Gateway** (`LOVABLE_API_KEY` is already configured). All AI calls will go through `https://ai.gateway.lovable.dev/v1/chat/completions` using `google/gemini-3-flash-preview` (consistent with existing `enrich-content` function).
-- **Subscription Tiers**: The spec uses numeric tiers (0, 1, 2) but the codebase uses string tiers (`free`, `growth`, `scale`, `enterprise`). We will use the existing `useSubscription` hook pattern.
-- **No `visibility_tier` column** exists on content tables. Tier gating will be applied at the report section level only (not per-record in the database).
-- **Existing `market_entry_reports` table** will remain for the old manual report requests. New tables will be created for this AI system.
+## How It Works
 
----
+The `generate-report` Edge Function gains a new step between enrichment and section generation:
 
-## Phase 1: Database Schema (Migration)
+```text
+Current Flow:
+  Firecrawl (website) --> DB Matches --> AI Generation
 
-### Table 1: `user_intake_forms`
-
-```sql
-CREATE TABLE user_intake_forms (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  company_name text NOT NULL,
-  website_url text NOT NULL,
-  country_of_origin text NOT NULL,
-  industry_sector text NOT NULL,
-  company_stage text NOT NULL,
-  employee_count text NOT NULL,
-  target_regions text[] NOT NULL DEFAULT '{}',
-  services_needed text[] NOT NULL DEFAULT '{}',
-  timeline text NOT NULL,
-  budget_level text NOT NULL,
-  primary_goals text,
-  key_challenges text,
-  raw_input jsonb NOT NULL DEFAULT '{}',
-  enriched_input jsonb,
-  status text NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending','processing','completed','failed')),
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
+New Flow:
+  Firecrawl (website) --> Perplexity (market research) --> DB Matches --> AI Generation
+                                                                            |
+                                                              (research injected into prompts)
 ```
 
-RLS: Users can INSERT and SELECT their own rows. Admins can see all.
+Perplexity runs 3 targeted research queries based on the intake form data:
+1. **Market landscape** -- industry size, trends, competitors in Australia
+2. **Regulatory environment** -- compliance, visa, licensing requirements
+3. **Recent news** -- latest developments in the sector/region
 
-### Table 2: `user_reports`
+The research results (with citations) are then injected as a `{{market_research}}` variable into the template prompts, giving the AI grounded facts to work with instead of hallucinating.
 
-```sql
-CREATE TABLE user_reports (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  intake_form_id uuid REFERENCES user_intake_forms(id) ON DELETE CASCADE,
-  tier_at_generation text NOT NULL DEFAULT 'free',
-  report_json jsonb NOT NULL DEFAULT '{}',
-  sections_generated text[] DEFAULT '{}',
-  status text NOT NULL DEFAULT 'draft'
-    CHECK (status IN ('draft','completed','archived')),
-  feedback_score integer,
-  feedback_notes text,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-```
+## Implementation Steps
 
-RLS: Users can SELECT and UPDATE (feedback only) their own rows. Admins can see all.
+### Step 1: Connect Perplexity to the project
 
-### Table 3: `report_templates`
+Link the existing Perplexity workspace connection to this project so the `PERPLEXITY_API_KEY` secret becomes available in Edge Functions.
 
-```sql
-CREATE TABLE report_templates (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  section_name text NOT NULL,
-  prompt_body text NOT NULL,
-  variables text[] NOT NULL DEFAULT '{}',
-  visibility_tier text NOT NULL DEFAULT 'free',
-  is_active boolean NOT NULL DEFAULT true,
-  version integer NOT NULL DEFAULT 1,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-```
+### Step 2: Add a `callPerplexity` helper function
 
-RLS: SELECT for all authenticated users. INSERT/UPDATE/DELETE for admins only.
+Add a new helper to the `generate-report` Edge Function that calls the Perplexity API with structured search queries. Uses the `sonar` model for fast, grounded responses with citations.
 
-Seed data: 7 section templates (executive_summary, swot_analysis, service_providers, mentor_recommendations, events_resources, action_plan, lead_list) with their prompt templates and visibility tiers.
+### Step 3: Add a market research step to the pipeline
 
----
+After Firecrawl enrichment and before section generation, run 3 parallel Perplexity queries:
 
-## Phase 2: Multi-Step Intake Form
+| Query | Purpose | Example |
+|-------|---------|---------|
+| Market landscape | Industry data for the target region | "SaaS market size and trends in Australia 2025" |
+| Regulatory/compliance | Entry requirements | "Requirements for US tech company entering Australian market" |
+| Recent news | Timely developments | "Recent news about fintech regulation in Australia" |
 
-### New Page: `/report-creator`
+Each query uses `search_recency_filter: 'year'` to keep results current.
 
-**File: `src/pages/ReportCreator.tsx`**
+### Step 4: Inject research into template variables
 
-A full-page multi-step form (not a modal) with 3 steps:
+Add three new template variables that any report section can reference:
 
-**Step 1 - Company Details:**
-- Company name, website URL, country of origin (dropdown), industry/sector (dropdown), company stage (dropdown), employee count (dropdown)
+- `{{market_research_landscape}}` -- market size, trends, competitors
+- `{{market_research_regulatory}}` -- compliance and entry requirements
+- `{{market_research_news}}` -- recent relevant developments
+- `{{market_research_citations}}` -- source URLs for credibility
 
-**Step 2 - Market Entry Goals:**
-- Target regions (multi-select checkboxes), services needed (multi-select checkboxes), timeline (dropdown), budget level (dropdown), primary goals (textarea, 500 char max), key challenges (textarea, 500 char max)
+### Step 5: Update report templates to use research
 
-**Step 3 - Review and Generate:**
-- Summary card showing all inputs
-- "Generate My Report" button
-- Loading state with animated progress steps
+Update the `report_templates` database prompts for key sections:
 
-**Components to create:**
+- **executive_summary** -- include market landscape data for grounded opportunity assessment
+- **swot_analysis** -- use regulatory research for Threats, market data for Opportunities
+- **action_plan** -- reference regulatory requirements in Phase 1, market trends in Phase 3
 
-| Component | Description |
-|-----------|-------------|
-| `src/pages/ReportCreator.tsx` | Main page component |
-| `src/components/report-creator/IntakeStep1.tsx` | Company details form |
-| `src/components/report-creator/IntakeStep2.tsx` | Market entry goals form |
-| `src/components/report-creator/IntakeStep3.tsx` | Review and submit |
-| `src/components/report-creator/IntakeProgress.tsx` | Step progress bar |
-| `src/components/report-creator/GeneratingOverlay.tsx` | Loading animation |
-| `src/components/report-creator/intakeSchema.ts` | Zod validation schemas |
+### Step 6: Store citations in report metadata
 
-**Auth handling:**
-- Form is accessible to all users (including unauthenticated)
-- On submit, if not logged in: save form data to localStorage, redirect to auth dialog, then restore and submit after login
-- Uses existing `useAuth()` hook and `AuthDialog` component
+Save Perplexity's citation URLs in the report JSON so they can be displayed as "Sources" in the report view, adding credibility.
 
-**Validation:** Zod schema validation on each step before allowing "Next".
+## Technical Details
 
----
-
-## Phase 3: Edge Functions
-
-### Edge Function 1: `enrich-intake`
-
-**File: `supabase/functions/enrich-intake/index.ts`**
-
-Pipeline:
-1. Receive intake form ID
-2. Fetch the intake form from `user_intake_forms`
-3. Use Firecrawl to scrape the company website (extract first 2000 chars of markdown)
-4. Call Lovable AI to:
-   - Standardize industry classification
-   - Generate enriched company summary (2-3 sentences)
-   - Assess company maturity
-5. Store enriched output in `enriched_input` jsonb column
-6. Update status to `processing`
-7. Return enriched data
-
-Uses: `FIRECRAWL_API_KEY`, `LOVABLE_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-
-### Edge Function 2: `search-matches`
-
-**File: `supabase/functions/search-matches/index.ts`**
-
-Two-pass search:
-
-**Pass 1 - Source Relevance:**
-- Query each table with filtered counts based on user's industry and target regions
-- Tables queried: `service_providers`, `community_members`, `events`, `leads`, `content_items`, `innovation_ecosystem`, `trade_investment_agencies`
-- Matching logic uses text search on `location`, `services`, `description`, `industry`/`sector` fields
-- Return top 4-5 tables with most relevant matches
-
-**Pass 2 - Deep Match:**
-- Within relevant tables, run detailed queries with LIMIT
-- service_providers: WHERE location matches target_regions AND services/description overlap with industry, LIMIT 10
-- community_members: WHERE specialties overlap with services_needed AND location matches, LIMIT 5
-- content_items: WHERE content_type IN ('case_study', 'guide') AND sector_tags overlap, LIMIT 5
-- events: WHERE date > NOW() AND sector/location match, LIMIT 5
-- leads: WHERE industry matches AND location matches, LIMIT 5
-- innovation_ecosystem: WHERE location matches, LIMIT 3
-- trade_investment_agencies: WHERE location/services relevant, LIMIT 3
-
-**Tier gating:** For tables/records gated by tier, return placeholder objects with `{ id, name, blurred: true, upgrade_cta: "..." }` for users below required tier.
-
-### Edge Function 3: `generate-report`
-
-**File: `supabase/functions/generate-report/index.ts`**
-
-Pipeline:
-1. Receive intake_form_id and user_id
-2. Fetch enriched intake data from `user_intake_forms`
-3. Fetch matched records from `search-matches` (call internally or receive as input)
-4. Fetch active prompt templates from `report_templates` table
-5. For each section template, substitute variables and call Lovable AI
-6. Run sections in parallel where possible (Promise.allSettled with batches of 2-3)
-7. Assemble into structured JSON report
-8. Store in `user_reports` table
-9. Update `user_intake_forms.status` to `completed`
-
-**Section visibility based on user's subscription tier:**
-- Free: executive_summary, service_providers, events_resources, action_plan
-- Growth: All of Free + swot_analysis, mentor_recommendations
-- Scale/Enterprise: Everything + lead_list
-
-**Config:**
-```toml
-[functions.enrich-intake]
-verify_jwt = false
-wall_clock_limit = 60
-
-[functions.search-matches]
-verify_jwt = false
-wall_clock_limit = 60
-
-[functions.generate-report]
-verify_jwt = false
-wall_clock_limit = 300
-```
-
----
-
-## Phase 4: Report Display Page
-
-### New Page: `/report/:reportId`
-
-**File: `src/pages/ReportView.tsx`**
-
-Layout:
-- Top bar: Company name, generated date, tier badge, "Download PDF" (placeholder), "Share" button
-- Left sidebar (desktop): Table of contents with anchor links to sections
-- Main content: Report sections as styled Cards
-
-**Components to create:**
-
-| Component | Description |
-|-----------|-------------|
-| `src/pages/ReportView.tsx` | Main report view page |
-| `src/components/report/ReportHeader.tsx` | Top bar with company info |
-| `src/components/report/ReportSidebar.tsx` | Table of contents |
-| `src/components/report/ReportSection.tsx` | Individual section card |
-| `src/components/report/ReportMatchCard.tsx` | Matched entity mini-card |
-| `src/components/report/ReportGatedSection.tsx` | Blurred/locked section overlay |
-| `src/components/report/ReportFeedback.tsx` | Thumbs up/down feedback widget |
-| `src/hooks/useReport.ts` | React Query hook for fetching report |
-| `src/hooks/useReportGeneration.ts` | Hook for orchestrating the generation pipeline |
-
-**Tier gating UI:**
-- Locked sections show heading + frosted glass blur overlay
-- "Upgrade to unlock" card with lock icon and CTA to /pricing
-- Individual blurred entity cards with lock icon
-
-**Matched entity cards:**
-- Service providers: Name, category, "View Profile" link to /service-providers
-- Mentors: Name, expertise, location, "Connect" CTA
-- Events: Title, date, location, "RSVP" link
-- Content: Title, type, "Read More" link
-
-### New Page: `/my-reports`
-
-**File: `src/pages/MyReports.tsx`**
-
-List view of all reports for the current user:
-- Company name, date generated, tier badge, status, "View Report" link
-- Uses React Query to fetch from `user_reports`
-- Protected route (requires auth)
-
----
-
-## Phase 5: Navigation and Access Updates
-
-### Navigation Changes
-
-**Modify `src/components/navigation/NavigationItems.tsx`:**
-- Add "Report Creator" to `primaryNavItems` between Events and Leads
-
-**Modify `src/components/auth/UserDropdown.tsx`:**
-- Add "My Reports" link to user dropdown (linking to /my-reports)
-
-**Modify `src/App.tsx`:**
-- Add routes: `/report-creator`, `/report/:reportId`, `/my-reports`
-
-### CTA Placements
-
-**Modify `src/components/sections/HeroSection.tsx`:**
-- Add a secondary CTA card: "Get Your Free Market Entry Report" linking to /report-creator
-
-**Create `src/components/ReportCreatorCTA.tsx`:**
-- Reusable CTA component for placement on /service-providers, /community, /content pages
-
----
-
-## Phase 6: API Client Layer
-
-**Create `src/lib/api/reportApi.ts`:**
+### Perplexity helper function (added to Edge Function)
 
 ```typescript
-// Functions:
-// - submitIntakeForm(data) -> creates intake form record
-// - enrichIntake(intakeFormId) -> calls enrich-intake edge function
-// - searchMatches(intakeFormId) -> calls search-matches edge function
-// - generateReport(intakeFormId) -> calls generate-report edge function
-// - fetchReport(reportId) -> fetches report from user_reports
-// - fetchMyReports() -> fetches all reports for current user
-// - submitFeedback(reportId, score, notes) -> updates feedback
+async function callPerplexity(
+  apiKey: string,
+  query: string,
+  options?: { recency?: string; domains?: string[] }
+): Promise<{ content: string; citations: string[] }> {
+  const resp = await fetch("https://api.perplexity.ai/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "sonar",
+      messages: [
+        { role: "system", content: "Be precise and concise. Focus on factual, data-driven insights." },
+        { role: "user", content: query },
+      ],
+      search_recency_filter: options?.recency || "year",
+      search_domain_filter: options?.domains,
+    }),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text();
+    console.error("Perplexity error:", resp.status, text);
+    return { content: "", citations: [] };
+  }
+
+  const data = await resp.json();
+  return {
+    content: data.choices?.[0]?.message?.content || "",
+    citations: data.citations || [],
+  };
+}
 ```
 
----
+### Research queries (run in parallel)
 
-## Implementation Order
+```typescript
+const perplexityKey = Deno.env.get("PERPLEXITY_API_KEY");
+let marketResearch = { landscape: "", regulatory: "", news: "", citations: [] };
 
-Due to the size of this feature, implementation will be broken into multiple steps:
+if (perplexityKey) {
+  const [landscape, regulatory, news] = await Promise.allSettled([
+    callPerplexity(perplexityKey,
+      `${intake.industry_sector} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points and statistics.`
+    ),
+    callPerplexity(perplexityKey,
+      `Requirements, regulations, compliance, and licensing for a ${intake.country_of_origin} ${intake.industry_sector} company entering the Australian market. Include visa, tax, and legal entity requirements.`
+    ),
+    callPerplexity(perplexityKey,
+      `Recent news and developments in ${intake.industry_sector} in Australia in the last 6 months`,
+      { recency: "month" }
+    ),
+  ]);
+  // Extract results, merge citations...
+}
+```
 
-**Step 1**: Database migration (3 tables + RLS + seed data)
+### Template variable additions
 
-**Step 2**: Intake form page (`/report-creator`) with all 3 steps, validation, and form submission
+The existing `variables` object gets 4 new entries:
 
-**Step 3**: `enrich-intake` edge function (Firecrawl + AI enrichment)
+```typescript
+variables.market_research_landscape = marketResearch.landscape;
+variables.market_research_regulatory = marketResearch.regulatory;
+variables.market_research_news = marketResearch.news;
+variables.market_research_citations = marketResearch.citations.join("\n");
+```
 
-**Step 4**: `search-matches` edge function (two-pass database search)
+### Database template updates (SQL migration)
 
-**Step 5**: `generate-report` edge function (modular AI report assembly)
+Update prompts for `executive_summary`, `swot_analysis`, and `action_plan` to reference the new variables. Example for executive_summary:
 
-**Step 6**: Report display page (`/report/:reportId`) with tier gating
+```sql
+UPDATE report_templates
+SET prompt_body = prompt_body || E'\n\nUse the following real market research data to ground your analysis:\n{{market_research_landscape}}\n\nCite specific data points where possible.'
+WHERE section_name = 'executive_summary';
+```
 
-**Step 7**: My Reports page (`/my-reports`) + navigation updates + CTA placements
+### Best-effort design
 
-**Step 8**: `report_templates` seed data + template-driven generation
+Like Firecrawl, all Perplexity calls are wrapped in try/catch. If the API key is missing or calls fail, the report still generates -- just without the external research layer. The report metadata will indicate whether Perplexity research was used.
 
----
+## Impact on Generation Time
 
-## Files Summary
+- Current pipeline: ~30-60 seconds
+- With Perplexity: adds ~5-10 seconds (3 parallel queries)
+- Well within the existing 300-second timeout
 
-### New Files (21 files)
-
-| File | Purpose |
-|------|---------|
-| `src/pages/ReportCreator.tsx` | Multi-step intake form page |
-| `src/pages/ReportView.tsx` | Report display page |
-| `src/pages/MyReports.tsx` | User's reports list |
-| `src/components/report-creator/IntakeStep1.tsx` | Company details step |
-| `src/components/report-creator/IntakeStep2.tsx` | Market entry goals step |
-| `src/components/report-creator/IntakeStep3.tsx` | Review and generate step |
-| `src/components/report-creator/IntakeProgress.tsx` | Progress bar |
-| `src/components/report-creator/GeneratingOverlay.tsx` | Generation loading UI |
-| `src/components/report-creator/intakeSchema.ts` | Zod validation |
-| `src/components/report/ReportHeader.tsx` | Report top bar |
-| `src/components/report/ReportSidebar.tsx` | Table of contents |
-| `src/components/report/ReportSection.tsx` | Section card renderer |
-| `src/components/report/ReportMatchCard.tsx` | Matched entity card |
-| `src/components/report/ReportGatedSection.tsx` | Locked section overlay |
-| `src/components/report/ReportFeedback.tsx` | Feedback widget |
-| `src/components/ReportCreatorCTA.tsx` | Reusable CTA component |
-| `src/hooks/useReport.ts` | Report data fetching hook |
-| `src/hooks/useReportGeneration.ts` | Generation orchestration hook |
-| `src/lib/api/reportApi.ts` | API client for report functions |
-| `supabase/functions/enrich-intake/index.ts` | Website enrichment function |
-| `supabase/functions/search-matches/index.ts` | Database search function |
-| `supabase/functions/generate-report/index.ts` | AI report generation function |
-
-### Modified Files (5 files)
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/App.tsx` | Add 3 new routes |
-| `src/components/navigation/NavigationItems.tsx` | Add Report Creator nav item |
-| `src/components/auth/UserDropdown.tsx` | Add My Reports link |
-| `src/components/sections/HeroSection.tsx` | Add Report Creator CTA |
-| `supabase/config.toml` | Register 3 new edge functions |
-
-### No External API Keys Needed
-
-All required secrets are already configured:
-- `LOVABLE_API_KEY` - for AI generation via Lovable AI Gateway
-- `FIRECRAWL_API_KEY` - for website scraping
-- `SUPABASE_SERVICE_ROLE_KEY` - for server-side data access
+| `supabase/functions/generate-report/index.ts` | Add `callPerplexity` helper, research step, new template variables, citations in metadata |
+| `supabase/config.toml` | No change needed (already has 300s timeout) |
+| Database migration | Update 3 report template prompts to use `{{market_research_*}}` variables |
 
