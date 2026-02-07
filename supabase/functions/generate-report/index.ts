@@ -128,13 +128,22 @@ async function searchMatches(supabase: any, intake: any) {
   const matches: Record<string, any[]> = {};
   const regions = intake.target_regions || [];
   const industry = intake.industry_sector || "";
+  const servicesNeeded = intake.services_needed || [];
 
   const locationPatterns = regions.map((r: string) => r.split("/")[0]).filter(Boolean);
 
+  // Service providers — filter by location AND services overlap
   try {
     let spQuery = supabase.from("service_providers").select("id, name, location, services, description, website").limit(10);
+    const filters: string[] = [];
     if (locationPatterns.length > 0) {
-      spQuery = spQuery.or(locationPatterns.map((l: string) => `location.ilike.%${l}%`).join(","));
+      filters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+    }
+    if (servicesNeeded.length > 0) {
+      filters.push(...servicesNeeded.map((s: string) => `services.cs.{${s}}`));
+    }
+    if (filters.length > 0) {
+      spQuery = spQuery.or(filters.join(","));
     }
     const { data: sp } = await spQuery;
     matches.service_providers = (sp || []).map((p: any) => ({
@@ -143,10 +152,18 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("SP search error:", e); }
 
+  // Community members — match specialties to services needed
   try {
-    let cmQuery = supabase.from("community_members").select("id, name, title, location, specialties, company").limit(5);
+    let cmQuery = supabase.from("community_members").select("id, name, title, location, specialties, company, website").limit(5);
+    const cmFilters: string[] = [];
     if (locationPatterns.length > 0) {
-      cmQuery = cmQuery.or(locationPatterns.map((l: string) => `location.ilike.%${l}%`).join(","));
+      cmFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+    }
+    if (servicesNeeded.length > 0) {
+      cmFilters.push(...servicesNeeded.map((s: string) => `specialties.cs.{${s}}`));
+    }
+    if (cmFilters.length > 0) {
+      cmQuery = cmQuery.or(cmFilters.join(","));
     }
     const { data: cm } = await cmQuery;
     matches.community_members = (cm || []).map((m: any) => ({
@@ -156,18 +173,24 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("CM search error:", e); }
 
+  // Events — include past events, sort by date desc, match category/location
   try {
-    const { data: ev } = await supabase
+    let evQuery = supabase
       .from("events")
       .select("id, title, date, location, category, type")
-      .gte("date", new Date().toISOString().split("T")[0])
+      .order("date", { ascending: false })
       .limit(5);
+    if (locationPatterns.length > 0) {
+      evQuery = evQuery.or(locationPatterns.map((l: string) => `location.ilike.%${l}%`).join(","));
+    }
+    const { data: ev } = await evQuery;
     matches.events = (ev || []).map((e: any) => ({
       ...e, name: e.title, link: "/events", linkLabel: "View Event",
       subtitle: `${e.date} · ${e.location}`, tags: [e.category],
     }));
   } catch (e) { console.error("Events search error:", e); }
 
+  // Content items
   try {
     const { data: ci } = await supabase
       .from("content_items")
@@ -181,6 +204,7 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("Content search error:", e); }
 
+  // Leads — match by industry
   try {
     let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type").limit(5);
     if (industry) ldQuery = ldQuery.ilike("industry", `%${industry}%`);
@@ -191,8 +215,9 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("Leads search error:", e); }
 
+  // Innovation ecosystem
   try {
-    let ieQuery = supabase.from("innovation_ecosystem").select("id, name, location, services, description").limit(3);
+    let ieQuery = supabase.from("innovation_ecosystem").select("id, name, location, services, description, website").limit(3);
     if (locationPatterns.length > 0) {
       ieQuery = ieQuery.or(locationPatterns.map((l: string) => `location.ilike.%${l}%`).join(","));
     }
@@ -203,10 +228,11 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("IE search error:", e); }
 
+  // Trade investment agencies
   try {
     const { data: ta } = await supabase
       .from("trade_investment_agencies")
-      .select("id, name, location, services, description")
+      .select("id, name, location, services, description, website")
       .limit(3);
     matches.trade_investment_agencies = (ta || []).map((t: any) => ({
       ...t, link: "/trade-investment-agencies", linkLabel: "View",

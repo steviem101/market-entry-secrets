@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ReactMarkdown from 'react-markdown';
 
 interface ReportSectionProps {
   id: string;
@@ -15,8 +16,8 @@ export const ReportSection = ({ id, title, content, children }: ReportSectionPro
           <CardTitle className="text-xl">{title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="prose prose-sm max-w-none text-foreground/90 whitespace-pre-wrap">
-            {content}
+          <div className="prose prose-sm max-w-none text-foreground/90 prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-li:text-foreground/90">
+            <ReactMarkdown>{content}</ReactMarkdown>
           </div>
           {children}
         </CardContent>
