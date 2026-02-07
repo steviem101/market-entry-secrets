@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Share2, Calendar } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Calendar, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -8,6 +8,7 @@ interface ReportHeaderProps {
   companyName: string;
   generatedAt: string;
   tier: string;
+  perplexityUsed?: boolean;
 }
 
 const tierLabels: Record<string, string> = {
@@ -24,7 +25,7 @@ const tierColors: Record<string, string> = {
   enterprise: 'bg-destructive/10 text-destructive border-destructive/20',
 };
 
-export const ReportHeader = ({ companyName, generatedAt, tier }: ReportHeaderProps) => {
+export const ReportHeader = ({ companyName, generatedAt, tier, perplexityUsed }: ReportHeaderProps) => {
   return (
     <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -43,6 +44,12 @@ export const ReportHeader = ({ companyName, generatedAt, tier }: ReportHeaderPro
               <Badge variant="outline" className={`text-xs ${tierColors[tier] || ''}`}>
                 {tierLabels[tier] || tier}
               </Badge>
+              {perplexityUsed && (
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <Globe className="w-3 h-3" />
+                  AI Research
+                </Badge>
+              )}
             </div>
           </div>
         </div>

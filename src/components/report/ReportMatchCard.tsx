@@ -12,6 +12,7 @@ interface ReportMatchCardProps {
   linkLabel?: string;
   blurred?: boolean;
   upgradeCta?: string;
+  website?: string;
 }
 
 export const ReportMatchCard = ({
@@ -22,6 +23,7 @@ export const ReportMatchCard = ({
   linkLabel = 'View Profile',
   blurred,
   upgradeCta,
+  website,
 }: ReportMatchCardProps) => {
   if (blurred) {
     return (
@@ -57,14 +59,24 @@ export const ReportMatchCard = ({
               </div>
             )}
           </div>
-          {link && (
-            <Link to={link}>
-              <Button variant="outline" size="sm" className="gap-1 shrink-0">
-                {linkLabel}
-                <ExternalLink className="w-3 h-3" />
-              </Button>
-            </Link>
-          )}
+          <div className="flex flex-col gap-1.5 shrink-0">
+            {link && (
+              <Link to={link}>
+                <Button variant="outline" size="sm" className="gap-1 w-full">
+                  {linkLabel}
+                  <ExternalLink className="w-3 h-3" />
+                </Button>
+              </Link>
+            )}
+            {website && (
+              <a href={website} target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1 w-full text-xs text-muted-foreground">
+                  Website
+                  <ExternalLink className="w-3 h-3" />
+                </Button>
+              </a>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

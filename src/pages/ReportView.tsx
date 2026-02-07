@@ -8,6 +8,7 @@ import { ReportSection } from '@/components/report/ReportSection';
 import { ReportGatedSection } from '@/components/report/ReportGatedSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
 import { ReportFeedback } from '@/components/report/ReportFeedback';
+import { ReportSources } from '@/components/report/ReportSources';
 import { useReport } from '@/hooks/useReport';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -70,6 +71,8 @@ const ReportView = () => {
   const sections = reportJson?.sections || {};
   const companyName = reportJson?.company_name || 'Market Entry Report';
   const matches = reportJson?.matches || {};
+  const perplexityCitations = reportJson?.metadata?.perplexity_citations || [];
+  const perplexityUsed = reportJson?.metadata?.perplexity_used || false;
 
   const sidebarSections = SECTION_ORDER
     .filter((id) => sections[id] || TIER_REQUIREMENTS[id])
@@ -90,6 +93,7 @@ const ReportView = () => {
         companyName={companyName}
         generatedAt={report.created_at}
         tier={report.tier_at_generation}
+        perplexityUsed={perplexityUsed}
       />
 
       <main className="min-h-screen pt-6 pb-16 px-4">
@@ -153,6 +157,7 @@ const ReportView = () => {
                             linkLabel={match.linkLabel}
                             blurred={match.blurred}
                             upgradeCta={match.upgrade_cta}
+                            website={match.website}
                           />
                         ))}
                       </div>
@@ -160,6 +165,11 @@ const ReportView = () => {
                   </ReportSection>
                 );
               })}
+
+              {/* Sources */}
+              {perplexityCitations.length > 0 && (
+                <ReportSources citations={perplexityCitations} />
+              )}
 
               {/* Feedback */}
               <ReportFeedback
