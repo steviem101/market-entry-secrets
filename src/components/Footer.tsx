@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import MarketEntryLogo from "./MarketEntryLogo";
+import { EmailCaptureForm } from "./EmailCaptureForm";
 import { 
   Mail, 
   MapPin, 
@@ -123,23 +124,7 @@ export const Footer = () => {
               Get the latest market insights, new service provider listings, and exclusive content delivered to your inbox.
             </p>
             
-            {/* Beehiiv Newsletter Embed */}
-            <div className="min-h-[207px] overflow-visible">
-              <div 
-                dangerouslySetInnerHTML={{
-                  __html: `
-                    <iframe 
-                      src="https://subscribe-forms.beehiiv.com/570e944b-c9cb-436b-a319-f1c04b8048cf" 
-                      class="beehiiv-embed" 
-                      data-test-id="beehiiv-embed" 
-                      frameborder="0" 
-                      scrolling="no" 
-                      style="width: 412px; height: 207px; margin: 0; border-radius: 0px 0px 0px 0px !important; background-color: transparent; box-shadow: 0 0 #0000; max-width: 100%;">
-                    </iframe>
-                  `
-                }}
-              />
-            </div>
+            <EmailCaptureForm source="footer_newsletter" buttonText="Subscribe" />
           </div>
         </div>
 
