@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Lock } from 'lucide-react';
+import { ExternalLink, Lock, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ReportMatchCardProps {
@@ -13,6 +13,7 @@ interface ReportMatchCardProps {
   blurred?: boolean;
   upgradeCta?: string;
   website?: string;
+  source?: string; // "web" for externally discovered matches
 }
 
 export const ReportMatchCard = ({
@@ -24,6 +25,7 @@ export const ReportMatchCard = ({
   blurred,
   upgradeCta,
   website,
+  source,
 }: ReportMatchCardProps) => {
   if (blurred) {
     return (
@@ -44,12 +46,22 @@ export const ReportMatchCard = ({
     );
   }
 
+  const isWebSource = source === 'web';
+
   return (
     <Card className="border-border/50 border-l-[3px] border-l-primary/30 hover:border-l-primary/60 hover:shadow-sm transition-all">
       <CardContent className="p-5 space-y-3">
         {/* Name & subtitle */}
         <div>
-          <p className="font-semibold text-foreground">{name}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-foreground">{name}</p>
+            {isWebSource && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1 text-muted-foreground border-muted-foreground/30">
+                <Globe className="w-2.5 h-2.5" />
+                Web
+              </Badge>
+            )}
+          </div>
           {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
         </div>
 
@@ -62,18 +74,27 @@ export const ReportMatchCard = ({
           </div>
         )}
 
-        {/* Action buttons -- stacked below */}
+        {/* Action buttons */}
         {(link || website) && (
           <div className="flex flex-wrap gap-2 pt-1">
             {link && (
-              <Link to={link}>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                  {linkLabel}
-                  <ExternalLink className="w-3 h-3" />
-                </Button>
-              </Link>
+              isWebSource ? (
+                <a href={link} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                    {linkLabel}
+                    <ExternalLink className="w-3 h-3" />
+                  </Button>
+                </a>
+              ) : (
+                <Link to={link}>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                    {linkLabel}
+                    <ExternalLink className="w-3 h-3" />
+                  </Button>
+                </Link>
+              )
             )}
-            {website && (
+            {website && !isWebSource && (
               <a href={website} target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground">
                   Website

@@ -12,6 +12,7 @@ import { ReportFeedback } from '@/components/report/ReportFeedback';
 import { ReportSources } from '@/components/report/ReportSources';
 import { ReportBackToTop } from '@/components/report/ReportBackToTop';
 import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
+import { ReportKeyMetrics } from '@/components/report/ReportKeyMetrics';
 import { useReport } from '@/hooks/useReport';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -66,6 +67,7 @@ const ReportView = () => {
   const matches = reportJson?.matches || {};
   const perplexityCitations = reportJson?.metadata?.perplexity_citations || [];
   const perplexityUsed = reportJson?.metadata?.perplexity_used || false;
+  const keyMetrics = reportJson?.metadata?.key_metrics || [];
   const readingTime = estimateReadingTime(sections);
 
   const sidebarSections = SECTION_ORDER
@@ -108,6 +110,9 @@ const ReportView = () => {
 
             {/* Main content */}
             <div className="flex-1 max-w-3xl space-y-8">
+              {/* Key Metrics stat cards — only for new reports with metrics */}
+              <ReportKeyMetrics metrics={keyMetrics} />
+
               {SECTION_ORDER.map((sectionId) => {
                 const section = sections[sectionId];
                 const requiredTier = TIER_REQUIREMENTS[sectionId];
@@ -160,6 +165,7 @@ const ReportView = () => {
                             blurred={match.blurred}
                             upgradeCta={match.upgrade_cta}
                             website={match.website}
+                            source={match.source}
                           />
                         ))}
                       </div>
