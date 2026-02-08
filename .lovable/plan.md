@@ -1,190 +1,88 @@
 
+# Fix: Report Stuck at "Processing" Due to Polish Pass Timeout
 
-# Enhanced Research Intelligence Pipeline
+## Root Cause
 
-## Overview
+The edge function worker is killed during the polish pass. The sequence is:
+1. Parallel research completes (~20s)
+2. Provider enrichment completes (~1s)
+3. Section generation completes (~26s)
+4. Polish pass starts -- sends 33,831 chars to `gemini-2.5-pro` (the slowest model)
+5. **Worker is shut down ~28 seconds into the polish pass** -- before it can save the report
 
-This plan adds 7 new research capabilities to the report generation pipeline, all running in parallel with the existing queries to minimize latency. The changes are entirely in the backend edge function and the report template prompts -- the frontend already supports rendering any new data injected into sections.
+Because the save happens AFTER the polish pass (line 1296), the report status is never updated from "processing" to "completed". The data is lost.
 
----
+## Fix Strategy
 
-## New Research Queries
+Three changes to make the pipeline robust:
 
-### 1. Bilateral Trade Intelligence (Perplexity)
+### 1. Save the report BEFORE the polish pass (critical fix)
 
-A new Perplexity query using the user's `country_of_origin` to research the specific trade corridor between their home country and Australia.
+Move the database save (lines 1296-1304) to happen immediately after section generation completes, BEFORE attempting the polish pass. This ensures the report is always saved even if the worker gets killed.
 
-**Query**: "Trade relationship between {country_of_origin} and Australia in {industry_sector}: bilateral agreements, free trade agreements, export statistics, success stories of {country_of_origin} companies entering Australia"
+If the polish pass succeeds, do a second save to update the sections with polished content. If it fails or the worker dies, the user still gets their unpolished report.
 
-- Uses `sonar` model with `year` recency
-- Citations merge into the shared citations pool
-- Result stored in a new template variable `market_research_bilateral_trade`
-- Injected into: `executive_summary`, `swot_analysis`, and `action_plan` prompts
+### 2. Downgrade the polish pass model from `gemini-2.5-pro` to `gemini-3-flash-preview`
 
-### 2. Cost of Doing Business (Perplexity)
+The `gemini-2.5-pro` model is 5-10x slower than flash models and is the primary reason the worker times out. The flash model produces comparable editing quality for this task and completes in 5-10 seconds instead of 30-60+.
 
-Practical operational costs for the target regions.
+### 3. Add a timeout wrapper around the polish pass
 
-**Query**: "Cost of doing business in Australia {target_regions} for {industry_sector}: average office rent, local salaries for key roles, corporate tax rate, GST, employer superannuation obligations, typical setup costs for a foreign company"
+Wrap the polish call in a `Promise.race` with a 30-second timeout. If it doesn't complete in time, fall back to the already-saved unpolished content gracefully.
 
-- Result stored as `market_research_cost_of_business`
-- Injected into: `action_plan` and `swot_analysis` prompts (informs budgeting advice and threats/opportunities)
+## Technical Changes
 
-### 3. Government Grants and Incentives (Perplexity)
+### File: `supabase/functions/generate-report/index.ts`
 
-Targeted search for available financial support.
+**Change 1 — Save before polish (lines ~1259-1310)**
 
-**Query**: "Australian government grants, incentives, R&D tax incentives, landing pad programs, and funding opportunities for international {industry_sector} companies from {country_of_origin} setting up in {target_regions}"
-
-- Result stored as `market_research_grants`
-- Injected into: `action_plan` prompt (Phase 1 funding opportunities) and `executive_summary` (highlight key incentives)
-
-### 4. Upgrade Market Landscape to sonar-pro
-
-The existing `landscape` Perplexity query currently uses `sonar`. This switches it to `sonar-pro` for deeper multi-step analysis, more citations, and richer data points -- the single highest-impact change for research quality.
-
-### 5. Key Metrics via Perplexity Structured Output
-
-A new Perplexity call using `sonar` with a JSON schema response format to extract 4-6 hard data points (market size, CAGR, key growth drivers, number of active players, etc.).
-
-**Response schema**:
-```text
-{
-  "metrics": [
-    { "label": "Market Size", "value": "$8.48B", "context": "2024 estimate" },
-    { "label": "CAGR", "value": "5.1%", "context": "2024-2030 projected" },
-    ...
-  ]
-}
-```
-
-- Stored as `key_metrics` in the report JSON metadata
-- The frontend `ReportView.tsx` renders these as stat cards above the Executive Summary section
-
-### 6. End Buyer Deep Research (Perplexity)
-
-Currently, end buyer URLs are scraped via Firecrawl and analysed with the same competitor analysis prompt. This replaces that with a dedicated Perplexity query per buyer industry + a refined Firecrawl extraction prompt focused on procurement.
-
-**Perplexity query**: "How do {end_buyer_industry} companies in Australia procure {industry_sector} services? Key procurement channels, typical buying cycles, RFP processes, partnership models"
-
-**Firecrawl extraction prompt update**: Change from competitor intelligence framing to buyer intelligence: "Analyse this company as a potential customer. Extract: what they buy, how they procure, partnership programs, supplier requirements."
-
-- Result stored as `end_buyer_research` and `end_buyers_analysis_json`
-- Injected into: `executive_summary` (target customer insights), `lead_list` (buyer matching context), and `action_plan` (go-to-market approach)
-
-### 7. External Event Discovery (Firecrawl Search)
-
-Supplement the internal events database with real-world industry events discovered via web search.
-
-**Firecrawl Search query**: "{industry_sector} conference trade show expo Australia {target_regions} 2025 2026"
-
-- Returns up to 5 results, AI extracts structured event data (name, date, location, URL, relevance)
-- Stored as `discovered_events_json` template variable
-- Injected into: `events_resources` prompt alongside the existing `matched_events_json`
-
----
-
-## Execution Architecture
-
-All new queries run in the existing `Promise.all` parallel block alongside the current 5 operations, keeping total latency roughly the same.
+Restructure `generateReportInBackground` so that:
+- After section generation (line 1257), immediately build `reportJson` and save with `status: "completed"`
+- Then attempt the polish pass as an optional improvement
+- If polish succeeds, do an UPDATE with the polished sections
+- If polish fails or times out, the report is already saved and viewable
 
 ```text
-Promise.all([
-  enrichCompanyDeep(...)          // existing
-  runMarketResearch(...)          // MODIFIED: adds 4 new queries, upgrades model
-  searchMatches(...)              // existing
-  searchCompetitors(...)          // existing  
-  scrapeEndBuyers(...)            // MODIFIED: new Perplexity buyer research
-  discoverExternalEvents(...)     // NEW
-  extractKeyMetrics(...)          // NEW
-])
+Before:
+  Generate sections -> Polish -> Save (single save at the end)
+
+After:
+  Generate sections -> Save (completed) -> Polish (optional) -> Update if successful
 ```
 
-The `runMarketResearch` function expands from 3 parallel Perplexity calls to 6:
-1. Market landscape (upgraded to `sonar-pro`)
-2. Regulatory requirements (unchanged)
-3. Recent news (unchanged)
-4. Bilateral trade intelligence (new)
-5. Cost of doing business (new)
-6. Government grants and incentives (new)
+**Change 2 — Downgrade polish model (line 828)**
 
----
+Change from:
+```
+"google/gemini-2.5-pro"
+```
+To:
+```
+"google/gemini-3-flash-preview"
+```
 
-## Frontend Changes
+**Change 3 — Add timeout wrapper (around line 1262)**
 
-### Key Metrics Stat Cards
+```
+const polishWithTimeout = Promise.race([
+  polishReport(lovableKey, sections, sectionOrder),
+  new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("Polish timeout")), 30000)
+  ),
+]);
+```
 
-A new `ReportKeyMetrics` component renders 3-6 stat cards in a responsive grid above the Executive Summary. Each card shows:
-- A bold value (e.g. "$8.48B")
-- A label (e.g. "Market Size")
-- A small context line (e.g. "2024 estimate")
+### No frontend changes needed
 
-This is conditionally rendered -- only appears if `key_metrics` data exists in the report metadata (backward compatible with existing reports).
+The frontend already polls for `status === "completed"` and renders whatever `report_json` is saved. This fix is entirely backend.
 
-### Discovered Events in Match Cards
+## What This Fixes
 
-External events discovered by Firecrawl are added to the `events_resources` section's match cards alongside internal directory events, with a small "Web" badge to distinguish them from directory entries.
+- Reports will no longer get stuck at "processing" -- they save immediately after sections are generated
+- The polish pass becomes a best-effort improvement rather than a blocking requirement
+- The faster model reduces the chance of worker shutdown during polish
+- Existing reports already stuck at "processing" can be manually fixed by updating their status
 
-### Report Config Updates
+## Bonus: Fix the stuck Credit Logic report
 
-- Add `key_metrics` section config styling
-- Update `SECTION_CONFIG` labels for discovered events badge support
-
----
-
-## Template Variable Summary
-
-| New Variable | Source | Injected Into |
-|---|---|---|
-| `market_research_bilateral_trade` | Perplexity (sonar) | executive_summary, swot_analysis, action_plan |
-| `market_research_cost_of_business` | Perplexity (sonar) | action_plan, swot_analysis |
-| `market_research_grants` | Perplexity (sonar) | action_plan, executive_summary |
-| `end_buyer_research` | Perplexity (sonar) | executive_summary, lead_list, action_plan |
-| `end_buyers_analysis_json` | Firecrawl + AI | lead_list |
-| `discovered_events_json` | Firecrawl Search + AI | events_resources |
-| `key_metrics_json` | Perplexity structured output | stored in report metadata, rendered by frontend |
-
----
-
-## Database Changes
-
-**Update `report_templates` table**: Add the new template variables to each affected section's `variables` array and append new research data blocks to the relevant prompt bodies:
-
-- `executive_summary`: Add bilateral trade, grants, end buyer research
-- `swot_analysis`: Add bilateral trade, cost of business
-- `action_plan`: Add bilateral trade, cost of business, grants, end buyer research
-- `events_resources`: Add discovered events
-- `lead_list`: Add end buyer research and analysis
-
----
-
-## Technical File Changes
-
-| File | Changes |
-|---|---|
-| `supabase/functions/generate-report/index.ts` | Expand `runMarketResearch` with 3 new queries + sonar-pro upgrade; add `discoverExternalEvents` function; add `extractKeyMetrics` function; update `scrapeKnownCompetitors` buyer prompt; add all new variables to the variables map; add discovered events to matches; store key_metrics in reportJson metadata |
-| `src/components/report/ReportKeyMetrics.tsx` | New component: stat card grid for key metrics |
-| `src/pages/ReportView.tsx` | Render `ReportKeyMetrics` above first section if data exists; pass discovered event badges |
-| `src/pages/SharedReportView.tsx` | Same key metrics rendering |
-| `src/components/report/ReportMatchCard.tsx` | Add optional "Web" source badge for externally discovered matches |
-| `src/components/report/reportSectionConfig.ts` | No structural changes needed |
-| Database migration | Update `report_templates` rows with expanded prompts and variables arrays |
-
----
-
-## Backward Compatibility
-
-- All new variables default to empty strings or "No data available" if their API calls fail
-- Existing reports render exactly as before (no `key_metrics` in metadata = component doesn't render)
-- Template variable substitution is additive -- old prompts without new `{{variables}}` simply don't use them
-- Every new API call is wrapped in try/catch with fallback values (best-effort pattern)
-
----
-
-## API Cost Impact
-
-- 3 additional Perplexity calls per report (sonar model, ~$0.005 each)
-- 1 Perplexity call upgraded from sonar to sonar-pro (~$0.005 more)
-- 1 additional Firecrawl Search call (~1 credit)
-- All calls run in parallel, so wall-clock time increase is minimal (bounded by the slowest call, which is typically the existing deep scrape)
-
+Run a query to check if the stuck report actually has section data in `report_json`, and if not, mark it as "failed" so the user can regenerate.
