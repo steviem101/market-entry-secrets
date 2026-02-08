@@ -71,6 +71,25 @@ function transformCompany(raw: any) {
   };
 }
 
+function parseDate(val: any): string | null {
+  if (!val) return null;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function parseInteger(val: any): number | null {
+  if (val == null || val === "") return null;
+  const n = parseInt(String(val), 10);
+  return isNaN(n) ? null : n;
+}
+
+function parseBoolean(val: any): boolean | null {
+  if (val == null || val === "") return null;
+  if (typeof val === "boolean") return val;
+  const s = String(val).toLowerCase();
+  return s === "true" || s === "1" || s === "yes";
+}
+
 function transformContact(raw: any) {
   const firstName = raw.firstName || raw.fields?.firstName || "";
   const lastName = raw.lastName || raw.fields?.lastName || "";
@@ -91,6 +110,42 @@ function transformContact(raw: any) {
     fields: raw.fields || {},
     owner_id: raw.ownerId || null,
     lemlist_created_at: raw.createdAt || null,
+
+    // ── New dedicated columns (28 fields) ──────────────────────────
+    // Contact enrichment
+    linkedin_url_sales_nav: raw.linkedinUrlSalesNav || null,
+    company_name: raw.companyName || raw.fields?.companyName || null,
+    company_website: raw.companyWebsite || raw.fields?.companyWebsite || null,
+    location: raw.location || raw.fields?.location || null,
+    contact_location: raw.contactLocation || raw.fields?.contactLocation || null,
+    personal_email: raw.personalEmail || raw.fields?.personalEmail || null,
+    twitter_profile: raw.twitterProfile || raw.fields?.twitterProfile || null,
+
+    // LinkedIn intelligence
+    linkedin_headline: raw.linkedinHeadline || raw.fields?.linkedinHeadline || null,
+    linkedin_description: raw.linkedinDescription || raw.fields?.linkedinDescription || null,
+    linkedin_skills: raw.linkedinSkills || raw.fields?.linkedinSkills || null,
+    linkedin_job_industry: raw.linkedinJobIndustry || raw.fields?.linkedinJobIndustry || null,
+    linkedin_followers: parseInteger(raw.linkedinFollowers ?? raw.fields?.linkedinFollowers),
+    linkedin_connection_degree: raw.linkedinConnectionDegree || raw.fields?.linkedinConnectionDegree || null,
+    linkedin_profile_id: raw.linkedinProfileId || raw.fields?.linkedinProfileId || null,
+    linkedin_open: parseBoolean(raw.linkedinOpen ?? raw.fields?.linkedinOpen),
+    tagline: raw.tagline || raw.fields?.tagline || null,
+    summary: raw.summary || raw.fields?.summary || null,
+
+    // CRM / campaign status
+    status: raw.status || raw.fields?.status || null,
+    lead_status: raw.leadStatus || raw.fields?.leadStatus || null,
+    source: raw.source || raw.fields?.source || null,
+    email_status: raw.emailstatus || raw.fields?.emailstatus || null,
+    priority: raw.priority || raw.fields?.priority || null,
+    client: raw.client || raw.fields?.client || null,
+    hubspot_id: raw["hubspot Id"] || raw.fields?.["hubspot Id"] || null,
+    lead_notes: raw.leadNotes || raw.fields?.leadNotes || null,
+    last_contacted_date: parseDate(raw.lastContactedDate || raw.fields?.lastContactedDate),
+    first_contacted_date: parseDate(raw.firstContactedDate || raw.fields?.firstContactedDate),
+    last_replied_date: parseDate(raw.lastRepliedDate || raw.fields?.lastRepliedDate),
+
     // company linking fields (used for matching, not stored directly)
     _companyName: raw.companyName || raw.fields?.companyName || null,
     _companyDomain: raw.companyDomain || raw.fields?.companyDomain || null,
