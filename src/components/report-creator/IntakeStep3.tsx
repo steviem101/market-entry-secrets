@@ -2,7 +2,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Sparkles, Building2, MapPin, Briefcase, Clock, DollarSign } from 'lucide-react';
+import { ArrowLeft, Sparkles, Building2, MapPin, Briefcase, Clock, DollarSign, Swords, ExternalLink } from 'lucide-react';
 import type { IntakeFormData } from './intakeSchema';
 
 interface IntakeStep3Props {
@@ -116,6 +116,32 @@ export const IntakeStep3 = ({ form, onBack, onSubmit, isGenerating }: IntakeStep
             )}
           </div>
         </div>
+
+        {/* Known Competitors Summary */}
+        {data.known_competitors && data.known_competitors.length > 0 && (
+          <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-3">
+            <h3 className="font-semibold flex items-center gap-2 text-foreground">
+              <Swords className="w-4 h-4 text-primary" />
+              Known Competitors
+            </h3>
+            <div className="space-y-2 text-sm">
+              {data.known_competitors.map((c, i) => (
+                <div key={i} className="flex items-center justify-between gap-2">
+                  <span className="font-medium">{c.name}</span>
+                  <a
+                    href={c.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline flex items-center gap-1 text-xs truncate max-w-[200px]"
+                  >
+                    {c.website.replace(/^https?:\/\//, '')}
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="pt-4 flex justify-between">
           <Button variant="outline" onClick={onBack} disabled={isGenerating} className="gap-2">

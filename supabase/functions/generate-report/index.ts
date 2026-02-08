@@ -267,6 +267,52 @@ interface CompetitorData {
   key_info: string;
 }
 
+async function scrapeKnownCompetitors(
+  firecrawlKey: string,
+  lovableKey: string,
+  knownCompetitors: Array<{ name: string; website: string }>,
+  companyName: string
+): Promise<CompetitorData[]> {
+  if (!firecrawlKey || knownCompetitors.length === 0) return [];
+
+  console.log(`Scraping ${knownCompetitors.length} user-provided competitors...`);
+  const startTime = Date.now();
+
+  const results = await Promise.allSettled(
+    knownCompetitors.map(async (comp) => {
+      const markdown = await firecrawlScrape(firecrawlKey, comp.website, 15000);
+      if (!markdown || markdown.length < 50) {
+        return { name: comp.name, url: comp.website, description: "Website could not be analysed.", key_info: "" };
+      }
+
+      try {
+        const aiResp = await callAI(lovableKey, [
+          { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
+          {
+            role: "user",
+            content: `Analyze this website content for "${comp.name}" (${comp.website}), a competitor of "${companyName}".
+Return a JSON object: {"name": "${comp.name}", "url": "${comp.website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"}
+
+Website content:
+${markdown.slice(0, 3000)}`,
+          },
+        ]);
+        const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+        return JSON.parse(cleaned) as CompetitorData;
+      } catch {
+        return { name: comp.name, url: comp.website, description: "Could not extract competitor intelligence.", key_info: "" };
+      }
+    })
+  );
+
+  const competitors = results
+    .filter((r): r is PromiseFulfilledResult<CompetitorData> => r.status === "fulfilled")
+    .map((r) => r.value);
+
+  console.log(`Scraped ${competitors.length} known competitors in ${Date.now() - startTime}ms`);
+  return competitors;
+}
+
 async function searchCompetitors(
   firecrawlKey: string,
   lovableKey: string,
@@ -276,6 +322,13 @@ async function searchCompetitors(
   if (!firecrawlKey) return empty;
 
   try {
+    // Step 1: Scrape user-provided known competitors
+    const knownCompetitors = intake.known_competitors || [];
+    const knownResults = await scrapeKnownCompetitors(
+      firecrawlKey, lovableKey, knownCompetitors, intake.company_name
+    );
+
+    // Step 2: Also search for additional competitors via Firecrawl Search
     const targetRegions = (intake.target_regions || []).join(", ") || "Australia";
     const industrySectorText = (intake.industry_sector || []).join(", ");
     const query = `${industrySectorText} companies in Australia ${targetRegions} competitors`;
@@ -283,44 +336,52 @@ async function searchCompetitors(
     console.log(`Searching competitors: "${query}"`);
     const results = await firecrawlSearch(firecrawlKey, query, 5);
 
-    if (results.length === 0) {
-      console.log("No competitor results found");
-      return empty;
-    }
-
-    // Filter out the user's own website
+    // Filter out the user's own website and already-known competitor domains
     const userDomain = new URL(
       intake.website_url.startsWith("http") ? intake.website_url : `https://${intake.website_url}`
     ).hostname.replace("www.", "");
 
+    const knownDomains = new Set(
+      knownCompetitors.map((c: { website: string }) => {
+        try { return new URL(c.website.startsWith("http") ? c.website : `https://${c.website}`).hostname.replace("www.", ""); }
+        catch { return ""; }
+      }).filter(Boolean)
+    );
+
     const filtered = results.filter((r) => {
       try {
         const resultDomain = new URL(r.url).hostname.replace("www.", "");
-        return resultDomain !== userDomain;
+        return resultDomain !== userDomain && !knownDomains.has(resultDomain);
       } catch {
         return true;
       }
     }).slice(0, 3);
 
-    // Use AI to extract structured competitor data
-    const competitorSummaries = await callAI(lovableKey, [
-      { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
-      {
-        role: "user",
-        content: `Analyze these search results about ${(intake.industry_sector || []).join(", ")} companies in Australia. For each, extract competitor intelligence relevant to ${intake.company_name}.
+    let searchCompetitorsList: CompetitorData[] = [];
+    if (filtered.length > 0) {
+      // Use AI to extract structured competitor data from search results
+      const competitorSummaries = await callAI(lovableKey, [
+        { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
+        {
+          role: "user",
+          content: `Analyze these search results about ${industrySectorText} companies in Australia. For each, extract competitor intelligence relevant to ${intake.company_name}.
 
 Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"}]
 
 Search results:
 ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.title}\nContent: ${r.markdown}`).join("\n\n")}`,
-      },
-    ]);
+        },
+      ]);
 
-    const cleanedResp = competitorSummaries.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
-    const competitors = JSON.parse(cleanedResp) as CompetitorData[];
+      const cleanedResp = competitorSummaries.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+      searchCompetitorsList = JSON.parse(cleanedResp) as CompetitorData[];
+    }
 
-    console.log(`Found ${competitors.length} competitors`);
-    return { competitors, raw_results: filtered };
+    // Merge: known competitors first, then search-discovered ones
+    const allCompetitors = [...knownResults, ...searchCompetitorsList];
+
+    console.log(`Total competitors: ${allCompetitors.length} (${knownResults.length} known + ${searchCompetitorsList.length} discovered)`);
+    return { competitors: allCompetitors, raw_results: filtered };
   } catch (e) {
     console.error("Competitor search failed (continuing):", e);
     return empty;
@@ -815,6 +876,7 @@ serve(async (req) => {
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
       // Enhancement 2: Competitor analysis
       competitor_analysis_json: JSON.stringify(competitorResult.competitors),
+      known_competitors_json: JSON.stringify(intake.known_competitors || []),
       // Perplexity market research variables
       market_research_landscape: marketResearch.landscape || "No market research data available.",
       market_research_regulatory: marketResearch.regulatory || "No regulatory research data available.",
