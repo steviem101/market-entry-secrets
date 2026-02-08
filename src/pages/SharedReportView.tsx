@@ -148,6 +148,7 @@ const SharedReportView = () => {
                 id={sectionId}
                 title={SECTION_LABELS[sectionId]}
                 content={section.content || ''}
+                citations={perplexityCitations}
               >
                 {sectionMatches.length > 0 && (
                   <div className="grid gap-3 sm:grid-cols-2">

@@ -554,7 +554,8 @@ Rules:
 7. PRESERVE all Markdown formatting: headings (###), **bold**, bullet points, numbered lists, links.
 8. PRESERVE the section delimiters EXACTLY as they appear (lines starting with "${SECTION_DELIMITER_PREFIX}" and ending with "${SECTION_DELIMITER_SUFFIX}"). Every section delimiter from the input MUST appear in your output.
 9. Do NOT add new sections, remove sections, or change section names.
-10. Do NOT add a title or introduction before the first section delimiter.`,
+10. Do NOT add a title or introduction before the first section delimiter.
+11. PRESERVE all inline citation markers [N] (e.g. [1], [2], [14]) exactly as they appear. These are source references — do NOT remove, renumber, or alter them.`,
       },
       {
         role: "user",
@@ -921,7 +922,7 @@ serve(async (req) => {
 
             try {
               const content = await callAI(lovableKey, [
-                { role: "system", content: "You are Market Entry Secrets AI, an expert consultant on international companies entering the Australian market. Write professional, actionable content grounded in real data when available. Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps." },
+                { role: "system", content: "You are Market Entry Secrets AI, an expert consultant on international companies entering the Australian market. Write professional, actionable content grounded in real data when available. Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\nIMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MUST include inline citation markers using the format [N] where N is the source number from the provided citations list. Place the citation immediately after the relevant claim. For example: \"The Australian AI market is projected to reach USD 8.48 billion by 2030 [3].\" If multiple sources support a claim, list them: [1][4]. Only cite sources from the provided numbered citations list — do not invent citation numbers." },
                 { role: "user", content: prompt },
               ]);
 

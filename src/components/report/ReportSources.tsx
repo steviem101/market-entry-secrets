@@ -35,7 +35,11 @@ export const ReportSources = ({ citations }: ReportSourcesProps) => {
           <CardContent className="pt-0">
             <ol className="space-y-1.5 list-decimal list-inside">
               {citations.map((url, idx) => (
-                <li key={idx} className="text-sm text-muted-foreground">
+                <li
+                  key={idx}
+                  id={`source-${idx + 1}`}
+                  className="text-sm text-muted-foreground scroll-mt-24 transition-colors duration-500 rounded px-1 -mx-1 citation-target"
+                >
                   <a
                     href={url}
                     target="_blank"
