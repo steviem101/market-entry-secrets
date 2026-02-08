@@ -253,6 +253,35 @@
   .report-prose :where(strong) {
     font-weight: 650;
   }
+
+  /* Inline citation superscript badge */
+  .inline-citation {
+    @apply no-underline cursor-pointer;
+    font-size: 0.65em;
+    font-weight: 600;
+    vertical-align: super;
+    line-height: 1;
+    padding: 0.05em 0.35em;
+    margin: 0 0.05em;
+    border-radius: 0.25em;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .inline-citation:hover {
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary));
+  }
+
+  /* Citation target highlight animation */
+  .citation-target.citation-highlight {
+    background: hsl(var(--primary) / 0.12);
+  }
+
+  .citation-target:target {
+    background: hsl(var(--primary) / 0.12);
+  }
 }
 
 /* Print styles for PDF export */
@@ -337,11 +366,27 @@
     word-break: break-all;
   }
 
-  /* Don't show URL for internal links or buttons */
+  /* Don't show URL for internal links, buttons, or citation badges */
   a[href^="/"]::after,
+  a[href^="#"]::after,
   button a::after,
-  a.no-print-url::after {
+  a.no-print-url::after,
+  .inline-citation::after {
     content: none;
+  }
+
+  /* Show inline citations as plain numbers in print */
+  .inline-citation {
+    background: none !important;
+    color: black !important;
+    font-size: 0.7em;
+    padding: 0;
+  }
+  .inline-citation::before {
+    content: "[";
+  }
+  .inline-citation::after {
+    content: "]" !important;
   }
 
   /* Hide floating buttons in print */
