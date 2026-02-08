@@ -426,11 +426,15 @@ async function runMarketResearch(intake: any): Promise<MarketResearch> {
 }
 
 // ── AI helper ──────────────────────────────────────────────────────────
-async function callAI(apiKey: string, messages: Array<{ role: string; content: string }>): Promise<string> {
+async function callAI(
+  apiKey: string,
+  messages: Array<{ role: string; content: string }>,
+  model = "google/gemini-3-flash-preview"
+): Promise<string> {
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/gemini-3-flash-preview", messages }),
+    body: JSON.stringify({ model, messages }),
   });
 
   if (!resp.ok) {
@@ -441,6 +445,91 @@ async function callAI(apiKey: string, messages: Array<{ role: string; content: s
 
   const data = await resp.json();
   return data.choices?.[0]?.message?.content || "";
+}
+
+// ── Report polish pass ─────────────────────────────────────────────────
+
+const SECTION_DELIMITER_PREFIX = "===SECTION: ";
+const SECTION_DELIMITER_SUFFIX = "===";
+
+async function polishReport(
+  apiKey: string,
+  sections: Record<string, any>,
+  sectionOrder: string[]
+): Promise<Record<string, any>> {
+  // Collect visible sections that have content
+  const visibleSections = sectionOrder.filter(
+    (name) => sections[name]?.visible && sections[name]?.content?.trim()
+  );
+
+  if (visibleSections.length === 0) {
+    console.log("Polish: no visible sections to polish");
+    return sections;
+  }
+
+  // Concatenate all visible section content with delimiters
+  const concatenated = visibleSections
+    .map((name) => `${SECTION_DELIMITER_PREFIX}${name}${SECTION_DELIMITER_SUFFIX}\n${sections[name].content}`)
+    .join("\n\n");
+
+  console.log(`Polish: sending ${visibleSections.length} sections (${concatenated.length} chars) to gemini-2.5-pro...`);
+  const polishStart = Date.now();
+
+  const polished = await callAI(
+    apiKey,
+    [
+      {
+        role: "system",
+        content: `You are a professional editor improving a market entry report for an international company expanding into Australia. Your task is to EDIT the following report for readability and consistency — you are NOT rewriting it.
+
+Rules:
+1. Use Australian English spelling throughout (e.g. "organisation", "labour", "recognise", "analyse", "licence" (noun), "program" for government programs is acceptable).
+2. Improve sentence structure and flow. Break up overly long sentences.
+3. Add smooth 1-2 sentence transitions between sections where the topic shifts.
+4. Remove redundant phrases or information that is repeated across sections.
+5. Maintain a professional, advisory tone — like a senior consultant briefing a CEO.
+6. PRESERVE all factual data, statistics, numbers, company names, URLs, and citations EXACTLY as they appear. Do NOT invent or alter any data.
+7. PRESERVE all Markdown formatting: headings (###), **bold**, bullet points, numbered lists, links.
+8. PRESERVE the section delimiters EXACTLY as they appear (lines starting with "${SECTION_DELIMITER_PREFIX}" and ending with "${SECTION_DELIMITER_SUFFIX}"). Every section delimiter from the input MUST appear in your output.
+9. Do NOT add new sections, remove sections, or change section names.
+10. Do NOT add a title or introduction before the first section delimiter.`,
+      },
+      {
+        role: "user",
+        content: concatenated,
+      },
+    ],
+    "google/gemini-2.5-pro"
+  );
+
+  console.log(`Polish: AI call completed in ${Date.now() - polishStart}ms`);
+
+  // Parse polished output back into sections
+  const polishedSections = { ...sections };
+  const parts = polished.split(new RegExp(`${SECTION_DELIMITER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(.+?)${SECTION_DELIMITER_SUFFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+
+  // parts array: [preamble, sectionName1, content1, sectionName2, content2, ...]
+  let parsedCount = 0;
+  for (let i = 1; i < parts.length - 1; i += 2) {
+    const sectionName = parts[i].trim();
+    const sectionContent = (parts[i + 1] || "").trim();
+
+    if (polishedSections[sectionName] && polishedSections[sectionName].visible && sectionContent.length > 50) {
+      polishedSections[sectionName] = {
+        ...polishedSections[sectionName],
+        content: sectionContent,
+      };
+      parsedCount++;
+    }
+  }
+
+  if (parsedCount === 0) {
+    console.warn("Polish: could not parse any sections from polished output — using original content");
+    return sections;
+  }
+
+  console.log(`Polish: successfully polished ${parsedCount}/${visibleSections.length} sections`);
+  return polishedSections;
 }
 
 // ── Database matching ──────────────────────────────────────────────────
@@ -754,6 +843,19 @@ serve(async (req) => {
       }
     }
 
+    // 6b. Polish pass — improve readability, consistency, and Australian English
+    const sectionOrder = templates ? templates.map((t: any) => t.section_name) : Object.keys(sections);
+    try {
+      const polishedSections = await polishReport(lovableKey, sections, sectionOrder);
+      // Replace section data in-place, preserving matches
+      for (const [name, data] of Object.entries(polishedSections)) {
+        sections[name] = data;
+      }
+      console.log("Polish pass completed successfully");
+    } catch (e) {
+      console.warn("Polish pass failed (using original content):", e);
+    }
+
     // 7. Assemble and store report (with citations + enrichment metadata)
     const reportJson = {
       company_name: intake.company_name,
@@ -768,6 +870,7 @@ serve(async (req) => {
         firecrawl_deep_scrape: !!companyProfile,
         firecrawl_providers_enriched: enrichedProviders.filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
+        polish_applied: true,
       },
     };
 
