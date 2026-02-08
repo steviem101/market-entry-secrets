@@ -2,7 +2,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Sparkles, Building2, MapPin, Briefcase, Clock, DollarSign, Swords, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Sparkles, Building2, MapPin, Briefcase, Clock, DollarSign, Swords, ExternalLink, Users } from 'lucide-react';
 import type { IntakeFormData } from './intakeSchema';
 
 interface IntakeStep3Props {
@@ -116,6 +116,49 @@ export const IntakeStep3 = ({ form, onBack, onSubmit, isGenerating }: IntakeStep
             )}
           </div>
         </div>
+
+        {/* End Buyers Summary */}
+        {((data.end_buyer_industries && data.end_buyer_industries.length > 0) || (data.end_buyers && data.end_buyers.length > 0)) && (
+          <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-3">
+            <h3 className="font-semibold flex items-center gap-2 text-foreground">
+              <Users className="w-4 h-4 text-primary" />
+              End Buyers / Target Customers
+            </h3>
+            <div className="space-y-2 text-sm">
+              {data.end_buyer_industries && data.end_buyer_industries.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground">Target Customer Industries:</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {data.end_buyer_industries.map((ind) => (
+                      <Badge key={ind} variant="secondary" className="text-xs">{ind}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {data.end_buyers && data.end_buyers.length > 0 && (
+                <div>
+                  <span className="text-muted-foreground">Example End Buyers:</span>
+                  <div className="space-y-1.5 mt-1">
+                    {data.end_buyers.map((b, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{b.name}</span>
+                        <a
+                          href={b.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline flex items-center gap-1 text-xs truncate max-w-[200px]"
+                        >
+                          {b.website.replace(/^https?:\/\//, '')}
+                          <ExternalLink className="w-3 h-3 shrink-0" />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Known Competitors Summary */}
         {data.known_competitors && data.known_competitors.length > 0 && (

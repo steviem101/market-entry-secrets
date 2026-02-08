@@ -18,6 +18,8 @@ export const reportApi = {
       primary_goals: data.primary_goals || '',
       key_challenges: data.key_challenges || '',
       known_competitors: data.known_competitors || [],
+      end_buyer_industries: data.end_buyer_industries || [],
+      end_buyers: data.end_buyers || [],
       raw_input: data as unknown,
       status: 'pending',
     };

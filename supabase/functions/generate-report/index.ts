@@ -790,11 +790,11 @@ serve(async (req) => {
     await supabase.from("user_intake_forms").update({ status: "processing" }).eq("id", intake_form_id);
 
     // 2. Run enrichment + research + matching ALL in parallel
-    const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin} with ${intake.employee_count} employees.`;
+    const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin} with ${intake.employee_count} employees. Their target end buyers are in: ${(intake.end_buyer_industries || []).join(", ") || "not specified"}.`;
 
     console.log("Starting parallel pipeline: deep scrape + Perplexity + DB matching + competitor search...");
 
-    const [companyEnrichResult, marketResearch, matches, competitorResult] = await Promise.all([
+    const [companyEnrichResult, marketResearch, matches, competitorResult, endBuyerScrapeResult] = await Promise.all([
       // Enhancement 3: Deep company scrape (map + multi-page)
       firecrawlKey && intake.website_url
         ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary)
@@ -807,6 +807,10 @@ serve(async (req) => {
       firecrawlKey
         ? searchCompetitors(firecrawlKey, lovableKey, intake)
         : Promise.resolve({ competitors: [], raw_results: [] }),
+      // End buyer scraping (best-effort, same pattern as competitors)
+      firecrawlKey && (intake.end_buyers || []).length > 0
+        ? scrapeKnownCompetitors(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name)
+        : Promise.resolve([]),
     ]);
 
     const enrichedSummary = companyEnrichResult.enrichedSummary;
@@ -877,6 +881,10 @@ serve(async (req) => {
       // Enhancement 2: Competitor analysis
       competitor_analysis_json: JSON.stringify(competitorResult.competitors),
       known_competitors_json: JSON.stringify(intake.known_competitors || []),
+      // End buyer data
+      end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",
+      end_buyers_json: JSON.stringify(intake.end_buyers || []),
+      end_buyers_scraped_json: JSON.stringify(endBuyerScrapeResult || []),
       // Perplexity market research variables
       market_research_landscape: marketResearch.landscape || "No market research data available.",
       market_research_regulatory: marketResearch.regulatory || "No regulatory research data available.",
