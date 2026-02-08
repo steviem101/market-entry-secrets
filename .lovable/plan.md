@@ -1,43 +1,65 @@
 
 
-# Add Database Constraint for Industry Sector (149 Options Only)
+# Make Industry / Sector Multi-Select
 
 ## Overview
 
-Add a validation trigger on the `user_intake_forms` table to restrict the `industry_sector` column to only the 149 approved industry options. First, existing non-conforming data will be migrated to valid values.
+Change the Industry / Sector field from a single-select string to a multi-select array, allowing users to choose multiple industries from the 149 approved options. This requires changes across the database, backend edge function, frontend form, and validation trigger.
 
-## Existing data to fix
+## What changes for the user
 
-The table currently has 9 rows with values not in the 149-option list:
+- The Industry / Sector field becomes a **multi-select combobox** -- users can pick multiple industries (e.g. "AI" + "SaaS" + "Computer Software")
+- Selected industries appear as removable badges below the selector
+- The review step (Step 3) shows all selected industries as badges instead of a single text value
+- The generated report will reference all selected industries for better matching and more relevant results
 
-| Current Value | Count | Maps To |
-|---|---|---|
-| Cybersecurity | 6 | Computer & Network Security |
-| MedTech/HealthTech | 1 | Medical Devices |
-| Other | 2 | Already valid (in list) |
+## Changes required
 
-## What the migration will do
+### 1. Database migration
 
-1. **Update existing rows** to map free-text values to valid options:
-   - `Cybersecurity` → `Computer & Network Security`
-   - `MedTech/HealthTech` → `Medical Devices`
+- **Alter column type**: Change `user_intake_forms.industry_sector` from `text` to `text[]` (array)
+- **Migrate existing data**: Convert all existing single-value rows to single-element arrays (e.g. `'AI'` becomes `ARRAY['AI']`)
+- **Drop old trigger**: Remove `validate_industry_sector_trigger` and `validate_industry_sector()` function
+- **Create new trigger**: New validation function that checks every element of the `industry_sector` array is in the approved 149-option list, and that the array is not empty
 
-2. **Create a validation trigger** (not a CHECK constraint, per Supabase best practices) that runs on INSERT and UPDATE. It will reject any `industry_sector` value that is not in the approved 149-option list.
+### 2. Frontend -- Schema (`intakeSchema.ts`)
 
-## Why a trigger instead of a CHECK constraint
+- Change `industry_sector` from `z.string().min(1)` to `z.array(z.string()).min(1, 'Select at least one industry')`
+- Update the `IntakeFormData` type (auto-derived from Zod)
 
-Supabase recommends validation triggers over CHECK constraints because CHECK constraints must be immutable and can cause issues with database backups/restores. A trigger-based approach is more flexible and safer.
+### 3. Frontend -- Step 1 form (`IntakeStep1.tsx`)
 
-## Technical details
+- Convert the combobox from single-select to multi-select:
+  - Clicking an industry toggles it on/off (instead of closing the popover)
+  - Display selected industries as removable badges below the trigger button
+  - The trigger button shows count text like "3 industries selected" instead of a single value
+  - An "X" button on each badge allows removing individual selections
 
-### Migration SQL will:
+### 4. Frontend -- Step 3 review (`IntakeStep3.tsx`)
 
-1. Run UPDATE statements to fix the 7 non-conforming rows
-2. Create a function `validate_industry_sector()` containing the list of 149 valid values
-3. Create a BEFORE INSERT OR UPDATE trigger on `user_intake_forms` that calls this function
-4. If an invalid value is submitted, it raises an exception with a clear error message
+- Change from displaying `data.industry_sector` as a single `<p>` to rendering it as badges (same pattern used for `target_regions` and `services_needed`)
 
-### No frontend changes needed
+### 5. Frontend -- Default values (`ReportCreator.tsx`)
 
-The searchable combobox already restricts the UI to only the 149 options -- this migration adds the database-level enforcement as a safety net.
+- Change `industry_sector: ''` to `industry_sector: []`
+
+### 6. API layer (`reportApi.ts`)
+
+- The `industry_sector` field is already passed through to Supabase -- no code change needed since it will now be an array matching the new column type
+
+### 7. Edge function -- Report generation (`generate-report/index.ts`)
+
+- **Variable assignment** (line 789): Change from `intake.industry_sector` (string) to `(intake.industry_sector || []).join(", ")` (join array for template interpolation)
+- **Fallback summary** (line 725): Same join treatment
+- **Competitor search** (line 280): Join the array for the search query
+- **Leads matching** (line 619): Change from single `ilike` to an `or` filter across all selected industries
+- **Lemlist matching** (line 661): Same multi-industry `or` filter
+- **Perplexity queries** (lines 395-401): Join the array for natural language queries
+
+## Technical notes
+
+- The database column type change from `text` to `text[]` is safe because we first convert all existing data
+- The validation trigger ensures no invalid industries can be inserted, even via direct SQL
+- The `cmdk` combobox already supports the toggle pattern -- we just stop closing the popover on select and track an array instead of a single value
+- Report templates use `{{industry_sector}}` which will now receive a comma-separated string (e.g. "AI, SaaS, Computer Software") -- this reads naturally in AI prompts
 
