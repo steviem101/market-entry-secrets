@@ -707,13 +707,22 @@ export type Database = {
           description: string
           event_logo_url: string | null
           id: string
+          image_url: string | null
+          is_featured: boolean
           location: string
           organizer: string
+          organizer_email: string | null
+          organizer_website: string | null
+          price: string | null
+          registration_url: string | null
           sector: string | null
+          slug: string
+          tags: string[] | null
           time: string
           title: string
           type: string
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           attendees?: number
@@ -723,13 +732,22 @@ export type Database = {
           description: string
           event_logo_url?: string | null
           id?: string
+          image_url?: string | null
+          is_featured?: boolean
           location: string
           organizer: string
+          organizer_email?: string | null
+          organizer_website?: string | null
+          price?: string | null
+          registration_url?: string | null
           sector?: string | null
+          slug: string
+          tags?: string[] | null
           time: string
           title: string
           type: string
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           attendees?: number
@@ -739,13 +757,22 @@ export type Database = {
           description?: string
           event_logo_url?: string | null
           id?: string
+          image_url?: string | null
+          is_featured?: boolean
           location?: string
           organizer?: string
+          organizer_email?: string | null
+          organizer_website?: string | null
+          price?: string | null
+          registration_url?: string | null
           sector?: string | null
+          slug?: string
+          tags?: string[] | null
           time?: string
           title?: string
           type?: string
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
