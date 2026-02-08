@@ -1,114 +1,64 @@
 
 
-# Add Lemlist CSV Properties as Supabase Columns
+# Add Countries + "Other" Custom Input to Country of Origin
 
 ## Overview
 
-The current `lemlist_contacts` table only has 18 columns (mostly core fields like name, email, phone) with a generic `fields` JSONB catch-all. The actual Lemlist export has **83 properties**. This plan adds dedicated columns for the most valuable fields so your n8n automation can write directly to named columns, making the data queryable and usable in report generation.
+Add Australia, New Zealand, and Japan to the Country of Origin dropdown, and when the user selects "Other", show a text input where they can type their actual country name.
 
-## Current vs new mapping
+## What changes for the user
 
-The table below shows every CSV column and whether it already exists, will become a new dedicated column, or will remain in the `fields` JSONB.
-
-### Already mapped (no change needed)
-| CSV Column | Supabase Column |
-|---|---|
-| firstName | first_name |
-| lastName | last_name |
-| email | email |
-| linkedinUrl | linkedin_url |
-| jobTitle | job_title |
-| phone | phone |
-
-### New dedicated columns (28 new columns)
-
-These are fields that are valuable for lead intelligence, CRM filtering, and report generation:
-
-**Contact enrichment:**
-| CSV Column | New Supabase Column | Type |
-|---|---|---|
-| linkedinUrlSalesNav | linkedin_url_sales_nav | text |
-| companyName | company_name | text |
-| companyWebsite | company_website | text |
-| location | location | text |
-| contactLocation | contact_location | text |
-| personalEmail | personal_email | text |
-| twitterProfile | twitter_profile | text |
-
-**LinkedIn intelligence:**
-| CSV Column | New Supabase Column | Type |
-|---|---|---|
-| linkedinHeadline | linkedin_headline | text |
-| linkedinDescription | linkedin_description | text |
-| linkedinSkills | linkedin_skills | text |
-| linkedinJobIndustry | linkedin_job_industry | text |
-| linkedinFollowers | linkedin_followers | integer |
-| linkedinConnectionDegree | linkedin_connection_degree | text |
-| linkedinProfileId | linkedin_profile_id | text |
-| linkedinOpen | linkedin_open | boolean |
-| tagline | tagline | text |
-| summary | summary | text |
-
-**CRM / campaign status:**
-| CSV Column | New Supabase Column | Type |
-|---|---|---|
-| status | status | text |
-| leadStatus | lead_status | text |
-| source | source | text |
-| emailstatus | email_status | text |
-| priority | priority | text |
-| client | client | text |
-| hubspot Id | hubspot_id | text |
-| leadNotes | lead_notes | text |
-| lastContactedDate | last_contacted_date | timestamptz |
-| firstContactedDate | first_contacted_date | timestamptz |
-| lastRepliedDate | last_replied_date | timestamptz |
-
-### Remaining in `fields` JSONB (not worth dedicated columns)
-
-These are either rarely populated, duplicative, or too granular for querying:
-- languages, skills, lastCampaign, activeCampaigns, isActiveInCampaigns
-- lastLeadLaunchedDate, firstLeadLaunchedDate, lastLeadMarkedAsInterestedDate
-- lastCampaignStartDate, lastCampaignEndDate
-- jobTitle_custom, linkedinCompanyURL, salesNavigatorCompanyURL
-- linkedinJobDateRange, jobLocation, jobDescription
-- All "previous" fields (previousCompanyName, previousJobTitle, etc.)
-- All school fields (schoolName, degree, description)
-- linkedinMutualConnectionsUrl
-- phone1-10, companyName_custom
-- variable1, variable2, linkedInConnectionDegree (duplicate)
-- sBLinkedinConnection, sBLinkedInConnectionDegree (duplicates)
-- sectorCopy3HCI
+- The dropdown now includes **Australia**, **New Zealand**, and **Japan** in addition to the existing 9 countries
+- When "Other" is selected, a text input appears below the dropdown with placeholder "Enter your country"
+- The custom country value is what gets stored and sent to the report generator (not the word "Other")
+- Step 3 review shows the actual country name regardless of whether it was a preset or custom entry
 
 ## Changes required
 
-### 1. Database migration
+### 1. Schema (`intakeSchema.ts`)
 
-- Add 28 new nullable columns to `lemlist_contacts` with appropriate types
-- No data migration needed (existing rows will have NULL for new columns until next sync)
+- Add `'Australia'`, `'New Zealand'`, `'Japan'` to the `COUNTRY_OPTIONS` array (placed alphabetically or in a logical order -- Australia and New Zealand first since this is an ANZ-focused platform, then the rest alphabetically)
+- No Zod schema change needed -- `country_of_origin` is already `z.string().min(1)` which accepts any string value
 
-### 2. Edge function update (`sync-lemlist/index.ts`)
+**Updated list order:**
+1. Australia
+2. New Zealand
+3. United States
+4. United Kingdom
+5. Ireland
+6. Canada
+7. Germany
+8. France
+9. Japan
+10. Singapore
+11. South Korea
+12. India
+13. Other
 
-- Update the `transformContact()` function to map all new fields from the Lemlist API response to the new column names
-- The Lemlist API returns the same property names as the CSV export, so the mapping is straightforward (e.g., `raw.linkedinHeadline` maps to `linkedin_headline`)
+### 2. Step 1 form (`IntakeStep1.tsx`)
 
-### 3. Report generation (`generate-report/index.ts`)
+- Add local state: `const [customCountry, setCustomCountry] = useState('')`
+- Watch the `country_of_origin` field value
+- When user selects "Other" from the dropdown, show a text `Input` below with placeholder "Enter your country"
+- When the user types in the custom input, call `setValue('country_of_origin', customCountryValue)` so the actual country name (not "Other") is stored in the form
+- When user selects "Other", set the form value to the custom input's current value (or empty, triggering validation)
+- When user switches away from "Other" back to a preset country, hide the custom input
+- On component mount, if the loaded draft value is not in the preset list, auto-set the dropdown to "Other" and populate the custom input with the draft value
 
-- Update the Lemlist contacts SELECT query to include key new columns: `company_name`, `company_website`, `linkedin_headline`, `linkedin_job_industry`, `status`, `contact_location`
-- This gives the AI more context about each contact for better lead matching
+### 3. Step 3 review (`IntakeStep3.tsx`)
 
-### 4. No frontend changes
+- No change needed -- it already displays `data.country_of_origin` which will contain either the preset value or the custom-typed country name
 
-The Lemlist data is currently only surfaced through the report generation pipeline (as match cards in the lead list section). The new columns will automatically enrich those results.
+### 4. No database or edge function changes
 
-## n8n automation compatibility
+- The `country_of_origin` column is already `text` type -- it accepts any string
+- The report generation pipeline already uses `intake.country_of_origin` as a plain string in prompts and queries
 
-After this migration, your n8n workflow can map CSV columns directly to Supabase column names using this mapping:
-- `firstName` -> `first_name`
-- `lastName` -> `last_name`
-- `companyName` -> `company_name`
-- `companyWebsite` -> `company_website`
-- `linkedinHeadline` -> `linkedin_headline`
-- etc.
+## Technical approach
 
-Any CSV columns not in the dedicated list should be combined into the `fields` JSONB column as a JSON object.
+The key UX detail: when "Other" is selected, the form's `country_of_origin` value should be the custom text the user types, NOT the literal string "Other". This means:
+
+- The `Select` component tracks a separate "selection mode" (`isOther`) rather than binding directly to form value
+- The form value (`country_of_origin`) always contains the real country name
+- When restoring from a draft, if the saved value does not match any preset option, the dropdown shows "Other" and the input is pre-filled
+
