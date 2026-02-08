@@ -1,25 +1,28 @@
 
 
-# Remove Whitespace Below Footer Columns
+# Upgrade Your Account to Growth Tier
 
-## Problem
-The 4-column footer grid stretches all columns to the height of the tallest one (the Brand column on the left). The 3 right-hand columns -- Quick Links, Resources, and Stay Updated -- are shorter, so they have visible whitespace below their content.
+## What will change
 
-## Fix
-Add `items-start` to the grid container on line 48 of `src/components/Footer.tsx`. This aligns all grid children to the top of their row instead of stretching them to fill the full height.
+1. **Update your subscription** in the `user_subscriptions` table from `free` to `growth`
+2. **Update the report's generation tier** from `free` to `growth` so the gated sections (SWOT Analysis, Mentor Recommendations) become visible on the report you're currently viewing
 
-### Change
-**File**: `src/components/Footer.tsx`, line 48
+## SQL to execute
 
-Before:
+```text
+-- 1. Upgrade subscription tier
+UPDATE user_subscriptions
+SET tier = 'growth', updated_at = now()
+WHERE user_id = 'db079fd9-c221-4411-bd82-a9868974b1b4';
+
+-- 2. Update the report's tier so gated sections unlock
+UPDATE user_reports
+SET tier_at_generation = 'growth', updated_at = now()
+WHERE id = '2bfe9ed5-0460-4e25-b02d-9dc0e8229360';
 ```
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-```
 
-After:
-```
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 items-start">
-```
-
-One line, one class addition. No other changes needed.
+## Result
+- Your account will show as Growth tier
+- The report page will unlock the SWOT Analysis and Mentor Recommendations sections (currently showing the lock/upgrade overlay)
+- Lead List will still be gated (requires Scale tier)
 
