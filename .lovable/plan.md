@@ -1,28 +1,29 @@
 
 
-# Upgrade Your Account to Growth Tier
+# Upgrade Account to Enterprise (Highest Tier)
 
 ## What will change
 
-1. **Update your subscription** in the `user_subscriptions` table from `free` to `growth`
-2. **Update the report's generation tier** from `free` to `growth` so the gated sections (SWOT Analysis, Mentor Recommendations) become visible on the report you're currently viewing
+1. **Subscription tier**: Update from `growth` to `enterprise` in `user_subscriptions`
+2. **Report tier**: Update from `growth` to `enterprise` in `user_reports` so all gated sections (including Lead List) become visible
 
 ## SQL to execute
 
 ```text
--- 1. Upgrade subscription tier
+-- 1. Upgrade subscription to enterprise
 UPDATE user_subscriptions
-SET tier = 'growth', updated_at = now()
+SET tier = 'enterprise', updated_at = now()
 WHERE user_id = 'db079fd9-c221-4411-bd82-a9868974b1b4';
 
--- 2. Update the report's tier so gated sections unlock
+-- 2. Update the report's tier so ALL sections unlock
 UPDATE user_reports
-SET tier_at_generation = 'growth', updated_at = now()
+SET tier_at_generation = 'enterprise', updated_at = now()
 WHERE id = '2bfe9ed5-0460-4e25-b02d-9dc0e8229360';
 ```
 
 ## Result
-- Your account will show as Growth tier
-- The report page will unlock the SWOT Analysis and Mentor Recommendations sections (currently showing the lock/upgrade overlay)
-- Lead List will still be gated (requires Scale tier)
+
+- Your account will show as Enterprise tier
+- All report sections will be unlocked, including the Lead List (previously gated behind Scale tier)
+- No sections will show the lock/upgrade overlay
 
