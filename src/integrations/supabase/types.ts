@@ -1519,6 +1519,7 @@ export type Database = {
           id: string
           industry_sector: string[]
           key_challenges: string | null
+          known_competitors: Json | null
           primary_goals: string | null
           raw_input: Json
           services_needed: string[]
@@ -1540,6 +1541,7 @@ export type Database = {
           id?: string
           industry_sector: string[]
           key_challenges?: string | null
+          known_competitors?: Json | null
           primary_goals?: string | null
           raw_input?: Json
           services_needed?: string[]
@@ -1561,6 +1563,7 @@ export type Database = {
           id?: string
           industry_sector?: string[]
           key_challenges?: string | null
+          known_competitors?: Json | null
           primary_goals?: string | null
           raw_input?: Json
           services_needed?: string[]

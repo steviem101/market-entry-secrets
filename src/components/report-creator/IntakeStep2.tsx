@@ -1,11 +1,12 @@
 import { UseFormReturn } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Target, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Target, ArrowLeft, ArrowRight, Plus, X, Globe } from 'lucide-react';
 import {
   REGION_OPTIONS, SERVICES_OPTIONS, TIMELINE_OPTIONS, BUDGET_OPTIONS,
   type IntakeFormData,
@@ -23,6 +24,7 @@ export const IntakeStep2 = ({ form, onNext, onBack }: IntakeStep2Props) => {
   const servicesNeeded = watch('services_needed') || [];
   const primaryGoals = watch('primary_goals') || '';
   const keyChallenges = watch('key_challenges') || '';
+  const knownCompetitors = watch('known_competitors') || [];
 
   const toggleArrayItem = (field: 'target_regions' | 'services_needed', item: string) => {
     const current = watch(field) || [];
@@ -156,6 +158,80 @@ export const IntakeStep2 = ({ form, onNext, onBack }: IntakeStep2Props) => {
             {...register('key_challenges')}
           />
           <p className="text-xs text-muted-foreground text-right">{keyChallenges.length}/500</p>
+        </div>
+
+        {/* Known Competitors */}
+        <div className="space-y-3">
+          <div>
+            <Label>Known Competitors</Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Add companies you consider direct competitors in the Australian market (optional, max 5)
+            </p>
+          </div>
+          
+          {knownCompetitors.map((competitor, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2">
+                <Input
+                  placeholder="e.g. Acme Corp"
+                  value={competitor.name}
+                  onChange={(e) => {
+                    const updated = [...knownCompetitors];
+                    updated[index] = { ...updated[index], name: e.target.value };
+                    setValue('known_competitors', updated, { shouldValidate: true });
+                  }}
+                />
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="https://competitor.com"
+                    className="pl-10"
+                    value={competitor.website}
+                    onChange={(e) => {
+                      const updated = [...knownCompetitors];
+                      updated[index] = { ...updated[index], website: e.target.value };
+                      setValue('known_competitors', updated, { shouldValidate: true });
+                    }}
+                  />
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0 mt-0.5"
+                onClick={() => {
+                  const updated = knownCompetitors.filter((_, i) => i !== index);
+                  setValue('known_competitors', updated, { shouldValidate: true });
+                }}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+
+          {knownCompetitors.length < 5 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => {
+                setValue('known_competitors', [...knownCompetitors, { name: '', website: '' }], { shouldValidate: false });
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Competitor
+            </Button>
+          )}
+
+          {errors.known_competitors && (
+            <p className="text-xs text-destructive">
+              {typeof errors.known_competitors.message === 'string'
+                ? errors.known_competitors.message
+                : 'Please fix competitor entries'}
+            </p>
+          )}
         </div>
 
         <div className="pt-4 flex justify-between">

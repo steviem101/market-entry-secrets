@@ -102,6 +102,17 @@ export const step1Schema = z.object({
   employee_count: z.string().min(1, 'Employee count is required'),
 });
 
+export const competitorSchema = z.object({
+  name: z.string().min(1, 'Competitor name is required').max(200),
+  website: z.string().max(500).transform((val) => {
+    const trimmed = val.trim();
+    if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      return `https://${trimmed}`;
+    }
+    return trimmed;
+  }).pipe(z.string().url('Please enter a valid URL')),
+});
+
 export const step2Schema = z.object({
   target_regions: z.array(z.string()).min(1, 'Select at least one target region'),
   services_needed: z.array(z.string()).min(1, 'Select at least one service'),
@@ -109,6 +120,7 @@ export const step2Schema = z.object({
   budget_level: z.string().min(1, 'Budget level is required'),
   primary_goals: z.string().max(500, 'Maximum 500 characters').optional().default(''),
   key_challenges: z.string().max(500, 'Maximum 500 characters').optional().default(''),
+  known_competitors: z.array(competitorSchema).max(5).optional().default([]),
 });
 
 export const fullIntakeSchema = step1Schema.merge(step2Schema);

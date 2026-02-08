@@ -17,6 +17,7 @@ export const reportApi = {
       budget_level: data.budget_level,
       primary_goals: data.primary_goals || '',
       key_challenges: data.key_challenges || '',
+      known_competitors: data.known_competitors || [],
       raw_input: data as unknown,
       status: 'pending',
     };
