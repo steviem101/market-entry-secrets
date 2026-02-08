@@ -10,11 +10,13 @@ import { ReportMatchCard } from '@/components/report/ReportMatchCard';
 import { ReportFeedback } from '@/components/report/ReportFeedback';
 import { ReportSources } from '@/components/report/ReportSources';
 import { useReport } from '@/hooks/useReport';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const SECTION_LABELS: Record<string, string> = {
   executive_summary: 'Executive Summary',
   swot_analysis: 'SWOT Analysis',
+  competitor_landscape: 'Competitor Landscape',
   service_providers: 'Service Provider Recommendations',
   mentor_recommendations: 'Mentor Recommendations',
   events_resources: 'Events & Resources',
@@ -23,19 +25,32 @@ const SECTION_LABELS: Record<string, string> = {
 };
 
 const SECTION_ORDER = [
-  'executive_summary', 'swot_analysis', 'service_providers',
+  'executive_summary', 'swot_analysis', 'competitor_landscape', 'service_providers',
   'mentor_recommendations', 'events_resources', 'action_plan', 'lead_list',
 ];
 
+// Minimum subscription tier required for each gated section
 const TIER_REQUIREMENTS: Record<string, string> = {
   swot_analysis: 'growth',
+  competitor_landscape: 'growth',
   mentor_recommendations: 'growth',
   lead_list: 'scale',
+};
+
+// Tier hierarchy for comparison
+const TIER_HIERARCHY = ['free', 'growth', 'scale', 'enterprise'];
+
+const userTierMeetsRequirement = (userTier: string, requiredTier: string): boolean => {
+  const userIndex = TIER_HIERARCHY.indexOf(userTier);
+  const requiredIndex = TIER_HIERARCHY.indexOf(requiredTier);
+  return userIndex >= requiredIndex;
 };
 
 const ReportView = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const { data: report, isLoading, error } = useReport(reportId);
+  const { subscription } = useSubscription();
+  const currentTier = subscription?.tier || 'free';
 
   if (isLoading) {
     return (
@@ -76,11 +91,15 @@ const ReportView = () => {
 
   const sidebarSections = SECTION_ORDER
     .filter((id) => sections[id] || TIER_REQUIREMENTS[id])
-    .map((id) => ({
-      id,
-      label: SECTION_LABELS[id] || id,
-      visible: sections[id]?.visible !== false,
-    }));
+    .map((id) => {
+      const requiredTier = TIER_REQUIREMENTS[id];
+      const isUnlocked = !requiredTier || userTierMeetsRequirement(currentTier, requiredTier);
+      return {
+        id,
+        label: SECTION_LABELS[id] || id,
+        visible: isUnlocked,
+      };
+    });
 
   return (
     <>
@@ -110,6 +129,9 @@ const ReportView = () => {
                 const section = sections[sectionId];
                 const requiredTier = TIER_REQUIREMENTS[sectionId];
 
+                // Dynamic tier check: use current subscription, not stale visible flag
+                const isGated = requiredTier && !userTierMeetsRequirement(currentTier, requiredTier);
+
                 // If section not generated and has tier requirement, show gated
                 if (!section && requiredTier) {
                   return (
@@ -124,8 +146,8 @@ const ReportView = () => {
 
                 if (!section) return null;
 
-                // If section exists but is not visible (tier-gated)
-                if (section.visible === false) {
+                // If user's current tier is too low, show gated overlay
+                if (isGated) {
                   return (
                     <ReportGatedSection
                       key={sectionId}
