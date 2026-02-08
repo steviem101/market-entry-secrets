@@ -277,7 +277,8 @@ async function searchCompetitors(
 
   try {
     const targetRegions = (intake.target_regions || []).join(", ") || "Australia";
-    const query = `${intake.industry_sector} companies in Australia ${targetRegions} competitors`;
+    const industrySectorText = (intake.industry_sector || []).join(", ");
+    const query = `${industrySectorText} companies in Australia ${targetRegions} competitors`;
 
     console.log(`Searching competitors: "${query}"`);
     const results = await firecrawlSearch(firecrawlKey, query, 5);
@@ -306,7 +307,7 @@ async function searchCompetitors(
       { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
       {
         role: "user",
-        content: `Analyze these search results about ${intake.industry_sector} companies in Australia. For each, extract competitor intelligence relevant to ${intake.company_name}.
+        content: `Analyze these search results about ${(intake.industry_sector || []).join(", ")} companies in Australia. For each, extract competitor intelligence relevant to ${intake.company_name}.
 
 Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"}]
 
@@ -392,13 +393,13 @@ async function runMarketResearch(intake: any): Promise<MarketResearch> {
 
   const [landscape, regulatory, news] = await Promise.allSettled([
     callPerplexity(perplexityKey,
-      `${intake.industry_sector} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.`
+      `${(intake.industry_sector || []).join(", ")} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.`
     ),
     callPerplexity(perplexityKey,
-      `Requirements, regulations, compliance, and licensing for a ${intake.country_of_origin} ${intake.industry_sector} company entering the Australian market. Include visa requirements, tax obligations, legal entity setup, and any industry-specific regulations.`
+      `Requirements, regulations, compliance, and licensing for a ${intake.country_of_origin} ${(intake.industry_sector || []).join(", ")} company entering the Australian market. Include visa requirements, tax obligations, legal entity setup, and any industry-specific regulations.`
     ),
     callPerplexity(perplexityKey,
-      `Recent news and developments in ${intake.industry_sector} in Australia in the last 6 months. Focus on market trends, regulatory changes, major deals, and new entrants.`,
+      `Recent news and developments in ${(intake.industry_sector || []).join(", ")} in Australia in the last 6 months. Focus on market trends, regulatory changes, major deals, and new entrants.`,
       { recency: "month" }
     ),
   ]);
@@ -536,7 +537,7 @@ Rules:
 async function searchMatches(supabase: any, intake: any) {
   const matches: Record<string, any[]> = {};
   const regions = intake.target_regions || [];
-  const industry = intake.industry_sector || "";
+  const industry = (intake.industry_sector || []).join(", ");
   const servicesNeeded = intake.services_needed || [];
 
   const locationPatterns = regions.map((r: string) => r.split("/")[0]).filter(Boolean);
@@ -616,7 +617,12 @@ async function searchMatches(supabase: any, intake: any) {
   // Leads — match by industry
   try {
     let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type").limit(5);
-    if (industry) ldQuery = ldQuery.ilike("industry", `%${industry}%`);
+    if (industry) {
+      const industries = intake.industry_sector || [];
+      if (industries.length > 0) {
+        ldQuery = ldQuery.or(industries.map((ind: string) => `industry.ilike.%${ind}%`).join(","));
+      }
+    }
     const { data: ld } = await ldQuery;
     matches.leads = (ld || []).map((l: any) => ({
       ...l, link: "/leads", linkLabel: "View Lead",
@@ -657,8 +663,9 @@ async function searchMatches(supabase: any, intake: any) {
       .limit(10);
 
     const lcFilters: string[] = [];
-    if (industry) {
-      lcFilters.push(`industry.ilike.%${industry}%`);
+    const industries = intake.industry_sector || [];
+    if (industries.length > 0) {
+      lcFilters.push(...industries.map((ind: string) => `industry.ilike.%${ind}%`));
     }
     if (locationPatterns.length > 0) {
       lcFilters.push(...locationPatterns.map((l: string) => `lemlist_companies.location.ilike.%${l}%`));
@@ -722,7 +729,7 @@ serve(async (req) => {
     await supabase.from("user_intake_forms").update({ status: "processing" }).eq("id", intake_form_id);
 
     // 2. Run enrichment + research + matching ALL in parallel
-    const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${intake.industry_sector} company from ${intake.country_of_origin} with ${intake.employee_count} employees.`;
+    const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin} with ${intake.employee_count} employees.`;
 
     console.log("Starting parallel pipeline: deep scrape + Perplexity + DB matching + competitor search...");
 
@@ -786,7 +793,7 @@ serve(async (req) => {
     const variables: Record<string, string> = {
       company_name: intake.company_name,
       company_stage: intake.company_stage,
-      industry_sector: intake.industry_sector,
+      industry_sector: (intake.industry_sector || []).join(", "),
       country_of_origin: intake.country_of_origin,
       target_regions: (intake.target_regions || []).join(", "),
       services_needed: (intake.services_needed || []).join(", "),
