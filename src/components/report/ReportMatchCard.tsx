@@ -28,7 +28,7 @@ export const ReportMatchCard = ({
   if (blurred) {
     return (
       <Card className="relative overflow-hidden border-border/50">
-        <CardContent className="p-4">
+        <CardContent className="p-5">
           <div className="filter blur-sm select-none">
             <p className="font-semibold">████████ ██████</p>
             <p className="text-sm text-muted-foreground">████████ ███ ██████</p>
@@ -45,24 +45,29 @@ export const ReportMatchCard = ({
   }
 
   return (
-    <Card className="border-border/50 hover:border-primary/30 transition-colors">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="font-semibold text-foreground truncate">{name}</p>
-            {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
-            {tags && tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {tags.slice(0, 3).map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-                ))}
-              </div>
-            )}
+    <Card className="border-border/50 border-l-[3px] border-l-primary/30 hover:border-l-primary/60 hover:shadow-sm transition-all">
+      <CardContent className="p-5 space-y-3">
+        {/* Name & subtitle */}
+        <div>
+          <p className="font-semibold text-foreground">{name}</p>
+          {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+        </div>
+
+        {/* Tags */}
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {tags.slice(0, 3).map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+            ))}
           </div>
-          <div className="flex flex-col gap-1.5 shrink-0">
+        )}
+
+        {/* Action buttons -- stacked below */}
+        {(link || website) && (
+          <div className="flex flex-wrap gap-2 pt-1">
             {link && (
               <Link to={link}>
-                <Button variant="outline" size="sm" className="gap-1 w-full">
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                   {linkLabel}
                   <ExternalLink className="w-3 h-3" />
                 </Button>
@@ -70,14 +75,14 @@ export const ReportMatchCard = ({
             )}
             {website && (
               <a href={website} target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1 w-full text-xs text-muted-foreground">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground">
                   Website
                   <ExternalLink className="w-3 h-3" />
                 </Button>
               </a>
             )}
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

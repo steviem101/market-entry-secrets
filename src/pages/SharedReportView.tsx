@@ -5,28 +5,19 @@ import { Footer } from '@/components/Footer';
 import { ReportSection } from '@/components/report/ReportSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
 import { ReportSources } from '@/components/report/ReportSources';
+import { ReportBackToTop } from '@/components/report/ReportBackToTop';
+import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
 import { useSharedReport } from '@/hooks/useReport';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Eye, Calendar } from 'lucide-react';
+import { ArrowRight, Eye, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-
-const SECTION_LABELS: Record<string, string> = {
-  executive_summary: 'Executive Summary',
-  swot_analysis: 'SWOT Analysis',
-  competitor_landscape: 'Competitor Landscape',
-  service_providers: 'Service Provider Recommendations',
-  mentor_recommendations: 'Mentor Recommendations',
-  events_resources: 'Events & Resources',
-  action_plan: 'Action Plan & Timeline',
-  lead_list: 'Lead List',
-};
-
-const SECTION_ORDER = [
-  'executive_summary', 'swot_analysis', 'competitor_landscape', 'service_providers',
-  'mentor_recommendations', 'events_resources', 'action_plan', 'lead_list',
-];
+import {
+  SECTION_LABELS,
+  SECTION_ORDER,
+  estimateReadingTime,
+} from '@/components/report/reportSectionConfig';
 
 const SharedReportView = () => {
   const { shareToken } = useParams<{ shareToken: string }>();
@@ -72,6 +63,16 @@ const SharedReportView = () => {
   const companyName = reportJson?.company_name || 'Market Entry Report';
   const matches = reportJson?.matches || {};
   const perplexityCitations = reportJson?.metadata?.perplexity_citations || [];
+  const readingTime = estimateReadingTime(sections);
+
+  // Build TOC sections for mobile drawer
+  const tocSections = SECTION_ORDER
+    .filter((id) => sections[id] && sections[id].visible !== false)
+    .map((id) => ({
+      id,
+      label: SECTION_LABELS[id] || id,
+      visible: true,
+    }));
 
   return (
     <>
@@ -94,6 +95,12 @@ const SharedReportView = () => {
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Calendar className="w-3 h-3" />
                 {format(new Date(report.created_at), 'MMM d, yyyy')}
+                {readingTime > 0 && (
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {readingTime} min read
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -110,9 +117,7 @@ const SharedReportView = () => {
           {SECTION_ORDER.map((sectionId) => {
             const section = sections[sectionId];
 
-            // In the shared view, respect the visible flag from generation time
             if (!section || section.visible === false) {
-              // Show a placeholder for gated sections
               if (!section && SECTION_LABELS[sectionId]) return null;
               if (section?.visible === false) {
                 return (
@@ -183,6 +188,10 @@ const SharedReportView = () => {
           </div>
         </div>
       </main>
+
+      {/* Floating utilities */}
+      <ReportBackToTop />
+      <ReportMobileTOC sections={tocSections} />
 
       <Footer />
     </>

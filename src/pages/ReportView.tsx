@@ -10,42 +10,18 @@ import { ReportGatedSection } from '@/components/report/ReportGatedSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
 import { ReportFeedback } from '@/components/report/ReportFeedback';
 import { ReportSources } from '@/components/report/ReportSources';
+import { ReportBackToTop } from '@/components/report/ReportBackToTop';
+import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
 import { useReport } from '@/hooks/useReport';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const SECTION_LABELS: Record<string, string> = {
-  executive_summary: 'Executive Summary',
-  swot_analysis: 'SWOT Analysis',
-  competitor_landscape: 'Competitor Landscape',
-  service_providers: 'Service Provider Recommendations',
-  mentor_recommendations: 'Mentor Recommendations',
-  events_resources: 'Events & Resources',
-  action_plan: 'Action Plan & Timeline',
-  lead_list: 'Lead List',
-};
-
-const SECTION_ORDER = [
-  'executive_summary', 'swot_analysis', 'competitor_landscape', 'service_providers',
-  'mentor_recommendations', 'events_resources', 'action_plan', 'lead_list',
-];
-
-// Minimum subscription tier required for each gated section
-const TIER_REQUIREMENTS: Record<string, string> = {
-  swot_analysis: 'growth',
-  competitor_landscape: 'growth',
-  mentor_recommendations: 'growth',
-  lead_list: 'scale',
-};
-
-// Tier hierarchy for comparison
-const TIER_HIERARCHY = ['free', 'growth', 'scale', 'enterprise'];
-
-const userTierMeetsRequirement = (userTier: string, requiredTier: string): boolean => {
-  const userIndex = TIER_HIERARCHY.indexOf(userTier);
-  const requiredIndex = TIER_HIERARCHY.indexOf(requiredTier);
-  return userIndex >= requiredIndex;
-};
+import {
+  SECTION_LABELS,
+  SECTION_ORDER,
+  TIER_REQUIREMENTS,
+  userTierMeetsRequirement,
+  estimateReadingTime,
+} from '@/components/report/reportSectionConfig';
 
 const ReportView = () => {
   const { reportId } = useParams<{ reportId: string }>();
@@ -90,6 +66,7 @@ const ReportView = () => {
   const matches = reportJson?.matches || {};
   const perplexityCitations = reportJson?.metadata?.perplexity_citations || [];
   const perplexityUsed = reportJson?.metadata?.perplexity_used || false;
+  const readingTime = estimateReadingTime(sections);
 
   const sidebarSections = SECTION_ORDER
     .filter((id) => sections[id] || TIER_REQUIREMENTS[id])
@@ -118,6 +95,7 @@ const ReportView = () => {
         reportId={report.id}
         shareToken={localShareToken ?? (report as any).share_token ?? null}
         onShareTokenChange={setLocalShareToken}
+        readingTimeMinutes={readingTime}
       />
 
       <main className="min-h-screen pt-6 pb-16 px-4">
@@ -133,11 +111,8 @@ const ReportView = () => {
               {SECTION_ORDER.map((sectionId) => {
                 const section = sections[sectionId];
                 const requiredTier = TIER_REQUIREMENTS[sectionId];
-
-                // Dynamic tier check: use current subscription, not stale visible flag
                 const isGated = requiredTier && !userTierMeetsRequirement(currentTier, requiredTier);
 
-                // If section not generated and has tier requirement, show gated
                 if (!section && requiredTier) {
                   return (
                     <ReportGatedSection
@@ -151,7 +126,6 @@ const ReportView = () => {
 
                 if (!section) return null;
 
-                // If user's current tier is too low, show gated overlay
                 if (isGated) {
                   return (
                     <ReportGatedSection
@@ -193,12 +167,10 @@ const ReportView = () => {
                 );
               })}
 
-              {/* Sources */}
               {perplexityCitations.length > 0 && (
                 <ReportSources citations={perplexityCitations} />
               )}
 
-              {/* Feedback */}
               <ReportFeedback
                 reportId={report.id}
                 existingScore={report.feedback_score}
@@ -207,6 +179,10 @@ const ReportView = () => {
           </div>
         </div>
       </main>
+
+      {/* Floating utilities */}
+      <ReportBackToTop />
+      <ReportMobileTOC sections={sidebarSections} />
 
       <Footer />
     </>
