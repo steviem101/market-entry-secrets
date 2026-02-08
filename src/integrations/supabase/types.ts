@@ -1019,62 +1019,146 @@ export type Database = {
       lemlist_contacts: {
         Row: {
           campaigns: Json | null
+          client: string | null
           company_id: string | null
+          company_name: string | null
+          company_website: string | null
+          contact_location: string | null
           created_at: string
           email: string | null
+          email_status: string | null
           fields: Json | null
+          first_contacted_date: string | null
           first_name: string | null
           full_name: string | null
+          hubspot_id: string | null
           id: string
           industry: string | null
           job_title: string | null
+          last_contacted_date: string | null
           last_name: string | null
+          last_replied_date: string | null
+          lead_notes: string | null
+          lead_status: string | null
           lemlist_created_at: string | null
           lemlist_id: string
           lifecycle_status: string | null
+          linkedin_connection_degree: string | null
+          linkedin_description: string | null
+          linkedin_followers: number | null
+          linkedin_headline: string | null
+          linkedin_job_industry: string | null
+          linkedin_open: boolean | null
+          linkedin_profile_id: string | null
+          linkedin_skills: string | null
           linkedin_url: string | null
+          linkedin_url_sales_nav: string | null
+          location: string | null
           owner_id: string | null
+          personal_email: string | null
           phone: string | null
+          priority: string | null
+          source: string | null
+          status: string | null
+          summary: string | null
+          tagline: string | null
+          twitter_profile: string | null
           updated_at: string
         }
         Insert: {
           campaigns?: Json | null
+          client?: string | null
           company_id?: string | null
+          company_name?: string | null
+          company_website?: string | null
+          contact_location?: string | null
           created_at?: string
           email?: string | null
+          email_status?: string | null
           fields?: Json | null
+          first_contacted_date?: string | null
           first_name?: string | null
           full_name?: string | null
+          hubspot_id?: string | null
           id?: string
           industry?: string | null
           job_title?: string | null
+          last_contacted_date?: string | null
           last_name?: string | null
+          last_replied_date?: string | null
+          lead_notes?: string | null
+          lead_status?: string | null
           lemlist_created_at?: string | null
           lemlist_id: string
           lifecycle_status?: string | null
+          linkedin_connection_degree?: string | null
+          linkedin_description?: string | null
+          linkedin_followers?: number | null
+          linkedin_headline?: string | null
+          linkedin_job_industry?: string | null
+          linkedin_open?: boolean | null
+          linkedin_profile_id?: string | null
+          linkedin_skills?: string | null
           linkedin_url?: string | null
+          linkedin_url_sales_nav?: string | null
+          location?: string | null
           owner_id?: string | null
+          personal_email?: string | null
           phone?: string | null
+          priority?: string | null
+          source?: string | null
+          status?: string | null
+          summary?: string | null
+          tagline?: string | null
+          twitter_profile?: string | null
           updated_at?: string
         }
         Update: {
           campaigns?: Json | null
+          client?: string | null
           company_id?: string | null
+          company_name?: string | null
+          company_website?: string | null
+          contact_location?: string | null
           created_at?: string
           email?: string | null
+          email_status?: string | null
           fields?: Json | null
+          first_contacted_date?: string | null
           first_name?: string | null
           full_name?: string | null
+          hubspot_id?: string | null
           id?: string
           industry?: string | null
           job_title?: string | null
+          last_contacted_date?: string | null
           last_name?: string | null
+          last_replied_date?: string | null
+          lead_notes?: string | null
+          lead_status?: string | null
           lemlist_created_at?: string | null
           lemlist_id?: string
           lifecycle_status?: string | null
+          linkedin_connection_degree?: string | null
+          linkedin_description?: string | null
+          linkedin_followers?: number | null
+          linkedin_headline?: string | null
+          linkedin_job_industry?: string | null
+          linkedin_open?: boolean | null
+          linkedin_profile_id?: string | null
+          linkedin_skills?: string | null
           linkedin_url?: string | null
+          linkedin_url_sales_nav?: string | null
+          location?: string | null
           owner_id?: string | null
+          personal_email?: string | null
           phone?: string | null
+          priority?: string | null
+          source?: string | null
+          status?: string | null
+          summary?: string | null
+          tagline?: string | null
+          twitter_profile?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -720,7 +720,7 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let lcQuery = supabase
       .from("lemlist_contacts")
-      .select("id, full_name, email, job_title, linkedin_url, industry, company_id, lemlist_companies(name, domain, location)")
+      .select("id, full_name, email, job_title, linkedin_url, industry, company_id, company_name, company_website, linkedin_headline, linkedin_job_industry, status, contact_location, lead_status, lemlist_companies(name, domain, location)")
       .limit(10);
 
     const lcFilters: string[] = [];
@@ -741,8 +741,8 @@ async function searchMatches(supabase: any, intake: any) {
       name: c.full_name || c.email || "Unknown Contact",
       link: c.linkedin_url || "#",
       linkLabel: c.linkedin_url ? "LinkedIn" : "Contact",
-      subtitle: [c.job_title, c.lemlist_companies?.name].filter(Boolean).join(" at "),
-      tags: [c.industry, c.lemlist_companies?.location].filter(Boolean).slice(0, 2),
+      subtitle: [c.job_title, c.company_name || c.lemlist_companies?.name].filter(Boolean).join(" at "),
+      tags: [c.linkedin_job_industry || c.industry, c.contact_location || c.lemlist_companies?.location].filter(Boolean).slice(0, 2),
     }));
     console.log(`Lemlist contacts matched: ${(lc || []).length}`);
   } catch (e) { console.error("Lemlist contacts search error:", e); }
