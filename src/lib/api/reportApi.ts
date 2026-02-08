@@ -93,4 +93,46 @@ export const reportApi = {
 
     if (error) throw error;
   },
+
+  async generateShareToken(reportId: string): Promise<string> {
+    const token = crypto.randomUUID();
+    const { error } = await (supabase as any)
+      .from('user_reports')
+      .update({ share_token: token })
+      .eq('id', reportId);
+
+    if (error) throw error;
+    return token;
+  },
+
+  async revokeShareToken(reportId: string) {
+    const { error } = await (supabase as any)
+      .from('user_reports')
+      .update({ share_token: null })
+      .eq('id', reportId);
+
+    if (error) throw error;
+  },
+
+  async fetchSharedReport(shareToken: string) {
+    const { data, error } = await (supabase as any)
+      .from('user_reports')
+      .select('*')
+      .eq('share_token', shareToken)
+      .single();
+
+    if (error) throw error;
+    return data as {
+      id: string;
+      user_id: string;
+      intake_form_id: string;
+      tier_at_generation: string;
+      report_json: Record<string, unknown>;
+      sections_generated: string[];
+      status: string;
+      created_at: string;
+      updated_at: string;
+      share_token: string;
+    };
+  },
 };

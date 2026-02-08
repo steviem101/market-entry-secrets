@@ -239,5 +239,89 @@
     backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
+}
 
+/* Print styles for PDF export */
+@media print {
+  /* Hide non-content elements */
+  nav,
+  footer,
+  .print\\:hidden,
+  [data-report-sidebar],
+  [data-report-feedback] {
+    display: none !important;
+  }
+
+  /* Reset page layout */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+
+  /* Clean margins */
+  @page {
+    margin: 1.5cm 2cm;
+    size: A4;
+  }
+
+  /* Remove sticky positioning */
+  .sticky {
+    position: static !important;
+  }
+
+  /* Remove blur on gated sections */
+  .blur-sm, .blur-md, .blur-lg {
+    filter: none !important;
+  }
+
+  /* Ensure prose content prints cleanly */
+  .prose {
+    color: black !important;
+    max-width: none !important;
+  }
+
+  .prose h1, .prose h2, .prose h3, .prose h4 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+
+  .prose p, .prose li {
+    color: #333 !important;
+  }
+
+  /* Page break before each report section */
+  [data-report-section] {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  [data-report-section] + [data-report-section] {
+    page-break-before: always;
+  }
+
+  /* Remove shadows, borders simplify */
+  * {
+    box-shadow: none !important;
+  }
+
+  /* Cards in print */
+  .rounded-xl {
+    border: 1px solid #ddd !important;
+  }
+
+  /* Links show URL */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666;
+    word-break: break-all;
+  }
+
+  /* Don't show URL for internal links or buttons */
+  a[href^="/"]::after,
+  button a::after,
+  a.no-print-url::after {
+    content: none;
+  }
 }

@@ -1675,6 +1675,7 @@ export type Database = {
           intake_form_id: string | null
           report_json: Json
           sections_generated: string[] | null
+          share_token: string | null
           status: string
           tier_at_generation: string
           updated_at: string
@@ -1688,6 +1689,7 @@ export type Database = {
           intake_form_id?: string | null
           report_json?: Json
           sections_generated?: string[] | null
+          share_token?: string | null
           status?: string
           tier_at_generation?: string
           updated_at?: string
@@ -1701,6 +1703,7 @@ export type Database = {
           intake_form_id?: string | null
           report_json?: Json
           sections_generated?: string[] | null
+          share_token?: string | null
           status?: string
           tier_at_generation?: string
           updated_at?: string

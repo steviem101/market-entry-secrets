@@ -40,7 +40,7 @@ export const ReportFeedback = ({ reportId, existingScore }: ReportFeedbackProps)
 
   if (submitted && !showNotes) {
     return (
-      <Card className="border-border/50 bg-muted/30">
+      <Card className="border-border/50 bg-muted/30" data-report-feedback>
         <CardContent className="p-6 text-center">
           <Check className="w-8 h-8 text-primary mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Thanks for your feedback!</p>
@@ -50,7 +50,7 @@ export const ReportFeedback = ({ reportId, existingScore }: ReportFeedbackProps)
   }
 
   return (
-    <Card className="border-border/50">
+    <Card className="border-border/50" data-report-feedback>
       <CardContent className="p-6 text-center space-y-4">
         <p className="font-medium text-foreground">Was this report helpful?</p>
         <div className="flex justify-center gap-3">

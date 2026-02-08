@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Navigation from '@/components/Navigation';
@@ -51,6 +52,7 @@ const ReportView = () => {
   const { data: report, isLoading, error } = useReport(reportId);
   const { subscription } = useSubscription();
   const currentTier = subscription?.tier || 'free';
+  const [localShareToken, setLocalShareToken] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -113,6 +115,9 @@ const ReportView = () => {
         generatedAt={report.created_at}
         tier={report.tier_at_generation}
         perplexityUsed={perplexityUsed}
+        reportId={report.id}
+        shareToken={localShareToken ?? (report as any).share_token ?? null}
+        onShareTokenChange={setLocalShareToken}
       />
 
       <main className="min-h-screen pt-6 pb-16 px-4">

@@ -23,7 +23,7 @@ const SECTION_LABELS: Record<string, string> = {
 
 export const ReportSidebar = ({ sections }: ReportSidebarProps) => {
   return (
-    <nav className="sticky top-20 space-y-1">
+    <nav className="sticky top-20 space-y-1" data-report-sidebar>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
         Contents
       </p>
