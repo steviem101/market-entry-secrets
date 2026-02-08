@@ -1,64 +1,92 @@
 
 
-# Add Countries + "Other" Custom Input to Country of Origin
+# Add "End Buyers" Property to the Intake Form
 
 ## Overview
 
-Add Australia, New Zealand, and Japan to the Country of Origin dropdown, and when the user selects "Other", show a text input where they can type their actual country name.
+Add a new "End Buyers" section to Step 2 of the Report Creator. This has two parts:
+
+1. **Target End Buyer Industries** -- a multi-select searchable combobox using the same 149 industry options as the "Industry / Sector" field on Step 1
+2. **Example End Buyers** -- a dynamic list of specific companies (name + website), following the exact same pattern as the "Known Competitors" field
+
+This helps the report generator understand who the user's customers are in Australia, enabling better lead matching and market analysis.
 
 ## What changes for the user
 
-- The dropdown now includes **Australia**, **New Zealand**, and **Japan** in addition to the existing 9 countries
-- When "Other" is selected, a text input appears below the dropdown with placeholder "Enter your country"
-- The custom country value is what gets stored and sent to the report generator (not the word "Other")
-- Step 3 review shows the actual country name regardless of whether it was a preset or custom entry
+- A new "End Buyers" section appears on Step 2, between "Key Challenges" and "Known Competitors"
+- First, users select which industries their end buyers belong to (using the same searchable combobox as the Industry/Sector picker on Step 1)
+- Then, they can optionally add up to 5 specific end buyer companies with name and website URL
+- Step 3 (Review) shows both the selected industries and any named end buyers
+- The entire field is optional -- users can skip it
 
 ## Changes required
 
-### 1. Schema (`intakeSchema.ts`)
+### 1. Database migration
 
-- Add `'Australia'`, `'New Zealand'`, `'Japan'` to the `COUNTRY_OPTIONS` array (placed alphabetically or in a logical order -- Australia and New Zealand first since this is an ANZ-focused platform, then the rest alphabetically)
-- No Zod schema change needed -- `country_of_origin` is already `z.string().min(1)` which accepts any string value
+Add two new columns to `user_intake_forms`:
 
-**Updated list order:**
-1. Australia
-2. New Zealand
-3. United States
-4. United Kingdom
-5. Ireland
-6. Canada
-7. Germany
-8. France
-9. Japan
-10. Singapore
-11. South Korea
-12. India
-13. Other
+| Column | Type | Default | Purpose |
+|---|---|---|---|
+| `end_buyer_industries` | `text[]` | `'{}'::text[]` | Selected industry categories for end buyers |
+| `end_buyers` | `jsonb` | `'[]'::jsonb` | Array of `{ name, website }` objects (same structure as `known_competitors`) |
 
-### 2. Step 1 form (`IntakeStep1.tsx`)
+Both nullable, both optional. The `end_buyer_industries` values come from the same validated 149-industry list, but since end buyers may belong to industries outside the user's own sector, no trigger validation is needed here (the frontend enforces the options).
 
-- Add local state: `const [customCountry, setCustomCountry] = useState('')`
-- Watch the `country_of_origin` field value
-- When user selects "Other" from the dropdown, show a text `Input` below with placeholder "Enter your country"
-- When the user types in the custom input, call `setValue('country_of_origin', customCountryValue)` so the actual country name (not "Other") is stored in the form
-- When user selects "Other", set the form value to the custom input's current value (or empty, triggering validation)
-- When user switches away from "Other" back to a preset country, hide the custom input
-- On component mount, if the loaded draft value is not in the preset list, auto-set the dropdown to "Other" and populate the custom input with the draft value
+### 2. Schema (`intakeSchema.ts`)
 
-### 3. Step 3 review (`IntakeStep3.tsx`)
+- Add `end_buyer_industries` to `step2Schema`: `z.array(z.string()).optional().default([])`
+- Add `end_buyers` to `step2Schema`: `z.array(competitorSchema).max(5).optional().default([])`
+  - Reuses the existing `competitorSchema` (name + website with URL auto-prepend)
 
-- No change needed -- it already displays `data.country_of_origin` which will contain either the preset value or the custom-typed country name
+### 3. Step 2 form (`IntakeStep2.tsx`)
 
-### 4. No database or edge function changes
+Add a new section between "Key Challenges" and "Known Competitors" with:
 
-- The `country_of_origin` column is already `text` type -- it accepts any string
-- The report generation pipeline already uses `intake.country_of_origin` as a plain string in prompts and queries
+**End Buyer Industries (multi-select combobox):**
+- Same searchable `Popover` + `Command` pattern used for Industry/Sector on Step 1
+- Uses the same `INDUSTRY_OPTIONS` list
+- Selected industries shown as removable badges below the combobox
+- Label: "End Buyer Industries"
+- Helper text: "What industries do your target customers belong to? (optional)"
 
-## Technical approach
+**Example End Buyers (dynamic name + website rows):**
+- Identical UI pattern to Known Competitors
+- Label: "Example End Buyers"
+- Helper text: "Add specific companies you want to sell to in Australia (optional, max 5)"
+- Each row: Name input + Website input with Globe icon + X remove button
+- "Add End Buyer" button (hidden when 5 already added)
 
-The key UX detail: when "Other" is selected, the form's `country_of_origin` value should be the custom text the user types, NOT the literal string "Other". This means:
+### 4. Step 3 review (`IntakeStep3.tsx`)
 
-- The `Select` component tracks a separate "selection mode" (`isOther`) rather than binding directly to form value
-- The form value (`country_of_origin`) always contains the real country name
-- When restoring from a draft, if the saved value does not match any preset option, the dropdown shows "Other" and the input is pre-filled
+Add a new summary card (between Market Entry Goals and Known Competitors) that shows:
+- Selected end buyer industries as badges
+- Named end buyers as name + clickable website link (same layout as competitors)
+- Only renders if either list has entries
+
+### 5. Default values (`ReportCreator.tsx`)
+
+Add to `defaultValues`:
+- `end_buyer_industries: []`
+- `end_buyers: []`
+
+### 6. API layer (`reportApi.ts`)
+
+Add to the insert payload:
+- `end_buyer_industries: data.end_buyer_industries || []`
+- `end_buyers: data.end_buyers || []`
+
+### 7. Edge function (`generate-report/index.ts`)
+
+- Read `intake.end_buyer_industries` and `intake.end_buyers` from the intake form
+- If end buyers have websites, scrape them via Firecrawl (same best-effort pattern as known competitors) to understand what these companies do
+- Pass end buyer context into the AI prompt template variables so report sections can reference the user's target customer profile
+- This enriches sections like executive summary, action plan, and lead list with buyer-aware recommendations
+
+## Technical notes
+
+- Reuses `competitorSchema` for the end buyer entries since both have the same name + website structure
+- Reuses `INDUSTRY_OPTIONS` for the combobox, no duplication
+- The searchable combobox pattern is copied from `IntakeStep1.tsx` (Industry/Sector picker)
+- Both fields are fully optional with empty defaults, so existing forms are unaffected
+- Max 5 end buyers keeps scraping workload reasonable within the edge function timeout
 
