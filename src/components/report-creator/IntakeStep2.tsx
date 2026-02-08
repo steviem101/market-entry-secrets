@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, ArrowLeft, ArrowRight, Plus, X, Globe } from 'lucide-react';
+import { EndBuyersSection } from './EndBuyersSection';
 import {
   REGION_OPTIONS, SERVICES_OPTIONS, TIMELINE_OPTIONS, BUDGET_OPTIONS,
   type IntakeFormData,
@@ -159,6 +160,9 @@ export const IntakeStep2 = ({ form, onNext, onBack }: IntakeStep2Props) => {
           />
           <p className="text-xs text-muted-foreground text-right">{keyChallenges.length}/500</p>
         </div>
+
+        {/* End Buyers */}
+        <EndBuyersSection form={form} />
 
         {/* Known Competitors */}
         <div className="space-y-3">

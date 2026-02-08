@@ -1599,6 +1599,8 @@ export type Database = {
           country_of_origin: string
           created_at: string
           employee_count: string
+          end_buyer_industries: string[] | null
+          end_buyers: Json | null
           enriched_input: Json | null
           id: string
           industry_sector: string[]
@@ -1621,6 +1623,8 @@ export type Database = {
           country_of_origin: string
           created_at?: string
           employee_count: string
+          end_buyer_industries?: string[] | null
+          end_buyers?: Json | null
           enriched_input?: Json | null
           id?: string
           industry_sector: string[]
@@ -1643,6 +1647,8 @@ export type Database = {
           country_of_origin?: string
           created_at?: string
           employee_count?: string
+          end_buyer_industries?: string[] | null
+          end_buyers?: Json | null
           enriched_input?: Json | null
           id?: string
           industry_sector?: string[]

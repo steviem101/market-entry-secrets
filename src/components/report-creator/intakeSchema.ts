@@ -121,6 +121,8 @@ export const step2Schema = z.object({
   budget_level: z.string().min(1, 'Budget level is required'),
   primary_goals: z.string().max(500, 'Maximum 500 characters').optional().default(''),
   key_challenges: z.string().max(500, 'Maximum 500 characters').optional().default(''),
+  end_buyer_industries: z.array(z.string()).optional().default([]),
+  end_buyers: z.array(competitorSchema).max(5).optional().default([]),
   known_competitors: z.array(competitorSchema).max(5).optional().default([]),
 });
 

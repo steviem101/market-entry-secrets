@@ -35,6 +35,8 @@ const ReportCreator = () => {
       budget_level: '',
       primary_goals: '',
       key_challenges: '',
+      end_buyer_industries: [],
+      end_buyers: [],
       known_competitors: [],
     },
   });
