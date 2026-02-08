@@ -1,88 +1,143 @@
 
-# Fix: Report Stuck at "Processing" Due to Polish Pass Timeout
 
-## Root Cause
+# Events Page Deep Dive: Recommendations
 
-The edge function worker is killed during the polish pass. The sequence is:
-1. Parallel research completes (~20s)
-2. Provider enrichment completes (~1s)
-3. Section generation completes (~26s)
-4. Polish pass starts -- sends 33,831 chars to `gemini-2.5-pro` (the slowest model)
-5. **Worker is shut down ~28 seconds into the polish pass** -- before it can save the report
+## Current State Assessment
 
-Because the save happens AFTER the polish pass (line 1296), the report status is never updated from "processing" to "completed". The data is lost.
+The Events page currently works as a basic directory listing with:
+- A hero section with stats (event count + location count)
+- Standard directory filters (search, location, type, sector, category)
+- A card grid showing all 22 events
+- Clicking "View Details" opens a **modal** (not a dedicated page)
+- No slug column on the `events` table -- events have no URL-friendly identifiers
+- No SEO metadata per event
+- No pagination (all 22 events load at once -- fine for now, but won't scale)
+- Events are sorted by date ascending, meaning **past events from 2024 appear first** and upcoming events are buried
+- None of the 22 events have a logo image populated (`event_logo_url` is null for all)
+- The "Contact" button opens a blank `mailto:` link (no actual organizer email stored)
 
-## Fix Strategy
+---
 
-Three changes to make the pipeline robust:
+## Recommended Improvements (Priority Order)
 
-### 1. Save the report BEFORE the polish pass (critical fix)
+### 1. Individual Event Detail Pages with Dedicated URLs (High Priority)
 
-Move the database save (lines 1296-1304) to happen immediately after section generation completes, BEFORE attempting the polish pass. This ensures the report is always saved even if the worker gets killed.
+**What:** Create `/events/:eventSlug` routes so each event has its own shareable, SEO-friendly URL.
 
-If the polish pass succeeds, do a second save to update the sections with polished content. If it fails or the worker dies, the user still gets their unpolished report.
+**Why:** Currently events only open in a modal, which means:
+- Events cannot be shared via URL or linked to from reports/sectors/locations
+- No SEO value -- Google cannot index individual events
+- No deep linking from the report generator's "events_resources" section
 
-### 2. Downgrade the polish pass model from `gemini-2.5-pro` to `gemini-3-flash-preview`
+**Technical changes:**
+- Add a `slug` column to the `events` table (generated from title, e.g., "international-mining-and-resources-conference-imarc")
+- Run a migration to backfill slugs for all 22 existing events
+- Create a `useEventBySlug` hook (following the `useLocationBySlug` pattern)
+- Create a new `src/pages/EventDetailPage.tsx` with:
+  - Event hero with logo, title, date, location
+  - Full description section
+  - Organizer details
+  - Related events (same category/sector)
+  - Sidebar with "Related Service Providers" and "Related Content" from the same sector
+  - Bookmark and share buttons
+  - Breadcrumb navigation (Events > Event Name)
+  - SEO meta tags via react-helmet-async
+- Add route `/events/:eventSlug` to App.tsx
+- Update `EventCard` "View Details" button to use `<Link>` navigation instead of opening a modal
+- Keep the modal as a fallback for embedded contexts (sector pages, location pages)
 
-The `gemini-2.5-pro` model is 5-10x slower than flash models and is the primary reason the worker times out. The flash model produces comparable editing quality for this task and completes in 5-10 seconds instead of 30-60+.
+### 2. Fix Event Sorting -- Upcoming Events First (High Priority)
 
-### 3. Add a timeout wrapper around the polish pass
+**What:** Show upcoming/future events before past events, and visually separate them.
 
-Wrap the polish call in a `Promise.race` with a 30-second timeout. If it doesn't complete in time, fall back to the already-saved unpolished content gracefully.
+**Why:** Currently, events from May 2024 appear first while December 2025 events are at the bottom. Users care about **upcoming** events, not past ones.
 
-## Technical Changes
+**Technical changes:**
+- Split events into "Upcoming" and "Past" sections
+- Default sort: upcoming events by nearest date first, past events by most recent first
+- Add a visual divider or tab between sections
+- Optionally add a toggle/tab: "Upcoming" | "Past" | "All"
+- Grey out or visually de-emphasize past event cards
 
-### File: `supabase/functions/generate-report/index.ts`
+### 3. Enrich the Event Data Model (Medium Priority)
 
-**Change 1 — Save before polish (lines ~1259-1310)**
+**What:** Add new columns to the `events` table to support richer event detail pages.
 
-Restructure `generateReportInBackground` so that:
-- After section generation (line 1257), immediately build `reportJson` and save with `status: "completed"`
-- Then attempt the polish pass as an optional improvement
-- If polish succeeds, do an UPDATE with the polished sections
-- If polish fails or times out, the report is already saved and viewable
+**New columns to add:**
+- `slug` (text, unique) -- URL-friendly identifier
+- `website_url` (text) -- Link to the official event page
+- `registration_url` (text) -- Direct registration/ticket link
+- `organizer_email` (text) -- Actual contact email (currently the "Contact" button is non-functional)
+- `organizer_website` (text) -- Organizer's website
+- `price` (text) -- Ticket pricing info (e.g., "Free", "$299 Early Bird")
+- `is_featured` (boolean) -- For highlighting key events
+- `tags` (text[]) -- Additional tags for better filtering
+- `image_url` (text) -- Event banner/hero image (separate from logo)
 
-```text
-Before:
-  Generate sections -> Polish -> Save (single save at the end)
+### 4. Add "Featured Events" Carousel at the Top (Medium Priority)
 
-After:
-  Generate sections -> Save (completed) -> Polish (optional) -> Update if successful
-```
+**What:** Display 3-4 featured/upcoming events in a prominent carousel or highlight section above the grid.
 
-**Change 2 — Downgrade polish model (line 828)**
+**Why:** Draws attention to the most important upcoming events and adds visual interest to the page (currently it jumps straight from hero to a flat grid).
 
-Change from:
-```
-"google/gemini-2.5-pro"
-```
-To:
-```
-"google/gemini-3-flash-preview"
-```
+**Technical changes:**
+- Use the `is_featured` flag or auto-select the next 3 upcoming events
+- Use an Embla carousel (already installed) or a highlight card row
+- Each featured card shows a larger image, date countdown, and CTA
 
-**Change 3 — Add timeout wrapper (around line 1262)**
+### 5. Add "Add to Calendar" Functionality (Medium Priority)
 
-```
-const polishWithTimeout = Promise.race([
-  polishReport(lovableKey, sections, sectionOrder),
-  new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("Polish timeout")), 30000)
-  ),
-]);
-```
+**What:** Let users add events to their Google Calendar, Outlook, or Apple Calendar directly from the event card or detail page.
 
-### No frontend changes needed
+**Technical changes:**
+- Generate `.ics` calendar file download
+- Add Google Calendar link (URL-based, no API needed)
+- Add an "Add to Calendar" dropdown button on EventCard and EventDetailPage
 
-The frontend already polls for `status === "completed"` and renders whatever `report_json` is saved. This fix is entirely backend.
+### 6. Improve Event Card Design (Low Priority)
 
-## What This Fixes
+**What:** Polish the event cards for better visual hierarchy and scannability.
 
-- Reports will no longer get stuck at "processing" -- they save immediately after sections are generated
-- The polish pass becomes a best-effort improvement rather than a blocking requirement
-- The faster model reduces the chance of worker shutdown during polish
-- Existing reports already stuck at "processing" can be manually fixed by updating their status
+**Current issues:**
+- Placeholder avatar images from Unsplash (hardcoded stock photos for organizers)
+- Debug `console.log` left in EventCard component
+- No visual distinction between upcoming and past events
+- Logo area shows generic calendar icon for all events (none have logos)
 
-## Bonus: Fix the stuck Credit Logic report
+**Improvements:**
+- Remove debug console.log
+- Remove the fake organizer avatar (just use initials or icon)
+- Add a date badge/ribbon in the corner (e.g., "JUL 25")
+- Add visual indicators: "Coming Soon", "Registration Open", "Past Event"
+- Show countdown for upcoming events (e.g., "In 14 days")
 
-Run a query to check if the stuck report actually has section data in `report_json`, and if not, mark it as "failed" so the user can regenerate.
+### 7. Add Pagination or Infinite Scroll (Low Priority -- Future)
+
+**What:** Currently all 22 events load at once. As the event count grows, add pagination.
+
+**Why:** Not urgent at 22 events, but important once the count exceeds 50+.
+
+---
+
+## Technical Implementation Summary
+
+### Database Migration
+- Add `slug`, `website_url`, `registration_url`, `organizer_email`, `organizer_website`, `price`, `is_featured`, `tags`, `image_url` columns to `events`
+- Backfill `slug` for all 22 existing events
+- Add unique index on `slug`
+
+### New Files
+- `src/pages/EventDetailPage.tsx` -- Full event detail page
+- `src/hooks/useEventBySlug.ts` -- Fetch single event by slug
+- `src/components/events/EventDetailHero.tsx` -- Hero section for detail page
+- `src/components/events/EventDetailSidebar.tsx` -- Sidebar with related items
+- `src/components/events/FeaturedEventsSection.tsx` -- Featured carousel
+- `src/components/events/AddToCalendarButton.tsx` -- Calendar integration
+
+### Modified Files
+- `src/App.tsx` -- Add `/events/:eventSlug` route
+- `src/components/EventCard.tsx` -- Link to detail page, remove debug log, add date badge
+- `src/pages/Events.tsx` -- Split upcoming/past, add featured section
+- `src/hooks/useEvents.ts` -- Add upcoming/past sorting logic
+- `src/integrations/supabase/types.ts` -- Updated types
+
