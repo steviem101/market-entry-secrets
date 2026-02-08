@@ -44,9 +44,13 @@ export const IntakeStep3 = ({ form, onBack, onSubmit, isGenerating }: IntakeStep
               <span className="text-muted-foreground">Country:</span>
               <p className="font-medium">{data.country_of_origin}</p>
             </div>
-            <div>
-              <span className="text-muted-foreground">Industry:</span>
-              <p className="font-medium">{data.industry_sector}</p>
+            <div className="col-span-2">
+              <span className="text-muted-foreground">Industry / Sector:</span>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {data.industry_sector?.map((ind) => (
+                  <Badge key={ind} variant="secondary" className="text-xs">{ind}</Badge>
+                ))}
+              </div>
             </div>
             <div>
               <span className="text-muted-foreground">Stage:</span>

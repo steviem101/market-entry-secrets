@@ -5,9 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Building2, Globe, ArrowRight, Check, ChevronsUpDown } from 'lucide-react';
+import { Building2, Globe, ArrowRight, Check, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   COUNTRY_OPTIONS, INDUSTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS,
@@ -22,7 +23,20 @@ interface IntakeStep1Props {
 export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
   const { register, formState: { errors }, setValue, watch } = form;
   const [industryOpen, setIndustryOpen] = useState(false);
-  const selectedIndustry = watch('industry_sector');
+  const selectedIndustries = watch('industry_sector') || [];
+
+  const toggleIndustry = (industry: string) => {
+    const current = selectedIndustries;
+    if (current.includes(industry)) {
+      setValue('industry_sector', current.filter((i) => i !== industry), { shouldValidate: true });
+    } else {
+      setValue('industry_sector', [...current, industry], { shouldValidate: true });
+    }
+  };
+
+  const removeIndustry = (industry: string) => {
+    setValue('industry_sector', selectedIndustries.filter((i) => i !== industry), { shouldValidate: true });
+  };
 
   return (
     <Card className="max-w-2xl mx-auto border-border/50 shadow-lg">
@@ -92,10 +106,12 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
                   aria-expanded={industryOpen}
                   className={cn(
                     "w-full justify-between font-normal h-10",
-                    !selectedIndustry && "text-muted-foreground"
+                    selectedIndustries.length === 0 && "text-muted-foreground"
                   )}
                 >
-                  {selectedIndustry || "Select industry"}
+                  {selectedIndustries.length === 0
+                    ? "Select industries"
+                    : `${selectedIndustries.length} selected`}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -109,15 +125,12 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
                         <CommandItem
                           key={industry}
                           value={industry}
-                          onSelect={() => {
-                            setValue('industry_sector', industry);
-                            setIndustryOpen(false);
-                          }}
+                          onSelect={() => toggleIndustry(industry)}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              selectedIndustry === industry ? "opacity-100" : "opacity-0"
+                              selectedIndustries.includes(industry) ? "opacity-100" : "opacity-0"
                             )}
                           />
                           {industry}
@@ -128,6 +141,22 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
                 </Command>
               </PopoverContent>
             </Popover>
+            {selectedIndustries.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {selectedIndustries.map((ind) => (
+                  <Badge key={ind} variant="secondary" className="text-xs gap-1 pr-1">
+                    {ind}
+                    <button
+                      type="button"
+                      onClick={() => removeIndustry(ind)}
+                      className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
             {errors.industry_sector && (
               <p className="text-xs text-destructive">{errors.industry_sector.message}</p>
             )}

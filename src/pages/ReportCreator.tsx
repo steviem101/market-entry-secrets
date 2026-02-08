@@ -26,7 +26,7 @@ const ReportCreator = () => {
       company_name: '',
       website_url: '',
       country_of_origin: '',
-      industry_sector: '',
+      industry_sector: [],
       company_stage: '',
       employee_count: '',
       target_regions: [],

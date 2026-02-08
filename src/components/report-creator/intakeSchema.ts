@@ -97,7 +97,7 @@ export const step1Schema = z.object({
     return trimmed;
   }).pipe(z.string().url('Please enter a valid URL')),
   country_of_origin: z.string().min(1, 'Country is required'),
-  industry_sector: z.string().min(1, 'Industry is required'),
+  industry_sector: z.array(z.string()).min(1, 'Select at least one industry'),
   company_stage: z.string().min(1, 'Company stage is required'),
   employee_count: z.string().min(1, 'Employee count is required'),
 });

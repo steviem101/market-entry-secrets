@@ -1517,7 +1517,7 @@ export type Database = {
           employee_count: string
           enriched_input: Json | null
           id: string
-          industry_sector: string
+          industry_sector: string[]
           key_challenges: string | null
           primary_goals: string | null
           raw_input: Json
@@ -1538,7 +1538,7 @@ export type Database = {
           employee_count: string
           enriched_input?: Json | null
           id?: string
-          industry_sector: string
+          industry_sector: string[]
           key_challenges?: string | null
           primary_goals?: string | null
           raw_input?: Json
@@ -1559,7 +1559,7 @@ export type Database = {
           employee_count?: string
           enriched_input?: Json | null
           id?: string
-          industry_sector?: string
+          industry_sector?: string[]
           key_challenges?: string | null
           primary_goals?: string | null
           raw_input?: Json
