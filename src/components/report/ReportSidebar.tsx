@@ -13,6 +13,7 @@ interface ReportSidebarProps {
 const SECTION_LABELS: Record<string, string> = {
   executive_summary: 'Executive Summary',
   swot_analysis: 'SWOT Analysis',
+  competitor_landscape: 'Competitor Landscape',
   service_providers: 'Service Providers',
   mentor_recommendations: 'Mentor Recommendations',
   events_resources: 'Events & Resources',
