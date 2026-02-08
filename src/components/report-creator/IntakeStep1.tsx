@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, Globe, ArrowRight } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
+import { Building2, Globe, ArrowRight, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   COUNTRY_OPTIONS, INDUSTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS,
   type IntakeFormData,
@@ -17,6 +21,8 @@ interface IntakeStep1Props {
 
 export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
   const { register, formState: { errors }, setValue, watch } = form;
+  const [industryOpen, setIndustryOpen] = useState(false);
+  const selectedIndustry = watch('industry_sector');
 
   return (
     <Card className="max-w-2xl mx-auto border-border/50 shadow-lg">
@@ -78,16 +84,50 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
 
           <div className="space-y-2">
             <Label>Industry / Sector *</Label>
-            <Select value={watch('industry_sector')} onValueChange={(v) => setValue('industry_sector', v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select industry" />
-              </SelectTrigger>
-              <SelectContent>
-                {INDUSTRY_OPTIONS.map((i) => (
-                  <SelectItem key={i} value={i}>{i}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={industryOpen} onOpenChange={setIndustryOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={industryOpen}
+                  className={cn(
+                    "w-full justify-between font-normal h-10",
+                    !selectedIndustry && "text-muted-foreground"
+                  )}
+                >
+                  {selectedIndustry || "Select industry"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search industry..." />
+                  <CommandList>
+                    <CommandEmpty>No industry found.</CommandEmpty>
+                    <CommandGroup>
+                      {INDUSTRY_OPTIONS.map((industry) => (
+                        <CommandItem
+                          key={industry}
+                          value={industry}
+                          onSelect={() => {
+                            setValue('industry_sector', industry);
+                            setIndustryOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedIndustry === industry ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {industry}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             {errors.industry_sector && (
               <p className="text-xs text-destructive">{errors.industry_sector.message}</p>
             )}
