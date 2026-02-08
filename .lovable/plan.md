@@ -1,71 +1,43 @@
 
 
-# Expand Industry/Sector to 149 Options with Searchable Combobox
+# Add Database Constraint for Industry Sector (149 Options Only)
 
 ## Overview
 
-Replace the current `Select` dropdown for the "Industry / Sector" field on Step 1 of the Report Creator with a searchable combobox (Popover + Command pattern). The existing 10-item `INDUSTRY_OPTIONS` list will be replaced with the full 149 industries provided.
+Add a validation trigger on the `user_intake_forms` table to restrict the `industry_sector` column to only the 149 approved industry options. First, existing non-conforming data will be migrated to valid values.
 
-## What changes for the user
+## Existing data to fix
 
-- The Industry / Sector field becomes a **type-to-search** input instead of a plain dropdown
-- Clicking the field opens a popover with a search box and a scrollable list of 149 industries
-- Typing filters the list in real time (e.g., typing "fin" shows "Financial Services", "FinTech", "Fine Art")
-- Selecting an industry closes the popover and displays the chosen value
-- A check mark appears next to the currently selected industry
-- The field still shows "Select industry" as placeholder when nothing is selected
+The table currently has 9 rows with values not in the 149-option list:
 
-## Files to change
+| Current Value | Count | Maps To |
+|---|---|---|
+| Cybersecurity | 6 | Computer & Network Security |
+| MedTech/HealthTech | 1 | Medical Devices |
+| Other | 2 | Already valid (in list) |
 
-### 1. `src/components/report-creator/intakeSchema.ts`
+## What the migration will do
 
-- Replace the current 10-item `INDUSTRY_OPTIONS` array with the full 149 industries (alphabetically sorted, matching the provided list exactly)
-- No schema validation changes needed -- the Zod schema already accepts any non-empty string
+1. **Update existing rows** to map free-text values to valid options:
+   - `Cybersecurity` → `Computer & Network Security`
+   - `MedTech/HealthTech` → `Medical Devices`
 
-### 2. `src/components/report-creator/IntakeStep1.tsx`
+2. **Create a validation trigger** (not a CHECK constraint, per Supabase best practices) that runs on INSERT and UPDATE. It will reject any `industry_sector` value that is not in the approved 149-option list.
 
-- Import `Popover`, `PopoverTrigger`, `PopoverContent` from `@/components/ui/popover`
-- Import `Command`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem` from `@/components/ui/command`
-- Import `Check`, `ChevronsUpDown` icons from `lucide-react`
-- Replace the Industry / Sector `Select` component with a Popover + Command combobox:
-  - A button trigger styled to match the existing Select fields (same height, border, rounded corners)
-  - A popover containing a Command component with search input and scrollable list
-  - Selecting an item calls `setValue('industry_sector', value)` and closes the popover
-- Add local state `const [industryOpen, setIndustryOpen] = useState(false)` to control the popover
+## Why a trigger instead of a CHECK constraint
 
-### Component structure (Industry field only)
+Supabase recommends validation triggers over CHECK constraints because CHECK constraints must be immutable and can cause issues with database backups/restores. A trigger-based approach is more flexible and safer.
 
-```text
-<Popover open={industryOpen} onOpenChange={setIndustryOpen}>
-  <PopoverTrigger asChild>
-    <Button variant="outline" role="combobox" ...>
-      {selectedIndustry || "Select industry"}
-      <ChevronsUpDown />
-    </Button>
-  </PopoverTrigger>
-  <PopoverContent className="w-full p-0">
-    <Command>
-      <CommandInput placeholder="Search industry..." />
-      <CommandList>
-        <CommandEmpty>No industry found.</CommandEmpty>
-        <CommandGroup>
-          {INDUSTRY_OPTIONS.map(industry => (
-            <CommandItem onSelect={...}>
-              <Check /> {industry}
-            </CommandItem>
-          ))}
-        </CommandGroup>
-      </CommandList>
-    </Command>
-  </PopoverContent>
-</Popover>
-```
+## Technical details
 
-## Technical notes
+### Migration SQL will:
 
-- All 149 industry values are stored as plain strings, so they flow through unchanged to the report generation pipeline and Lemlist matching
-- The Zod validation (`z.string().min(1)`) does not restrict to specific values, so expanding the list has zero backend impact
-- The `cmdk` library handles fuzzy search natively -- no custom filtering code needed
-- The popover width will match the trigger button width using `w-[--radix-popover-trigger-width]` to stay visually consistent
-- The other fields (Country, Stage, Employees) remain as standard Select dropdowns since their lists are small (4-10 items)
+1. Run UPDATE statements to fix the 7 non-conforming rows
+2. Create a function `validate_industry_sector()` containing the list of 149 valid values
+3. Create a BEFORE INSERT OR UPDATE trigger on `user_intake_forms` that calls this function
+4. If an invalid value is submitted, it raises an exception with a clear error message
+
+### No frontend changes needed
+
+The searchable combobox already restricts the UI to only the 149 options -- this migration adds the database-level enforcement as a safety net.
 
