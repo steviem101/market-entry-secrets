@@ -10,7 +10,7 @@ interface ReportSectionProps {
 
 export const ReportSection = ({ id, title, content, children }: ReportSectionProps) => {
   return (
-    <section id={id} className="scroll-mt-20">
+    <section id={id} className="scroll-mt-20" data-report-section>
       <Card className="border-border/50 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-xl">{title}</CardTitle>

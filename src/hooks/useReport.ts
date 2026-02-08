@@ -9,6 +9,14 @@ export const useReport = (reportId: string | undefined) => {
   });
 };
 
+export const useSharedReport = (shareToken: string | undefined) => {
+  return useQuery({
+    queryKey: ['shared-report', shareToken],
+    queryFn: () => reportApi.fetchSharedReport(shareToken!),
+    enabled: !!shareToken,
+  });
+};
+
 export const useMyReports = () => {
   return useQuery({
     queryKey: ['my-reports'],

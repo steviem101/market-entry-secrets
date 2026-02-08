@@ -37,6 +37,7 @@ import AuthCallback from "./pages/AuthCallback";
 import Pricing from "./pages/Pricing";
 import ReportCreator from "./pages/ReportCreator";
 import ReportView from "./pages/ReportView";
+import SharedReportView from "./pages/SharedReportView";
 import MyReports from "./pages/MyReports";
 import NotFound from "./pages/NotFound";
 
@@ -81,6 +82,8 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/report-creator" element={<ReportCreator />} />
               <Route path="/report/:reportId" element={<ReportView />} />
+              <Route path="/report/shared/:shareToken" element={<SharedReportView />} />
+              <Route path="/my-reports" element={<MyReports />} />
               <Route path="/my-reports" element={<MyReports />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="*" element={<NotFound />} />
