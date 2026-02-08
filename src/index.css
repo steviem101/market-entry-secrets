@@ -260,7 +260,7 @@
   /* Hide non-content elements */
   nav,
   footer,
-  .print\\:hidden,
+  .print\:hidden,
   [data-report-sidebar],
   [data-report-feedback] {
     display: none !important;
@@ -319,6 +319,11 @@
     box-shadow: none !important;
   }
 
+  /* Remove accent top borders in print */
+  [data-report-section] .border-t-\\[3px\\] {
+    border-top-width: 0 !important;
+  }
+
   /* Cards in print */
   .rounded-xl {
     border: 1px solid #ddd !important;
@@ -337,5 +342,10 @@
   button a::after,
   a.no-print-url::after {
     content: none;
+  }
+
+  /* Hide floating buttons in print */
+  .fixed {
+    display: none !important;
   }
 }

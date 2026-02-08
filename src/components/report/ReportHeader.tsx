@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Share2, Calendar, Globe } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Calendar, Globe, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ReportShareDialog } from './ReportShareDialog';
@@ -14,6 +14,7 @@ interface ReportHeaderProps {
   reportId: string;
   shareToken: string | null;
   onShareTokenChange: (token: string | null) => void;
+  readingTimeMinutes?: number;
 }
 
 const tierLabels: Record<string, string> = {
@@ -38,6 +39,7 @@ export const ReportHeader = ({
   reportId,
   shareToken,
   onShareTokenChange,
+  readingTimeMinutes,
 }: ReportHeaderProps) => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
@@ -69,6 +71,12 @@ export const ReportHeader = ({
                     <Globe className="w-3 h-3" />
                     AI Research
                   </Badge>
+                )}
+                {readingTimeMinutes && (
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    {readingTimeMinutes} min read
+                  </span>
                 )}
               </div>
             </div>
