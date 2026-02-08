@@ -1,81 +1,110 @@
 
 
-# Add Readability Polish Step to Report Generation
+# Set Up Lemlist Contact and Company Sync for Report Generation
 
 ## Overview
 
-After all 8 report sections are generated individually, a new "polish pass" will run. It will concatenate the visible section content and send it through `google/gemini-2.5-pro` (a stronger reasoning model) with a professional editing prompt. The polished content replaces the raw sections before saving to the database.
+Create two new Supabase tables to store Lemlist contacts and companies, plus an edge function that pulls data from Lemlist's API and upserts it into your database. This data then becomes available as an additional source during AI Market Entry Report generation.
 
-## Why a single pass with a stronger model?
+## Database Design
 
-- **Consistency**: Individual sections are generated in parallel batches and can have inconsistent tone, formatting, or repeated information. A single pass unifies the voice.
-- **Quality uplift**: `gemini-2.5-pro` is a more capable model than `gemini-3-flash-preview` (used for initial generation), giving a meaningful quality improvement without adding a new API key or provider.
-- **No new secrets needed**: Uses the same `LOVABLE_API_KEY` already configured.
-- **Cost-efficient**: One extra AI call instead of 8 individual polish calls.
+### Table 1: `lemlist_companies`
 
-## What the polish prompt will do
+Stores company/account-level data from Lemlist.
 
-1. Improve sentence structure and flow
-2. Ensure Australian English spelling (e.g., "organisation", "labour", "recognise")
-3. Add smooth transitions between sections
-4. Remove redundant phrases or repeated information across sections
-5. Maintain all factual data, statistics, and citations exactly as-is
-6. Keep Markdown formatting intact (headings, bold, bullets, numbered lists)
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid (PK) | Supabase auto-generated |
+| lemlist_id | text (unique, not null) | Lemlist `_id` field, used for upsert matching |
+| name | text (not null) | Company name |
+| domain | text | Website domain |
+| industry | text | Industry sector |
+| size | text | Company size (e.g. "11-50") |
+| location | text | Geographic location |
+| linkedin_url | text | LinkedIn company page |
+| fields | jsonb | All other flexible Lemlist fields |
+| owner_id | text | Lemlist owner user ID |
+| lemlist_created_at | timestamptz | Original creation date in Lemlist |
+| created_at | timestamptz | Row creation in Supabase |
+| updated_at | timestamptz | Last sync timestamp |
 
-## Technical Details
+### Table 2: `lemlist_contacts`
 
-### File changed
+Stores individual contact/person data from Lemlist, linked to companies.
 
-`supabase/functions/generate-report/index.ts`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid (PK) | Supabase auto-generated |
+| lemlist_id | text (unique, not null) | Lemlist `_id` field |
+| company_id | uuid (FK) | References lemlist_companies.id |
+| full_name | text | Calculated full name |
+| first_name | text | From fields.firstName |
+| last_name | text | From fields.lastName |
+| email | text | Primary email |
+| job_title | text | From fields.jobTitle |
+| phone | text | From fields.phone |
+| linkedin_url | text | LinkedIn profile URL |
+| industry | text | From fields.industry |
+| lifecycle_status | text | Contact lifecycle stage (New, Contacted, Opportunity, etc.) |
+| campaigns | jsonb | Array of campaign associations |
+| fields | jsonb | All other flexible Lemlist fields |
+| owner_id | text | Lemlist owner user ID |
+| lemlist_created_at | timestamptz | Original creation date in Lemlist |
+| created_at | timestamptz | Row creation in Supabase |
+| updated_at | timestamptz | Last sync timestamp |
 
-### Insertion point
+### RLS Policies
 
-After the section generation loop (line 755) and before the report assembly (line 757). The new code will:
+Both tables will have:
+- **Public SELECT** for reading (needed by the report generator edge function)
+- **No public INSERT/UPDATE/DELETE** -- only the sync edge function (using service role key) writes to these tables
 
-1. Collect all visible section content into a single string with section headers
-2. Call `callAI()` using `google/gemini-2.5-pro` with an editing system prompt
-3. Parse the polished output back into individual sections
-4. Replace each section's content with the polished version
-5. Wrap the whole step in a try/catch so that if the polish fails, the original unpolished content is preserved
+## Edge Function: `sync-lemlist`
 
-### New helper function
+A new edge function that connects to the Lemlist API (v2) and syncs data into Supabase.
 
-```text
-async function polishReport(
-  apiKey: string,
-  sections: Record<string, any>,
-  sectionOrder: string[]
-): Promise<Record<string, any>>
-```
+### How it works
 
-This function:
-- Filters to only visible sections with content
-- Concatenates them with clear `===SECTION: section_name===` delimiters
-- Sends to `google/gemini-2.5-pro` with an editing prompt
-- Splits the response back by the same delimiters
-- Returns the updated sections object (or the original if anything fails)
+1. Authenticates with Lemlist using Basic Auth (API key)
+2. Fetches all companies from `GET https://api.lemlist.com/api/companies`
+3. Upserts each company into `lemlist_companies` (matched on `lemlist_id`)
+4. Fetches all contacts from `GET https://api.lemlist.com/api/contacts`
+5. Links contacts to companies by matching the company name/domain
+6. Upserts each contact into `lemlist_contacts` (matched on `lemlist_id`)
+7. Returns a summary of synced counts
 
-### Prompt strategy
+### Trigger options
 
-The system prompt will instruct the model to act as a professional editor, not a rewriter. It will preserve:
-- All data, numbers, statistics, and citations
-- Markdown formatting structure
-- Section delimiters exactly as provided
-- The advisory/consultant tone
+- **Manual**: Call it from an admin button in your app
+- **Scheduled**: Set up a pg_cron job to run it hourly or daily
 
-### Failsafe
+## Integration with Report Generation
 
-The entire polish step is wrapped in try/catch. If the AI call fails, times out, or the response cannot be parsed back into sections, the original unpolished content is used. A console log will indicate whether polishing succeeded or was skipped.
+Update the `generate-report` edge function to include Lemlist data as an additional matching source during Step 3 (Database Directory Matching). Specifically:
 
-### Timing consideration
+- Query `lemlist_contacts` for contacts whose company industry or location matches the report's target market
+- Include matched contacts in the report as potential leads or connections
+- This complements the existing matching against `service_providers`, `community_members`, `leads`, etc.
 
-The `generate-report` function already has a 300-second wall clock limit. The polish call adds roughly 15-30 seconds. The existing pipeline typically completes in under 60 seconds, so there is ample headroom.
+## New Secret Required
 
-## Result
+- **LEMLIST_API_KEY**: Your Lemlist API key (found in Lemlist Settings > Integrations > API). This will be stored securely as a Supabase secret.
 
-- Reports will read more professionally with consistent tone and Australian English
-- Transitions between sections will feel natural rather than disconnected
-- No new API keys, secrets, or external services required
-- Zero risk of breaking existing reports -- polish only applies to new generations
-- If the polish step fails for any reason, the report still saves with original content
+## Files to create or modify
+
+| File | Change |
+|------|--------|
+| `supabase/migrations/...` | Create `lemlist_companies` and `lemlist_contacts` tables with indexes and RLS |
+| `supabase/functions/sync-lemlist/index.ts` | New edge function for API sync |
+| `supabase/config.toml` | Add `sync-lemlist` function config with `verify_jwt = false` |
+| `supabase/functions/generate-report/index.ts` | Add Lemlist data as additional matching source in Step 3 |
+
+## Implementation sequence
+
+1. Add the `LEMLIST_API_KEY` secret
+2. Create the database tables via migration
+3. Build and deploy the `sync-lemlist` edge function
+4. Test the sync by calling the edge function manually
+5. Update the report generator to include Lemlist matches
+6. Optionally set up a cron schedule for automatic syncing
 
