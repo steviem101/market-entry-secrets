@@ -1,8 +1,9 @@
 import { z } from 'zod';
 
 export const COUNTRY_OPTIONS = [
+  'Australia', 'New Zealand',
   'United States', 'United Kingdom', 'Ireland', 'Canada', 'Germany',
-  'France', 'Singapore', 'South Korea', 'India', 'Other'
+  'France', 'Japan', 'Singapore', 'South Korea', 'India', 'Other'
 ] as const;
 
 export const INDUSTRY_OPTIONS = [
