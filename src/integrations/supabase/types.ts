@@ -968,6 +968,125 @@ export type Database = {
         }
         Relationships: []
       }
+      lemlist_companies: {
+        Row: {
+          created_at: string
+          domain: string | null
+          fields: Json | null
+          id: string
+          industry: string | null
+          lemlist_created_at: string | null
+          lemlist_id: string
+          linkedin_url: string | null
+          location: string | null
+          name: string
+          owner_id: string | null
+          size: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          domain?: string | null
+          fields?: Json | null
+          id?: string
+          industry?: string | null
+          lemlist_created_at?: string | null
+          lemlist_id: string
+          linkedin_url?: string | null
+          location?: string | null
+          name: string
+          owner_id?: string | null
+          size?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string | null
+          fields?: Json | null
+          id?: string
+          industry?: string | null
+          lemlist_created_at?: string | null
+          lemlist_id?: string
+          linkedin_url?: string | null
+          location?: string | null
+          name?: string
+          owner_id?: string | null
+          size?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lemlist_contacts: {
+        Row: {
+          campaigns: Json | null
+          company_id: string | null
+          created_at: string
+          email: string | null
+          fields: Json | null
+          first_name: string | null
+          full_name: string | null
+          id: string
+          industry: string | null
+          job_title: string | null
+          last_name: string | null
+          lemlist_created_at: string | null
+          lemlist_id: string
+          lifecycle_status: string | null
+          linkedin_url: string | null
+          owner_id: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaigns?: Json | null
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          fields?: Json | null
+          first_name?: string | null
+          full_name?: string | null
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          last_name?: string | null
+          lemlist_created_at?: string | null
+          lemlist_id: string
+          lifecycle_status?: string | null
+          linkedin_url?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaigns?: Json | null
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          fields?: Json | null
+          first_name?: string | null
+          full_name?: string | null
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          last_name?: string | null
+          lemlist_created_at?: string | null
+          lemlist_id?: string
+          lifecycle_status?: string | null
+          linkedin_url?: string | null
+          owner_id?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lemlist_contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "lemlist_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           business_environment_score: number | null

@@ -649,6 +649,36 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("TA search error:", e); }
 
+  // Lemlist contacts — match by industry or location for potential leads/connections
+  try {
+    let lcQuery = supabase
+      .from("lemlist_contacts")
+      .select("id, full_name, email, job_title, linkedin_url, industry, company_id, lemlist_companies(name, domain, location)")
+      .limit(10);
+
+    const lcFilters: string[] = [];
+    if (industry) {
+      lcFilters.push(`industry.ilike.%${industry}%`);
+    }
+    if (locationPatterns.length > 0) {
+      lcFilters.push(...locationPatterns.map((l: string) => `lemlist_companies.location.ilike.%${l}%`));
+    }
+    if (lcFilters.length > 0) {
+      lcQuery = lcQuery.or(lcFilters.join(","));
+    }
+
+    const { data: lc } = await lcQuery;
+    matches.lemlist_contacts = (lc || []).map((c: any) => ({
+      ...c,
+      name: c.full_name || c.email || "Unknown Contact",
+      link: c.linkedin_url || "#",
+      linkLabel: c.linkedin_url ? "LinkedIn" : "Contact",
+      subtitle: [c.job_title, c.lemlist_companies?.name].filter(Boolean).join(" at "),
+      tags: [c.industry, c.lemlist_companies?.location].filter(Boolean).slice(0, 2),
+    }));
+    console.log(`Lemlist contacts matched: ${(lc || []).length}`);
+  } catch (e) { console.error("Lemlist contacts search error:", e); }
+
   return matches;
 }
 
@@ -657,7 +687,7 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
     case "service_providers": return matches.service_providers || [];
     case "mentor_recommendations": return matches.community_members || [];
     case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
-    case "lead_list": return matches.leads || [];
+    case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
     case "competitor_landscape": return []; // competitors are embedded in the prompt, not as match cards
     default: return [];
   }
@@ -774,6 +804,8 @@ serve(async (req) => {
       matched_content_json: JSON.stringify(matches.content_items || []),
       matched_leads_json: JSON.stringify(matches.leads || []),
       matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
+      // Lemlist contacts for lead list section
+      matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
       // Enhancement 2: Competitor analysis
       competitor_analysis_json: JSON.stringify(competitorResult.competitors),
       // Perplexity market research variables

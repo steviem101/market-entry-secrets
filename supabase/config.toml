@@ -31,3 +31,7 @@ wall_clock_limit = 60
 [functions.generate-report]
 verify_jwt = false
 wall_clock_limit = 300
+
+[functions.sync-lemlist]
+verify_jwt = false
+wall_clock_limit = 120
