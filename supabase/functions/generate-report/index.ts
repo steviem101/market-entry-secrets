@@ -153,7 +153,6 @@ async function enrichCompanyDeep(
   };
 
   try {
-    // Step 1: Map the website to discover pages + scrape homepage in parallel
     const [allUrls, homepageMarkdown] = await Promise.all([
       firecrawlMap(firecrawlKey, websiteUrl),
       firecrawlScrape(firecrawlKey, websiteUrl),
@@ -161,7 +160,6 @@ async function enrichCompanyDeep(
 
     console.log(`Map found ${allUrls.length} URLs on ${websiteUrl}`);
 
-    // Step 2: Find key pages and scrape up to 3 additional ones
     const keyPages = allUrls.filter(isKeyPage).slice(0, 3);
     console.log(`Scraping ${keyPages.length} key pages:`, keyPages);
 
@@ -169,7 +167,6 @@ async function enrichCompanyDeep(
       keyPages.map((url) => firecrawlScrape(firecrawlKey, url))
     );
 
-    // Step 3: Concatenate all content (capped at 4000 chars)
     const allContent: string[] = [];
     if (homepageMarkdown) allContent.push(homepageMarkdown);
     for (const result of additionalScrapes) {
@@ -185,7 +182,6 @@ async function enrichCompanyDeep(
       return { profile: defaultProfile, enrichedSummary: fallbackSummary };
     }
 
-    // Step 4: AI extraction of structured company profile
     const enrichResp = await callAI(lovableKey, [
       { role: "system", content: "You are an analyst. Return only valid JSON, no markdown fences." },
       {
@@ -322,13 +318,11 @@ async function searchCompetitors(
   if (!firecrawlKey) return empty;
 
   try {
-    // Step 1: Scrape user-provided known competitors
     const knownCompetitors = intake.known_competitors || [];
     const knownResults = await scrapeKnownCompetitors(
       firecrawlKey, lovableKey, knownCompetitors, intake.company_name
     );
 
-    // Step 2: Also search for additional competitors via Firecrawl Search
     const targetRegions = (intake.target_regions || []).join(", ") || "Australia";
     const industrySectorText = (intake.industry_sector || []).join(", ");
     const query = `${industrySectorText} companies in Australia ${targetRegions} competitors`;
@@ -336,7 +330,6 @@ async function searchCompetitors(
     console.log(`Searching competitors: "${query}"`);
     const results = await firecrawlSearch(firecrawlKey, query, 5);
 
-    // Filter out the user's own website and already-known competitor domains
     const userDomain = new URL(
       intake.website_url.startsWith("http") ? intake.website_url : `https://${intake.website_url}`
     ).hostname.replace("www.", "");
@@ -359,7 +352,6 @@ async function searchCompetitors(
 
     let searchCompetitorsList: CompetitorData[] = [];
     if (filtered.length > 0) {
-      // Use AI to extract structured competitor data from search results
       const competitorSummaries = await callAI(lovableKey, [
         { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
         {
@@ -377,7 +369,6 @@ ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.tit
       searchCompetitorsList = JSON.parse(cleanedResp) as CompetitorData[];
     }
 
-    // Merge: known competitors first, then search-discovered ones
     const allCompetitors = [...knownResults, ...searchCompetitorsList];
 
     console.log(`Total competitors: ${allCompetitors.length} (${knownResults.length} known + ${searchCompetitorsList.length} discovered)`);
@@ -388,11 +379,67 @@ ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.tit
   }
 }
 
-// ── Perplexity helper ──────────────────────────────────────────────────
+// ── End Buyer Deep Research ────────────────────────────────────────────
+
+interface EndBuyerIntelligence {
+  name: string;
+  url: string;
+  description: string;
+  key_info: string;
+}
+
+async function scrapeEndBuyers(
+  firecrawlKey: string,
+  lovableKey: string,
+  endBuyers: Array<{ name: string; website: string }>,
+  companyName: string
+): Promise<EndBuyerIntelligence[]> {
+  if (!firecrawlKey || endBuyers.length === 0) return [];
+
+  console.log(`Scraping ${endBuyers.length} end buyer companies...`);
+  const startTime = Date.now();
+
+  const results = await Promise.allSettled(
+    endBuyers.map(async (buyer) => {
+      const markdown = await firecrawlScrape(firecrawlKey, buyer.website, 15000);
+      if (!markdown || markdown.length < 50) {
+        return { name: buyer.name, url: buyer.website, description: "Website could not be analysed.", key_info: "" };
+      }
+
+      try {
+        const aiResp = await callAI(lovableKey, [
+          { role: "system", content: "You are a B2B procurement and buyer intelligence analyst. Return only valid JSON, no markdown fences." },
+          {
+            role: "user",
+            content: `Analyse this company "${buyer.name}" (${buyer.website}) as a POTENTIAL CUSTOMER for "${companyName}".
+Return a JSON object: {"name": "${buyer.name}", "url": "${buyer.website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them"}
+
+Website content:
+${markdown.slice(0, 3000)}`,
+          },
+        ]);
+        const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+        return JSON.parse(cleaned) as EndBuyerIntelligence;
+      } catch {
+        return { name: buyer.name, url: buyer.website, description: "Could not extract buyer intelligence.", key_info: "" };
+      }
+    })
+  );
+
+  const buyers = results
+    .filter((r): r is PromiseFulfilledResult<EndBuyerIntelligence> => r.status === "fulfilled")
+    .map((r) => r.value);
+
+  console.log(`Scraped ${buyers.length} end buyers in ${Date.now() - startTime}ms`);
+  return buyers;
+}
+
+// ── Perplexity helpers ─────────────────────────────────────────────────
+
 async function callPerplexity(
   apiKey: string,
   query: string,
-  options?: { recency?: string; domains?: string[] }
+  options?: { recency?: string; domains?: string[]; model?: string }
 ): Promise<{ content: string; citations: string[] }> {
   try {
     const resp = await fetch("https://api.perplexity.ai/chat/completions", {
@@ -402,7 +449,7 @@ async function callPerplexity(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "sonar",
+        model: options?.model || "sonar",
         messages: [
           { role: "system", content: "Be precise and concise. Focus on factual, data-driven insights with specific numbers and statistics where available." },
           { role: "user", content: query },
@@ -429,18 +476,79 @@ async function callPerplexity(
   }
 }
 
-// ── Market research step ───────────────────────────────────────────────
+/** Perplexity structured output for extracting key metrics as JSON */
+async function callPerplexityStructured(
+  apiKey: string,
+  query: string,
+  schema: Record<string, any>
+): Promise<{ content: any; citations: string[] }> {
+  try {
+    const resp = await fetch("https://api.perplexity.ai/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "sonar",
+        messages: [
+          { role: "system", content: "Provide precise, data-driven answers with specific numbers and statistics." },
+          { role: "user", content: query },
+        ],
+        search_recency_filter: "year",
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "key_metrics",
+            schema,
+          },
+        },
+      }),
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error("Perplexity structured error:", resp.status, text);
+      return { content: null, citations: [] };
+    }
+
+    const data = await resp.json();
+    const raw = data.choices?.[0]?.message?.content || "";
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      console.error("Failed to parse Perplexity structured output:", raw.slice(0, 200));
+    }
+    return {
+      content: parsed,
+      citations: data.citations || [],
+    };
+  } catch (e) {
+    console.error("Perplexity structured call failed:", e);
+    return { content: null, citations: [] };
+  }
+}
+
+// ── Market research step (expanded) ────────────────────────────────────
 interface MarketResearch {
   landscape: string;
   regulatory: string;
   news: string;
+  bilateral_trade: string;
+  cost_of_business: string;
+  grants: string;
   citations: string[];
   used: boolean;
 }
 
 async function runMarketResearch(intake: any): Promise<MarketResearch> {
   const perplexityKey = Deno.env.get("PERPLEXITY_API_KEY");
-  const empty: MarketResearch = { landscape: "", regulatory: "", news: "", citations: [], used: false };
+  const empty: MarketResearch = {
+    landscape: "", regulatory: "", news: "",
+    bilateral_trade: "", cost_of_business: "", grants: "",
+    citations: [], used: false,
+  };
 
   if (!perplexityKey) {
     console.log("PERPLEXITY_API_KEY not set — skipping market research");
@@ -448,24 +556,46 @@ async function runMarketResearch(intake: any): Promise<MarketResearch> {
   }
 
   const targetRegionsText = (intake.target_regions || []).join(", ") || "Australia";
+  const industrySectorText = (intake.industry_sector || []).join(", ");
+  const countryOfOrigin = intake.country_of_origin || "international";
 
-  console.log("Running Perplexity market research...");
+  console.log("Running expanded Perplexity market research (6 parallel queries)...");
   const startTime = Date.now();
 
-  const [landscape, regulatory, news] = await Promise.allSettled([
+  const [landscape, regulatory, news, bilateralTrade, costOfBusiness, grants] = await Promise.allSettled([
+    // 1. Market landscape — UPGRADED to sonar-pro
     callPerplexity(perplexityKey,
-      `${(intake.industry_sector || []).join(", ")} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.`
+      `${industrySectorText} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.`,
+      { model: "sonar-pro" }
     ),
+    // 2. Regulatory requirements (unchanged)
     callPerplexity(perplexityKey,
-      `Requirements, regulations, compliance, and licensing for a ${intake.country_of_origin} ${(intake.industry_sector || []).join(", ")} company entering the Australian market. Include visa requirements, tax obligations, legal entity setup, and any industry-specific regulations.`
+      `Requirements, regulations, compliance, and licensing for a ${countryOfOrigin} ${industrySectorText} company entering the Australian market. Include visa requirements, tax obligations, legal entity setup, and any industry-specific regulations.`
     ),
+    // 3. Recent news (unchanged)
     callPerplexity(perplexityKey,
-      `Recent news and developments in ${(intake.industry_sector || []).join(", ")} in Australia in the last 6 months. Focus on market trends, regulatory changes, major deals, and new entrants.`,
+      `Recent news and developments in ${industrySectorText} in Australia in the last 6 months. Focus on market trends, regulatory changes, major deals, and new entrants.`,
       { recency: "month" }
+    ),
+    // 4. NEW: Bilateral trade intelligence
+    callPerplexity(perplexityKey,
+      `Trade relationship between ${countryOfOrigin} and Australia in ${industrySectorText}: bilateral agreements, free trade agreements, export statistics, success stories of ${countryOfOrigin} companies entering Australia, trade volumes, and key trade facilitation organisations.`
+    ),
+    // 5. NEW: Cost of doing business
+    callPerplexity(perplexityKey,
+      `Cost of doing business in Australia ${targetRegionsText} for ${industrySectorText}: average office rent per sqm, local salaries for key roles, corporate tax rate, GST obligations, employer superannuation rate, typical setup costs for a foreign company, and any cost comparison with ${countryOfOrigin}.`
+    ),
+    // 6. NEW: Government grants and incentives
+    callPerplexity(perplexityKey,
+      `Australian government grants, incentives, R&D tax incentives, landing pad programs, and funding opportunities for international ${industrySectorText} companies from ${countryOfOrigin} setting up in ${targetRegionsText}. Include state-specific programs and eligibility requirements.`
     ),
   ]);
 
-  const result: MarketResearch = { landscape: "", regulatory: "", news: "", citations: [], used: true };
+  const result: MarketResearch = {
+    landscape: "", regulatory: "", news: "",
+    bilateral_trade: "", cost_of_business: "", grants: "",
+    citations: [], used: true,
+  };
 
   if (landscape.status === "fulfilled") {
     result.landscape = landscape.value.content;
@@ -479,12 +609,155 @@ async function runMarketResearch(intake: any): Promise<MarketResearch> {
     result.news = news.value.content;
     result.citations.push(...news.value.citations);
   }
+  if (bilateralTrade.status === "fulfilled") {
+    result.bilateral_trade = bilateralTrade.value.content;
+    result.citations.push(...bilateralTrade.value.citations);
+  }
+  if (costOfBusiness.status === "fulfilled") {
+    result.cost_of_business = costOfBusiness.value.content;
+    result.citations.push(...costOfBusiness.value.citations);
+  }
+  if (grants.status === "fulfilled") {
+    result.grants = grants.value.content;
+    result.citations.push(...grants.value.citations);
+  }
 
   // Deduplicate citations
   result.citations = [...new Set(result.citations)];
 
   console.log(`Perplexity research completed in ${Date.now() - startTime}ms — ${result.citations.length} citations`);
   return result;
+}
+
+// ── Key Metrics extraction via Perplexity structured output ────────────
+
+interface KeyMetric {
+  label: string;
+  value: string;
+  context: string;
+}
+
+async function extractKeyMetrics(intake: any): Promise<{ metrics: KeyMetric[]; citations: string[] }> {
+  const perplexityKey = Deno.env.get("PERPLEXITY_API_KEY");
+  if (!perplexityKey) return { metrics: [], citations: [] };
+
+  const industrySectorText = (intake.industry_sector || []).join(", ");
+  const targetRegionsText = (intake.target_regions || []).join(", ") || "Australia";
+
+  console.log("Extracting key market metrics via Perplexity structured output...");
+
+  try {
+    const result = await callPerplexityStructured(
+      perplexityKey,
+      `Provide key market metrics for the ${industrySectorText} industry in Australia ${targetRegionsText}. Include: total market size (in AUD or USD), projected CAGR or growth rate, number of active companies/players, key growth drivers, average industry revenue, and any other important quantitative data points. Provide 4-6 metrics with specific numbers.`,
+      {
+        type: "object",
+        properties: {
+          metrics: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                label: { type: "string", description: "Short metric name, e.g. 'Market Size', 'CAGR', 'Active Players'" },
+                value: { type: "string", description: "The metric value, e.g. '$8.48B', '5.1%', '2,400+'" },
+                context: { type: "string", description: "Brief context, e.g. '2024 estimate', '2024-2030 projected'" },
+              },
+              required: ["label", "value", "context"],
+            },
+          },
+        },
+        required: ["metrics"],
+      }
+    );
+
+    const metrics = result.content?.metrics || [];
+    console.log(`Extracted ${metrics.length} key metrics`);
+    return { metrics, citations: result.citations };
+  } catch (e) {
+    console.error("Key metrics extraction failed (continuing):", e);
+    return { metrics: [], citations: [] };
+  }
+}
+
+// ── External Event Discovery via Firecrawl Search ─────────────────────
+
+interface DiscoveredEvent {
+  name: string;
+  date: string;
+  location: string;
+  url: string;
+  relevance: string;
+  source: string; // "web" to distinguish from directory events
+}
+
+async function discoverExternalEvents(
+  firecrawlKey: string,
+  lovableKey: string,
+  intake: any
+): Promise<DiscoveredEvent[]> {
+  if (!firecrawlKey) return [];
+
+  const industrySectorText = (intake.industry_sector || []).join(", ");
+  const targetRegionsText = (intake.target_regions || []).join(", ") || "Australia";
+  const query = `${industrySectorText} conference trade show expo Australia ${targetRegionsText} 2025 2026`;
+
+  console.log(`Discovering external events: "${query}"`);
+  const startTime = Date.now();
+
+  try {
+    const results = await firecrawlSearch(firecrawlKey, query, 5);
+    if (results.length === 0) return [];
+
+    const aiResp = await callAI(lovableKey, [
+      { role: "system", content: "You are an events researcher. Return only valid JSON, no markdown fences." },
+      {
+        role: "user",
+        content: `From these search results, extract industry events relevant to ${industrySectorText} in Australia. Return a JSON array of events:
+[{"name": "Event Name", "date": "Date or date range (e.g. 'March 2025', '15-17 Oct 2025')", "location": "City, Australia", "url": "event website URL", "relevance": "Why this event is relevant in 1 sentence"}]
+
+Only include actual events (conferences, trade shows, expos, summits). Skip articles, blog posts, or general pages. Return up to 5 events. If no events found, return [].
+
+Search results:
+${results.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.title}\nDescription: ${r.description}\nContent: ${r.markdown}`).join("\n\n")}`,
+      },
+    ]);
+
+    const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+    const events = JSON.parse(cleaned) as DiscoveredEvent[];
+
+    // Add source marker
+    const taggedEvents = events.map((e) => ({ ...e, source: "web" }));
+
+    console.log(`Discovered ${taggedEvents.length} external events in ${Date.now() - startTime}ms`);
+    return taggedEvents;
+  } catch (e) {
+    console.error("External event discovery failed (continuing):", e);
+    return [];
+  }
+}
+
+// ── End Buyer Perplexity Research ──────────────────────────────────────
+
+async function researchEndBuyerProcurement(intake: any): Promise<string> {
+  const perplexityKey = Deno.env.get("PERPLEXITY_API_KEY");
+  if (!perplexityKey) return "";
+
+  const endBuyerIndustries = (intake.end_buyer_industries || []).join(", ");
+  if (!endBuyerIndustries) return "";
+
+  const industrySectorText = (intake.industry_sector || []).join(", ");
+
+  console.log(`Researching end buyer procurement for: ${endBuyerIndustries}`);
+
+  try {
+    const result = await callPerplexity(perplexityKey,
+      `How do ${endBuyerIndustries} companies in Australia procure ${industrySectorText} services? Key procurement channels, typical buying cycles, RFP processes, partnership models, preferred supplier criteria, and how international companies can become approved suppliers.`
+    );
+    return result.content || "";
+  } catch (e) {
+    console.error("End buyer procurement research failed:", e);
+    return "";
+  }
 }
 
 // ── AI helper ──────────────────────────────────────────────────────────
@@ -519,7 +792,6 @@ async function polishReport(
   sections: Record<string, any>,
   sectionOrder: string[]
 ): Promise<Record<string, any>> {
-  // Collect visible sections that have content
   const visibleSections = sectionOrder.filter(
     (name) => sections[name]?.visible && sections[name]?.content?.trim()
   );
@@ -529,7 +801,6 @@ async function polishReport(
     return sections;
   }
 
-  // Concatenate all visible section content with delimiters
   const concatenated = visibleSections
     .map((name) => `${SECTION_DELIMITER_PREFIX}${name}${SECTION_DELIMITER_SUFFIX}\n${sections[name].content}`)
     .join("\n\n");
@@ -567,11 +838,9 @@ Rules:
 
   console.log(`Polish: AI call completed in ${Date.now() - polishStart}ms`);
 
-  // Parse polished output back into sections
   const polishedSections = { ...sections };
   const parts = polished.split(new RegExp(`${SECTION_DELIMITER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(.+?)${SECTION_DELIMITER_SUFFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
 
-  // parts array: [preamble, sectionName1, content1, sectionName2, content2, ...]
   let parsedCount = 0;
   for (let i = 1; i < parts.length - 1; i += 2) {
     const sectionName = parts[i].trim();
@@ -604,7 +873,7 @@ async function searchMatches(supabase: any, intake: any) {
 
   const locationPatterns = regions.map((r: string) => r.split("/")[0]).filter(Boolean);
 
-  // Service providers — filter by location AND services overlap
+  // Service providers
   try {
     let spQuery = supabase.from("service_providers").select("id, name, location, services, description, website").limit(10);
     const filters: string[] = [];
@@ -624,7 +893,7 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("SP search error:", e); }
 
-  // Community members — match specialties to services needed
+  // Community members
   try {
     let cmQuery = supabase.from("community_members").select("id, name, title, location, specialties, company, website").limit(5);
     const cmFilters: string[] = [];
@@ -645,7 +914,7 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("CM search error:", e); }
 
-  // Events — include past events, sort by date desc, match category/location
+  // Events
   try {
     let evQuery = supabase
       .from("events")
@@ -676,7 +945,7 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("Content search error:", e); }
 
-  // Leads — match by industry
+  // Leads
   try {
     let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type").limit(5);
     if (industry) {
@@ -717,7 +986,7 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("TA search error:", e); }
 
-  // Lemlist contacts — match by industry or location for potential leads/connections
+  // Lemlist contacts
   try {
     let lcQuery = supabase
       .from("lemlist_contacts")
@@ -757,7 +1026,7 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
     case "mentor_recommendations": return matches.community_members || [];
     case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
     case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
-    case "competitor_landscape": return []; // competitors are embedded in the prompt, not as match cards
+    case "competitor_landscape": return [];
     default: return [];
   }
 }
@@ -790,28 +1059,45 @@ serve(async (req) => {
 
     await supabase.from("user_intake_forms").update({ status: "processing" }).eq("id", intake_form_id);
 
-    // 2. Run enrichment + research + matching ALL in parallel
+    // 2. Run ALL enrichment + research + matching in parallel (expanded pipeline)
     const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin} with ${intake.employee_count} employees. Their target end buyers are in: ${(intake.end_buyer_industries || []).join(", ") || "not specified"}.`;
 
-    console.log("Starting parallel pipeline: deep scrape + Perplexity + DB matching + competitor search...");
+    console.log("Starting expanded parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + competitors + end buyers + external events + key metrics...");
 
-    const [companyEnrichResult, marketResearch, matches, competitorResult, endBuyerScrapeResult] = await Promise.all([
-      // Enhancement 3: Deep company scrape (map + multi-page)
+    const [
+      companyEnrichResult,
+      marketResearch,
+      matches,
+      competitorResult,
+      endBuyerScrapeResult,
+      discoveredEvents,
+      keyMetricsResult,
+      endBuyerProcurementResearch,
+    ] = await Promise.all([
+      // Deep company scrape (existing)
       firecrawlKey && intake.website_url
         ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary)
         : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary }),
-      // Perplexity market research
+      // Perplexity market research (EXPANDED: 6 parallel queries, sonar-pro for landscape)
       runMarketResearch(intake),
-      // Database directory matching
+      // Database directory matching (existing)
       searchMatches(supabase, intake),
-      // Enhancement 2: Competitor landscape
+      // Competitor landscape (existing)
       firecrawlKey
         ? searchCompetitors(firecrawlKey, lovableKey, intake)
         : Promise.resolve({ competitors: [], raw_results: [] }),
-      // End buyer scraping (best-effort, same pattern as competitors)
+      // End buyer scraping (UPDATED: dedicated buyer intelligence prompt)
       firecrawlKey && (intake.end_buyers || []).length > 0
-        ? scrapeKnownCompetitors(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name)
+        ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name)
         : Promise.resolve([]),
+      // NEW: External event discovery via Firecrawl Search
+      firecrawlKey
+        ? discoverExternalEvents(firecrawlKey, lovableKey, intake)
+        : Promise.resolve([]),
+      // NEW: Key metrics extraction via Perplexity structured output
+      extractKeyMetrics(intake),
+      // NEW: End buyer procurement research via Perplexity
+      researchEndBuyerProcurement(intake),
     ]);
 
     const enrichedSummary = companyEnrichResult.enrichedSummary;
@@ -824,12 +1110,26 @@ serve(async (req) => {
         .eq("id", intake_form_id);
     }
 
-    // Enhancement 1: Enrich matched service providers with Firecrawl scrapes
+    // Enrich matched service providers with Firecrawl scrapes
     const enrichedProviders = await enrichMatchedProviders(
       firecrawlKey,
       matches.service_providers || []
     );
     matches.service_providers = enrichedProviders;
+
+    // Merge discovered events into matches for events_resources section
+    if (discoveredEvents.length > 0) {
+      const discoveredEventMatches = discoveredEvents.map((e) => ({
+        name: e.name,
+        subtitle: `${e.date} · ${e.location}`,
+        tags: ["Web Discovery"],
+        link: e.url,
+        linkLabel: "View Event",
+        website: e.url,
+        source: "web",
+      }));
+      matches.events = [...(matches.events || []), ...discoveredEventMatches];
+    }
 
     // 3. Get user subscription tier
     let userTier = "free";
@@ -852,7 +1152,7 @@ serve(async (req) => {
       .eq("is_active", true)
       .order("section_name");
 
-    // 5. Build template variables (including market research + enriched data)
+    // 5. Build template variables (expanded with all new research data)
     const tierHierarchy = ["free", "growth", "scale", "enterprise"];
     const userTierIndex = tierHierarchy.indexOf(userTier);
 
@@ -868,28 +1168,35 @@ serve(async (req) => {
       primary_goals: intake.primary_goals || "Not specified",
       key_challenges: intake.key_challenges || "Not specified",
       enriched_summary: enrichedSummary,
-      // Enhancement 3: Full enriched company profile for all sections
       enriched_company_profile: companyProfile ? JSON.stringify(companyProfile) : "No enriched data available.",
-      // Enhancement 1: Enriched providers (with enriched_description field)
+      // Matched directory data
       matched_providers_json: JSON.stringify(matches.service_providers || []),
       matched_mentors_json: JSON.stringify(matches.community_members || []),
       matched_events_json: JSON.stringify(matches.events || []),
       matched_content_json: JSON.stringify(matches.content_items || []),
       matched_leads_json: JSON.stringify(matches.leads || []),
       matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
-      // Lemlist contacts for lead list section
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
-      // Enhancement 2: Competitor analysis
+      // Competitor analysis
       competitor_analysis_json: JSON.stringify(competitorResult.competitors),
       known_competitors_json: JSON.stringify(intake.known_competitors || []),
-      // End buyer data
+      // End buyer data (UPDATED: buyer intelligence)
       end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",
       end_buyers_json: JSON.stringify(intake.end_buyers || []),
       end_buyers_scraped_json: JSON.stringify(endBuyerScrapeResult || []),
-      // Perplexity market research variables
+      end_buyers_analysis_json: JSON.stringify(endBuyerScrapeResult || []),
+      end_buyer_research: endBuyerProcurementResearch || "No end buyer procurement data available.",
+      // Perplexity market research variables (existing)
       market_research_landscape: marketResearch.landscape || "No market research data available.",
       market_research_regulatory: marketResearch.regulatory || "No regulatory research data available.",
       market_research_news: marketResearch.news || "No recent news data available.",
+      // NEW: Expanded Perplexity research
+      market_research_bilateral_trade: marketResearch.bilateral_trade || "No bilateral trade data available.",
+      market_research_cost_of_business: marketResearch.cost_of_business || "No cost of business data available.",
+      market_research_grants: marketResearch.grants || "No grants and incentives data available.",
+      // NEW: Discovered events
+      discovered_events_json: JSON.stringify(discoveredEvents || []),
+      // Citations
       market_research_citations: marketResearch.citations.length > 0
         ? marketResearch.citations.map((url: string, i: number) => `[${i + 1}] ${url}`).join("\n")
         : "",
@@ -953,11 +1260,10 @@ serve(async (req) => {
       }
     }
 
-    // 6b. Polish pass — improve readability, consistency, and Australian English
+    // 6b. Polish pass
     const sectionOrder = templates ? templates.map((t: any) => t.section_name) : Object.keys(sections);
     try {
       const polishedSections = await polishReport(lovableKey, sections, sectionOrder);
-      // Replace section data in-place, preserving matches
       for (const [name, data] of Object.entries(polishedSections)) {
         sections[name] = data;
       }
@@ -966,7 +1272,7 @@ serve(async (req) => {
       console.warn("Polish pass failed (using original content):", e);
     }
 
-    // 7. Assemble and store report (with citations + enrichment metadata)
+    // 7. Assemble and store report (with expanded metadata)
     const reportJson = {
       company_name: intake.company_name,
       sections,
@@ -981,6 +1287,13 @@ serve(async (req) => {
         firecrawl_providers_enriched: enrichedProviders.filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
         polish_applied: true,
+        // NEW metadata fields
+        key_metrics: keyMetricsResult.metrics,
+        discovered_events_count: discoveredEvents.length,
+        end_buyer_research_available: !!endBuyerProcurementResearch,
+        bilateral_trade_available: !!marketResearch.bilateral_trade,
+        cost_of_business_available: !!marketResearch.cost_of_business,
+        grants_available: !!marketResearch.grants,
       },
     };
 

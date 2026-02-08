@@ -8,6 +8,7 @@ import { ReportSources } from '@/components/report/ReportSources';
 import { ReportBackToTop } from '@/components/report/ReportBackToTop';
 import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
 import { useSharedReport } from '@/hooks/useReport';
+import { ReportKeyMetrics } from '@/components/report/ReportKeyMetrics';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ const SharedReportView = () => {
   const companyName = reportJson?.company_name || 'Market Entry Report';
   const matches = reportJson?.matches || {};
   const perplexityCitations = reportJson?.metadata?.perplexity_citations || [];
+  const keyMetrics = reportJson?.metadata?.key_metrics || [];
   const readingTime = estimateReadingTime(sections);
 
   // Build TOC sections for mobile drawer
@@ -114,6 +116,9 @@ const SharedReportView = () => {
 
       <main className="min-h-screen pt-6 pb-16 px-4">
         <div className="container mx-auto max-w-3xl space-y-8">
+          {/* Key Metrics stat cards */}
+          <ReportKeyMetrics metrics={keyMetrics} />
+
           {SECTION_ORDER.map((sectionId) => {
             const section = sections[sectionId];
 
@@ -161,6 +166,7 @@ const SharedReportView = () => {
                         link={match.link}
                         linkLabel={match.linkLabel}
                         website={match.website}
+                        source={match.source}
                       />
                     ))}
                   </div>
