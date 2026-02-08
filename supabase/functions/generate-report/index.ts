@@ -797,7 +797,7 @@ async function polishReport(
     .map((name) => `${SECTION_DELIMITER_PREFIX}${name}${SECTION_DELIMITER_SUFFIX}\n${sections[name].content}`)
     .join("\n\n");
 
-  console.log(`Polish: sending ${visibleSections.length} sections (${concatenated.length} chars) to gemini-2.5-pro...`);
+  console.log(`Polish: sending ${visibleSections.length} sections (${concatenated.length} chars) to gemini-3-flash-preview...`);
   const polishStart = Date.now();
 
   const polished = await callAI(
@@ -825,7 +825,7 @@ Rules:
         content: concatenated,
       },
     ],
-    "google/gemini-2.5-pro"
+    "google/gemini-3-flash-preview"
   );
 
   console.log(`Polish: AI call completed in ${Date.now() - polishStart}ms`);
@@ -1256,22 +1256,12 @@ async function generateReportInBackground(
       }
     }
 
-    // 6b. Polish pass
+    // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
     const sectionOrder = templates ? templates.map((t: any) => t.section_name) : Object.keys(sections);
-    try {
-      const polishedSections = await polishReport(lovableKey, sections, sectionOrder);
-      for (const [name, data] of Object.entries(polishedSections)) {
-        sections[name] = data;
-      }
-      console.log("Polish pass completed successfully");
-    } catch (e) {
-      console.warn("Polish pass failed (using original content):", e);
-    }
 
-    // 7. Assemble and store report
-    const reportJson = {
+    const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => ({
       company_name: intake.company_name,
-      sections,
+      sections: currentSections,
       matches,
       metadata: {
         tables_searched: Object.keys(matches),
@@ -1282,7 +1272,7 @@ async function generateReportInBackground(
         firecrawl_deep_scrape: !!companyProfile,
         firecrawl_providers_enriched: enrichedProviders.filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
-        polish_applied: true,
+        polish_applied: polishApplied,
         key_metrics: keyMetricsResult.metrics,
         discovered_events_count: discoveredEvents.length,
         end_buyer_research_available: !!endBuyerProcurementResearch,
@@ -1290,9 +1280,11 @@ async function generateReportInBackground(
         cost_of_business_available: !!marketResearch.cost_of_business,
         grants_available: !!marketResearch.grants,
       },
-    };
+    });
 
-    // Update the pre-created report row with the completed data
+    // Save immediately with unpolished content — report is now viewable
+    const reportJson = buildReportJson(sections, false);
+
     const { error: reportErr } = await supabase
       .from("user_reports")
       .update({
@@ -1307,7 +1299,33 @@ async function generateReportInBackground(
 
     await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intakeFormId);
 
-    console.log(`Report ${reportId} generated in ${Date.now() - startTime}ms`);
+    console.log(`Report ${reportId} saved (unpolished) in ${Date.now() - startTime}ms`);
+
+    // 7b. Polish pass — best-effort improvement with 30s timeout
+    try {
+      const polishedSections = await Promise.race([
+        polishReport(lovableKey, sections, sectionOrder),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Polish timeout (30s)")), 30000)
+        ),
+      ]);
+
+      // Polish succeeded — update report with polished content
+      for (const [name, data] of Object.entries(polishedSections)) {
+        sections[name] = data;
+      }
+
+      const polishedReportJson = buildReportJson(sections, true);
+
+      await supabase
+        .from("user_reports")
+        .update({ report_json: polishedReportJson })
+        .eq("id", reportId);
+
+      console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);
+    } catch (e) {
+      console.warn("Polish pass skipped (report already saved):", e instanceof Error ? e.message : e);
+    }
   } catch (e) {
     console.error("Background report generation failed:", e);
 
