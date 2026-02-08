@@ -1,82 +1,114 @@
 
 
-# Add Known Competitors Field to Intake Form
+# Add Lemlist CSV Properties as Supabase Columns
 
 ## Overview
 
-Add a new "Known Competitors" section to Step 2 of the Report Creator form where users can enter the names and websites of companies they see as direct competitors. These competitor websites will be stored in the database and used during report generation for a deeper, more targeted competitor analysis (Firecrawl scraping of the actual competitor websites instead of relying solely on generic search queries).
+The current `lemlist_contacts` table only has 18 columns (mostly core fields like name, email, phone) with a generic `fields` JSONB catch-all. The actual Lemlist export has **83 properties**. This plan adds dedicated columns for the most valuable fields so your n8n automation can write directly to named columns, making the data queryable and usable in report generation.
 
-## What changes for the user
+## Current vs new mapping
 
-- A new section appears on Step 2 ("Your Market Entry Goals") between "Key Challenges" and the navigation buttons
-- Users can add up to 5 competitors, each with a **name** and **website URL**
-- An "Add Competitor" button lets them add rows dynamically
-- Each competitor row has a remove button (X) to delete it
-- The field is optional -- users can skip it entirely
-- Step 3 (Review) shows the entered competitors in a summary card
-- The generated report will scrape these specific competitor websites for a more accurate competitor landscape section
+The table below shows every CSV column and whether it already exists, will become a new dedicated column, or will remain in the `fields` JSONB.
 
-## Files to change
+### Already mapped (no change needed)
+| CSV Column | Supabase Column |
+|---|---|
+| firstName | first_name |
+| lastName | last_name |
+| email | email |
+| linkedinUrl | linkedin_url |
+| jobTitle | job_title |
+| phone | phone |
+
+### New dedicated columns (28 new columns)
+
+These are fields that are valuable for lead intelligence, CRM filtering, and report generation:
+
+**Contact enrichment:**
+| CSV Column | New Supabase Column | Type |
+|---|---|---|
+| linkedinUrlSalesNav | linkedin_url_sales_nav | text |
+| companyName | company_name | text |
+| companyWebsite | company_website | text |
+| location | location | text |
+| contactLocation | contact_location | text |
+| personalEmail | personal_email | text |
+| twitterProfile | twitter_profile | text |
+
+**LinkedIn intelligence:**
+| CSV Column | New Supabase Column | Type |
+|---|---|---|
+| linkedinHeadline | linkedin_headline | text |
+| linkedinDescription | linkedin_description | text |
+| linkedinSkills | linkedin_skills | text |
+| linkedinJobIndustry | linkedin_job_industry | text |
+| linkedinFollowers | linkedin_followers | integer |
+| linkedinConnectionDegree | linkedin_connection_degree | text |
+| linkedinProfileId | linkedin_profile_id | text |
+| linkedinOpen | linkedin_open | boolean |
+| tagline | tagline | text |
+| summary | summary | text |
+
+**CRM / campaign status:**
+| CSV Column | New Supabase Column | Type |
+|---|---|---|
+| status | status | text |
+| leadStatus | lead_status | text |
+| source | source | text |
+| emailstatus | email_status | text |
+| priority | priority | text |
+| client | client | text |
+| hubspot Id | hubspot_id | text |
+| leadNotes | lead_notes | text |
+| lastContactedDate | last_contacted_date | timestamptz |
+| firstContactedDate | first_contacted_date | timestamptz |
+| lastRepliedDate | last_replied_date | timestamptz |
+
+### Remaining in `fields` JSONB (not worth dedicated columns)
+
+These are either rarely populated, duplicative, or too granular for querying:
+- languages, skills, lastCampaign, activeCampaigns, isActiveInCampaigns
+- lastLeadLaunchedDate, firstLeadLaunchedDate, lastLeadMarkedAsInterestedDate
+- lastCampaignStartDate, lastCampaignEndDate
+- jobTitle_custom, linkedinCompanyURL, salesNavigatorCompanyURL
+- linkedinJobDateRange, jobLocation, jobDescription
+- All "previous" fields (previousCompanyName, previousJobTitle, etc.)
+- All school fields (schoolName, degree, description)
+- linkedinMutualConnectionsUrl
+- phone1-10, companyName_custom
+- variable1, variable2, linkedInConnectionDegree (duplicate)
+- sBLinkedinConnection, sBLinkedInConnectionDegree (duplicates)
+- sectorCopy3HCI
+
+## Changes required
 
 ### 1. Database migration
 
-Add a new column `known_competitors` to the `user_intake_forms` table:
-- Type: `jsonb`
-- Default: `'[]'::jsonb`
-- Nullable: yes
-- Structure: array of objects `[{ "name": "Acme Corp", "website": "https://acme.com" }, ...]`
+- Add 28 new nullable columns to `lemlist_contacts` with appropriate types
+- No data migration needed (existing rows will have NULL for new columns until next sync)
 
-JSONB is the right choice here because:
-- Each competitor has two fields (name + website) -- not a simple string array
-- The number of competitors varies per submission (0-5)
-- No need to query/filter by individual competitor values
+### 2. Edge function update (`sync-lemlist/index.ts`)
 
-### 2. Schema (`intakeSchema.ts`)
+- Update the `transformContact()` function to map all new fields from the Lemlist API response to the new column names
+- The Lemlist API returns the same property names as the CSV export, so the mapping is straightforward (e.g., `raw.linkedinHeadline` maps to `linkedin_headline`)
 
-- Add a `competitorSchema` Zod object: `z.object({ name: z.string(), website: z.string() })`
-- Add `known_competitors` to `step2Schema` as `z.array(competitorSchema).max(5).optional().default([])`
-- Each competitor entry validates that website is a valid URL (with the same `https://` auto-prepend transform used for company website)
+### 3. Report generation (`generate-report/index.ts`)
 
-### 3. Step 2 form (`IntakeStep2.tsx`)
+- Update the Lemlist contacts SELECT query to include key new columns: `company_name`, `company_website`, `linkedin_headline`, `linkedin_job_industry`, `status`, `contact_location`
+- This gives the AI more context about each contact for better lead matching
 
-- Add a new "Known Competitors" section after the Key Challenges textarea
-- Section includes:
-  - Label: "Known Competitors" (no asterisk -- it is optional)
-  - Helper text: "Add companies you consider direct competitors in the Australian market"
-  - Dynamic list of competitor rows, each with:
-    - Name input (placeholder: "e.g. Acme Corp")
-    - Website input with Globe icon (placeholder: "https://competitor.com")
-    - X button to remove the row
-  - "Add Competitor" button (disabled when 5 competitors already added)
-- Uses `useFieldArray` or manual array state management via `setValue`
+### 4. No frontend changes
 
-### 4. Step 3 review (`IntakeStep3.tsx`)
+The Lemlist data is currently only surfaced through the report generation pipeline (as match cards in the lead list section). The new columns will automatically enrich those results.
 
-- Add a "Known Competitors" subsection in the Market Entry Goals summary card
-- Only shows if `known_competitors` has entries
-- Displays each competitor as a row with name and a truncated, clickable website link
+## n8n automation compatibility
 
-### 5. Default values (`ReportCreator.tsx`)
+After this migration, your n8n workflow can map CSV columns directly to Supabase column names using this mapping:
+- `firstName` -> `first_name`
+- `lastName` -> `last_name`
+- `companyName` -> `company_name`
+- `companyWebsite` -> `company_website`
+- `linkedinHeadline` -> `linkedin_headline`
+- etc.
 
-- Add `known_competitors: []` to the `defaultValues` object
-
-### 6. API layer (`reportApi.ts`)
-
-- Add `known_competitors: data.known_competitors || []` to the payload sent to Supabase
-
-### 7. Edge function (`generate-report/index.ts`)
-
-- Update the `searchCompetitors` function to use user-provided competitor websites:
-  - If `intake.known_competitors` exists and has entries, scrape those websites directly using Firecrawl instead of (or in addition to) the generic search
-  - For each known competitor: call `firecrawlScrape` on their website, then use AI to extract structured `CompetitorData`
-  - Merge user-provided competitors with any search-discovered competitors (deduplicating by domain)
-  - This gives the competitor landscape section much more accurate, targeted intelligence
-- Pass `known_competitors` into the template variables so the AI prompt can reference them
-
-## Technical notes
-
-- The field is fully optional with a default of `[]`, so existing intake forms and the current flow are unaffected
-- Max 5 competitors keeps the scraping workload reasonable within the edge function's 300-second timeout
-- URL validation on the frontend prevents bad URLs from reaching the scraping pipeline
-- The JSONB column type means no schema migration is needed if we later add fields like "relationship" or "notes" to each competitor entry
-
+Any CSV columns not in the dedicated list should be combined into the `fields` JSONB column as a JSON object.
