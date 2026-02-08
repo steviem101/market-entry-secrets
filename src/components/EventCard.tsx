@@ -1,87 +1,59 @@
-
-import { Calendar, MapPin, Users, Clock, Building, User, Eye, Mail } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, User, CalendarPlus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import { AddToCalendarButton } from "@/components/events/AddToCalendarButton";
 import { Event } from "@/hooks/useEvents";
+import { Link } from "react-router-dom";
+import { differenceInDays, isPast, format } from "date-fns";
 
 interface EventCardProps {
   event: Event;
   onViewDetails?: (event: Event) => void;
+  useModal?: boolean;
 }
 
-export const EventCard = ({ event, onViewDetails }: EventCardProps) => {
-  // Placeholder images for event organizers
-  const getOrganizerImage = (index: number) => {
-    const images = [
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    ];
-    return images[index % images.length];
-  };
-
-  const handleContactOrganizer = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const subject = encodeURIComponent(`Inquiry about ${event.title}`);
-    const body = encodeURIComponent(`Hi,\n\nI'm interested in learning more about the event "${event.title}" scheduled for ${new Date(event.date).toLocaleDateString()} at ${event.time}.\n\nPlease provide more details.\n\nBest regards`);
-    window.open(`mailto:?subject=${subject}&body=${body}`);
-  };
+export const EventCard = ({ event, onViewDetails, useModal = false }: EventCardProps) => {
+  const eventDate = new Date(event.date);
+  const isEventPast = isPast(eventDate);
+  const daysUntil = differenceInDays(eventDate, new Date());
+  const monthShort = format(eventDate, "MMM").toUpperCase();
+  const dayNum = format(eventDate, "d");
 
   const handleViewDetails = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onViewDetails?.(event);
+    if (useModal && onViewDetails) {
+      e.preventDefault();
+      e.stopPropagation();
+      onViewDetails(event);
+    }
   };
 
-  console.log('EventCard event data:', { id: event.id, title: event.title, event_logo_url: event.event_logo_url }); // Debug
-
-  return (
-    <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+  const cardContent = (
+    <Card className={`h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${isEventPast ? "opacity-70" : ""}`}>
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="flex-shrink-0">
-              {event.event_logo_url ? (
-                <>
-                  <img 
-                    src={event.event_logo_url} 
-                    alt={`${event.title} logo`}
-                    className="w-12 h-12 rounded-lg object-cover border border-border"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                      if (fallback) fallback.style.display = 'flex';
-                    }}
-                  />
-                  <div className="w-12 h-12 rounded-lg bg-muted items-center justify-center hidden">
-                    <Calendar className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                </>
-              ) : (
-                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-muted-foreground" />
-                </div>
-              )}
+            {/* Date Badge */}
+            <div className="flex-shrink-0 w-14 h-14 rounded-lg bg-primary/10 flex flex-col items-center justify-center text-center">
+              <span className="text-xs font-bold text-primary leading-none">{monthShort}</span>
+              <span className="text-lg font-bold text-primary leading-tight">{dayNum}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg font-semibold line-clamp-2 mb-3 leading-tight">
+              <div className="flex items-center gap-2 mb-2">
+                {isEventPast ? (
+                  <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
+                    Past Event
+                  </Badge>
+                ) : daysUntil <= 14 ? (
+                  <Badge className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                    {daysUntil === 0 ? "Today" : `In ${daysUntil} days`}
+                  </Badge>
+                ) : null}
+              </div>
+              <CardTitle className="text-lg font-semibold line-clamp-2 leading-tight">
                 {event.title}
               </CardTitle>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground mb-1">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4 flex-shrink-0" />
-                  <span>{new Date(event.date).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 flex-shrink-0" />
-                  <span>{event.time}</span>
-                </div>
-              </div>
             </div>
           </div>
           <BookmarkButton
@@ -104,7 +76,7 @@ export const EventCard = ({ event, onViewDetails }: EventCardProps) => {
       </CardHeader>
       
       <CardContent className="flex-1 flex flex-col pt-0">
-        <CardDescription className="line-clamp-3 mb-4 flex-1">
+        <CardDescription className="line-clamp-2 mb-4 flex-1">
           {event.description}
         </CardDescription>
         
@@ -117,52 +89,54 @@ export const EventCard = ({ event, onViewDetails }: EventCardProps) => {
           </Badge>
         </div>
         
-        <div className="space-y-3 mb-4">
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4 flex-shrink-0" />
+            <span>{event.time}</span>
+          </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="w-4 h-4 flex-shrink-0" />
             <span className="truncate flex-1">{event.location}</span>
           </div>
-          
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <Avatar className="w-6 h-6 flex-shrink-0">
-                <AvatarImage src={getOrganizerImage(parseInt(event.id) || 0)} alt={event.organizer} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  <User className="w-3 h-3" />
-                </AvatarFallback>
-              </Avatar>
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <User className="w-3 h-3 text-primary" />
+              </div>
               <span className="text-sm text-muted-foreground truncate">{event.organizer}</span>
             </div>
-            
             <div className="flex items-center gap-1 text-sm text-muted-foreground flex-shrink-0">
               <Users className="w-4 h-4" />
-              <span>{event.attendees}</span>
+              <span>{event.attendees.toLocaleString()}</span>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex gap-2 mt-auto">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex-1"
-            onClick={handleViewDetails}
-          >
-            <Eye className="w-4 h-4 mr-1" />
-            View Details
-          </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="flex-1"
-            onClick={handleContactOrganizer}
-          >
-            <Mail className="w-4 h-4 mr-1" />
-            Contact
-          </Button>
+          {useModal ? (
+            <Button variant="default" size="sm" className="flex-1" onClick={handleViewDetails}>
+              View Details
+            </Button>
+          ) : (
+            <Button variant="default" size="sm" className="flex-1" asChild>
+              <Link to={`/events/${event.slug}`}>View Details</Link>
+            </Button>
+          )}
+          {!isEventPast && (
+            <AddToCalendarButton
+              title={event.title}
+              description={event.description}
+              date={event.date}
+              time={event.time}
+              location={event.location}
+              size="sm"
+            />
+          )}
         </div>
       </CardContent>
     </Card>
   );
+
+  return cardContent;
 };

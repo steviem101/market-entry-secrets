@@ -1,4 +1,3 @@
-
 import { EventCard } from "@/components/EventCard";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import SectorSection from "./SectorSection";
@@ -27,6 +26,7 @@ const EventsSection = ({ events, onViewEventDetails }: EventsSectionProps) => {
           <EventCard 
             event={event} 
             onViewDetails={onViewEventDetails}
+            useModal={!!onViewEventDetails}
           />
         </FreemiumGate>
       ))}

@@ -4,13 +4,12 @@ import Navigation from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
-import { EventModal } from "@/components/EventModal";
 import { EventsHero } from "@/components/events/EventsHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { useEvents, Event } from "@/hooks/useEvents";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { UsageBanner } from "@/components/UsageBanner";
-import { getStandardTypes, STANDARD_SECTORS } from "@/utils/sectorMapping";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Events = () => {
   const [localSearchQuery, setLocalSearchQuery] = useState("");
@@ -19,10 +18,9 @@ const Events = () => {
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("upcoming");
 
-  const { events, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
+  const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
 
   // Get unique categories, types, locations, and sectors for filters
   const categories = Array.from(new Set(events.map(event => event.category))).sort();
@@ -30,8 +28,11 @@ const Events = () => {
   const locations = Array.from(new Set(events.map(event => event.location))).sort();
   const sectors = Array.from(new Set(events.map(event => event.sector).filter(Boolean))).sort();
 
+  // Choose events based on active tab
+  const baseEvents = activeTab === "upcoming" ? upcomingEvents : activeTab === "past" ? pastEvents : events;
+
   // Filter events based on selected filters
-  const filteredEvents = events.filter(event => {
+  const filteredEvents = baseEvents.filter(event => {
     const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
     const matchesType = selectedType === "all" || event.type === selectedType;
     const matchesLocation = selectedLocation === "all" || event.location === selectedLocation;
@@ -51,16 +52,6 @@ const Events = () => {
     setSelectedLocation("all");
     setSelectedSector("all");
     clearSearch();
-  };
-
-  const handleViewEventDetails = (event: Event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedEvent(null);
   };
 
   const hasActiveFilters = selectedCategory !== "all" || selectedType !== "all" || 
@@ -105,6 +96,7 @@ const Events = () => {
       <EventsHero 
         totalEvents={events.length}
         totalLocations={locations.length}
+        upcomingCount={upcomingEvents.length}
       />
 
       <StandardDirectoryFilters
@@ -152,6 +144,23 @@ const Events = () => {
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
 
+        {/* Tabs for Upcoming / Past / All */}
+        <div className="mb-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="upcoming">
+                Upcoming ({upcomingEvents.length})
+              </TabsTrigger>
+              <TabsTrigger value="past">
+                Past ({pastEvents.length})
+              </TabsTrigger>
+              <TabsTrigger value="all">
+                All ({events.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         {/* Events Grid */}
         {filteredEvents.length === 0 ? (
           <div className="text-center py-12">
@@ -160,7 +169,9 @@ const Events = () => {
             <p className="text-muted-foreground mb-6">
               {isSearching 
                 ? "Try adjusting your search criteria to find more events."
-                : "There are no events matching your current filters."
+                : activeTab === "upcoming"
+                  ? "No upcoming events at the moment. Check back soon!"
+                  : "There are no events matching your current filters."
               }
             </p>
             {(localSearchQuery || hasActiveFilters) && (
@@ -179,22 +190,12 @@ const Events = () => {
                 contentTitle={event.title}
                 contentDescription={event.description}
               >
-                <EventCard 
-                  event={event} 
-                  onViewDetails={handleViewEventDetails}
-                />
+                <EventCard event={event} />
               </FreemiumGate>
             ))}
           </div>
         )}
       </div>
-
-      {/* Event Modal */}
-      <EventModal
-        event={selectedEvent}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
       
       <Footer />
     </div>

@@ -59,8 +59,16 @@ export const EventSubmissionForm: React.FC<EventSubmissionFormProps> = ({ onEven
     
     try {
       // Transform the form data to match the database schema exactly
+      // Generate slug from title
+      const slug = data.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+
       const eventData: EventInsert = {
         title: data.title,
+        slug,
         description: data.description,
         date: data.date,
         time: data.time,

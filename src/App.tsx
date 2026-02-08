@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import ServiceProviders from "./pages/ServiceProviders";
 import Events from "./pages/Events";
+import EventDetailPage from "./pages/EventDetailPage";
 import Community from "./pages/Community";
 import Content from "./pages/Content";
 import ContentDetail from "./pages/ContentDetail";
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/service-providers" element={<ServiceProviders />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/events/:eventSlug" element={<EventDetailPage />} />
               <Route path="/community" element={<Community />} />
               <Route path="/content" element={<Content />} />
               <Route path="/content/:slug" element={<ContentDetail />} />

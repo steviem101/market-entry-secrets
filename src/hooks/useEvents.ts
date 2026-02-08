@@ -1,11 +1,11 @@
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 
 export interface Event {
   id: string;
   title: string;
+  slug: string;
   date: string;
   time: string;
   location: string;
@@ -14,8 +14,16 @@ export interface Event {
   attendees: number;
   description: string;
   organizer: string;
-  event_logo_url?: string;
-  sector?: string;
+  event_logo_url?: string | null;
+  sector?: string | null;
+  website_url?: string | null;
+  registration_url?: string | null;
+  organizer_email?: string | null;
+  organizer_website?: string | null;
+  price?: string | null;
+  is_featured: boolean;
+  tags?: string[] | null;
+  image_url?: string | null;
 }
 
 export const useEvents = () => {
@@ -39,7 +47,6 @@ export const useEvents = () => {
         .select('*')
         .order('date', { ascending: true });
 
-      // Add search functionality
       if (query && query.trim()) {
         queryBuilder = queryBuilder.or(
           `title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%,organizer.ilike.%${query}%`
@@ -53,7 +60,6 @@ export const useEvents = () => {
       }
 
       setEvents(data || []);
-      console.log('Events fetched:', data?.slice(0, 2)); // Debug: check first 2 events
     } catch (err) {
       console.error('Error fetching events:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch events');
@@ -66,13 +72,38 @@ export const useEvents = () => {
     }
   }, []);
 
+  // Split events into upcoming and past
+  const { upcomingEvents, pastEvents } = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    
+    const upcoming: Event[] = [];
+    const past: Event[] = [];
+
+    events.forEach(event => {
+      const eventDate = new Date(event.date);
+      if (eventDate >= now) {
+        upcoming.push(event);
+      } else {
+        past.push(event);
+      }
+    });
+
+    // Upcoming: nearest first
+    upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Past: most recent first
+    past.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return { upcomingEvents: upcoming, pastEvents: past };
+  }, [events]);
+
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
   useEffect(() => {
     if (debouncedSearchQuery !== searchQuery) {
-      return; // Don't search if debounce hasn't finished
+      return;
     }
     
     if (debouncedSearchQuery.trim()) {
@@ -92,6 +123,8 @@ export const useEvents = () => {
 
   return { 
     events, 
+    upcomingEvents,
+    pastEvents,
     loading, 
     searchLoading,
     error, 
