@@ -17,7 +17,7 @@ import { fullIntakeSchema, step1Schema, step2Schema, type IntakeFormData } from 
 const ReportCreator = () => {
   const [step, setStep] = useState(1);
   const [showAuth, setShowAuth] = useState(false);
-  const { isGenerating, generate, loadDraft, clearDraft } = useReportGeneration();
+  const { isGenerating, generationStatus, generate, loadDraft, clearDraft } = useReportGeneration();
   const { user } = useAuth();
 
   const form = useForm<IntakeFormData>({
@@ -114,7 +114,7 @@ const ReportCreator = () => {
         </div>
       </main>
 
-      <GeneratingOverlay isVisible={isGenerating} />
+      <GeneratingOverlay isVisible={isGenerating} statusMessage={generationStatus} />
       <AuthDialog open={showAuth} onOpenChange={setShowAuth} defaultTab="signup" />
       <Footer />
     </>

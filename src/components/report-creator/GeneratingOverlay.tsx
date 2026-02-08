@@ -2,17 +2,18 @@ import { useEffect, useState } from 'react';
 import { Loader2, Search, Database, Brain, FileText, Check } from 'lucide-react';
 
 const STEPS = [
-  { label: 'Analysing your company...', icon: Search, duration: 8000 },
-  { label: 'Searching our database...', icon: Database, duration: 12000 },
-  { label: 'Matching service providers...', icon: Brain, duration: 15000 },
-  { label: 'Building your report...', icon: FileText, duration: 20000 },
+  { label: 'Analysing your company...', icon: Search, duration: 15000 },
+  { label: 'Researching your market...', icon: Database, duration: 30000 },
+  { label: 'Matching service providers & mentors...', icon: Brain, duration: 45000 },
+  { label: 'Generating report sections...', icon: FileText, duration: 60000 },
 ];
 
 interface GeneratingOverlayProps {
   isVisible: boolean;
+  statusMessage?: string;
 }
 
-export const GeneratingOverlay = ({ isVisible }: GeneratingOverlayProps) => {
+export const GeneratingOverlay = ({ isVisible, statusMessage }: GeneratingOverlayProps) => {
   const [activeStep, setActiveStep] = useState(0);
 
   useEffect(() => {
@@ -44,7 +45,9 @@ export const GeneratingOverlay = ({ isVisible }: GeneratingOverlayProps) => {
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
           <h2 className="text-xl font-bold text-foreground">Generating Your Report</h2>
-          <p className="text-sm text-muted-foreground mt-1">This usually takes 1-2 minutes</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {statusMessage || 'This usually takes 2-4 minutes'}
+          </p>
         </div>
 
         <div className="space-y-4">

@@ -9,6 +9,7 @@ const LOCALSTORAGE_KEY = 'mes_intake_form_draft';
 
 export const useReportGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState<string>('');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -37,23 +38,53 @@ export const useReportGeneration = () => {
     }
 
     setIsGenerating(true);
+    setGenerationStatus('Submitting your information...');
 
     try {
       // 1. Submit intake form to database
       const intakeForm = await reportApi.submitIntakeForm(data, user.id);
 
-      // 2. Call generate-report edge function (handles enrich + search + generate)
+      setGenerationStatus('Starting report generation...');
+
+      // 2. Call generate-report edge function (returns immediately with report_id)
       const result = await reportApi.generateReport(intakeForm.id);
 
-      clearDraft();
+      setGenerationStatus('Researching your market — this takes 2-4 minutes...');
 
-      toast({
-        title: 'Report Generated!',
-        description: 'Your market entry report is ready to view.',
-      });
+      // 3. Poll for completion
+      const pollResult = await reportApi.pollReportStatus(
+        result.report_id,
+        (status) => {
+          if (status === 'processing') {
+            setGenerationStatus('Generating your report — analysing market data...');
+          }
+        }
+      );
 
-      // Navigate to the report
-      navigate(`/report/${result.report_id}`);
+      if (pollResult.status === 'completed') {
+        clearDraft();
+
+        toast({
+          title: 'Report Generated!',
+          description: 'Your market entry report is ready to view.',
+        });
+
+        navigate(`/report/${result.report_id}`);
+      } else if (pollResult.status === 'failed') {
+        toast({
+          title: 'Generation Failed',
+          description: pollResult.error || 'Something went wrong. Please try again.',
+          variant: 'destructive',
+        });
+      } else {
+        // Timeout — report may still complete
+        toast({
+          title: 'Report Still Processing',
+          description: 'Your report is taking longer than expected. Check My Reports shortly.',
+        });
+        navigate('/my-reports');
+      }
+
       return { needsAuth: false };
     } catch (error: any) {
       console.error('Report generation error:', error);
@@ -65,11 +96,13 @@ export const useReportGeneration = () => {
       return { needsAuth: false };
     } finally {
       setIsGenerating(false);
+      setGenerationStatus('');
     }
   };
 
   return {
     isGenerating,
+    generationStatus,
     generate,
     saveDraft,
     loadDraft,

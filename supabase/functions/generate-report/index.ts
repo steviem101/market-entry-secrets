@@ -563,29 +563,23 @@ async function runMarketResearch(intake: any): Promise<MarketResearch> {
   const startTime = Date.now();
 
   const [landscape, regulatory, news, bilateralTrade, costOfBusiness, grants] = await Promise.allSettled([
-    // 1. Market landscape — UPGRADED to sonar-pro
     callPerplexity(perplexityKey,
       `${industrySectorText} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.`,
       { model: "sonar-pro" }
     ),
-    // 2. Regulatory requirements (unchanged)
     callPerplexity(perplexityKey,
       `Requirements, regulations, compliance, and licensing for a ${countryOfOrigin} ${industrySectorText} company entering the Australian market. Include visa requirements, tax obligations, legal entity setup, and any industry-specific regulations.`
     ),
-    // 3. Recent news (unchanged)
     callPerplexity(perplexityKey,
       `Recent news and developments in ${industrySectorText} in Australia in the last 6 months. Focus on market trends, regulatory changes, major deals, and new entrants.`,
       { recency: "month" }
     ),
-    // 4. NEW: Bilateral trade intelligence
     callPerplexity(perplexityKey,
       `Trade relationship between ${countryOfOrigin} and Australia in ${industrySectorText}: bilateral agreements, free trade agreements, export statistics, success stories of ${countryOfOrigin} companies entering Australia, trade volumes, and key trade facilitation organisations.`
     ),
-    // 5. NEW: Cost of doing business
     callPerplexity(perplexityKey,
       `Cost of doing business in Australia ${targetRegionsText} for ${industrySectorText}: average office rent per sqm, local salaries for key roles, corporate tax rate, GST obligations, employer superannuation rate, typical setup costs for a foreign company, and any cost comparison with ${countryOfOrigin}.`
     ),
-    // 6. NEW: Government grants and incentives
     callPerplexity(perplexityKey,
       `Australian government grants, incentives, R&D tax incentives, landing pad programs, and funding opportunities for international ${industrySectorText} companies from ${countryOfOrigin} setting up in ${targetRegionsText}. Include state-specific programs and eligibility requirements.`
     ),
@@ -622,7 +616,6 @@ async function runMarketResearch(intake: any): Promise<MarketResearch> {
     result.citations.push(...grants.value.citations);
   }
 
-  // Deduplicate citations
   result.citations = [...new Set(result.citations)];
 
   console.log(`Perplexity research completed in ${Date.now() - startTime}ms — ${result.citations.length} citations`);
@@ -687,7 +680,7 @@ interface DiscoveredEvent {
   location: string;
   url: string;
   relevance: string;
-  source: string; // "web" to distinguish from directory events
+  source: string;
 }
 
 async function discoverExternalEvents(
@@ -725,7 +718,6 @@ ${results.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.titl
     const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
     const events = JSON.parse(cleaned) as DiscoveredEvent[];
 
-    // Add source marker
     const taggedEvents = events.map((e) => ({ ...e, source: "web" }));
 
     console.log(`Discovered ${taggedEvents.length} external events in ${Date.now() - startTime}ms`);
@@ -908,95 +900,116 @@ async function searchMatches(supabase: any, intake: any) {
     }
     const { data: cm } = await cmQuery;
     matches.community_members = (cm || []).map((m: any) => ({
-      ...m, link: "/community", linkLabel: "Connect",
-      subtitle: `${m.title}${m.company ? ` at ${m.company}` : ""}`,
+      ...m, link: "/community", linkLabel: "View Profile",
+      subtitle: [m.title, m.company].filter(Boolean).join(", "),
       tags: (m.specialties || []).slice(0, 3),
     }));
   } catch (e) { console.error("CM search error:", e); }
 
   // Events
   try {
-    let evQuery = supabase
-      .from("events")
-      .select("id, title, date, location, category, type")
-      .order("date", { ascending: false })
-      .limit(5);
+    let evQuery = supabase.from("events").select("id, title, date, location, category, type, organizer, sector").limit(5);
+    const evFilters: string[] = [];
     if (locationPatterns.length > 0) {
-      evQuery = evQuery.or(locationPatterns.map((l: string) => `location.ilike.%${l}%`).join(","));
+      evFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+    }
+    if (intake.industry_sector?.length > 0) {
+      evFilters.push(...intake.industry_sector.map((s: string) => `sector.ilike.%${s}%`));
+    }
+    if (evFilters.length > 0) {
+      evQuery = evQuery.or(evFilters.join(","));
     }
     const { data: ev } = await evQuery;
-    matches.events = (ev || []).map((e: any) => ({
+
+    let eventResults = ev || [];
+    if (eventResults.length === 0) {
+      const { data: allEvents } = await supabase.from("events").select("id, title, date, location, category, type, organizer, sector").order("date", { ascending: true }).limit(5);
+      eventResults = allEvents || [];
+    }
+
+    matches.events = eventResults.map((e: any) => ({
       ...e, name: e.title, link: "/events", linkLabel: "View Event",
-      subtitle: `${e.date} · ${e.location}`, tags: [e.category],
+      subtitle: `${e.date} · ${e.location}`, tags: [e.category, e.type].filter(Boolean),
     }));
   } catch (e) { console.error("Events search error:", e); }
 
   // Content items
   try {
-    const { data: ci } = await supabase
-      .from("content_items")
-      .select("id, title, content_type, slug, sector_tags")
-      .in("content_type", ["case_study", "guide", "article"])
-      .eq("status", "published")
-      .limit(5);
+    let ciQuery = supabase.from("content_items").select("id, title, slug, content_type, sector_tags, meta_description").eq("status", "published").limit(5);
+    if (intake.industry_sector?.length > 0) {
+      ciQuery = ciQuery.overlaps("sector_tags", intake.industry_sector);
+    }
+    const { data: ci } = await ciQuery;
     matches.content_items = (ci || []).map((c: any) => ({
       ...c, name: c.title, link: `/content/${c.slug}`, linkLabel: "Read More",
-      subtitle: c.content_type, tags: (c.sector_tags || []).slice(0, 3),
+      subtitle: c.content_type, tags: (c.sector_tags || []).slice(0, 2),
     }));
   } catch (e) { console.error("Content search error:", e); }
 
   // Leads
   try {
-    let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type").limit(5);
-    if (industry) {
-      const industries = intake.industry_sector || [];
-      if (industries.length > 0) {
-        ldQuery = ldQuery.or(industries.map((ind: string) => `industry.ilike.%${ind}%`).join(","));
-      }
+    let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type, price, record_count, provider_name").limit(5);
+    const ldFilters: string[] = [];
+    if (locationPatterns.length > 0) {
+      ldFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+    }
+    if (intake.industry_sector?.length > 0) {
+      ldFilters.push(...intake.industry_sector.map((s: string) => `industry.ilike.%${s}%`));
+    }
+    if (ldFilters.length > 0) {
+      ldQuery = ldQuery.or(ldFilters.join(","));
     }
     const { data: ld } = await ldQuery;
     matches.leads = (ld || []).map((l: any) => ({
-      ...l, link: "/leads", linkLabel: "View Lead",
-      subtitle: `${l.industry} · ${l.location}`, tags: [l.category],
+      ...l, link: "/leads", linkLabel: "View Dataset",
+      subtitle: `${l.location} · ${l.record_count || "?"} records`,
+      tags: [l.category, l.type].filter(Boolean),
     }));
   } catch (e) { console.error("Leads search error:", e); }
 
   // Innovation ecosystem
   try {
-    let ieQuery = supabase.from("innovation_ecosystem").select("id, name, location, services, description, website").limit(3);
+    let ieQuery = supabase.from("innovation_ecosystem").select("id, name, location, services, description, website").limit(5);
+    const ieFilters: string[] = [];
     if (locationPatterns.length > 0) {
-      ieQuery = ieQuery.or(locationPatterns.map((l: string) => `location.ilike.%${l}%`).join(","));
+      ieFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+    }
+    if (ieFilters.length > 0) {
+      ieQuery = ieQuery.or(ieFilters.join(","));
     }
     const { data: ie } = await ieQuery;
-    matches.innovation_ecosystem = (ie || []).map((i: any) => ({
-      ...i, link: "/innovation-ecosystem", linkLabel: "View",
-      subtitle: i.location, tags: (i.services || []).slice(0, 3),
+    matches.innovation_ecosystem = (ie || []).map((o: any) => ({
+      ...o, link: "/innovation-ecosystem", linkLabel: "View Hub",
+      subtitle: o.location, tags: (o.services || []).slice(0, 3),
     }));
   } catch (e) { console.error("IE search error:", e); }
 
-  // Trade investment agencies
+  // Trade & investment agencies
   try {
-    const { data: ta } = await supabase
-      .from("trade_investment_agencies")
-      .select("id, name, location, services, description, website")
-      .limit(3);
-    matches.trade_investment_agencies = (ta || []).map((t: any) => ({
-      ...t, link: "/trade-investment-agencies", linkLabel: "View",
-      subtitle: t.location, tags: (t.services || []).slice(0, 3),
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, location, services, description, website").limit(5);
+    const taFilters: string[] = [];
+    if (locationPatterns.length > 0) {
+      taFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+    }
+    if (taFilters.length > 0) {
+      taQuery = taQuery.or(taFilters.join(","));
+    }
+    const { data: ta } = await taQuery;
+    matches.trade_investment_agencies = (ta || []).map((a: any) => ({
+      ...a, link: "/trade-investment-agencies", linkLabel: "View Agency",
+      subtitle: a.location, tags: (a.services || []).slice(0, 3),
     }));
-  } catch (e) { console.error("TA search error:", e); }
+  } catch (e) { console.error("TIA search error:", e); }
 
   // Lemlist contacts
   try {
-    let lcQuery = supabase
-      .from("lemlist_contacts")
-      .select("id, full_name, email, job_title, linkedin_url, industry, company_id, company_name, company_website, linkedin_headline, linkedin_job_industry, status, contact_location, lead_status, lemlist_companies(name, domain, location)")
+    let lcQuery = supabase.from("lemlist_contacts")
+      .select("id, full_name, email, job_title, company_name, linkedin_url, linkedin_job_industry, industry, contact_location, lemlist_companies(name, location, industry)")
       .limit(10);
-
     const lcFilters: string[] = [];
-    const industries = intake.industry_sector || [];
-    if (industries.length > 0) {
-      lcFilters.push(...industries.map((ind: string) => `industry.ilike.%${ind}%`));
+    if (intake.industry_sector?.length > 0) {
+      lcFilters.push(...intake.industry_sector.map((s: string) => `industry.ilike.%${s}%`));
+      lcFilters.push(...intake.industry_sector.map((s: string) => `linkedin_job_industry.ilike.%${s}%`));
     }
     if (locationPatterns.length > 0) {
       lcFilters.push(...locationPatterns.map((l: string) => `lemlist_companies.location.ilike.%${l}%`));
@@ -1031,16 +1044,15 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
   }
 }
 
-// ── Main handler ───────────────────────────────────────────────────────
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+// ── Background report generation logic ─────────────────────────────────
 
+async function generateReportInBackground(
+  intakeFormId: string,
+  reportId: string
+): Promise<void> {
   const startTime = Date.now();
 
   try {
-    const { intake_form_id } = await req.json();
-    if (!intake_form_id) throw new Error("intake_form_id is required");
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
@@ -1052,14 +1064,14 @@ serve(async (req) => {
     const { data: intake, error: intakeErr } = await supabase
       .from("user_intake_forms")
       .select("*")
-      .eq("id", intake_form_id)
+      .eq("id", intakeFormId)
       .single();
 
     if (intakeErr || !intake) throw new Error("Intake form not found");
 
-    await supabase.from("user_intake_forms").update({ status: "processing" }).eq("id", intake_form_id);
+    await supabase.from("user_intake_forms").update({ status: "processing" }).eq("id", intakeFormId);
 
-    // 2. Run ALL enrichment + research + matching in parallel (expanded pipeline)
+    // 2. Run ALL enrichment + research + matching in parallel
     const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin} with ${intake.employee_count} employees. Their target end buyers are in: ${(intake.end_buyer_industries || []).join(", ") || "not specified"}.`;
 
     console.log("Starting expanded parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + competitors + end buyers + external events + key metrics...");
@@ -1074,50 +1086,41 @@ serve(async (req) => {
       keyMetricsResult,
       endBuyerProcurementResearch,
     ] = await Promise.all([
-      // Deep company scrape (existing)
       firecrawlKey && intake.website_url
         ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary)
         : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary }),
-      // Perplexity market research (EXPANDED: 6 parallel queries, sonar-pro for landscape)
       runMarketResearch(intake),
-      // Database directory matching (existing)
       searchMatches(supabase, intake),
-      // Competitor landscape (existing)
       firecrawlKey
         ? searchCompetitors(firecrawlKey, lovableKey, intake)
         : Promise.resolve({ competitors: [], raw_results: [] }),
-      // End buyer scraping (UPDATED: dedicated buyer intelligence prompt)
       firecrawlKey && (intake.end_buyers || []).length > 0
         ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name)
         : Promise.resolve([]),
-      // NEW: External event discovery via Firecrawl Search
       firecrawlKey
         ? discoverExternalEvents(firecrawlKey, lovableKey, intake)
         : Promise.resolve([]),
-      // NEW: Key metrics extraction via Perplexity structured output
       extractKeyMetrics(intake),
-      // NEW: End buyer procurement research via Perplexity
       researchEndBuyerProcurement(intake),
     ]);
 
     const enrichedSummary = companyEnrichResult.enrichedSummary;
     const companyProfile = companyEnrichResult.profile;
 
-    // Store enriched profile in DB
     if (companyProfile) {
       await supabase.from("user_intake_forms")
         .update({ enriched_input: companyProfile })
-        .eq("id", intake_form_id);
+        .eq("id", intakeFormId);
     }
 
-    // Enrich matched service providers with Firecrawl scrapes
+    // Enrich matched service providers
     const enrichedProviders = await enrichMatchedProviders(
       firecrawlKey,
       matches.service_providers || []
     );
     matches.service_providers = enrichedProviders;
 
-    // Merge discovered events into matches for events_resources section
+    // Merge discovered events
     if (discoveredEvents.length > 0) {
       const discoveredEventMatches = discoveredEvents.map((e) => ({
         name: e.name,
@@ -1152,7 +1155,7 @@ serve(async (req) => {
       .eq("is_active", true)
       .order("section_name");
 
-    // 5. Build template variables (expanded with all new research data)
+    // 5. Build template variables
     const tierHierarchy = ["free", "growth", "scale", "enterprise"];
     const userTierIndex = tierHierarchy.indexOf(userTier);
 
@@ -1169,7 +1172,6 @@ serve(async (req) => {
       key_challenges: intake.key_challenges || "Not specified",
       enriched_summary: enrichedSummary,
       enriched_company_profile: companyProfile ? JSON.stringify(companyProfile) : "No enriched data available.",
-      // Matched directory data
       matched_providers_json: JSON.stringify(matches.service_providers || []),
       matched_mentors_json: JSON.stringify(matches.community_members || []),
       matched_events_json: JSON.stringify(matches.events || []),
@@ -1177,26 +1179,20 @@ serve(async (req) => {
       matched_leads_json: JSON.stringify(matches.leads || []),
       matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
-      // Competitor analysis
       competitor_analysis_json: JSON.stringify(competitorResult.competitors),
       known_competitors_json: JSON.stringify(intake.known_competitors || []),
-      // End buyer data (UPDATED: buyer intelligence)
       end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",
       end_buyers_json: JSON.stringify(intake.end_buyers || []),
       end_buyers_scraped_json: JSON.stringify(endBuyerScrapeResult || []),
       end_buyers_analysis_json: JSON.stringify(endBuyerScrapeResult || []),
       end_buyer_research: endBuyerProcurementResearch || "No end buyer procurement data available.",
-      // Perplexity market research variables (existing)
       market_research_landscape: marketResearch.landscape || "No market research data available.",
       market_research_regulatory: marketResearch.regulatory || "No regulatory research data available.",
       market_research_news: marketResearch.news || "No recent news data available.",
-      // NEW: Expanded Perplexity research
       market_research_bilateral_trade: marketResearch.bilateral_trade || "No bilateral trade data available.",
       market_research_cost_of_business: marketResearch.cost_of_business || "No cost of business data available.",
       market_research_grants: marketResearch.grants || "No grants and incentives data available.",
-      // NEW: Discovered events
       discovered_events_json: JSON.stringify(discoveredEvents || []),
-      // Citations
       market_research_citations: marketResearch.citations.length > 0
         ? marketResearch.citations.map((url: string, i: number) => `[${i + 1}] ${url}`).join("\n")
         : "",
@@ -1272,7 +1268,7 @@ serve(async (req) => {
       console.warn("Polish pass failed (using original content):", e);
     }
 
-    // 7. Assemble and store report (with expanded metadata)
+    // 7. Assemble and store report
     const reportJson = {
       company_name: intake.company_name,
       sections,
@@ -1287,7 +1283,6 @@ serve(async (req) => {
         firecrawl_providers_enriched: enrichedProviders.filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
         polish_applied: true,
-        // NEW metadata fields
         key_metrics: keyMetricsResult.metrics,
         discovered_events_count: discoveredEvents.length,
         end_buyer_research_available: !!endBuyerProcurementResearch,
@@ -1297,27 +1292,97 @@ serve(async (req) => {
       },
     };
 
+    // Update the pre-created report row with the completed data
+    const { error: reportErr } = await supabase
+      .from("user_reports")
+      .update({
+        tier_at_generation: userTier,
+        report_json: reportJson,
+        sections_generated: sectionsGenerated,
+        status: "completed",
+      })
+      .eq("id", reportId);
+
+    if (reportErr) throw reportErr;
+
+    await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intakeFormId);
+
+    console.log(`Report ${reportId} generated in ${Date.now() - startTime}ms`);
+  } catch (e) {
+    console.error("Background report generation failed:", e);
+
+    // Update report status to failed
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabase = createClient(supabaseUrl, serviceKey);
+
+      await supabase
+        .from("user_reports")
+        .update({
+          status: "failed",
+          report_json: { error: e instanceof Error ? e.message : "Report generation failed" },
+        })
+        .eq("id", reportId);
+
+      await supabase
+        .from("user_intake_forms")
+        .update({ status: "failed" })
+        .eq("id", intakeFormId);
+    } catch (updateErr) {
+      console.error("Failed to update report status:", updateErr);
+    }
+  }
+}
+
+// ── Main handler ───────────────────────────────────────────────────────
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { intake_form_id } = await req.json();
+    if (!intake_form_id) throw new Error("intake_form_id is required");
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // Fetch intake form to get user_id
+    const { data: intake, error: intakeErr } = await supabase
+      .from("user_intake_forms")
+      .select("user_id")
+      .eq("id", intake_form_id)
+      .single();
+
+    if (intakeErr || !intake) throw new Error("Intake form not found");
+
+    // Pre-create the report row with "processing" status
     const { data: report, error: reportErr } = await supabase
       .from("user_reports")
       .insert({
         user_id: intake.user_id,
         intake_form_id,
-        tier_at_generation: userTier,
-        report_json: reportJson,
-        sections_generated: sectionsGenerated,
-        status: "completed",
+        tier_at_generation: "free",
+        report_json: {},
+        sections_generated: [],
+        status: "processing",
       })
       .select("id")
       .single();
 
     if (reportErr) throw reportErr;
 
-    await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intake_form_id);
+    const reportId = report.id;
 
-    console.log(`Report generated in ${Date.now() - startTime}ms`);
+    // Kick off background processing — does NOT block the response
+    // @ts-ignore: EdgeRuntime.waitUntil is available in Supabase Edge Functions
+    EdgeRuntime.waitUntil(generateReportInBackground(intake_form_id, reportId));
 
+    console.log(`Report ${reportId} queued for background generation`);
+
+    // Return immediately with the report ID
     return new Response(
-      JSON.stringify({ report_id: report.id, generation_time_ms: Date.now() - startTime }),
+      JSON.stringify({ report_id: reportId, status: "processing" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
