@@ -40,7 +40,42 @@ export const reportApi = {
     });
 
     if (error) throw error;
-    return data as { report_id: string; [key: string]: unknown };
+    return data as { report_id: string; status: string; [key: string]: unknown };
+  },
+
+  /** Poll report status until completed or failed. Returns the final status. */
+  async pollReportStatus(
+    reportId: string,
+    onProgress?: (status: string) => void,
+    maxAttempts = 120,
+    intervalMs = 3000
+  ): Promise<{ status: string; error?: string }> {
+    for (let i = 0; i < maxAttempts; i++) {
+      const { data, error } = await (supabase as any)
+        .from('user_reports')
+        .select('status, report_json')
+        .eq('id', reportId)
+        .single();
+
+      if (error) throw error;
+
+      const status = data.status as string;
+      onProgress?.(status);
+
+      if (status === 'completed') {
+        return { status: 'completed' };
+      }
+
+      if (status === 'failed') {
+        const errorMsg = (data.report_json as any)?.error || 'Report generation failed';
+        return { status: 'failed', error: errorMsg };
+      }
+
+      // Wait before next poll
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+
+    return { status: 'timeout', error: 'Report generation timed out. Please check My Reports later.' };
   },
 
   async fetchReport(reportId: string) {
