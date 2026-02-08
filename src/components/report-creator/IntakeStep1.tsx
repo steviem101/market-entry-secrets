@@ -25,6 +25,25 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
   const [industryOpen, setIndustryOpen] = useState(false);
   const selectedIndustries = watch('industry_sector') || [];
 
+  const countryValue = watch('country_of_origin');
+  const presetCountries = COUNTRY_OPTIONS.filter(c => c !== 'Other');
+  const isOther = countryValue !== '' && !presetCountries.includes(countryValue as any);
+  const [customCountry, setCustomCountry] = useState(() => isOther ? countryValue : '');
+  const selectDisplayValue = isOther ? 'Other' : countryValue;
+
+  const handleCountrySelect = (value: string) => {
+    if (value === 'Other') {
+      setValue('country_of_origin', customCountry, { shouldValidate: true });
+    } else {
+      setValue('country_of_origin', value, { shouldValidate: true });
+      setCustomCountry('');
+    }
+  };
+
+  const handleCustomCountryChange = (value: string) => {
+    setCustomCountry(value);
+    setValue('country_of_origin', value, { shouldValidate: true });
+  };
   const toggleIndustry = (industry: string) => {
     const current = selectedIndustries;
     if (current.includes(industry)) {
@@ -81,7 +100,7 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2">
             <Label>Country of Origin *</Label>
-            <Select value={watch('country_of_origin')} onValueChange={(v) => setValue('country_of_origin', v)}>
+            <Select value={selectDisplayValue} onValueChange={handleCountrySelect}>
               <SelectTrigger>
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
@@ -91,6 +110,13 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
                 ))}
               </SelectContent>
             </Select>
+            {isOther && (
+              <Input
+                placeholder="Enter your country"
+                value={customCountry}
+                onChange={(e) => handleCustomCountryChange(e.target.value)}
+              />
+            )}
             {errors.country_of_origin && (
               <p className="text-xs text-destructive">{errors.country_of_origin.message}</p>
             )}
