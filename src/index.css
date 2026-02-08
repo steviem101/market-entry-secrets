@@ -239,6 +239,20 @@
     backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
+
+  /* Report-specific prose fine-tuning */
+  .report-prose :where(h2, h3, h4) + :where(p, ul, ol) {
+    margin-top: 0;
+  }
+
+  .report-prose :where(hr) {
+    margin-top: 2em;
+    margin-bottom: 2em;
+  }
+
+  .report-prose :where(strong) {
+    font-weight: 650;
+  }
 }
 
 /* Print styles for PDF export */

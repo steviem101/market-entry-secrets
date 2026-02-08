@@ -106,7 +106,7 @@ const SharedReportView = () => {
       </div>
 
       <main className="min-h-screen pt-6 pb-16 px-4">
-        <div className="container mx-auto max-w-3xl space-y-6">
+        <div className="container mx-auto max-w-3xl space-y-8">
           {SECTION_ORDER.map((sectionId) => {
             const section = sections[sectionId];
 

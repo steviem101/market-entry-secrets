@@ -12,11 +12,11 @@ export const ReportSection = ({ id, title, content, children }: ReportSectionPro
   return (
     <section id={id} className="scroll-mt-20" data-report-section>
       <Card className="border-border/50 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-xl">{title}</CardTitle>
+        <CardHeader className="pt-6 px-6 pb-4">
+          <CardTitle className="text-2xl">{title}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="prose prose-sm max-w-none text-foreground/90 prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-li:text-foreground/90">
+        <CardContent className="px-6 pb-6 space-y-5">
+          <div className="prose max-w-none text-foreground/90 prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-li:text-foreground/90 prose-p:mb-4 prose-headings:mt-8 prose-headings:mb-3 prose-li:my-1 leading-relaxed report-prose">
             <ReactMarkdown>{content}</ReactMarkdown>
           </div>
           {children}
