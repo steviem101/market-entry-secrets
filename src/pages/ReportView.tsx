@@ -129,7 +129,7 @@ const ReportView = () => {
             </aside>
 
             {/* Main content */}
-            <div className="flex-1 max-w-3xl space-y-6">
+            <div className="flex-1 max-w-3xl space-y-8">
               {SECTION_ORDER.map((sectionId) => {
                 const section = sections[sectionId];
                 const requiredTier = TIER_REQUIREMENTS[sectionId];
