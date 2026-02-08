@@ -1,92 +1,107 @@
 
 
-# Add "End Buyers" Property to the Intake Form
+# PDF Download and Share Links for Completed Reports
 
 ## Overview
 
-Add a new "End Buyers" section to Step 2 of the Report Creator. This has two parts:
-
-1. **Target End Buyer Industries** -- a multi-select searchable combobox using the same 149 industry options as the "Industry / Sector" field on Step 1
-2. **Example End Buyers** -- a dynamic list of specific companies (name + website), following the exact same pattern as the "Known Competitors" field
-
-This helps the report generator understand who the user's customers are in Australia, enabling better lead matching and market analysis.
+Enable the two currently disabled buttons in the report header: **PDF** for downloading a formatted PDF of the report, and **Share** for generating a shareable link that anyone can view without logging in.
 
 ## What changes for the user
 
-- A new "End Buyers" section appears on Step 2, between "Key Challenges" and "Known Competitors"
-- First, users select which industries their end buyers belong to (using the same searchable combobox as the Industry/Sector picker on Step 1)
-- Then, they can optionally add up to 5 specific end buyer companies with name and website URL
-- Step 3 (Review) shows both the selected industries and any named end buyers
-- The entire field is optional -- users can skip it
+- **PDF button**: Clicking opens the browser's print dialog, pre-configured for PDF output. The report renders cleanly with print-optimized styling (no navigation, no sidebar, no feedback section -- just the report content).
+- **Share button**: Clicking opens a dialog where the user can generate a unique shareable link. The link is copied to their clipboard with one click. Anyone with the link can view the report's unlocked sections without needing an account.
+- A shared report view shows a "View Only" banner and hides interactive elements (feedback, upgrade CTAs).
 
 ## Changes required
 
-### 1. Database migration
+### 1. Database: Add share_token column
 
-Add two new columns to `user_intake_forms`:
+Add a `share_token` (UUID, nullable, unique) column to `user_reports`. This token is generated on-demand when a user first clicks "Share" -- not pre-generated for every report.
 
 | Column | Type | Default | Purpose |
 |---|---|---|---|
-| `end_buyer_industries` | `text[]` | `'{}'::text[]` | Selected industry categories for end buyers |
-| `end_buyers` | `jsonb` | `'[]'::jsonb` | Array of `{ name, website }` objects (same structure as `known_competitors`) |
+| `share_token` | `uuid` | `NULL` | Unique public access token, created when user shares |
 
-Both nullable, both optional. The `end_buyer_industries` values come from the same validated 149-industry list, but since end buyers may belong to industries outside the user's own sector, no trigger validation is needed here (the frontend enforces the options).
+Add a new RLS policy: **"Anyone can view shared reports via token"** -- allows `SELECT` on `user_reports` when the `share_token` matches, without requiring authentication.
 
-### 2. Schema (`intakeSchema.ts`)
+### 2. PDF Download (Client-side print)
 
-- Add `end_buyer_industries` to `step2Schema`: `z.array(z.string()).optional().default([])`
-- Add `end_buyers` to `step2Schema`: `z.array(competitorSchema).max(5).optional().default([])`
-  - Reuses the existing `competitorSchema` (name + website with URL auto-prepend)
+**Approach**: Use `window.print()` with `@media print` CSS. This is the most reliable approach that requires zero extra dependencies. The browser's built-in "Save as PDF" option produces a clean document.
 
-### 3. Step 2 form (`IntakeStep2.tsx`)
+**Print stylesheet additions (`index.css`)**:
+- Hide Navigation, Footer, ReportSidebar, ReportFeedback, ReportHeader sticky bar, gated section overlays
+- Remove blur filters on gated sections (show the placeholder lines but not blurred)
+- Add a visible print-only header with company name, date, and "Market Entry Secrets" branding
+- Set clean page margins, remove background colors, ensure prose text is black
+- Force page breaks before each report section for clean formatting
 
-Add a new section between "Key Challenges" and "Known Competitors" with:
+**ReportHeader changes**:
+- Remove `disabled` from PDF button
+- Add `onClick` handler that calls `window.print()`
 
-**End Buyer Industries (multi-select combobox):**
-- Same searchable `Popover` + `Command` pattern used for Industry/Sector on Step 1
-- Uses the same `INDUSTRY_OPTIONS` list
-- Selected industries shown as removable badges below the combobox
-- Label: "End Buyer Industries"
-- Helper text: "What industries do your target customers belong to? (optional)"
+### 3. Share Link Feature
 
-**Example End Buyers (dynamic name + website rows):**
-- Identical UI pattern to Known Competitors
-- Label: "Example End Buyers"
-- Helper text: "Add specific companies you want to sell to in Australia (optional, max 5)"
-- Each row: Name input + Website input with Globe icon + X remove button
-- "Add End Buyer" button (hidden when 5 already added)
+**New component: `ReportShareDialog.tsx`**
+- Dialog triggered by the Share button in ReportHeader
+- Shows current share status:
+  - If no share_token exists: "Generate Share Link" button
+  - If share_token exists: displays the URL with a "Copy Link" button
+- Copy button uses `navigator.clipboard.writeText()` with a success toast
+- Share URL format: `https://market-entry-secrets.lovable.app/report/shared/{share_token}`
 
-### 4. Step 3 review (`IntakeStep3.tsx`)
+**API layer (`reportApi.ts`)**:
+- Add `generateShareToken(reportId)`: calls Supabase to update the report with a new UUID share_token (using `crypto.randomUUID()`) and returns it
+- Add `fetchSharedReport(shareToken)`: queries `user_reports` by `share_token` instead of `id`
+- Add `revokeShareToken(reportId)`: sets `share_token` back to null (optional, nice to have for revoking access)
 
-Add a new summary card (between Market Entry Goals and Known Competitors) that shows:
-- Selected end buyer industries as badges
-- Named end buyers as name + clickable website link (same layout as competitors)
-- Only renders if either list has entries
+**New route: `/report/shared/:shareToken`**
+- New page component `SharedReportView.tsx` that:
+  - Fetches the report by share_token (no auth required)
+  - Shows a "Shared Report" banner at the top with a link to create your own report
+  - Renders only the sections that were unlocked at the owner's tier at generation time (uses `visible` flag from stored `report_json.sections`)
+  - Hides: feedback section, upgrade CTAs, sidebar locked items, PDF/Share buttons
+  - Shows: Navigation (with CTA to sign up), report content, match cards, sources, Footer
 
-### 5. Default values (`ReportCreator.tsx`)
+**ReportHeader changes**:
+- Accept new props: `shareToken`, `onShare`, `reportId`
+- Remove `disabled` from Share button
+- Wire Share button to open `ReportShareDialog`
 
-Add to `defaultValues`:
-- `end_buyer_industries: []`
-- `end_buyers: []`
+### 4. Shared Report View (`SharedReportView.tsx`)
 
-### 6. API layer (`reportApi.ts`)
+- Simplified version of `ReportView.tsx`
+- No subscription check needed -- uses the `visible` flag already stored in each section of `report_json`
+- Sections where `visible: false` show a "This section is available in the full report" placeholder with CTA to sign up
+- No feedback component
+- Header shows "Shared Report" badge instead of tier badge
+- "Create Your Own Report" CTA button in header
 
-Add to the insert payload:
-- `end_buyer_industries: data.end_buyer_industries || []`
-- `end_buyers: data.end_buyers || []`
+### 5. Route Registration (`App.tsx`)
 
-### 7. Edge function (`generate-report/index.ts`)
+Add new route:
+```
+/report/shared/:shareToken -> SharedReportView
+```
 
-- Read `intake.end_buyer_industries` and `intake.end_buyers` from the intake form
-- If end buyers have websites, scrape them via Firecrawl (same best-effort pattern as known competitors) to understand what these companies do
-- Pass end buyer context into the AI prompt template variables so report sections can reference the user's target customer profile
-- This enriches sections like executive summary, action plan, and lead list with buyer-aware recommendations
+## File-by-file summary
+
+| File | Change |
+|---|---|
+| `supabase/migrations/...` | Add `share_token` column + unique index + public read RLS policy |
+| `src/index.css` | Add `@media print` styles for clean PDF output |
+| `src/components/report/ReportHeader.tsx` | Enable PDF/Share buttons, add share dialog trigger, print handler |
+| `src/components/report/ReportShareDialog.tsx` | **New** -- share link dialog with generate/copy/revoke |
+| `src/lib/api/reportApi.ts` | Add `generateShareToken`, `fetchSharedReport`, `revokeShareToken` |
+| `src/hooks/useReport.ts` | Add `useSharedReport` hook |
+| `src/pages/SharedReportView.tsx` | **New** -- public read-only report view |
+| `src/pages/ReportView.tsx` | Pass share props to ReportHeader |
+| `src/App.tsx` | Add `/report/shared/:shareToken` route |
+| `src/integrations/supabase/types.ts` | Update types for share_token column |
 
 ## Technical notes
 
-- Reuses `competitorSchema` for the end buyer entries since both have the same name + website structure
-- Reuses `INDUSTRY_OPTIONS` for the combobox, no duplication
-- The searchable combobox pattern is copied from `IntakeStep1.tsx` (Industry/Sector picker)
-- Both fields are fully optional with empty defaults, so existing forms are unaffected
-- Max 5 end buyers keeps scraping workload reasonable within the edge function timeout
+- **PDF approach rationale**: `window.print()` with CSS is zero-dependency, works across all browsers, and produces high-quality output. Users can choose "Save as PDF" from the print dialog. A library like `jspdf` + `html2canvas` would add ~500KB to the bundle and produce lower-quality rasterized output.
+- **Share token security**: UUIDs are effectively unguessable (122 bits of randomness). The token is only generated when explicitly requested, and can be revoked. The RLS policy scopes access strictly to SELECT with a matching token.
+- **Gated sections in shared view**: The shared view respects the `visible` flag stored in the report JSON at generation time. This means if the owner was on the Growth plan, shared viewers see Growth-level sections. They cannot see sections the owner didn't have access to.
+- **No new dependencies required** -- everything uses existing packages and browser APIs.
 
