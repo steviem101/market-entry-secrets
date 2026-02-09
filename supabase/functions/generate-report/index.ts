@@ -45,7 +45,7 @@ async function firecrawlScrape(
 async function firecrawlMap(
   apiKey: string,
   url: string,
-  timeoutMs = 8000
+  timeoutMs = 5000
 ): Promise<string[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -160,7 +160,7 @@ async function enrichCompanyDeep(
 
     console.log(`Map found ${allUrls.length} URLs on ${websiteUrl}`);
 
-    const keyPages = allUrls.filter(isKeyPage).slice(0, 3);
+    const keyPages = allUrls.filter(isKeyPage).slice(0, 2);
     console.log(`Scraping ${keyPages.length} key pages:`, keyPages);
 
     const additionalScrapes = await Promise.allSettled(
@@ -175,7 +175,7 @@ async function enrichCompanyDeep(
       }
     }
 
-    const combinedContent = allContent.join("\n\n---\n\n").slice(0, 4000);
+    const combinedContent = allContent.join("\n\n---\n\n").slice(0, 2000);
 
     if (combinedContent.length < 100) {
       console.log("Insufficient website content for deep analysis");
@@ -276,7 +276,7 @@ async function scrapeKnownCompetitors(
 
   const results = await Promise.allSettled(
     knownCompetitors.map(async (comp) => {
-      const markdown = await firecrawlScrape(firecrawlKey, comp.website, 15000);
+      const markdown = await firecrawlScrape(firecrawlKey, comp.website, 10000);
       if (!markdown || markdown.length < 50) {
         return { name: comp.name, url: comp.website, description: "Website could not be analysed.", key_info: "" };
       }
@@ -290,7 +290,7 @@ async function scrapeKnownCompetitors(
 Return a JSON object: {"name": "${comp.name}", "url": "${comp.website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"}
 
 Website content:
-${markdown.slice(0, 3000)}`,
+${markdown.slice(0, 2000)}`,
           },
         ]);
         const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
@@ -319,16 +319,17 @@ async function searchCompetitors(
 
   try {
     const knownCompetitors = intake.known_competitors || [];
-    const knownResults = await scrapeKnownCompetitors(
-      firecrawlKey, lovableKey, knownCompetitors, intake.company_name
-    );
-
     const targetRegions = (intake.target_regions || []).join(", ") || "Australia";
     const industrySectorText = (intake.industry_sector || []).join(", ");
     const query = `${industrySectorText} companies in Australia ${targetRegions} competitors`;
 
-    console.log(`Searching competitors: "${query}"`);
-    const results = await firecrawlSearch(firecrawlKey, query, 5);
+    console.log(`Searching competitors: "${query}" (parallel with known competitor scraping)`);
+
+    // Run known competitor scraping AND web search in parallel
+    const [knownResults, results] = await Promise.all([
+      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name),
+      firecrawlSearch(firecrawlKey, query, 5),
+    ]);
 
     const userDomain = new URL(
       intake.website_url.startsWith("http") ? intake.website_url : `https://${intake.website_url}`
@@ -396,12 +397,15 @@ async function scrapeEndBuyers(
 ): Promise<EndBuyerIntelligence[]> {
   if (!firecrawlKey || endBuyers.length === 0) return [];
 
-  console.log(`Scraping ${endBuyers.length} end buyer companies...`);
+  // Cap at 3 end buyers to avoid resource contention in the parallel block
+  const cappedBuyers = endBuyers.slice(0, 3);
+
+  console.log(`Scraping ${cappedBuyers.length} end buyer companies (capped from ${endBuyers.length})...`);
   const startTime = Date.now();
 
   const results = await Promise.allSettled(
-    endBuyers.map(async (buyer) => {
-      const markdown = await firecrawlScrape(firecrawlKey, buyer.website, 15000);
+    cappedBuyers.map(async (buyer) => {
+      const markdown = await firecrawlScrape(firecrawlKey, buyer.website, 8000);
       if (!markdown || markdown.length < 50) {
         return { name: buyer.name, url: buyer.website, description: "Website could not be analysed.", key_info: "" };
       }
@@ -415,7 +419,7 @@ async function scrapeEndBuyers(
 Return a JSON object: {"name": "${buyer.name}", "url": "${buyer.website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them"}
 
 Website content:
-${markdown.slice(0, 3000)}`,
+${markdown.slice(0, 2000)}`,
           },
         ]);
         const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
@@ -559,12 +563,19 @@ async function runMarketResearch(intake: any): Promise<MarketResearch> {
   const industrySectorText = (intake.industry_sector || []).join(", ");
   const countryOfOrigin = intake.country_of_origin || "international";
 
-  console.log("Running expanded Perplexity market research (6 parallel queries)...");
+  console.log("Running expanded Perplexity market research (6 parallel queries, landscape includes key metrics)...");
   const startTime = Date.now();
 
   const [landscape, regulatory, news, bilateralTrade, costOfBusiness, grants] = await Promise.allSettled([
     callPerplexity(perplexityKey,
-      `${industrySectorText} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.`,
+      `${industrySectorText} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.
+
+IMPORTANT: At the end of your response, include a section titled "KEY METRICS" with 4-6 quantitative metrics in this exact format:
+- METRIC: [Label] | [Value] | [Context]
+For example:
+- METRIC: Market Size | $8.48B | 2024 estimate
+- METRIC: CAGR | 5.1% | 2024-2030 projected
+- METRIC: Active Players | 2,400+ | Registered companies`,
       { model: "sonar-pro" }
     ),
     callPerplexity(perplexityKey,
@@ -1074,7 +1085,18 @@ async function generateReportInBackground(
     // 2. Run ALL enrichment + research + matching in parallel
     const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin} with ${intake.employee_count} employees. Their target end buyers are in: ${(intake.end_buyer_industries || []).join(", ") || "not specified"}.`;
 
-    console.log("Starting expanded parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + competitors + end buyers + external events + key metrics...");
+    console.log("Starting optimised parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + providers enrichment + competitors + end buyers...");
+
+    // Wrap DB matching + provider enrichment into a single parallel task
+    const matchesAndEnrichTask = async () => {
+      const rawMatches = await searchMatches(supabase, intake);
+      // Enrich providers in parallel (was previously sequential after the main block)
+      rawMatches.service_providers = await enrichMatchedProviders(
+        firecrawlKey,
+        rawMatches.service_providers || []
+      );
+      return rawMatches;
+    };
 
     const [
       companyEnrichResult,
@@ -1082,27 +1104,36 @@ async function generateReportInBackground(
       matches,
       competitorResult,
       endBuyerScrapeResult,
-      discoveredEvents,
-      keyMetricsResult,
       endBuyerProcurementResearch,
     ] = await Promise.all([
       firecrawlKey && intake.website_url
         ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary)
         : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary }),
       runMarketResearch(intake),
-      searchMatches(supabase, intake),
+      matchesAndEnrichTask(),
       firecrawlKey
         ? searchCompetitors(firecrawlKey, lovableKey, intake)
         : Promise.resolve({ competitors: [], raw_results: [] }),
       firecrawlKey && (intake.end_buyers || []).length > 0
         ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name)
         : Promise.resolve([]),
-      firecrawlKey
-        ? discoverExternalEvents(firecrawlKey, lovableKey, intake)
-        : Promise.resolve([]),
-      extractKeyMetrics(intake),
       researchEndBuyerProcurement(intake),
     ]);
+
+    // Extract key metrics from the landscape response instead of a separate Perplexity call
+    const keyMetrics: Array<{ label: string; value: string; context: string }> = [];
+    if (marketResearch.landscape) {
+      const metricLines = marketResearch.landscape.match(/- METRIC: (.+?) \| (.+?) \| (.+)/g);
+      if (metricLines) {
+        for (const line of metricLines) {
+          const m = line.match(/- METRIC: (.+?) \| (.+?) \| (.+)/);
+          if (m) keyMetrics.push({ label: m[1].trim(), value: m[2].trim(), context: m[3].trim() });
+        }
+        // Remove the KEY METRICS section from landscape text to keep it clean
+        marketResearch.landscape = marketResearch.landscape.replace(/\n*(?:KEY METRICS|## KEY METRICS|### KEY METRICS)[\s\S]*$/i, "").trim();
+      }
+      console.log(`Extracted ${keyMetrics.length} key metrics from landscape query`);
+    }
 
     const enrichedSummary = companyEnrichResult.enrichedSummary;
     const companyProfile = companyEnrichResult.profile;
@@ -1113,12 +1144,15 @@ async function generateReportInBackground(
         .eq("id", intakeFormId);
     }
 
-    // Enrich matched service providers
-    const enrichedProviders = await enrichMatchedProviders(
-      firecrawlKey,
-      matches.service_providers || []
-    );
-    matches.service_providers = enrichedProviders;
+    // Conditional external event discovery: only if DB returned < 3 events
+    let discoveredEvents: DiscoveredEvent[] = [];
+    const internalEventCount = (matches.events || []).length;
+    if (firecrawlKey && internalEventCount < 3) {
+      console.log(`Only ${internalEventCount} internal events found — discovering external events...`);
+      discoveredEvents = await discoverExternalEvents(firecrawlKey, lovableKey, intake);
+    } else {
+      console.log(`${internalEventCount} internal events found — skipping external event discovery`);
+    }
 
     // Merge discovered events
     if (discoveredEvents.length > 0) {
@@ -1203,57 +1237,56 @@ async function generateReportInBackground(
     const sectionsGenerated: string[] = [];
 
     if (templates && templates.length > 0) {
-      const batches: any[][] = [];
-      for (let i = 0; i < templates.length; i += 3) {
-        batches.push(templates.slice(i, i + 3));
-      }
+      // Generate ALL sections in a single parallel batch (was batches of 3)
+      console.log(`Generating ${templates.length} sections in single parallel batch...`);
+      const sectionStartTime = Date.now();
 
-      for (const batch of batches) {
-        const results = await Promise.allSettled(
-          batch.map(async (tmpl: any) => {
-            const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
-            const visible = userTierIndex >= requiredTierIndex;
+      const results = await Promise.allSettled(
+        templates.map(async (tmpl: any) => {
+          const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
+          const visible = userTierIndex >= requiredTierIndex;
 
-            if (!visible) {
-              return { name: tmpl.section_name, data: { content: "", visible: false } };
-            }
-
-            let prompt = tmpl.prompt_body;
-            for (const [key, value] of Object.entries(variables)) {
-              prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
-            }
-
-            try {
-              const content = await callAI(lovableKey, [
-                { role: "system", content: "You are Market Entry Secrets AI, an expert consultant on international companies entering the Australian market. Write professional, actionable content grounded in real data when available. Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\nIMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MUST include inline citation markers using the format [N] where N is the source number from the provided citations list. Place the citation immediately after the relevant claim. For example: \"The Australian AI market is projected to reach USD 8.48 billion by 2030 [3].\" If multiple sources support a claim, list them: [1][4]. Only cite sources from the provided numbered citations list — do not invent citation numbers." },
-                { role: "user", content: prompt },
-              ]);
-
-              return {
-                name: tmpl.section_name,
-                data: {
-                  content,
-                  visible: true,
-                  matches: getMatchesForSection(tmpl.section_name, matches),
-                },
-              };
-            } catch (e) {
-              console.error(`Failed to generate ${tmpl.section_name}:`, e);
-              return {
-                name: tmpl.section_name,
-                data: { content: "This section could not be generated. Please try again.", visible: true },
-              };
-            }
-          })
-        );
-
-        for (const result of results) {
-          if (result.status === "fulfilled" && result.value) {
-            sections[result.value.name] = result.value.data;
-            if (result.value.data.visible) sectionsGenerated.push(result.value.name);
+          if (!visible) {
+            return { name: tmpl.section_name, data: { content: "", visible: false } };
           }
+
+          let prompt = tmpl.prompt_body;
+          for (const [key, value] of Object.entries(variables)) {
+            prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
+          }
+
+          try {
+            const content = await callAI(lovableKey, [
+              { role: "system", content: "You are Market Entry Secrets AI, an expert consultant on international companies entering the Australian market. Write professional, actionable content grounded in real data when available. Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\nIMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MUST include inline citation markers using the format [N] where N is the source number from the provided citations list. Place the citation immediately after the relevant claim. For example: \"The Australian AI market is projected to reach USD 8.48 billion by 2030 [3].\" If multiple sources support a claim, list them: [1][4]. Only cite sources from the provided numbered citations list — do not invent citation numbers." },
+              { role: "user", content: prompt },
+            ]);
+
+            return {
+              name: tmpl.section_name,
+              data: {
+                content,
+                visible: true,
+                matches: getMatchesForSection(tmpl.section_name, matches),
+              },
+            };
+          } catch (e) {
+            console.error(`Failed to generate ${tmpl.section_name}:`, e);
+            return {
+              name: tmpl.section_name,
+              data: { content: "This section could not be generated. Please try again.", visible: true },
+            };
+          }
+        })
+      );
+
+      for (const result of results) {
+        if (result.status === "fulfilled" && result.value) {
+          sections[result.value.name] = result.value.data;
+          if (result.value.data.visible) sectionsGenerated.push(result.value.name);
         }
       }
+
+      console.log(`Section generation: ${sectionsGenerated.length} sections in ${Date.now() - sectionStartTime}ms (single batch)`);
     }
 
     // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
@@ -1270,10 +1303,10 @@ async function generateReportInBackground(
         perplexity_used: marketResearch.used,
         perplexity_citations: marketResearch.citations,
         firecrawl_deep_scrape: !!companyProfile,
-        firecrawl_providers_enriched: enrichedProviders.filter((p: any) => p.enriched_description).length,
+        firecrawl_providers_enriched: (matches.service_providers || []).filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
         polish_applied: polishApplied,
-        key_metrics: keyMetricsResult.metrics,
+        key_metrics: keyMetrics,
         discovered_events_count: discoveredEvents.length,
         end_buyer_research_available: !!endBuyerProcurementResearch,
         bilateral_trade_available: !!marketResearch.bilateral_trade,
