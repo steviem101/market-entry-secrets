@@ -3,7 +3,6 @@ import { useRef, useEffect } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { SimpleSearchDropdown } from "./search/SimpleSearchDropdown";
 import { useSearchState } from "@/hooks/useSearchState";
-import { cn } from "@/lib/utils";
 
 interface MasterSearchProps {
   placeholder?: string;
@@ -29,31 +28,17 @@ export const MasterSearch = ({
     setShowResults
   } = useSearchState();
 
-  // Enhanced click-outside handling
+  // Close dropdown when clicking outside the search container
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Check if click is outside the search container
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        // Also check if click is not on the dropdown (which is now portaled)
-        const target = event.target as Element;
-        const isClickOnDropdown = target.closest('[data-search-dropdown]');
-        
-        if (!isClickOnDropdown) {
-          setShowResults(false);
-        }
+        setShowResults(false);
       }
     };
 
     if (showResults) {
-      // Add slight delay to prevent immediate closure on initial show
-      const timer = setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-      }, 100);
-
-      return () => {
-        clearTimeout(timer);
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showResults, setShowResults]);
 

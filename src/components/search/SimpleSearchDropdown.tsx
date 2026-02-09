@@ -1,6 +1,5 @@
 import { SearchResult } from "@/hooks/useMasterSearch";
 import { SearchResultsContainer } from "./SearchResultsContainer";
-import { Portal } from "@/components/ui/portal";
 
 interface SimpleSearchDropdownProps {
   results: SearchResult[];
@@ -19,25 +18,11 @@ export const SimpleSearchDropdown = ({
   searchQuery,
   showResults,
   onResultClick,
-  inputRef
 }: SimpleSearchDropdownProps) => {
-  // Calculate dropdown position
-  const getDropdownPosition = () => {
-    if (!inputRef.current) return { top: 0, left: 0, width: 300 };
-    
-    const rect = inputRef.current.getBoundingClientRect();
-    const scrollY = window.scrollY || document.documentElement.scrollTop;
-    
-    return {
-      top: rect.bottom + scrollY + 8,
-      left: rect.left,
-      width: rect.width
-    };
-  };
   // Show dropdown if we have a query AND (loading OR results OR error OR completed search with no results)
   const shouldShowResults = showResults && searchQuery.trim() && (
-    loading || 
-    results.length > 0 || 
+    loading ||
+    results.length > 0 ||
     error ||
     (!loading && results.length === 0)
   );
@@ -45,8 +30,6 @@ export const SimpleSearchDropdown = ({
   if (!shouldShowResults) {
     return null;
   }
-
-  const position = getDropdownPosition();
 
   const content = (() => {
     if (loading) {
@@ -80,20 +63,11 @@ export const SimpleSearchDropdown = ({
   })();
 
   return (
-    <Portal>
-      <div 
-        data-search-dropdown
-        className="bg-background/95 backdrop-blur-sm border border-border rounded-xl shadow-2xl max-h-[500px] overflow-hidden"
-        style={{
-          position: 'fixed',
-          top: position.top,
-          left: position.left,
-          width: position.width,
-          zIndex: 50
-        }}
-      >
-        {content}
-      </div>
-    </Portal>
+    <div
+      data-search-dropdown
+      className="absolute left-0 right-0 top-full mt-2 z-[9999] bg-background border border-border rounded-xl shadow-2xl max-h-[500px] overflow-y-auto"
+    >
+      {content}
+    </div>
   );
 };
