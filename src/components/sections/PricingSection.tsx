@@ -105,7 +105,13 @@ export const PricingSection = () => {
         });
 
         if (!error && data?.url) {
-          window.location.href = data.url;
+          // If inside an iframe (e.g. Lovable preview), open in new tab
+          // because Stripe blocks iframe embedding via X-Frame-Options
+          if (window.self !== window.top) {
+            window.open(data.url, '_blank');
+          } else {
+            window.location.href = data.url;
+          }
         } else {
           toast.error(data.error || "Unable to start checkout");
         }
