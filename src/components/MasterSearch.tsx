@@ -3,7 +3,6 @@ import { useRef, useEffect } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { SimpleSearchDropdown } from "./search/SimpleSearchDropdown";
 import { useSearchState } from "@/hooks/useSearchState";
-import { cn } from "@/lib/utils";
 
 interface MasterSearchProps {
   placeholder?: string;
@@ -62,16 +61,6 @@ export const MasterSearch = ({
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
         />
-
-        {/* DEBUG: Inline state indicator - remove after debugging */}
-        {searchQuery.trim() && (
-          <div className="mt-2 p-3 bg-yellow-200 text-black text-sm rounded border-2 border-yellow-500 font-mono">
-            <div>query: "{searchQuery}" | loading: {String(loading)} | results: {results.length} | showResults: {String(showResults)} | error: {String(error)}</div>
-            {results.length > 0 && (
-              <div className="mt-1">First result: {results[0]?.title} ({results[0]?.type})</div>
-            )}
-          </div>
-        )}
 
         <SimpleSearchDropdown
           results={results}
