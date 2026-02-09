@@ -30,6 +30,7 @@ serve(async (req: Request) => {
     log("create-checkout", "incoming body", body);
 
     const tier = String(body.tier ?? "").toLowerCase();
+    const returnUrl = typeof body.return_url === "string" ? body.return_url : "";
     const priceId = PRICE_IDS[tier];
     if (!priceId) {
       logError("create-checkout", "Invalid tier provided", { tier });
@@ -96,8 +97,8 @@ serve(async (req: Request) => {
       customer: stripeCustomerId,
       metadata: { tier, supabase_user_id: supabaseUserId },
       client_reference_id: supabaseUserId,
-      success_url: `${FRONTEND_URL}/pricing?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
-      cancel_url: `${FRONTEND_URL}/pricing?stripe_status=cancel`,
+      success_url: `${FRONTEND_URL}${returnUrl || "/pricing"}?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
+      cancel_url: `${FRONTEND_URL}${returnUrl || "/pricing"}?stripe_status=cancel`,
     });
 
 

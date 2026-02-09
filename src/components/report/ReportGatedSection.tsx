@@ -1,7 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useCheckout } from '@/hooks/useCheckout';
+import { useLocation } from 'react-router-dom';
+import { AuthDialog } from '@/components/auth/AuthDialog';
 
 interface ReportGatedSectionProps {
   id: string;
@@ -15,7 +18,34 @@ const tierLabels: Record<string, string> = {
   enterprise: 'Enterprise',
 };
 
+const tierPrices: Record<string, string> = {
+  growth: '$99',
+  scale: '$999',
+};
+
 export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSectionProps) => {
+  const { startCheckout, loading, isAuthenticated } = useCheckout();
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const location = useLocation();
+
+  const handleUpgradeClick = async () => {
+    if (!isAuthenticated) {
+      setShowAuthDialog(true);
+      return;
+    }
+
+    if (requiredTier === 'enterprise') {
+      window.location.href = '/contact';
+      return;
+    }
+
+    const checkoutTier = requiredTier as 'growth' | 'scale';
+    await startCheckout({
+      tier: checkoutTier,
+      returnUrl: location.pathname,
+    });
+  };
+
   return (
     <section id={id} className="scroll-mt-20">
       <Card className="relative overflow-hidden border-border/50">
@@ -45,16 +75,28 @@ export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSecti
               <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
                 Unlock the {title} section and get deeper insights for your market entry strategy.
               </p>
-              <Link to="/pricing">
-                <Button className="gap-2">
-                  <Lock className="w-4 h-4" />
-                  View Plans
-                </Button>
-              </Link>
+              <Button
+                className="gap-2"
+                onClick={handleUpgradeClick}
+                disabled={loading}
+              >
+                <Lock className="w-4 h-4" />
+                {loading
+                  ? 'Starting checkout...'
+                  : tierPrices[requiredTier]
+                    ? `Upgrade for ${tierPrices[requiredTier]}`
+                    : 'Contact Us'}
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        defaultTab="signup"
+      />
     </section>
   );
 };
