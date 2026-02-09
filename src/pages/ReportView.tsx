@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { toast } from 'sonner';
 import Navigation from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { ReportHeader } from '@/components/report/ReportHeader';
@@ -26,10 +27,29 @@ import {
 
 const ReportView = () => {
   const { reportId } = useParams<{ reportId: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { data: report, isLoading, error } = useReport(reportId);
-  const { subscription } = useSubscription();
+  const { subscription, refetch: refetchSubscription } = useSubscription();
   const currentTier = subscription?.tier || 'free';
   const [localShareToken, setLocalShareToken] = useState<string | null>(null);
+
+  // Handle Stripe checkout return
+  useEffect(() => {
+    const stripeStatus = searchParams.get('stripe_status');
+    if (!stripeStatus) return;
+
+    if (stripeStatus === 'success') {
+      toast.success('Payment successful! Your upgraded sections are now unlocking...');
+      // Refetch subscription so gated sections unlock
+      refetchSubscription();
+    } else if (stripeStatus === 'cancel') {
+      toast.info('Checkout was cancelled. You can upgrade anytime.');
+    }
+
+    // Clean up URL params
+    navigate(`/report/${reportId}`, { replace: true });
+  }, [searchParams, reportId, navigate, refetchSubscription]);
 
   if (isLoading) {
     return (
