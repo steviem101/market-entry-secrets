@@ -18,14 +18,6 @@ export const MasterSearchResults = ({
   onResultClick,
   position 
 }: MasterSearchResultsProps) => {
-  console.log("MasterSearchResults render:", { 
-    resultsLength: results.length, 
-    loading, 
-    error,
-    position,
-    sampleResults: results.slice(0, 3).map(r => ({ title: r.title, type: r.type }))
-  });
-
   // Calculate if dropdown should open upward
   const viewportHeight = window.innerHeight;
   const maxDropdownHeight = Math.min(500, viewportHeight * 0.7);
@@ -83,7 +75,7 @@ export const MasterSearchResults = ({
       <div 
         data-search-dropdown
         style={dropdownStyle} 
-        className="bg-red-500 border-4 border-yellow-400 rounded-xl shadow-2xl backdrop-blur-xl animate-in fade-in-0 zoom-in-95 duration-200"
+        className="bg-background/95 backdrop-blur-sm border border-border rounded-xl shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
       >
         {content}
       </div>

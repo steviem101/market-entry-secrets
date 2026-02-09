@@ -16,10 +16,7 @@ export const useMasterSearch = () => {
   const [error, setError] = useState<string | null>(null);
 
   const searchAll = useCallback(async (query: string) => {
-    console.log("🔍 searchAll called with query:", query);
-    
     if (!query.trim()) {
-      console.log("Empty query, clearing results");
       setResults([]);
       return;
     }
@@ -27,292 +24,235 @@ export const useMasterSearch = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log("🚀 Starting comprehensive search...");
 
       const searchTerm = `%${query.trim().toLowerCase()}%`;
-      console.log("Search term with wildcards:", searchTerm);
-      
+
       const allResults: SearchResult[] = [];
-      
-      // Search events with individual queries
-      console.log("📅 Searching events...");
+
+      // Search events
       try {
         const { data: events, error: eventsError } = await supabase
           .from('events')
           .select('*')
           .or(`title.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},organizer.ilike.${searchTerm},category.ilike.${searchTerm},type.ilike.${searchTerm}`);
 
-        if (eventsError) {
-          console.error("❌ Events search error:", eventsError);
-        } else {
-          console.log(`✅ Events found: ${events?.length || 0}`, events?.slice(0, 2));
-          
-          if (events) {
-            events.forEach(event => {
-              allResults.push({
-                id: event.id,
-                title: event.title,
-                description: event.description || 'Event',
-                type: 'event',
-                url: `/events`,
-                metadata: {
-                  date: event.date,
-                  time: event.time,
-                  location: event.location,
-                  organizer: event.organizer,
-                  category: event.category,
-                  type: event.type,
-                  attendees: event.attendees
-                }
-              });
+        if (!eventsError && events) {
+          events.forEach(event => {
+            allResults.push({
+              id: event.id,
+              title: event.title,
+              description: event.description || 'Event',
+              type: 'event',
+              url: `/events`,
+              metadata: {
+                date: event.date,
+                time: event.time,
+                location: event.location,
+                organizer: event.organizer,
+                category: event.category,
+                type: event.type,
+                attendees: event.attendees
+              }
             });
-          }
+          });
         }
       } catch (err) {
-        console.error("Events search failed:", err);
+        // Silently continue - partial results are still useful
       }
 
       // Search community members
-      console.log("👥 Searching community members...");
       try {
         const { data: members, error: membersError } = await supabase
           .from('community_members')
           .select('*')
           .or(`name.ilike.${searchTerm},title.ilike.${searchTerm},description.ilike.${searchTerm},company.ilike.${searchTerm},location.ilike.${searchTerm},experience.ilike.${searchTerm}`);
 
-        if (membersError) {
-          console.error("❌ Members search error:", membersError);
-        } else {
-          console.log(`✅ Members found: ${members?.length || 0}`);
-          
-          if (members) {
-            members.forEach(member => {
-              allResults.push({
-                id: member.id,
-                title: member.name,
-                description: member.description || 'Community member',
-                type: 'community_member',
-                url: `/community`,
-                metadata: {
-                  title: member.title,
-                  company: member.company,
-                  location: member.location,
-                  experience: member.experience,
-                  specialties: member.specialties,
-                  isAnonymous: member.is_anonymous
-                }
-              });
+        if (!membersError && members) {
+          members.forEach(member => {
+            allResults.push({
+              id: member.id,
+              title: member.name,
+              description: member.description || 'Community member',
+              type: 'community_member',
+              url: `/community`,
+              metadata: {
+                title: member.title,
+                company: member.company,
+                location: member.location,
+                experience: member.experience,
+                specialties: member.specialties,
+                isAnonymous: member.is_anonymous
+              }
             });
-          }
+          });
         }
       } catch (err) {
-        console.error("Members search failed:", err);
+        // Silently continue
       }
 
       // Search trade & investment agencies
-      console.log("🏛️ Searching trade agencies...");
       try {
         const { data: agencies, error: agenciesError } = await supabase
           .from('trade_investment_agencies')
           .select('*')
           .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
 
-        if (agenciesError) {
-          console.error("❌ Agencies search error:", agenciesError);
-        } else {
-          console.log(`✅ Agencies found: ${agencies?.length || 0}`);
-          
-          if (agencies) {
-            agencies.forEach(agency => {
-              allResults.push({
-                id: agency.id,
-                title: agency.name,
-                description: agency.description || 'Trade & Investment Agency',
-                type: 'content',
-                url: `/trade-investment-agencies`,
-                metadata: {
-                  location: agency.location,
-                  founded: agency.founded,
-                  employees: agency.employees,
-                  services: agency.services,
-                  website: agency.website,
-                  contact: agency.contact,
-                  originalType: 'trade_agency'
-                }
-              });
+        if (!agenciesError && agencies) {
+          agencies.forEach(agency => {
+            allResults.push({
+              id: agency.id,
+              title: agency.name,
+              description: agency.description || 'Trade & Investment Agency',
+              type: 'content',
+              url: `/trade-investment-agencies`,
+              metadata: {
+                location: agency.location,
+                founded: agency.founded,
+                employees: agency.employees,
+                services: agency.services,
+                website: agency.website,
+                contact: agency.contact,
+                originalType: 'trade_agency'
+              }
             });
-          }
+          });
         }
       } catch (err) {
-        console.error("Agencies search failed:", err);
+        // Silently continue
       }
 
       // Search service providers
-      console.log("🔧 Searching service providers...");
       try {
         const { data: serviceProviders, error: serviceProvidersError } = await supabase
           .from('service_providers')
           .select('*')
           .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
 
-        if (serviceProvidersError) {
-          console.error("❌ Service providers search error:", serviceProvidersError);
-        } else {
-          console.log(`✅ Service providers found: ${serviceProviders?.length || 0}`);
-          
-          if (serviceProviders) {
-            serviceProviders.forEach(provider => {
-              allResults.push({
-                id: provider.id,
-                title: provider.name,
-                description: provider.description || 'Service Provider',
-                type: 'service_provider',
-                url: `/service-providers`,
-                metadata: {
-                  location: provider.location,
-                  founded: provider.founded,
-                  employees: provider.employees,
-                  services: provider.services,
-                  website: provider.website,
-                  contact: provider.contact
-                }
-              });
+        if (!serviceProvidersError && serviceProviders) {
+          serviceProviders.forEach(provider => {
+            allResults.push({
+              id: provider.id,
+              title: provider.name,
+              description: provider.description || 'Service Provider',
+              type: 'service_provider',
+              url: `/service-providers`,
+              metadata: {
+                location: provider.location,
+                founded: provider.founded,
+                employees: provider.employees,
+                services: provider.services,
+                website: provider.website,
+                contact: provider.contact
+              }
             });
-          }
+          });
         }
       } catch (err) {
-        console.error("Service providers search failed:", err);
+        // Silently continue
       }
 
       // Search innovation ecosystem
-      console.log("💡 Searching innovation ecosystem...");
       try {
         const { data: innovationHubs, error: innovationError } = await supabase
           .from('innovation_ecosystem')
           .select('*')
           .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`);
 
-        if (innovationError) {
-          console.error("❌ Innovation ecosystem search error:", innovationError);
-        } else {
-          console.log(`✅ Innovation hubs found: ${innovationHubs?.length || 0}`);
-          
-          if (innovationHubs) {
-            innovationHubs.forEach(hub => {
-              allResults.push({
-                id: hub.id,
-                title: hub.name,
-                description: hub.description || 'Innovation Hub',
-                type: 'innovation_hub',
-                url: `/innovation-ecosystem`,
-                metadata: {
-                  location: hub.location,
-                  founded: hub.founded,
-                  employees: hub.employees,
-                  services: hub.services,
-                  website: hub.website,
-                  contact: hub.contact
-                }
-              });
+        if (!innovationError && innovationHubs) {
+          innovationHubs.forEach(hub => {
+            allResults.push({
+              id: hub.id,
+              title: hub.name,
+              description: hub.description || 'Innovation Hub',
+              type: 'innovation_hub',
+              url: `/innovation-ecosystem`,
+              metadata: {
+                location: hub.location,
+                founded: hub.founded,
+                employees: hub.employees,
+                services: hub.services,
+                website: hub.website,
+                contact: hub.contact
+              }
             });
-          }
+          });
         }
       } catch (err) {
-        console.error("Innovation search failed:", err);
+        // Silently continue
       }
 
       // Search leads
-      console.log("📊 Searching leads...");
       try {
         const { data: leads, error: leadsError } = await supabase
           .from('leads')
           .select('*')
           .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},type.ilike.${searchTerm},category.ilike.${searchTerm},industry.ilike.${searchTerm},location.ilike.${searchTerm},provider_name.ilike.${searchTerm}`);
 
-        if (leadsError) {
-          console.error("❌ Leads search error:", leadsError);
-        } else {
-          console.log(`✅ Leads found: ${leads?.length || 0}`);
-          
-          if (leads) {
-            leads.forEach(lead => {
-              allResults.push({
-                id: lead.id,
-                title: lead.name,
-                description: lead.description || 'Lead',
-                type: 'lead',
-                url: `/leads`,
-                metadata: {
-                  type: lead.type,
-                  category: lead.category,
-                  industry: lead.industry,
-                  location: lead.location,
-                  provider: lead.provider_name,
-                  recordCount: lead.record_count,
-                  price: lead.price,
-                  currency: lead.currency
-                }
-              });
+        if (!leadsError && leads) {
+          leads.forEach(lead => {
+            allResults.push({
+              id: lead.id,
+              title: lead.name,
+              description: lead.description || 'Lead',
+              type: 'lead',
+              url: `/leads`,
+              metadata: {
+                type: lead.type,
+                category: lead.category,
+                industry: lead.industry,
+                location: lead.location,
+                provider: lead.provider_name,
+                recordCount: lead.record_count,
+                price: lead.price,
+                currency: lead.currency
+              }
             });
-          }
+          });
         }
       } catch (err) {
-        console.error("Leads search failed:", err);
+        // Silently continue
       }
 
       // Search content items
-      console.log("📝 Searching content items...");
       try {
         const { data: contentItems, error: contentError } = await supabase
           .from('content_items')
           .select('*, content_categories(name)')
           .or(`title.ilike.${searchTerm},subtitle.ilike.${searchTerm},meta_description.ilike.${searchTerm}`);
 
-        if (contentError) {
-          console.error("❌ Content items search error:", contentError);
-        } else {
-          console.log(`✅ Content items found: ${contentItems?.length || 0}`);
-          
-          if (contentItems) {
-            contentItems.forEach(content => {
-              allResults.push({
-                id: content.id,
-                title: content.title,
-                description: content.subtitle || content.meta_description || 'Market entry content',
-                type: 'content',
-                url: `/content/${content.slug}`,
-                metadata: {
-                  category: content.content_categories?.name,
-                  contentType: content.content_type,
-                  featured: content.featured,
-                  readTime: content.read_time,
-                  publishDate: content.publish_date,
-                  sectorTags: content.sector_tags
-                }
-              });
+        if (!contentError && contentItems) {
+          contentItems.forEach(content => {
+            allResults.push({
+              id: content.id,
+              title: content.title,
+              description: content.subtitle || content.meta_description || 'Market entry content',
+              type: 'content',
+              url: `/content/${content.slug}`,
+              metadata: {
+                category: content.content_categories?.name,
+                contentType: content.content_type,
+                featured: content.featured,
+                readTime: content.read_time,
+                publishDate: content.publish_date,
+                sectorTags: content.sector_tags
+              }
             });
-          }
+          });
         }
       } catch (err) {
-        console.error("Content search failed:", err);
+        // Silently continue
       }
 
-      console.log(`🎉 Total results compiled: ${allResults.length}`);
-      console.log("Sample results:", allResults.slice(0, 3).map(r => ({ title: r.title, type: r.type })));
-      
       setResults(allResults);
     } catch (err) {
-      console.error('💥 Search error:', err);
       setError(err instanceof Error ? err.message : 'Search failed');
-      setResults([]); // Clear results on error
+      setResults([]);
     } finally {
       setLoading(false);
-      console.log("🏁 Search completed");
     }
   }, []);
 
   const clearSearch = useCallback(() => {
-    console.log("🧹 clearSearch called");
     setResults([]);
     setError(null);
   }, []);

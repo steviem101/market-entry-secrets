@@ -24,21 +24,13 @@ export const SearchDropdown = ({
 }: SearchDropdownProps) => {
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
-  // Calculate dropdown position with better accuracy
+  // Calculate dropdown position relative to viewport (for position: fixed)
   const calculateDropdownPosition = useCallback(() => {
     if (inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
-      const scrollY = window.scrollY || document.documentElement.scrollTop;
-      
-      console.log("Position calculation:", {
-        rectBottom: rect.bottom,
-        rectLeft: rect.left,
-        rectWidth: rect.width,
-        scrollY
-      });
-      
+
       return {
-        top: rect.bottom + scrollY,
+        top: rect.bottom,
         left: rect.left,
         width: rect.width
       };
@@ -73,15 +65,6 @@ export const SearchDropdown = ({
       };
     }
   }, [shouldShowResults, calculateDropdownPosition]);
-
-  console.log("Should show results:", shouldShowResults, {
-    showResults,
-    hasQuery: !!searchQuery.trim(),
-    loading,
-    resultsCount: results.length,
-    error: !!error,
-    dropdownPosition
-  });
 
   if (!shouldShowResults) {
     return null;

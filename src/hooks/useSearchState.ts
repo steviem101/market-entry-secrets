@@ -9,23 +9,11 @@ export const useSearchState = () => {
   const { results, loading, error, searchAll, clearSearch } = useMasterSearch();
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  console.log("useSearchState:", { 
-    searchQuery, 
-    debouncedSearchQuery, 
-    results: results.length, 
-    loading, 
-    showResults,
-    error 
-  });
-
   // Perform search when debounced query changes
   useEffect(() => {
-    console.log("Search effect triggered:", { debouncedSearchQuery });
     if (debouncedSearchQuery.trim()) {
-      console.log("Performing search for:", debouncedSearchQuery);
       searchAll(debouncedSearchQuery);
     } else {
-      console.log("Clearing search - empty query");
       clearSearch();
       setShowResults(false);
     }
@@ -33,34 +21,22 @@ export const useSearchState = () => {
 
   // Show results when we have a query and any of: results, loading, or error
   useEffect(() => {
-    console.log("Results effect:", { 
-      hasQuery: searchQuery.trim().length > 0,
-      hasResults: results.length > 0, 
-      loading,
-      error: !!error
-    });
-    
     if (searchQuery.trim() && (loading || results.length > 0 || error)) {
-      console.log("Setting showResults to true");
       setShowResults(true);
     } else if (searchQuery.trim() && !loading && results.length === 0 && !error) {
-      console.log("Setting showResults to true for no results case");
       setShowResults(true);
     } else {
-      console.log("Setting showResults to false");
       setShowResults(false);
     }
   }, [results, searchQuery, loading, error]);
 
   const handleClearSearch = () => {
-    console.log("Clearing search manually");
     setSearchQuery("");
     clearSearch();
     setShowResults(false);
   };
 
   const handleInputFocus = () => {
-    console.log("Input focused:", { searchQuery, resultsLength: results.length, loading, error });
     if (searchQuery.trim() && (results.length > 0 || loading || error)) {
       setShowResults(true);
     }
@@ -71,7 +47,6 @@ export const useSearchState = () => {
   };
 
   const handleInputChange = (value: string) => {
-    console.log("Input changed:", value);
     setSearchQuery(value);
   };
 

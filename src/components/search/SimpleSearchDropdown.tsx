@@ -21,15 +21,14 @@ export const SimpleSearchDropdown = ({
   onResultClick,
   inputRef
 }: SimpleSearchDropdownProps) => {
-  // Calculate dropdown position
+  // Calculate dropdown position relative to viewport (for position: fixed)
   const getDropdownPosition = () => {
     if (!inputRef.current) return { top: 0, left: 0, width: 300 };
-    
+
     const rect = inputRef.current.getBoundingClientRect();
-    const scrollY = window.scrollY || document.documentElement.scrollTop;
-    
+
     return {
-      top: rect.bottom + scrollY + 8,
+      top: rect.bottom + 8,
       left: rect.left,
       width: rect.width
     };
