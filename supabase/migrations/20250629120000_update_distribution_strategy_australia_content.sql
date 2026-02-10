@@ -60,12 +60,14 @@ BEGIN
   WHERE ci.slug = 'distribution-strategy-australia' AND cs.slug = 'market-overview'
   ON CONFLICT (section_id, sort_order) DO NOTHING;
 
-END $$;
+  -- Update the main content item with enhanced metadata
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'content_items') THEN
+    UPDATE content_items
+    SET
+      subtitle = 'A comprehensive guide to building successful distribution networks across Australia, covering traditional retail, e-commerce, and omnichannel strategies.',
+      read_time = 12,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE slug = 'distribution-strategy-australia';
+  END IF;
 
--- Update the main content item with enhanced metadata (safe even if table exists without the row)
-UPDATE content_items
-SET
-  subtitle = 'A comprehensive guide to building successful distribution networks across Australia, covering traditional retail, e-commerce, and omnichannel strategies.',
-  read_time = 12,
-  updated_at = CURRENT_TIMESTAMP
-WHERE slug = 'distribution-strategy-australia';
+END $$;
