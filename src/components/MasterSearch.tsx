@@ -2,16 +2,18 @@
 import { useRef, useEffect } from "react";
 import { SearchInput } from "./search/SearchInput";
 import { SimpleSearchDropdown } from "./search/SimpleSearchDropdown";
-import { useSearchState } from "@/hooks/useSearchState";
+import { useSearchState, SearchCategory } from "@/hooks/useSearchState";
 
 interface MasterSearchProps {
   placeholder?: string;
   className?: string;
+  activeCategory?: SearchCategory;
 }
 
-export const MasterSearch = ({ 
-  placeholder = "Search across all content...", 
-  className = "" 
+export const MasterSearch = ({
+  placeholder = "Search across all content...",
+  className = "",
+  activeCategory = "all"
 }: MasterSearchProps) => {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -26,7 +28,7 @@ export const MasterSearch = ({
     handleInputFocus,
     handleResultClick,
     setShowResults
-  } = useSearchState();
+  } = useSearchState({ category: activeCategory });
 
   // Close dropdown when clicking outside the search container
   useEffect(() => {

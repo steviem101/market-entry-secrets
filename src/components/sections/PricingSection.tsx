@@ -2,11 +2,14 @@ import { PricingCard } from "@/components/pricing/PricingCard";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthDialog } from "@/components/auth/AuthDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { useCheckout } from "@/hooks/useCheckout";
 
 export const PricingSection = () => {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { startCheckout } = useCheckout();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const pricingTiers = [
@@ -78,12 +81,11 @@ export const PricingSection = () => {
   ];
 
   const handleSelectTier = async (tierId: string) => {
-    // console.log('Selected tier:', tierId);
     switch (tierId) {
       case 'free': {
         if (user) {
-          window.location.href = '/dashboard';
           toast.success('Welcome! You already have free access.');
+          navigate('/dashboard');
         } else {
           setShowAuthDialog(true);
         }
@@ -91,41 +93,21 @@ export const PricingSection = () => {
       }
       case 'growth':
       case 'scale': {
-        if (!user || !session?.access_token) {
-          toast.error("Please login or register first in order to subscribe to a plan.");
-          setShowAuthDialog(true)
-          return;
-        }
-
-        const { data, error } = await supabase.functions.invoke('create-checkout', {
-          body: {
-            tier: tierId,
-            supabase_user_id: user.id, // required
-          }
+        const result = await startCheckout({
+          tier: tierId as 'growth' | 'scale',
+          returnUrl: window.location.pathname,
         });
-
-        if (!error && data?.url) {
-          // If inside an iframe (e.g. Lovable preview), open in new tab
-          // because Stripe blocks iframe embedding via X-Frame-Options
-          if (window.self !== window.top) {
-            window.open(data.url, '_blank');
-          } else {
-            window.location.href = data.url;
-          }
-        } else {
-          toast.error(data.error || "Unable to start checkout");
+        if (result?.needsAuth) {
+          setShowAuthDialog(true);
         }
         break;
       }
       case 'enterprise': {
         toast.success('Redirecting to contact our enterprise team...');
-        setTimeout(() => {
-          window.location.href = '/contact';
-        }, 1000);
+        navigate('/contact');
         break;
       }
       default: {
-        // handle unknown tier
         toast.error("Unknown tier selected");
         break;
       }

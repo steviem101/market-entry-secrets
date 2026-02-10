@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Search, Sparkles, Users, Building2, Calendar, MapPin } from "lucide-react";
 import { MasterSearch } from "@/components/MasterSearch";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import type { SearchCategory } from "@/hooks/useSearchState";
 
 interface SearchSectionProps {
   totalResources?: number;
 }
 
 export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => {
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<SearchCategory>("all");
   const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.2 });
   const [animationComplete, setAnimationComplete] = useState(false);
 
@@ -87,7 +88,7 @@ export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => 
                     className={`group relative px-6 py-4 rounded-2xl border transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
                       isActive
                         ? 'bg-gradient-to-r from-primary to-primary/90 text-white border-primary shadow-lg shadow-primary/25'
-                        : 'bg-white/80 backdrop-blur-sm border-border/30 text-foreground hover:bg-white/90 hover:border-primary/30'
+                        : 'bg-background/80 backdrop-blur-sm border-border/30 text-foreground hover:bg-background/90 hover:border-primary/30'
                     } ${animationComplete ? `animate-fade-in` : ''}`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -116,14 +117,14 @@ export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => 
           <div className={`transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="relative max-w-4xl mx-auto">
               {/* Background Card with Glassmorphism */}
-              <div className="relative bg-white/60 backdrop-blur-xl border border-white/30 rounded-3xl p-8 shadow-2xl shadow-primary/10">
+              <div className="relative bg-card/60 backdrop-blur-xl border border-border/30 rounded-3xl p-8 shadow-2xl shadow-primary/10">
                 {/* Gradient Border Effect */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-primary/20 via-transparent to-accent/20 p-[2px]">
-                  <div className="w-full h-full bg-white/60 backdrop-blur-xl rounded-3xl" />
+                  <div className="w-full h-full bg-card/60 backdrop-blur-xl rounded-3xl" />
                 </div>
                 
                 <div className="relative z-10">
-                  <MasterSearch />
+                  <MasterSearch activeCategory={activeTab} />
                 </div>
                 
                 {/* Floating Search Icon */}

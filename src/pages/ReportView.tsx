@@ -42,31 +42,34 @@ const ReportView = () => {
   );
 
   // Handle Stripe checkout return — poll for subscription update
-  // because the webhook may not have processed yet when Stripe redirects
+  // because the webhook may not have processed yet when Stripe redirects.
+  // Intentionally uses empty deps: runs once on mount using initial URL params.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const stripeStatus = searchParams.get('stripe_status');
-    if (!stripeStatus) return;
+    const initialStatus = new URLSearchParams(window.location.search).get('stripe_status');
+    if (!initialStatus) return;
 
     // Clean up URL params immediately
     navigate(`/report/${reportId}`, { replace: true });
 
-    if (stripeStatus === 'success') {
+    if (initialStatus === 'success') {
       toast.success('Payment successful! Unlocking your premium sections...');
 
-      // Poll for subscription update — webhook may take a few seconds
+      // Poll for subscription update — webhook may take a few seconds.
+      // Use the return value from refetchSubscription to compare tiers
+      // instead of relying on the stale closure.
+      const previousTier = subscription?.tier || 'free';
       let attempts = 0;
       const poll = async () => {
-        const previousTier = subscription?.tier || 'free';
-        await refetchSubscription();
+        const newTier = await refetchSubscription();
         attempts++;
-        // Keep polling if tier hasn't changed yet (max 5 attempts over ~10s)
-        if (attempts < 5 && (subscription?.tier || 'free') === previousTier) {
+        if (attempts < 5 && newTier === previousTier) {
           setTimeout(poll, 2000);
         }
       };
       // Start polling after a brief delay to give the webhook time
       setTimeout(poll, 2000);
-    } else if (stripeStatus === 'cancel') {
+    } else if (initialStatus === 'cancel') {
       toast.info('Checkout was cancelled. You can upgrade anytime.');
     }
   }, []);
