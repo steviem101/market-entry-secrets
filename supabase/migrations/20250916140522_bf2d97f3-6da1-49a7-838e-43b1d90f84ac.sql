@@ -10,14 +10,13 @@ CREATE TABLE IF NOT EXISTS public.payment_webhook_logs (
 -- Enable RLS
 ALTER TABLE public.payment_webhook_logs ENABLE ROW LEVEL SECURITY;
 
--- Only admins can view webhook logs (inline check avoids dependency on has_role function)
+-- Webhook logs are only read via Supabase dashboard (service role bypasses RLS).
+-- Using false here so no regular API user can SELECT; avoids dependency on
+-- user_roles/has_role which may not exist yet during Preview migrations.
 CREATE POLICY "Admins can view webhook logs"
 ON public.payment_webhook_logs
 FOR SELECT
-USING (EXISTS (
-  SELECT 1 FROM public.user_roles
-  WHERE user_id = auth.uid() AND role = 'admin'
-));
+USING (false);
 
 -- System can insert webhook logs (for the webhook handler)
 CREATE POLICY "System can insert webhook logs" 
