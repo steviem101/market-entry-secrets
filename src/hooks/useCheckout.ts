@@ -34,7 +34,13 @@ export const useCheckout = () => {
         },
       });
 
-      if (!error && data?.url) {
+      if (error) {
+        console.error('[useCheckout] Edge function error:', error);
+        toast.error('Unable to start checkout. Please try again.');
+        return { success: false };
+      }
+
+      if (data?.url) {
         // If inside an iframe (e.g. Lovable preview), open in new tab
         // because Stripe blocks iframe embedding via X-Frame-Options
         if (window.self !== window.top) {
@@ -44,6 +50,7 @@ export const useCheckout = () => {
         }
         return { success: true };
       } else {
+        console.error('[useCheckout] No checkout URL returned:', data);
         toast.error(data?.error || 'Unable to start checkout');
         return { success: false };
       }
