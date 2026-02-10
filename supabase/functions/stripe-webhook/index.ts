@@ -126,6 +126,19 @@ serve(async (req: Request) => {
         } else {
           log("stripe-webhook", "Upserted user_subscriptions successfully", { data });
         }
+
+        // Also update tier_at_generation on the user's reports so
+        // the "free" badge updates to reflect their current plan
+        const { error: reportsErr } = await supabaseAdmin
+          .from("user_reports")
+          .update({ tier_at_generation: tier })
+          .eq("user_id", supabaseUserId);
+
+        if (reportsErr) {
+          logError("stripe-webhook", "Error updating user_reports tier", { error: reportsErr });
+        } else {
+          log("stripe-webhook", "Updated user_reports tier_at_generation", { supabaseUserId, tier });
+        }
       } else {
         logError("stripe-webhook", "Checkout completed but no supabaseUserId in metadata — ignoring", {event: event});
       }

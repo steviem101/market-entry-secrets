@@ -97,8 +97,14 @@ serve(async (req: Request) => {
       customer: stripeCustomerId,
       metadata: { tier, supabase_user_id: supabaseUserId },
       client_reference_id: supabaseUserId,
-      success_url: `${FRONTEND_URL}${returnUrl || "/pricing"}?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
-      cancel_url: `${FRONTEND_URL}${returnUrl || "/pricing"}?stripe_status=cancel`,
+      // If returnUrl is a full URL (has origin), use it directly;
+      // otherwise fall back to FRONTEND_URL + path
+      success_url: returnUrl?.startsWith("http")
+        ? `${returnUrl}?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`
+        : `${FRONTEND_URL}${returnUrl || "/pricing"}?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
+      cancel_url: returnUrl?.startsWith("http")
+        ? `${returnUrl}?stripe_status=cancel`
+        : `${FRONTEND_URL}${returnUrl || "/pricing"}?stripe_status=cancel`,
     });
 
 

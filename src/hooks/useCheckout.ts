@@ -20,11 +20,17 @@ export const useCheckout = () => {
 
     setLoading(true);
     try {
+      // Send full URL (origin + path) so Stripe redirects back to the
+      // exact domain the user is on (Lovable preview vs published app)
+      const fullReturnUrl = returnUrl
+        ? `${window.location.origin}${returnUrl}`
+        : undefined;
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           tier,
           supabase_user_id: user.id,
-          return_url: returnUrl,
+          return_url: fullReturnUrl,
         },
       });
 
