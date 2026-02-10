@@ -50,11 +50,11 @@ export const useSubscription = () => {
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchSubscription = useCallback(async () => {
+  const fetchSubscription = useCallback(async (): Promise<SubscriptionTier> => {
     if (!user) {
       setSubscription(null);
       setLoading(false);
-      return;
+      return 'free';
     }
 
     setLoading(true);
@@ -68,20 +68,23 @@ export const useSubscription = () => {
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching subscription:', error);
       } else if (data) {
+        const mappedTier = mapDatabaseTier(data.tier);
         const mappedSubscription: UserSubscription = {
           id: data.id,
           user_id: data.user_id,
-          tier: mapDatabaseTier(data.tier),
+          tier: mappedTier,
           created_at: data.created_at,
           updated_at: data.updated_at,
         };
         setSubscription(mappedSubscription);
+        return mappedTier;
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
     } finally {
       setLoading(false);
     }
+    return 'free';
   }, [user]);
 
   useEffect(() => {

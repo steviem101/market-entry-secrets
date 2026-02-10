@@ -50,7 +50,7 @@ export const Footer = () => {
           {/* Brand Section */}
           <div className="lg:col-span-1">
             <Link to="/" className="block mb-4">
-              <MarketEntryLogo size="lg" className="h-32 w-auto" />
+              <MarketEntryLogo size="lg" className="h-16 w-auto" />
             </Link>
             
             <p className="text-muted-foreground mb-4 leading-relaxed">
@@ -71,13 +71,13 @@ export const Footer = () => {
 
             {/* Social Links */}
             <div className="flex gap-4">
-              <a href="#" className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
+              <a href="https://www.linkedin.com/company/market-entry-secrets" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
                 <Linkedin className="w-5 h-5 text-primary" />
               </a>
-              <a href="#" className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
+              <a href="#" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
                 <Facebook className="w-5 h-5 text-primary" />
               </a>
-              <a href="#" className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
+              <a href="#" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
                 <Instagram className="w-5 h-5 text-primary" />
               </a>
             </div>
@@ -133,7 +133,7 @@ export const Footer = () => {
         
         <div className="flex flex-col md:flex-row justify-between items-center gap-2">
           <div className="text-sm text-muted-foreground">
-            © 2024 Market Entry Secrets. All rights reserved.
+            © {new Date().getFullYear()} Market Entry Secrets. All rights reserved.
           </div>
           
           <div className="flex flex-wrap gap-6">

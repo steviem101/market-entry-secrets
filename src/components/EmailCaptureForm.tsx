@@ -22,7 +22,7 @@ export const EmailCaptureForm = ({ onSubmit, className = "", source = "homepage_
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !email.includes('@')) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast({
         title: "Invalid Email",
         description: "Please enter a valid email address.",

@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface PaymentStatusModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface PaymentStatusModalProps {
 
 export const PaymentStatusModal = ({ isOpen, onClose, status, sessionId }: PaymentStatusModalProps) => {
   const isSuccess = status === 'success';
+  const navigate = useNavigate();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -53,7 +55,7 @@ export const PaymentStatusModal = ({ isOpen, onClose, status, sessionId }: Payme
             {isSuccess ? 'Get Started' : 'Close'}
           </Button>
           {!isSuccess && (
-            <Button variant="outline" onClick={onClose} className="w-full">
+            <Button variant="outline" onClick={() => { onClose(); navigate('/pricing'); }} className="w-full">
               View Pricing Plans
             </Button>
           )}

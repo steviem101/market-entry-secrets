@@ -15,10 +15,8 @@ export const HeroSection = ({
   // Count Up Animation Effect - starts immediately on mount
   useEffect(() => {
     if (totalResources === 0) {
-      console.log('No resources to count');
       return;
     }
-    console.log('Starting count animation to:', totalResources);
     let currentCount = 0;
     const duration = 2500;
     const steps = 60;
@@ -27,7 +25,6 @@ export const HeroSection = ({
     const animate = () => {
       currentCount += increment;
       if (currentCount >= totalResources) {
-        console.log('Animation completed at:', totalResources);
         setCount(totalResources);
         return;
       }
@@ -41,15 +38,9 @@ export const HeroSection = ({
       }
     };
   }, [totalResources]);
-  const rotatingWords = ["Leads", "Mentors", "Vendors", "Events", "Communities", "Content", "Case Studies", "Ecosystem's", "Supports", "Accelerators", "Investors", "Partners"];
-  const handleEmailSubmit = async (email: string) => {
-    // Handle email submission - can integrate with existing lead generation system
-    console.log('Processing email submission:', email);
-
-    // Add any additional logic here like:
-    // - API calls to save the email
-    // - Analytics tracking
-    // - Integration with email marketing services
+  const rotatingWords = ["Leads", "Mentors", "Vendors", "Events", "Communities", "Content", "Case Studies", "Ecosystems", "Support", "Accelerators", "Investors", "Partners"];
+  const handleEmailSubmit = async (_email: string) => {
+    // EmailCaptureForm handles saving to Supabase internally
   };
   return <section className="relative overflow-hidden min-h-screen flex items-center">
       {/* Enhanced Background with light blue tinge */}

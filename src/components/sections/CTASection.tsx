@@ -1,10 +1,12 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 
 export const CTASection = () => {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <section className="relative py-20 overflow-hidden">
@@ -32,9 +34,10 @@ export const CTASection = () => {
             >
               Get Started Today
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate('/contact')}
               className="bg-background/60 backdrop-blur-sm border-primary/30 text-foreground hover:bg-background/80 hover:border-primary/50 px-8 py-4 text-lg rounded-xl soft-shadow hover:shadow-lg transition-all duration-300"
             >
               Schedule Consultation

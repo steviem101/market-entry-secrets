@@ -1,13 +1,34 @@
 
-import { useState, useEffect } from "react";
-import { useMasterSearch } from "./useMasterSearch";
+import { useState, useEffect, useMemo } from "react";
+import { useMasterSearch, SearchResult } from "./useMasterSearch";
 import { useDebounce } from "./useDebounce";
 
-export const useSearchState = () => {
+export type SearchCategory = 'all' | 'companies' | 'people' | 'events' | 'locations';
+
+const CATEGORY_TYPE_MAP: Record<SearchCategory, SearchResult['type'][] | null> = {
+  all: null,
+  companies: ['service_provider', 'innovation_hub'],
+  people: ['community_member'],
+  events: ['event'],
+  locations: ['lead', 'content'],
+};
+
+interface UseSearchStateOptions {
+  category?: SearchCategory;
+}
+
+export const useSearchState = (options?: UseSearchStateOptions) => {
+  const category = options?.category || 'all';
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const { results, loading, error, searchAll, clearSearch } = useMasterSearch();
+  const { results: rawResults, loading, error, searchAll, clearSearch } = useMasterSearch();
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  const results = useMemo(() => {
+    const allowedTypes = CATEGORY_TYPE_MAP[category];
+    if (!allowedTypes) return rawResults;
+    return rawResults.filter((r) => allowedTypes.includes(r.type));
+  }, [rawResults, category]);
 
   // Perform search when debounced query changes
   useEffect(() => {
