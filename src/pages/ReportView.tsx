@@ -8,6 +8,7 @@ import { ReportHeader } from '@/components/report/ReportHeader';
 import { ReportSidebar } from '@/components/report/ReportSidebar';
 import { ReportSection } from '@/components/report/ReportSection';
 import { ReportGatedSection } from '@/components/report/ReportGatedSection';
+import { ReportRegenerateSection } from '@/components/report/ReportRegenerateSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
 import { ReportFeedback } from '@/components/report/ReportFeedback';
 import { ReportSources } from '@/components/report/ReportSources';
@@ -34,22 +35,35 @@ const ReportView = () => {
   const currentTier = subscription?.tier || 'free';
   const [localShareToken, setLocalShareToken] = useState<string | null>(null);
 
-  // Handle Stripe checkout return
+  // Handle Stripe checkout return — poll for subscription update
+  // because the webhook may not have processed yet when Stripe redirects
   useEffect(() => {
     const stripeStatus = searchParams.get('stripe_status');
     if (!stripeStatus) return;
 
+    // Clean up URL params immediately
+    navigate(`/report/${reportId}`, { replace: true });
+
     if (stripeStatus === 'success') {
-      toast.success('Payment successful! Your upgraded sections are now unlocking...');
-      // Refetch subscription so gated sections unlock
-      refetchSubscription();
+      toast.success('Payment successful! Unlocking your premium sections...');
+
+      // Poll for subscription update — webhook may take a few seconds
+      let attempts = 0;
+      const poll = async () => {
+        const previousTier = subscription?.tier || 'free';
+        await refetchSubscription();
+        attempts++;
+        // Keep polling if tier hasn't changed yet (max 5 attempts over ~10s)
+        if (attempts < 5 && (subscription?.tier || 'free') === previousTier) {
+          setTimeout(poll, 2000);
+        }
+      };
+      // Start polling after a brief delay to give the webhook time
+      setTimeout(poll, 2000);
     } else if (stripeStatus === 'cancel') {
       toast.info('Checkout was cancelled. You can upgrade anytime.');
     }
-
-    // Clean up URL params
-    navigate(`/report/${reportId}`, { replace: true });
-  }, [searchParams, reportId, navigate, refetchSubscription]);
+  }, []);
 
   if (isLoading) {
     return (
@@ -137,20 +151,9 @@ const ReportView = () => {
                 const section = sections[sectionId];
                 const requiredTier = TIER_REQUIREMENTS[sectionId];
                 const isGated = requiredTier && !userTierMeetsRequirement(currentTier, requiredTier);
+                const hasContent = section?.content && section.content.trim().length > 0;
 
-                if (!section && requiredTier) {
-                  return (
-                    <ReportGatedSection
-                      key={sectionId}
-                      id={sectionId}
-                      title={SECTION_LABELS[sectionId]}
-                      requiredTier={requiredTier}
-                    />
-                  );
-                }
-
-                if (!section) return null;
-
+                // Case 1: Section requires a tier the user doesn't have → show upgrade prompt
                 if (isGated) {
                   return (
                     <ReportGatedSection
@@ -162,6 +165,22 @@ const ReportView = () => {
                   );
                 }
 
+                // Case 2: Section is unlocked but has no content (report was generated at lower tier)
+                // → show "generate new report" prompt
+                if (requiredTier && !hasContent) {
+                  return (
+                    <ReportRegenerateSection
+                      key={sectionId}
+                      id={sectionId}
+                      title={SECTION_LABELS[sectionId]}
+                    />
+                  );
+                }
+
+                // Case 3: No section data and no tier requirement → skip
+                if (!section) return null;
+
+                // Case 4: Section is unlocked with content → render normally
                 const sectionMatches = section.matches || matches[sectionId] || [];
 
                 return (
