@@ -8,24 +8,32 @@ interface LeadGenPopupProviderProps {
   children: React.ReactNode;
 }
 
+// Check once at mount whether the user is returning from Stripe checkout.
+// This provider sits outside BrowserRouter so we use window.location directly.
+const isStripeReturn = () =>
+  new URLSearchParams(window.location.search).has('stripe_status');
+
 export const LeadGenPopupProvider = ({ children }: LeadGenPopupProviderProps) => {
   const [showLeadGenPopup, setShowLeadGenPopup] = useState(false);
-  
-  const { user } = useAuth();
-  const { triggered } = useTimerTrigger({ 
+
+  const { user, loading } = useAuth();
+
+  // Don't start timer while auth is still loading (user appears null
+  // during the async getSession() call) or when returning from Stripe.
+  const { triggered } = useTimerTrigger({
     delay: 15000, // 15 seconds
-    enabled: !user // Only enable for non-authenticated users
+    enabled: !user && !loading && !isStripeReturn()
   });
 
   useEffect(() => {
-    // Show popup if timer triggered and user is not signed in
-    if (triggered && !user) {
+    // Show popup only after auth has settled and user is genuinely not signed in
+    if (triggered && !user && !loading) {
       const hasSeenPopup = localStorage.getItem('leadGenPopupShown');
       if (!hasSeenPopup) {
         setShowLeadGenPopup(true);
       }
     }
-  }, [triggered, user]);
+  }, [triggered, user, loading]);
 
   const handleCloseLeadGenPopup = () => {
     setShowLeadGenPopup(false);
