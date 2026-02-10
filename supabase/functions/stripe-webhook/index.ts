@@ -4,6 +4,7 @@ import Stripe from "https://esm.sh/stripe@12?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
+import { notifyPayment } from "../_shared/slack.ts";
 
 const STRIPE_SECRET = Deno.env.get("STRIPE_SECRET")!;
 const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
@@ -139,6 +140,26 @@ serve(async (req: Request) => {
         } else {
           log("stripe-webhook", "Updated user_reports tier_at_generation", { supabaseUserId, tier });
         }
+
+        // Notify Slack about the payment (best-effort, don't block response)
+        let customerEmail: string | null = null;
+        let customerName: string | null = null;
+        try {
+          const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(supabaseUserId);
+          customerEmail = authUser?.user?.email ?? null;
+          const meta = authUser?.user?.user_metadata;
+          customerName = [meta?.first_name, meta?.last_name].filter(Boolean).join(" ") || null;
+        } catch (_e) { /* best-effort */ }
+
+        await notifyPayment({
+          user_id: supabaseUserId,
+          email: customerEmail ?? dataObj?.customer_details?.email ?? null,
+          name: customerName ?? dataObj?.customer_details?.name ?? null,
+          tier,
+          amount,
+          currency,
+          stripe_event_id: event.id,
+        });
       } else {
         logError("stripe-webhook", "Checkout completed but no supabaseUserId in metadata — ignoring", {event: event});
       }
