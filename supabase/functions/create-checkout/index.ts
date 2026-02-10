@@ -118,9 +118,9 @@ serve(async (req: Request) => {
         const urlOrigin = new URL(url).origin;
         return ALLOWED_ORIGINS.some((allowed) => {
           try { return new URL(allowed!).origin === urlOrigin; }
-          catch { return false; }
+          catch (_e) { return false; }
         });
-      } catch { return false; }
+      } catch (_e) { return false; }
     };
 
     const safeReturnUrl =

@@ -18,12 +18,6 @@ verify_jwt = false
 [functions.enrich-innovation-ecosystem]
 verify_jwt = false
 
-[functions.enrich-intake]
-verify_jwt = false
-
-[functions.search-matches]
-verify_jwt = false
-
 [functions.generate-report]
 verify_jwt = true
 
