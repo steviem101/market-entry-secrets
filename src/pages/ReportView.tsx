@@ -17,6 +17,7 @@ import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
 import { ReportKeyMetrics } from '@/components/report/ReportKeyMetrics';
 import { useReport } from '@/hooks/useReport';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   SECTION_LABELS,
@@ -30,10 +31,15 @@ const ReportView = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const { data: report, isLoading, error } = useReport(reportId);
   const { subscription, refetch: refetchSubscription } = useSubscription();
   const currentTier = subscription?.tier || 'free';
   const [localShareToken, setLocalShareToken] = useState<string | null>(null);
+  // Track if user arrived from Stripe (before we clean the URL params)
+  const [cameFromStripe] = useState(
+    () => new URLSearchParams(window.location.search).get('stripe_status') === 'success'
+  );
 
   // Handle Stripe checkout return — poll for subscription update
   // because the webhook may not have processed yet when Stripe redirects
@@ -65,7 +71,8 @@ const ReportView = () => {
     }
   }, []);
 
-  if (isLoading) {
+  // Wait for auth to settle before showing report (especially after Stripe redirect)
+  if (isLoading || (authLoading && cameFromStripe)) {
     return (
       <>
         <Navigation />
@@ -76,6 +83,25 @@ const ReportView = () => {
             ))}
           </div>
         </main>
+      </>
+    );
+  }
+
+  // If user arrived from Stripe but isn't signed in, show a helpful message
+  // instead of the generic "Report Not Found"
+  if ((error || !report) && cameFromStripe && !user) {
+    return (
+      <>
+        <Navigation />
+        <main className="min-h-screen pt-20 pb-16 px-4">
+          <div className="container mx-auto text-center py-20">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Payment Successful!</h1>
+            <p className="text-muted-foreground mb-4">
+              Please sign in to view your upgraded report.
+            </p>
+          </div>
+        </main>
+        <Footer />
       </>
     );
   }

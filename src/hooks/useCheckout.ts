@@ -41,10 +41,17 @@ export const useCheckout = () => {
       }
 
       if (data?.url) {
-        // If inside an iframe (e.g. Lovable preview), open in new tab
-        // because Stripe blocks iframe embedding via X-Frame-Options
+        // If inside an iframe (e.g. Lovable preview), navigate the
+        // parent window. Opening a new tab doesn't work because browser
+        // storage partitioning gives the new tab a separate localStorage
+        // (no auth session), causing "Report Not Found" after redirect.
         if (window.self !== window.top) {
-          window.open(data.url, '_blank');
+          try {
+            window.top!.location.href = data.url;
+          } catch {
+            // Cross-origin restriction — fall back to new tab
+            window.open(data.url, '_blank');
+          }
         } else {
           window.location.href = data.url;
         }
