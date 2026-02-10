@@ -61,24 +61,40 @@ serve(async (req: Request) => {
     
     const supabaseUserId = userData.user.id;
 
-    // First fetch user profile (with stripe_customer_id) from Supabase
+    // Fetch user profile (with stripe_customer_id) from Supabase
+    // Use maybeSingle() so new users without a profile don't crash
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("stripe_customer_id, first_name, last_name")
       .eq("id", supabaseUserId)
-      .single();
+      .maybeSingle();
 
     if (profileError) {
+      logError("create-checkout", "Error querying profiles", { error: profileError });
       throw new Error("Could not fetch user profile");
+    }
+
+    // If no profile exists yet (race condition with signup trigger),
+    // create one so checkout can proceed
+    if (!profile) {
+      log("create-checkout", "No profile found, creating one for new user", { supabaseUserId });
+      const meta = userData.user.user_metadata || {};
+      await supabaseAdmin.from("profiles").upsert({
+        id: supabaseUserId,
+        first_name: meta.first_name || null,
+        last_name: meta.last_name || null,
+      }, { onConflict: "id" });
     }
 
     let stripeCustomerId = profile?.stripe_customer_id;
 
     if (!stripeCustomerId) {
       // Create customer on Stripe only at the moment of purchase
+      const firstName = profile?.first_name ?? userData.user.user_metadata?.first_name ?? "";
+      const lastName = profile?.last_name ?? userData.user.user_metadata?.last_name ?? "";
       const customer = await stripe.customers.create({
         email: userData.user.email,
-        name: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
+        name: `${firstName} ${lastName}`.trim() || userData.user.email,
         metadata: { supabase_user_id: supabaseUserId },
       });
 

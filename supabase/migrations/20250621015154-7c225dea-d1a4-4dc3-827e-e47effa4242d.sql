@@ -62,9 +62,16 @@ END;
 $$;
 
 -- Trigger to create subscription on user signup
-CREATE TRIGGER on_auth_user_created_subscription
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_subscription();
+-- Wrapped in exception handler: Supabase Preview may not allow triggers on auth.users
+DO $$
+BEGIN
+  CREATE TRIGGER on_auth_user_created_subscription
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_subscription();
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Could not create trigger on auth.users: %. Tables and functions still created.', SQLERRM;
+END;
+$$;
 
 -- Add updated_at trigger for user_subscriptions
 CREATE TRIGGER update_user_subscriptions_updated_at

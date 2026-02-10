@@ -101,9 +101,16 @@ END;
 $$;
 
 -- Trigger to run function on user creation
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+-- Wrapped in exception handler: Supabase Preview may not allow triggers on auth.users
+DO $$
+BEGIN
+  CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Could not create trigger on auth.users: %. Tables and functions still created.', SQLERRM;
+END;
+$$;
 
 -- Add trigger to update updated_at timestamp for profiles
 CREATE TRIGGER update_profiles_updated_at
