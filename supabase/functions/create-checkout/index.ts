@@ -107,20 +107,35 @@ serve(async (req: Request) => {
         .eq("id", supabaseUserId);
     }
 
+    // Validate returnUrl to prevent open redirect attacks
+    const ALLOWED_ORIGINS = [
+      FRONTEND_URL,
+      "https://marketentrysecrets.com",
+      "https://www.marketentrysecrets.com",
+    ].filter(Boolean);
+    const isAllowedUrl = (url: string): boolean => {
+      try {
+        const urlOrigin = new URL(url).origin;
+        return ALLOWED_ORIGINS.some((allowed) => {
+          try { return new URL(allowed!).origin === urlOrigin; }
+          catch { return false; }
+        });
+      } catch { return false; }
+    };
+
+    const safeReturnUrl =
+      returnUrl?.startsWith("http") && isAllowedUrl(returnUrl)
+        ? returnUrl
+        : `${FRONTEND_URL}${returnUrl || "/pricing"}`;
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [{ price: priceId, quantity: 1 }],
       customer: stripeCustomerId,
       metadata: { tier, supabase_user_id: supabaseUserId },
       client_reference_id: supabaseUserId,
-      // If returnUrl is a full URL (has origin), use it directly;
-      // otherwise fall back to FRONTEND_URL + path
-      success_url: returnUrl?.startsWith("http")
-        ? `${returnUrl}?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`
-        : `${FRONTEND_URL}${returnUrl || "/pricing"}?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
-      cancel_url: returnUrl?.startsWith("http")
-        ? `${returnUrl}?stripe_status=cancel`
-        : `${FRONTEND_URL}${returnUrl || "/pricing"}?stripe_status=cancel`,
+      success_url: `${safeReturnUrl}?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
+      cancel_url: `${safeReturnUrl}?stripe_status=cancel`,
     });
 
 

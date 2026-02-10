@@ -1398,6 +1398,23 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    // ── Authentication & ownership check ──────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Fetch intake form to get user_id
     const { data: intake, error: intakeErr } = await supabase
       .from("user_intake_forms")
@@ -1406,6 +1423,14 @@ serve(async (req) => {
       .single();
 
     if (intakeErr || !intake) throw new Error("Intake form not found");
+
+    // Verify the authenticated user owns this intake form
+    if (intake.user_id !== user.id) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Pre-create the report row with "processing" status
     const { data: report, error: reportErr } = await supabase

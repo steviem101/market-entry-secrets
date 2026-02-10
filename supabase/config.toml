@@ -25,7 +25,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.generate-report]
-verify_jwt = false
+verify_jwt = true
 
 [functions.sync-lemlist]
-verify_jwt = false
+verify_jwt = true
