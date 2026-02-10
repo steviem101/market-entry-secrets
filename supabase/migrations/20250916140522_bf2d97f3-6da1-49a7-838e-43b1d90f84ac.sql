@@ -14,7 +14,7 @@ ALTER TABLE public.payment_webhook_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admins can view webhook logs" 
 ON public.payment_webhook_logs 
 FOR SELECT 
-USING (public.has_role(auth.uid(), 'admin'));
+USING (has_role(auth.uid(), 'admin'));
 
 -- System can insert webhook logs (for the webhook handler)
 CREATE POLICY "System can insert webhook logs" 
