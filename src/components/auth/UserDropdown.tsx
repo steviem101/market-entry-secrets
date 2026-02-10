@@ -16,11 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ProfileDialog } from './ProfileDialog';
 import { Link } from 'react-router-dom';
 
-interface UserDropdownProps {
-  onReportModalOpen?: () => void;
-}
-
-export const UserDropdown = ({ onReportModalOpen }: UserDropdownProps) => {
+export const UserDropdown = () => {
   const { user, profile, signOut, isAdmin, isModerator } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
 
@@ -94,12 +90,12 @@ export const UserDropdown = ({ onReportModalOpen }: UserDropdownProps) => {
               <span>My Reports</span>
             </Link>
           </DropdownMenuItem>
-          {onReportModalOpen && (
-            <DropdownMenuItem onClick={onReportModalOpen}>
+          <DropdownMenuItem asChild>
+            <Link to="/report-creator">
               <FileText className="mr-2 h-4 w-4" />
-              <span>Free Market Entry Report</span>
-            </DropdownMenuItem>
-          )}
+              <span>Create Market Entry Report</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>

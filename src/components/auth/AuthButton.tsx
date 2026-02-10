@@ -6,11 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { AuthDialog } from './AuthDialog';
 import { UserDropdown } from './UserDropdown';
 
-interface AuthButtonProps {
-  onReportModalOpen?: () => void;
-}
-
-export const AuthButton = ({ onReportModalOpen }: AuthButtonProps) => {
+export const AuthButton = () => {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const { user, loading } = useAuth();
 
@@ -23,7 +19,7 @@ export const AuthButton = ({ onReportModalOpen }: AuthButtonProps) => {
   }
 
   if (user) {
-    return <UserDropdown onReportModalOpen={onReportModalOpen} />;
+    return <UserDropdown />;
   }
 
   return (
