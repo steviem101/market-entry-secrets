@@ -1,11 +1,8 @@
 
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { AuthDialog } from "@/components/auth/AuthDialog";
 
 export const CTASection = () => {
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const navigate = useNavigate();
 
   return (
@@ -13,7 +10,7 @@ export const CTASection = () => {
       {/* Background gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20" />
       <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-background/20" />
-      
+
       <div className="relative container mx-auto px-4 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
@@ -27,9 +24,9 @@ export const CTASection = () => {
             Join thousands of successful businesses who've made Australia their new home with our expert guidance
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={() => setShowAuthDialog(true)}
+            <Button
+              size="lg"
+              onClick={() => navigate('/report-creator')}
               className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-4 text-lg rounded-xl soft-shadow hover:shadow-lg transition-all duration-300"
             >
               Get Started Today
@@ -45,12 +42,6 @@ export const CTASection = () => {
           </div>
         </div>
       </div>
-      
-      <AuthDialog 
-        open={showAuthDialog} 
-        onOpenChange={setShowAuthDialog}
-        defaultTab="signup"
-      />
     </section>
   );
 };

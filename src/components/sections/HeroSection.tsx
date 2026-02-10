@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { RotatingText } from "@/components/RotatingText";
 import { EmailCaptureForm } from "@/components/EmailCaptureForm";
 import { SocialProofAvatars } from "@/components/SocialProofAvatars";
-import { Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Star, Sparkles, ArrowRight } from "lucide-react";
 interface HeroSectionProps {
   totalResources: number;
 }
@@ -86,6 +88,22 @@ export const HeroSection = ({
           
           {/* Email Capture Form - Primary CTA */}
           <EmailCaptureForm onSubmit={handleEmailSubmit} className="mb-8 max-w-lg mx-auto" />
+
+          {/* Report Creator CTA - Secondary */}
+          <div className="mb-8">
+            <p className="text-sm text-muted-foreground mb-3">Or get a personalised market entry report</p>
+            <Link to="/report-creator">
+              <Button
+                variant="outline"
+                size="lg"
+                className="bg-background/60 backdrop-blur-sm border-primary/30 text-foreground hover:bg-background/80 hover:border-primary/50 px-8 py-3 text-base rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 group"
+              >
+                <Sparkles className="w-5 h-5 mr-2 text-primary" />
+                Create Your Free Market Entry Report
+                <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+              </Button>
+            </Link>
+          </div>
 
           {/* Trust indicators */}
           <p className="text-sm text-muted-foreground">Free access ✅ • Vendor Discounts ✅ • Australian Ecosystem Mapped ✅</p>
