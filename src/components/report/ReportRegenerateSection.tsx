@@ -35,10 +35,10 @@ export const ReportRegenerateSection = ({ id, title }: ReportRegenerateSectionPr
               <RefreshCw className="w-7 h-7 text-primary" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              Content Available with Your Plan
+              Section Unlocked!
             </h3>
             <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-              This section is now unlocked with your upgraded plan. Generate a new report to see the full {title} analysis.
+              Your upgraded plan has unlocked the <span className="font-medium text-foreground">{title}</span> section. Generate a new report to see the full premium analysis.
             </p>
             <Button
               onClick={() => navigate('/report-creator')}

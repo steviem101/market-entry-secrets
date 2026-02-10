@@ -40,9 +40,9 @@ const ReportView = () => {
   const [cameFromStripe] = useState(
     () => new URLSearchParams(window.location.search).get('stripe_status') === 'success'
   );
+  const [pollingForUpgrade, setPollingForUpgrade] = useState(false);
 
-  // Handle Stripe checkout return — poll for subscription update
-  // because the webhook may not have processed yet when Stripe redirects
+  // Handle Stripe checkout return — clean URL and start polling
   useEffect(() => {
     const stripeStatus = searchParams.get('stripe_status');
     if (!stripeStatus) return;
@@ -51,25 +51,40 @@ const ReportView = () => {
     navigate(`/report/${reportId}`, { replace: true });
 
     if (stripeStatus === 'success') {
-      toast.success('Payment successful! Unlocking your premium sections...');
-
-      // Poll for subscription update — webhook may take a few seconds
-      let attempts = 0;
-      const poll = async () => {
-        const previousTier = subscription?.tier || 'free';
-        await refetchSubscription();
-        attempts++;
-        // Keep polling if tier hasn't changed yet (max 5 attempts over ~10s)
-        if (attempts < 5 && (subscription?.tier || 'free') === previousTier) {
-          setTimeout(poll, 2000);
-        }
-      };
-      // Start polling after a brief delay to give the webhook time
-      setTimeout(poll, 2000);
+      toast.success('Payment successful! Your premium sections are being unlocked...');
+      setPollingForUpgrade(true);
     } else if (stripeStatus === 'cancel') {
       toast.info('Checkout was cancelled. You can upgrade anytime.');
     }
   }, []);
+
+  // Separate polling effect — always has the latest refetchSubscription
+  // (avoids stale closure when auth resolves after mount)
+  useEffect(() => {
+    if (!pollingForUpgrade) return;
+
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const interval = setInterval(async () => {
+      attempts++;
+      await refetchSubscription();
+      if (attempts >= maxAttempts) {
+        setPollingForUpgrade(false);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [pollingForUpgrade, refetchSubscription]);
+
+  // Detect when tier actually upgrades during polling
+  useEffect(() => {
+    if (pollingForUpgrade && subscription?.tier && subscription.tier !== 'free') {
+      setPollingForUpgrade(false);
+      const tierLabel = subscription.tier === 'growth' ? 'Growth' : subscription.tier === 'scale' ? 'Scale' : 'Enterprise';
+      toast.success(`Your ${tierLabel} plan is now active! Generate a new report to access your premium sections.`);
+    }
+  }, [subscription, pollingForUpgrade]);
 
   // Wait for auth to settle before showing report (especially after Stripe redirect)
   if (isLoading || (authLoading && cameFromStripe)) {
