@@ -1,8 +1,21 @@
 
 -- Update the Distribution Strategy Best Practices for Australia content with comprehensive sections and body text
+-- Wrapped in DO block: skip gracefully if content_sections/content_items tables don't exist
+-- (these tables were created manually on production via Lovable, not guaranteed in Preview)
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'content_sections') THEN
+    RAISE NOTICE 'content_sections table does not exist, skipping migration';
+    RETURN;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'content_items') THEN
+    RAISE NOTICE 'content_items table does not exist, skipping migration';
+    RETURN;
+  END IF;
 
 -- First, let's add the main sections for this content item
-INSERT INTO content_sections (content_item_id, title, slug, sort_order, is_active) 
+INSERT INTO content_sections (content_item_id, title, slug, sort_order, is_active)
 SELECT 
   ci.id,
   'Market Overview',
@@ -612,9 +625,11 @@ ON CONFLICT (section_id, sort_order) DO UPDATE SET
   content_type = EXCLUDED.content_type;
 
 -- Update the main content item with enhanced metadata
-UPDATE content_items 
-SET 
+UPDATE content_items
+SET
   subtitle = 'A comprehensive guide to building successful distribution networks across Australia, covering traditional retail, e-commerce, and omnichannel strategies.',
   read_time = 12,
   updated_at = CURRENT_TIMESTAMP
 WHERE slug = 'distribution-strategy-australia';
+
+END $$;

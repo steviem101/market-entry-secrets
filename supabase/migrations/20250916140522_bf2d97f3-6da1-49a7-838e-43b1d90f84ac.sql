@@ -10,11 +10,14 @@ CREATE TABLE IF NOT EXISTS public.payment_webhook_logs (
 -- Enable RLS
 ALTER TABLE public.payment_webhook_logs ENABLE ROW LEVEL SECURITY;
 
--- Only admins can view webhook logs
-CREATE POLICY "Admins can view webhook logs" 
-ON public.payment_webhook_logs 
-FOR SELECT 
-USING (has_role(auth.uid(), 'admin'));
+-- Only admins can view webhook logs (inline check avoids dependency on has_role function)
+CREATE POLICY "Admins can view webhook logs"
+ON public.payment_webhook_logs
+FOR SELECT
+USING (EXISTS (
+  SELECT 1 FROM public.user_roles
+  WHERE user_id = auth.uid() AND role = 'admin'
+));
 
 -- System can insert webhook logs (for the webhook handler)
 CREATE POLICY "System can insert webhook logs" 
