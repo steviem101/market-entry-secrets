@@ -59,7 +59,6 @@ export const EmailCaptureForm = ({ onSubmit, className = "", source = "homepage_
         await onSubmit(email);
       }
       
-      console.log('Email captured successfully:', email);
       setIsSubmitted(true);
       
       // Show success toast
