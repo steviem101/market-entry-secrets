@@ -1,7 +1,5 @@
 
 import { useState } from "react";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { ServiceProvidersHero } from "@/components/service-providers/ServiceProvidersHero";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
@@ -41,8 +39,7 @@ const ServiceProviders = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <ServiceProvidersDataProvider
         selectedLocations={selectedLocation === "all" ? [] : [selectedLocation]}
@@ -127,8 +124,7 @@ const ServiceProviders = () => {
         />
       )}
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

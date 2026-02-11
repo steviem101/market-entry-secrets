@@ -1,5 +1,4 @@
 
-import Navigation from "@/components/Navigation";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
 import { SearchSection } from "@/components/sections/SearchSection";
@@ -7,7 +6,6 @@ import { ValueSection } from "@/components/sections/ValueSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { PricingSection } from "@/components/sections/PricingSection";
 import { CTASection } from "@/components/sections/CTASection";
-import { Footer } from "@/components/Footer";
 import { FloatingCTAButton } from "@/components/FloatingCTAButton";
 
 const Index = () => {
@@ -15,8 +13,7 @@ const Index = () => {
   const totalResources = 500 + 25 + 100 + 1200 + 50 + 200; // Service Providers + Innovation Hubs + Lead Data + Success Stories + Events + Mentors
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
 
       {/* Streamlined Hero Section - Email Capture Focus */}
       <HeroSection totalResources={totalResources} />
@@ -40,11 +37,10 @@ const Index = () => {
       <CTASection />
 
       {/* Footer */}
-      <Footer />
 
       {/* Floating CTA Button */}
       <FloatingCTAButton />
-    </div>
+    </>
   );
 };
 

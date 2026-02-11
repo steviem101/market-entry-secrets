@@ -1,8 +1,6 @@
 
 import { useParams } from "react-router-dom";
 import { useSectorBySlug } from "@/hooks/useSectors";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { useSectorServiceProviders } from "@/hooks/useSectorServiceProviders";
 import { useSectorEvents } from "@/hooks/useSectorEvents";
 import { useSectorLeads } from "@/hooks/useSectorLeads";
@@ -29,15 +27,14 @@ const SectorPage = () => {
 
   if (sectorLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground mt-4">Loading sector...</p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -48,8 +45,7 @@ const SectorPage = () => {
   const isLoading = providersLoading || eventsLoading || leadsLoading || communityLoading || innovationLoading || tradeLoading || contentLoading;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       {/* Hero Section */}
       <SectorHero 
@@ -88,8 +84,7 @@ const SectorPage = () => {
         )}
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

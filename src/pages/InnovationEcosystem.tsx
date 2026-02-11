@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import CompanyModal from "@/components/CompanyModal";
 import { InnovationEcosystemHero } from "@/components/innovation-ecosystem/InnovationEcosystemHero";
 import InnovationEcosystemFilters from "@/components/innovation-ecosystem/InnovationEcosystemFilters";
@@ -80,20 +78,18 @@ const InnovationEcosystem = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-red-500">
             Error loading innovation ecosystem: {error.message}
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <InnovationEcosystemHero 
         organizationCount={organizations?.length || 0}
@@ -158,8 +154,7 @@ const InnovationEcosystem = () => {
         />
       )}
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

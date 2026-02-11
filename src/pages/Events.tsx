@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Calendar, AlertCircle } from "lucide-react";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { EventsHero } from "@/components/events/EventsHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { useEvents, Event } from "@/hooks/useEvents";
-import { FreemiumGate } from "@/components/FreemiumGate";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { useAuth } from "@/hooks/useAuth";
+import { PaywallModal } from "@/components/PaywallModal";
 import { UsageBanner } from "@/components/UsageBanner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -21,6 +21,8 @@ const Events = () => {
   const [activeTab, setActiveTab] = useState<string>("upcoming");
 
   const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
+  const { user, loading: authLoading } = useAuth();
+  const { hasReachedLimit } = useUsageTracking();
 
   // Get unique categories, types, locations, and sectors for filters
   const categories = Array.from(new Set(events.map(event => event.category))).sort();
@@ -59,22 +61,20 @@ const Events = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground mt-4">Loading events...</p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
@@ -85,13 +85,12 @@ const Events = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <EventsHero 
         totalEvents={events.length}
@@ -180,25 +179,18 @@ const Events = () => {
               </Button>
             )}
           </div>
+        ) : !authLoading && hasReachedLimit && !user ? (
+          <PaywallModal contentType="events" />
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredEvents.map((event) => (
-              <FreemiumGate
-                key={event.id}
-                contentType="events"
-                itemId={event.id}
-                contentTitle={event.title}
-                contentDescription={event.description}
-              >
-                <EventCard event={event} />
-              </FreemiumGate>
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         )}
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

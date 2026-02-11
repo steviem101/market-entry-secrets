@@ -1,6 +1,4 @@
 
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, TrendingUp, Shield, Target, Lightbulb } from "lucide-react";
 
@@ -30,8 +28,7 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
@@ -187,8 +184,7 @@ const About = () => {
         </div>
       </section>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

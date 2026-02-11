@@ -1,19 +1,21 @@
 
 import { useState } from "react";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Users } from "lucide-react";
 import { useCommunityMembers } from "@/hooks/useCommunityMembers";
 import PersonCard, { Person } from "@/components/PersonCard";
 import PersonModal from "@/components/PersonModal";
-import { FreemiumGate } from "@/components/FreemiumGate";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { useAuth } from "@/hooks/useAuth";
+import { PaywallModal } from "@/components/PaywallModal";
 import { UsageBanner } from "@/components/UsageBanner";
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { mapSpecialtiesToSectors, getStandardTypes, STANDARD_SECTORS } from "@/utils/sectorMapping";
 
 const Community = () => {
+  const { user, loading: authLoading } = useAuth();
+  const { hasReachedLimit } = useUsageTracking();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("all");
@@ -89,22 +91,20 @@ const Community = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground mt-4">Loading community members...</p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
@@ -117,13 +117,12 @@ const Community = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <CommunityHero 
         totalExperts={members.length}
@@ -175,7 +174,9 @@ const Community = () => {
         <UsageBanner />
 
         {/* Members Grid */}
-        {filteredMembers.length === 0 ? (
+        {!authLoading && hasReachedLimit && !user ? (
+          <PaywallModal contentType="community_members" />
+        ) : filteredMembers.length === 0 ? (
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No experts found</h3>
@@ -186,19 +187,12 @@ const Community = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredMembers.map((member) => (
-              <FreemiumGate
+              <PersonCard
                 key={member.id}
-                contentType="community_members"
-                itemId={member.id}
-                contentTitle={member.name}
-                contentDescription={member.description}
-              >
-                <PersonCard
-                  person={member}
-                  onViewProfile={handleViewProfile}
-                  onContact={handleContact}
-                />
-              </FreemiumGate>
+                person={member}
+                onViewProfile={handleViewProfile}
+                onContact={handleContact}
+              />
             ))}
           </div>
         )}
@@ -214,8 +208,7 @@ const Community = () => {
         />
       )}
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

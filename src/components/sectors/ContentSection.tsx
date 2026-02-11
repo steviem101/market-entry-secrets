@@ -1,6 +1,8 @@
 
 import { ContentCard } from "@/components/content/ContentCard";
-import { FreemiumGate } from "@/components/FreemiumGate";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { useAuth } from "@/hooks/useAuth";
+import { PaywallModal } from "@/components/PaywallModal";
 import SectorSection from "./SectorSection";
 
 interface ContentSectionProps {
@@ -8,7 +10,14 @@ interface ContentSectionProps {
 }
 
 const ContentSection = ({ contentItems }: ContentSectionProps) => {
+  const { user, loading: authLoading } = useAuth();
+  const { hasReachedLimit } = useUsageTracking();
+
   if (contentItems.length === 0) return null;
+
+  if (!authLoading && hasReachedLimit && !user) {
+    return <PaywallModal contentType="content" />;
+  }
 
   return (
     <SectorSection
@@ -18,15 +27,7 @@ const ContentSection = ({ contentItems }: ContentSectionProps) => {
       isEmpty={false}
     >
       {contentItems.slice(0, 6).map((content) => (
-        <FreemiumGate
-          key={content.id}
-          contentType="content"
-          itemId={content.id}
-          contentTitle={content.title}
-          contentDescription={content.subtitle || content.description}
-        >
-          <ContentCard content={content} />
-        </FreemiumGate>
+        <ContentCard key={content.id} content={content} />
       ))}
     </SectorSection>
   );

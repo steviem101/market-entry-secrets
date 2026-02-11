@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, ChevronDown } from "lucide-react";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { FreemiumGate } from "@/components/FreemiumGate";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { useAuth } from "@/hooks/useAuth";
+import { PaywallModal } from "@/components/PaywallModal";
 import { UsageBanner } from "@/components/UsageBanner";
 
 interface CaseStudy {
@@ -123,6 +123,8 @@ const mockCaseStudies: CaseStudy[] = [
 ];
 
 const CaseStudies = () => {
+  const { user, loading: authLoading } = useAuth();
+  const { hasReachedLimit } = useUsageTracking();
   const [searchTerm, setSearchTerm] = useState("");
   const [revenueFilter, setRevenueFilter] = useState("any");
   const [costsFilter, setCostsFilter] = useState("any");
@@ -154,8 +156,7 @@ const CaseStudies = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       {/* Header */}
       <div className="bg-card border-b border-border">
@@ -433,17 +434,13 @@ const CaseStudies = () => {
 
           {/* Case Studies List */}
           <main className="flex-1">
+            {!authLoading && hasReachedLimit && !user ? (
+              <PaywallModal contentType="case-study" />
+            ) : (
             <div className="space-y-6">
               {filteredCaseStudies.map((caseStudy) => (
-                <FreemiumGate
-                  key={caseStudy.id}
-                  contentType="case-study"
-                  itemId={caseStudy.id}
-                  contentTitle={caseStudy.title}
-                  contentDescription={caseStudy.description}
-                >
-                  <Link to={`/case-studies/${caseStudy.slug}`}>
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <Link key={caseStudy.id} to={`/case-studies/${caseStudy.slug}`}>
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardHeader>
                       <div className="flex items-start gap-4">
                         <Avatar className="w-12 h-12">
@@ -497,15 +494,14 @@ const CaseStudies = () => {
                     </CardContent>
                   </Card>
                 </Link>
-                </FreemiumGate>
               ))}
             </div>
+            )}
           </main>
         </div>
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

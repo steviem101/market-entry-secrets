@@ -1,6 +1,4 @@
 
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,8 +10,7 @@ import { Users, Building, Calendar, Handshake, ArrowRight } from "lucide-react";
 
 const PartnerWithUs = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto">
@@ -289,8 +286,7 @@ const PartnerWithUs = () => {
         </div>
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

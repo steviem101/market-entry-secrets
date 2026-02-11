@@ -1,7 +1,9 @@
 
 import { BookOpen } from "lucide-react";
 import { ContentCard } from "./ContentCard";
-import { FreemiumGate } from "@/components/FreemiumGate";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { useAuth } from "@/hooks/useAuth";
+import { PaywallModal } from "@/components/PaywallModal";
 
 interface ContentGridProps {
   filteredContent: any[];
@@ -10,13 +12,15 @@ interface ContentGridProps {
   totalContent: number;
 }
 
-export const ContentGrid = ({ 
-  filteredContent, 
-  selectedCategory, 
-  categories, 
-  totalContent 
+export const ContentGrid = ({
+  filteredContent,
+  selectedCategory,
+  categories,
+  totalContent
 }: ContentGridProps) => {
-  const categoryName = selectedCategory 
+  const { user, loading } = useAuth();
+  const { hasReachedLimit } = useUsageTracking();
+  const categoryName = selectedCategory
     ? categories.find(c => c.id === selectedCategory)?.name || 'Category'
     : 'All Content';
 
@@ -28,7 +32,7 @@ export const ContentGrid = ({
           <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-xl font-semibold mb-2">No Content Found</h3>
           <p className="text-muted-foreground mb-6">
-            {totalContent === 0 
+            {totalContent === 0
               ? "No content has been added to the database yet."
               : "No content found matching your criteria."
             }
@@ -43,20 +47,21 @@ export const ContentGrid = ({
     );
   }
 
+  if (!loading && hasReachedLimit && !user) {
+    return (
+      <section>
+        <h2 className="text-2xl font-bold mb-6">{categoryName} Content</h2>
+        <PaywallModal contentType="content" />
+      </section>
+    );
+  }
+
   return (
     <section>
       <h2 className="text-2xl font-bold mb-6">{categoryName} Content</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredContent.map((content) => (
-          <FreemiumGate
-            key={content.id}
-            contentType="content"
-            itemId={content.id}
-            contentTitle={content.title}
-            contentDescription={content.subtitle || content.description}
-          >
-            <ContentCard content={content} />
-          </FreemiumGate>
+          <ContentCard key={content.id} content={content} />
         ))}
       </div>
     </section>

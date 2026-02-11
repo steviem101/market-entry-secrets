@@ -33,7 +33,7 @@ export const useAuthService = () => {
       }
 
       // Clear usage tracking after successful sign in
-      setTimeout(clearUsageTracking, 100);
+      clearUsageTracking();
 
       toast({
         title: "Welcome back!",
@@ -72,7 +72,7 @@ export const useAuthService = () => {
       }
 
       // Clear usage tracking after successful sign up
-      setTimeout(clearUsageTracking, 100);
+      clearUsageTracking();
 
       toast({
         title: "Account Created!",

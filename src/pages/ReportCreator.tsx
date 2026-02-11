@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Helmet } from 'react-helmet-async';
-import Navigation from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
 import { IntakeProgress } from '@/components/report-creator/IntakeProgress';
 import { IntakeStep1 } from '@/components/report-creator/IntakeStep1';
 import { IntakeStep2 } from '@/components/report-creator/IntakeStep2';
@@ -92,7 +90,6 @@ const ReportCreator = () => {
         <meta name="description" content="Get your personalised AI-powered market entry report for entering the Australian market." />
       </Helmet>
 
-      <Navigation />
 
       <main className="min-h-screen bg-gradient-to-b from-muted/30 to-background pt-24 pb-16 px-4">
         <div className="container mx-auto">
@@ -116,7 +113,6 @@ const ReportCreator = () => {
 
       <GeneratingOverlay isVisible={isGenerating} statusMessage={generationStatus} />
       <AuthDialog open={showAuth} onOpenChange={setShowAuth} defaultTab="signup" />
-      <Footer />
     </>
   );
 };

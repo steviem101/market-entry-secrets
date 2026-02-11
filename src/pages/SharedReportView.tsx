@@ -1,7 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import Navigation from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
 import { ReportSection } from '@/components/report/ReportSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
 import { ReportSources } from '@/components/report/ReportSources';
@@ -27,7 +25,6 @@ const SharedReportView = () => {
   if (isLoading) {
     return (
       <>
-        <Navigation />
         <main className="min-h-screen pt-20 pb-16 px-4">
           <div className="container mx-auto max-w-3xl space-y-6">
             {[1, 2, 3].map((i) => (
@@ -42,7 +39,6 @@ const SharedReportView = () => {
   if (error || !report) {
     return (
       <>
-        <Navigation />
         <main className="min-h-screen pt-20 pb-16 px-4">
           <div className="container mx-auto text-center py-20">
             <h1 className="text-2xl font-bold text-foreground mb-2">Report Not Found</h1>
@@ -54,7 +50,6 @@ const SharedReportView = () => {
             </Link>
           </div>
         </main>
-        <Footer />
       </>
     );
   }
@@ -82,7 +77,6 @@ const SharedReportView = () => {
         <title>{companyName} - Shared Report | Market Entry Secrets</title>
       </Helmet>
 
-      <Navigation />
 
       {/* Shared report banner */}
       <div className="sticky top-0 z-30 bg-muted/95 backdrop-blur-sm border-b border-border">
@@ -200,7 +194,6 @@ const SharedReportView = () => {
       <ReportBackToTop />
       <ReportMobileTOC sections={tocSections} />
 
-      <Footer />
     </>
   );
 };

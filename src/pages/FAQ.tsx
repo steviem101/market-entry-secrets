@@ -1,6 +1,4 @@
 
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +6,7 @@ import { Link } from "react-router-dom";
 
 const FAQ = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
@@ -165,8 +162,7 @@ const FAQ = () => {
         </div>
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 
