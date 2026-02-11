@@ -1,7 +1,5 @@
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import Navigation from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,7 +26,6 @@ const MyReports = () => {
         <title>My Reports | Market Entry Secrets</title>
       </Helmet>
 
-      <Navigation />
 
       <main className="min-h-screen bg-gradient-to-b from-muted/30 to-background pt-24 pb-16 px-4">
         <div className="container mx-auto max-w-3xl">
@@ -103,7 +100,6 @@ const MyReports = () => {
         </div>
       </main>
 
-      <Footer />
     </>
   );
 };

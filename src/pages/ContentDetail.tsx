@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +10,7 @@ import { useContentItem, useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { useAuth } from "@/hooks/useAuth";
 import { ContentEnrichmentButton } from "@/components/content/ContentEnrichmentButton";
+import { FreemiumGate } from "@/components/FreemiumGate";
 
 interface ContentSection {
   id: string;
@@ -52,22 +51,20 @@ const ContentDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground mt-4">Loading content...</p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error || !content) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold mb-4">Content Not Found</h2>
@@ -79,7 +76,7 @@ const ContentDetail = () => {
             </Link>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -109,8 +106,7 @@ const ContentDetail = () => {
   const generalContent = content.content_bodies?.filter(body => !body.section_id) || [];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
@@ -169,6 +165,12 @@ const ContentDetail = () => {
 
           {/* Main Content */}
           <main className="flex-1">
+            <FreemiumGate
+              contentType="content"
+              itemId={content.id}
+              contentTitle={content.title}
+              contentDescription={content.subtitle || content.description}
+            >
             <div className="mb-8">
               <div className="flex items-center gap-4 mb-6">
                 <img
@@ -330,6 +332,7 @@ const ContentDetail = () => {
                 ))}
               </div>
             </div>
+            </FreemiumGate>
           </main>
 
           {/* Right Sidebar */}
@@ -387,8 +390,7 @@ const ContentDetail = () => {
         </div>
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

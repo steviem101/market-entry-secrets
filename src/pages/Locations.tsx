@@ -1,7 +1,5 @@
 
 import { useState } from "react";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { LocationsHero } from "@/components/locations/LocationsHero";
 import { FeaturedLocationsSection } from "@/components/locations/FeaturedLocationsSection";
 import { AllLocationsSection } from "@/components/locations/AllLocationsSection";
@@ -15,8 +13,7 @@ const Locations = () => {
   const [filterType, setFilterType] = useState<string>("all");
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <main className="pt-4">
         <LocationsHero />
@@ -62,8 +59,7 @@ const Locations = () => {
         <LocationsCallToAction />
       </main>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

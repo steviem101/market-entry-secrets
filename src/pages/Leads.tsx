@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { LeadCard } from "@/components/LeadCard";
 import { LeadsHero } from "@/components/leads/LeadsHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { Button } from "@/components/ui/button";
 import { TrendingUp } from "lucide-react";
-import { FreemiumGate } from "@/components/FreemiumGate";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { useAuth } from "@/hooks/useAuth";
+import { PaywallModal } from "@/components/PaywallModal";
 import { UsageBanner } from "@/components/UsageBanner";
 import { mapIndustryToSector, getStandardTypes } from "@/utils/sectorMapping";
 
@@ -36,6 +36,8 @@ export interface Lead {
 }
 
 const Leads = () => {
+  const { user, loading: authLoading } = useAuth();
+  const { hasReachedLimit } = useUsageTracking();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -120,20 +122,18 @@ const Leads = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-red-500">
             Error loading leads: {error.message}
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <LeadsHero 
         csvListsCount={csvListsCount}
@@ -217,6 +217,8 @@ const Leads = () => {
                 <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
               ))}
             </div>
+          ) : !authLoading && hasReachedLimit && !user ? (
+            <PaywallModal contentType="leads" />
           ) : filteredLeads && filteredLeads.length > 0 ? (
             <>
               <div className="flex items-center justify-between mb-6">
@@ -226,15 +228,7 @@ const Leads = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredLeads.map(lead => (
-                  <FreemiumGate
-                    key={lead.id}
-                    contentType="leads"
-                    itemId={lead.id}
-                    contentTitle={lead.name}
-                    contentDescription={lead.description}
-                  >
-                    <LeadCard lead={lead} onDownload={handleDownload} onPreview={handlePreview} />
-                  </FreemiumGate>
+                  <LeadCard key={lead.id} lead={lead} onDownload={handleDownload} onPreview={handlePreview} />
                 ))}
               </div>
             </>
@@ -253,8 +247,7 @@ const Leads = () => {
         </section>
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

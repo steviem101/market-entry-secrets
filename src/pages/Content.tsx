@@ -1,6 +1,4 @@
 import { useState } from "react";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { useContentItems, useContentCategories } from "@/hooks/useContent";
@@ -64,22 +62,20 @@ const Content = () => {
 
   if (itemsLoading || categoriesLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground mt-4">Loading content...</p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (itemsError || categoriesError) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
@@ -92,13 +88,12 @@ const Content = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <ContentHero 
         totalContent={contentItems.length}
@@ -163,8 +158,7 @@ const Content = () => {
         />
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

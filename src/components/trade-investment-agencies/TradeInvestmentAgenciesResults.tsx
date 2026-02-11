@@ -2,8 +2,9 @@
 import { TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyCard from "@/components/CompanyCard";
-import { FreemiumGate } from "@/components/FreemiumGate";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useAuth } from "@/hooks/useAuth";
+import { PaywallModal } from "@/components/PaywallModal";
 
 interface TradeInvestmentAgenciesResultsProps {
   filteredAgencies: any[] | undefined;
@@ -22,7 +23,8 @@ const TradeInvestmentAgenciesResults = ({
   onClearFilters,
   parseJsonArray
 }: TradeInvestmentAgenciesResultsProps) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { hasReachedLimit } = useUsageTracking();
 
   if (isLoading) {
     return (
@@ -56,6 +58,10 @@ const TradeInvestmentAgenciesResults = ({
   // Limit to 3 items for non-authenticated users
   const displayedAgencies = user ? filteredAgencies : filteredAgencies.slice(0, 3);
 
+  if (!authLoading && hasReachedLimit && !user) {
+    return <PaywallModal contentType="trade_investment_agencies" />;
+  }
+
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
@@ -65,34 +71,27 @@ const TradeInvestmentAgenciesResults = ({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayedAgencies.map((agency, index) => (
-          <FreemiumGate
+          <CompanyCard
             key={agency.id}
-            contentType="trade_investment_agency"
-            itemId={agency.id}
-            contentTitle={agency.name}
-            contentDescription={agency.description}
-          >
-            <CompanyCard
-              company={{
-                id: agency.id,
-                name: agency.name,
-                description: agency.description,
-                location: agency.location,
-                founded: agency.founded,
-                employees: agency.employees,
-                services: agency.services,
-                website: agency.website,
-                contact: agency.contact,
-                logo: agency.logo,
-                basic_info: agency.basic_info,
-                why_work_with_us: agency.why_work_with_us,
-                contact_persons: parseJsonArray(agency.contact_persons),
-                experience_tiles: parseJsonArray(agency.experience_tiles)
-              }}
-              onViewProfile={() => onViewProfile(agency)}
-              onContact={() => onContact(agency)}
-            />
-          </FreemiumGate>
+            company={{
+              id: agency.id,
+              name: agency.name,
+              description: agency.description,
+              location: agency.location,
+              founded: agency.founded,
+              employees: agency.employees,
+              services: agency.services,
+              website: agency.website,
+              contact: agency.contact,
+              logo: agency.logo,
+              basic_info: agency.basic_info,
+              why_work_with_us: agency.why_work_with_us,
+              contact_persons: parseJsonArray(agency.contact_persons),
+              experience_tiles: parseJsonArray(agency.experience_tiles)
+            }}
+            onViewProfile={() => onViewProfile(agency)}
+            onContact={() => onContact(agency)}
+          />
         ))}
       </div>
     </section>

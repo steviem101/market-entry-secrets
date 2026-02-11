@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
-import Navigation from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
 import { ReportHeader } from '@/components/report/ReportHeader';
 import { ReportSidebar } from '@/components/report/ReportSidebar';
 import { ReportSection } from '@/components/report/ReportSection';
@@ -78,7 +76,6 @@ const ReportView = () => {
   if (isLoading || (authLoading && cameFromStripe)) {
     return (
       <>
-        <Navigation />
         <main className="min-h-screen pt-20 pb-16 px-4">
           <div className="container mx-auto max-w-4xl space-y-6">
             {[1, 2, 3].map((i) => (
@@ -95,7 +92,6 @@ const ReportView = () => {
   if ((error || !report) && cameFromStripe && !user) {
     return (
       <>
-        <Navigation />
         <main className="min-h-screen pt-20 pb-16 px-4">
           <div className="container mx-auto text-center py-20">
             <h1 className="text-2xl font-bold text-foreground mb-2">Payment Successful!</h1>
@@ -104,7 +100,6 @@ const ReportView = () => {
             </p>
           </div>
         </main>
-        <Footer />
       </>
     );
   }
@@ -112,14 +107,12 @@ const ReportView = () => {
   if (error || !report) {
     return (
       <>
-        <Navigation />
         <main className="min-h-screen pt-20 pb-16 px-4">
           <div className="container mx-auto text-center py-20">
             <h1 className="text-2xl font-bold text-foreground mb-2">Report Not Found</h1>
             <p className="text-muted-foreground">This report doesn't exist or you don't have access.</p>
           </div>
         </main>
-        <Footer />
       </>
     );
   }
@@ -151,7 +144,6 @@ const ReportView = () => {
         <title>{companyName} - Market Entry Report | Market Entry Secrets</title>
       </Helmet>
 
-      <Navigation />
       <ReportHeader
         companyName={companyName}
         generatedAt={report.created_at}
@@ -259,7 +251,6 @@ const ReportView = () => {
       <ReportBackToTop />
       <ReportMobileTOC sections={sidebarSections} />
 
-      <Footer />
     </>
   );
 };

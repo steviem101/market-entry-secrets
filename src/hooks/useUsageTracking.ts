@@ -28,8 +28,7 @@ export const useUsageTracking = (): UsageTrackingHook => {
   };
 
   const [viewCount, setViewCount] = useState(getInitialViewCount);
-  const [isInitialized, setIsInitialized] = useState(true); // Start as initialized to prevent flash
-  
+
   // Generate session ID once and persist it
   const [sessionId] = useState(() => {
     const existing = localStorage.getItem('session_id');
@@ -105,7 +104,7 @@ export const useUsageTracking = (): UsageTrackingHook => {
     canView,
     hasReachedLimit,
     remainingViews,
-    isInitialized,
+    isInitialized: true,
     trackView,
     resetUsage,
   };

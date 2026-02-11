@@ -2,8 +2,9 @@
 import { Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyCard from "@/components/CompanyCard";
-import { FreemiumGate } from "@/components/FreemiumGate";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useAuth } from "@/hooks/useAuth";
+import { PaywallModal } from "@/components/PaywallModal";
 
 interface InnovationEcosystemResultsProps {
   filteredOrganizations: any[] | undefined;
@@ -22,7 +23,8 @@ const InnovationEcosystemResults = ({
   onClearFilters,
   parseJsonArray
 }: InnovationEcosystemResultsProps) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { hasReachedLimit } = useUsageTracking();
 
   if (isLoading) {
     return (
@@ -59,6 +61,10 @@ const InnovationEcosystemResults = ({
   // Limit to 3 items for non-authenticated users
   const displayedOrganizations = user ? filteredOrganizations : filteredOrganizations.slice(0, 3);
 
+  if (!authLoading && hasReachedLimit && !user) {
+    return <PaywallModal contentType="innovation_ecosystem" />;
+  }
+
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
@@ -68,34 +74,27 @@ const InnovationEcosystemResults = ({
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayedOrganizations.map((org, index) => (
-          <FreemiumGate
+          <CompanyCard
             key={org.id}
-            contentType="innovation_ecosystem"
-            itemId={org.id}
-            contentTitle={org.name}
-            contentDescription={org.description}
-          >
-            <CompanyCard
-              company={{
-                id: org.id,
-                name: org.name,
-                description: org.description,
-                location: org.location,
-                founded: org.founded,
-                employees: org.employees,
-                services: org.services,
-                website: org.website,
-                contact: org.contact,
-                logo: org.logo,
-                basic_info: org.basic_info,
-                why_work_with_us: org.why_work_with_us,
-                contact_persons: parseJsonArray(org.contact_persons),
-                experience_tiles: parseJsonArray(org.experience_tiles)
-              }}
-              onViewProfile={() => onViewProfile(org)}
-              onContact={() => onContact(org)}
-            />
-          </FreemiumGate>
+            company={{
+              id: org.id,
+              name: org.name,
+              description: org.description,
+              location: org.location,
+              founded: org.founded,
+              employees: org.employees,
+              services: org.services,
+              website: org.website,
+              contact: org.contact,
+              logo: org.logo,
+              basic_info: org.basic_info,
+              why_work_with_us: org.why_work_with_us,
+              contact_persons: parseJsonArray(org.contact_persons),
+              experience_tiles: parseJsonArray(org.experience_tiles)
+            }}
+            onViewProfile={() => onViewProfile(org)}
+            onContact={() => onContact(org)}
+          />
         ))}
       </div>
     </section>

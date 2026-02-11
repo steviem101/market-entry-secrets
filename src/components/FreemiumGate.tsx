@@ -21,26 +21,28 @@ export const FreemiumGate = ({
   contentDescription,
   onView 
 }: FreemiumGateProps) => {
-  const { user } = useAuth();
-  const { canView, trackView, hasReachedLimit, isInitialized } = useUsageTracking();
+  const { user, loading } = useAuth();
+  const { canView, trackView, hasReachedLimit } = useUsageTracking();
 
   useEffect(() => {
+    if (loading) return;
     // Only track if user can view and is not signed in
-    if (canView && !user && isInitialized) {
+    if (canView && !user) {
       trackView(contentType, itemId);
       onView?.();
     } else if (user && onView) {
       // Still call onView for signed-in users for any analytics
       onView();
     }
-  }, [canView, contentType, itemId, trackView, onView, user, isInitialized]);
+  }, [canView, contentType, itemId, trackView, onView, user, loading]);
 
-  // Show paywall immediately if reached limit and not signed in
-  // No loading state needed since we initialize synchronously
+  // Don't show paywall while auth is still loading — prevents flash for signed-in users
+  if (loading) return null;
+
   if (hasReachedLimit && !user) {
     return (
-      <PaywallModal 
-        contentType={contentType} 
+      <PaywallModal
+        contentType={contentType}
         contentTitle={contentTitle}
         contentDescription={contentDescription}
       />

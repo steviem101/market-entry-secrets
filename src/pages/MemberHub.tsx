@@ -1,7 +1,6 @@
 
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Footer } from "@/components/Footer";
 import { 
   Heart, 
   FileText, 
@@ -18,7 +17,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Navigation from "@/components/Navigation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks } from "@/hooks/useBookmarks";
@@ -103,8 +101,7 @@ const MemberHub = () => {
 
   return (
     <ProtectedRoute fallbackMessage="Please sign in to access your Member Hub.">
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
 
         <div className="container mx-auto px-4 py-8">
           {/* Header Section */}
@@ -248,9 +245,8 @@ const MemberHub = () => {
             </div>
           </div>
         </div>
-      </div>
+      </>
       
-      <Footer />
     </ProtectedRoute>
   );
 };

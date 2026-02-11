@@ -1,7 +1,9 @@
 
 import { Grid3X3 } from "lucide-react";
 import CompanyCard, { Company } from "@/components/CompanyCard";
-import { FreemiumGate } from "../FreemiumGate";
+import { useUsageTracking } from "@/hooks/useUsageTracking";
+import { useAuth } from "@/hooks/useAuth";
+import { PaywallModal } from "@/components/PaywallModal";
 
 interface ServiceProvidersListProps {
   companies: Company[];
@@ -14,6 +16,9 @@ export const ServiceProvidersList = ({
   onViewProfile,
   onContact
 }: ServiceProvidersListProps) => {
+  const { user, loading: authLoading } = useAuth();
+  const { hasReachedLimit } = useUsageTracking();
+
   if (companies.length === 0) {
     return (
       <div className="text-center py-12">
@@ -26,22 +31,19 @@ export const ServiceProvidersList = ({
     );
   }
 
+  if (!authLoading && hasReachedLimit && !user) {
+    return <PaywallModal contentType="service_providers" />;
+  }
+
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
       {companies.map((company) => (
-        <FreemiumGate
+        <CompanyCard
           key={company.id}
-          contentType="service_providers"
-          itemId={company.id}
-          contentTitle={company.name}
-          contentDescription={company.description}
-        >
-          <CompanyCard
-            company={company}
-            onViewProfile={onViewProfile}
-            onContact={onContact}
-          />
-        </FreemiumGate>
+          company={company}
+          onViewProfile={onViewProfile}
+          onContact={onContact}
+        />
       ))}
     </div>
   );

@@ -18,42 +18,41 @@ export const useAuthState = () => {
   const currentUserId = useRef<string | null>(null);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Get initial session and wait for profile/roles before clearing loading
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user && session.user.id !== currentUserId.current) {
         currentUserId.current = session.user.id;
-        // Use setTimeout to avoid blocking the auth state update
-        setTimeout(() => {
-          fetchUserData(session.user.id, {
-            setProfile,
-            setRoles,
-            fetchingProfile,
-            fetchingRoles
-          });
-        }, 0);
+        await fetchUserData(session.user.id, {
+          setProfile,
+          setRoles,
+          fetchingProfile,
+          fetchingRoles
+        });
       }
       setLoading(false);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user && session.user.id !== currentUserId.current) {
           currentUserId.current = session.user.id;
-          // Use setTimeout to defer Supabase calls and prevent deadlocks
-          setTimeout(() => {
-            fetchUserData(session.user.id, {
+          // Defer to avoid Supabase auth callback deadlock, but await the result
+          setTimeout(async () => {
+            await fetchUserData(session.user.id, {
               setProfile,
               setRoles,
               fetchingProfile,
               fetchingRoles
             });
+            setLoading(false);
           }, 0);
+          return; // Don't set loading false yet — setTimeout will do it after fetch
         } else if (!session) {
           currentUserId.current = null;
           setProfile(null);

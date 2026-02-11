@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -11,6 +11,11 @@ import { allNavItems } from "./NavigationItems";
 export const MobileNavigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+
+  // Close mobile sheet on route change (handles back/forward navigation)
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
 
   const isActivePath = (path: string) => {
     if (path === "/") {

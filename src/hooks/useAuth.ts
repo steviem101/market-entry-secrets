@@ -1,5 +1,5 @@
 
-import { useAuthState } from './auth/useAuthState';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useAuthService } from './auth/authService';
 import { useRoleHelpers } from './auth/useRoleHelpers';
 
@@ -12,7 +12,7 @@ export const useAuth = () => {
     loading,
     setProfile,
     setLoading
-  } = useAuthState();
+  } = useAuthContext();
 
   const {
     signInWithEmail: serviceSignInWithEmail,

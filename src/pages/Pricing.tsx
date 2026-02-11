@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import Navigation from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
 import { PricingSection } from '@/components/sections/PricingSection';
 import { PaymentStatusModal } from '@/components/PaymentStatusModal';
 import { PageTransition } from '@/components/PageTransition';
@@ -32,12 +30,10 @@ const Pricing = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <main>
           <PricingSection />
         </main>
-        <Footer />
 
         <PaymentStatusModal
           isOpen={showStatusModal}
@@ -45,7 +41,7 @@ const Pricing = () => {
           status={paymentStatus}
           sessionId={sessionId}
         />
-      </div>
+      </>
     </PageTransition>
   );
 };

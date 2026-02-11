@@ -1,7 +1,5 @@
 
 import { useParams } from "react-router-dom";
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { useLocationBySlug } from "@/hooks/useLocations";
 import { LocationHero } from "@/components/locations/LocationHero";
 import { LocationStats } from "@/components/locations/LocationStats";
@@ -15,28 +13,25 @@ const LocationPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <PageSkeleton />
-      </div>
+      </>
     );
   }
 
   if (error || !location) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <>
         <div className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Location Not Found</h1>
           <p className="text-muted-foreground">The location you're looking for doesn't exist.</p>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <main className="pt-4">
         <LocationHero location={location} />
@@ -45,8 +40,7 @@ const LocationPage = () => {
         <LocationContent location={location} />
       </main>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

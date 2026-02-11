@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { LeadGenPopupProvider } from "@/components/LeadGenPopupProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import ServiceProviders from "./pages/ServiceProviders";
@@ -42,7 +44,14 @@ import SharedReportView from "./pages/SharedReportView";
 import MyReports from "./pages/MyReports";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -53,43 +62,46 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/service-providers" element={<ServiceProviders />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/events/:eventSlug" element={<EventDetailPage />} />
-              <Route path="/community" element={<Community />} />
-              <Route path="/content" element={<Content />} />
-              <Route path="/content/:slug" element={<ContentDetail />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/locations" element={<Locations />} />
-              <Route path="/locations/:locationSlug" element={<LocationPage />} />
-              <Route path="/countries" element={<Countries />} />
-              <Route path="/countries/:countrySlug" element={<CountryPage />} />
-              <Route path="/sectors" element={<Sectors />} />
-              <Route path="/sectors/:sectorSlug" element={<SectorPage />} />
-              <Route path="/leads" element={<Leads />} />
-              <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
-              <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
-              <Route path="/case-studies" element={<CaseStudies />} />
-              <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/partner" element={<PartnerWithUs />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/bookmarks" element={<Bookmarks />} />
-              <Route path="/member-hub" element={<MemberHub />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/report-creator" element={<ReportCreator />} />
-              <Route path="/report/:reportId" element={<ReportView />} />
-              <Route path="/report/shared/:shareToken" element={<SharedReportView />} />
-              <Route path="/my-reports" element={<MyReports />} />
-              <Route path="/my-reports" element={<MyReports />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AuthProvider>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/service-providers" element={<ServiceProviders />} />
+                  <Route path="/events" element={<Events />} />
+                  <Route path="/events/:eventSlug" element={<EventDetailPage />} />
+                  <Route path="/community" element={<Community />} />
+                  <Route path="/content" element={<Content />} />
+                  <Route path="/content/:slug" element={<ContentDetail />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/locations" element={<Locations />} />
+                  <Route path="/locations/:locationSlug" element={<LocationPage />} />
+                  <Route path="/countries" element={<Countries />} />
+                  <Route path="/countries/:countrySlug" element={<CountryPage />} />
+                  <Route path="/sectors" element={<Sectors />} />
+                  <Route path="/sectors/:sectorSlug" element={<SectorPage />} />
+                  <Route path="/leads" element={<Leads />} />
+                  <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
+                  <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
+                  <Route path="/case-studies" element={<CaseStudies />} />
+                  <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/partner" element={<PartnerWithUs />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/bookmarks" element={<Bookmarks />} />
+                  <Route path="/member-hub" element={<MemberHub />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/report-creator" element={<ReportCreator />} />
+                  <Route path="/report/:reportId" element={<ReportView />} />
+                  <Route path="/report/shared/:shareToken" element={<SharedReportView />} />
+                  <Route path="/my-reports" element={<MyReports />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </AuthProvider>
           </BrowserRouter>
         </LeadGenPopupProvider>
       </TooltipProvider>

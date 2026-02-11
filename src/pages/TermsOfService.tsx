@@ -1,12 +1,9 @@
 
-import Navigation from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const TermsOfService = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
@@ -252,8 +249,7 @@ const TermsOfService = () => {
         </div>
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 

@@ -1,12 +1,10 @@
 
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Footer } from "@/components/Footer";
 import { Heart, Calendar, Users, FileText, MapPin, Building, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Navigation from "@/components/Navigation";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { useBookmarks } from "@/hooks/useBookmarks";
 
@@ -57,8 +55,7 @@ const Bookmarks = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <>
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
@@ -176,8 +173,7 @@ const Bookmarks = () => {
         )}
       </div>
       
-      <Footer />
-    </div>
+    </>
   );
 };
 
