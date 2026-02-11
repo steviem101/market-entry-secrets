@@ -57,12 +57,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
       <TooltipProvider>
-        <LeadGenPopupProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <AuthProvider>
+        <AuthProvider>
+          <LeadGenPopupProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
               <Layout>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -101,9 +101,9 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Layout>
-            </AuthProvider>
-          </BrowserRouter>
-        </LeadGenPopupProvider>
+            </BrowserRouter>
+          </LeadGenPopupProvider>
+        </AuthProvider>
       </TooltipProvider>
     </HelmetProvider>
   </QueryClientProvider>
