@@ -20,7 +20,7 @@ export const SearchSection = ({ totalResources = 2075 }: SearchSectionProps) => 
     }
   }, [isVisible, animationComplete]);
 
-  const searchTabs = [
+  const searchTabs: { id: SearchCategory; label: string; icon: typeof Search; count: number }[] = [
     { id: "all", label: "All Resources", icon: Search, count: totalResources },
     { id: "companies", label: "Companies", icon: Building2, count: 850 },
     { id: "people", label: "People", icon: Users, count: 620 },
