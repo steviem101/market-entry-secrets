@@ -1,18 +1,11 @@
-
 import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface ContentItemsOptions {
-  featured?: boolean;
-  contentType?: string | string[];
-}
-
-export const useContentItems = (options?: ContentItemsOptions) => {
+export const useCaseStudies = () => {
   return useQuery({
-    queryKey: ['content-items', options],
+    queryKey: ['case-studies'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('content_items')
         .select(`
           *,
@@ -20,24 +13,13 @@ export const useContentItems = (options?: ContentItemsOptions) => {
             name,
             icon,
             color
-          )
+          ),
+          content_company_profiles (*),
+          content_founders (*)
         `)
         .eq('status', 'published')
+        .eq('content_type', 'case_study')
         .order('publish_date', { ascending: false });
-
-      if (options?.featured) {
-        query = query.eq('featured', true);
-      }
-
-      if (options?.contentType) {
-        if (Array.isArray(options.contentType)) {
-          query = query.in('content_type', options.contentType);
-        } else {
-          query = query.eq('content_type', options.contentType);
-        }
-      }
-
-      const { data, error } = await query;
 
       if (error) throw error;
       return data;
@@ -45,11 +27,10 @@ export const useContentItems = (options?: ContentItemsOptions) => {
   });
 };
 
-export const useContentItem = (slug: string) => {
+export const useCaseStudy = (slug: string) => {
   return useQuery({
-    queryKey: ['content-item', slug],
+    queryKey: ['case-study', slug],
     queryFn: async () => {
-      // First get the content item
       const { data: contentItem, error: contentError } = await supabase
         .from('content_items')
         .select(`
@@ -64,11 +45,12 @@ export const useContentItem = (slug: string) => {
         `)
         .eq('slug', slug)
         .eq('status', 'published')
+        .eq('content_type', 'case_study')
         .single();
 
       if (contentError) throw contentError;
 
-      // Get sections for this content item
+      // Get sections for this case study
       const { data: sections, error: sectionsError } = await supabase
         .from('content_sections')
         .select('*')
@@ -78,7 +60,7 @@ export const useContentItem = (slug: string) => {
 
       if (sectionsError) throw sectionsError;
 
-      // Get all content bodies for this content item (both sectioned and non-sectioned)
+      // Get all content bodies (both sectioned and non-sectioned)
       const { data: bodies, error: bodiesError } = await supabase
         .from('content_bodies')
         .select('*')
@@ -95,35 +77,4 @@ export const useContentItem = (slug: string) => {
     },
     enabled: !!slug
   });
-};
-
-export const useContentCategories = () => {
-  return useQuery({
-    queryKey: ['content-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('content_categories')
-        .select('*')
-        .order('sort_order');
-
-      if (error) throw error;
-      return data;
-    }
-  });
-};
-
-export const useIncrementViewCount = () => {
-  return useCallback(async (contentId: string) => {
-    try {
-      const { error } = await (supabase as any).rpc('increment_view_count', {
-        content_id: contentId
-      });
-
-      if (error) {
-        console.error('Error incrementing view count:', error);
-      }
-    } catch (err) {
-      console.error('Failed to increment view count:', err);
-    }
-  }, []);
 };

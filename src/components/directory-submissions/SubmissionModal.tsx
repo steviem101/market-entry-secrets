@@ -8,9 +8,10 @@ import { SubmissionType } from "./submissionConfig";
 import { FormData, initialFormData } from "./types";
 import { EventFormFields } from "./EventFormFields";
 import { ContentFormFields } from "./ContentFormFields";
+import { CaseStudyFormFields } from "./CaseStudyFormFields";
+import { GuideFormFields } from "./GuideFormFields";
 import { DataRequestFormFields } from "./DataRequestFormFields";
 import { DefaultFormFields } from "./DefaultFormFields";
-// Removed unused lucide-react imports
 
 interface SubmissionModalProps {
   isOpen: boolean;
@@ -29,12 +30,18 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
     setIsSubmitting(true);
 
     try {
+      const structuredFormData: Record<string, unknown> = {
+        submission_version: 2,
+        content_type: submissionType,
+        ...formData
+      };
+
       const { error } = await supabase
         .from('directory_submissions')
         .insert({
           submission_type: submissionType,
           contact_email: formData.email,
-          form_data: formData as any
+          form_data: structuredFormData
         });
 
       if (error) throw error;
@@ -74,6 +81,10 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
         return <EventFormFields formData={formData} onInputChange={handleInputChange} />;
       case 'content':
         return <ContentFormFields formData={formData} onInputChange={handleInputChange} />;
+      case 'case_study':
+        return <CaseStudyFormFields formData={formData} onInputChange={handleInputChange} />;
+      case 'guide':
+        return <GuideFormFields formData={formData} onInputChange={handleInputChange} />;
       case 'data_request':
         return <DataRequestFormFields formData={formData} onInputChange={handleInputChange} />;
       default:
@@ -91,6 +102,10 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
         return "Submit your market entry event to be featured in our events calendar.";
       case 'content':
         return "Share your insights and expertise through our content platform.";
+      case 'case_study':
+        return "Share your company's Australian market entry story — whether a success or a failure, your experience helps others navigate the journey.";
+      case 'guide':
+        return "Share your expertise with a market entry guide. Help businesses navigate Australian regulations, compliance, and market opportunities.";
       case 'data_request':
         return "Request specific market data or research to support your business entry.";
       default:

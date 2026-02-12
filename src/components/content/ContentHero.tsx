@@ -21,13 +21,13 @@ export const ContentHero = ({
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">Learn from real businesses that successfully entered the Australian market. Get actionable insights, proven strategies, expert guidance and Australia-specific documents</p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-          <SubmissionButton submissionType="content" variant="hero" size="lg" />
+          <SubmissionButton submissionType="guide" variant="hero" size="lg" />
         </div>
         
         <div className="flex flex-wrap justify-center gap-8 text-center">
           <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
             <div className="text-3xl font-bold text-teal-600 mb-1">{totalContent}</div>
-            <div className="text-sm text-gray-600">Success Stories</div>
+            <div className="text-sm text-gray-600">Market Entry Guides</div>
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
             <div className="text-3xl font-bold text-cyan-600 mb-1">{totalCategories}</div>

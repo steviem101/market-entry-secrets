@@ -59,7 +59,7 @@ export const ContentCard = ({ content, featured = false }: ContentCardProps) => 
         
         <Link to={`/content/${content.slug}`}>
           <Button variant={featured ? "default" : "outline"} className="w-full">
-            {featured ? "Read Success Story" : "Read More"}
+            {featured ? "Read Featured Guide" : "Read More"}
           </Button>
         </Link>
       </CardContent>

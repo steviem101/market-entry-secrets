@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -32,12 +32,14 @@ const ContentDetail = () => {
   const sectionIds = content?.content_sections?.map(section => section.slug) || [];
   const { activeSection, scrollToSection } = useScrollSpy({ sectionIds });
 
-  // Increment view count when content loads
+  // Increment view count once when content loads
+  const hasCountedRef = useRef(false);
   useEffect(() => {
-    if (content && content.id) {
+    if (content?.id && !hasCountedRef.current) {
+      hasCountedRef.current = true;
       incrementViewCount(content.id);
     }
-  }, [content, incrementViewCount]);
+  }, [content?.id, incrementViewCount]);
 
   const toggleSave = () => {
     if (!content) return;
@@ -169,7 +171,7 @@ const ContentDetail = () => {
               contentType="content"
               itemId={content.id}
               contentTitle={content.title}
-              contentDescription={content.subtitle || content.description}
+              contentDescription={content.subtitle || content.meta_description}
             >
             <div className="mb-8">
               <div className="flex items-center gap-4 mb-6">

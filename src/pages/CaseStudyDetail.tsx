@@ -1,64 +1,43 @@
-
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Globe, Twitter, Instagram, Youtube } from "lucide-react";
+import { ArrowLeft, Heart, Globe, Twitter, Clock, Calendar, Eye } from "lucide-react";
+import { useCaseStudy } from "@/hooks/useCaseStudies";
+import { useIncrementViewCount } from "@/hooks/useContent";
+import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { FreemiumGate } from "@/components/FreemiumGate";
 
 interface CaseStudySection {
   id: string;
   title: string;
+  slug: string;
   isActive?: boolean;
 }
 
 const CaseStudyDetail = () => {
-  const { id } = useParams();
+  const { slug } = useParams<{ slug: string }>();
   const [savedStories, setSavedStories] = useState<string[]>([]);
 
-  // Mock data - in a real app, this would come from an API based on the ID
-  const caseStudy = {
-    id: "us-tech-startup-success",
-    title: "How This US Tech Startup Successfully Entered Australia And Reached $2M ARR",
-    companyName: "CloudScale Solutions",
-    website: "cloudscale.com.au",
-    originCountry: "United States",
-    targetMarket: "Australia",
-    entryDate: "March 2022",
-    publishDate: "December 15th, 2023",
-    monthlyRevenue: "$167,000",
-    entryCosts: "$75,000",
-    profitable: "Yes",
-    founders: 2,
-    employees: 15,
-    founderName: "Marcus Chen & Lisa Rodriguez",
-    founderImage: "/placeholder.svg",
-    socialLinks: {
-      twitter: "#",
-      instagram: "#",
-      youtube: "#"
-    },
-    outcome: "Success"
-  };
+  const { data: caseStudy, isLoading, error } = useCaseStudy(slug || '');
+  const incrementViewCount = useIncrementViewCount();
 
-  const sections: CaseStudySection[] = [
-    { id: "company", title: "About The Company", isActive: true },
-    { id: "market-research", title: "Australian Market Research" },
-    { id: "entry-strategy", title: "Market Entry Strategy" },
-    { id: "regulatory", title: "Regulatory & Compliance Challenges" },
-    { id: "partnerships", title: "Building Local Partnerships" },
-    { id: "team", title: "Hiring & Building Australian Team" },
-    { id: "marketing", title: "Marketing & Customer Acquisition" },
-    { id: "revenue", title: "Revenue Growth & Financials" },
-    { id: "challenges", title: "Biggest Challenges Faced" },
-    { id: "lessons", title: "Key Lessons Learned" },
-    { id: "tools", title: "Essential Tools & Resources" },
-    { id: "advice", title: "Advice For Market Entry" },
-    { id: "future", title: "Future Plans In Australia" }
-  ];
+  // Get section IDs for scroll spy
+  const sectionIds = caseStudy?.content_sections?.map((section: any) => section.slug) || [];
+  const { activeSection, scrollToSection } = useScrollSpy({ sectionIds });
+
+  // Increment view count once when content loads
+  const hasCountedRef = useRef(false);
+  useEffect(() => {
+    if (caseStudy?.id && !hasCountedRef.current) {
+      hasCountedRef.current = true;
+      incrementViewCount(caseStudy.id);
+    }
+  }, [caseStudy?.id, incrementViewCount]);
 
   const toggleSave = () => {
+    if (!caseStudy) return;
     if (savedStories.includes(caseStudy.id)) {
       setSavedStories(savedStories.filter(id => id !== caseStudy.id));
     } else {
@@ -66,31 +45,94 @@ const CaseStudyDetail = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground mt-4">Loading case study...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !caseStudy) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">Case Study Not Found</h2>
+          <p className="text-muted-foreground mb-6">
+            The case study you're looking for doesn't exist or has been removed.
+          </p>
+          <Link to="/case-studies">
+            <Button>Back to Case Studies</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const companyProfile = caseStudy.content_company_profiles?.[0];
+  const primaryFounder = caseStudy.content_founders?.find((f: any) => f.is_primary) || caseStudy.content_founders?.[0];
+
+  // Group content bodies by section
+  const groupedContent = caseStudy.content_sections?.map((section: any) => ({
+    ...section,
+    bodies: caseStudy.content_bodies?.filter((body: any) => body.section_id === section.id) || []
+  })) || [];
+
+  const sections: CaseStudySection[] = caseStudy.content_sections?.map((section: any) => ({
+    id: section.id,
+    title: section.title,
+    slug: section.slug,
+    isActive: activeSection === section.slug
+  })) || [];
+
+  // Get content bodies that don't belong to any section
+  const generalContent = caseStudy.content_bodies?.filter((body: any) => !body.section_id) || [];
+
   return (
     <>
-      
       <div className="container mx-auto px-4 py-8">
+        <Link to="/case-studies">
+          <Button variant="ghost" className="mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Case Studies
+          </Button>
+        </Link>
+
         <div className="flex gap-8">
           {/* Left Sidebar Navigation */}
           <aside className="w-80 flex-shrink-0">
             <div className="sticky top-8">
-              <h2 className="text-lg font-semibold mb-4 text-foreground">
-                {caseStudy.title}
-              </h2>
-              <nav className="space-y-2">
-                {sections.map((section) => (
-                  <button
-                    key={section.id}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      section.isActive
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {section.title}
-                  </button>
-                ))}
-              </nav>
+              <div className="mb-6">
+                <h2 className="text-sm font-medium text-muted-foreground mb-2">
+                  {companyProfile?.company_name || caseStudy.title}
+                </h2>
+                {companyProfile?.monthly_revenue && (
+                  <h3 className="text-lg font-semibold mb-4 text-foreground">
+                    Revenue: {companyProfile.monthly_revenue}/Month
+                  </h3>
+                )}
+              </div>
+
+              {sections.length > 0 && (
+                <nav className="space-y-2">
+                  {sections.map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => scrollToSection(section.slug)}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                        section.isActive
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {section.title}
+                    </button>
+                  ))}
+                </nav>
+              )}
             </div>
           </aside>
 
@@ -98,155 +140,192 @@ const CaseStudyDetail = () => {
           <main className="flex-1">
             <FreemiumGate
               contentType="case-study"
-              itemId={id || ""}
+              itemId={caseStudy.id}
               contentTitle={caseStudy.title}
-              contentDescription={`A detailed case study of ${caseStudy.companyName}'s market entry from ${caseStudy.originCountry} to ${caseStudy.targetMarket}`}
+              contentDescription={caseStudy.subtitle || caseStudy.meta_description}
             >
               <div className="mb-8">
-              <div className="flex items-center gap-4 mb-6">
-                <img
-                  src={caseStudy.founderImage}
-                  alt={caseStudy.companyName}
-                  className="w-16 h-16 rounded-lg object-cover"
-                />
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground mb-1">
-                    {caseStudy.companyName}
-                  </h1>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>Market Entry Case Study</span>
-                    <span>Tools & Resources</span>
-                    <span>{caseStudy.originCountry} → {caseStudy.targetMarket}</span>
+                <div className="flex items-center gap-4 mb-6">
+                  <img
+                    src={primaryFounder?.image || companyProfile?.company_logo || "/placeholder.svg"}
+                    alt={companyProfile?.company_name || caseStudy.title}
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                  <div>
+                    <h1 className="text-2xl font-bold text-foreground mb-1">
+                      {companyProfile?.company_name || caseStudy.title}
+                    </h1>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>Market Entry Case Study</span>
+                      {companyProfile?.origin_country && companyProfile?.target_market && (
+                        <span>{companyProfile.origin_country} → {companyProfile.target_market}</span>
+                      )}
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(caseStudy.publish_date).toLocaleDateString()}
+                      </div>
+                      {caseStudy.read_time && (
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          {caseStudy.read_time} min read
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-4 h-4" />
+                        {caseStudy.view_count} views
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <h1 className="text-4xl font-bold text-foreground mb-4">
-                {caseStudy.title}
-              </h1>
+                <h1 className="text-4xl font-bold text-foreground mb-4">
+                  {caseStudy.title}
+                </h1>
 
-              <p className="text-muted-foreground mb-6">
-                Published {caseStudy.publishDate} • Market Entry: {caseStudy.entryDate}
-              </p>
+                {caseStudy.subtitle && (
+                  <p className="text-xl text-muted-foreground mb-6">
+                    {caseStudy.subtitle}
+                  </p>
+                )}
 
-              {/* Company Info Card */}
-              <Card className="bg-primary/5 border-primary/20 mb-8">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <Badge variant="secondary">MARKET ENTRY</Badge>
-                      <Badge>CASE STUDY</Badge>
-                      <Badge variant="secondary">AUSTRALIA</Badge>
-                      <Badge variant={caseStudy.outcome === "Success" ? "default" : "destructive"}>
-                        {caseStudy.outcome}
-                      </Badge>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={toggleSave}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <Heart 
-                        className={`w-4 h-4 mr-1 ${
-                          savedStories.includes(caseStudy.id) ? "fill-current text-red-500" : ""
-                        }`} 
-                      />
-                      SAVE STORY
-                    </Button>
+                {/* Company Info Card */}
+                {companyProfile && (
+                  <Card className="bg-primary/5 border-primary/20 mb-8">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="secondary">MARKET ENTRY</Badge>
+                          <Badge>CASE STUDY</Badge>
+                          {companyProfile.industry && (
+                            <Badge variant="secondary">{companyProfile.industry}</Badge>
+                          )}
+                          {companyProfile.outcome && (
+                            <Badge variant={companyProfile.outcome === "successful" ? "default" : "destructive"}>
+                              {companyProfile.outcome === "successful" ? "Success" : "Failure"}
+                            </Badge>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={toggleSave}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <Heart
+                            className={`w-4 h-4 mr-1 ${
+                              savedStories.includes(caseStudy.id) ? "fill-current text-red-500" : ""
+                            }`}
+                          />
+                          SAVE STORY
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center gap-8">
+                        {primaryFounder && (
+                          <div className="flex items-center gap-4">
+                            <img
+                              src={primaryFounder.image || "/placeholder.svg"}
+                              alt={primaryFounder.name}
+                              className="w-16 h-16 rounded-full object-cover"
+                            />
+                            <div>
+                              <h3 className="font-semibold text-foreground">{primaryFounder.name}</h3>
+                              <p className="text-sm text-muted-foreground">{primaryFounder.title}</p>
+                              <div className="flex gap-2 mt-2">
+                                {primaryFounder.social_twitter && (
+                                  <Twitter className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer" />
+                                )}
+                                {primaryFounder.social_linkedin && (
+                                  <Globe className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex gap-8 ml-auto">
+                          {companyProfile.monthly_revenue && (
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-foreground">
+                                {companyProfile.monthly_revenue}
+                              </div>
+                              <div className="text-xs text-muted-foreground">REVENUE/MO</div>
+                            </div>
+                          )}
+                          {companyProfile.startup_costs && (
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-foreground">
+                                {companyProfile.startup_costs}
+                              </div>
+                              <div className="text-xs text-muted-foreground">ENTRY COSTS</div>
+                            </div>
+                          )}
+                          {companyProfile.founder_count && (
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-foreground">
+                                {companyProfile.founder_count}
+                              </div>
+                              <div className="text-xs text-muted-foreground">FOUNDERS</div>
+                            </div>
+                          )}
+                          {companyProfile.employee_count && (
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-foreground">
+                                {companyProfile.employee_count}
+                              </div>
+                              <div className="text-xs text-muted-foreground">EMPLOYEES</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* General Content (not in sections) */}
+                {generalContent.length > 0 && (
+                  <div className="prose prose-lg max-w-none mb-12">
+                    {generalContent.map((body: any) => (
+                      <div key={body.id} className="mb-8">
+                        {body.question && (
+                          <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">
+                            {body.question}
+                          </h2>
+                        )}
+                        <div
+                          className="text-muted-foreground leading-relaxed"
+                          dangerouslySetInnerHTML={{ __html: body.body_text }}
+                        />
+                      </div>
+                    ))}
                   </div>
+                )}
 
-                  <div className="grid grid-cols-4 gap-8">
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-2">{caseStudy.companyName}</h3>
-                      <p className="text-sm text-muted-foreground mb-1">{caseStudy.website}</p>
-                      <p className="text-sm text-muted-foreground mb-1">from {caseStudy.originCountry}</p>
-                      <p className="text-sm text-muted-foreground mb-3">entered AU {caseStudy.entryDate}</p>
-                      <div className="flex gap-2">
-                        <Globe className="w-4 h-4 text-muted-foreground" />
-                        <Twitter className="w-4 h-4 text-muted-foreground" />
-                        <Instagram className="w-4 h-4 text-muted-foreground" />
-                        <Youtube className="w-4 h-4 text-muted-foreground" />
-                      </div>
+                {/* Sectioned Content */}
+                <div className="prose prose-lg max-w-none">
+                  {groupedContent.map((section: any) => (
+                    <div key={section.id} id={section.slug} className="mb-16 scroll-mt-8">
+                      <h2 className="text-3xl font-bold text-foreground mb-8 border-b border-border pb-4">
+                        {section.title}
+                      </h2>
+
+                      {section.bodies.map((body: any) => (
+                        <div key={body.id} className="mb-8">
+                          {body.question && (
+                            <h3 className="text-xl font-semibold text-foreground mt-6 mb-4">
+                              {body.question}
+                            </h3>
+                          )}
+                          <div
+                            className="text-muted-foreground leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: body.body_text }}
+                          />
+                        </div>
+                      ))}
                     </div>
-
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-foreground mb-1">
-                        {caseStudy.monthlyRevenue}
-                      </div>
-                      <div className="text-sm text-muted-foreground">MONTHLY REVENUE (AU)</div>
-                    </div>
-
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-foreground mb-1">
-                        {caseStudy.founders}
-                      </div>
-                      <div className="text-sm text-muted-foreground">FOUNDERS</div>
-                    </div>
-
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-foreground mb-1">
-                        {caseStudy.employees}
-                      </div>
-                      <div className="text-sm text-muted-foreground">EMPLOYEES (AU)</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Article Content */}
-              <div className="prose prose-lg max-w-none">
-                <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                  CloudScale Solutions, a successful US-based SaaS company serving enterprise clients, 
-                  decided to expand to Australia in early 2022. After 18 months of strategic market entry 
-                  efforts, they've built a thriving Australian operation generating $167,000 monthly revenue 
-                  and serving major Australian enterprises across Sydney and Melbourne.
-                </p>
-
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  This case study details their complete market entry journey, including the regulatory 
-                  hurdles they navigated, the local partnerships they built, their hiring strategy for 
-                  building an Australian team, and the marketing approaches that drove rapid customer 
-                  acquisition in a competitive market.
-                </p>
-
-                <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">
-                  Hello! Tell us about your company and why you decided to enter the Australian market.
-                </h2>
-
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  Hi, I'm Marcus Chen, co-founder of CloudScale Solutions along with my partner Lisa Rodriguez. 
-                  We built CloudScale as a cloud infrastructure management platform for enterprise clients, 
-                  and by 2021 we were doing about $8M ARR in the US market. 
-                </p>
-
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  Australia became attractive to us because of the strong demand for cloud solutions, 
-                  the regulatory environment that favored data sovereignty, and the fact that many 
-                  Australian enterprises were looking for alternatives to US-only providers. We saw 
-                  an opportunity to be early in a growing market with less competition than what we 
-                  faced in Silicon Valley.
-                </p>
-
-                <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">
-                  What was your market research process for Australia?
-                </h2>
-
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  We spent six months doing deep market research before making any commitments. We hired 
-                  a local market research firm in Sydney to conduct surveys with IT directors at ASX 200 
-                  companies. We also attended three major Australian tech conferences virtually to understand 
-                  the competitive landscape and customer pain points.
-                </p>
-
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  The key insight was that Australian enterprises were frustrated with data residency 
-                  requirements and wanted cloud solutions with guaranteed Australian data storage. 
-                  This became our core value proposition and differentiated us from global competitors 
-                  who couldn't make the same guarantees.
-                </p>
+                  ))}
+                </div>
               </div>
-            </div>
             </FreemiumGate>
           </main>
 
@@ -254,74 +333,80 @@ const CaseStudyDetail = () => {
           <aside className="w-80 flex-shrink-0">
             <div className="sticky top-8 space-y-6">
               {/* About Company Card */}
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-4">Market Entry Details</h3>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Monthly Revenue (AU)</span>
-                      <span className="font-medium">{caseStudy.monthlyRevenue}</span>
+              {companyProfile && (
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-foreground mb-4">Market Entry Details</h3>
+                    <div className="space-y-3 text-sm">
+                      {companyProfile.monthly_revenue && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Monthly Revenue (AU)</span>
+                          <span className="font-medium">{companyProfile.monthly_revenue}</span>
+                        </div>
+                      )}
+                      {companyProfile.startup_costs && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Entry Investment</span>
+                          <span className="font-medium">{companyProfile.startup_costs}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Profitable</span>
+                        <span className="font-medium">{companyProfile.is_profitable ? 'Yes' : 'No'}</span>
+                      </div>
+                      {companyProfile.origin_country && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Origin Country</span>
+                          <span className="font-medium">{companyProfile.origin_country}</span>
+                        </div>
+                      )}
+                      {companyProfile.entry_date && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Entry Date</span>
+                          <span className="font-medium">{companyProfile.entry_date}</span>
+                        </div>
+                      )}
+                      {companyProfile.founder_count && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Founders</span>
+                          <span className="font-medium">{companyProfile.founder_count}</span>
+                        </div>
+                      )}
+                      {companyProfile.employee_count && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">AU Employees</span>
+                          <span className="font-medium">{companyProfile.employee_count}</span>
+                        </div>
+                      )}
+                      {companyProfile.business_model && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Business Model</span>
+                          <span className="font-medium">{companyProfile.business_model}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Entry Investment</span>
-                      <span className="font-medium">{caseStudy.entryCosts}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Profitable</span>
-                      <span className="font-medium">{caseStudy.profitable}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Origin Country</span>
-                      <span className="font-medium">{caseStudy.originCountry}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Entry Date</span>
-                      <span className="font-medium">{caseStudy.entryDate}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">AU Employees</span>
-                      <span className="font-medium">{caseStudy.employees}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
-              {/* Market Entry Guide Card */}
+              {/* CTA Card */}
               <Card className="bg-card">
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-foreground mb-3">Australian Market Entry Guide</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     Get our comprehensive guide to entering the Australian market
                   </p>
-                  <Button className="w-full bg-foreground text-background hover:bg-foreground/90">
-                    Download Free Guide
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Related Resources Card */}
-              <Card className="bg-card">
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-3">Related Stories</h3>
-                  <div className="space-y-3">
-                    <div className="text-sm">
-                      <Link to="/case-studies/uk-ecommerce-failure" className="text-primary hover:underline">
-                        Why Our UK E-commerce Brand Failed In Australia
-                      </Link>
-                    </div>
-                    <div className="text-sm">
-                      <Link to="/case-studies/german-manufacturing-success" className="text-primary hover:underline">
-                        German Manufacturing Success Story
-                      </Link>
-                    </div>
-                  </div>
+                  <Link to="/content">
+                    <Button className="w-full bg-foreground text-background hover:bg-foreground/90">
+                      Browse Market Entry Guides
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </div>
           </aside>
         </div>
       </div>
-      
     </>
   );
 };

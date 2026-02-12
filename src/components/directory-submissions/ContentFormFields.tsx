@@ -48,7 +48,7 @@ export const ContentFormFields = ({ formData, onInputChange }: ContentFormFields
       </div>
       <div>
         <Label htmlFor="contentCategory">Content Category *</Label>
-        <Select onValueChange={(value) => onInputChange('contentCategory', value)} required>
+        <Select onValueChange={(value) => onInputChange('contentCategory', value)} value={formData.contentCategory}>
           <SelectTrigger>
             <SelectValue placeholder="Select content category" />
           </SelectTrigger>
