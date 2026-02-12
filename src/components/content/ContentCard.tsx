@@ -21,48 +21,62 @@ interface ContentCardProps {
 
 export const ContentCard = ({ content, featured = false }: ContentCardProps) => {
   const IconComponent = iconMap[content.content_categories?.icon] || BookOpen;
+  const categoryColor = content.content_categories?.color || "teal";
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Badge 
-            variant={featured ? "secondary" : "outline"} 
-            className="flex items-center gap-1"
-          >
-            <IconComponent className="w-3 h-3" />
-            {content.content_categories?.name}
-          </Badge>
-          {content.featured && <Badge>Featured</Badge>}
+    <Link to={`/content/${content.slug}`} className="block">
+      <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+        {/* Thumbnail */}
+        <div className={`relative w-full ${featured ? 'h-48' : 'h-40'} overflow-hidden`}>
+          {content.thumbnail_url ? (
+            <img
+              src={content.thumbnail_url}
+              alt={content.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-br from-${categoryColor}-500/20 to-${categoryColor}-600/10 flex items-center justify-center`}>
+              <IconComponent className={`w-12 h-12 text-${categoryColor}-500/40`} />
+            </div>
+          )}
+          {content.featured && (
+            <Badge className="absolute top-3 right-3">Featured</Badge>
+          )}
         </div>
-        
-        <h3 className={`font-semibold mb-2 text-foreground ${featured ? 'text-xl' : 'text-lg line-clamp-2'}`}>
-          {content.title}
-        </h3>
-        
-        {content.subtitle && (
-          <p className={`text-muted-foreground mb-4 ${featured ? '' : 'line-clamp-2'}`}>
-            {content.subtitle}
-          </p>
-        )}
-        
-        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            {new Date(content.publish_date).toLocaleDateString()}
+
+        <CardContent className="p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Badge
+              variant="outline"
+              className="flex items-center gap-1 text-xs"
+            >
+              <IconComponent className="w-3 h-3" />
+              {content.content_categories?.name}
+            </Badge>
           </div>
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            {content.read_time} min read
+
+          <h3 className={`font-semibold mb-1.5 text-foreground group-hover:text-primary transition-colors ${featured ? 'text-xl' : 'text-base line-clamp-2'}`}>
+            {content.title}
+          </h3>
+
+          {content.subtitle && (
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+              {content.subtitle}
+            </p>
+          )}
+
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" />
+              {new Date(content.publish_date).toLocaleDateString()}
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" />
+              {content.read_time} min
+            </div>
           </div>
-        </div>
-        
-        <Link to={`/content/${content.slug}`}>
-          <Button variant={featured ? "default" : "outline"} className="w-full">
-            {featured ? "Read Featured Guide" : "Read More"}
-          </Button>
-        </Link>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 };
