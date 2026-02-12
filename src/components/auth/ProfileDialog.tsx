@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, Save } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { getInitials } from '@/lib/profileUtils';
 
 interface ProfileDialogProps {
   open: boolean;
@@ -50,11 +51,7 @@ export const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const getInitials = () => {
-    const firstName = formData.first_name || '';
-    const lastName = formData.last_name || '';
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-  };
+  const formInitials = getInitials({ first_name: formData.first_name, last_name: formData.last_name });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,7 +65,7 @@ export const ProfileDialog = ({ open, onOpenChange }: ProfileDialogProps) => {
             <div className="relative">
               <Avatar className="h-20 w-20">
                 <AvatarImage src={profile?.avatar_url} />
-                <AvatarFallback className="text-lg">{getInitials()}</AvatarFallback>
+                <AvatarFallback className="text-lg">{formInitials}</AvatarFallback>
               </Avatar>
               <Button
                 type="button"
