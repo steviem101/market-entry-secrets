@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { User, Settings, LogOut, UserCircle, Shield, Heart, FileText, ClipboardList } from 'lucide-react';
+import { LogOut, UserCircle, Shield, LayoutDashboard, FileText, Heart, Handshake, BarChart3 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,25 +14,13 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { ProfileDialog } from './ProfileDialog';
 import { Link } from 'react-router-dom';
+import { getInitials, getDisplayName } from '@/lib/profileUtils';
 
 export const UserDropdown = () => {
   const { user, profile, signOut, isAdmin, isModerator } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
 
   if (!user || !profile) return null;
-
-  const getInitials = () => {
-    const firstName = profile.first_name || '';
-    const lastName = profile.last_name || '';
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-  };
-
-  const getDisplayName = () => {
-    if (profile.first_name && profile.last_name) {
-      return `${profile.first_name} ${profile.last_name}`;
-    }
-    return profile.username || user.email;
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -45,15 +32,15 @@ export const UserDropdown = () => {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={profile.avatar_url} alt={getDisplayName()} />
-              <AvatarFallback>{getInitials()}</AvatarFallback>
+              <AvatarImage src={profile.avatar_url} alt={getDisplayName(profile, user)} />
+              <AvatarFallback>{getInitials(profile)}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end">
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{getDisplayName()}</p>
+              <p className="text-sm font-medium leading-none">{getDisplayName(profile, user)}</p>
               <p className="text-xs leading-none text-muted-foreground">
                 {user.email}
               </p>
@@ -74,31 +61,40 @@ export const UserDropdown = () => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setShowProfile(true)}>
-            <UserCircle className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/member-hub">
-              <Heart className="mr-2 h-4 w-4" />
+              <LayoutDashboard className="mr-2 h-4 w-4" />
               <span>Member Hub</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/my-reports">
-              <ClipboardList className="mr-2 h-4 w-4" />
+              <BarChart3 className="mr-2 h-4 w-4" />
               <span>My Reports</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/report-creator">
-              <FileText className="mr-2 h-4 w-4" />
-              <span>Create Market Entry Report</span>
+            <Link to="/bookmarks">
+              <Heart className="mr-2 h-4 w-4" />
+              <span>Bookmarks</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+          <DropdownMenuItem asChild>
+            <Link to="/mentor-connections">
+              <Handshake className="mr-2 h-4 w-4" />
+              <span>Mentor Connections</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link to="/report-creator">
+              <FileText className="mr-2 h-4 w-4" />
+              <span>Create New Report</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowProfile(true)}>
+            <UserCircle className="mr-2 h-4 w-4" />
+            <span>Edit Profile</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>

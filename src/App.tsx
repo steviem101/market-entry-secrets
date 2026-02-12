@@ -36,6 +36,7 @@ import PartnerWithUs from "./pages/PartnerWithUs";
 import Dashboard from "./pages/Dashboard";
 import Bookmarks from "./pages/Bookmarks";
 import MemberHub from "./pages/MemberHub";
+import MentorConnections from "./pages/MentorConnections";
 import AuthCallback from "./pages/AuthCallback";
 import Pricing from "./pages/Pricing";
 import ReportCreator from "./pages/ReportCreator";
@@ -89,9 +90,10 @@ const App = () => (
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/partner" element={<PartnerWithUs />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<MemberHub />} />
                   <Route path="/bookmarks" element={<Bookmarks />} />
                   <Route path="/member-hub" element={<MemberHub />} />
+                  <Route path="/mentor-connections" element={<MentorConnections />} />
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/report-creator" element={<ReportCreator />} />
                   <Route path="/report/:reportId" element={<ReportView />} />

@@ -60,9 +60,9 @@ const Bookmarks = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/">
+            <Link to="/member-hub">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
+              Back to Member Hub
             </Link>
           </Button>
         </div>

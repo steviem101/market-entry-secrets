@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { requireAdmin } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +29,14 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const authResult = await requireAdmin(req);
+    if ("error" in authResult) {
+      return new Response(
+        JSON.stringify({ success: false, error: authResult.error.message }),
+        { status: authResult.error.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { organization_id, only_missing } = await req.json();
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

@@ -4,19 +4,19 @@ project_id = "xhziwveaiuhzdoutpgrh"
 verify_jwt = true
 
 [functions.firecrawl-search]
-verify_jwt = false
+verify_jwt = true
 
 [functions.firecrawl-scrape]
-verify_jwt = false
+verify_jwt = true
 
 [functions.firecrawl-map]
-verify_jwt = false
+verify_jwt = true
 
 [functions.enrich-content]
-verify_jwt = false
+verify_jwt = true
 
 [functions.enrich-innovation-ecosystem]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-report]
 verify_jwt = true
