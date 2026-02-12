@@ -23,7 +23,24 @@ export interface FormData {
   targetMarket: string;
   dataRequirements: string;
   useCase: string;
-  [key: string]: string; // Add index signature for Json compatibility
+  // Case study specific fields (map to content_company_profiles)
+  originCountry: string;
+  entryDate: string;
+  monthlyRevenue: string;
+  startupCosts: string;
+  businessModel: string;
+  outcomeResult: string;
+  founderName: string;
+  founderTitle: string;
+  founderLinkedin: string;
+  employeeCount: string;
+  founderCount: string;
+  // Guide specific fields
+  guideTitle: string;
+  guideSubtitle: string;
+  guideBody: string;
+  guideSectorTags: string;
+  [key: string]: string; // Index signature for Json compatibility
 }
 
 export const initialFormData: FormData = {
@@ -49,5 +66,20 @@ export const initialFormData: FormData = {
   businessSize: '',
   targetMarket: '',
   dataRequirements: '',
-  useCase: ''
+  useCase: '',
+  originCountry: '',
+  entryDate: '',
+  monthlyRevenue: '',
+  startupCosts: '',
+  businessModel: '',
+  outcomeResult: '',
+  founderName: '',
+  founderTitle: '',
+  founderLinkedin: '',
+  employeeCount: '',
+  founderCount: '',
+  guideTitle: '',
+  guideSubtitle: '',
+  guideBody: '',
+  guideSectorTags: ''
 };

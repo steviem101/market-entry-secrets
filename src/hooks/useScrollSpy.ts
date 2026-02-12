@@ -19,7 +19,6 @@ export const useScrollSpy = ({
     const handleIntersection = (entries: IntersectionObserverEntry[]) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          console.log('Section in view:', entry.target.id);
           setActiveSection(entry.target.id);
         }
       });
@@ -48,7 +47,6 @@ export const useScrollSpy = ({
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      console.log('Scrolling to section:', sectionId);
       element.scrollIntoView({ 
         behavior: 'smooth',
         block: 'start'

@@ -12,16 +12,14 @@ import { getStandardTypes, STANDARD_SECTORS } from "@/utils/sectorMapping";
 const Content = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedSector, setSelectedSector] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems();
+  const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems({
+    contentType: ['guide', 'article', 'success_story']
+  });
   const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useContentCategories();
-
-  // Mock locations for now - in a real app, this would come from content data
-  const mockLocations = ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"];
   
   // Get types and sectors
   const allTypes = getStandardTypes.content;
@@ -50,12 +48,11 @@ const Content = () => {
   });
 
   const featuredContent = contentItems.filter(item => item.featured);
-  const hasActiveFilters = selectedCategory !== null || selectedLocation !== "all" || 
+  const hasActiveFilters = selectedCategory !== null ||
     selectedType !== "all" || selectedSector !== "all";
 
   const handleClearFilters = () => {
     setSelectedCategory(null);
-    setSelectedLocation("all");
     setSelectedType("all");
     setSelectedSector("all");
   };
@@ -103,8 +100,8 @@ const Content = () => {
       <StandardDirectoryFilters
         searchTerm={searchQuery}
         onSearchChange={setSearchQuery}
-        selectedLocation={selectedLocation}
-        onLocationChange={setSelectedLocation}
+        selectedLocation="all"
+        onLocationChange={() => {}}
         selectedType={selectedType}
         onTypeChange={setSelectedType}
         selectedSector={selectedSector}
@@ -113,10 +110,10 @@ const Content = () => {
         onToggleFilters={() => setShowFilters(!showFilters)}
         onClearFilters={handleClearFilters}
         hasActiveFilters={hasActiveFilters}
-        locations={mockLocations}
+        locations={[]}
         types={allTypes}
         sectors={allSectors}
-        searchPlaceholder="Search success stories..."
+        searchPlaceholder="Search market entry guides..."
       >
         {/* Advanced Filters - Categories */}
         <div className="flex flex-wrap gap-2">
