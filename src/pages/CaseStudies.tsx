@@ -265,7 +265,35 @@ const CaseStudies = () => {
           {/* Case Studies List */}
           <main className="flex-1">
             {!authLoading && hasReachedLimit && !user ? (
-              <PaywallModal contentType="case-study" />
+              <div className="relative">
+                <div className="space-y-6 blur-sm pointer-events-none select-none" aria-hidden="true">
+                  {filteredCaseStudies.slice(0, 3).map((cs) => {
+                    const p = cs.content_company_profiles?.[0];
+                    const f = cs.content_founders?.find((f: any) => f.is_primary) || cs.content_founders?.[0];
+                    return (
+                      <Card key={cs.id}>
+                        <CardHeader>
+                          <div className="flex items-start gap-4">
+                            <Avatar className="w-12 h-12">
+                              <AvatarImage src={f?.image} alt={f?.name || p?.company_name} />
+                              <AvatarFallback>?</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <CardTitle className="text-xl">{cs.title}</CardTitle>
+                              <CardDescription className="text-base leading-relaxed mt-1">
+                                {cs.subtitle || cs.meta_description}
+                              </CardDescription>
+                            </div>
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    );
+                  })}
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <PaywallModal contentType="case-study" />
+                </div>
+              </div>
             ) : (
             <div className="space-y-6">
               {filteredCaseStudies.length === 0 && (

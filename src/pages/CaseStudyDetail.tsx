@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { useCaseStudy } from "@/hooks/useCaseStudies";
 import { useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { FreemiumGate } from "@/components/FreemiumGate";
+import DOMPurify from "dompurify";
 
 interface CaseStudySection {
   id: string;
@@ -16,9 +17,19 @@ interface CaseStudySection {
   isActive?: boolean;
 }
 
+const SAVED_STORIES_KEY = "mes_saved_stories";
+
+const getSavedStories = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_STORIES_KEY) || "[]");
+  } catch {
+    return [];
+  }
+};
+
 const CaseStudyDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [savedStories, setSavedStories] = useState<string[]>([]);
+  const [savedStories, setSavedStories] = useState<string[]>(getSavedStories);
 
   const { data: caseStudy, isLoading, error } = useCaseStudy(slug || '');
   const incrementViewCount = useIncrementViewCount();
@@ -36,14 +47,17 @@ const CaseStudyDetail = () => {
     }
   }, [caseStudy?.id, incrementViewCount]);
 
-  const toggleSave = () => {
+  const toggleSave = useCallback(() => {
     if (!caseStudy) return;
-    if (savedStories.includes(caseStudy.id)) {
-      setSavedStories(savedStories.filter(id => id !== caseStudy.id));
-    } else {
-      setSavedStories([...savedStories, caseStudy.id]);
-    }
-  };
+
+    setSavedStories(prev => {
+      const next = prev.includes(caseStudy.id)
+        ? prev.filter(id => id !== caseStudy.id)
+        : [...prev, caseStudy.id];
+      localStorage.setItem(SAVED_STORIES_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, [caseStudy]);
 
   if (isLoading) {
     return (
@@ -101,9 +115,9 @@ const CaseStudyDetail = () => {
           </Button>
         </Link>
 
-        <div className="flex gap-8">
-          {/* Left Sidebar Navigation */}
-          <aside className="w-80 flex-shrink-0">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Sidebar Navigation — hidden on mobile/tablet */}
+          <aside className="hidden lg:block w-80 flex-shrink-0">
             <div className="sticky top-8">
               <div className="mb-6">
                 <h2 className="text-sm font-medium text-muted-foreground mb-2">
@@ -137,7 +151,7 @@ const CaseStudyDetail = () => {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1">
+          <main className="flex-1 min-w-0">
             <FreemiumGate
               contentType="case-study"
               itemId={caseStudy.id}
@@ -155,7 +169,7 @@ const CaseStudyDetail = () => {
                     <h1 className="text-2xl font-bold text-foreground mb-1">
                       {companyProfile?.company_name || caseStudy.title}
                     </h1>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                       <span>Market Entry Case Study</span>
                       {companyProfile?.origin_country && companyProfile?.target_market && (
                         <span>{companyProfile.origin_country} → {companyProfile.target_market}</span>
@@ -178,22 +192,43 @@ const CaseStudyDetail = () => {
                   </div>
                 </div>
 
-                <h1 className="text-4xl font-bold text-foreground mb-4">
+                <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
                   {caseStudy.title}
                 </h1>
 
                 {caseStudy.subtitle && (
-                  <p className="text-xl text-muted-foreground mb-6">
+                  <p className="text-lg lg:text-xl text-muted-foreground mb-6">
                     {caseStudy.subtitle}
                   </p>
+                )}
+
+                {/* Mobile section nav */}
+                {sections.length > 0 && (
+                  <div className="lg:hidden mb-6">
+                    <div className="flex overflow-x-auto gap-2 pb-2">
+                      {sections.map((section) => (
+                        <button
+                          key={section.id}
+                          onClick={() => scrollToSection(section.slug)}
+                          className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm transition-colors ${
+                            section.isActive
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {section.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 {/* Company Info Card */}
                 {companyProfile && (
                   <Card className="bg-primary/5 border-primary/20 mb-8">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="secondary">MARKET ENTRY</Badge>
                           <Badge>CASE STUDY</Badge>
                           {companyProfile.industry && (
@@ -220,7 +255,7 @@ const CaseStudyDetail = () => {
                         </Button>
                       </div>
 
-                      <div className="flex items-center gap-8">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                         {primaryFounder && (
                           <div className="flex items-center gap-4">
                             <img
@@ -243,10 +278,10 @@ const CaseStudyDetail = () => {
                           </div>
                         )}
 
-                        <div className="flex gap-8 ml-auto">
+                        <div className="flex flex-wrap gap-6 sm:ml-auto">
                           {companyProfile.monthly_revenue && (
                             <div className="text-center">
-                              <div className="text-2xl font-bold text-foreground">
+                              <div className="text-xl sm:text-2xl font-bold text-foreground">
                                 {companyProfile.monthly_revenue}
                               </div>
                               <div className="text-xs text-muted-foreground">REVENUE/MO</div>
@@ -254,23 +289,23 @@ const CaseStudyDetail = () => {
                           )}
                           {companyProfile.startup_costs && (
                             <div className="text-center">
-                              <div className="text-2xl font-bold text-foreground">
+                              <div className="text-xl sm:text-2xl font-bold text-foreground">
                                 {companyProfile.startup_costs}
                               </div>
                               <div className="text-xs text-muted-foreground">ENTRY COSTS</div>
                             </div>
                           )}
-                          {companyProfile.founder_count && (
+                          {companyProfile.founder_count != null && (
                             <div className="text-center">
-                              <div className="text-2xl font-bold text-foreground">
+                              <div className="text-xl sm:text-2xl font-bold text-foreground">
                                 {companyProfile.founder_count}
                               </div>
                               <div className="text-xs text-muted-foreground">FOUNDERS</div>
                             </div>
                           )}
-                          {companyProfile.employee_count && (
+                          {companyProfile.employee_count != null && (
                             <div className="text-center">
-                              <div className="text-2xl font-bold text-foreground">
+                              <div className="text-xl sm:text-2xl font-bold text-foreground">
                                 {companyProfile.employee_count}
                               </div>
                               <div className="text-xs text-muted-foreground">EMPLOYEES</div>
@@ -294,7 +329,7 @@ const CaseStudyDetail = () => {
                         )}
                         <div
                           className="text-muted-foreground leading-relaxed"
-                          dangerouslySetInnerHTML={{ __html: body.body_text }}
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body.body_text) }}
                         />
                       </div>
                     ))}
@@ -318,7 +353,7 @@ const CaseStudyDetail = () => {
                           )}
                           <div
                             className="text-muted-foreground leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: body.body_text }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body.body_text) }}
                           />
                         </div>
                       ))}
@@ -329,8 +364,8 @@ const CaseStudyDetail = () => {
             </FreemiumGate>
           </main>
 
-          {/* Right Sidebar */}
-          <aside className="w-80 flex-shrink-0">
+          {/* Right Sidebar — hidden on mobile/tablet */}
+          <aside className="hidden lg:block w-80 flex-shrink-0">
             <div className="sticky top-8 space-y-6">
               {/* About Company Card */}
               {companyProfile && (
@@ -366,13 +401,13 @@ const CaseStudyDetail = () => {
                           <span className="font-medium">{companyProfile.entry_date}</span>
                         </div>
                       )}
-                      {companyProfile.founder_count && (
+                      {companyProfile.founder_count != null && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Founders</span>
                           <span className="font-medium">{companyProfile.founder_count}</span>
                         </div>
                       )}
-                      {companyProfile.employee_count && (
+                      {companyProfile.employee_count != null && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">AU Employees</span>
                           <span className="font-medium">{companyProfile.employee_count}</span>

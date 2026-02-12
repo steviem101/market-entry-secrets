@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { useAuth } from "@/hooks/useAuth";
 import { ContentEnrichmentButton } from "@/components/content/ContentEnrichmentButton";
 import { FreemiumGate } from "@/components/FreemiumGate";
+import DOMPurify from "dompurify";
 
 interface ContentSection {
   id: string;
@@ -19,9 +20,26 @@ interface ContentSection {
   isActive?: boolean;
 }
 
+const CONTENT_TYPE_BADGE_LABELS: Record<string, string> = {
+  success_story: "SUCCESS STORY",
+  guide: "GUIDE",
+  article: "ARTICLE",
+  case_study: "CASE STUDY",
+};
+
+const SAVED_STORIES_KEY = "mes_saved_stories";
+
+const getSavedStories = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_STORIES_KEY) || "[]");
+  } catch {
+    return [];
+  }
+};
+
 const ContentDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [savedStories, setSavedStories] = useState<string[]>([]);
+  const [savedStories, setSavedStories] = useState<string[]>(getSavedStories);
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
@@ -41,44 +59,42 @@ const ContentDetail = () => {
     }
   }, [content?.id, incrementViewCount]);
 
-  const toggleSave = () => {
+  const toggleSave = useCallback(() => {
     if (!content) return;
-    
-    if (savedStories.includes(content.id)) {
-      setSavedStories(savedStories.filter(id => id !== content.id));
-    } else {
-      setSavedStories([...savedStories, content.id]);
-    }
-  };
+
+    setSavedStories(prev => {
+      const next = prev.includes(content.id)
+        ? prev.filter(id => id !== content.id)
+        : [...prev, content.id];
+      localStorage.setItem(SAVED_STORIES_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, [content]);
 
   if (isLoading) {
     return (
-      <>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="text-muted-foreground mt-4">Loading content...</p>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground mt-4">Loading content...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   if (error || !content) {
     return (
-      <>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Content Not Found</h2>
-            <p className="text-muted-foreground mb-6">
-              The content you're looking for doesn't exist or has been removed.
-            </p>
-            <Link to="/content">
-              <Button>Back to Content</Button>
-            </Link>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">Content Not Found</h2>
+          <p className="text-muted-foreground mb-6">
+            The content you're looking for doesn't exist or has been removed.
+          </p>
+          <Link to="/content">
+            <Button>Back to Content</Button>
+          </Link>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -107,9 +123,11 @@ const ContentDetail = () => {
   // Get content bodies that don't belong to any section
   const generalContent = content.content_bodies?.filter(body => !body.section_id) || [];
 
+  const badgeLabel = CONTENT_TYPE_BADGE_LABELS[content.content_type] || content.content_type.toUpperCase();
+
   return (
     <>
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
           <Link to="/content">
@@ -118,7 +136,7 @@ const ContentDetail = () => {
               Back to Content
             </Button>
           </Link>
-          
+
           {isAdmin && sections.length > 0 && (
             <ContentEnrichmentButton
               contentId={content.id}
@@ -132,9 +150,9 @@ const ContentDetail = () => {
           )}
         </div>
 
-        <div className="flex gap-8">
-          {/* Left Sidebar Navigation */}
-          <aside className="w-80 flex-shrink-0">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Sidebar Navigation — hidden on mobile/tablet */}
+          <aside className="hidden lg:block w-80 flex-shrink-0">
             <div className="sticky top-8">
               <div className="mb-6">
                 <h2 className="text-sm font-medium text-muted-foreground mb-2">
@@ -144,7 +162,7 @@ const ContentDetail = () => {
                   {companyProfile?.monthly_revenue && `Revenue: ${companyProfile.monthly_revenue}/Month`}
                 </h3>
               </div>
-              
+
               {sections.length > 0 && (
                 <nav className="space-y-2">
                   {sections.map((section) => (
@@ -166,7 +184,7 @@ const ContentDetail = () => {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1">
+          <main className="flex-1 min-w-0">
             <FreemiumGate
               contentType="content"
               itemId={content.id}
@@ -184,8 +202,8 @@ const ContentDetail = () => {
                   <h1 className="text-2xl font-bold text-foreground mb-1">
                     {companyProfile?.company_name || content.title}
                   </h1>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>{content.content_type === 'success_story' ? 'Success Story' : 'Article'}</span>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                    <span>{badgeLabel}</span>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       {new Date(content.publish_date).toLocaleDateString()}
@@ -202,23 +220,44 @@ const ContentDetail = () => {
                 </div>
               </div>
 
-              <h1 className="text-4xl font-bold text-foreground mb-4">
+              <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
                 {content.title}
               </h1>
 
               {content.subtitle && (
-                <p className="text-xl text-muted-foreground mb-6">
+                <p className="text-lg lg:text-xl text-muted-foreground mb-6">
                   {content.subtitle}
                 </p>
+              )}
+
+              {/* Mobile section nav */}
+              {sections.length > 0 && (
+                <div className="lg:hidden mb-6">
+                  <div className="flex overflow-x-auto gap-2 pb-2">
+                    {sections.map((section) => (
+                      <button
+                        key={section.id}
+                        onClick={() => scrollToSection(section.slug)}
+                        className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm transition-colors ${
+                          section.isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {section.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {/* Company Info Card */}
               {companyProfile && (
                 <Card className="bg-primary/5 border-primary/20 mb-8">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <Badge>SUCCESS STORY</Badge>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge>{badgeLabel}</Badge>
                         <Badge variant="secondary">{companyProfile.industry}</Badge>
                         {companyProfile.origin_country && companyProfile.target_market && (
                           <Badge variant="outline">
@@ -232,16 +271,16 @@ const ContentDetail = () => {
                         onClick={toggleSave}
                         className="text-muted-foreground hover:text-foreground"
                       >
-                        <Heart 
+                        <Heart
                           className={`w-4 h-4 mr-1 ${
                             savedStories.includes(content.id) ? "fill-current text-red-500" : ""
-                          }`} 
+                          }`}
                         />
                         SAVE
                       </Button>
                     </div>
 
-                    <div className="flex items-center gap-8">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                       {primaryFounder && (
                         <div className="flex items-center gap-4">
                           <img
@@ -261,29 +300,33 @@ const ContentDetail = () => {
                         </div>
                       )}
 
-                      <div className="flex gap-8 ml-auto">
+                      <div className="flex flex-wrap gap-6 sm:ml-auto">
                         {companyProfile.monthly_revenue && (
                           <div className="text-center">
-                            <div className="text-2xl font-bold text-foreground">
+                            <div className="text-xl sm:text-2xl font-bold text-foreground">
                               {companyProfile.monthly_revenue}
                             </div>
                             <div className="text-xs text-muted-foreground">REVENUE/MO</div>
                           </div>
                         )}
 
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-foreground">
-                            {companyProfile.founder_count}
+                        {companyProfile.founder_count != null && (
+                          <div className="text-center">
+                            <div className="text-xl sm:text-2xl font-bold text-foreground">
+                              {companyProfile.founder_count}
+                            </div>
+                            <div className="text-xs text-muted-foreground">FOUNDERS</div>
                           </div>
-                          <div className="text-xs text-muted-foreground">FOUNDERS</div>
-                        </div>
+                        )}
 
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-foreground">
-                            {companyProfile.employee_count}
+                        {companyProfile.employee_count != null && (
+                          <div className="text-center">
+                            <div className="text-xl sm:text-2xl font-bold text-foreground">
+                              {companyProfile.employee_count}
+                            </div>
+                            <div className="text-xs text-muted-foreground">EMPLOYEES</div>
                           </div>
-                          <div className="text-xs text-muted-foreground">EMPLOYEES</div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -300,9 +343,9 @@ const ContentDetail = () => {
                           {body.question}
                         </h2>
                       )}
-                      <div 
+                      <div
                         className="text-muted-foreground leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: body.body_text }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body.body_text) }}
                       />
                     </div>
                   ))}
@@ -316,7 +359,7 @@ const ContentDetail = () => {
                     <h2 className="text-3xl font-bold text-foreground mb-8 border-b border-border pb-4">
                       {section.title}
                     </h2>
-                    
+
                     {section.bodies.map((body) => (
                       <div key={body.id} className="mb-8">
                         {body.question && (
@@ -324,9 +367,9 @@ const ContentDetail = () => {
                             {body.question}
                           </h3>
                         )}
-                        <div 
+                        <div
                           className="text-muted-foreground leading-relaxed"
-                          dangerouslySetInnerHTML={{ __html: body.body_text }}
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body.body_text) }}
                         />
                       </div>
                     ))}
@@ -337,8 +380,8 @@ const ContentDetail = () => {
             </FreemiumGate>
           </main>
 
-          {/* Right Sidebar */}
-          <aside className="w-80 flex-shrink-0">
+          {/* Right Sidebar — hidden on mobile/tablet */}
+          <aside className="hidden lg:block w-80 flex-shrink-0">
             <div className="sticky top-8 space-y-6">
               {/* About Company Card */}
               {companyProfile && (
@@ -356,14 +399,18 @@ const ContentDetail = () => {
                         <span className="text-muted-foreground">Profitable</span>
                         <span className="font-medium">{companyProfile.is_profitable ? 'Yes' : 'No'}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Founders</span>
-                        <span className="font-medium">{companyProfile.founder_count}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Employees</span>
-                        <span className="font-medium">{companyProfile.employee_count}</span>
-                      </div>
+                      {companyProfile.founder_count != null && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Founders</span>
+                          <span className="font-medium">{companyProfile.founder_count}</span>
+                        </div>
+                      )}
+                      {companyProfile.employee_count != null && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Employees</span>
+                          <span className="font-medium">{companyProfile.employee_count}</span>
+                        </div>
+                      )}
                       {companyProfile.entry_date && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Market Entry</span>
@@ -391,7 +438,7 @@ const ContentDetail = () => {
           </aside>
         </div>
       </div>
-      
+
     </>
   );
 };

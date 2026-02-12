@@ -419,6 +419,7 @@ export type Database = {
           slug: string
           status: string
           subtitle: string | null
+          thumbnail_url: string | null
           title: string
           updated_at: string
           view_count: number | null
@@ -437,6 +438,7 @@ export type Database = {
           slug: string
           status?: string
           subtitle?: string | null
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
           view_count?: number | null
@@ -455,6 +457,7 @@ export type Database = {
           slug?: string
           status?: string
           subtitle?: string | null
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
           view_count?: number | null
