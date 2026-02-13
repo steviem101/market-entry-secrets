@@ -234,9 +234,9 @@ const CaseStudyDetail = () => {
                           {companyProfile.industry && (
                             <Badge variant="secondary">{companyProfile.industry}</Badge>
                           )}
-                          {companyProfile.outcome && (
-                            <Badge variant={companyProfile.outcome === "successful" ? "default" : "destructive"}>
-                              {companyProfile.outcome === "successful" ? "Success" : "Failure"}
+                          {(companyProfile as any).outcome && (
+                            <Badge variant={(companyProfile as any).outcome === "successful" ? "default" : "destructive"}>
+                              {(companyProfile as any).outcome === "successful" ? "Success" : "Failure"}
                             </Badge>
                           )}
                         </div>

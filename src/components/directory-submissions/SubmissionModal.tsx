@@ -41,7 +41,7 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
         .insert({
           submission_type: submissionType,
           contact_email: formData.email,
-          form_data: structuredFormData
+          form_data: structuredFormData as any
         });
 
       if (error) throw error;
