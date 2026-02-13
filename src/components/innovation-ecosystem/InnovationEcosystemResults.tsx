@@ -1,30 +1,21 @@
-
 import { Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyCard from "@/components/CompanyCard";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/PaywallModal";
+import { parseJsonArray } from "@/components/company-card/CompanyCardHelpers";
 
 interface InnovationEcosystemResultsProps {
   filteredOrganizations: any[] | undefined;
   isLoading: boolean;
-  onViewProfile: (org: any) => void;
-  onContact: (org: any) => void;
   onClearFilters: () => void;
-  parseJsonArray: (jsonData: any) => any[];
 }
 
 const InnovationEcosystemResults = ({
   filteredOrganizations,
   isLoading,
-  onViewProfile,
-  onContact,
   onClearFilters,
-  parseJsonArray
 }: InnovationEcosystemResultsProps) => {
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
+  const { user } = useAuth();
 
   if (isLoading) {
     return (
@@ -61,10 +52,6 @@ const InnovationEcosystemResults = ({
   // Limit to 3 items for non-authenticated users
   const displayedOrganizations = user ? filteredOrganizations : filteredOrganizations.slice(0, 3);
 
-  if (!authLoading && hasReachedLimit && !user) {
-    return <PaywallModal contentType="innovation_ecosystem" />;
-  }
-
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
@@ -73,7 +60,7 @@ const InnovationEcosystemResults = ({
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayedOrganizations.map((org, index) => (
+        {displayedOrganizations.map((org) => (
           <CompanyCard
             key={org.id}
             company={{
@@ -92,11 +79,17 @@ const InnovationEcosystemResults = ({
               contact_persons: parseJsonArray(org.contact_persons),
               experience_tiles: parseJsonArray(org.experience_tiles)
             }}
-            onViewProfile={() => onViewProfile(org)}
-            onContact={() => onContact(org)}
+            detailUrl={`/innovation-ecosystem/${org.id}`}
           />
         ))}
       </div>
+      {!user && filteredOrganizations.length > 3 && (
+        <div className="text-center mt-8 py-6 bg-muted/50 rounded-lg">
+          <p className="text-muted-foreground mb-2">
+            Sign in to see all {filteredOrganizations.length} organizations
+          </p>
+        </div>
+      )}
     </section>
   );
 };
