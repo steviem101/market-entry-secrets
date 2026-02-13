@@ -1,56 +1,85 @@
 
 
-# Security Fixes Deployment + Build Error Fix
+# Claude Code Preprocessor File (CLAUDE.md) for Market Entry Secrets
 
-## Status After Investigation
-
-Your 5 security migration SQL files are present in the codebase but **none have been applied to the database**. The old vulnerable policies are still live. The edge function code updates also need redeployment.
+This will create a single `CLAUDE.md` file at the project root -- the standard preprocessor file that Claude Code reads automatically before every task. It will contain the complete project knowledge, architecture, conventions, database schema, edge function patterns, security constraints, and coding guidelines needed for productive autonomous work on this codebase.
 
 ---
 
-## Step 1: Fix Build Error
+## What the file will cover
 
-The `SearchSection.tsx` file has a TypeScript error on line 87 where `tab.id` (type `string`) is passed to `setActiveTab` which expects `SearchCategory`. Fix by typing the `searchTabs` array with `as const` or casting `tab.id`.
+### 1. Project Identity and Stack
+- Market Entry Secrets: B2B SaaS directory + AI report platform for ANZ market entry
+- React 18 + Vite + TypeScript + Tailwind CSS + shadcn/ui frontend
+- Supabase (Lovable Cloud) backend: Postgres, Auth, Edge Functions, Storage
+- Stripe payments, Firecrawl scraping, Perplexity research, Lovable AI Gateway (Gemini)
 
-**File:** `src/components/sections/SearchSection.tsx`
-- Type the `searchTabs` array so each `id` is recognized as a `SearchCategory` literal
+### 2. Critical Build and Type Safety Rules
+- The auto-generated `src/integrations/supabase/types.ts` file must never be hand-edited
+- When Supabase types don't match runtime tables (e.g. `user_intake_forms`, `user_reports`), cast via `(supabase as any)` -- this is the established pattern throughout `reportApi.ts`
+- The `directory_submissions` insert requires exactly `{ submission_type, contact_email, form_data }` -- no extra top-level keys
+- Edge functions use Deno runtime with `esm.sh` imports, not npm
+
+### 3. Complete Route Map
+All 30+ routes with their page components and purposes.
+
+### 4. Database Schema Reference
+All tables grouped by domain (directory, content, auth/user, reports, payments) with key columns and RLS notes.
+
+### 5. Edge Function Inventory
+All 10 edge functions with their purpose, auth requirements (`verify_jwt` settings from `config.toml`), and external API dependencies.
+
+### 6. Authentication Architecture
+- `AuthProvider` -> `useAuthState` -> `useAuth` hook composition
+- `useRoleHelpers` for admin/moderator checks
+- `requireAdmin()` shared helper for edge functions
+- Database triggers: `handle_new_user` (profile + role), `handle_new_user_subscription` (free tier)
+
+### 7. Report Generation Pipeline
+The 5-phase parallel pipeline in `generate-report`:
+1. Deep company scrape (Firecrawl map + scrape)
+2. Perplexity market research (6 parallel queries)
+3. Database directory matching (7 tables)
+4. Competitor + end buyer scraping
+5. AI section generation (batched) + polish pass
+
+### 8. Subscription and Tier System
+- Tiers: free -> growth -> scale -> enterprise
+- Legacy mapping: premium -> growth, concierge -> enterprise
+- `useSubscription` hook with `canAccessFeature()` and tier hierarchy
+- `useCheckout` hook for Stripe checkout flow
+- Report section gating via `TIER_REQUIREMENTS` in `ReportView.tsx`
+
+### 9. Coding Conventions and Patterns
+- Directory pages: Hero + Filters + Results grid (consistent pattern)
+- Hooks per domain: `useEvents`, `useCommunityMembers`, `useSectorEvents`, etc.
+- `useMasterSearch` searches 7 tables with ilike queries
+- All pages include `Navigation` + `Footer` via `Layout` wrapper + SEO via `react-helmet-async`
+- Toast notifications: `useToast` (shadcn) and `sonner` (both are available)
+- Edge function shared modules: `_shared/http.ts` (CORS), `_shared/log.ts` (logging), `_shared/auth.ts` (admin check)
+
+### 10. Security Constraints
+- RLS policies: admin-only on `email_leads`, `lemlist_*`, `lead_submissions`; own-profile on `profiles`
+- Edge functions: JWT verification enabled on all functions via `config.toml`
+- `create-checkout`: URL allowlist validation for redirect URLs
+- `sync-lemlist`: admin role check via `requireAdmin()`
+- Never log PII (emails, tokens) to console
+
+### 11. Environment Secrets Reference
+All required secrets: `STRIPE_SECRET`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_GROWTH_PRICE_ID`, `STRIPE_SCALE_PRICE_ID`, `FIRECRAWL_API_KEY`, `PERPLEXITY_API_KEY`, `LOVABLE_API_KEY`, `FRONTEND_URL`
+
+### 12. Known Gotchas
+- `form_data` column is `Json` type -- pass structured objects, not flat form fields at the insert root level
+- `user_intake_forms` and `user_reports` tables are not in the auto-generated types -- always use `(supabase as any)` cast
+- Stripe webhook uses raw body (`ArrayBuffer` -> `TextDecoder`) for signature verification
+- The `callAI` function targets `ai.gateway.lovable.dev` (Lovable AI Gateway), not OpenAI directly
+- Freemium gate: 3 free views tracked in localStorage + `user_usage` table; signed-in users bypass
 
 ---
 
-## Step 2: Apply 5 RLS Security Migrations
+## Technical Details
 
-The migration files exist but were not applied. Re-run them as direct SQL migrations:
+**File:** `CLAUDE.md` (new file at project root)
 
-1. **email_leads** -- Drop `"Authenticated users can view email leads"` (USING true), replace with admin-only SELECT
-2. **lemlist_contacts + lemlist_companies** -- Drop `USING(true)` SELECT policies, replace with admin-only
-3. **lead_submissions** -- Enable RLS, add admin-only SELECT policy
-4. **profiles** -- Drop `"Users can view all profiles"` (USING true), replace with own-profile + admin SELECT
-5. **user_reports** -- Drop the tautological `share_token = share_token` policy, replace with a proper share token check that requires a query parameter match
-
----
-
-## Step 3: Redeploy Edge Functions
-
-Deploy the 3 updated edge functions:
-- `generate-report` (JWT validation + ownership check)
-- `create-checkout` (open redirect fix with URL allowlist)
-- `sync-lemlist` (admin role check)
-
-The `config.toml` already has `verify_jwt = true` for `generate-report` and `sync-lemlist`.
-
----
-
-## Summary of What Gets Fixed
-
-| # | Issue | Severity | Action |
-|---|-------|----------|--------|
-| 1 | Email addresses publicly readable | CRITICAL | RLS migration |
-| 2 | Lemlist CRM data publicly readable | CRITICAL | RLS migration |
-| 3 | Lead submissions no RLS | CRITICAL | RLS migration |
-| 4 | Profiles leaking stripe_customer_id | HIGH | RLS migration |
-| 5 | Share token always-true tautology | CRITICAL | RLS migration |
-| 6 | Build error in SearchSection.tsx | LOW | Type fix |
-| 7 | Edge functions need redeployment | HIGH | Deploy 3 functions |
-
-No new secrets or schema columns are needed.
+The file will be approximately 400-500 lines of markdown, structured as a flat reference document optimized for LLM context window consumption. No nested folders or multiple files -- Claude Code reads `CLAUDE.md` automatically.
 
