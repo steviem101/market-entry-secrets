@@ -26,6 +26,7 @@ import Sectors from "./pages/Sectors";
 import SectorPage from "./pages/SectorPage";
 import Leads from "./pages/Leads";
 import InnovationEcosystem from "./pages/InnovationEcosystem";
+import InnovationOrgPage from "./pages/InnovationOrgPage";
 import TradeInvestmentAgencies from "./pages/TradeInvestmentAgencies";
 import CaseStudies from "./pages/CaseStudies";
 import CaseStudyDetail from "./pages/CaseStudyDetail";
@@ -83,6 +84,7 @@ const App = () => (
                   <Route path="/sectors/:sectorSlug" element={<SectorPage />} />
                   <Route path="/leads" element={<Leads />} />
                   <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
+                  <Route path="/innovation-ecosystem/:orgId" element={<InnovationOrgPage />} />
                   <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
                   <Route path="/case-studies" element={<CaseStudies />} />
                   <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />

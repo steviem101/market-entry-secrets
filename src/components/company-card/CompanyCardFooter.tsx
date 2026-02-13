@@ -1,4 +1,3 @@
-
 import { Calendar, Users, Globe, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Company } from "@/components/CompanyCard";
@@ -7,9 +6,10 @@ interface CompanyCardFooterProps {
   company: Company;
   onViewProfile: (company: Company) => void;
   onContact: (company: Company) => void;
+  detailUrl?: string;
 }
 
-const CompanyCardFooter = ({ company, onViewProfile, onContact }: CompanyCardFooterProps) => {
+const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: CompanyCardFooterProps) => {
   return (
     <>
       <div className="grid grid-cols-3 gap-4 mb-4 text-xs text-muted-foreground">
@@ -22,25 +22,51 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact }: CompanyCardFoo
           <span className="truncate">{company.employees}</span>
         </div>
         {company.website && (
-          <div className="flex items-center">
+          <a
+            href={company.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center hover:text-primary transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Globe className="w-3 h-3 mr-1" />
             <span className="truncate">Website</span>
-          </div>
+          </a>
         )}
       </div>
 
       <div className="flex gap-2">
+        {detailUrl ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            View Profile
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onViewProfile(company);
+            }}
+            className="flex-1"
+          >
+            View Profile
+          </Button>
+        )}
         <Button
-          variant="outline"
           size="sm"
-          onClick={() => onViewProfile(company)}
-          className="flex-1"
-        >
-          View Profile
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => onContact(company)}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (detailUrl) return;
+            onContact(company);
+          }}
           className="flex-1"
         >
           <Phone className="w-4 h-4 mr-1" />

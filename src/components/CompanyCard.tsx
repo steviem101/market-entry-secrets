@@ -1,4 +1,4 @@
-
+import { Link } from "react-router-dom";
 import { Json } from "@/integrations/supabase/types";
 import CompanyCardHeader from "./company-card/CompanyCardHeader";
 import CompanyCardContent from "./company-card/CompanyCardContent";
@@ -38,22 +38,36 @@ export interface Company {
 
 interface CompanyCardProps {
   company: Company;
-  onViewProfile: (company: Company) => void;
-  onContact: (company: Company) => void;
+  onViewProfile?: (company: Company) => void;
+  onContact?: (company: Company) => void;
+  detailUrl?: string;
 }
 
-const CompanyCard = ({ company, onViewProfile, onContact }: CompanyCardProps) => {
-  return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+const CompanyCard = ({ company, onViewProfile, onContact, detailUrl }: CompanyCardProps) => {
+  const cardContent = (
+    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
       <CompanyCardHeader company={company} />
       <CompanyCardContent company={company} />
-      <CompanyCardFooter 
-        company={company} 
-        onViewProfile={onViewProfile} 
-        onContact={onContact} 
-      />
+      <div className="mt-auto">
+        <CompanyCardFooter
+          company={company}
+          onViewProfile={onViewProfile || (() => {})}
+          onContact={onContact || (() => {})}
+          detailUrl={detailUrl}
+        />
+      </div>
     </div>
   );
+
+  if (detailUrl) {
+    return (
+      <Link to={detailUrl} className="block no-underline text-inherit">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 };
 
 export default CompanyCard;

@@ -1,25 +1,18 @@
-
 import CompanyCard from "@/components/CompanyCard";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/PaywallModal";
 import SectorSection from "./SectorSection";
-import { useSectorHandlers } from "@/hooks/useSectorHandlers";
+import { parseJsonArray } from "@/components/company-card/CompanyCardHelpers";
 
 interface InnovationEcosystemSectionProps {
   innovationEcosystem: any[];
 }
 
 const InnovationEcosystemSection = ({ innovationEcosystem }: InnovationEcosystemSectionProps) => {
-  const { handleViewProfile, handleContact } = useSectorHandlers();
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
+  const { user } = useAuth();
 
   if (innovationEcosystem.length === 0) return null;
 
-  if (!authLoading && hasReachedLimit && !user) {
-    return <PaywallModal contentType="innovation_ecosystem" />;
-  }
+  const displayedEntities = user ? innovationEcosystem.slice(0, 6) : innovationEcosystem.slice(0, 3);
 
   return (
     <SectorSection
@@ -28,7 +21,7 @@ const InnovationEcosystemSection = ({ innovationEcosystem }: InnovationEcosystem
       viewAllText="View All Partners"
       isEmpty={false}
     >
-      {innovationEcosystem.slice(0, 6).map((entity) => (
+      {displayedEntities.map((entity) => (
         <CompanyCard
           key={entity.id}
           company={{
@@ -42,11 +35,10 @@ const InnovationEcosystemSection = ({ innovationEcosystem }: InnovationEcosystem
             website: entity.website,
             contact: entity.contact,
             logo: entity.logo,
-            experienceTiles: entity.experience_tiles ? (Array.isArray(entity.experience_tiles) ? entity.experience_tiles as any[] : []) : [],
-            contactPersons: entity.contact_persons ? (Array.isArray(entity.contact_persons) ? entity.contact_persons as any[] : []) : []
+            experience_tiles: parseJsonArray(entity.experience_tiles),
+            contact_persons: parseJsonArray(entity.contact_persons)
           }}
-          onViewProfile={handleViewProfile}
-          onContact={handleContact}
+          detailUrl={`/innovation-ecosystem/${entity.id}`}
         />
       ))}
     </SectorSection>
