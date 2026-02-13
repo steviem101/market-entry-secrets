@@ -74,7 +74,7 @@ const CaseStudies = () => {
       profile?.company_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesOutcome = outcomeFilter === "all" ||
-      profile?.outcome === outcomeFilter;
+      (profile as any)?.outcome === outcomeFilter;
 
     const matchesRevenue = matchesRevenueRange(profile?.monthly_revenue, revenueFilter);
     const matchesCosts = matchesCostsRange(profile?.startup_costs, costsFilter);
@@ -138,13 +138,13 @@ const CaseStudies = () => {
             </div>
             <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
               <div className="text-3xl font-bold text-green-600 mb-1">
-                {caseStudies.filter(cs => cs.content_company_profiles?.[0]?.outcome === 'successful').length}
+                {caseStudies.filter(cs => (cs.content_company_profiles?.[0] as any)?.outcome === 'successful').length}
               </div>
               <div className="text-sm text-gray-600">Success Stories</div>
             </div>
             <div className="bg-white/80 backdrop-blur-sm rounded-lg px-6 py-4 shadow-sm border">
               <div className="text-3xl font-bold text-red-600 mb-1">
-                {caseStudies.filter(cs => cs.content_company_profiles?.[0]?.outcome === 'unsuccessful').length}
+                {caseStudies.filter(cs => (cs.content_company_profiles?.[0] as any)?.outcome === 'unsuccessful').length}
               </div>
               <div className="text-sm text-gray-600">Lessons Learned</div>
             </div>
@@ -331,9 +331,9 @@ const CaseStudies = () => {
                               <CardTitle className="text-xl hover:text-primary transition-colors">
                                 {cs.title}
                               </CardTitle>
-                              {profile?.outcome && (
-                                <Badge variant={profile.outcome === "successful" ? "default" : "destructive"}>
-                                  {profile.outcome === "successful" ? "Success" : "Failure"}
+                              {(profile as any)?.outcome && (
+                                <Badge variant={(profile as any).outcome === "successful" ? "default" : "destructive"}>
+                                  {(profile as any).outcome === "successful" ? "Success" : "Failure"}
                                 </Badge>
                               )}
                             </div>

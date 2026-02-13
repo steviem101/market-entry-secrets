@@ -288,7 +288,6 @@ export type Database = {
           is_profitable: boolean | null
           monthly_revenue: string | null
           origin_country: string | null
-          outcome: string | null
           startup_costs: string | null
           target_market: string | null
           updated_at: string
@@ -310,7 +309,6 @@ export type Database = {
           is_profitable?: boolean | null
           monthly_revenue?: string | null
           origin_country?: string | null
-          outcome?: string | null
           startup_costs?: string | null
           target_market?: string | null
           updated_at?: string
@@ -332,7 +330,6 @@ export type Database = {
           is_profitable?: boolean | null
           monthly_revenue?: string | null
           origin_country?: string | null
-          outcome?: string | null
           startup_costs?: string | null
           target_market?: string | null
           updated_at?: string
@@ -419,7 +416,6 @@ export type Database = {
           slug: string
           status: string
           subtitle: string | null
-          thumbnail_url: string | null
           title: string
           updated_at: string
           view_count: number | null
@@ -438,7 +434,6 @@ export type Database = {
           slug: string
           status?: string
           subtitle?: string | null
-          thumbnail_url?: string | null
           title: string
           updated_at?: string
           view_count?: number | null
@@ -457,7 +452,6 @@ export type Database = {
           slug?: string
           status?: string
           subtitle?: string | null
-          thumbnail_url?: string | null
           title?: string
           updated_at?: string
           view_count?: number | null
