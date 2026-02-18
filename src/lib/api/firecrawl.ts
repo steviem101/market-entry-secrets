@@ -76,6 +76,18 @@ export const firecrawlApi = {
     return data;
   },
 
+  // Enrich investors
+  async enrichInvestors(investorId?: string, onlyMissing?: boolean): Promise<FirecrawlResponse> {
+    const { data, error } = await supabase.functions.invoke('enrich-investors', {
+      body: { investor_id: investorId, only_missing: onlyMissing },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return data;
+  },
+
   // Map a website to discover all URLs (fast sitemap)
   async map(url: string, options?: MapOptions): Promise<FirecrawlResponse> {
     const { data, error } = await supabase.functions.invoke('firecrawl-map', {
