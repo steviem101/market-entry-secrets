@@ -23,6 +23,7 @@ interface ServiceProvidersDataProviderProps {
   searchTerm: string;
   selectedType: string;
   selectedSector: string;
+  personaFilter?: string;
 }
 
 export const ServiceProvidersDataProvider = ({
@@ -31,6 +32,7 @@ export const ServiceProvidersDataProvider = ({
   searchTerm,
   selectedType,
   selectedSector,
+  personaFilter = 'all',
 }: ServiceProvidersDataProviderProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,8 @@ export const ServiceProvidersDataProvider = ({
           contact: provider.contact || undefined,
           logo: provider.logo || undefined,
           experienceTiles,
-          contactPersons
+          contactPersons,
+          serves_personas: (provider as any).serves_personas || [],
         };
       });
 
@@ -137,7 +140,11 @@ export const ServiceProvidersDataProvider = ({
                            )
                          ));
     
-    return matchesSearch && matchesLocation && matchesType && matchesSector;
+    const matchesPersona = personaFilter === 'all' ||
+                          !company.serves_personas?.length ||
+                          company.serves_personas.includes(personaFilter);
+
+    return matchesSearch && matchesLocation && matchesType && matchesSector && matchesPersona;
   });
 
   // Calculate comprehensive counts

@@ -35,10 +35,11 @@ export const useCommunityMembers = () => {
         image: member.image,
         company: member.company,
         isAnonymous: member.is_anonymous,
-        experienceTiles: member.experience_tiles ? 
-          (Array.isArray(member.experience_tiles) ? 
-            (member.experience_tiles as unknown as ExperienceTile[]) : 
-            []) : 
+        serves_personas: (member as any).serves_personas || [],
+        experienceTiles: member.experience_tiles ?
+          (Array.isArray(member.experience_tiles) ?
+            (member.experience_tiles as unknown as ExperienceTile[]) :
+            []) :
           []
       }));
     }
