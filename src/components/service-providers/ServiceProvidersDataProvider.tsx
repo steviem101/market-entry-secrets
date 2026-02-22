@@ -23,6 +23,7 @@ interface ServiceProvidersDataProviderProps {
   searchTerm: string;
   selectedType: string;
   selectedSector: string;
+  personaFilter?: string | null;
 }
 
 export const ServiceProvidersDataProvider = ({
@@ -30,7 +31,8 @@ export const ServiceProvidersDataProvider = ({
   selectedLocations,
   searchTerm,
   selectedType,
-  selectedSector
+  selectedSector,
+  personaFilter
 }: ServiceProvidersDataProviderProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,14 +40,22 @@ export const ServiceProvidersDataProvider = ({
 
   useEffect(() => {
     fetchServiceProviders();
-  }, []);
+  }, [personaFilter]);
 
   const fetchServiceProviders = async () => {
     try {
-      const { data, error } = await supabase
+      let queryBuilder = supabase
         .from('service_providers')
         .select('*')
         .order('name');
+
+      if (personaFilter && personaFilter !== 'all') {
+        queryBuilder = queryBuilder.or(
+          `serves_personas.cs.{${personaFilter}},serves_personas.eq.{}`
+        );
+      }
+
+      const { data, error } = await queryBuilder;
 
       if (error) throw error;
 

@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -21,15 +20,15 @@ export const CTASection = () => {
             <span className="text-foreground">the Australian Market?</span>
           </h2>
           <p className="text-xl mb-10 text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Join thousands of successful businesses who've made Australia their new home with our expert guidance
+            Generate a tailored market entry or growth plan in minutes, backed by 500+ vetted providers and real market intelligence.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
-              onClick={() => navigate('/report-creator')}
+              onClick={() => navigate('/planner')}
               className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-4 text-lg rounded-xl soft-shadow hover:shadow-lg transition-all duration-300"
             >
-              Get Started Today
+              Start My Plan
             </Button>
             <Button
               size="lg"
