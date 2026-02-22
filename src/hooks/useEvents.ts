@@ -26,7 +26,7 @@ export interface Event {
   image_url?: string | null;
 }
 
-export const useEvents = (personaFilter?: string | null) => {
+export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -46,12 +46,6 @@ export const useEvents = (personaFilter?: string | null) => {
         .from('events')
         .select('*')
         .order('date', { ascending: true });
-
-      if (personaFilter && personaFilter !== 'all') {
-        queryBuilder = queryBuilder.or(
-          `target_personas.cs.{${personaFilter}},target_personas.eq.{}`
-        );
-      }
 
       if (query && query.trim()) {
         queryBuilder = queryBuilder.or(
@@ -76,7 +70,7 @@ export const useEvents = (personaFilter?: string | null) => {
         setLoading(false);
       }
     }
-  }, [personaFilter]);
+  }, []);
 
   // Split events into upcoming and past
   const { upcomingEvents, pastEvents } = useMemo(() => {
@@ -105,7 +99,7 @@ export const useEvents = (personaFilter?: string | null) => {
 
   useEffect(() => {
     fetchEvents();
-  }, [fetchEvents, personaFilter]);
+  }, [fetchEvents]);
 
   useEffect(() => {
     if (debouncedSearchQuery !== searchQuery) {

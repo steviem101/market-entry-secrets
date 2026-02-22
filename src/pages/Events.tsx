@@ -10,14 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { PaywallModal } from "@/components/PaywallModal";
 import { UsageBanner } from "@/components/UsageBanner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
-import { usePersona } from "@/contexts/PersonaContext";
-
 const Events = () => {
-  const { persona } = usePersona();
-  const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
-    (persona as PersonaFilterValue) ?? 'all'
-  );
   const [localSearchQuery, setLocalSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -26,7 +19,7 @@ const Events = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("upcoming");
 
-  const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents(personaFilterValue);
+  const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
   const { user, loading: authLoading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
 
@@ -148,11 +141,6 @@ const Events = () => {
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
-
-        {/* Persona Filter */}
-        <div className="mb-6">
-          <PersonaFilter value={personaFilterValue} onChange={setPersonaFilterValue} />
-        </div>
 
         {/* Tabs for Upcoming / Past / All */}
         <div className="mb-6">
