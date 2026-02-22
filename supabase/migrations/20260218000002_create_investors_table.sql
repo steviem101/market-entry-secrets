@@ -1,11 +1,12 @@
 -- Create investors directory table for Australian startup investor database
 -- Modelled on AirTree Open Source VC investor categories
+-- Made idempotent for Supabase Preview safety (IF NOT EXISTS / DO-EXCEPTION)
 
 ----------------------------------------------------------------------
 -- 1. Table creation
 ----------------------------------------------------------------------
 
-CREATE TABLE public.investors (
+CREATE TABLE IF NOT EXISTS public.investors (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name            text NOT NULL,
   description     text NOT NULL,
@@ -42,17 +43,20 @@ CREATE TABLE public.investors (
 -- 2. Indexes
 ----------------------------------------------------------------------
 
-CREATE INDEX idx_investors_type ON public.investors(investor_type);
-CREATE INDEX idx_investors_sector ON public.investors USING gin(sector_focus);
-CREATE INDEX idx_investors_stage ON public.investors USING gin(stage_focus);
+CREATE INDEX IF NOT EXISTS idx_investors_type ON public.investors(investor_type);
+CREATE INDEX IF NOT EXISTS idx_investors_sector ON public.investors USING gin(sector_focus);
+CREATE INDEX IF NOT EXISTS idx_investors_stage ON public.investors USING gin(stage_focus);
 
 ----------------------------------------------------------------------
 -- 3. Triggers
 ----------------------------------------------------------------------
 
-CREATE TRIGGER handle_updated_at
-  BEFORE UPDATE ON public.investors
-  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+DO $$ BEGIN
+  CREATE TRIGGER handle_updated_at
+    BEFORE UPDATE ON public.investors
+    FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 ----------------------------------------------------------------------
 -- 4. RLS (public read, admin write — same as other directory tables)
@@ -60,24 +64,36 @@ CREATE TRIGGER handle_updated_at
 
 ALTER TABLE public.investors ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can read investors"
-  ON public.investors FOR SELECT
-  USING (true);
+DO $$ BEGIN
+  CREATE POLICY "Anyone can read investors"
+    ON public.investors FOR SELECT
+    USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Only admins can insert investors"
-  ON public.investors FOR INSERT
-  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DO $$ BEGIN
+  CREATE POLICY "Only admins can insert investors"
+    ON public.investors FOR INSERT
+    WITH CHECK (public.has_role(auth.uid(), 'admin'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Only admins can update investors"
-  ON public.investors FOR UPDATE
-  USING (public.has_role(auth.uid(), 'admin'));
+DO $$ BEGIN
+  CREATE POLICY "Only admins can update investors"
+    ON public.investors FOR UPDATE
+    USING (public.has_role(auth.uid(), 'admin'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Only admins can delete investors"
-  ON public.investors FOR DELETE
-  USING (public.has_role(auth.uid(), 'admin'));
+DO $$ BEGIN
+  CREATE POLICY "Only admins can delete investors"
+    ON public.investors FOR DELETE
+    USING (public.has_role(auth.uid(), 'admin'));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 ----------------------------------------------------------------------
--- 5. Seed data — well-known Australian investors
+-- 5. Seed data — well-known Australian investors (skip if already seeded)
 ----------------------------------------------------------------------
 
 INSERT INTO public.investors (name, description, investor_type, location, website, sector_focus, stage_focus, check_size_min, check_size_max, is_featured, details) VALUES
@@ -115,7 +131,8 @@ INSERT INTO public.investors (name, description, investor_type, location, websit
 -- Grants
 ('R&D Tax Incentive', 'Australian Government program providing tax offsets for eligible R&D activities to encourage innovation and investment in Australia.', 'grant', 'National', 'https://www.business.gov.au/grants-and-programs/research-and-development-tax-incentive', ARRAY['All Sectors'], ARRAY['Startup/Seed','Series A-B','Growth','Enterprise'], null, null, true, '{"eligibility": "Australian registered company conducting eligible R&D activities", "benefit": "43.5% refundable tax offset for <$20M turnover, 38.5% non-refundable for larger companies"}'::jsonb),
 
-('Export Market Development Grant (EMDG)', 'Australian Government grant for SMEs to develop export markets, covering up to 50% of eligible promotional expenses.', 'grant', 'National', 'https://www.austrade.gov.au/australian/export/export-grants', ARRAY['All Sectors'], ARRAY['Startup/Seed','Series A-B','Growth'], null, null, false, '{"eligibility": "Australian SME with turnover <$50M", "benefit": "Up to $150K per year in reimbursement for export marketing expenses"}');
+('Export Market Development Grant (EMDG)', 'Australian Government grant for SMEs to develop export markets, covering up to 50% of eligible promotional expenses.', 'grant', 'National', 'https://www.austrade.gov.au/australian/export/export-grants', ARRAY['All Sectors'], ARRAY['Startup/Seed','Series A-B','Growth'], null, null, false, '{"eligibility": "Australian SME with turnover <$50M", "benefit": "Up to $150K per year in reimbursement for export marketing expenses"}')
+ON CONFLICT DO NOTHING;
 
 ----------------------------------------------------------------------
 -- 6. Report template for investor_recommendations section
@@ -151,4 +168,5 @@ Format as clean markdown with:
   'growth',
   ARRAY['company_name', 'company_stage', 'industry_sector', 'country_of_origin', 'enriched_company_profile', 'primary_goals', 'budget_level', 'timeline', 'matched_investors_json'],
   1
-);
+)
+ON CONFLICT DO NOTHING;
