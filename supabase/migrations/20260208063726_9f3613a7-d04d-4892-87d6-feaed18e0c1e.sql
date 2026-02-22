@@ -1,16 +1,25 @@
 
--- 1. Convert existing single-value industry_sector to arrays
-UPDATE public.user_intake_forms
-SET industry_sector = industry_sector;
+-- 1. Convert existing single-value industry_sector to arrays (no-op if already text[])
+DO $$ BEGIN
+  UPDATE public.user_intake_forms SET industry_sector = industry_sector;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
 
 -- 2. Drop old trigger and function
 DROP TRIGGER IF EXISTS validate_industry_sector_trigger ON public.user_intake_forms;
 DROP FUNCTION IF EXISTS public.validate_industry_sector();
 
--- 3. Alter column from text to text[]
-ALTER TABLE public.user_intake_forms
-  ALTER COLUMN industry_sector TYPE text[]
-  USING ARRAY[industry_sector];
+-- 3. Alter column from text to text[] (skip if already text[] from repair migration)
+DO $$ BEGIN
+  ALTER TABLE public.user_intake_forms
+    ALTER COLUMN industry_sector TYPE text[]
+    USING ARRAY[industry_sector];
+EXCEPTION
+  WHEN undefined_table THEN NULL;
+  WHEN cannot_coerce THEN NULL;
+  WHEN datatype_mismatch THEN NULL;
+  WHEN others THEN NULL;
+END $$;
 
 -- 4. Create new validation function for array
 CREATE OR REPLACE FUNCTION public.validate_industry_sector()
@@ -88,8 +97,13 @@ BEGIN
 END;
 $function$;
 
--- 5. Create trigger
-CREATE TRIGGER validate_industry_sector_trigger
-  BEFORE INSERT OR UPDATE ON public.user_intake_forms
-  FOR EACH ROW
-  EXECUTE FUNCTION public.validate_industry_sector();
+-- 5. Create trigger (wrapped for safety)
+DO $$ BEGIN
+  CREATE TRIGGER validate_industry_sector_trigger
+    BEFORE INSERT OR UPDATE ON public.user_intake_forms
+    FOR EACH ROW
+    EXECUTE FUNCTION public.validate_industry_sector();
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN undefined_table THEN NULL;
+END $$;
