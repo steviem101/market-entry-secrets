@@ -890,6 +890,75 @@ export type Database = {
         }
         Relationships: []
       }
+      investors: {
+        Row: {
+          basic_info: string | null
+          check_size_max: number | null
+          check_size_min: number | null
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          description: string
+          details: Json | null
+          id: string
+          investor_type: string
+          is_featured: boolean
+          linkedin_url: string | null
+          location: string
+          logo: string | null
+          name: string
+          sector_focus: string[] | null
+          stage_focus: string[] | null
+          updated_at: string
+          website: string | null
+          why_work_with_us: string | null
+        }
+        Insert: {
+          basic_info?: string | null
+          check_size_max?: number | null
+          check_size_min?: number | null
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          description: string
+          details?: Json | null
+          id?: string
+          investor_type: string
+          is_featured?: boolean
+          linkedin_url?: string | null
+          location: string
+          logo?: string | null
+          name: string
+          sector_focus?: string[] | null
+          stage_focus?: string[] | null
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
+        }
+        Update: {
+          basic_info?: string | null
+          check_size_max?: number | null
+          check_size_min?: number | null
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          description?: string
+          details?: Json | null
+          id?: string
+          investor_type?: string
+          is_featured?: boolean
+          linkedin_url?: string | null
+          location?: string
+          logo?: string | null
+          name?: string
+          sector_focus?: string[] | null
+          stage_focus?: string[] | null
+          updated_at?: string
+          website?: string | null
+          why_work_with_us?: string | null
+        }
+        Relationships: []
+      }
       lead_submissions: {
         Row: {
           company_website: string | null
@@ -897,10 +966,11 @@ export type Database = {
           email: string
           id: string
           notes: string | null
-          phone: string
-          sector: string
+          phone: string | null
+          sector: string | null
+          source: string | null
           status: string | null
-          target_market: string
+          target_market: string | null
           updated_at: string
         }
         Insert: {
@@ -909,10 +979,11 @@ export type Database = {
           email: string
           id?: string
           notes?: string | null
-          phone: string
-          sector: string
+          phone?: string | null
+          sector?: string | null
+          source?: string | null
           status?: string | null
-          target_market: string
+          target_market?: string | null
           updated_at?: string
         }
         Update: {
@@ -921,10 +992,11 @@ export type Database = {
           email?: string
           id?: string
           notes?: string | null
-          phone?: string
-          sector?: string
+          phone?: string | null
+          sector?: string | null
+          source?: string | null
           status?: string | null
-          target_market?: string
+          target_market?: string | null
           updated_at?: string
         }
         Relationships: []

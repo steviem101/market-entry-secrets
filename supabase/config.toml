@@ -26,3 +26,12 @@ verify_jwt = true
 
 [functions.sync-lemlist]
 verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.ai-chat]
+verify_jwt = true
+
+[functions.send-lead-followup]
+verify_jwt = true

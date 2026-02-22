@@ -36,7 +36,7 @@ export const InvestorsHero = ({ investorCount, typeCounts }: InvestorsHeroProps)
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <SubmissionButton submissionType="service_provider" variant="hero" size="lg" />
+            <SubmissionButton submissionType="investor" variant="hero" size="lg" />
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 text-center">
