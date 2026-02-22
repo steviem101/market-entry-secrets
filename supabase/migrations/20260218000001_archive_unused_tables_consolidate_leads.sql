@@ -31,14 +31,17 @@ END $$;
 -- 2a. Add source column to lead_submissions (matches email_leads.source)
 DO $$ BEGIN
   ALTER TABLE public.lead_submissions ADD COLUMN source text;
-EXCEPTION WHEN duplicate_column THEN NULL;
+EXCEPTION WHEN duplicate_column OR undefined_table THEN NULL;
 END $$;
 
 -- 2b. Make phone, sector, target_market nullable so email-only captures can be inserted
 --     (These were required before but email captures only provide email + source)
-ALTER TABLE public.lead_submissions ALTER COLUMN phone DROP NOT NULL;
-ALTER TABLE public.lead_submissions ALTER COLUMN sector DROP NOT NULL;
-ALTER TABLE public.lead_submissions ALTER COLUMN target_market DROP NOT NULL;
+DO $$ BEGIN
+  ALTER TABLE public.lead_submissions ALTER COLUMN phone DROP NOT NULL;
+  ALTER TABLE public.lead_submissions ALTER COLUMN sector DROP NOT NULL;
+  ALTER TABLE public.lead_submissions ALTER COLUMN target_market DROP NOT NULL;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
 
 -- 2c. Migrate existing email_leads data into lead_submissions
 DO $$ BEGIN
