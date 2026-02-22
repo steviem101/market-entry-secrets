@@ -26,7 +26,7 @@ const Events = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("upcoming");
 
-  const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents(personaFilterValue);
+  const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
   const { user, loading: authLoading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
 
@@ -45,7 +45,10 @@ const Events = () => {
     const matchesType = selectedType === "all" || event.type === selectedType;
     const matchesLocation = selectedLocation === "all" || event.location === selectedLocation;
     const matchesSector = selectedSector === "all" || event.sector === selectedSector;
-    return matchesCategory && matchesType && matchesLocation && matchesSector;
+    const matchesPersona = personaFilterValue === 'all' ||
+      !event.target_personas?.length ||
+      event.target_personas.includes(personaFilterValue);
+    return matchesCategory && matchesType && matchesLocation && matchesSector && matchesPersona;
   });
 
   const handleSearch = (query: string) => {

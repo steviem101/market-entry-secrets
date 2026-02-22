@@ -31,7 +31,7 @@ const Community = () => {
   const [showModal, setShowModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: members = [], isLoading, error } = useCommunityMembers(personaFilterValue);
+  const { data: members = [], isLoading, error } = useCommunityMembers();
 
   // Get all unique specialties, locations, types, and sectors
   const allSpecialties = Array.from(
@@ -73,7 +73,11 @@ const Community = () => {
     const matchesSector = selectedSector === "all" || 
       memberSectors.includes(selectedSector);
     
-    return matchesSearch && matchesSpecialty && matchesLocation && matchesType && matchesSector;
+    const matchesPersona = personaFilterValue === 'all' ||
+      !member.serves_personas?.length ||
+      member.serves_personas.includes(personaFilterValue);
+
+    return matchesSearch && matchesSpecialty && matchesLocation && matchesType && matchesSector && matchesPersona;
   });
 
   const hasActiveFilters = selectedSpecialty !== null || selectedLocation !== "all" || 

@@ -34,6 +34,7 @@ export interface Company {
   experience_tiles?: ExperienceTile[] | Json;
   experienceTiles?: ExperienceTile[];
   contactPersons?: ContactPerson[];
+  serves_personas?: string[] | null;
 }
 
 interface CompanyCardProps {

@@ -3,24 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Person, ExperienceTile } from "@/components/PersonCard";
 
-export const useCommunityMembers = (personaFilter?: string | null) => {
+export const useCommunityMembers = () => {
   return useQuery({
-    queryKey: ['community-members', personaFilter],
+    queryKey: ['community-members'],
     queryFn: async (): Promise<Person[]> => {
       console.log('Fetching community members from Supabase...');
 
-      let queryBuilder = supabase
+      const { data, error } = await supabase
         .from('community_members')
         .select('*')
         .order('created_at', { ascending: false });
-
-      if (personaFilter && personaFilter !== 'all') {
-        queryBuilder = queryBuilder.or(
-          `serves_personas.cs.{${personaFilter}},serves_personas.eq.{}`
-        );
-      }
-
-      const { data, error } = await queryBuilder;
 
       if (error) {
         console.error('Error fetching community members:', error);
@@ -43,10 +35,11 @@ export const useCommunityMembers = (personaFilter?: string | null) => {
         image: member.image,
         company: member.company,
         isAnonymous: member.is_anonymous,
-        experienceTiles: member.experience_tiles ? 
-          (Array.isArray(member.experience_tiles) ? 
-            (member.experience_tiles as unknown as ExperienceTile[]) : 
-            []) : 
+        serves_personas: (member as any).serves_personas || [],
+        experienceTiles: member.experience_tiles ?
+          (Array.isArray(member.experience_tiles) ?
+            (member.experience_tiles as unknown as ExperienceTile[]) :
+            []) :
           []
       }));
     }

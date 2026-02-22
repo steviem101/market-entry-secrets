@@ -103,7 +103,6 @@ const ServiceProviders = () => {
               <div className="container mx-auto px-4 py-8">
                 <UsageBanner />
 
-                {/* Persona Filter + Results count */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                   <PersonaFilter value={personaFilterValue} onChange={setPersonaFilterValue} />
                   <p className="text-muted-foreground text-sm">
