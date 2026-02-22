@@ -49,6 +49,12 @@ CREATE TABLE IF NOT EXISTS public.user_intake_forms (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- If the original migration (20260206223728) created the table, these columns
+-- won't exist yet. ADD COLUMN IF NOT EXISTS ensures they're present either way.
+ALTER TABLE public.user_intake_forms ADD COLUMN IF NOT EXISTS known_competitors jsonb DEFAULT '[]'::jsonb;
+ALTER TABLE public.user_intake_forms ADD COLUMN IF NOT EXISTS end_buyer_industries text[] DEFAULT '{}'::text[];
+ALTER TABLE public.user_intake_forms ADD COLUMN IF NOT EXISTS end_buyers jsonb DEFAULT '[]'::jsonb;
+
 ALTER TABLE public.user_intake_forms ENABLE ROW LEVEL SECURITY;
 
 DO $$ BEGIN
@@ -100,6 +106,10 @@ CREATE TABLE IF NOT EXISTS public.user_reports (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- If the original migration created the table, these columns won't exist yet.
+ALTER TABLE public.user_reports ADD COLUMN IF NOT EXISTS share_token uuid DEFAULT NULL;
+ALTER TABLE public.user_reports ADD COLUMN IF NOT EXISTS target_personas text[] DEFAULT '{}';
 
 ALTER TABLE public.user_reports ENABLE ROW LEVEL SECURITY;
 
