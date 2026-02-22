@@ -7,6 +7,7 @@ import {
   CalendarDays,
   ListChecks,
   Database,
+  Landmark,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -48,6 +49,12 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
     accentBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
     matchLabel: 'Matched Mentors',
   },
+  investor_recommendations: {
+    icon: Landmark,
+    accentColor: 'border-t-violet-500',
+    accentBg: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+    matchLabel: 'Matched Investors',
+  },
   events_resources: {
     icon: CalendarDays,
     accentColor: 'border-t-orange-500',
@@ -74,6 +81,7 @@ export const SECTION_LABELS: Record<string, string> = {
   competitor_landscape: 'Competitor Landscape',
   service_providers: 'Service Provider Recommendations',
   mentor_recommendations: 'Mentor Recommendations',
+  investor_recommendations: 'Investor Recommendations',
   events_resources: 'Events & Resources',
   action_plan: 'Action Plan & Timeline',
   lead_list: 'Lead List',
@@ -81,7 +89,7 @@ export const SECTION_LABELS: Record<string, string> = {
 
 export const SECTION_ORDER = [
   'executive_summary', 'swot_analysis', 'competitor_landscape', 'service_providers',
-  'mentor_recommendations', 'events_resources', 'action_plan', 'lead_list',
+  'mentor_recommendations', 'investor_recommendations', 'events_resources', 'action_plan', 'lead_list',
 ];
 
 // Minimum subscription tier required for each gated section
@@ -89,6 +97,7 @@ export const TIER_REQUIREMENTS: Record<string, string> = {
   swot_analysis: 'growth',
   competitor_landscape: 'growth',
   mentor_recommendations: 'growth',
+  investor_recommendations: 'growth',
   lead_list: 'scale',
 };
 

@@ -1012,6 +1012,27 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("TIA search error:", e); }
 
+  // Investors
+  try {
+    let invQuery = supabase.from("investors").select("id, name, investor_type, location, sector_focus, stage_focus, check_size_min, check_size_max, website, description").limit(8);
+    const invFilters: string[] = [];
+    if (locationPatterns.length > 0) {
+      invFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+    }
+    if (intake.industry_sector?.length > 0) {
+      invFilters.push(...intake.industry_sector.map((s: string) => `sector_focus.cs.{${s}}`));
+    }
+    if (invFilters.length > 0) {
+      invQuery = invQuery.or(invFilters.join(","));
+    }
+    const { data: inv } = await invQuery;
+    matches.investors = (inv || []).map((i: any) => ({
+      ...i, link: `/investors/${i.id}`, linkLabel: "View Investor",
+      subtitle: `${i.investor_type} · ${i.location}`,
+      tags: (i.stage_focus || []).slice(0, 3),
+    }));
+  } catch (e) { console.error("Investors search error:", e); }
+
   // Lemlist contacts
   try {
     let lcQuery = supabase.from("lemlist_contacts")
@@ -1050,6 +1071,7 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
     case "mentor_recommendations": return matches.community_members || [];
     case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
     case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
+    case "investor_recommendations": return matches.investors || [];
     case "competitor_landscape": return [];
     default: return [];
   }
@@ -1213,6 +1235,7 @@ async function generateReportInBackground(
       matched_leads_json: JSON.stringify(matches.leads || []),
       matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
+      matched_investors_json: JSON.stringify(matches.investors || []),
       competitor_analysis_json: JSON.stringify(competitorResult.competitors),
       known_competitors_json: JSON.stringify(intake.known_competitors || []),
       end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",

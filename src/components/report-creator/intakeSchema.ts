@@ -75,7 +75,7 @@ export const SERVICES_OPTIONS = [
   'Legal & Compliance', 'Accounting & Tax', 'Recruitment & HR',
   'Office Space', 'Banking & Finance', 'PR & Marketing',
   'Government Grants', 'Visa & Immigration', 'Lead Generation',
-  'Mentorship', 'Market Research'
+  'Mentorship', 'Market Research', 'Investment & Funding'
 ] as const;
 
 export const TIMELINE_OPTIONS = [
