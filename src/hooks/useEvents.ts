@@ -26,7 +26,7 @@ export interface Event {
   image_url?: string | null;
 }
 
-export const useEvents = () => {
+export const useEvents = (personaFilter?: string | null) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -41,11 +41,17 @@ export const useEvents = () => {
       } else {
         setLoading(true);
       }
-      
+
       let queryBuilder = supabase
         .from('events')
         .select('*')
         .order('date', { ascending: true });
+
+      if (personaFilter && personaFilter !== 'all') {
+        queryBuilder = queryBuilder.or(
+          `target_personas.cs.{${personaFilter}},target_personas.eq.{}`
+        );
+      }
 
       if (query && query.trim()) {
         queryBuilder = queryBuilder.or(
@@ -70,7 +76,7 @@ export const useEvents = () => {
         setLoading(false);
       }
     }
-  }, []);
+  }, [personaFilter]);
 
   // Split events into upcoming and past
   const { upcomingEvents, pastEvents } = useMemo(() => {
@@ -99,7 +105,7 @@ export const useEvents = () => {
 
   useEffect(() => {
     fetchEvents();
-  }, [fetchEvents]);
+  }, [fetchEvents, personaFilter]);
 
   useEffect(() => {
     if (debouncedSearchQuery !== searchQuery) {
