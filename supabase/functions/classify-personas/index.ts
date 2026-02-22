@@ -15,16 +15,16 @@ Some content serves BOTH audiences (e.g., general business services, accounting,
 For each record, respond with ONLY a JSON array of applicable persona tags. Valid values: ["international_entrant"], ["local_startup"], ["international_entrant", "local_startup"]. If you truly cannot determine relevance, return []. Do not explain. Just return the JSON array.`;
 
 const TABLES_CONFIG = [
-  { table: "service_providers", column: "serves_personas", fields: ["name", "description", "specialties"], type: "service provider" },
+  { table: "service_providers", column: "serves_personas", fields: ["name", "description", "services"], type: "service provider" },
   { table: "events", column: "target_personas", fields: ["title", "description", "location"], type: "event" },
-  { table: "community_members", column: "serves_personas", fields: ["name", "role", "company"], type: "mentor/community member" },
-  { table: "user_reports", column: "target_personas", fields: ["title", "description", "sector"], type: "market report" },
+  { table: "community_members", column: "serves_personas", fields: ["name", "title", "company"], type: "mentor/community member" },
+  { table: "user_reports", column: "target_personas", fields: ["status", "tier_at_generation"], type: "market report" },
   { table: "content_items", column: "target_personas", fields: ["title", "content_type"], type: "content item" },
-  { table: "content_company_profiles", column: "target_personas", fields: ["company_name", "description"], type: "company case study" },
+  { table: "content_company_profiles", column: "target_personas", fields: ["company_name", "industry", "origin_country"], type: "company case study" },
   { table: "innovation_ecosystem", column: "serves_personas", fields: ["name", "description", "location"], type: "innovation hub" },
-  { table: "trade_investment_agencies", column: "serves_personas", fields: ["name", "description", "services_offered"], type: "trade agency" },
-  { table: "content_bodies", column: "target_personas", fields: ["title", "body_text"], type: "content body" },
-  { table: "testimonials", column: "target_personas", fields: ["quote", "author_name"], type: "testimonial" },
+  { table: "trade_investment_agencies", column: "serves_personas", fields: ["name", "description", "services"], type: "trade agency" },
+  { table: "content_bodies", column: "target_personas", fields: ["body_text", "content_type"], type: "content body" },
+  { table: "testimonials", column: "target_personas", fields: ["testimonial", "name"], type: "testimonial" },
 ];
 
 Deno.serve(async (req: Request) => {
@@ -36,6 +36,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const { table, batch_size = 20, dry_run = false } = await req.json();
+    const safeBatchSize = Math.min(Math.max(batch_size || 20, 1), 100);
 
     const config = TABLES_CONFIG.find((c) => c.table === table);
     if (!config) {
@@ -50,13 +51,13 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    log(PREFIX, `Fetching untagged records from ${config.table}`, { batch_size, dry_run });
+    log(PREFIX, `Fetching untagged records from ${config.table}`, { batch_size: safeBatchSize, dry_run });
 
     const { data: records, error: fetchError } = await supabase
       .from(config.table)
       .select("id, " + config.fields.join(", "))
       .or(`${config.column}.is.null,${config.column}.eq.{}`)
-      .limit(batch_size);
+      .limit(safeBatchSize);
 
     if (fetchError) {
       logError(PREFIX, "Failed to fetch records", fetchError);

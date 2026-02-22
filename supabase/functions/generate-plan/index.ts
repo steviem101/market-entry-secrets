@@ -38,29 +38,29 @@ Deno.serve(async (req: Request) => {
       await Promise.all([
         supabase
           .from("service_providers")
-          .select("name, description, specialties")
+          .select("name, description, services")
           .or(personaFilter("serves_personas"))
           .limit(20),
         supabase
           .from("events")
-          .select("title, event_date, location, description")
+          .select("title, date, location, description")
           .or(personaFilter("target_personas"))
-          .gte("event_date", new Date().toISOString())
-          .order("event_date", { ascending: true })
+          .gte("date", new Date().toISOString())
+          .order("date", { ascending: true })
           .limit(10),
         supabase
           .from("user_reports")
-          .select("title, description, sector")
+          .select("id, status, tier_at_generation, created_at")
           .or(personaFilter("target_personas"))
           .limit(10),
         supabase
           .from("content_company_profiles")
-          .select("company_name, description")
+          .select("company_name, industry, origin_country")
           .or(personaFilter("target_personas"))
           .limit(5),
         supabase
           .from("community_members")
-          .select("name, role, company")
+          .select("name, title, company")
           .or(personaFilter("serves_personas"))
           .limit(10),
       ]);
