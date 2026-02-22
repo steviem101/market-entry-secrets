@@ -8,6 +8,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { LeadGenPopupProvider } from "@/components/LeadGenPopupProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PersonaProvider } from "@/contexts/PersonaContext";
 import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import About from "./pages/About";
@@ -46,6 +47,7 @@ import ReportCreator from "./pages/ReportCreator";
 import ReportView from "./pages/ReportView";
 import SharedReportView from "./pages/SharedReportView";
 import MyReports from "./pages/MyReports";
+import Planner from "./pages/Planner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -62,6 +64,7 @@ const App = () => (
     <HelmetProvider>
       <TooltipProvider>
         <AuthProvider>
+          <PersonaProvider>
           <LeadGenPopupProvider>
             <Toaster />
             <Sonner />
@@ -101,6 +104,7 @@ const App = () => (
                   <Route path="/member-hub" element={<MemberHub />} />
                   <Route path="/mentor-connections" element={<MentorConnections />} />
                   <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/planner" element={<Planner />} />
                   <Route path="/report-creator" element={<ReportCreator />} />
                   <Route path="/report/:reportId" element={<ReportView />} />
                   <Route path="/report/shared/:shareToken" element={<SharedReportView />} />
@@ -111,6 +115,7 @@ const App = () => (
               </Layout>
             </BrowserRouter>
           </LeadGenPopupProvider>
+          </PersonaProvider>
         </AuthProvider>
       </TooltipProvider>
     </HelmetProvider>

@@ -1,113 +1,56 @@
-import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { RotatingText } from "@/components/RotatingText";
-import { EmailCaptureForm } from "@/components/EmailCaptureForm";
-import { SocialProofAvatars } from "@/components/SocialProofAvatars";
 import { Button } from "@/components/ui/button";
-import { Star, Sparkles, ArrowRight } from "lucide-react";
-interface HeroSectionProps {
-  totalResources: number;
-}
-export const HeroSection = ({
-  totalResources
-}: HeroSectionProps) => {
-  const [count, setCount] = useState(0);
-  const animationRef = useRef<ReturnType<typeof setTimeout>>();
+import { ArrowRight, Search } from "lucide-react";
 
-  // Count Up Animation Effect - starts immediately on mount
-  useEffect(() => {
-    if (totalResources === 0) {
-      return;
-    }
-    let currentCount = 0;
-    const duration = 2500;
-    const steps = 60;
-    const increment = totalResources / steps;
-    const stepDuration = duration / steps;
-    const animate = () => {
-      currentCount += increment;
-      if (currentCount >= totalResources) {
-        setCount(totalResources);
-        return;
-      }
-      setCount(Math.floor(currentCount));
-      animationRef.current = setTimeout(animate, stepDuration);
-    };
-    animationRef.current = setTimeout(animate, stepDuration);
-    return () => {
-      if (animationRef.current) {
-        clearTimeout(animationRef.current);
-      }
-    };
-  }, [totalResources]);
-  const rotatingWords = ["Leads", "Mentors", "Vendors", "Events", "Communities", "Content", "Case Studies", "Ecosystems", "Support", "Accelerators", "Investors", "Partners"];
-  const handleEmailSubmit = async (_email: string) => {
-    // EmailCaptureForm handles saving to Supabase internally
-  };
-  return <section className="relative overflow-hidden min-h-screen flex items-center">
-      {/* Enhanced Background with light blue tinge */}
+export const HeroSection = () => {
+  return (
+    <section className="relative overflow-hidden min-h-[80vh] flex items-center">
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-sky-50/60 via-sky-25/40 to-background" />
       <div className="absolute inset-0 gradient-overlay" />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-accent/8" />
-      
+
       {/* Floating elements */}
       <div className="absolute top-20 left-10 w-20 h-20 bg-primary/5 rounded-full blur-xl animate-pulse" />
       <div className="absolute bottom-20 right-10 w-32 h-32 bg-accent/5 rounded-full blur-xl animate-pulse delay-1000" />
-      
+
       <div className="relative container mx-auto px-4 py-20">
-        <div className="max-w-6xl mx-auto text-center">
-          {/* Enhanced Social Proof with Avatars */}
-          <div className="mb-8">
-            <SocialProofAvatars className="mb-4" />
-            <div className="inline-flex items-center justify-center bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-full px-6 py-3">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
-                </div>
-                <span className="text-sm font-medium text-muted-foreground">Trusted by 1,200+ companies entering Australia</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Dynamic Headline with Rotating Text */}
-          <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight">
-            <span className="text-foreground">Unlock the </span>
-            <RotatingText words={rotatingWords} className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent" duration={2000} />
-            <span className="text-foreground"> to</span>
-            <br />
-            <span className="text-foreground">Australian Market Success</span>
+        <div className="max-w-4xl mx-auto text-center">
+          {/* Headline */}
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
+            Build your Australian market entry plan in minutes.
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed max-w-4xl mx-auto">
-            Skip months of research and costly mistakes. Access vetted service providers, expert mentors, and proven strategies in one comprehensive platform.
+
+          {/* Subheadline */}
+          <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-3xl mx-auto">
+            Answer a few questions about your company, sector, and goals. MES combines 500+ vetted
+            providers, real case studies, and AI-powered intelligence to generate a tailored action
+            plan for entering or scaling in the ANZ market.
           </p>
 
-          {/* Supporting Text for Email Capture */}
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Uncover our database of <span className="font-semibold text-primary">{count.toLocaleString()}+ resources</span> and community to successfully scale in the Australian market
-          </p>
-          
-          {/* Email Capture Form - Primary CTA */}
-          <EmailCaptureForm onSubmit={handleEmailSubmit} className="mb-8 max-w-lg mx-auto" />
-
-          {/* Report Creator CTA - Secondary */}
-          <div className="mb-8">
-            <p className="text-sm text-muted-foreground mb-3">Or get a personalised market entry report</p>
-            <Link to="/report-creator">
+          {/* Primary CTA */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+            <Link to="/planner">
               <Button
-                variant="outline"
                 size="lg"
-                className="bg-background/60 backdrop-blur-sm border-primary/30 text-foreground hover:bg-background/80 hover:border-primary/50 px-8 py-3 text-base rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 group"
+                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-10 py-6 text-lg rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 group"
               >
-                <Sparkles className="w-5 h-5 mr-2 text-primary" />
-                Create Your Free Market Entry Report
-                <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                Start my plan
+                <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
               </Button>
             </Link>
           </div>
 
-          {/* Trust indicators */}
-          <p className="text-sm text-muted-foreground">Free access ✅ • Vendor Discounts ✅ • Australian Ecosystem Mapped ✅</p>
+          {/* Secondary link */}
+          <Link
+            to="/service-providers"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm"
+          >
+            <Search className="w-4 h-4" />
+            Or explore the ecosystem first
+          </Link>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };

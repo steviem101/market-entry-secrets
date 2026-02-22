@@ -3,16 +3,24 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Person, ExperienceTile } from "@/components/PersonCard";
 
-export const useCommunityMembers = () => {
+export const useCommunityMembers = (personaFilter?: string | null) => {
   return useQuery({
-    queryKey: ['community-members'],
+    queryKey: ['community-members', personaFilter],
     queryFn: async (): Promise<Person[]> => {
       console.log('Fetching community members from Supabase...');
-      
-      const { data, error } = await supabase
+
+      let queryBuilder = supabase
         .from('community_members')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (personaFilter && personaFilter !== 'all') {
+        queryBuilder = queryBuilder.or(
+          `serves_personas.cs.{${personaFilter}},serves_personas.eq.{}`
+        );
+      }
+
+      const { data, error } = await queryBuilder;
 
       if (error) {
         console.error('Error fetching community members:', error);

@@ -1,5 +1,6 @@
-
 import { HeroSection } from "@/components/sections/HeroSection";
+import { PersonaPathways } from "@/components/sections/PersonaPathways";
+import { StatsBar } from "@/components/sections/StatsBar";
 import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
 import { SearchSection } from "@/components/sections/SearchSection";
 import { ValueSection } from "@/components/sections/ValueSection";
@@ -9,34 +10,34 @@ import { CTASection } from "@/components/sections/CTASection";
 import { FloatingCTAButton } from "@/components/FloatingCTAButton";
 
 const Index = () => {
-  // Calculate total resources count based on actual database tables
-  const totalResources = 500 + 25 + 100 + 1200 + 50 + 200; // Service Providers + Innovation Hubs + Lead Data + Success Stories + Events + Mentors
-
   return (
     <>
+      {/* Planner-First Hero Section */}
+      <HeroSection />
 
-      {/* Streamlined Hero Section - Email Capture Focus */}
-      <HeroSection totalResources={totalResources} />
+      {/* Persona Pathway Cards */}
+      <PersonaPathways />
 
-      {/* Before vs. After Market Entry Section - Core value proposition */}
+      {/* Stats Bar */}
+      <StatsBar />
+
+      {/* Before vs. After Market Entry Section */}
       <BeforeAfterSection />
 
-      {/* Search Section - Moved from Hero */}
+      {/* Search Section */}
       <SearchSection />
 
-      {/* Combined Value Section - What they get access to */}
+      {/* Combined Value Section */}
       <ValueSection />
 
-      {/* Testimonials Section - Social proof without heavy CTA */}
+      {/* Testimonials Section */}
       <TestimonialsSection />
 
-      {/* Pricing Section - Clear value and pricing tiers */}
+      {/* Pricing Section */}
       <PricingSection />
 
       {/* Final Conversion CTA Section */}
       <CTASection />
-
-      {/* Footer */}
 
       {/* Floating CTA Button */}
       <FloatingCTAButton />

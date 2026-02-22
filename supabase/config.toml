@@ -35,3 +35,9 @@ verify_jwt = true
 
 [functions.send-lead-followup]
 verify_jwt = true
+
+[functions.classify-personas]
+verify_jwt = true
+
+[functions.generate-plan]
+verify_jwt = true

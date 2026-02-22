@@ -30,12 +30,12 @@ export const FloatingCTAButton = () => {
 
   return (
     <Button
-      onClick={() => navigate('/report-creator')}
+      onClick={() => navigate('/planner')}
       className="
         fixed bottom-6 right-6 z-40
         h-14 px-6
-        bg-gradient-to-r from-orange-500 to-red-500
-        hover:from-orange-600 hover:to-red-600
+        bg-gradient-to-r from-primary to-accent
+        hover:from-primary/90 hover:to-accent/90
         text-white font-semibold
         shadow-lg hover:shadow-xl
         transition-all duration-300
@@ -47,8 +47,8 @@ export const FloatingCTAButton = () => {
     >
       <div className="flex items-center gap-2">
         <FileText className="h-5 w-5" />
-        <span className="hidden sm:inline">Get Free Report</span>
-        <span className="sm:hidden">Report</span>
+        <span className="hidden sm:inline">Start My Plan</span>
+        <span className="sm:hidden">Plan</span>
         <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
       </div>
 
