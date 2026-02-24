@@ -54,7 +54,7 @@ export const HeroCTAGroup = ({ persona }: HeroCTAGroupProps) => {
         <Button
           size="lg"
           variant="outline"
-          className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 hover:text-white px-8 py-6 text-base rounded-xl transition-all duration-300"
+          className="bg-background/80 backdrop-blur-sm border-primary/20 text-foreground hover:bg-primary/5 hover:border-primary/30 hover:text-foreground px-8 py-6 text-base rounded-xl transition-all duration-300"
         >
           {content.secondaryCTA.label}
         </Button>
