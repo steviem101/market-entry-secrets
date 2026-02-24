@@ -24,6 +24,7 @@ export interface Event {
   is_featured: boolean;
   tags?: string[] | null;
   image_url?: string | null;
+  target_personas?: string[] | null;
 }
 
 export const useEvents = () => {
@@ -41,7 +42,7 @@ export const useEvents = () => {
       } else {
         setLoading(true);
       }
-      
+
       let queryBuilder = supabase
         .from('events')
         .select('*')

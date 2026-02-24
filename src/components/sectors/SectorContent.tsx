@@ -3,6 +3,7 @@ import NoDataMessage from "./NoDataMessage";
 import ContentSection from "./ContentSection";
 import ServiceProvidersSection from "./ServiceProvidersSection";
 import InnovationEcosystemSection from "./InnovationEcosystemSection";
+import InvestorSection from "./InvestorSection";
 import TradeAgenciesSection from "./TradeAgenciesSection";
 import EventsSection from "./EventsSection";
 import LeadsSection from "./LeadsSection";
@@ -14,6 +15,7 @@ interface SectorContentProps {
   leads: any[];
   communityMembers: any[];
   innovationEcosystem: any[];
+  investors: any[];
   tradeAgencies: any[];
   contentItems: any[];
   sectorName: string;
@@ -25,13 +27,14 @@ const SectorContent = ({
   leads,
   communityMembers,
   innovationEcosystem,
+  investors,
   tradeAgencies,
   contentItems,
   sectorName
 }: SectorContentProps) => {
   // If no data at all, show message
-  if (serviceProviders.length === 0 && events.length === 0 && leads.length === 0 && 
-      communityMembers.length === 0 && innovationEcosystem.length === 0 && tradeAgencies.length === 0 && 
+  if (serviceProviders.length === 0 && events.length === 0 && leads.length === 0 &&
+      communityMembers.length === 0 && innovationEcosystem.length === 0 && investors.length === 0 && tradeAgencies.length === 0 &&
       contentItems.length === 0) {
     return <NoDataMessage sectorName={sectorName} />;
   }
@@ -41,6 +44,7 @@ const SectorContent = ({
       <ContentSection contentItems={contentItems} />
       <ServiceProvidersSection serviceProviders={serviceProviders} />
       <InnovationEcosystemSection innovationEcosystem={innovationEcosystem} />
+      <InvestorSection investors={investors} />
       <TradeAgenciesSection tradeAgencies={tradeAgencies} />
       <EventsSection events={events} />
       <LeadsSection leads={leads} />

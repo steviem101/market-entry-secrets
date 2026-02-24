@@ -10,8 +10,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { PaywallModal } from "@/components/PaywallModal";
 import { UsageBanner } from "@/components/UsageBanner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
+import { usePersona } from "@/contexts/PersonaContext";
 
 const Events = () => {
+  const { persona } = usePersona();
+  const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
+    (persona as PersonaFilterValue) ?? 'all'
+  );
   const [localSearchQuery, setLocalSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -39,7 +45,10 @@ const Events = () => {
     const matchesType = selectedType === "all" || event.type === selectedType;
     const matchesLocation = selectedLocation === "all" || event.location === selectedLocation;
     const matchesSector = selectedSector === "all" || event.sector === selectedSector;
-    return matchesCategory && matchesType && matchesLocation && matchesSector;
+    const matchesPersona = personaFilterValue === 'all' ||
+      !event.target_personas?.length ||
+      event.target_personas.includes(personaFilterValue);
+    return matchesCategory && matchesType && matchesLocation && matchesSector && matchesPersona;
   });
 
   const handleSearch = (query: string) => {
@@ -142,6 +151,11 @@ const Events = () => {
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
+
+        {/* Persona Filter */}
+        <div className="mb-6">
+          <PersonaFilter value={personaFilterValue} onChange={setPersonaFilterValue} />
+        </div>
 
         {/* Tabs for Upcoming / Past / All */}
         <div className="mb-6">

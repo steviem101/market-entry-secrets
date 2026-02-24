@@ -8,8 +8,14 @@ import CompanyModal from "@/components/CompanyModal";
 import { Company } from "@/components/CompanyCard";
 import { UsageBanner } from "@/components/UsageBanner";
 import { mapServicesToSectors, getStandardTypes } from "@/utils/sectorMapping";
+import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
+import { usePersona } from "@/contexts/PersonaContext";
 
 const ServiceProviders = () => {
+  const { persona } = usePersona();
+  const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
+    (persona as PersonaFilterValue) ?? 'all'
+  );
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,6 +52,7 @@ const ServiceProviders = () => {
         searchTerm={searchTerm}
         selectedType={selectedType}
         selectedSector={selectedSector}
+        personaFilter={personaFilterValue}
       >
         {({ companies, loading, filteredCompanies, uniqueTypes, uniqueSectors, totalCompanies, uniqueLocations, totalServices }) => {
           const hasActiveFilters = selectedLocation !== "all" || selectedType !== "all" || selectedSector !== "all" || searchTerm !== "";
@@ -95,10 +102,10 @@ const ServiceProviders = () => {
             
               <div className="container mx-auto px-4 py-8">
                 <UsageBanner />
-                
-                {/* Results count */}
-                <div className="mb-6">
-                  <p className="text-muted-foreground">
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                  <PersonaFilter value={personaFilterValue} onChange={setPersonaFilterValue} />
+                  <p className="text-muted-foreground text-sm">
                     {filteredCompanies.length} service providers found
                   </p>
                 </div>

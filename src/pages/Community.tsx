@@ -12,10 +12,16 @@ import { UsageBanner } from "@/components/UsageBanner";
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { mapSpecialtiesToSectors, getStandardTypes, STANDARD_SECTORS } from "@/utils/sectorMapping";
+import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
+import { usePersona } from "@/contexts/PersonaContext";
 
 const Community = () => {
   const { user, loading: authLoading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
+  const { persona } = usePersona();
+  const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
+    (persona as PersonaFilterValue) ?? 'all'
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState("all");
@@ -67,7 +73,11 @@ const Community = () => {
     const matchesSector = selectedSector === "all" || 
       memberSectors.includes(selectedSector);
     
-    return matchesSearch && matchesSpecialty && matchesLocation && matchesType && matchesSector;
+    const matchesPersona = personaFilterValue === 'all' ||
+      !member.serves_personas?.length ||
+      member.serves_personas.includes(personaFilterValue);
+
+    return matchesSearch && matchesSpecialty && matchesLocation && matchesType && matchesSector && matchesPersona;
   });
 
   const hasActiveFilters = selectedSpecialty !== null || selectedLocation !== "all" || 
@@ -172,6 +182,11 @@ const Community = () => {
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
+
+        {/* Persona Filter */}
+        <div className="mb-6">
+          <PersonaFilter value={personaFilterValue} onChange={setPersonaFilterValue} />
+        </div>
 
         {/* Members Grid */}
         {!authLoading && hasReachedLimit && !user ? (

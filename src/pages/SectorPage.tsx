@@ -6,6 +6,7 @@ import { useSectorEvents } from "@/hooks/useSectorEvents";
 import { useSectorLeads } from "@/hooks/useSectorLeads";
 import { useSectorCommunityMembers } from "@/hooks/useSectorCommunityMembers";
 import { useSectorInnovationEcosystem } from "@/hooks/useSectorInnovationEcosystem";
+import { useSectorInvestors } from "@/hooks/useSectorInvestors";
 import { useSectorTradeAgencies } from "@/hooks/useSectorTradeAgencies";
 import { useSectorContent } from "@/hooks/useSectorContent";
 import NotFound from "./NotFound";
@@ -22,6 +23,7 @@ const SectorPage = () => {
   const { data: leads = [], isLoading: leadsLoading } = useSectorLeads(sectorId || '');
   const { data: communityMembers = [], isLoading: communityLoading } = useSectorCommunityMembers(sectorId || '');
   const { data: innovationEcosystem = [], isLoading: innovationLoading } = useSectorInnovationEcosystem(sectorId || '');
+  const { data: investors = [], isLoading: investorsLoading } = useSectorInvestors(sectorId || '');
   const { data: tradeAgencies = [], isLoading: tradeLoading } = useSectorTradeAgencies(sectorId || '');
   const { data: contentItems = [], isLoading: contentLoading } = useSectorContent(sectorId || '');
 
@@ -42,7 +44,7 @@ const SectorPage = () => {
     return <NotFound />;
   }
 
-  const isLoading = providersLoading || eventsLoading || leadsLoading || communityLoading || innovationLoading || tradeLoading || contentLoading;
+  const isLoading = providersLoading || eventsLoading || leadsLoading || communityLoading || innovationLoading || investorsLoading || tradeLoading || contentLoading;
 
   return (
     <>
@@ -61,6 +63,7 @@ const SectorPage = () => {
           leads={leads}
           communityMembers={communityMembers}
           innovationEcosystem={innovationEcosystem}
+          investors={investors}
           tradeAgencies={tradeAgencies}
           contentItems={contentItems}
         />
@@ -77,6 +80,7 @@ const SectorPage = () => {
             leads={leads}
             communityMembers={communityMembers}
             innovationEcosystem={innovationEcosystem}
+            investors={investors}
             tradeAgencies={tradeAgencies}
             contentItems={contentItems}
             sectorName={sectorConfig.name}

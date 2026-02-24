@@ -25,6 +25,7 @@ export interface Person {
   experienceTiles?: ExperienceTile[];
   company?: string;
   isAnonymous?: boolean;
+  serves_personas?: string[] | null;
 }
 
 interface PersonCardProps {

@@ -5,6 +5,7 @@ interface SectorStatsProps {
   leads: any[];
   communityMembers: any[];
   innovationEcosystem: any[];
+  investors: any[];
   tradeAgencies: any[];
   contentItems: any[];
 }
@@ -15,6 +16,7 @@ const SectorStats = ({
   leads,
   communityMembers,
   innovationEcosystem,
+  investors,
   tradeAgencies,
   contentItems
 }: SectorStatsProps) => {
@@ -43,6 +45,11 @@ const SectorStats = ({
       label: "Innovation Partners",
       value: innovationEcosystem.length,
       color: "text-teal-600"
+    },
+    {
+      label: "Investors",
+      value: investors.length,
+      color: "text-violet-600"
     },
     {
       label: "Trade Agencies",

@@ -18,8 +18,26 @@ verify_jwt = true
 [functions.enrich-innovation-ecosystem]
 verify_jwt = true
 
+[functions.enrich-investors]
+verify_jwt = true
+
 [functions.generate-report]
 verify_jwt = true
 
 [functions.sync-lemlist]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.ai-chat]
+verify_jwt = true
+
+[functions.send-lead-followup]
+verify_jwt = true
+
+[functions.classify-personas]
+verify_jwt = true
+
+[functions.generate-plan]
 verify_jwt = true

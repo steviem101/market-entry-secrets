@@ -1,7 +1,7 @@
 
-import { Users, Building, Globe, Lightbulb, Calendar, FileText, Database, BookOpen } from "lucide-react";
+import { Users, Building, Globe, Lightbulb, Calendar, FileText, Database, BookOpen, Landmark } from "lucide-react";
 
-export type SubmissionType = 'mentor' | 'service_provider' | 'trade_agency' | 'innovation_organization' | 'event' | 'content' | 'case_study' | 'guide' | 'data_request';
+export type SubmissionType = 'mentor' | 'service_provider' | 'trade_agency' | 'innovation_organization' | 'investor' | 'event' | 'content' | 'case_study' | 'guide' | 'data_request';
 
 export interface SubmissionConfig {
   title: string;
@@ -39,6 +39,13 @@ export const getSubmissionConfig = (type: SubmissionType): SubmissionConfig => {
         buttonText: 'Join the Ecosystem',
         icon: Lightbulb,
         modalTitle: 'Submit Your Innovation Organization'
+      };
+    case 'investor':
+      return {
+        title: 'Submit an Investor',
+        buttonText: 'Submit Investor',
+        icon: Landmark,
+        modalTitle: 'Submit an Investor or Funding Program'
       };
     case 'event':
       return {

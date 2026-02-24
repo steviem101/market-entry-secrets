@@ -8,6 +8,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { LeadGenPopupProvider } from "@/components/LeadGenPopupProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PersonaProvider } from "@/contexts/PersonaContext";
 import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import About from "./pages/About";
@@ -27,6 +28,8 @@ import SectorPage from "./pages/SectorPage";
 import Leads from "./pages/Leads";
 import InnovationEcosystem from "./pages/InnovationEcosystem";
 import InnovationOrgPage from "./pages/InnovationOrgPage";
+import Investors from "./pages/Investors";
+import InvestorPage from "./pages/InvestorPage";
 import TradeInvestmentAgencies from "./pages/TradeInvestmentAgencies";
 import CaseStudies from "./pages/CaseStudies";
 import CaseStudyDetail from "./pages/CaseStudyDetail";
@@ -44,6 +47,7 @@ import ReportView from "./pages/ReportView";
 import SharedReportView from "./pages/SharedReportView";
 import MyReports from "./pages/MyReports";
 import ResetPassword from "./pages/ResetPassword";
+import Planner from "./pages/Planner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -60,6 +64,7 @@ const App = () => (
     <HelmetProvider>
       <TooltipProvider>
         <AuthProvider>
+          <PersonaProvider>
           <LeadGenPopupProvider>
             <Toaster />
             <Sonner />
@@ -85,6 +90,8 @@ const App = () => (
                   <Route path="/leads" element={<Leads />} />
                   <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
                   <Route path="/innovation-ecosystem/:orgId" element={<InnovationOrgPage />} />
+                  <Route path="/investors" element={<Investors />} />
+                  <Route path="/investors/:investorId" element={<InvestorPage />} />
                   <Route path="/trade-investment-agencies" element={<TradeInvestmentAgencies />} />
                   <Route path="/case-studies" element={<CaseStudies />} />
                   <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
@@ -97,6 +104,7 @@ const App = () => (
                   <Route path="/member-hub" element={<MemberHub />} />
                   <Route path="/mentor-connections" element={<MentorConnections />} />
                   <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/planner" element={<Planner />} />
                   <Route path="/report-creator" element={<ReportCreator />} />
                   <Route path="/report/:reportId" element={<ReportView />} />
                   <Route path="/report/shared/:shareToken" element={<SharedReportView />} />
@@ -108,6 +116,7 @@ const App = () => (
               </Layout>
             </BrowserRouter>
           </LeadGenPopupProvider>
+          </PersonaProvider>
         </AuthProvider>
       </TooltipProvider>
     </HelmetProvider>
