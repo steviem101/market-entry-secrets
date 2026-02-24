@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   FileText,
   Building2,
@@ -228,14 +228,23 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
   const [activeView, setActiveView] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const cycleView = useCallback(() => {
+  // Centralized transition helper — clears any in-flight timeout first
+  const startTransition = useCallback((onComplete: () => void) => {
+    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
     setIsTransitioning(true);
-    setTimeout(() => {
-      setActiveView((prev) => (prev + 1) % VIEWS.length);
+    transitionTimerRef.current = setTimeout(() => {
+      onComplete();
       setIsTransitioning(false);
     }, 200);
   }, []);
+
+  const cycleView = useCallback(() => {
+    startTransition(() => {
+      setActiveView((prev) => (prev + 1) % VIEWS.length);
+    });
+  }, [startTransition]);
 
   // Auto-cycle every 4 seconds, pause on hover
   useEffect(() => {
@@ -246,12 +255,17 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
 
   // Reset view on persona change
   useEffect(() => {
-    setIsTransitioning(true);
-    setTimeout(() => {
+    startTransition(() => {
       setActiveView(0);
-      setIsTransitioning(false);
-    }, 200);
-  }, [persona]);
+    });
+  }, [persona, startTransition]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+    };
+  }, []);
 
   const ActiveComponent = VIEWS[activeView].component;
 
@@ -295,11 +309,9 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
             <button
               key={view.key}
               onClick={() => {
-                setIsTransitioning(true);
-                setTimeout(() => {
+                startTransition(() => {
                   setActiveView(i);
-                  setIsTransitioning(false);
-                }, 200);
+                });
               }}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 i === activeView

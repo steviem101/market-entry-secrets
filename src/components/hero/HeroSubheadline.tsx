@@ -18,6 +18,8 @@ export const HeroSubheadline = ({ persona }: HeroSubheadlineProps) => {
         setIsTransitioning(false);
       }, 250); // Slightly delayed vs headline for stagger
       return () => clearTimeout(timer);
+    } else {
+      setIsTransitioning(false);
     }
   }, [persona, displayPersona]);
 

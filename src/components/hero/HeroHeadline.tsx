@@ -18,6 +18,8 @@ export const HeroHeadline = ({ persona }: HeroHeadlineProps) => {
         setIsTransitioning(false);
       }, 200);
       return () => clearTimeout(timer);
+    } else {
+      setIsTransitioning(false);
     }
   }, [persona, displayPersona]);
 
