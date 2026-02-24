@@ -41,7 +41,7 @@ export const HeroSection = () => {
     >
       <HeroBackground />
 
-      <div className="relative container mx-auto px-4 py-16 lg:py-0 z-10">
+      <div className="relative container mx-auto px-4 pt-24 pb-16 lg:pt-28 lg:pb-8 z-10">
         <div className="flex flex-col space-y-8">
           {/* Tier 1: Centered trust badge */}
           <div
@@ -64,7 +64,7 @@ export const HeroSection = () => {
 
           {/* Visual flow connector (desktop only) */}
           <div
-            className="animate-fade-in-up"
+            className="animate-fade-in-up hidden lg:block"
             style={{ animationDelay: "200ms" }}
           >
             <HeroJourneyFlow activePersona={activePersona} />
