@@ -21,7 +21,7 @@ export const HERO_PERSONAS: Record<HeroPersona, PersonaContent> = {
       line2: "with confidence.",
     },
     subheadline:
-      "Answer a few questions about your company, sector, and goals. MES combines 500+ vetted providers, real case studies, and AI-powered intelligence to generate a tailored action plan for entering the ANZ market.",
+      "Answer a few questions about your company, sector, and goals. MES combines 500+ vetted providers, real case studies, and AI-powered intelligence to generate a plan for entering the ANZ market.",
     primaryCTA: { label: "Plan my market entry", href: "/planner?persona=international_entrant" },
     secondaryCTA: { label: "Explore providers", href: "/service-providers" },
     toggleDescription: "Entering the ANZ market",
