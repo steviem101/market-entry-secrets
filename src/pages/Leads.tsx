@@ -53,7 +53,6 @@ const Leads = () => {
   } = useQuery({
     queryKey: ['leads'],
     queryFn: async () => {
-      console.log('Fetching leads...');
       const {
         data,
         error
@@ -61,10 +60,8 @@ const Leads = () => {
         ascending: false
       });
       if (error) {
-        console.error('Error fetching leads:', error);
         throw error;
       }
-      console.log('Leads fetched:', data);
       return data as Lead[];
     }
   });
@@ -90,7 +87,6 @@ const Leads = () => {
   const sectors = Array.from(new Set(leads?.map(lead => mapIndustryToSector(lead.industry)) || [])).sort();
 
   const handleDownload = (lead: Lead) => {
-    console.log('Download lead:', lead.name);
     if (lead.file_url) {
       window.open(lead.file_url, '_blank');
     } else if (lead.preview_url) {
@@ -99,7 +95,6 @@ const Leads = () => {
   };
 
   const handlePreview = (lead: Lead) => {
-    console.log('Preview lead:', lead.name);
     if (lead.preview_url) {
       window.open(lead.preview_url, '_blank');
     }

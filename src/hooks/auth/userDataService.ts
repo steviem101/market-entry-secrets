@@ -1,12 +1,13 @@
 
+import type { MutableRefObject } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from './types';
 
 interface UserDataSetters {
   setProfile: (profile: UserProfile | null) => void;
   setRoles: (roles: UserRole[]) => void;
-  fetchingProfile: React.MutableRefObject<boolean>;
-  fetchingRoles: React.MutableRefObject<boolean>;
+  fetchingProfile: MutableRefObject<boolean>;
+  fetchingRoles: MutableRefObject<boolean>;
 }
 
 export const fetchUserData = async (userId: string, setters: UserDataSetters) => {

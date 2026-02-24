@@ -154,7 +154,7 @@ const FAQ = () => {
                   <Link to="/contact">Contact Us</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link to="/partner-with-us">Partner With Us</Link>
+                  <Link to="/partner">Partner With Us</Link>
                 </Button>
               </div>
             </CardContent>
