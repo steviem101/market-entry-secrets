@@ -304,10 +304,13 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
         </div>
 
         {/* View indicator dots */}
-        <div className="flex items-center justify-center gap-2 pb-4">
+        <div className="flex items-center justify-center gap-2 pb-4" role="tablist" aria-label="Mockup views">
           {VIEWS.map((view, i) => (
             <button
               key={view.key}
+              role="tab"
+              aria-selected={i === activeView}
+              aria-label={`View ${view.key}`}
               onClick={() => {
                 startTransition(() => {
                   setActiveView(i);
@@ -325,7 +328,7 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
 
       {/* Floating accent badges */}
       <div
-        className="absolute -top-3 right-2 lg:-right-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
+        className="absolute -top-3 right-4 lg:-right-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
         style={{ animationDelay: "0.5s" }}
       >
         <div className="flex items-center gap-1.5">
@@ -335,7 +338,7 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
       </div>
 
       <div
-        className="absolute -bottom-2 left-2 lg:-left-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
+        className="absolute -bottom-2 left-4 lg:-left-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
         style={{ animationDelay: "2s" }}
       >
         <div className="flex items-center gap-1.5">
@@ -347,7 +350,7 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
       </div>
 
       <div
-        className="absolute top-1/2 -right-4 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20 hidden lg:block"
+        className="absolute top-1/2 right-4 lg:-right-4 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20 hidden lg:block"
         style={{ animationDelay: "3.5s" }}
       >
         <div className="flex items-center gap-1.5">

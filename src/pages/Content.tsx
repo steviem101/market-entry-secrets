@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, Search } from "lucide-react";
@@ -14,10 +15,17 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   success_story: "Success Stories",
 };
 
+const VALID_CONTENT_TYPES = new Set(Object.keys(CONTENT_TYPE_LABELS));
+
 const Content = () => {
+  const [searchParams] = useSearchParams();
+  const initialType = searchParams.get("type") ?? "all";
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedType, setSelectedType] = useState("all");
+  const [selectedType, setSelectedType] = useState(
+    VALID_CONTENT_TYPES.has(initialType) ? initialType : "all"
+  );
 
   const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems({
     contentType: ['guide', 'article', 'success_story']
