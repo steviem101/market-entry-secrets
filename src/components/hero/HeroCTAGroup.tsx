@@ -30,7 +30,7 @@ export const HeroCTAGroup = ({ persona }: HeroCTAGroupProps) => {
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-start gap-3 transition-all duration-200 ${
+      className={`flex flex-col sm:flex-row items-center sm:items-start lg:items-start justify-center lg:justify-start gap-3 transition-all duration-200 ${
         isTransitioning
           ? "opacity-0 -translate-y-2"
           : "opacity-100 translate-y-0"

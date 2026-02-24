@@ -27,7 +27,7 @@ export const HeroSubheadline = ({ persona }: HeroSubheadlineProps) => {
 
   return (
     <p
-      className={`text-lg text-muted-foreground max-w-xl leading-relaxed transition-all duration-200 ${
+      className={`text-lg text-muted-foreground max-w-xl leading-relaxed text-center lg:text-left mx-auto lg:mx-0 transition-all duration-200 ${
         isTransitioning
           ? "opacity-0 -translate-y-2"
           : "opacity-100 translate-y-0"

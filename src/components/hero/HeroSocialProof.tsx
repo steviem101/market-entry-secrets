@@ -2,7 +2,7 @@ import { HERO_FLAGS } from "./heroContent";
 
 export const HeroSocialProof = () => {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 justify-center lg:justify-start">
       <div className="flex items-center">
         {HERO_FLAGS.map((flag, i) => (
           <span

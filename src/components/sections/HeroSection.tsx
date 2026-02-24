@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { HeroBackground } from "@/components/hero/HeroBackground";
 import { HeroTrustBadge } from "@/components/hero/HeroTrustBadge";
 import { HeroPersonaToggle } from "@/components/hero/HeroPersonaToggle";
+import { HeroJourneyFlow } from "@/components/hero/HeroJourneyFlow";
 import { HeroHeadline } from "@/components/hero/HeroHeadline";
 import { HeroSubheadline } from "@/components/hero/HeroSubheadline";
 import { HeroCTAGroup } from "@/components/hero/HeroCTAGroup";
@@ -41,68 +42,84 @@ export const HeroSection = () => {
       <HeroBackground />
 
       <div className="relative container mx-auto px-4 py-16 lg:py-0 z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left column: Copy */}
-          <div className="space-y-6">
-            <div
-              className="animate-fade-in-up"
-              style={{ animationDelay: "0ms" }}
-            >
-              <HeroTrustBadge />
+        <div className="flex flex-col space-y-8">
+          {/* Tier 1: Centered trust badge */}
+          <div
+            className="animate-fade-in-up flex justify-center"
+            style={{ animationDelay: "0ms" }}
+          >
+            <HeroTrustBadge />
+          </div>
+
+          {/* Tier 2: Prominent journey selector */}
+          <div
+            className="animate-fade-in-up"
+            style={{ animationDelay: "100ms" }}
+          >
+            <HeroPersonaToggle
+              activePersona={activePersona}
+              onChange={setActivePersona}
+            />
+          </div>
+
+          {/* Visual flow connector (desktop only) */}
+          <div
+            className="animate-fade-in-up"
+            style={{ animationDelay: "200ms" }}
+          >
+            <HeroJourneyFlow activePersona={activePersona} />
+          </div>
+
+          {/* Tier 3: Two-column content grid */}
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            {/* Left column: Copy */}
+            <div className="space-y-6">
+              <div
+                className="animate-fade-in-up"
+                style={{ animationDelay: "300ms" }}
+              >
+                <HeroHeadline persona={activePersona} />
+              </div>
+
+              <div
+                className="animate-fade-in-up"
+                style={{ animationDelay: "400ms" }}
+              >
+                <HeroSubheadline persona={activePersona} />
+              </div>
+
+              <div
+                className="animate-fade-in-up"
+                style={{ animationDelay: "500ms" }}
+              >
+                <HeroCTAGroup persona={activePersona} />
+              </div>
+
+              <div
+                className="animate-fade-in-up"
+                style={{ animationDelay: "600ms" }}
+              >
+                <HeroSocialProof />
+              </div>
             </div>
 
+            {/* Right column: Interactive mockup */}
             <div
-              className="animate-fade-in-up"
-              style={{ animationDelay: "100ms" }}
-            >
-              <HeroPersonaToggle
-                activePersona={activePersona}
-                onChange={setActivePersona}
-              />
-            </div>
-
-            <div
-              className="animate-fade-in-up"
-              style={{ animationDelay: "200ms" }}
-            >
-              <HeroHeadline persona={activePersona} />
-            </div>
-
-            <div
-              className="animate-fade-in-up"
+              className="animate-fade-in-up lg:pl-4"
               style={{ animationDelay: "300ms" }}
             >
-              <HeroSubheadline persona={activePersona} />
-            </div>
-
-            <div
-              className="animate-fade-in-up"
-              style={{ animationDelay: "400ms" }}
-            >
-              <HeroCTAGroup persona={activePersona} />
-            </div>
-
-            <div
-              className="animate-fade-in-up"
-              style={{ animationDelay: "500ms" }}
-            >
-              <HeroSocialProof />
-            </div>
-
-            <div
-              className="animate-fade-in-up pt-2"
-              style={{ animationDelay: "600ms" }}
-            >
-              <HeroStatsRow isVisible={isVisible} />
+              <HeroProductMockup persona={activePersona} />
             </div>
           </div>
 
-          {/* Right column: Interactive mockup */}
+          {/* Tier 4: Full-width centered stats */}
           <div
-            className="animate-fade-in-up lg:pl-4"
-            style={{ animationDelay: "300ms" }}
+            className="animate-fade-in-up"
+            style={{ animationDelay: "700ms" }}
           >
-            <HeroProductMockup persona={activePersona} />
+            <div className="border-t border-border/50 pt-6">
+              <HeroStatsRow isVisible={isVisible} />
+            </div>
           </div>
         </div>
       </div>

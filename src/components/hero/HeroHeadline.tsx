@@ -27,7 +27,7 @@ export const HeroHeadline = ({ persona }: HeroHeadlineProps) => {
 
   return (
     <h1
-      className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight transition-all duration-200 ${
+      className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-center lg:text-left transition-all duration-200 ${
         isTransitioning
           ? "opacity-0 -translate-y-2"
           : "opacity-100 translate-y-0"

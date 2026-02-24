@@ -33,7 +33,7 @@ const StatItem = ({
 
 export const HeroStatsRow = ({ isVisible }: HeroStatsRowProps) => {
   return (
-    <div className="flex items-center gap-6 md:gap-8 flex-wrap">
+    <div className="flex items-center justify-center gap-6 md:gap-8 flex-wrap">
       {HERO_STATS.map((stat, i) => (
         <div key={stat.label} className="flex items-center gap-6 md:gap-8">
           {i > 0 && (
