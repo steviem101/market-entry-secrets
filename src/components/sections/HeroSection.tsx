@@ -1,54 +1,109 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Search } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { HeroBackground } from "@/components/hero/HeroBackground";
+import { HeroTrustBadge } from "@/components/hero/HeroTrustBadge";
+import { HeroPersonaToggle } from "@/components/hero/HeroPersonaToggle";
+import { HeroHeadline } from "@/components/hero/HeroHeadline";
+import { HeroSubheadline } from "@/components/hero/HeroSubheadline";
+import { HeroCTAGroup } from "@/components/hero/HeroCTAGroup";
+import { HeroSocialProof } from "@/components/hero/HeroSocialProof";
+import { HeroStatsRow } from "@/components/hero/HeroStatsRow";
+import { HeroProductMockup } from "@/components/hero/HeroProductMockup";
+import type { HeroPersona } from "@/components/hero/heroContent";
 
 export const HeroSection = () => {
+  const [activePersona, setActivePersona] = useState<HeroPersona>("international");
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="relative overflow-hidden min-h-[80vh] flex items-center">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-sky-50/60 via-sky-25/40 to-background" />
-      <div className="absolute inset-0 gradient-overlay" />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-accent/8" />
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden min-h-screen flex items-center"
+    >
+      <HeroBackground />
 
-      {/* Floating elements */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-primary/5 rounded-full blur-xl animate-pulse" />
-      <div className="absolute bottom-20 right-10 w-32 h-32 bg-accent/5 rounded-full blur-xl animate-pulse delay-1000" />
+      <div className="relative container mx-auto px-4 py-16 lg:py-0 z-10">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Left column: Copy */}
+          <div className="space-y-6">
+            <div
+              className="animate-fade-in-up"
+              style={{ animationDelay: "0ms" }}
+            >
+              <HeroTrustBadge />
+            </div>
 
-      <div className="relative container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Headline */}
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-            Build your Australian market entry plan in minutes.
-          </h1>
+            <div
+              className="animate-fade-in-up"
+              style={{ animationDelay: "100ms" }}
+            >
+              <HeroPersonaToggle
+                activePersona={activePersona}
+                onChange={setActivePersona}
+              />
+            </div>
 
-          {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-3xl mx-auto">
-            Answer a few questions about your company, sector, and goals. MES combines 500+ vetted
-            providers, real case studies, and AI-powered intelligence to generate a tailored action
-            plan for entering or scaling in the ANZ market.
-          </p>
+            <div
+              className="animate-fade-in-up"
+              style={{ animationDelay: "200ms" }}
+            >
+              <HeroHeadline persona={activePersona} />
+            </div>
 
-          {/* Primary CTA */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <Link to="/planner">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-10 py-6 text-lg rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 group"
-              >
-                Start my plan
-                <ArrowRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
-              </Button>
-            </Link>
+            <div
+              className="animate-fade-in-up"
+              style={{ animationDelay: "300ms" }}
+            >
+              <HeroSubheadline persona={activePersona} />
+            </div>
+
+            <div
+              className="animate-fade-in-up"
+              style={{ animationDelay: "400ms" }}
+            >
+              <HeroCTAGroup persona={activePersona} />
+            </div>
+
+            <div
+              className="animate-fade-in-up"
+              style={{ animationDelay: "500ms" }}
+            >
+              <HeroSocialProof />
+            </div>
+
+            <div
+              className="animate-fade-in-up pt-2"
+              style={{ animationDelay: "600ms" }}
+            >
+              <HeroStatsRow isVisible={isVisible} />
+            </div>
           </div>
 
-          {/* Secondary link */}
-          <Link
-            to="/service-providers"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors text-sm"
+          {/* Right column: Interactive mockup */}
+          <div
+            className="animate-fade-in-up lg:pl-4"
+            style={{ animationDelay: "300ms" }}
           >
-            <Search className="w-4 h-4" />
-            Or explore the ecosystem first
-          </Link>
+            <HeroProductMockup persona={activePersona} />
+          </div>
         </div>
       </div>
     </section>
