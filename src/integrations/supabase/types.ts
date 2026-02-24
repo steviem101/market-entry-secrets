@@ -288,6 +288,7 @@ export type Database = {
           is_profitable: boolean | null
           monthly_revenue: string | null
           origin_country: string | null
+          outcome: string | null
           startup_costs: string | null
           target_market: string | null
           updated_at: string
@@ -309,6 +310,7 @@ export type Database = {
           is_profitable?: boolean | null
           monthly_revenue?: string | null
           origin_country?: string | null
+          outcome?: string | null
           startup_costs?: string | null
           target_market?: string | null
           updated_at?: string
@@ -330,6 +332,7 @@ export type Database = {
           is_profitable?: boolean | null
           monthly_revenue?: string | null
           origin_country?: string | null
+          outcome?: string | null
           startup_costs?: string | null
           target_market?: string | null
           updated_at?: string
@@ -897,19 +900,19 @@ export type Database = {
           check_size_min: number | null
           contact_email: string | null
           contact_name: string | null
-          created_at: string
+          created_at: string | null
           description: string
           details: Json | null
           id: string
           investor_type: string
-          is_featured: boolean
+          is_featured: boolean | null
           linkedin_url: string | null
           location: string
           logo: string | null
           name: string
           sector_focus: string[] | null
           stage_focus: string[] | null
-          updated_at: string
+          updated_at: string | null
           website: string | null
           why_work_with_us: string | null
         }
@@ -919,19 +922,19 @@ export type Database = {
           check_size_min?: number | null
           contact_email?: string | null
           contact_name?: string | null
-          created_at?: string
+          created_at?: string | null
           description: string
           details?: Json | null
           id?: string
           investor_type: string
-          is_featured?: boolean
+          is_featured?: boolean | null
           linkedin_url?: string | null
           location: string
           logo?: string | null
           name: string
           sector_focus?: string[] | null
           stage_focus?: string[] | null
-          updated_at?: string
+          updated_at?: string | null
           website?: string | null
           why_work_with_us?: string | null
         }
@@ -941,19 +944,19 @@ export type Database = {
           check_size_min?: number | null
           contact_email?: string | null
           contact_name?: string | null
-          created_at?: string
+          created_at?: string | null
           description?: string
           details?: Json | null
           id?: string
           investor_type?: string
-          is_featured?: boolean
+          is_featured?: boolean | null
           linkedin_url?: string | null
           location?: string
           logo?: string | null
           name?: string
           sector_focus?: string[] | null
           stage_focus?: string[] | null
-          updated_at?: string
+          updated_at?: string | null
           website?: string | null
           why_work_with_us?: string | null
         }
@@ -966,11 +969,10 @@ export type Database = {
           email: string
           id: string
           notes: string | null
-          phone: string | null
-          sector: string | null
-          source: string | null
+          phone: string
+          sector: string
           status: string | null
-          target_market: string | null
+          target_market: string
           updated_at: string
         }
         Insert: {
@@ -979,11 +981,10 @@ export type Database = {
           email: string
           id?: string
           notes?: string | null
-          phone?: string | null
-          sector?: string | null
-          source?: string | null
+          phone: string
+          sector: string
           status?: string | null
-          target_market?: string | null
+          target_market: string
           updated_at?: string
         }
         Update: {
@@ -992,11 +993,10 @@ export type Database = {
           email?: string
           id?: string
           notes?: string | null
-          phone?: string | null
-          sector?: string | null
-          source?: string | null
+          phone?: string
+          sector?: string
           status?: string | null
-          target_market?: string | null
+          target_market?: string
           updated_at?: string
         }
         Relationships: []
