@@ -1,8 +1,14 @@
+import { Star } from "lucide-react";
 import { HERO_FLAGS } from "./heroContent";
 
 export const HeroSocialProof = () => {
   return (
-    <div className="flex items-center gap-3 justify-center lg:justify-start">
+    <div className="flex items-center gap-3 justify-center lg:justify-start flex-wrap">
+      <div className="flex items-center gap-0.5">
+        {[...Array(5)].map((_, i) => (
+          <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+        ))}
+      </div>
       <div className="flex items-center">
         {HERO_FLAGS.map((flag, i) => (
           <span
@@ -14,7 +20,7 @@ export const HeroSocialProof = () => {
         ))}
       </div>
       <span className="text-sm text-muted-foreground">
-        Companies from 12+ countries
+        Trusted by hundreds of companies from 12+ countries
       </span>
     </div>
   );
