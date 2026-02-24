@@ -7,13 +7,13 @@ export const HeroSocialProof = () => {
         {HERO_FLAGS.map((flag, i) => (
           <span
             key={i}
-            className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/10 border border-white/20 text-sm -ml-1.5 first:ml-0"
+            className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/5 border border-primary/15 text-sm -ml-1.5 first:ml-0"
           >
             {flag}
           </span>
         ))}
       </div>
-      <span className="text-sm text-white/60">
+      <span className="text-sm text-muted-foreground">
         Companies from 12+ countries
       </span>
     </div>

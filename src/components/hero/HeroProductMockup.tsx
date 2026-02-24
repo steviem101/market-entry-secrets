@@ -26,20 +26,20 @@ const ReportPreview = ({ persona }: { persona: HeroPersona }) => {
           <FileText className="w-4 h-4 text-primary" />
         </div>
         <div>
-          <div className="text-sm font-semibold text-white">
+          <div className="text-sm font-semibold text-foreground">
             Executive Summary
           </div>
-          <div className="text-xs text-white/40">
+          <div className="text-xs text-muted-foreground">
             {scenario.companyName} &mdash; {scenario.industry}
           </div>
         </div>
       </div>
 
-      <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+      <div className="bg-muted/30 rounded-lg p-3 border border-border">
         <div className="space-y-2">
-          <div className="h-2.5 bg-white/15 rounded-full w-full" />
-          <div className="h-2.5 bg-white/10 rounded-full w-11/12" />
-          <div className="h-2.5 bg-white/10 rounded-full w-4/5" />
+          <div className="h-2.5 bg-muted rounded-full w-full" />
+          <div className="h-2.5 bg-muted/70 rounded-full w-11/12" />
+          <div className="h-2.5 bg-muted/70 rounded-full w-4/5" />
         </div>
       </div>
 
@@ -51,16 +51,16 @@ const ReportPreview = ({ persona }: { persona: HeroPersona }) => {
         ].map((metric) => (
           <div
             key={metric.label}
-            className="bg-white/5 rounded-lg p-2 border border-white/10 text-center"
+            className="bg-muted/30 rounded-lg p-2 border border-border text-center"
           >
-            <div className="text-xs text-white/40">{metric.label}</div>
+            <div className="text-xs text-muted-foreground">{metric.label}</div>
             <div className="text-sm font-bold text-primary">{metric.value}</div>
           </div>
         ))}
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-white/40 pt-1">
-        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+      <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
+        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
         <span>
           Report generated &mdash; {persona === "international" ? "12" : "8"}{" "}
           sections
@@ -119,13 +119,13 @@ const ProviderMatches = ({ persona }: { persona: HeroPersona }) => {
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/30 to-primary/30 flex items-center justify-center">
-          <Building2 className="w-4 h-4 text-emerald-400" />
+          <Building2 className="w-4 h-4 text-emerald-500" />
         </div>
         <div>
-          <div className="text-sm font-semibold text-white">
+          <div className="text-sm font-semibold text-foreground">
             Matched Providers
           </div>
-          <div className="text-xs text-white/40">
+          <div className="text-xs text-muted-foreground">
             3 of 12 top matches shown
           </div>
         </div>
@@ -134,9 +134,9 @@ const ProviderMatches = ({ persona }: { persona: HeroPersona }) => {
       {providers.map((provider) => (
         <div
           key={provider.name}
-          className="flex items-center gap-3 bg-white/5 rounded-lg p-3 border border-white/10"
+          className="flex items-center gap-3 bg-muted/30 rounded-lg p-3 border border-border"
         >
-          <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold text-white/60 shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
             {provider.name
               .split(" ")
               .map((w) => w[0])
@@ -144,17 +144,17 @@ const ProviderMatches = ({ persona }: { persona: HeroPersona }) => {
               .slice(0, 2)}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-white truncate">
+            <div className="text-sm font-medium text-foreground truncate">
               {provider.name}
             </div>
-            <div className="flex items-center gap-1 text-xs text-white/40">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <MapPin className="w-3 h-3" />
               {provider.location}
               <span className="mx-1">&middot;</span>
               {provider.services.join(", ")}
             </div>
           </div>
-          <div className="text-xs font-bold text-emerald-400 shrink-0">
+          <div className="text-xs font-bold text-emerald-500 shrink-0">
             {provider.match}%
           </div>
         </div>
@@ -170,44 +170,44 @@ const IntakePreview = ({ persona }: { persona: HeroPersona }) => {
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/30 to-primary/30 flex items-center justify-center">
-          <ClipboardList className="w-4 h-4 text-violet-400" />
+          <ClipboardList className="w-4 h-4 text-violet-500" />
         </div>
         <div>
-          <div className="text-sm font-semibold text-white">
+          <div className="text-sm font-semibold text-foreground">
             Your Details
           </div>
-          <div className="text-xs text-white/40">Step 1 of 3</div>
+          <div className="text-xs text-muted-foreground">Step 1 of 3</div>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-white/10 rounded-full h-1.5">
+      <div className="w-full bg-muted rounded-full h-1.5">
         <div className="bg-gradient-to-r from-primary to-accent h-1.5 rounded-full w-1/3 transition-all duration-500" />
       </div>
 
       {/* Form fields */}
       <div className="space-y-2.5">
         <div>
-          <div className="text-xs text-white/50 mb-1">Company Name</div>
-          <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80">
+          <div className="text-xs text-muted-foreground mb-1">Company Name</div>
+          <div className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground/80">
             {scenario.companyName}
           </div>
         </div>
         <div>
-          <div className="text-xs text-white/50 mb-1">Country of Origin</div>
-          <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80">
+          <div className="text-xs text-muted-foreground mb-1">Country of Origin</div>
+          <div className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground/80">
             {scenario.country}
           </div>
         </div>
         <div>
-          <div className="text-xs text-white/50 mb-1">Industry Sector</div>
-          <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80">
+          <div className="text-xs text-muted-foreground mb-1">Industry Sector</div>
+          <div className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground/80">
             {scenario.industry}
           </div>
         </div>
         <div>
-          <div className="text-xs text-white/50 mb-1">Target Region</div>
-          <div className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80">
+          <div className="text-xs text-muted-foreground mb-1">Target Region</div>
+          <div className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground/80">
             {scenario.targetRegion}
           </div>
         </div>
@@ -276,17 +276,17 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Glow effect behind mockup */}
-      <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-accent/20 blur-3xl rounded-3xl animate-glow" />
+      <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 to-accent/10 blur-3xl rounded-3xl animate-glow" />
 
       {/* Browser frame */}
-      <div className="relative bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+      <div className="relative bg-card/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-border shadow-xl">
         {/* Title bar */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-white/5 border-b border-white/10">
+        <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 border-b border-border">
           <div className="w-3 h-3 rounded-full bg-red-400/60" />
           <div className="w-3 h-3 rounded-full bg-yellow-400/60" />
           <div className="w-3 h-3 rounded-full bg-green-400/60" />
           <div className="flex-1 mx-4">
-            <div className="bg-white/10 rounded-md px-3 py-1 text-xs text-white/40 text-center max-w-xs mx-auto">
+            <div className="bg-background border border-border rounded-md px-3 py-1 text-xs text-muted-foreground text-center max-w-xs mx-auto">
               market-entry-secrets.com/report
             </div>
           </div>
@@ -316,7 +316,7 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 i === activeView
                   ? "bg-primary w-6"
-                  : "bg-white/20 hover:bg-white/40"
+                  : "bg-border hover:bg-muted-foreground/40"
               }`}
             />
           ))}
@@ -325,34 +325,34 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
 
       {/* Floating accent badges */}
       <div
-        className="absolute -top-3 -right-3 bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl px-3 py-2 animate-float z-20"
+        className="absolute -top-3 -right-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
         style={{ animationDelay: "0.5s" }}
       >
         <div className="flex items-center gap-1.5">
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-xs font-semibold text-white">97% match</span>
+          <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+          <span className="text-xs font-semibold text-foreground">97% match</span>
         </div>
       </div>
 
       <div
-        className="absolute -bottom-2 -left-3 bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl px-3 py-2 animate-float z-20"
+        className="absolute -bottom-2 -left-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
         style={{ animationDelay: "2s" }}
       >
         <div className="flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5 text-primary" />
-          <span className="text-xs font-semibold text-white">
+          <span className="text-xs font-semibold text-foreground">
             Report in 3 min
           </span>
         </div>
       </div>
 
       <div
-        className="absolute top-1/2 -right-4 bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl px-3 py-2 animate-float z-20 hidden lg:block"
+        className="absolute top-1/2 -right-4 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20 hidden lg:block"
         style={{ animationDelay: "3.5s" }}
       >
         <div className="flex items-center gap-1.5">
           <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-          <span className="text-xs font-semibold text-white">4.9/5</span>
+          <span className="text-xs font-semibold text-foreground">4.9/5</span>
         </div>
       </div>
     </div>

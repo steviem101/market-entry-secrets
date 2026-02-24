@@ -33,7 +33,7 @@ export const HeroHeadline = ({ persona }: HeroHeadlineProps) => {
           : "opacity-100 translate-y-0"
       }`}
     >
-      <span className="text-white">{content.line1}</span>
+      <span className="text-foreground">{content.line1}</span>
       <br />
       <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
         {content.line2}
