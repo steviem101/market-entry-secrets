@@ -21,6 +21,8 @@ export const HeroCTAGroup = ({ persona }: HeroCTAGroupProps) => {
         setIsTransitioning(false);
       }, 300); // Slightly more delay for stagger after subheadline
       return () => clearTimeout(timer);
+    } else {
+      setIsTransitioning(false);
     }
   }, [persona, displayPersona]);
 
