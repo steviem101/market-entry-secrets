@@ -325,7 +325,7 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
 
       {/* Floating accent badges */}
       <div
-        className="absolute -top-3 -right-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
+        className="absolute -top-3 right-2 lg:-right-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
         style={{ animationDelay: "0.5s" }}
       >
         <div className="flex items-center gap-1.5">
@@ -335,7 +335,7 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
       </div>
 
       <div
-        className="absolute -bottom-2 -left-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
+        className="absolute -bottom-2 left-2 lg:-left-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
         style={{ animationDelay: "2s" }}
       >
         <div className="flex items-center gap-1.5">

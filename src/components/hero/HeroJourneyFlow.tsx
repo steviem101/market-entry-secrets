@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { HeroPersona } from "./heroContent";
 
 interface HeroJourneyFlowProps {
@@ -5,24 +6,25 @@ interface HeroJourneyFlowProps {
 }
 
 export const HeroJourneyFlow = ({ activePersona }: HeroJourneyFlowProps) => {
+  const filterId = useId();
+  const glowId = `glow-${filterId}`;
   const isInternational = activePersona === "international";
 
-  // Left path: curves from center-left down to the left column
-  const leftPath = "M 200,0 C 200,25 120,35 80,60";
-  // Right path: curves from center-right down to the right column
-  const rightPath = "M 280,0 C 280,25 360,35 400,60";
+  // Paths curve from the center area downward toward left/right edges
+  // Using a wider viewBox that better represents the full container width
+  const leftPath = "M 240,0 C 240,30 100,40 40,60";
+  const rightPath = "M 260,0 C 260,30 400,40 460,60";
 
   return (
-    <div className="hidden lg:flex justify-center w-full max-w-2xl mx-auto -my-1">
+    <div className="flex justify-center w-full -my-2">
       <svg
-        viewBox="0 0 480 60"
+        viewBox="0 0 500 60"
         fill="none"
-        className="w-full h-[60px]"
+        className="w-full max-w-4xl h-[50px]"
         preserveAspectRatio="xMidYMid meet"
       >
-        {/* Glow filter for the traveling dot */}
         <defs>
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -38,7 +40,7 @@ export const HeroJourneyFlow = ({ activePersona }: HeroJourneyFlowProps) => {
           strokeWidth="1.5"
           strokeDasharray="4 6"
           strokeLinecap="round"
-          className={`transition-opacity duration-400 ${
+          className={`transition-opacity duration-300 ${
             isInternational ? "opacity-40" : "opacity-10"
           }`}
         />
@@ -50,40 +52,22 @@ export const HeroJourneyFlow = ({ activePersona }: HeroJourneyFlowProps) => {
           strokeWidth="1.5"
           strokeDasharray="4 6"
           strokeLinecap="round"
-          className={`transition-opacity duration-400 ${
+          className={`transition-opacity duration-300 ${
             !isInternational ? "opacity-40" : "opacity-10"
           }`}
         />
 
-        {/* Traveling dot on left path */}
+        {/* Traveling dot — only rendered for the active path */}
         <circle
           r="3"
           fill="hsl(var(--primary))"
-          filter="url(#glow)"
-          className={`transition-opacity duration-400 ${
-            isInternational ? "opacity-100" : "opacity-0"
-          }`}
+          filter={`url(#${glowId})`}
+          key={activePersona}
         >
           <animateMotion
             dur="2.5s"
             repeatCount="indefinite"
-            path={leftPath}
-          />
-        </circle>
-
-        {/* Traveling dot on right path */}
-        <circle
-          r="3"
-          fill="hsl(var(--primary))"
-          filter="url(#glow)"
-          className={`transition-opacity duration-400 ${
-            !isInternational ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <animateMotion
-            dur="2.5s"
-            repeatCount="indefinite"
-            path={rightPath}
+            path={isInternational ? leftPath : rightPath}
           />
         </circle>
       </svg>
