@@ -51,12 +51,38 @@ export const HERO_PERSONAS: Record<HeroPersona, PersonaContent> = {
   },
 };
 
-export const HERO_STATS = [
-  { value: 500, suffix: "+", label: "Vetted Providers" },
-  { value: 50, suffix: "+", label: "Monthly Events" },
-  { value: 37, suffix: "", label: "Market Reports" },
-  { value: 8, suffix: "", label: "Sectors Covered" },
-  { value: 12, suffix: "+", label: "Countries" },
-];
+export type HeroStatKey =
+  | "investors"
+  | "leads"
+  | "mentors"
+  | "serviceProviders"
+  | "accelerators"
+  | "events"
+  | "guides";
+
+export interface HeroStatConfig {
+  key: HeroStatKey;
+  label: string;
+  suffix: string;
+  fallback: number;
+  href: string;
+}
+
+export const HERO_PERSONA_STATS: Record<HeroPersona, HeroStatConfig[]> = {
+  startup: [
+    { key: "investors", label: "Investors", suffix: "+", fallback: 50, href: "/investors" },
+    { key: "leads", label: "Lead Databases", suffix: "+", fallback: 20, href: "/leads" },
+    { key: "mentors", label: "Mentors", suffix: "+", fallback: 30, href: "/community" },
+    { key: "serviceProviders", label: "Service Providers", suffix: "+", fallback: 100, href: "/service-providers" },
+    { key: "accelerators", label: "Accelerators", suffix: "+", fallback: 10, href: "/investors?type=accelerator" },
+  ],
+  international: [
+    { key: "leads", label: "Lead Databases", suffix: "+", fallback: 20, href: "/leads" },
+    { key: "mentors", label: "Mentors", suffix: "+", fallback: 30, href: "/community" },
+    { key: "events", label: "Events", suffix: "+", fallback: 50, href: "/events" },
+    { key: "guides", label: "Market Entry Guides", suffix: "+", fallback: 10, href: "/content?type=guide" },
+    { key: "serviceProviders", label: "Service Providers", suffix: "+", fallback: 100, href: "/service-providers" },
+  ],
+};
 
 export const HERO_FLAGS = ["🇺🇸", "🇬🇧", "🇩🇪", "🇯🇵", "🇸🇬", "🇰🇷", "🇮🇳", "🇫🇷", "🇨🇦", "🇮🇪"];

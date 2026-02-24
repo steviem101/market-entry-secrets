@@ -109,7 +109,7 @@ export const HeroSection = () => {
             style={{ animationDelay: "600ms" }}
           >
             <div className="border-t border-border/50 pt-6">
-              <HeroStatsRow isVisible={isVisible} />
+              <HeroStatsRow isVisible={isVisible} activePersona={activePersona} />
             </div>
           </div>
         </div>

@@ -259,13 +259,28 @@
     opacity: 0;
   }
 
+  /* Subtle breathing pulse for hero stat icons */
+  @keyframes hero-stat-breathe {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.06);
+    }
+  }
+
+  .animate-hero-stat-breathe {
+    animation: hero-stat-breathe 3s ease-in-out infinite;
+  }
+
   /* Reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
     .animate-fade-in-up,
     .animate-float,
     .animate-glow,
     .animate-shimmer,
-    .animate-gradient-shift {
+    .animate-gradient-shift,
+    .animate-hero-stat-breathe {
       animation: none;
       opacity: 1;
     }
