@@ -18,7 +18,6 @@ const CompanyCardHeader = ({ company }: CompanyCardHeaderProps) => {
             alt={`${company.name} logo`}
             className="w-full h-full object-contain p-2"
             onError={(e) => {
-              console.log(`Logo failed to load for ${company.name}, falling back to initials`);
               e.currentTarget.style.display = 'none';
               const fallbackElement = e.currentTarget.nextElementSibling as HTMLElement;
               if (fallbackElement) {

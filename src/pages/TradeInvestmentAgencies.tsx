@@ -22,18 +22,15 @@ const TradeInvestmentAgencies = () => {
   } = useQuery({
     queryKey: ['trade-investment-agencies'],
     queryFn: async () => {
-      console.log('Fetching trade & investment agencies...');
       const { data, error } = await supabase
         .from('trade_investment_agencies')
         .select('*')
         .order('name');
 
       if (error) {
-        console.error('Error fetching trade investment agencies:', error);
         throw error;
       }
 
-      console.log('Trade investment agencies fetched:', data);
       return data;
     }
   });

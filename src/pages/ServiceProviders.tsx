@@ -40,8 +40,8 @@ const ServiceProviders = () => {
     setShowModal(true);
   };
 
-  const handleContact = (company: Company) => {
-    console.log('Contact company:', company.name);
+  const handleContact = (_company: Company) => {
+    // Contact functionality placeholder
   };
 
   return (

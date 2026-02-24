@@ -37,7 +37,6 @@ import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import PartnerWithUs from "./pages/PartnerWithUs";
-import Dashboard from "./pages/Dashboard";
 import Bookmarks from "./pages/Bookmarks";
 import MemberHub from "./pages/MemberHub";
 import MentorConnections from "./pages/MentorConnections";
@@ -47,6 +46,7 @@ import ReportCreator from "./pages/ReportCreator";
 import ReportView from "./pages/ReportView";
 import SharedReportView from "./pages/SharedReportView";
 import MyReports from "./pages/MyReports";
+import ResetPassword from "./pages/ResetPassword";
 import Planner from "./pages/Planner";
 import NotFound from "./pages/NotFound";
 
@@ -109,6 +109,7 @@ const App = () => (
                   <Route path="/report/:reportId" element={<ReportView />} />
                   <Route path="/report/shared/:shareToken" element={<SharedReportView />} />
                   <Route path="/my-reports" element={<MyReports />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

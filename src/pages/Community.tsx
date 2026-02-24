@@ -88,8 +88,8 @@ const Community = () => {
     setShowModal(true);
   };
 
-  const handleContact = (member: Person) => {
-    console.log('Contact member:', member.name);
+  const handleContact = (_member: Person) => {
+    // Contact functionality placeholder
   };
 
   const handleClearFilters = () => {
