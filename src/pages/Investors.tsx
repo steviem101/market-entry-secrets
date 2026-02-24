@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { InvestorsHero } from "@/components/investors/InvestorsHero";
@@ -9,8 +10,11 @@ import { EnrichInvestorsButton } from "@/components/investors/EnrichInvestorsBut
 import { useInvestors } from "@/hooks/useInvestors";
 
 const Investors = () => {
+  const [searchParams] = useSearchParams();
+  const initialType = searchParams.get("type") ?? "all";
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>(initialType);
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const queryClient = useQueryClient();

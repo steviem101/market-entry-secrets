@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { HeroBackground } from "@/components/hero/HeroBackground";
 import { HeroPersonaToggle } from "@/components/hero/HeroPersonaToggle";
 import { HeroJourneyFlow } from "@/components/hero/HeroJourneyFlow";
@@ -8,10 +8,29 @@ import { HeroCTAGroup } from "@/components/hero/HeroCTAGroup";
 import { HeroSocialProof } from "@/components/hero/HeroSocialProof";
 import { HeroStatsRow } from "@/components/hero/HeroStatsRow";
 import { HeroProductMockup } from "@/components/hero/HeroProductMockup";
+import { usePersona } from "@/contexts/PersonaContext";
 import type { HeroPersona } from "@/components/hero/heroContent";
+import type { Persona } from "@/contexts/PersonaContext";
+
+const contextToHero = (p: Persona): HeroPersona =>
+  p === "local_startup" ? "startup" : "international";
+
+const heroToContext = (h: HeroPersona): Persona =>
+  h === "startup" ? "local_startup" : "international_entrant";
 
 export const HeroSection = () => {
-  const [activePersona, setActivePersona] = useState<HeroPersona>("international");
+  const { persona, setPersona } = usePersona();
+  const [activePersona, setActivePersona] = useState<HeroPersona>(
+    contextToHero(persona)
+  );
+
+  const handlePersonaChange = useCallback(
+    (next: HeroPersona) => {
+      setActivePersona(next);
+      setPersona(heroToContext(next));
+    },
+    [setPersona]
+  );
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -49,7 +68,7 @@ export const HeroSection = () => {
           >
             <HeroPersonaToggle
               activePersona={activePersona}
-              onChange={setActivePersona}
+              onChange={handlePersonaChange}
             />
           </div>
 

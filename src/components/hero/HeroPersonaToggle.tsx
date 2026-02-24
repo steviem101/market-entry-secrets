@@ -21,7 +21,7 @@ export const HeroPersonaToggle = ({
       <p className="text-xs uppercase tracking-widest text-muted-foreground text-center mb-3">
         Choose your journey
       </p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3" role="tablist" aria-label="Choose your journey">
         {toggleOptions.map((option) => {
           const Icon = option.icon;
           const isActive = activePersona === option.key;
@@ -29,6 +29,8 @@ export const HeroPersonaToggle = ({
           return (
             <button
               key={option.key}
+              role="tab"
+              aria-selected={isActive}
               onClick={() => onChange(option.key)}
               className={`relative flex items-center gap-3 px-4 py-4 rounded-xl border transition-all duration-300 cursor-pointer text-left ${
                 isActive
