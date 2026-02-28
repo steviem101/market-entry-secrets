@@ -7,11 +7,13 @@ import { Separator } from "@/components/ui/separator";
 import { Menu, Sparkles } from "lucide-react";
 import MarketEntryLogo from "@/components/MarketEntryLogo";
 import { AuthButton } from "@/components/auth/AuthButton";
+import { useAuth } from "@/hooks/useAuth";
 import { mobileNavGroups } from "./NavigationItems";
 
 export const MobileNavigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   // Close mobile sheet on route change (handles back/forward navigation)
   useEffect(() => {
@@ -58,13 +60,15 @@ export const MobileNavigation = () => {
                 Get Your Report
               </Button>
             </Link>
-            <Link
-              to="/pricing"
-              onClick={handleLinkClick}
-              className="block text-center text-sm text-muted-foreground hover:text-primary mt-3"
-            >
-              View Pricing
-            </Link>
+            {!user && (
+              <Link
+                to="/pricing"
+                onClick={handleLinkClick}
+                className="block text-center text-sm text-muted-foreground hover:text-primary mt-3"
+              >
+                View Pricing
+              </Link>
+            )}
           </div>
 
           <Separator />

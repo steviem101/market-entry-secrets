@@ -1,5 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { NavigationDropdown } from "./NavigationDropdown";
 import {
   coreNavItems,
@@ -11,6 +12,7 @@ import {
 
 export const DesktopNavigation = () => {
   const location = useLocation();
+  const { user } = useAuth();
 
   const isActivePath = (path: string) => {
     if (path === "/") {
@@ -20,7 +22,7 @@ export const DesktopNavigation = () => {
   };
 
   return (
-    <nav className="hidden lg:flex items-center space-x-1">
+    <nav className="hidden lg:flex items-center space-x-2">
       {/* Directory Dropdown */}
       <NavigationDropdown
         label={dropdownTriggers.directory.label}
@@ -63,17 +65,19 @@ export const DesktopNavigation = () => {
         items={resourcesNavItems}
       />
 
-      {/* Pricing Link */}
-      <Link
-        to="/pricing"
-        className={`nav-link flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
-          isActivePath("/pricing")
-            ? "text-primary bg-accent/30"
-            : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-        }`}
-      >
-        Pricing
-      </Link>
+      {/* Pricing Link — hidden for authenticated users (they have Upgrade Plan in UserDropdown) */}
+      {!user && (
+        <Link
+          to="/pricing"
+          className={`nav-link flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+            isActivePath("/pricing")
+              ? "text-primary bg-accent/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+          }`}
+        >
+          Pricing
+        </Link>
+      )}
     </nav>
   );
 };
