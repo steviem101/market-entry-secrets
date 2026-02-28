@@ -114,10 +114,20 @@ export interface TestimonialsContent {
 // Pricing
 // ---------------------------------------------------------------------------
 
+export interface PricingTierContent {
+  id: 'free' | 'growth' | 'scale' | 'enterprise';
+  price: string;
+  description: string;
+  features: string[];
+  cta: string;
+  isPopular: boolean;
+}
+
 export interface PricingContent {
   heading: string;
   headingAccent: string;
   subtitle: string;
+  tiers: PricingTierContent[];
 }
 
 // ---------------------------------------------------------------------------
@@ -386,6 +396,68 @@ const internationalContent: PersonaSectionContent = {
     headingAccent: "Market Entry",
     subtitle:
       "From free exploration to enterprise-grade support, find the perfect plan to accelerate your Australian market entry",
+    tiers: [
+      {
+        id: 'free',
+        price: '$0',
+        description: 'Explore the ANZ ecosystem and see what\'s possible.',
+        features: [
+          'Browse 500+ service providers, mentors, and trade agencies',
+          'Explore innovation hubs, events, and location guides',
+          'Read sample case studies and market-entry content',
+          'AI-powered market-entry report and planner (summary + action plan)',
+          'Browse trade agencies and innovation directories',
+          'Contact us for questions',
+        ],
+        cta: 'Start Exploring Free',
+        isPopular: false,
+      },
+      {
+        id: 'growth',
+        price: '$99',
+        description: 'For teams building their Australian market-entry playbook.',
+        features: [
+          'Everything in Free, plus:',
+          'Full AI report: SWOT, competitor landscape, and mentor matches',
+          'Unlimited case studies and market-entry guides',
+          'Browse and download lead sample packs',
+          'AI-matched mentor and advisor recommendations',
+          'Priority email support',
+        ],
+        cta: 'Unlock Market Entry',
+        isPopular: true,
+      },
+      {
+        id: 'scale',
+        price: '$999',
+        description: 'Full-stack market intelligence for companies entering ANZ.',
+        features: [
+          'Everything in Growth, plus:',
+          'Full AI report with curated lead list and investor recommendations',
+          'Access the complete leads and TAM maps marketplace',
+          'AI-powered tools with deep competitor and end-buyer research',
+          'Personalised onboarding via our support team',
+          'Quarterly market intelligence updates',
+        ],
+        cta: 'Accelerate Your Entry',
+        isPopular: false,
+      },
+      {
+        id: 'enterprise',
+        price: 'Custom Pricing',
+        description: 'Your fully tailored market-entry program, built around your needs.',
+        features: [
+          'Everything in Scale, plus:',
+          'Custom AI reports with bespoke research parameters',
+          'Dedicated account manager',
+          'Multiple team seats with shared dashboards',
+          'Priority partner and provider introductions',
+          'Custom data exports and integrations',
+        ],
+        cta: 'Talk to Our Team',
+        isPopular: false,
+      },
+    ],
   },
 
   cta: {
@@ -637,6 +709,68 @@ const startupContent: PersonaSectionContent = {
     headingAccent: "Growth",
     subtitle:
       "From free exploration to full-stack support, pick the plan that matches your startup stage",
+    tiers: [
+      {
+        id: 'free',
+        price: '$0',
+        description: 'Discover the ecosystem and find your growth path.',
+        features: [
+          'Browse innovation hubs, trade agencies, and ecosystem directories',
+          'Discover events, meetups, and accelerator programs',
+          'Read sample founder case studies and growth content',
+          'AI-powered growth report and planner (summary + action plan)',
+          'Browse trade agencies and innovation directories',
+          'Contact us for questions',
+        ],
+        cta: 'Start Exploring Free',
+        isPopular: false,
+      },
+      {
+        id: 'growth',
+        price: '$99',
+        description: 'For founders building partnerships and go-to-market plans.',
+        features: [
+          'Everything in Free, plus:',
+          'Full AI report: SWOT, competitor landscape, and advisor matches',
+          'Unlimited case studies and growth guides',
+          'Browse and download lead sample packs',
+          'AI-matched advisor and mentor recommendations',
+          'Priority email support',
+        ],
+        cta: 'Unlock Growth Access',
+        isPopular: true,
+      },
+      {
+        id: 'scale',
+        price: '$999',
+        description: 'Full-stack growth intelligence for scaling startups.',
+        features: [
+          'Everything in Growth, plus:',
+          'Full AI report with investor recommendations and curated lead list',
+          'Access the complete leads and TAM maps marketplace',
+          'AI-powered tools with deep market and partner research',
+          'Curated investor and partner introductions',
+          'Personalised growth support via our team',
+        ],
+        cta: 'Scale Your Startup',
+        isPopular: false,
+      },
+      {
+        id: 'enterprise',
+        price: 'Custom Pricing',
+        description: 'Bespoke growth support, built around your startup.',
+        features: [
+          'Everything in Scale, plus:',
+          'Custom AI reports with bespoke research scope',
+          'Dedicated growth advisor',
+          'Multiple team seats with shared dashboards',
+          'Inbound international partner pipeline curation',
+          'Custom data exports and integrations',
+        ],
+        cta: 'Talk to Our Team',
+        isPopular: false,
+      },
+    ],
   },
 
   cta: {
