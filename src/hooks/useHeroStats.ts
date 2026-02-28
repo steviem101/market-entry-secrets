@@ -24,7 +24,7 @@ const fetchHeroCounts = async (): Promise<HeroStatCount> => {
     supabase.from("service_providers").select("*", { count: "exact", head: true }),
     supabase.from("community_members").select("*", { count: "exact", head: true }),
     supabase.from("events").select("*", { count: "exact", head: true }),
-    supabase.from("leads").select("*", { count: "exact", head: true }),
+    (supabase as any).from("lead_databases").select("*", { count: "exact", head: true }).eq("status", "active"),
     supabase
       .from("content_items")
       .select("*", { count: "exact", head: true })

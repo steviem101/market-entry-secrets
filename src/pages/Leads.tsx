@@ -1,126 +1,94 @@
-
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Helmet } from "react-helmet-async";
 import { LeadCard } from "@/components/LeadCard";
 import { LeadsHero } from "@/components/leads/LeadsHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp } from "lucide-react";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useAuth } from "@/hooks/useAuth";
 import { PaywallModal } from "@/components/PaywallModal";
 import { UsageBanner } from "@/components/UsageBanner";
-import { mapIndustryToSector, getStandardTypes } from "@/utils/sectorMapping";
+import { getStandardTypes } from "@/utils/sectorMapping";
+import { useLeadDatabases, useLeadDatabaseStats } from "@/hooks/useLeadDatabases";
+import type { LeadDatabase } from "@/types/leadDatabase";
 
-export interface Lead {
-  id: string;
-  name: string;
-  description: string;
-  type: 'csv_list' | 'tam_map';
-  category: string;
-  industry: string;
-  location: string;
-  record_count?: number;
-  file_url?: string;
-  preview_url?: string;
-  price?: number;
-  currency?: string;
-  data_quality_score?: number;
-  last_updated?: string;
-  contact_email?: string;
-  provider_name?: string;
-  tags?: string[];
-  created_at: string;
-  updated_at: string;
-}
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest' },
+  { value: 'most_records', label: 'Most Records' },
+  { value: 'highest_quality', label: 'Highest Quality' },
+  { value: 'price_low_high', label: 'Price: Low to High' },
+  { value: 'price_high_low', label: 'Price: High to Low' },
+];
+
+const sortLeads = (leads: LeadDatabase[], sortBy: string): LeadDatabase[] => {
+  const sorted = [...leads];
+  switch (sortBy) {
+    case 'newest':
+      return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    case 'most_records':
+      return sorted.sort((a, b) => (b.record_count || 0) - (a.record_count || 0));
+    case 'highest_quality':
+      return sorted.sort((a, b) => (b.quality_score || 0) - (a.quality_score || 0));
+    case 'price_low_high':
+      return sorted.sort((a, b) => (a.price_aud || 0) - (b.price_aud || 0));
+    case 'price_high_low':
+      return sorted.sort((a, b) => (b.price_aud || 0) - (a.price_aud || 0));
+    default:
+      return sorted;
+  }
+};
 
 const Leads = () => {
   const { user, loading: authLoading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedIndustry, setSelectedIndustry] = useState<string>("all");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [selectedSector, setSelectedSector] = useState<string>("all");
+  const [selectedSort, setSelectedSort] = useState<string>("newest");
   const [showFilters, setShowFilters] = useState(false);
 
-  const {
-    data: leads,
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['leads'],
-    queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('leads').select('*').order('created_at', {
-        ascending: false
-      });
-      if (error) {
-        throw error;
-      }
-      return data as Lead[];
-    }
-  });
+  const { data: leadDatabases, isLoading, error } = useLeadDatabases();
+  const { data: stats } = useLeadDatabaseStats();
 
-  const filteredLeads = leads?.filter(lead => {
-    const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      lead.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      lead.industry.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      lead.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesType = selectedType === "all" || lead.type === selectedType;
-    const matchesCategory = selectedCategory === "all" || lead.category === selectedCategory;
-    const matchesIndustry = selectedIndustry === "all" || lead.industry === selectedIndustry;
+  const filteredLeads = leadDatabases?.filter(lead => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm ||
+      lead.title.toLowerCase().includes(searchLower) ||
+      (lead.description || '').toLowerCase().includes(searchLower) ||
+      (lead.short_description || '').toLowerCase().includes(searchLower) ||
+      lead.tags?.some(tag => tag.toLowerCase().includes(searchLower));
+    const matchesType = selectedType === "all" || lead.list_type === selectedType;
     const matchesLocation = selectedLocation === "all" || lead.location === selectedLocation;
-    const matchesSector = selectedSector === "all" || mapIndustryToSector(lead.industry) === selectedSector;
-    return matchesSearch && matchesType && matchesCategory && matchesIndustry && matchesLocation && matchesSector;
+    const matchesSector = selectedSector === "all" || lead.sector === selectedSector;
+    return matchesSearch && matchesType && matchesLocation && matchesSector;
   });
 
-  // Get unique values for filters
+  const sortedLeads = filteredLeads ? sortLeads(filteredLeads, selectedSort) : [];
+
   const types = getStandardTypes.leads;
-  const categories = Array.from(new Set(leads?.map(lead => lead.category) || []));
-  const industries = Array.from(new Set(leads?.map(lead => lead.industry) || []));
-  const locations = Array.from(new Set(leads?.map(lead => lead.location) || []));
-  const sectors = Array.from(new Set(leads?.map(lead => mapIndustryToSector(lead.industry)) || [])).sort();
-
-  const handleDownload = (lead: Lead) => {
-    if (lead.file_url) {
-      window.open(lead.file_url, '_blank');
-    } else if (lead.preview_url) {
-      window.open(lead.preview_url, '_blank');
-    }
-  };
-
-  const handlePreview = (lead: Lead) => {
-    if (lead.preview_url) {
-      window.open(lead.preview_url, '_blank');
-    }
-  };
+  const locations = Array.from(new Set(leadDatabases?.map(lead => lead.location).filter(Boolean) as string[] || []));
+  const sectors = Array.from(new Set(leadDatabases?.map(lead => lead.sector).filter(Boolean) as string[] || [])).sort();
 
   const handleClearFilters = () => {
     setSelectedType("all");
-    setSelectedCategory("all");
-    setSelectedIndustry("all");
     setSelectedLocation("all");
     setSelectedSector("all");
     setSearchTerm("");
+    setSelectedSort("newest");
   };
 
-  const hasActiveFilters = selectedType !== "all" || selectedCategory !== "all" || 
-    selectedIndustry !== "all" || selectedLocation !== "all" || selectedSector !== "all" || searchTerm !== "";
-
-  const csvListsCount = leads?.filter(lead => lead.type === 'csv_list').length || 0;
-  const tamMapsCount = leads?.filter(lead => lead.type === 'tam_map').length || 0;
+  const hasActiveFilters = selectedType !== "all" || selectedLocation !== "all" ||
+    selectedSector !== "all" || searchTerm !== "";
 
   if (error) {
     return (
       <>
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-red-500">
-            Error loading leads: {error.message}
+            Error loading lead databases: {(error as Error).message}
           </div>
         </div>
       </>
@@ -129,10 +97,18 @@ const Leads = () => {
 
   return (
     <>
-      
-      <LeadsHero 
-        csvListsCount={csvListsCount}
-        tamMapsCount={tamMapsCount}
+      <Helmet>
+        <title>Sales Leads & Market Intelligence | Market Entry Secrets</title>
+        <meta
+          name="description"
+          content="Access premium lead databases, market data, and TAM maps to accelerate your Australian market entry and sales strategy."
+        />
+      </Helmet>
+
+      <LeadsHero
+        totalDatabases={stats?.totalDatabases || 0}
+        totalRecords={stats?.totalRecords || 0}
+        countsByType={stats?.countsByType || {}}
       />
 
       <StandardDirectoryFilters
@@ -151,55 +127,8 @@ const Leads = () => {
         locations={locations}
         types={types}
         sectors={sectors}
-        searchPlaceholder="Search leads, industries, or tags..."
-      >
-        {/* Advanced Filters */}
-        <div className="space-y-4">
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Category:</span>
-            <Button
-              variant={selectedCategory === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory("all")}
-            >
-              All Categories
-            </Button>
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-
-          {/* Industry Filter */}
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Industry:</span>
-            <Button
-              variant={selectedIndustry === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedIndustry("all")}
-            >
-              All Industries
-            </Button>
-            {industries.map((industry) => (
-              <Button
-                key={industry}
-                variant={selectedIndustry === industry ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedIndustry(industry)}
-              >
-                {industry}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </StandardDirectoryFilters>
+        searchPlaceholder="Search lead databases, sectors, or tags..."
+      />
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
@@ -214,23 +143,37 @@ const Leads = () => {
             </div>
           ) : !authLoading && hasReachedLimit && !user ? (
             <PaywallModal contentType="leads" />
-          ) : filteredLeads && filteredLeads.length > 0 ? (
+          ) : sortedLeads && sortedLeads.length > 0 ? (
             <>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-foreground">
-                  {filteredLeads.length} Lead{filteredLeads.length !== 1 ? 's' : ''} Available
+                  {sortedLeads.length} Database{sortedLeads.length !== 1 ? 's' : ''} Available
                 </h2>
+                <div className="w-48">
+                  <Select value={selectedSort} onValueChange={setSelectedSort}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SORT_OPTIONS.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} onDownload={handleDownload} onPreview={handlePreview} />
+                {sortedLeads.map(lead => (
+                  <LeadCard key={lead.id} lead={lead} />
                 ))}
               </div>
             </>
           ) : (
             <div className="text-center py-16">
               <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-medium text-foreground mb-2">No leads found</h3>
+              <h3 className="text-xl font-medium text-foreground mb-2">No lead databases found</h3>
               <p className="text-muted-foreground mb-4">
                 Try adjusting your search criteria or filters
               </p>
@@ -241,7 +184,6 @@ const Leads = () => {
           )}
         </section>
       </div>
-      
     </>
   );
 };
