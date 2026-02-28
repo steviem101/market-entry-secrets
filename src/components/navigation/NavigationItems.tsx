@@ -30,7 +30,7 @@ export interface NavItem {
 export const ecosystemNavItems: NavItem[] = [
   { label: "Innovation Ecosystem", href: "/innovation-ecosystem", icon: Lightbulb },
   { label: "Investors", href: "/investors", icon: Landmark },
-  { label: "Trade & Investment", href: "/trade-investment-agencies", icon: TrendingUp },
+  { label: "Government Support", href: "/government-support", icon: TrendingUp },
   { label: "Service Providers", href: "/service-providers", icon: Users },
   { label: "Mentors", href: "/community", icon: UserCheck },
 ];

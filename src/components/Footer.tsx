@@ -26,7 +26,7 @@ export const Footer = () => {
     { label: "Sectors", href: "/sectors" },
     { label: "Locations", href: "/locations" },
     { label: "Case Studies", href: "/case-studies" },
-    { label: "Trade Agencies", href: "/trade-investment-agencies" },
+    { label: "Government Support", href: "/government-support" },
     { label: "FAQ", href: "/faq" }
   ];
 

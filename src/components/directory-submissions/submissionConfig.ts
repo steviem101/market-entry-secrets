@@ -28,10 +28,10 @@ export const getSubmissionConfig = (type: SubmissionType): SubmissionConfig => {
       };
     case 'trade_agency':
       return {
-        title: 'Submit Your Agency',
-        buttonText: 'Submit Your Agency',
+        title: 'Submit Your Organisation',
+        buttonText: 'Submit Your Organisation',
         icon: Globe,
-        modalTitle: 'Submit Your Trade & Investment Agency'
+        modalTitle: 'Submit a Government or Industry Organisation'
       };
     case 'innovation_organization':
       return {

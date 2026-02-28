@@ -102,9 +102,9 @@ export const useMasterSearch = () => {
             allResults.push({
               id: agency.id,
               title: agency.name,
-              description: agency.description || 'Trade & Investment Agency',
+              description: agency.description || 'Government & Industry Support',
               type: 'content',
-              url: `/trade-investment-agencies`,
+              url: `/government-support`,
               metadata: {
                 location: agency.location,
                 founded: agency.founded,

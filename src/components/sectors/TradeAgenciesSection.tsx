@@ -23,9 +23,9 @@ const TradeAgenciesSection = ({ tradeAgencies }: TradeAgenciesSectionProps) => {
 
   return (
     <SectorSection
-      title="Trade & Investment Agencies"
-      viewAllLink="/trade-investment-agencies"
-      viewAllText="View All Agencies"
+      title="Government & Industry Support"
+      viewAllLink="/government-support"
+      viewAllText="View All Organisations"
       isEmpty={false}
     >
       {tradeAgencies.slice(0, 6).map((agency) => (
