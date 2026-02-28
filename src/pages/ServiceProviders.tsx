@@ -1,8 +1,10 @@
 
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { ServiceProvidersHero } from "@/components/service-providers/ServiceProvidersHero";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
+import { ServiceProvidersAdvancedFilters } from "@/components/service-providers/ServiceProvidersAdvancedFilters";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
 import CompanyModal from "@/components/CompanyModal";
 import { Company } from "@/components/CompanyCard";
@@ -22,6 +24,9 @@ const ServiceProviders = () => {
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedSector, setSelectedSector] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("featured");
   const [showFilters, setShowFilters] = useState(false);
 
   const handleLocationChange = (location: string) => {
@@ -33,6 +38,9 @@ const ServiceProviders = () => {
     setSelectedLocation("all");
     setSelectedType("all");
     setSelectedSector("all");
+    setSelectedCategory("all");
+    setVerifiedOnly(false);
+    setSortBy("featured");
   };
 
   const handleViewProfile = (company: Company) => {
@@ -46,27 +54,44 @@ const ServiceProviders = () => {
 
   return (
     <>
-      
+      <Helmet>
+        <title>Service Providers | Market Entry Secrets</title>
+        <meta
+          name="description"
+          content="Find expert service providers who specialize in international market entry to Australia and New Zealand. Legal, accounting, recruitment, strategy, and more."
+        />
+        <meta property="og:title" content="Service Providers | Market Entry Secrets" />
+        <meta
+          property="og:description"
+          content="Connect with verified service providers for your market entry into Australia and New Zealand."
+        />
+        <link rel="canonical" href="https://market-entry-secrets.lovable.app/service-providers" />
+      </Helmet>
+
       <ServiceProvidersDataProvider
         selectedLocations={selectedLocation === "all" ? [] : [selectedLocation]}
         searchTerm={searchTerm}
         selectedType={selectedType}
         selectedSector={selectedSector}
+        selectedCategory={selectedCategory}
+        verifiedOnly={verifiedOnly}
+        sortBy={sortBy}
         personaFilter={personaFilterValue}
       >
         {({ companies, loading, filteredCompanies, uniqueTypes, uniqueSectors, totalCompanies, uniqueLocations, totalServices }) => {
-          const hasActiveFilters = selectedLocation !== "all" || selectedType !== "all" || selectedSector !== "all" || searchTerm !== "";
+          const hasActiveFilters = selectedLocation !== "all" || selectedType !== "all" || selectedSector !== "all" || searchTerm !== "" || selectedCategory !== "all" || verifiedOnly;
           const types = getStandardTypes.serviceProviders;
           const sectors = Array.from(new Set(companies.flatMap(company => mapServicesToSectors(company.services || [])))).sort();
-          
+          const allServices = Array.from(new Set(companies.flatMap(company => company.services || []))).sort();
+
           return (
             <>
-              <ServiceProvidersHero 
+              <ServiceProvidersHero
                 totalCompanies={totalCompanies}
                 uniqueLocations={uniqueLocations}
                 totalServices={totalServices}
               />
-              
+
               <StandardDirectoryFilters
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
@@ -85,21 +110,18 @@ const ServiceProviders = () => {
                 sectors={sectors}
                 searchPlaceholder="Search service providers..."
               >
-                {/* Advanced Filters - Services */}
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-sm font-medium text-muted-foreground">Services:</span>
-                  {Array.from(new Set(companies.flatMap(company => company.services || []))).sort().slice(0, 10).map((service) => (
-                    <button
-                      key={service}
-                      className="px-3 py-1 text-sm bg-muted hover:bg-muted/80 rounded-full transition-colors"
-                      onClick={() => setSearchTerm(service)}
-                    >
-                      {service}
-                    </button>
-                  ))}
-                </div>
+                <ServiceProvidersAdvancedFilters
+                  selectedCategory={selectedCategory}
+                  onCategoryChange={setSelectedCategory}
+                  verifiedOnly={verifiedOnly}
+                  onVerifiedChange={setVerifiedOnly}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
+                  services={allServices}
+                  onServiceClick={setSearchTerm}
+                />
               </StandardDirectoryFilters>
-            
+
               <div className="container mx-auto px-4 py-8">
                 <UsageBanner />
 
@@ -110,7 +132,6 @@ const ServiceProviders = () => {
                   </p>
                 </div>
 
-                {/* Service Providers List - No sidebar, full width */}
                 <ServiceProvidersList
                   companies={filteredCompanies}
                   onViewProfile={handleViewProfile}
@@ -130,7 +151,6 @@ const ServiceProviders = () => {
           onContact={handleContact}
         />
       )}
-      
     </>
   );
 };

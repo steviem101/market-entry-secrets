@@ -13,6 +13,7 @@ import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import ServiceProviders from "./pages/ServiceProviders";
+import ServiceProviderPage from "./pages/ServiceProviderPage";
 import Events from "./pages/Events";
 import EventDetailPage from "./pages/EventDetailPage";
 import MentorsDirectory from "./pages/MentorsDirectory";
@@ -76,6 +77,7 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/service-providers" element={<ServiceProviders />} />
+                  <Route path="/service-providers/:providerSlug" element={<ServiceProviderPage />} />
                   <Route path="/events" element={<Events />} />
                   <Route path="/events/:eventSlug" element={<EventDetailPage />} />
                   <Route path="/community" element={<Navigate to="/mentors" replace />} />
