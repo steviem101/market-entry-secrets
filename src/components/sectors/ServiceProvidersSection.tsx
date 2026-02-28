@@ -33,16 +33,16 @@ const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionPr
           key={provider.id}
           company={{
             id: provider.id,
-            name: provider.name,
-            description: provider.description,
-            location: provider.location,
-            founded: provider.founded,
-            employees: provider.employees,
+            name: provider.name || "",
+            description: provider.description || "",
+            location: provider.location || "",
+            founded: provider.founded || "",
+            employees: provider.employees || "",
             services: provider.services || [],
-            website: provider.website,
-            contact: provider.contact,
-            logo: provider.logo,
-            slug: provider.slug,
+            website: provider.website || undefined,
+            contact: provider.contact || undefined,
+            logo: provider.logo || undefined,
+            slug: provider.slug || undefined,
             experienceTiles: provider.experience_tiles ? (Array.isArray(provider.experience_tiles) ? provider.experience_tiles as any[] : []) : [],
             contactPersons: provider.contact_persons ? (Array.isArray(provider.contact_persons) ? provider.contact_persons as any[] : []) : []
           }}

@@ -71,11 +71,11 @@ export const ProvidersSection = ({
 
         return {
           id: provider.id,
-          name: provider.name,
-          description: provider.description,
-          location: provider.location,
-          founded: provider.founded,
-          employees: provider.employees,
+          name: provider.name || "",
+          description: provider.description || "",
+          location: provider.location || "",
+          founded: provider.founded || "",
+          employees: provider.employees || "",
           services: provider.services || [],
           website: provider.website || undefined,
           contact: provider.contact || undefined,

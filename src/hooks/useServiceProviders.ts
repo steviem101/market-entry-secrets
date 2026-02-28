@@ -1,5 +1,54 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Company } from "@/components/CompanyCard";
+
+// Normalize raw DB row into Company interface with safe defaults
+function normalizeProvider(raw: any, category_name?: string | null): Company {
+  return {
+    id: raw.id,
+    name: raw.name || "",
+    description: raw.description || "",
+    location: raw.location || "",
+    founded: raw.founded || "",
+    employees: raw.employees || "",
+    services: raw.services || [],
+    website: raw.website || undefined,
+    contact: raw.contact || undefined,
+    logo: raw.logo || undefined,
+    basic_info: raw.basic_info || undefined,
+    why_work_with_us: raw.why_work_with_us || undefined,
+    experience_tiles: raw.experience_tiles || [],
+    contact_persons: raw.contact_persons || [],
+    serves_personas: raw.serves_personas || [],
+    slug: raw.slug || undefined,
+    tagline: raw.tagline || undefined,
+    logo_url: raw.logo_url || undefined,
+    cover_image_url: raw.cover_image_url || undefined,
+    website_url: raw.website_url || undefined,
+    founded_year: raw.founded_year || undefined,
+    team_size_range: raw.team_size_range || undefined,
+    is_verified: raw.is_verified || false,
+    is_featured: raw.is_featured || false,
+    is_active: raw.is_active !== false,
+    markets_served: raw.markets_served || [],
+    support_types: raw.support_types || [],
+    sectors: raw.sectors || [],
+    engagement_model: raw.engagement_model || [],
+    company_size_focus: raw.company_size_focus || [],
+    price_range: raw.price_range || undefined,
+    contact_email: raw.contact_email || undefined,
+    contact_phone: raw.contact_phone || undefined,
+    linkedin_url: raw.linkedin_url || undefined,
+    location_city: raw.location_city || undefined,
+    location_state: raw.location_state || undefined,
+    location_country: raw.location_country || undefined,
+    category_slug: raw.category_slug || undefined,
+    category_name: category_name || undefined,
+    meta_title: raw.meta_title || undefined,
+    meta_description: raw.meta_description || undefined,
+    view_count: raw.view_count || 0,
+  };
+}
 
 export const useServiceProviderBySlug = (slug: string) => {
   return useQuery({
@@ -24,7 +73,7 @@ export const useServiceProviderBySlug = (slug: string) => {
         category_name = catData?.name || null;
       }
 
-      return { ...data, category_name } as any;
+      return normalizeProvider(data, category_name);
     },
     enabled: !!slug,
   });
@@ -55,7 +104,7 @@ export const useRelatedServiceProviders = (
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []) as any[];
+      return (data || []).map((row: any) => normalizeProvider(row));
     },
     enabled: !!currentId,
   });

@@ -74,12 +74,18 @@ export const ServiceProviderSidebar = ({
                 <dt className="text-xs text-muted-foreground">Website</dt>
                 <dd className="text-sm font-medium">
                   <a
-                    href={websiteUrl}
+                    href={websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
-                    {new URL(websiteUrl).hostname.replace('www.', '')}
+                    {(() => {
+                      try {
+                        return new URL(websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`).hostname.replace('www.', '');
+                      } catch {
+                        return websiteUrl;
+                      }
+                    })()}
                   </a>
                 </dd>
               </div>
