@@ -27,6 +27,9 @@ export const LocationHero = ({ location }: LocationHeroProps) => {
             <Badge className={getTypeColor(location.location_type)}>
               {location.location_type.charAt(0).toUpperCase() + location.location_type.slice(1)}
             </Badge>
+            <Badge variant="outline">
+              {location.country === 'New Zealand' ? 'NZ' : 'AU'}
+            </Badge>
             {location.business_environment_score && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 <TrendingUp className="h-3 w-3" />

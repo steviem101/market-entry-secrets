@@ -9,6 +9,9 @@ export interface LocationData {
   description: string;
   location_type: 'state' | 'city' | 'region';
   parent_location: string | null;
+  parent_location_id: string | null;
+  country: string;
+  active: boolean;
   hero_title: string;
   hero_description: string;
   government_agency_name: string | null;
@@ -37,6 +40,7 @@ export const useLocations = () => {
       const { data, error } = await supabase
         .from('locations')
         .select('*')
+        .eq('active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
@@ -53,6 +57,7 @@ export const useFeaturedLocations = () => {
         .from('locations')
         .select('*')
         .eq('featured', true)
+        .eq('active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
