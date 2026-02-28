@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { TradeInvestmentAgenciesHero } from "@/components/trade-investment-agencies/TradeInvestmentAgenciesHero";
 import TradeInvestmentAgenciesFilters from "@/components/trade-investment-agencies/TradeInvestmentAgenciesFilters";
 import TradeInvestmentAgenciesResults from "@/components/trade-investment-agencies/TradeInvestmentAgenciesResults";
@@ -23,10 +24,11 @@ const TradeInvestmentAgencies = () => {
       agency.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (a.tagline && a.tagline.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = selectedLocation === "all" || agency.location.toLowerCase().includes(selectedLocation.toLowerCase());
+    const normalise = (v: string) => v.replace(/_/g, ' ').toLowerCase();
     const matchesSector = selectedSector === "all" ||
-      (a.sectors_supported && a.sectors_supported.some((s: string) => s.toLowerCase().includes(selectedSector.toLowerCase())));
+      (a.sectors_supported && a.sectors_supported.some((s: string) => normalise(s) === selectedSector.toLowerCase()));
     const matchesType = selectedType === "all" ||
-      (a.organisation_type && a.organisation_type.toLowerCase().includes(selectedType.toLowerCase()));
+      (a.organisation_type && normalise(a.organisation_type) === selectedType.toLowerCase());
     const matchesCategory = selectedCategory === "all" ||
       (a.category_slug && a.category_slug === selectedCategory);
     return matchesSearch && matchesLocation && matchesSector && matchesType && matchesCategory;
@@ -62,6 +64,20 @@ const TradeInvestmentAgencies = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Government & Industry Support | Market Entry Secrets</title>
+        <meta
+          name="description"
+          content="Connect with government agencies, industry associations, chambers of commerce, and bilateral trade organisations supporting international business expansion into Australia and New Zealand."
+        />
+        <meta property="og:title" content="Government & Industry Support | Market Entry Secrets" />
+        <meta
+          property="og:description"
+          content="Connect with government agencies, industry associations, and chambers supporting market entry into Australia and New Zealand."
+        />
+        <link rel="canonical" href="https://market-entry-secrets.lovable.app/government-support" />
+      </Helmet>
+
       <TradeInvestmentAgenciesHero
         agencyCount={agencies?.length || 0}
         locationCount={uniqueLocations.length}

@@ -5,9 +5,10 @@ export const useTradeAgencies = () => {
   return useQuery({
     queryKey: ['trade-investment-agencies'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('trade_investment_agencies')
         .select('*')
+        .eq('is_active', true)
         .order('name');
 
       if (error) {

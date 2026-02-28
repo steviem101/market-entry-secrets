@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Globe, MapPin, Calendar, Users, Mail, Phone, Linkedin, Shield, Award, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
 import CompanyCard from "@/components/CompanyCard";
 import { parseJsonArray } from "@/components/company-card/CompanyCardHelpers";
 import { useAgencyContacts, useAgencyResources } from "@/hooks/useTradeAgencies";
@@ -288,39 +287,41 @@ export const AgencyContent = ({ agency, relatedAgencies, categoryName }: AgencyC
           </div>
 
           {/* Funding & Access */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-3">Funding & Access</h3>
-            <div className="space-y-3">
-              {agency.is_government_funded && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Shield className="w-4 h-4 text-green-600" />
-                  <span>Government Funded</span>
-                </div>
-              )}
-              {agency.is_free_to_access && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-green-600 font-medium">Free to access</span>
-                </div>
-              )}
-              {agency.grants_available && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Award className="w-4 h-4 text-amber-600" />
-                  <span>
-                    Grants Available
-                    {agency.max_grant_aud && ` (up to $${agency.max_grant_aud.toLocaleString()})`}
-                  </span>
-                </div>
-              )}
-              {agency.membership_required && (
-                <div className="text-sm">
-                  <span className="text-muted-foreground">Membership required</span>
-                  {agency.membership_fee_aud && (
-                    <span className="text-muted-foreground"> — ${agency.membership_fee_aud.toLocaleString()}/yr</span>
-                  )}
-                </div>
-              )}
+          {(agency.is_government_funded || agency.is_free_to_access || agency.grants_available || agency.membership_required) && (
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-3">Funding & Access</h3>
+              <div className="space-y-3">
+                {agency.is_government_funded && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Shield className="w-4 h-4 text-green-600" />
+                    <span>Government Funded</span>
+                  </div>
+                )}
+                {agency.is_free_to_access && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-green-600 font-medium">Free to access</span>
+                  </div>
+                )}
+                {agency.grants_available && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Award className="w-4 h-4 text-amber-600" />
+                    <span>
+                      Grants Available
+                      {agency.max_grant_aud && ` (up to $${agency.max_grant_aud.toLocaleString()})`}
+                    </span>
+                  </div>
+                )}
+                {agency.membership_required && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Membership required</span>
+                    {agency.membership_fee_aud && (
+                      <span className="text-muted-foreground"> — ${agency.membership_fee_aud.toLocaleString()}/yr</span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Services Quick View */}
           {agency.services && agency.services.length > 0 && (
