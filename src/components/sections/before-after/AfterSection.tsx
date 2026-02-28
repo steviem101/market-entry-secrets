@@ -1,66 +1,26 @@
 import { Link } from "react-router-dom";
-import { 
-  Building2,
-  Users, 
-  Database, 
-  Map, 
-  Calendar, 
-  CheckCircle,
-  Zap
-} from "lucide-react";
+import { Zap } from "lucide-react";
+import type { AfterItem } from "@/config/personaContent";
 
-export const AfterSection = () => {
-  const afterFeatures = [
-    {
-      icon: Building2,
-      title: "120+ Vetted Service Providers",
-      description: "Pre-screened legal, accounting, marketing partners",
-      link: "/service-providers"
-    },
-    {
-      icon: Users,
-      title: "200+ Expert Mentors",
-      description: "Advisors who've successfully entered Australian market",
-      link: "/community"
-    },
-    {
-      icon: Database,
-      title: "100+ Premium Lead Lists",
-      description: "Pre-qualified contact databases by industry/location",
-      link: "/leads"
-    },
-    {
-      icon: Map,
-      title: "TAM Maps & Market Intelligence",
-      description: "Real-time market sizing and opportunity analysis",
-      link: "/leads"
-    },
-    {
-      icon: Calendar,
-      title: "50+ Monthly Events",
-      description: "Networking and learning opportunities every month",
-      link: "/events"
-    },
-    {
-      icon: CheckCircle,
-      title: "1,200+ Success Stories",
-      description: "Proven case studies and lessons learned",
-      link: "/case-studies"
-    }
-  ];
+interface AfterSectionProps {
+  heading: string;
+  subheading: string;
+  items: AfterItem[];
+}
 
+export const AfterSection = ({ heading, subheading, items }: AfterSectionProps) => {
   return (
     <div className="space-y-6">
       <div className="text-center lg:text-left mb-8">
         <h3 className="text-2xl font-bold text-primary mb-2 flex items-center justify-center lg:justify-start gap-2">
           <Zap className="w-6 h-6" />
-          With Market Entry Secrets
+          {heading}
         </h3>
-        <p className="text-muted-foreground">Your streamlined path to success</p>
+        <p className="text-muted-foreground">{subheading}</p>
       </div>
 
       <div className="grid gap-4">
-        {afterFeatures.map((feature, index) => (
+        {items.map((feature, index) => (
           <Link key={index} to={feature.link} className="group">
             <div className="bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/20 rounded-xl p-4 hover:from-primary/10 hover:to-accent/10 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
               <div className="flex items-start gap-3">
