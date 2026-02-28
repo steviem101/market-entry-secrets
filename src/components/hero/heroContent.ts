@@ -22,7 +22,7 @@ export const HERO_PERSONAS: Record<HeroPersona, PersonaContent> = {
     },
     subheadline:
       "Answer a few questions about your company, sector, and goals. MES combines 500+ vetted providers, real case studies, and AI-powered intelligence to generate a plan for entering the ANZ market.",
-    primaryCTA: { label: "Plan my market entry", href: "/planner?persona=international_entrant" },
+    primaryCTA: { label: "Create my market entry report →", href: "/report-creator?persona=international" },
     secondaryCTA: { label: "Explore providers", href: "/service-providers" },
     toggleDescription: "Entering the ANZ market",
     mockupScenario: {
@@ -39,7 +39,7 @@ export const HERO_PERSONAS: Record<HeroPersona, PersonaContent> = {
     },
     subheadline:
       "Get a growth plan tailored to your stage: funding sources, accelerators, hiring strategy, customer acquisition channels, and the right mentors to scale your business.",
-    primaryCTA: { label: "Plan my growth strategy", href: "/planner?persona=local_startup" },
+    primaryCTA: { label: "Create my growth report →", href: "/report-creator?persona=startup" },
     secondaryCTA: { label: "Find a mentor", href: "/community" },
     toggleDescription: "Growing your Aussie startup",
     mockupScenario: {

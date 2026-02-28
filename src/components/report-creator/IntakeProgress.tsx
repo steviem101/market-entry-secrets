@@ -1,13 +1,21 @@
 import { Check } from 'lucide-react';
+import type { ReportPersona } from './intakeSchema';
 
 interface IntakeProgressProps {
   currentStep: number;
   totalSteps: number;
+  persona?: ReportPersona;
 }
 
-const STEP_LABELS = ['Company Details', 'Market Entry Goals', 'Review & Generate'];
+const getStepLabels = (persona?: ReportPersona): string[] => [
+  'Company Details',
+  persona === 'startup' ? 'Growth Goals' : 'Market Entry Goals',
+  'Review & Generate',
+];
 
-export const IntakeProgress = ({ currentStep, totalSteps }: IntakeProgressProps) => {
+export const IntakeProgress = ({ currentStep, totalSteps, persona }: IntakeProgressProps) => {
+  const STEP_LABELS = getStepLabels(persona);
+
   return (
     <div className="w-full max-w-2xl mx-auto mb-10">
       <div className="flex items-center justify-between">

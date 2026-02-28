@@ -8,19 +8,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Building2, Globe, ArrowRight, Check, ChevronsUpDown, X } from 'lucide-react';
+import { Building2, Globe, Rocket, ArrowRight, Check, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   COUNTRY_OPTIONS, INDUSTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS,
-  type IntakeFormData,
+  TARGET_MARKET_OPTIONS, REVENUE_STAGE_OPTIONS,
+  type IntakeFormData, type ReportPersona,
 } from './intakeSchema';
 
 interface IntakeStep1Props {
   form: UseFormReturn<IntakeFormData>;
   onNext: () => void;
+  persona: ReportPersona;
+  onPersonaChange: (persona: ReportPersona) => void;
 }
 
-export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
+export const IntakeStep1 = ({ form, onNext, persona, onPersonaChange }: IntakeStep1Props) => {
   const { register, formState: { errors }, setValue, watch } = form;
   const [industryOpen, setIndustryOpen] = useState(false);
   const selectedIndustries = watch('industry_sector') || [];
@@ -57,6 +60,11 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
     setValue('industry_sector', selectedIndustries.filter((i) => i !== industry), { shouldValidate: true });
   };
 
+  const toggleOptions = [
+    { key: 'international' as const, icon: Globe, label: 'International Entry', desc: 'Entering the ANZ market' },
+    { key: 'startup' as const, icon: Rocket, label: 'Startup Growth', desc: 'Growing your Aussie startup' },
+  ];
+
   return (
     <Card className="max-w-2xl mx-auto border-border/50 shadow-lg">
       <CardHeader className="text-center pb-2">
@@ -67,6 +75,59 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
         <CardDescription>We'll use this to match you with the right resources</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5 pt-4">
+        {/* Persona Toggle */}
+        <div className="w-full">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground text-center mb-3">
+            Choose your journey
+          </p>
+          <div className="grid grid-cols-2 gap-3" role="tablist" aria-label="Choose your journey">
+            {toggleOptions.map((option) => {
+              const Icon = option.icon;
+              const isActive = persona === option.key;
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => onPersonaChange(option.key)}
+                  className={`relative flex items-center gap-3 px-4 py-4 rounded-xl border transition-all duration-300 cursor-pointer text-left ${
+                    isActive
+                      ? 'bg-background shadow-lg border-primary/30 ring-2 ring-primary/20 scale-[1.02]'
+                      : 'bg-muted/50 border-border opacity-70 hover:opacity-90 hover:border-primary/20'
+                  }`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isActive
+                        ? 'bg-gradient-to-br from-primary/20 to-accent/20'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    <Icon
+                      className={`w-5 h-5 transition-colors duration-300 ${
+                        isActive ? 'text-primary' : 'text-muted-foreground'
+                      }`}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <div
+                      className={`text-base font-semibold transition-colors duration-300 ${
+                        isActive ? 'text-foreground' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {option.label}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {option.desc}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2">
             <Label htmlFor="company_name">Company Name *</Label>
@@ -99,7 +160,7 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2">
-            <Label>Country of Origin *</Label>
+            <Label>{persona === 'startup' ? 'Country / State *' : 'Country of Origin *'}</Label>
             <Select value={selectDisplayValue} onValueChange={handleCountrySelect}>
               <SelectTrigger>
                 <SelectValue placeholder="Select country" />
@@ -225,9 +286,42 @@ export const IntakeStep1 = ({ form, onNext }: IntakeStep1Props) => {
           </div>
         </div>
 
+        {/* Persona-specific fields */}
+        {persona === 'international' && (
+          <div className="space-y-2">
+            <Label>Target Market</Label>
+            <Select value={watch('target_market') || ''} onValueChange={(v) => setValue('target_market', v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select target market" />
+              </SelectTrigger>
+              <SelectContent>
+                {TARGET_MARKET_OPTIONS.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {persona === 'startup' && (
+          <div className="space-y-2">
+            <Label>Current ARR / Revenue Stage</Label>
+            <Select value={watch('revenue_stage') || ''} onValueChange={(v) => setValue('revenue_stage', v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select revenue stage" />
+              </SelectTrigger>
+              <SelectContent>
+                {REVENUE_STAGE_OPTIONS.map((r) => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="pt-4 flex justify-end">
           <Button onClick={onNext} size="lg" className="gap-2">
-            Next: Market Entry Goals
+            Next: {persona === 'startup' ? 'Growth Goals' : 'Market Entry Goals'}
             <ArrowRight className="w-4 h-4" />
           </Button>
         </div>

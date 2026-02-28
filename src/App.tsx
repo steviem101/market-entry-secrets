@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { LeadGenPopupProvider } from "@/components/LeadGenPopupProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -47,7 +47,6 @@ import ReportView from "./pages/ReportView";
 import SharedReportView from "./pages/SharedReportView";
 import MyReports from "./pages/MyReports";
 import ResetPassword from "./pages/ResetPassword";
-import Planner from "./pages/Planner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -104,7 +103,7 @@ const App = () => (
                   <Route path="/member-hub" element={<MemberHub />} />
                   <Route path="/mentor-connections" element={<MentorConnections />} />
                   <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/planner" element={<Planner />} />
+                  <Route path="/planner" element={<Navigate to="/report-creator" replace />} />
                   <Route path="/report-creator" element={<ReportCreator />} />
                   <Route path="/report/:reportId" element={<ReportView />} />
                   <Route path="/report/shared/:shareToken" element={<SharedReportView />} />
