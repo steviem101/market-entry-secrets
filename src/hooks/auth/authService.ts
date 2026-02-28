@@ -58,7 +58,7 @@ export const useAuthService = () => {
         password,
         options: {
           data: metadata,
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
@@ -90,12 +90,12 @@ export const useAuthService = () => {
     }
   };
 
-  const signInWithProvider = async (provider: 'google' | 'github' | 'linkedin_oidc') => {
+  const signInWithProvider = async (provider: 'google' | 'azure' | 'linkedin_oidc') => {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
@@ -184,6 +184,40 @@ export const useAuthService = () => {
     }
   };
 
+  const signInWithMagicLink = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Magic Link Error",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { error };
+      }
+
+      toast({
+        title: "Magic Link Sent!",
+        description: "Check your email for a sign-in link.",
+      });
+
+      return { success: true };
+    } catch (error) {
+      toast({
+        title: "Magic Link Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -219,6 +253,7 @@ export const useAuthService = () => {
     signInWithEmail,
     signUpWithEmail,
     signInWithProvider,
+    signInWithMagicLink,
     signOut,
     updateProfile,
     resetPassword,

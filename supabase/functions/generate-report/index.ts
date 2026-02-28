@@ -1485,7 +1485,11 @@ serve(async (req) => {
 
     // Kick off background processing — does NOT block the response
     // @ts-ignore: EdgeRuntime.waitUntil is available in Supabase Edge Functions
-    EdgeRuntime.waitUntil(generateReportInBackground(intake_form_id, reportId));
+    EdgeRuntime.waitUntil(
+      generateReportInBackground(intake_form_id, reportId).catch((err) => {
+        console.error("Unhandled error in background report generation:", err);
+      })
+    );
 
     console.log(`Report ${reportId} queued for background generation`);
 

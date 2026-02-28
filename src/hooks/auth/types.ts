@@ -8,6 +8,11 @@ export interface UserProfile {
   bio?: string;
   website?: string;
   location?: string;
+  company_name?: string;
+  country?: string;
+  target_market?: string;
+  use_case?: string;
+  onboarding_completed?: boolean;
   created_at?: string;
   updated_at?: string;
 }

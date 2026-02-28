@@ -18,6 +18,7 @@ export const useAuth = () => {
     signInWithEmail: serviceSignInWithEmail,
     signUpWithEmail: serviceSignUpWithEmail,
     signInWithProvider,
+    signInWithMagicLink: serviceSignInWithMagicLink,
     signOut: serviceSignOut,
     updateProfile: serviceUpdateProfile,
     resetPassword,
@@ -53,6 +54,15 @@ export const useAuth = () => {
     }
   };
 
+  const signInWithMagicLink = async (email: string) => {
+    setLoading(true);
+    try {
+      return await serviceSignInWithMagicLink(email);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateProfile = async (updates: any) => {
     setLoading(true);
     try {
@@ -71,6 +81,7 @@ export const useAuth = () => {
     signInWithEmail,
     signUpWithEmail,
     signInWithProvider,
+    signInWithMagicLink,
     signOut,
     updateProfile,
     resetPassword,

@@ -3,6 +3,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuthState } from '@/hooks/auth/useAuthState';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile, UserRole } from '@/hooks/auth/types';
+import { OnboardingDialog } from '@/components/auth/OnboardingDialog';
 
 interface AuthContextType {
   user: User | null;
@@ -19,9 +20,20 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const authState = useAuthState();
 
+  const showOnboarding = !authState.loading
+    && authState.user !== null
+    && authState.profile !== null
+    && authState.profile.onboarding_completed === false;
+
   return (
     <AuthContext.Provider value={authState}>
       {children}
+      <OnboardingDialog
+        open={showOnboarding}
+        onOpenChange={() => {
+          // Dialog closes when updateProfile sets onboarding_completed = true
+        }}
+      />
     </AuthContext.Provider>
   );
 };
