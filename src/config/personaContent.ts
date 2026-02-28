@@ -667,10 +667,3 @@ export const PERSONA_CONTENT: Record<SectionPersona, PersonaSectionContent> = {
   startup: startupContent,
 };
 
-/**
- * Returns the content object for the given persona.
- * Falls back to "international" when persona is null / undefined.
- */
-export const getPersonaContent = (
-  persona: SectionPersona | null | undefined
-): PersonaSectionContent => PERSONA_CONTENT[persona ?? "international"];
