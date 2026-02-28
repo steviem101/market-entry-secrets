@@ -18,7 +18,7 @@ export const useAuth = () => {
     signInWithEmail: serviceSignInWithEmail,
     signUpWithEmail: serviceSignUpWithEmail,
     signInWithProvider,
-    signInWithMagicLink,
+    signInWithMagicLink: serviceSignInWithMagicLink,
     signOut: serviceSignOut,
     updateProfile: serviceUpdateProfile,
     resetPassword,
@@ -49,6 +49,15 @@ export const useAuth = () => {
     setLoading(true);
     try {
       return await serviceSignOut();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithMagicLink = async (email: string) => {
+    setLoading(true);
+    try {
+      return await serviceSignInWithMagicLink(email);
     } finally {
       setLoading(false);
     }

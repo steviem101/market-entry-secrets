@@ -1,12 +1,11 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { log, logError } from "../_shared/log.ts";
+import { buildCorsHeaders } from "../_shared/http.ts";
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -25,7 +24,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Sending follow-up email to:', email);
+    log("send-lead-followup", "Processing follow-up email request", { sector, target_market });
 
     // Create the email content
     const emailHtml = `
@@ -125,16 +124,14 @@ Your Target Market: ${target_market}
     // - SendGrid
     // - Amazon SES
     
-    // For now, we'll log the email content and return success
+    // For now, we'll log that an email would be sent and return success
     // You can replace this with actual email sending logic
-    console.log('Email HTML:', emailHtml);
-    console.log('Email Text:', emailText);
+    log("send-lead-followup", "Email content prepared (not sent - placeholder)", { sector, target_market });
 
     // Simulated email sending - replace with actual service
     const emailResponse = {
       success: true,
       message: 'Follow-up email sent successfully',
-      recipient: email,
       sector: sector
     };
 
@@ -147,7 +144,7 @@ Your Target Market: ${target_market}
     );
 
   } catch (error) {
-    console.error('Error sending follow-up email:', error);
+    logError("send-lead-followup", "Error processing follow-up email", { error: error instanceof Error ? error.message : String(error) });
     return new Response(
       JSON.stringify({ error: 'Failed to send follow-up email' }),
       { 

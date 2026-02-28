@@ -41,8 +41,10 @@ export const OnboardingDialog = ({ open, onOpenChange }: OnboardingDialogProps) 
   };
 
   const handleSkip = async () => {
-    await updateProfile({ onboarding_completed: true });
-    onOpenChange(false);
+    const result = await updateProfile({ onboarding_completed: true });
+    if (!result.error) {
+      onOpenChange(false);
+    }
   };
 
   const isValid = formData.company_name && formData.country && formData.target_market && formData.use_case;

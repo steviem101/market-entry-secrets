@@ -24,10 +24,12 @@ const AuthCallback = () => {
           toast.success('Email verified successfully! Welcome to Market Entry Secrets.');
           navigate('/');
         } else {
-          // Check if there are auth parameters in the URL
+          // Check if there are auth parameters in URL query params or hash fragment
+          // Supabase may use either depending on the flow (OAuth, magic link, etc.)
           const urlParams = new URLSearchParams(window.location.search);
-          const accessToken = urlParams.get('access_token');
-          const refreshToken = urlParams.get('refresh_token');
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+          const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
           
           if (accessToken && refreshToken) {
             // Set the session manually if needed

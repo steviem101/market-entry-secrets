@@ -86,7 +86,7 @@ serve(async (req: Request) => {
     // Handle checkout session completed
     if (event.type === "checkout.session.completed") {
       const session = dataObj as Stripe.Checkout.Session;
-      const tier = metadata?.tier ?? null;
+      let tier = metadata?.tier ?? null;
       const supabaseUserId = metadata?.supabase_user_id ?? null;
       const payment_intent_id = session.payment_intent ? String(session.payment_intent) : paymentIntentId;
 
@@ -102,8 +102,10 @@ serve(async (req: Request) => {
         }
       }
 
-      if (tier == null) {
-        log("stripe-webhook", "No tier found in metadata for checkout.session.completed", { eventId: event.id });
+      const VALID_TIERS = ["free", "growth", "scale", "enterprise"];
+      if (!tier || !VALID_TIERS.includes(tier)) {
+        logError("stripe-webhook", `Invalid or missing tier in metadata: '${tier}', defaulting to 'growth'`, { eventId: event.id, tier });
+        tier = "growth";
       }
 
       if (supabaseUserId) {
