@@ -236,7 +236,7 @@ const internationalContent: PersonaSectionContent = {
         title: "200+ Expert Mentors",
         description:
           "Advisors who've successfully entered the Australian market from abroad",
-        link: "/community",
+        link: "/mentors",
       },
       {
         icon: Database,
@@ -298,7 +298,7 @@ const internationalContent: PersonaSectionContent = {
           "Connect with founders who've successfully entered the Australian market from your region",
         badge: "200+ Mentors",
         color: "text-green-600",
-        href: "/community",
+        href: "/mentors",
       },
       {
         icon: Target,
@@ -549,7 +549,7 @@ const startupContent: PersonaSectionContent = {
         title: "200+ Expert Mentors",
         description:
           "Founders, operators, and investors who've scaled companies just like yours",
-        link: "/community",
+        link: "/mentors",
       },
       {
         icon: Rocket,
@@ -611,7 +611,7 @@ const startupContent: PersonaSectionContent = {
           "Operators and investors who've scaled startups in the Australian market",
         badge: "200+ Mentors",
         color: "text-green-600",
-        href: "/community",
+        href: "/mentors",
       },
       {
         icon: Target,
@@ -782,7 +782,7 @@ const startupContent: PersonaSectionContent = {
       label: "Create My Growth Report",
       href: "/report-creator?persona=startup",
     },
-    secondaryCTA: { label: "Find a Mentor", href: "/community" },
+    secondaryCTA: { label: "Find a Mentor", href: "/mentors" },
   },
 
   floatingCTA: {

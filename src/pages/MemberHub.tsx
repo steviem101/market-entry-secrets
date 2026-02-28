@@ -402,7 +402,7 @@ const MemberHub = () => {
                 <Link to="/events">Browse Events</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/community">Explore Community</Link>
+                <Link to="/mentors">Explore Mentors</Link>
               </Button>
             </div>
           </div>
