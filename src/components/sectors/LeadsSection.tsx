@@ -1,17 +1,15 @@
-
 import { LeadCard } from "@/components/LeadCard";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useAuth } from "@/hooks/useAuth";
 import { PaywallModal } from "@/components/PaywallModal";
 import SectorSection from "./SectorSection";
-import { useSectorHandlers } from "@/hooks/useSectorHandlers";
+import type { LeadDatabase } from "@/types/leadDatabase";
 
 interface LeadsSectionProps {
-  leads: any[];
+  leads: LeadDatabase[];
 }
 
 const LeadsSection = ({ leads }: LeadsSectionProps) => {
-  const { handleDownload, handlePreview } = useSectorHandlers();
   const { user, loading: authLoading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
 
@@ -31,12 +29,7 @@ const LeadsSection = ({ leads }: LeadsSectionProps) => {
       {leads.slice(0, 6).map((lead) => (
         <LeadCard
           key={lead.id}
-          lead={{
-            ...lead,
-            type: lead.type as "csv_list" | "tam_map"
-          }}
-          onDownload={handleDownload}
-          onPreview={handlePreview}
+          lead={lead}
         />
       ))}
     </SectorSection>

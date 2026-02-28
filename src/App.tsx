@@ -26,6 +26,7 @@ import CountryPage from "./pages/CountryPage";
 import Sectors from "./pages/Sectors";
 import SectorPage from "./pages/SectorPage";
 import Leads from "./pages/Leads";
+import LeadDatabaseDetailPage from "./pages/LeadDatabaseDetailPage";
 import InnovationEcosystem from "./pages/InnovationEcosystem";
 import InnovationOrgPage from "./pages/InnovationOrgPage";
 import Investors from "./pages/Investors";
@@ -88,6 +89,7 @@ const App = () => (
                   <Route path="/sectors" element={<Sectors />} />
                   <Route path="/sectors/:sectorSlug" element={<SectorPage />} />
                   <Route path="/leads" element={<Leads />} />
+                  <Route path="/leads/:slug" element={<LeadDatabaseDetailPage />} />
                   <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
                   <Route path="/innovation-ecosystem/:orgId" element={<InnovationOrgPage />} />
                   <Route path="/investors" element={<Investors />} />

@@ -181,30 +181,29 @@ export const useMasterSearch = () => {
         // Silently continue
       }
 
-      // Search leads
+      // Search lead databases
       try {
-        const { data: leads, error: leadsError } = await supabase
-          .from('leads')
+        const { data: leads, error: leadsError } = await (supabase as any)
+          .from('lead_databases')
           .select('*')
-          .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},type.ilike.${searchTerm},category.ilike.${searchTerm},industry.ilike.${searchTerm},location.ilike.${searchTerm},provider_name.ilike.${searchTerm}`);
+          .eq('status', 'active')
+          .or(`title.ilike.${searchTerm},description.ilike.${searchTerm},list_type.ilike.${searchTerm},sector.ilike.${searchTerm},location.ilike.${searchTerm},provider_name.ilike.${searchTerm}`);
 
         if (!leadsError && leads) {
-          leads.forEach(lead => {
+          leads.forEach((lead: any) => {
             allResults.push({
               id: lead.id,
-              title: lead.name,
-              description: lead.description || 'Lead',
+              title: lead.title,
+              description: lead.short_description || lead.description || 'Lead Database',
               type: 'lead',
-              url: `/leads`,
+              url: `/leads/${lead.slug}`,
               metadata: {
-                type: lead.type,
-                category: lead.category,
-                industry: lead.industry,
+                type: lead.list_type,
+                sector: lead.sector,
                 location: lead.location,
                 provider: lead.provider_name,
                 recordCount: lead.record_count,
-                price: lead.price,
-                currency: lead.currency
+                price: lead.price_aud,
               }
             });
           });

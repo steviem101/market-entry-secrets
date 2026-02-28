@@ -119,7 +119,7 @@ export const getStandardTypes = {
   community: ['Expert', 'Consultant', 'Advisor', 'Mentor', 'Specialist'],
   content: ['Article', 'Case Study', 'Guide', 'Report', 'Video'],
   events: ['Conference', 'Workshop', 'Webinar', 'Networking', 'Trade Show'],
-  leads: ['CSV List', 'TAM Map'],
+  leads: ['Lead Database', 'Market Data', 'TAM Map'],
   serviceProviders: ['Consultant', 'Law Firm', 'Accountant', 'Marketing Agency', 'Other'],
   innovationEcosystem: ['Incubator', 'Accelerator', 'Coworking Space', 'Research Institute'],
   tradeAgencies: ['Trade Agency', 'Investment Agency', 'Government Agency']
