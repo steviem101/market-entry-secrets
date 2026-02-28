@@ -268,15 +268,22 @@ CREATE INDEX IF NOT EXISTS idx_sp_sectors ON public.service_providers USING GIN 
 CREATE INDEX IF NOT EXISTS idx_sp_engagement_model ON public.service_providers USING GIN (engagement_model);
 CREATE INDEX IF NOT EXISTS idx_sp_company_size_focus ON public.service_providers USING GIN (company_size_focus);
 
--- Full-text search
+-- Full-text search: wrap to_tsvector in an IMMUTABLE function so it can be used in an index expression
+CREATE OR REPLACE FUNCTION public.sp_search_text(
+  p_name TEXT, p_description TEXT, p_tagline TEXT, p_services TEXT[]
+) RETURNS tsvector
+LANGUAGE sql IMMUTABLE AS $$
+  SELECT to_tsvector('english',
+    COALESCE(p_name, '') || ' ' ||
+    COALESCE(p_description, '') || ' ' ||
+    COALESCE(p_tagline, '') || ' ' ||
+    COALESCE(array_to_string(p_services, ' '), '')
+  );
+$$;
+
 CREATE INDEX IF NOT EXISTS idx_sp_fts ON public.service_providers
   USING GIN (
-    to_tsvector('english',
-      COALESCE(name, '') || ' ' ||
-      COALESCE(description, '') || ' ' ||
-      COALESCE(tagline, '') || ' ' ||
-      COALESCE(array_to_string(services, ' '), '')
-    )
+    public.sp_search_text(name, description, tagline, services)
   );
 
 -- Reviews indexes
