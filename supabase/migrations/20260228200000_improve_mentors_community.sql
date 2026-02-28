@@ -123,6 +123,31 @@ CREATE TABLE IF NOT EXISTS mentor_contact_requests (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Enable RLS and add policies for new tables
+ALTER TABLE mentor_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mentor_experience_with ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mentor_testimonials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mentor_contact_requests ENABLE ROW LEVEL SECURITY;
+
+-- Public read access for directory tables
+CREATE POLICY "Anyone can view mentor_categories"
+  ON mentor_categories FOR SELECT USING (true);
+
+CREATE POLICY "Anyone can view mentor_experience_with"
+  ON mentor_experience_with FOR SELECT USING (true);
+
+CREATE POLICY "Anyone can view mentor_testimonials"
+  ON mentor_testimonials FOR SELECT USING (true);
+
+-- Public insert for contact requests (anyone can send a contact request)
+CREATE POLICY "Anyone can insert mentor_contact_requests"
+  ON mentor_contact_requests FOR INSERT WITH CHECK (true);
+
+-- Admin-only select for contact requests
+CREATE POLICY "Admins can view mentor_contact_requests"
+  ON mentor_contact_requests FOR SELECT
+  USING (public.has_role(auth.uid(), 'admin'));
+
 -- Indexes for filtering performance
 CREATE INDEX IF NOT EXISTS idx_mentors_slug ON community_members(slug);
 CREATE INDEX IF NOT EXISTS idx_mentors_category ON community_members(category_slug);

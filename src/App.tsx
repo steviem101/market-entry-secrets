@@ -15,7 +15,6 @@ import About from "./pages/About";
 import ServiceProviders from "./pages/ServiceProviders";
 import Events from "./pages/Events";
 import EventDetailPage from "./pages/EventDetailPage";
-import Community from "./pages/Community";
 import MentorsDirectory from "./pages/MentorsDirectory";
 import MentorProfile from "./pages/MentorProfile";
 import Content from "./pages/Content";

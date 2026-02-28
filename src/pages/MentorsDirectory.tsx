@@ -28,11 +28,12 @@ const MentorsDirectory = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [contactMentor, setContactMentor] = useState<Mentor | null>(null);
 
-  // Pre-filter by category from URL param
+  // Pre-filter by category from URL param on mount or when param changes
   useEffect(() => {
-    if (categorySlug && filters.category !== categorySlug) {
+    if (categorySlug && categorySlug !== filters.category) {
       setFilters({ ...filters, category: categorySlug });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categorySlug]);
 
   const filteredMentors = useFilteredMentors(mentors, filters);

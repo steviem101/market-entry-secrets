@@ -106,14 +106,14 @@ export const useMentors = () => {
         location_state: m.location_state || null,
         location_country: m.location_country || null,
         experience: m.experience,
-        years_experience: m.years_experience || null,
+        years_experience: m.years_experience ?? null,
         specialties: m.specialties || [],
         sectors: m.sectors || null,
         markets_served: m.markets_served || null,
         persona_fit: m.persona_fit || null,
         languages: m.languages || null,
         engagement_model: m.engagement_model || null,
-        session_rate_aud: m.session_rate_aud || null,
+        session_rate_aud: m.session_rate_aud ?? null,
         availability: m.availability || null,
         is_verified: m.is_verified ?? false,
         is_featured: m.is_featured ?? false,
@@ -146,13 +146,21 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
     queryFn: async (): Promise<Mentor | null> => {
       if (!mentorSlug) return null;
 
+      // Try slug first, fall back to id lookup for pre-migration records
       let query = (supabase as any)
         .from("community_members")
         .select("*")
-        .eq("slug", mentorSlug)
         .eq("is_active", true);
 
-      if (categorySlug) {
+      // Check if mentorSlug looks like a UUID (fallback for records without slugs)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mentorSlug);
+      if (isUuid) {
+        query = query.eq("id", mentorSlug);
+      } else {
+        query = query.eq("slug", mentorSlug);
+      }
+
+      if (categorySlug && categorySlug !== "experts") {
         query = query.eq("category_slug", categorySlug);
       }
 
@@ -180,14 +188,14 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
         location_state: m.location_state || null,
         location_country: m.location_country || null,
         experience: m.experience,
-        years_experience: m.years_experience || null,
+        years_experience: m.years_experience ?? null,
         specialties: m.specialties || [],
         sectors: m.sectors || null,
         markets_served: m.markets_served || null,
         persona_fit: m.persona_fit || null,
         languages: m.languages || null,
         engagement_model: m.engagement_model || null,
-        session_rate_aud: m.session_rate_aud || null,
+        session_rate_aud: m.session_rate_aud ?? null,
         availability: m.availability || null,
         is_verified: m.is_verified ?? false,
         is_featured: m.is_featured ?? false,

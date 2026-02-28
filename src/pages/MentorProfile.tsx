@@ -156,9 +156,9 @@ const MentorProfile = () => {
         }
       />
 
-      <div className="container mx-auto px-4 -mt-16 relative z-10 pb-12">
+      <div className="container mx-auto px-4 pb-12">
         {/* Breadcrumb */}
-        <div className="mb-4 pt-20">
+        <div className="mb-4 pt-4">
           <nav className="flex items-center text-sm text-muted-foreground gap-1">
             <Link to="/mentors" className="hover:text-primary flex items-center gap-1">
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -179,7 +179,7 @@ const MentorProfile = () => {
 
         {/* Profile header */}
         <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
-          <div className="relative -mt-24 md:-mt-28">
+          <div className="relative -mt-20 md:-mt-24">
             <Avatar className="w-24 h-24 md:w-28 md:h-28 border-4 border-background shadow-lg">
               <AvatarImage src={mentor.avatar_url || mentor.image || undefined} alt={mentor.name} />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl md:text-3xl">
