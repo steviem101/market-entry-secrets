@@ -19,6 +19,7 @@ export interface LeadDatabase {
   last_updated: string | null;
   sample_fields: string[] | null;
   cover_image_url: string | null;
+  stripe_price_id: string | null;
   status: string;
   created_at: string;
   updated_at: string;

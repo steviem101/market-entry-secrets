@@ -107,37 +107,50 @@ serve(async (req: Request) => {
       }
 
       if (supabaseUserId) {
-        log("stripe-webhook", "Upserting user subscription", { supabaseUserId, tier });
-
-        const { data, error: upsertErr } = await supabaseAdmin
-          .from("user_subscriptions")
-          .upsert(
-            {
-              user_id: supabaseUserId,
-              tier: tier,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "user_id" },
-          )
-          .select();
-
-        if (upsertErr) {
-          logError("stripe-webhook", "Error upserting user_subscriptions", { error: upsertErr });
-        } else {
-          log("stripe-webhook", "Upserted user_subscriptions successfully", { data });
+        // Handle lead database purchases (individual product checkout)
+        if (tier === "lead_purchase" && metadata?.lead_database_id) {
+          log("stripe-webhook", "Recording lead database purchase", {
+            supabaseUserId,
+            lead_database_id: metadata.lead_database_id,
+          });
+          // TODO: Create lead_database_purchases table and record purchase for download fulfillment
+          // For now, log the purchase in payment_webhook_logs (already done above)
         }
 
-        // Also update tier_at_generation on the user's reports so
-        // the "free" badge updates to reflect their current plan
-        const { error: reportsErr } = await supabaseAdmin
-          .from("user_reports")
-          .update({ tier_at_generation: tier })
-          .eq("user_id", supabaseUserId);
+        // Handle subscription tier upgrades (existing flow)
+        if (tier && tier !== "lead_purchase") {
+          log("stripe-webhook", "Upserting user subscription", { supabaseUserId, tier });
 
-        if (reportsErr) {
-          logError("stripe-webhook", "Error updating user_reports tier", { error: reportsErr });
-        } else {
-          log("stripe-webhook", "Updated user_reports tier_at_generation", { supabaseUserId, tier });
+          const { data, error: upsertErr } = await supabaseAdmin
+            .from("user_subscriptions")
+            .upsert(
+              {
+                user_id: supabaseUserId,
+                tier: tier,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id" },
+            )
+            .select();
+
+          if (upsertErr) {
+            logError("stripe-webhook", "Error upserting user_subscriptions", { error: upsertErr });
+          } else {
+            log("stripe-webhook", "Upserted user_subscriptions successfully", { data });
+          }
+
+          // Also update tier_at_generation on the user's reports so
+          // the "free" badge updates to reflect their current plan
+          const { error: reportsErr } = await supabaseAdmin
+            .from("user_reports")
+            .update({ tier_at_generation: tier })
+            .eq("user_id", supabaseUserId);
+
+          if (reportsErr) {
+            logError("stripe-webhook", "Error updating user_reports tier", { error: reportsErr });
+          } else {
+            log("stripe-webhook", "Updated user_reports tier_at_generation", { supabaseUserId, tier });
+          }
         }
       } else {
         logError("stripe-webhook", "Checkout completed but no supabaseUserId in metadata — ignoring", {event: event});
