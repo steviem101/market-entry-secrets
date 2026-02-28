@@ -5,12 +5,16 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useCheckout } from "@/hooks/useCheckout";
+import { useSectionPersona } from "@/hooks/useSectionPersona";
+import { PERSONA_CONTENT } from "@/config/personaContent";
 
 export const PricingSection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { startCheckout } = useCheckout();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const persona = useSectionPersona();
+  const content = PERSONA_CONTENT[persona].pricing;
 
   const pricingTiers = [
     {
@@ -118,15 +122,19 @@ export const PricingSection = () => {
     <section className="relative py-24 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/10 to-background" />
       <div className="absolute inset-0 gradient-overlay" />
-      
+
       <div className="relative container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Choose Your <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Market Entry</span> Plan
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 transition-all duration-300">
+            {content.heading}
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {content.headingAccent}
+            </span>{" "}
+            Plan
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            From free exploration to enterprise-grade support, find the perfect plan to accelerate your Australian market entry
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto transition-all duration-300">
+            {content.subtitle}
           </p>
         </div>
 
@@ -142,8 +150,8 @@ export const PricingSection = () => {
         </div>
       </div>
 
-      <AuthDialog 
-        open={showAuthDialog} 
+      <AuthDialog
+        open={showAuthDialog}
         onOpenChange={setShowAuthDialog}
         defaultTab="signup"
       />

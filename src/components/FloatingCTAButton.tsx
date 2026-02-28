@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowRight } from "lucide-react";
+import { useSectionPersona } from "@/hooks/useSectionPersona";
+import { PERSONA_CONTENT } from "@/config/personaContent";
 
 export const FloatingCTAButton = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isNearFooter, setIsNearFooter] = useState(false);
   const navigate = useNavigate();
+  const persona = useSectionPersona();
+  const content = PERSONA_CONTENT[persona].floatingCTA;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,11 +18,9 @@ export const FloatingCTAButton = () => {
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
 
-      // Hide when near footer (within 200px)
       const nearFooter = scrollTop + windowHeight > documentHeight - 200;
       setIsNearFooter(nearFooter);
 
-      // Show after scrolling 100px from top
       setIsVisible(scrollTop > 100);
     };
 
@@ -30,7 +32,7 @@ export const FloatingCTAButton = () => {
 
   return (
     <Button
-      onClick={() => navigate('/planner')}
+      onClick={() => navigate(content.href)}
       className="
         fixed bottom-6 right-6 z-40
         h-14 px-6
@@ -47,8 +49,8 @@ export const FloatingCTAButton = () => {
     >
       <div className="flex items-center gap-2">
         <FileText className="h-5 w-5" />
-        <span className="hidden sm:inline">Start My Plan</span>
-        <span className="sm:hidden">Plan</span>
+        <span className="hidden sm:inline">{content.label}</span>
+        <span className="sm:hidden">{content.shortLabel}</span>
         <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
       </div>
 

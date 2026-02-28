@@ -1,65 +1,25 @@
-import { 
-  Search, 
-  Phone, 
-  DollarSign, 
-  Target,
-  FileText,
-  TrendingUp,
-  AlertTriangle
-} from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import type { BeforeItem } from "@/config/personaContent";
 
-export const BeforeSection = () => {
-  const beforeItems = [
-    {
-      icon: Search,
-      title: "Manual Research",
-      description: "Months of Google searches and outdated reports",
-      color: "text-red-400"
-    },
-    {
-      icon: Phone,
-      title: "Cold Outreach",
-      description: "Spray and pray to unvetted service providers, advisors and partners",
-      color: "text-orange-400"
-    },
-    {
-      icon: DollarSign,
-      title: "Expensive Consultants",
-      description: "$000's for generic market analysis reports",
-      color: "text-red-400"
-    },
-    {
-      icon: Target,
-      title: "Random Networking",
-      description: "Trial and error finding the right connections",
-      color: "text-orange-400"
-    },
-    {
-      icon: FileText,
-      title: "Cultural Missteps",
-      description: "Expensive mistakes from lack of local knowledge",
-      color: "text-red-400"
-    },
-    {
-      icon: TrendingUp,
-      title: "Guesswork Strategy",
-      description: "No proven playbook, making it up as you go",
-      color: "text-orange-400"
-    }
-  ];
+interface BeforeSectionProps {
+  heading: string;
+  subheading: string;
+  items: BeforeItem[];
+}
 
+export const BeforeSection = ({ heading, subheading, items }: BeforeSectionProps) => {
   return (
     <div className="space-y-6">
       <div className="text-center lg:text-left mb-8">
         <h3 className="text-2xl font-bold text-red-400 mb-2 flex items-center justify-center lg:justify-start gap-2">
           <AlertTriangle className="w-6 h-6" />
-          Before Market Entry Secrets
+          {heading}
         </h3>
-        <p className="text-muted-foreground">The painful traditional approach</p>
+        <p className="text-muted-foreground">{subheading}</p>
       </div>
 
       <div className="grid gap-4">
-        {beforeItems.map((item, index) => (
+        {items.map((item, index) => (
           <div key={index} className="bg-background/60 backdrop-blur-sm border border-red-200/20 rounded-xl p-4 hover:border-red-300/30 transition-all duration-300">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-red-500/10 rounded-lg">
