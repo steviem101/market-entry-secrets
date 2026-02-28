@@ -1,5 +1,7 @@
 
 import { Link } from "react-router-dom";
+import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import MarketEntryLogo from "./MarketEntryLogo";
 import { AuthButton } from "./auth/AuthButton";
 import { DesktopNavigation } from "./navigation/DesktopNavigation";
@@ -20,8 +22,16 @@ const Navigation = () => {
           {/* Desktop Navigation */}
           <DesktopNavigation />
 
-          {/* Auth Section */}
+          {/* CTA + Auth Section */}
           <div className="flex items-center space-x-3">
+            {/* Desktop CTA Button */}
+            <Link to="/report-creator" className="hidden lg:block">
+              <Button variant="default" size="sm" className="font-semibold">
+                <Sparkles className="h-4 w-4" />
+                Get Your Report
+              </Button>
+            </Link>
+
             <div className="hidden md:block">
               <AuthButton />
             </div>
