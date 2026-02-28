@@ -27,7 +27,7 @@ serve(async (req: Request) => {
       return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
     const body = await req.json();
-    log("create-checkout", "incoming body", body);
+    log("create-checkout", "incoming request", { tier: body.tier, has_price_id: !!body.price_id });
 
     const tier = String(body.tier ?? "").toLowerCase();
     const returnUrl = typeof body.return_url === "string" ? body.return_url : "";
@@ -36,10 +36,32 @@ serve(async (req: Request) => {
     // Support two checkout flows:
     // 1. Tier-based (existing): body.tier → lookup in PRICE_IDS
     // 2. Direct price (new, for individual product purchases): body.price_id
+    //    validated against lead_databases.stripe_price_id in the database
     const directPriceId = typeof body.price_id === "string" ? body.price_id : null;
-    const priceId = directPriceId || PRICE_IDS[tier];
+    let priceId = directPriceId || PRICE_IDS[tier];
+
+    // For direct price purchases, validate the price_id matches the lead database record
+    if (directPriceId && extraMetadata.lead_database_id) {
+      const { data: leadDb, error: leadErr } = await supabaseAdmin
+        .from("lead_databases")
+        .select("stripe_price_id")
+        .eq("id", extraMetadata.lead_database_id)
+        .maybeSingle();
+
+      if (leadErr || !leadDb?.stripe_price_id || leadDb.stripe_price_id !== directPriceId) {
+        logError("create-checkout", "Price ID mismatch for lead database", {
+          lead_database_id: extraMetadata.lead_database_id,
+        });
+        return new Response(JSON.stringify({ error: "Invalid price for this database" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      priceId = leadDb.stripe_price_id;
+    }
+
     if (!priceId) {
-      logError("create-checkout", "No valid price_id or tier provided", { tier, directPriceId });
+      logError("create-checkout", "No valid price_id or tier provided", { tier });
       return new Response(JSON.stringify({ error: "Invalid tier or price_id" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -139,9 +161,10 @@ serve(async (req: Request) => {
       line_items: [{ price: priceId, quantity: 1 }],
       customer: stripeCustomerId,
       metadata: {
+        ...extraMetadata,
+        // Verified values MUST come after spread to prevent user-supplied overrides
         tier: tier || "lead_purchase",
         supabase_user_id: supabaseUserId,
-        ...extraMetadata,
       },
       client_reference_id: supabaseUserId,
       success_url: `${safeReturnUrl}?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
@@ -149,7 +172,7 @@ serve(async (req: Request) => {
     });
 
 
-    log("create-checkout", "created Stripe session", session);
+    log("create-checkout", "created Stripe session", { sessionId: session.id });
 
     return new Response(JSON.stringify({ url: session.url }), {
       status: 200,

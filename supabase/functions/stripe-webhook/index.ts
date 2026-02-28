@@ -115,8 +115,26 @@ serve(async (req: Request) => {
             supabaseUserId,
             lead_database_id: metadata.lead_database_id,
           });
-          // TODO: Create lead_database_purchases table and record purchase for download fulfillment
-          // For now, log the purchase in payment_webhook_logs (already done above)
+
+          const { error: purchaseErr } = await supabaseAdmin
+            .from("lead_database_purchases")
+            .upsert(
+              {
+                user_id: supabaseUserId,
+                lead_database_id: metadata.lead_database_id,
+                stripe_session_id: session.id ?? null,
+              },
+              { onConflict: "user_id,lead_database_id" },
+            );
+
+          if (purchaseErr) {
+            logError("stripe-webhook", "Error recording lead database purchase", { error: purchaseErr });
+          } else {
+            log("stripe-webhook", "Recorded lead database purchase", {
+              supabaseUserId,
+              lead_database_id: metadata.lead_database_id,
+            });
+          }
         }
 
         // Handle subscription tier upgrades (existing flow)
@@ -155,7 +173,7 @@ serve(async (req: Request) => {
           }
         }
       } else {
-        logError("stripe-webhook", "Checkout completed but no supabaseUserId in metadata — ignoring", {event: event});
+        logError("stripe-webhook", "Checkout completed but no supabaseUserId in metadata — ignoring", { eventId: event.id, eventType: event.type });
       }
     }
 
