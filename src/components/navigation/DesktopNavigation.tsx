@@ -1,17 +1,18 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Network, TrendingUp, FileText } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { NavigationDropdown } from "./NavigationDropdown";
-import { 
-  primaryNavItems, 
-  contentNavItems,
-  ecosystemNavItems, 
-  popularNavItems, 
-  infoNavItems 
+import {
+  coreNavItems,
+  directoryNavItems,
+  exploreNavItems,
+  resourcesNavItems,
+  dropdownTriggers,
 } from "./NavigationItems";
 
 export const DesktopNavigation = () => {
   const location = useLocation();
+  const { user } = useAuth();
 
   const isActivePath = (path: string) => {
     if (path === "/") {
@@ -21,33 +22,33 @@ export const DesktopNavigation = () => {
   };
 
   return (
-    <nav className="hidden lg:flex items-center space-x-4">
-      {/* Ecosystem Dropdown */}
+    <nav className="hidden lg:flex items-center space-x-2">
+      {/* Directory Dropdown */}
       <NavigationDropdown
-        label="Ecosystem"
-        icon={Network}
-        items={ecosystemNavItems}
+        label={dropdownTriggers.directory.label}
+        icon={dropdownTriggers.directory.icon}
+        items={directoryNavItems}
       />
 
-      {/* Content Dropdown */}
+      {/* Explore Dropdown */}
       <NavigationDropdown
-        label="Content"
-        icon={FileText}
-        items={contentNavItems}
+        label={dropdownTriggers.explore.label}
+        icon={dropdownTriggers.explore.icon}
+        items={exploreNavItems}
       />
 
-      {/* Primary Navigation Items */}
-      {primaryNavItems.map((item) => {
+      {/* Core Navigation Items: Events, Leads */}
+      {coreNavItems.map((item) => {
         const Icon = item.icon;
         const isActive = isActivePath(item.href);
-        
+
         return (
           <Link
             key={item.href}
             to={item.href}
             className={`nav-link flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
-              isActive 
-                ? "text-primary bg-accent/30" 
+              isActive
+                ? "text-primary bg-accent/30"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
             }`}
           >
@@ -57,19 +58,26 @@ export const DesktopNavigation = () => {
         );
       })}
 
-      {/* Popular Dropdown */}
+      {/* Resources Dropdown */}
       <NavigationDropdown
-        label="Popular"
-        icon={TrendingUp}
-        items={popularNavItems}
+        label={dropdownTriggers.resources.label}
+        icon={dropdownTriggers.resources.icon}
+        items={resourcesNavItems}
       />
 
-      {/* Info Dropdown */}
-      <NavigationDropdown
-        label="Info"
-        icon={FileText}
-        items={infoNavItems}
-      />
+      {/* Pricing Link — hidden for authenticated users (they have Upgrade Plan in UserDropdown) */}
+      {!user && (
+        <Link
+          to="/pricing"
+          className={`nav-link flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+            isActivePath("/pricing")
+              ? "text-primary bg-accent/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+          }`}
+        >
+          Pricing
+        </Link>
+      )}
     </nav>
   );
 };
