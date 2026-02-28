@@ -13,6 +13,7 @@ export interface UserProfile {
   target_market?: string;
   use_case?: string;
   onboarding_completed?: boolean;
+  is_email_subscribed?: boolean;
   created_at?: string;
   updated_at?: string;
 }

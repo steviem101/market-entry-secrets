@@ -1365,6 +1365,36 @@ async function generateReportInBackground(
 
     await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intakeFormId);
 
+    // Send report completion email (non-blocking)
+    try {
+      if (intake.user_id) {
+        const { data: userData } = await supabase.auth.admin.getUserById(intake.user_id);
+        if (userData?.user?.email) {
+          const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://marketentrysecrets.com";
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-internal-secret": Deno.env.get("EMAIL_INTERNAL_SECRET")!,
+            },
+            body: JSON.stringify({
+              email_type: "report_completed",
+              recipient_email: userData.user.email,
+              user_id: intake.user_id,
+              data: {
+                first_name: userData.user.user_metadata?.first_name || "there",
+                company_name: intake.company_name,
+                report_id: reportId,
+                report_url: `${frontendUrl}/report/${reportId}`,
+              },
+            }),
+          });
+        }
+      }
+    } catch (emailErr) {
+      console.warn("Failed to send report completion email (non-blocking):", emailErr);
+    }
+
     console.log(`Report ${reportId} saved (unpolished) in ${Date.now() - startTime}ms`);
 
     // 7b. Polish pass — best-effort improvement with 30s timeout

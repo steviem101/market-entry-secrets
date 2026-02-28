@@ -36,6 +36,9 @@ verify_jwt = true
 [functions.send-lead-followup]
 verify_jwt = true
 
+[functions.send-email]
+verify_jwt = false
+
 [functions.classify-personas]
 verify_jwt = true
 

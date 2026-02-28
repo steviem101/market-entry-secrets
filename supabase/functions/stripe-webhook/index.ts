@@ -153,6 +153,35 @@ serve(async (req: Request) => {
           } else {
             log("stripe-webhook", "Updated user_reports tier_at_generation", { supabaseUserId, tier });
           }
+
+          // Send payment confirmation email (non-blocking)
+          try {
+            const userEmail = dataObj?.customer_details?.email || dataObj?.customer_email;
+            if (userEmail) {
+              await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-internal-secret": Deno.env.get("EMAIL_INTERNAL_SECRET")!,
+                },
+                body: JSON.stringify({
+                  email_type: "payment_confirmation",
+                  recipient_email: userEmail,
+                  user_id: supabaseUserId,
+                  data: {
+                    tier,
+                    amount: amount ? (amount / 100).toFixed(2) : null,
+                    currency: currency?.toUpperCase() || "AUD",
+                    stripe_event_id: event.id,
+                  },
+                }),
+              });
+            }
+          } catch (emailErr) {
+            log("stripe-webhook", "Failed to send payment confirmation email (non-blocking)", {
+              error: emailErr instanceof Error ? emailErr.message : String(emailErr),
+            });
+          }
         }
       } else {
         logError("stripe-webhook", "Checkout completed but no supabaseUserId in metadata — ignoring", {event: event});

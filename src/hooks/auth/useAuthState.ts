@@ -51,6 +51,18 @@ export const useAuthState = () => {
               fetchingRoles
             });
             setLoading(false);
+
+            // Fire welcome email (idempotent — dedup prevents duplicates)
+            if (_event === 'SIGNED_UP' || _event === 'SIGNED_IN') {
+              supabase.functions.invoke('send-email', {
+                body: {
+                  email_type: 'welcome',
+                  recipient_email: session.user.email,
+                  user_id: session.user.id,
+                  data: { first_name: session.user.user_metadata?.first_name || 'there' },
+                },
+              }).catch(() => {}); // fire-and-forget
+            }
           }, 0);
           return; // Don't set loading false yet — setTimeout will do it after fetch
         } else if (!session) {
