@@ -227,10 +227,11 @@ async function enrichMatchedProviders(
   const startTime = Date.now();
 
   const enrichmentPromises = providers.map(async (provider) => {
-    if (!provider.website) return provider;
+    const providerUrl = provider.website_url || provider.website;
+    if (!providerUrl) return provider;
 
     try {
-      const markdown = await firecrawlScrape(firecrawlKey, provider.website, 10000);
+      const markdown = await firecrawlScrape(firecrawlKey, providerUrl, 10000);
       if (markdown && markdown.length > 50) {
         return {
           ...provider,
@@ -878,7 +879,7 @@ async function searchMatches(supabase: any, intake: any) {
 
   // Service providers
   try {
-    let spQuery = supabase.from("service_providers").select("id, name, location, services, description, website").limit(10);
+    let spQuery = supabase.from("service_providers").select("id, name, slug, location, services, description, website, website_url, is_verified, tagline, logo_url, category_slug").limit(10);
     const filters: string[] = [];
     if (locationPatterns.length > 0) {
       filters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
@@ -891,7 +892,9 @@ async function searchMatches(supabase: any, intake: any) {
     }
     const { data: sp } = await spQuery;
     matches.service_providers = (sp || []).map((p: any) => ({
-      ...p, link: "/service-providers", linkLabel: "View Profile",
+      ...p,
+      link: p.slug ? `/service-providers/${p.slug}` : "/service-providers",
+      linkLabel: "View Profile",
       subtitle: p.location, tags: (p.services || []).slice(0, 3),
     }));
   } catch (e) { console.error("SP search error:", e); }

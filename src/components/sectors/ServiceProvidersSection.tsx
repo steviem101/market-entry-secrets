@@ -42,11 +42,13 @@ const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionPr
             website: provider.website,
             contact: provider.contact,
             logo: provider.logo,
+            slug: provider.slug,
             experienceTiles: provider.experience_tiles ? (Array.isArray(provider.experience_tiles) ? provider.experience_tiles as any[] : []) : [],
             contactPersons: provider.contact_persons ? (Array.isArray(provider.contact_persons) ? provider.contact_persons as any[] : []) : []
           }}
           onViewProfile={handleViewProfile}
           onContact={handleContact}
+          detailUrl={provider.slug ? `/service-providers/${provider.slug}` : undefined}
         />
       ))}
     </SectorSection>
