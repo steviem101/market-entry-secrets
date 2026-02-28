@@ -32,7 +32,7 @@ export const ecosystemNavItems: NavItem[] = [
   { label: "Investors", href: "/investors", icon: Landmark },
   { label: "Trade & Investment", href: "/trade-investment-agencies", icon: TrendingUp },
   { label: "Service Providers", href: "/service-providers", icon: Users },
-  { label: "Mentors", href: "/community", icon: UserCheck },
+  { label: "Mentors", href: "/mentors", icon: UserCheck },
 ];
 
 // Content navigation items

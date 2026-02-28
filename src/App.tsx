@@ -16,6 +16,8 @@ import ServiceProviders from "./pages/ServiceProviders";
 import Events from "./pages/Events";
 import EventDetailPage from "./pages/EventDetailPage";
 import Community from "./pages/Community";
+import MentorsDirectory from "./pages/MentorsDirectory";
+import MentorProfile from "./pages/MentorProfile";
 import Content from "./pages/Content";
 import ContentDetail from "./pages/ContentDetail";
 import Contact from "./pages/Contact";
@@ -77,7 +79,10 @@ const App = () => (
                   <Route path="/service-providers" element={<ServiceProviders />} />
                   <Route path="/events" element={<Events />} />
                   <Route path="/events/:eventSlug" element={<EventDetailPage />} />
-                  <Route path="/community" element={<Community />} />
+                  <Route path="/community" element={<Navigate to="/mentors" replace />} />
+                  <Route path="/mentors" element={<MentorsDirectory />} />
+                  <Route path="/mentors/:categorySlug" element={<MentorsDirectory />} />
+                  <Route path="/mentors/:categorySlug/:mentorSlug" element={<MentorProfile />} />
                   <Route path="/content" element={<Content />} />
                   <Route path="/content/:slug" element={<ContentDetail />} />
                   <Route path="/contact" element={<Contact />} />

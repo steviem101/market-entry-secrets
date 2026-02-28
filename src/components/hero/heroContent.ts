@@ -40,7 +40,7 @@ export const HERO_PERSONAS: Record<HeroPersona, PersonaContent> = {
     subheadline:
       "Get a growth plan tailored to your stage: funding sources, accelerators, hiring strategy, customer acquisition channels, and the right mentors to scale your business.",
     primaryCTA: { label: "Create my growth report →", href: "/report-creator?persona=startup" },
-    secondaryCTA: { label: "Find a mentor", href: "/community" },
+    secondaryCTA: { label: "Find a mentor", href: "/mentors" },
     toggleDescription: "Growing your Aussie startup",
     mockupScenario: {
       companyName: "Alpine Fintech",
@@ -72,13 +72,13 @@ export const HERO_PERSONA_STATS: Record<HeroPersona, HeroStatConfig[]> = {
   startup: [
     { key: "investors", label: "Investors", suffix: "+", fallback: 50, href: "/investors" },
     { key: "leads", label: "Lead Databases", suffix: "+", fallback: 20, href: "/leads" },
-    { key: "mentors", label: "Mentors", suffix: "+", fallback: 30, href: "/community" },
+    { key: "mentors", label: "Mentors", suffix: "+", fallback: 30, href: "/mentors" },
     { key: "serviceProviders", label: "Service Providers", suffix: "+", fallback: 100, href: "/service-providers" },
     { key: "accelerators", label: "Accelerators", suffix: "+", fallback: 10, href: "/investors?type=accelerator" },
   ],
   international: [
     { key: "leads", label: "Lead Databases", suffix: "+", fallback: 20, href: "/leads" },
-    { key: "mentors", label: "Mentors", suffix: "+", fallback: 30, href: "/community" },
+    { key: "mentors", label: "Mentors", suffix: "+", fallback: 30, href: "/mentors" },
     { key: "events", label: "Events", suffix: "+", fallback: 50, href: "/events" },
     { key: "guides", label: "Market Entry Guides", suffix: "+", fallback: 10, href: "/content?type=guide" },
     { key: "serviceProviders", label: "Service Providers", suffix: "+", fallback: 100, href: "/service-providers" },
