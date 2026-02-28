@@ -111,35 +111,65 @@ CREATE POLICY "Anyone can view lead databases"
 CREATE POLICY "Admins can manage lead databases"
   ON public.lead_databases
   FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.user_roles
-      WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
-    )
-  );
+  USING (public.has_role(auth.uid(), 'admin'));
 
--- lead_database_records: public read
--- TODO: restrict non-preview records to premium users when billing is wired up
-CREATE POLICY "Anyone can view lead database records"
+-- lead_database_records: only preview rows are publicly visible;
+-- purchased (non-preview) records require a matching lead_database_purchases row
+CREATE POLICY "Anyone can view preview lead database records"
   ON public.lead_database_records
   FOR SELECT
-  USING (true);
+  USING (is_preview = true);
 
 -- lead_database_records: admin write
 CREATE POLICY "Admins can manage lead database records"
   ON public.lead_database_records
   FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
+----------------------------------------------------------------------
+-- 6. Lead Database Purchases table (records Stripe purchases)
+----------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.lead_database_purchases (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id),
+  lead_database_id uuid NOT NULL REFERENCES public.lead_databases(id),
+  stripe_session_id text,
+  purchased_at timestamptz DEFAULT now(),
+  UNIQUE(user_id, lead_database_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_lead_database_purchases_user
+  ON public.lead_database_purchases(user_id);
+CREATE INDEX IF NOT EXISTS idx_lead_database_purchases_user_db
+  ON public.lead_database_purchases(user_id, lead_database_id);
+
+ALTER TABLE public.lead_database_purchases ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users view own purchases"
+  ON public.lead_database_purchases
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins manage purchases"
+  ON public.lead_database_purchases
+  FOR ALL
+  USING (public.has_role(auth.uid(), 'admin'));
+
+-- Allow purchased (non-preview) records to be read by the buyer
+CREATE POLICY "Buyers can view purchased lead database records"
+  ON public.lead_database_records
+  FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM public.user_roles
-      WHERE user_roles.user_id = auth.uid()
-      AND user_roles.role = 'admin'
+      SELECT 1 FROM public.lead_database_purchases
+      WHERE lead_database_purchases.user_id = auth.uid()
+      AND lead_database_purchases.lead_database_id = lead_database_records.lead_database_id
     )
   );
 
 ----------------------------------------------------------------------
--- 6. Seed 20 lead databases
+-- 7. Seed 20 lead databases
 ----------------------------------------------------------------------
 
 INSERT INTO public.lead_databases (slug, title, short_description, description, list_type, record_count, sector, location, quality_score, price_aud, is_free, is_featured, preview_available, tags, sample_fields, provider_name, last_updated, status) VALUES
