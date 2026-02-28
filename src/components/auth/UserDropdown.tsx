@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, UserCircle, Shield, LayoutDashboard, FileText, Heart, Handshake, BarChart3 } from 'lucide-react';
+import { LogOut, UserCircle, Shield, LayoutDashboard, FileText, Heart, Handshake, BarChart3, TrendingUp } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,12 +12,29 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription, SubscriptionTier } from '@/hooks/useSubscription';
 import { ProfileDialog } from './ProfileDialog';
 import { Link } from 'react-router-dom';
 import { getInitials, getDisplayName } from '@/lib/profileUtils';
+import { cn } from '@/lib/utils';
+
+const TIER_BADGE_STYLES: Record<SubscriptionTier, string> = {
+  free: 'bg-muted text-muted-foreground',
+  growth: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+  scale: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+  enterprise: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+};
+
+const TIER_LABELS: Record<SubscriptionTier, string> = {
+  free: 'Free',
+  growth: 'Growth',
+  scale: 'Scale',
+  enterprise: 'Enterprise',
+};
 
 export const UserDropdown = () => {
   const { user, profile, signOut, isAdmin, isModerator } = useAuth();
+  const { subscription } = useSubscription();
   const [showProfile, setShowProfile] = useState(false);
 
   if (!user || !profile) return null;
@@ -44,7 +61,7 @@ export const UserDropdown = () => {
               <p className="text-xs leading-none text-muted-foreground">
                 {user.email}
               </p>
-              <div className="flex gap-1 mt-2">
+              <div className="flex flex-wrap gap-1 mt-2">
                 {isAdmin() && (
                   <Badge variant="destructive" className="text-xs">
                     <Shield className="w-3 h-3 mr-1" />
@@ -55,6 +72,11 @@ export const UserDropdown = () => {
                   <Badge variant="secondary" className="text-xs">
                     <Shield className="w-3 h-3 mr-1" />
                     Moderator
+                  </Badge>
+                )}
+                {subscription && (
+                  <Badge variant="outline" className={cn("text-xs", TIER_BADGE_STYLES[subscription.tier])}>
+                    {TIER_LABELS[subscription.tier]}
                   </Badge>
                 )}
               </div>
@@ -92,6 +114,14 @@ export const UserDropdown = () => {
               <span>Create New Report</span>
             </Link>
           </DropdownMenuItem>
+          {subscription && subscription.tier !== 'enterprise' && (
+            <DropdownMenuItem asChild>
+              <Link to="/pricing">
+                <TrendingUp className="mr-2 h-4 w-4" />
+                <span>Upgrade Plan</span>
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setShowProfile(true)}>
             <UserCircle className="mr-2 h-4 w-4" />
             <span>Edit Profile</span>
