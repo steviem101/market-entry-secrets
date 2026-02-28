@@ -67,6 +67,7 @@ const ReportCreator = () => {
         setPersona(draft.persona);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // After auth, auto-submit if we have a draft
@@ -79,6 +80,7 @@ const ReportCreator = () => {
         handleGenerate();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleStep1Next = async () => {
