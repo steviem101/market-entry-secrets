@@ -31,10 +31,16 @@ serve(async (req: Request) => {
 
     const tier = String(body.tier ?? "").toLowerCase();
     const returnUrl = typeof body.return_url === "string" ? body.return_url : "";
-    const priceId = PRICE_IDS[tier];
+    const extraMetadata = typeof body.metadata === "object" && body.metadata ? body.metadata : {};
+
+    // Support two checkout flows:
+    // 1. Tier-based (existing): body.tier → lookup in PRICE_IDS
+    // 2. Direct price (new, for individual product purchases): body.price_id
+    const directPriceId = typeof body.price_id === "string" ? body.price_id : null;
+    const priceId = directPriceId || PRICE_IDS[tier];
     if (!priceId) {
-      logError("create-checkout", "Invalid tier provided", { tier });
-      return new Response(JSON.stringify({ error: "Invalid tier" }), {
+      logError("create-checkout", "No valid price_id or tier provided", { tier, directPriceId });
+      return new Response(JSON.stringify({ error: "Invalid tier or price_id" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -132,7 +138,11 @@ serve(async (req: Request) => {
       mode: "payment",
       line_items: [{ price: priceId, quantity: 1 }],
       customer: stripeCustomerId,
-      metadata: { tier, supabase_user_id: supabaseUserId },
+      metadata: {
+        tier: tier || "lead_purchase",
+        supabase_user_id: supabaseUserId,
+        ...extraMetadata,
+      },
       client_reference_id: supabaseUserId,
       success_url: `${safeReturnUrl}?session_id={CHECKOUT_SESSION_ID}&stripe_status=success`,
       cancel_url: `${safeReturnUrl}?stripe_status=cancel`,

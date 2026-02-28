@@ -1,60 +1,106 @@
-import { Database, Map, Users, TrendingUp, Eye, Star, Calendar, MapPin, Tag } from "lucide-react";
+import { Database, Map, Users, TrendingUp, Eye, Calendar, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Link } from "react-router-dom";
+import { getSectorGradient, getSectorMeta } from "@/constants/sectorTaxonomy";
 import type { LeadDatabase } from "@/types/leadDatabase";
 
 interface LeadCardProps {
   lead: LeadDatabase;
+  onPreview?: (lead: LeadDatabase) => void;
+  onCheckout?: (lead: LeadDatabase) => void;
 }
 
 const getTypeIcon = (listType: string | null) => {
   switch (listType) {
     case 'Lead Database':
-      return <Database className="w-5 h-5 text-blue-600" />;
+      return <Database className="w-5 h-5 text-white/90" />;
     case 'TAM Map':
-      return <Map className="w-5 h-5 text-green-600" />;
+      return <Map className="w-5 h-5 text-white/90" />;
     case 'Market Data':
-      return <TrendingUp className="w-5 h-5 text-purple-600" />;
+      return <TrendingUp className="w-5 h-5 text-white/90" />;
     default:
-      return <Database className="w-5 h-5 text-blue-600" />;
+      return <Database className="w-5 h-5 text-white/90" />;
   }
 };
 
 const getTypeBadgeClass = (listType: string | null) => {
   switch (listType) {
     case 'Lead Database':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      return 'bg-white/20 text-white border-white/30 backdrop-blur-sm';
     case 'Market Data':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      return 'bg-white/20 text-white border-white/30 backdrop-blur-sm';
     case 'TAM Map':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      return 'bg-white/20 text-white border-white/30 backdrop-blur-sm';
     default:
-      return '';
+      return 'bg-white/20 text-white border-white/30 backdrop-blur-sm';
   }
 };
 
-export const LeadCard = ({ lead }: LeadCardProps) => {
+const truncateDescription = (text: string | null, maxLength: number = 100): string => {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength).trimEnd() + '…';
+};
+
+export const LeadCard = ({ lead, onPreview, onCheckout }: LeadCardProps) => {
   const formatLastUpdated = () => {
     if (!lead.last_updated) return 'Recently updated';
-    return new Date(lead.last_updated).toLocaleDateString();
+    return new Date(lead.last_updated).toLocaleDateString('en-AU', {
+      month: 'short',
+      year: 'numeric',
+    });
   };
 
+  const gradient = getSectorGradient(lead.sector);
+  const sectorMeta = getSectorMeta(lead.sector);
+
+  const ctaLabel = lead.is_free
+    ? 'Get Free Access'
+    : lead.price_aud
+      ? `Buy Now — $${lead.price_aud.toLocaleString()}`
+      : 'Get Instant Access';
+
   return (
-    <Link to={`/leads/${lead.slug}`} className="block h-full">
-      <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2 mb-2">
-              {getTypeIcon(lead.list_type)}
-              {lead.list_type && (
-                <Badge className={getTypeBadgeClass(lead.list_type)}>
-                  {lead.list_type}
-                </Badge>
-              )}
+    <Link to={`/leads/${lead.slug}`} className="block h-full group">
+      <Card className="h-full overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col">
+        {/* Gradient/Image Header */}
+        <div
+          className={`relative h-28 bg-gradient-to-br ${gradient} flex items-end p-4`}
+          style={lead.cover_image_url ? {
+            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url(${lead.cover_image_url})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          } : undefined}
+        >
+          {/* SVG pattern overlay for non-image headers */}
+          {!lead.cover_image_url && (
+            <div className="absolute inset-0 opacity-10">
+              <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id={`pattern-${lead.id}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="1" fill="white" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill={`url(#pattern-${lead.id})`} />
+              </svg>
             </div>
+          )}
+
+          {/* Type badge */}
+          <div className="absolute top-3 left-3 flex items-center gap-1.5">
+            {getTypeIcon(lead.list_type)}
+            {lead.list_type && (
+              <Badge className={getTypeBadgeClass(lead.list_type)}>
+                {lead.list_type}
+              </Badge>
+            )}
+          </div>
+
+          {/* Bookmark button */}
+          <div className="absolute top-3 right-3">
             <BookmarkButton
               contentType="lead_database"
               contentId={lead.id}
@@ -69,86 +115,60 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
               }}
               size="sm"
               variant="ghost"
+              className="text-white/80 hover:text-white hover:bg-white/20"
             />
           </div>
-          <h3 className="text-lg font-semibold text-foreground line-clamp-2">
-            {lead.title}
-          </h3>
+
+          {/* Record count overlay */}
           {lead.record_count && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Users className="w-4 h-4 mr-1" />
+            <div className="flex items-center gap-1.5 text-white/90 text-sm font-medium">
+              <Users className="w-4 h-4" />
               {lead.record_count.toLocaleString()} records
             </div>
           )}
-        </CardHeader>
+        </div>
 
-        <CardContent className="pb-4">
-          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-            {lead.short_description || lead.description}
+        {/* Card Body */}
+        <div className="flex-1 p-5 flex flex-col">
+          <h3 className="text-lg font-semibold text-foreground line-clamp-2 mb-2">
+            {lead.title}
+          </h3>
+
+          <p className="text-muted-foreground text-sm mb-4 line-clamp-1">
+            {truncateDescription(lead.short_description || lead.description)}
           </p>
 
-          <div className="space-y-2">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
             {lead.sector && (
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Tag className="w-4 h-4 mr-1" />
-                <span className="truncate">{lead.sector}</span>
-              </div>
+              <Badge variant="secondary" className="text-xs font-normal">
+                {sectorMeta.label}
+              </Badge>
             )}
-
-            {lead.location && (
-              <div className="flex items-center text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4 mr-1" />
-                <span className="truncate">{lead.location}</span>
-              </div>
-            )}
-
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4 mr-1" />
-              <span>Updated {formatLastUpdated()}</span>
-            </div>
-
-            {lead.quality_score && (
-              <div className="flex items-center text-sm">
-                <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                <span className="text-muted-foreground">
-                  Quality: {lead.quality_score}%
-                </span>
-              </div>
-            )}
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" />
+              {formatLastUpdated()}
+            </span>
           </div>
 
-          {lead.tags && lead.tags.length > 0 && (
-            <div className="mt-4">
-              <div className="flex flex-wrap gap-1">
-                {lead.tags.slice(0, 3).map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-                {lead.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{lead.tags.length - 3} more
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
+          {/* View details affordance */}
+          <div className="mt-auto pt-2 text-xs text-muted-foreground/60 group-hover:text-primary transition-colors flex items-center gap-1">
+            View details <ArrowRight className="w-3 h-3" />
+          </div>
+        </div>
 
-          {lead.provider_name && (
-            <div className="mt-3 text-xs text-muted-foreground">
-              Provided by {lead.provider_name}
-            </div>
-          )}
-        </CardContent>
-
-        <CardFooter className="pt-0">
+        {/* Card Footer CTAs */}
+        <div className="px-5 pb-5 pt-0">
           <div className="flex gap-2 w-full">
             {lead.preview_available && (
               <Button
                 variant="outline"
                 size="sm"
                 className="flex-1"
-                onClick={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onPreview?.(lead);
+                }}
               >
                 <Eye className="w-4 h-4 mr-1" />
                 Preview
@@ -157,12 +177,16 @@ export const LeadCard = ({ lead }: LeadCardProps) => {
             <Button
               size="sm"
               className="flex-1"
-              onClick={(e) => e.preventDefault()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onCheckout?.(lead);
+              }}
             >
-              Request Access
+              {ctaLabel}
             </Button>
           </div>
-        </CardFooter>
+        </div>
       </Card>
     </Link>
   );

@@ -17,10 +17,10 @@ export const LeadsHero = ({ totalDatabases, totalRecords, countsByType }: LeadsH
           </div>
         </div>
         <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-          Sales Leads & <span className="text-purple-600">Market Intelligence</span>
+          Find Your First <span className="text-purple-600">500 Customers</span> in Australia
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-          Access premium databases and Total Addressable Market (TAM) maps to accelerate your market entry and sales strategy
+          Pre-verified B2B contact lists for the sectors you're entering — updated monthly.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
