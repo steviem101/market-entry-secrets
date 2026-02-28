@@ -3,6 +3,11 @@ import type { IntakeFormData } from '@/components/report-creator/intakeSchema';
 
 export const reportApi = {
   async submitIntakeForm(data: IntakeFormData, userId: string) {
+    // Map selected_goals into services_needed for backward compat with edge function
+    const goalsText = (data.selected_goals || []).join('; ');
+    const additionalNotes = data.additional_notes || '';
+    const combinedGoals = [goalsText, additionalNotes].filter(Boolean).join('. ');
+
     const payload = {
       user_id: userId,
       company_name: data.company_name,
@@ -11,11 +16,11 @@ export const reportApi = {
       industry_sector: data.industry_sector,
       company_stage: data.company_stage,
       employee_count: data.employee_count,
-      target_regions: data.target_regions,
-      services_needed: data.services_needed,
-      timeline: data.timeline,
-      budget_level: data.budget_level,
-      primary_goals: data.primary_goals || '',
+      target_regions: data.target_regions || [],
+      services_needed: data.selected_goals || data.services_needed || [],
+      timeline: data.timeline || '',
+      budget_level: data.budget_level || '',
+      primary_goals: combinedGoals,
       key_challenges: data.key_challenges || '',
       known_competitors: data.known_competitors || [],
       end_buyer_industries: data.end_buyer_industries || [],

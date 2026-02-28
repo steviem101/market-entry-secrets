@@ -466,16 +466,16 @@ const internationalContent: PersonaSectionContent = {
     subtitle:
       "Generate a tailored market entry plan in minutes — backed by 500+ vetted providers and real market intelligence.",
     primaryCTA: {
-      label: "Plan My Market Entry",
-      href: "/planner?persona=international_entrant",
+      label: "Create My Market Entry Report",
+      href: "/report-creator?persona=international",
     },
     secondaryCTA: { label: "Schedule Consultation", href: "/contact" },
   },
 
   floatingCTA: {
-    label: "Start My Plan",
-    shortLabel: "Plan",
-    href: "/planner?persona=international_entrant",
+    label: "Start My Report",
+    shortLabel: "Report",
+    href: "/report-creator?persona=international",
   },
 };
 
@@ -779,16 +779,16 @@ const startupContent: PersonaSectionContent = {
     subtitle:
       "Generate a tailored growth plan in minutes — with curated mentors, funding intel, and the tools founders actually need.",
     primaryCTA: {
-      label: "Plan My Growth Strategy",
-      href: "/planner?persona=local_startup",
+      label: "Create My Growth Report",
+      href: "/report-creator?persona=startup",
     },
     secondaryCTA: { label: "Find a Mentor", href: "/community" },
   },
 
   floatingCTA: {
-    label: "Growth Plan",
-    shortLabel: "Plan",
-    href: "/planner?persona=local_startup",
+    label: "Growth Report",
+    shortLabel: "Report",
+    href: "/report-creator?persona=startup",
   },
 };
 

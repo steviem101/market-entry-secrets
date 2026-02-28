@@ -1215,15 +1215,21 @@ async function generateReportInBackground(
     const tierHierarchy = ["free", "growth", "scale", "enterprise"];
     const userTierIndex = tierHierarchy.indexOf(userTier);
 
+    // Extract persona from raw_input (new flow) with fallback to "international"
+    const rawInput = intake.raw_input || {};
+    const persona = (rawInput as any).persona === "startup" ? "startup" : "international";
+    console.log(`Report persona: ${persona}`);
+
     const variables: Record<string, string> = {
+      persona,
       company_name: intake.company_name,
       company_stage: intake.company_stage,
       industry_sector: (intake.industry_sector || []).join(", "),
       country_of_origin: intake.country_of_origin,
       target_regions: (intake.target_regions || []).join(", "),
       services_needed: (intake.services_needed || []).join(", "),
-      timeline: intake.timeline,
-      budget_level: intake.budget_level,
+      timeline: intake.timeline || "Not specified",
+      budget_level: intake.budget_level || "Not specified",
       primary_goals: intake.primary_goals || "Not specified",
       key_challenges: intake.key_challenges || "Not specified",
       enriched_summary: enrichedSummary,
@@ -1279,8 +1285,12 @@ async function generateReportInBackground(
           }
 
           try {
+            const personaContext = persona === "startup"
+              ? "\n\nPERSONA CONTEXT: This report is for an Australian startup seeking to grow and scale. Prioritise: investors, accelerators, grants, startup-focused mentors, innovation hubs, and founder networks."
+              : "\n\nPERSONA CONTEXT: This report is for an international company entering the ANZ market. Prioritise: service providers, trade agencies, case studies, associations, compliance, events, and mentors with inbound market entry experience.";
+
             const content = await callAI(lovableKey, [
-              { role: "system", content: "You are Market Entry Secrets AI, an expert consultant on international companies entering the Australian market. Write professional, actionable content grounded in real data when available. Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\nIMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MUST include inline citation markers using the format [N] where N is the source number from the provided citations list. Place the citation immediately after the relevant claim. For example: \"The Australian AI market is projected to reach USD 8.48 billion by 2030 [3].\" If multiple sources support a claim, list them: [1][4]. Only cite sources from the provided numbered citations list — do not invent citation numbers." },
+              { role: "system", content: "You are Market Entry Secrets AI, an expert consultant on international companies entering the Australian market. Write professional, actionable content grounded in real data when available. Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\nIMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MUST include inline citation markers using the format [N] where N is the source number from the provided citations list. Place the citation immediately after the relevant claim. For example: \"The Australian AI market is projected to reach USD 8.48 billion by 2030 [3].\" If multiple sources support a claim, list them: [1][4]. Only cite sources from the provided numbered citations list — do not invent citation numbers." + personaContext },
               { role: "user", content: prompt },
             ]);
 
