@@ -1000,7 +1000,7 @@ async function searchMatches(supabase: any, intake: any) {
 
   // Trade & investment agencies
   try {
-    let taQuery = supabase.from("trade_investment_agencies").select("id, name, location, services, description, website").limit(5);
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website").limit(5);
     const taFilters: string[] = [];
     if (locationPatterns.length > 0) {
       taFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
@@ -1010,7 +1010,7 @@ async function searchMatches(supabase: any, intake: any) {
     }
     const { data: ta } = await taQuery;
     matches.trade_investment_agencies = (ta || []).map((a: any) => ({
-      ...a, link: "/trade-investment-agencies", linkLabel: "View Agency",
+      ...a, link: a.slug ? `/government-support/${a.slug}` : "/government-support", linkLabel: "View Organisation",
       subtitle: a.location, tags: (a.services || []).slice(0, 3),
     }));
   } catch (e) { console.error("TIA search error:", e); }

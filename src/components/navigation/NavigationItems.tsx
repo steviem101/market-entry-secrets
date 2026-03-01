@@ -33,7 +33,7 @@ export const directoryNavItems: NavItem[] = [
   { label: "Mentors & Advisors", href: "/mentors", icon: UserCheck, description: "Founders who've done it before" },
   { label: "Investors", href: "/investors", icon: Landmark, description: "VCs, angels & funding sources" },
   { label: "Innovation Hubs", href: "/innovation-ecosystem", icon: Lightbulb, description: "Incubators & accelerators" },
-  { label: "Trade Agencies", href: "/trade-investment-agencies", icon: TrendingUp, description: "Government trade support" },
+  { label: "Government Support", href: "/government-support", icon: TrendingUp, description: "Government trade support" },
 ];
 
 // Explore navigation items (was "Popular")
