@@ -42,7 +42,7 @@ const TradeAgenciesSection = ({ tradeAgencies }: TradeAgenciesSectionProps) => {
             website: agency.website_url || agency.website,
             contact: agency.email || agency.contact,
             logo: agency.logo,
-            experienceTiles: agency.experience_tiles ? (Array.isArray(agency.experience_tiles) ? agency.experience_tiles as any[] : []) : [],
+            experienceTiles: [],
             contactPersons: agency.contact_persons ? (Array.isArray(agency.contact_persons) ? agency.contact_persons as any[] : []) : []
           }}
           detailUrl={`/government-support/${agency.slug || agency.id}`}
