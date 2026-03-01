@@ -84,14 +84,25 @@ export const reportApi = {
   },
 
   async fetchReport(reportId: string) {
-    const { data, error } = await (supabase as any)
+    // Fetch report metadata (without full report_json content for gated sections)
+    const { data: meta, error: metaError } = await (supabase as any)
       .from('user_reports')
-      .select('*')
+      .select('id, user_id, intake_form_id, tier_at_generation, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at')
       .eq('id', reportId)
       .single();
 
-    if (error) throw error;
-    return data as {
+    if (metaError) throw metaError;
+
+    // Use the server-side tier-gated function to get filtered report_json
+    const { data: gatedJson, error: rpcError } = await supabase
+      .rpc('get_tier_gated_report', { p_report_id: reportId });
+
+    if (rpcError) throw rpcError;
+
+    return {
+      ...meta,
+      report_json: gatedJson ?? {},
+    } as {
       id: string;
       user_id: string;
       intake_form_id: string;
@@ -155,10 +166,8 @@ export const reportApi = {
   },
 
   async fetchSharedReport(shareToken: string) {
-    const { data, error } = await (supabase as any)
-      .from('user_reports')
-      .select('*')
-      .eq('share_token', shareToken)
+    const { data, error } = await supabase
+      .rpc('get_shared_report', { p_share_token: shareToken })
       .single();
 
     if (error) throw error;

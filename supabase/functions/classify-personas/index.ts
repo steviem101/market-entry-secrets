@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/http.ts";
+import { requireAdmin } from "../_shared/auth.ts";
 import { log, logError } from "../_shared/log.ts";
 
 const PREFIX = "classify-personas";
@@ -35,6 +36,15 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // Require admin role — this function writes to multiple tables using service key
+    const authResult = await requireAdmin(req);
+    if ("error" in authResult) {
+      return new Response(
+        JSON.stringify({ error: authResult.error.message }),
+        { status: authResult.error.status, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+
     const { table, batch_size = 20, dry_run = false } = await req.json();
     const safeBatchSize = Math.min(Math.max(batch_size || 20, 1), 100);
 
