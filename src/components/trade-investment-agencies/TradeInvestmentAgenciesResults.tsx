@@ -80,7 +80,7 @@ const TradeInvestmentAgenciesResults = ({
               basic_info: agency.basic_info,
               why_work_with_us: agency.why_work_with_us,
               contact_persons: parseJsonArray(agency.contact_persons),
-              experience_tiles: parseJsonArray(agency.experience_tiles)
+              experience_tiles: []
             }}
             detailUrl={`/government-support/${agency.slug || agency.id}`}
           />
