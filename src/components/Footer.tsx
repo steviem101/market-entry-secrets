@@ -15,7 +15,7 @@ export const Footer = () => {
   const quickLinks = [
     { label: "Service Providers", href: "/service-providers" },
     { label: "Events", href: "/events" },
-    { label: "Community", href: "/community" },
+    { label: "Mentors", href: "/mentors" },
     { label: "Content Library", href: "/content" },
     { label: "Market Leads", href: "/leads" },
     { label: "Innovation Ecosystem", href: "/innovation-ecosystem" }

@@ -46,7 +46,7 @@ const Bookmarks = () => {
       case 'event':
         return '/events';
       case 'community_member':
-        return '/community';
+        return '/mentors';
       case 'content':
         return bookmark.content_metadata?.url || '/content';
       default:
@@ -96,7 +96,7 @@ const Bookmarks = () => {
                 <Link to="/events">Explore Events</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/community">Browse Community</Link>
+                <Link to="/mentors">Browse Mentors</Link>
               </Button>
             </div>
           </div>

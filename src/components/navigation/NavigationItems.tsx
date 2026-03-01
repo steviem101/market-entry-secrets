@@ -1,72 +1,71 @@
 
-import { 
-  Network, 
-  Users, 
-  Calendar, 
-  FileText, 
-  MapPin, 
-  Globe, 
-  Building2, 
-  Lightbulb, 
+import {
+  Users,
+  Calendar,
+  FileText,
+  MapPin,
+  Globe,
+  Building2,
+  Lightbulb,
   TrendingUp,
-  MessageSquare,
   Target,
   BookOpen,
-  Phone,
-  HelpCircle,
-  Info,
   UserCheck,
-  Sparkles,
-  Landmark
+  Landmark,
+  Compass
 } from "lucide-react";
 
 export interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  description?: string;
 }
 
-// Ecosystem navigation items
-export const ecosystemNavItems: NavItem[] = [
-  { label: "Innovation Ecosystem", href: "/innovation-ecosystem", icon: Lightbulb },
-  { label: "Investors", href: "/investors", icon: Landmark },
-  { label: "Government Support", href: "/government-support", icon: TrendingUp },
-  { label: "Service Providers", href: "/service-providers", icon: Users },
-  { label: "Mentors", href: "/community", icon: UserCheck },
+export interface NavGroup {
+  label: string | null;
+  items: NavItem[];
+}
+
+// Directory navigation items (was "Ecosystem")
+export const directoryNavItems: NavItem[] = [
+  { label: "Service Providers", href: "/service-providers", icon: Users, description: "Vetted advisors & consultants" },
+  { label: "Mentors & Advisors", href: "/mentors", icon: UserCheck, description: "Founders who've done it before" },
+  { label: "Investors", href: "/investors", icon: Landmark, description: "VCs, angels & funding sources" },
+  { label: "Innovation Hubs", href: "/innovation-ecosystem", icon: Lightbulb, description: "Incubators & accelerators" },
+  { label: "Government Support", href: "/government-support", icon: TrendingUp, description: "Government trade support" },
 ];
 
-// Content navigation items
-export const contentNavItems: NavItem[] = [
-  { label: "Market Entry Guides", href: "/content", icon: FileText },
-  { label: "Market Entry Case Studies", href: "/case-studies", icon: BookOpen },
+// Explore navigation items (was "Popular")
+export const exploreNavItems: NavItem[] = [
+  { label: "By Location", href: "/locations", icon: MapPin, description: "Australian cities & regions" },
+  { label: "By Country", href: "/countries", icon: Globe, description: "Source country market guides" },
+  { label: "By Sector", href: "/sectors", icon: Building2, description: "Industry-specific intelligence" },
 ];
 
-// Primary navigation items (main nav links)
-export const primaryNavItems: NavItem[] = [
-  { label: "Report Creator", href: "/report-creator", icon: Sparkles },
+// Core navigation items (standalone links — Events + Leads)
+export const coreNavItems: NavItem[] = [
   { label: "Events", href: "/events", icon: Calendar },
   { label: "Leads", href: "/leads", icon: Target },
 ];
 
-// Popular navigation items
-export const popularNavItems: NavItem[] = [
-  { label: "Locations", href: "/locations", icon: MapPin },
-  { label: "Countries", href: "/countries", icon: Globe },
-  { label: "Sectors", href: "/sectors", icon: Building2 },
+// Resources navigation items (was "Content")
+export const resourcesNavItems: NavItem[] = [
+  { label: "Market Entry Guides", href: "/content", icon: FileText, description: "Step-by-step entry playbooks" },
+  { label: "Case Studies", href: "/case-studies", icon: BookOpen, description: "Real company success stories" },
 ];
 
-// Info navigation items
-export const infoNavItems: NavItem[] = [
-  { label: "About", href: "/about", icon: Info },
-  { label: "FAQ", href: "/faq", icon: HelpCircle },
-  { label: "Contact", href: "/contact", icon: Phone },
-];
+// Dropdown trigger configs
+export const dropdownTriggers = {
+  directory: { label: "Directory", icon: Building2 },
+  explore: { label: "Explore", icon: Compass },
+  resources: { label: "Resources", icon: BookOpen },
+} as const;
 
-// All navigation items combined (for mobile)
-export const allNavItems: NavItem[] = [
-  ...primaryNavItems,
-  ...contentNavItems,
-  ...ecosystemNavItems,
-  ...popularNavItems,
-  ...infoNavItems,
+// Mobile navigation groups
+export const mobileNavGroups: NavGroup[] = [
+  { label: "Directory", items: directoryNavItems },
+  { label: "Explore", items: exploreNavItems },
+  { label: null, items: coreNavItems },
+  { label: "Resources", items: resourcesNavItems },
 ];

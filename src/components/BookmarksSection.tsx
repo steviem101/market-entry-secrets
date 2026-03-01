@@ -87,7 +87,7 @@ export const BookmarksSection = () => {
       case 'event':
         return '/events';
       case 'community_member':
-        return '/community';
+        return '/mentors';
       case 'content':
         return bookmark.content_metadata?.url || '/content';
       default:

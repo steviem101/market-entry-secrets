@@ -35,6 +35,38 @@ export interface Company {
   experienceTiles?: ExperienceTile[];
   contactPersons?: ContactPerson[];
   serves_personas?: string[] | null;
+
+  // Enhanced profile fields
+  slug?: string;
+  tagline?: string;
+  logo_url?: string;
+  cover_image_url?: string;
+  website_url?: string;
+  founded_year?: number;
+  team_size_range?: string;
+  is_verified?: boolean;
+  is_featured?: boolean;
+  is_active?: boolean;
+  markets_served?: string[];
+  support_types?: string[];
+  sectors?: string[];
+  engagement_model?: string[];
+  company_size_focus?: string[];
+  price_range?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  linkedin_url?: string;
+  location_city?: string;
+  location_state?: string;
+  location_country?: string;
+  category_slug?: string;
+  category_name?: string;
+  meta_title?: string;
+  meta_description?: string;
+  view_count?: number;
+  click_count?: number;
+  avg_rating?: number;
+  review_count?: number;
 }
 
 interface CompanyCardProps {

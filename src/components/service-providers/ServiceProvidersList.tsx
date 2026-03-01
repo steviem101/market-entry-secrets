@@ -43,6 +43,7 @@ export const ServiceProvidersList = ({
           company={company}
           onViewProfile={onViewProfile}
           onContact={onContact}
+          detailUrl={company.slug ? `/service-providers/${company.slug}` : undefined}
         />
       ))}
     </div>
