@@ -7,6 +7,7 @@ import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useCheckout } from "@/hooks/useCheckout";
 import { useSectionPersona } from "@/hooks/useSectionPersona";
 import { PERSONA_CONTENT } from "@/config/personaContent";
+import { Clock, DollarSign, ArrowRight } from "lucide-react";
 
 export const PricingSection = () => {
   const { user } = useAuth();
@@ -69,6 +70,19 @@ export const PricingSection = () => {
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto transition-all duration-300">
             {content.subtitle}
           </p>
+        </div>
+
+        {/* Comparison Anchor */}
+        <div className="max-w-2xl mx-auto mb-12 rounded-xl border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <DollarSign className="w-4 h-4 text-red-400" />
+            <span>Traditional consulting: <strong className="text-foreground">$15,000–$50,000</strong></span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-muted-foreground hidden sm:block" />
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Clock className="w-4 h-4 text-emerald-500" />
+            <span>MES Growth plan: <strong className="text-primary">$99 in 3 minutes</strong></span>
+          </div>
         </div>
 
         {/* Pricing Grid */}

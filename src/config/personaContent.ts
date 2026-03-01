@@ -266,73 +266,80 @@ const internationalContent: PersonaSectionContent = {
           "Proven case studies from companies that made the same move you're making",
         link: "/case-studies",
       },
+      {
+        icon: FileText,
+        title: "Custom AI Report in Minutes",
+        description:
+          "A tailored market entry plan with SWOT, competitor analysis, and provider matches — not months of consultant time",
+        link: "/report-creator?persona=international",
+      },
     ],
   },
 
   search: {
-    badge: "Comprehensive Market Intelligence",
-    headingLine1: "Discover Everything You Need",
-    headingLine2: "In One Powerful Search",
+    badge: "AI-Powered Market Intelligence",
+    headingLine1: "Search 2,000+ Verified Data Points",
+    headingLine2: "Curated by AI + Human Experts",
     subtitle:
-      "Access our comprehensive database of vetted providers, industry experts, events, and market insights to accelerate your Australian market entry.",
+      "Search vetted providers, industry experts, events, and market insights — all verified and continuously updated to accelerate your Australian market entry.",
   },
 
   value: {
-    sectionTitle: "Everything You Need in One Place",
+    sectionTitle: "Intelligence, Not Just a Directory",
     sectionSubtitle:
-      "Stop juggling multiple platforms and endless research. Get instant access to our comprehensive ecosystem of vetted resources and proven market entry strategies.",
+      "Stop juggling multiple platforms and outdated spreadsheets. Get AI-matched providers, real-time market data, and a custom report — what takes consultants months, delivered in minutes.",
     items: [
       {
         icon: Building2,
-        title: "Vetted Service Providers",
+        title: "Market Entry Specialists",
         description:
-          "Access pre-screened legal, accounting, and business setup providers who specialise in market entry",
-        badge: "500+ Providers",
+          "Pre-screened legal, accounting, and business setup providers who specialise in helping foreign companies establish in ANZ",
+        badge: "120+ Entry Specialists",
         color: "text-blue-600",
         href: "/service-providers",
       },
       {
         icon: Users,
-        title: "Expert Mentors",
+        title: "Cross-Border Mentors",
         description:
-          "Connect with founders who've successfully entered the Australian market from your region",
+          "Advisors who've successfully navigated the same market entry journey from your region to Australia",
         badge: "200+ Mentors",
         color: "text-green-600",
         href: "/mentors",
       },
       {
         icon: Target,
-        title: "Qualified Leads",
+        title: "ANZ Buyer Databases",
         description:
-          "Access databases of potential customers and channel partners in your target sector",
-        badge: "1,200+ Leads",
+          "Pre-qualified contact databases of Australian customers and channel partners in your target sector",
+        badge: "1,200+ Contacts",
         color: "text-purple-600",
         href: "/leads",
       },
       {
         icon: Calendar,
-        title: "Industry Events",
+        title: "Trade & Networking Events",
         description:
-          "Discover networking events, trade shows, and conferences relevant to your market entry",
-        badge: "50+ Events",
+          "Trade shows, expos, and bilateral business events relevant to international market entry",
+        badge: "50+ Monthly",
         color: "text-orange-600",
         href: "/events",
       },
       {
         icon: FileText,
-        title: "Market Intelligence",
+        title: "Market Entry Playbooks",
         description:
-          "Get detailed case studies, guides, and step-by-step market entry strategies",
-        badge: "100+ Resources",
+          "Step-by-step guides, case studies, and regulatory checklists from companies that made the move",
+        badge: "100+ Guides",
         color: "text-indigo-600",
         href: "/content",
       },
       {
         icon: Globe,
-        title: "Innovation Ecosystem",
+        title: "Trade & Government Support",
         description:
-          "Connect with trade agencies, incubators, and government programs that support foreign entrants",
-        badge: "25+ Hubs",
+          "Connect with Austrade, trade agencies, and government programs that actively support foreign entrants",
+        badge: "25+ Agencies",
         color: "text-teal-600",
         href: "/innovation-ecosystem",
       },
@@ -344,13 +351,13 @@ const internationalContent: PersonaSectionContent = {
     headingAccent: "Chose Success",
     subtitle:
       "See how international businesses transformed their market entry with our proven resources",
-    socialProof: "4.9/5 from 247+ companies",
+    socialProof: "Trusted by teams from 12+ countries",
     fallbackTestimonials: [
       {
         id: "fallback-int-1",
         name: "Sarah Chen",
         title: "CEO",
-        company: "TechStart Solutions",
+        company: "US SaaS Company",
         country_flag: "\u{1F1FA}\u{1F1F8}",
         country_name: "United States",
         testimonial:
@@ -364,7 +371,7 @@ const internationalContent: PersonaSectionContent = {
         id: "fallback-int-2",
         name: "Marcus Weber",
         title: "Founder",
-        company: "Alpine Innovations",
+        company: "German Manufacturing Firm",
         country_flag: "\u{1F1E9}\u{1F1EA}",
         country_name: "Germany",
         testimonial:
@@ -378,7 +385,7 @@ const internationalContent: PersonaSectionContent = {
         id: "fallback-int-3",
         name: "Priya Patel",
         title: "Head of Expansion",
-        company: "Mumbai Digital",
+        company: "Indian Digital Agency",
         country_flag: "\u{1F1EE}\u{1F1F3}",
         country_name: "India",
         testimonial:
@@ -579,70 +586,77 @@ const startupContent: PersonaSectionContent = {
           "Learn from Aussie founders who've been where you are right now",
         link: "/case-studies",
       },
+      {
+        icon: FileText,
+        title: "Custom AI Growth Plan in Minutes",
+        description:
+          "A tailored growth report with SWOT, investor matches, and go-to-market strategy — not months of guesswork",
+        link: "/report-creator?persona=startup",
+      },
     ],
   },
 
   search: {
-    badge: "Your Startup Growth Engine",
-    headingLine1: "Find the Right People & Tools",
-    headingLine2: "To Scale Faster",
+    badge: "AI-Powered Growth Engine",
+    headingLine1: "Search 2,000+ Verified Resources",
+    headingLine2: "Curated for Australian Founders",
     subtitle:
-      "Search our curated database of advisors, funding sources, service providers, and growth resources — built for Australian founders.",
+      "Search advisors, funding sources, service providers, and growth resources — all verified and continuously updated for Australian startups.",
   },
 
   value: {
-    sectionTitle: "Your Growth Toolkit, All in One Place",
+    sectionTitle: "Intelligence-Driven Growth, Not Guesswork",
     sectionSubtitle:
-      "Stop wasting time stitching together scattered resources. Everything you need to raise, hire, and scale — curated for Australian startups.",
+      "Stop wasting time stitching together scattered resources. Get AI-matched advisors, real market data, and a custom growth plan — what takes months of research, delivered in minutes.",
     items: [
       {
         icon: Building2,
-        title: "Startup-Friendly Providers",
+        title: "Startup-Stage Providers",
         description:
-          "Legal, accounting, and growth partners who understand the startup pace and budget",
-        badge: "500+ Providers",
+          "Legal, accounting, and growth partners who understand startup pace, budget, and equity-friendly terms",
+        badge: "300+ Startup-Friendly",
         color: "text-blue-600",
         href: "/service-providers",
       },
       {
         icon: Users,
-        title: "Founder Mentors",
+        title: "Founder Mentors & Operators",
         description:
-          "Operators and investors who've scaled startups in the Australian market",
+          "Operators and investors who've scaled Australian startups — matched to your stage and sector",
         badge: "200+ Mentors",
         color: "text-green-600",
         href: "/mentors",
       },
       {
         icon: Target,
-        title: "Prospect Databases",
+        title: "Sales-Ready Prospect Lists",
         description:
-          "Pre-qualified lead lists to jumpstart your outbound sales engine",
-        badge: "1,200+ Leads",
+          "Pre-qualified lead databases to jumpstart your outbound sales engine — segmented by industry",
+        badge: "1,200+ Prospects",
         color: "text-purple-600",
         href: "/leads",
       },
       {
         icon: Calendar,
-        title: "Founder Events",
+        title: "Pitch Nights & Demo Days",
         description:
-          "Pitch nights, demo days, and meetups with investors and fellow founders",
-        badge: "50+ Events",
+          "Pitch nights, demo days, and investor meetups curated for founders at your stage",
+        badge: "50+ Monthly",
         color: "text-orange-600",
         href: "/events",
       },
       {
         icon: FileText,
-        title: "Growth Playbooks",
+        title: "Founder Growth Playbooks",
         description:
-          "Case studies, guides, and strategies from founders who've done what you're doing",
-        badge: "100+ Resources",
+          "Step-by-step guides and case studies from founders who've scaled in the Australian market",
+        badge: "100+ Playbooks",
         color: "text-indigo-600",
         href: "/content",
       },
       {
         icon: Rocket,
-        title: "Funding & Accelerators",
+        title: "Investors & Accelerators",
         description:
           "VCs, grants, accelerators, and incubators filtered by stage, sector, and location",
         badge: "25+ Programs",
@@ -657,7 +671,7 @@ const startupContent: PersonaSectionContent = {
     headingAccent: "Scaled Smarter",
     subtitle:
       "See how Australian startup founders accelerated their growth with our curated resources",
-    socialProof: "4.9/5 from 247+ companies",
+    socialProof: "Trusted by 180+ Australian founders",
     fallbackTestimonials: [
       {
         id: "fallback-su-1",

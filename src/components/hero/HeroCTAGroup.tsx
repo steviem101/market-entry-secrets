@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HERO_PERSONAS } from "./heroContent";
 import type { HeroPersona } from "./heroContent";
@@ -59,6 +59,12 @@ export const HeroCTAGroup = ({ persona }: HeroCTAGroupProps) => {
           {content.secondaryCTA.label}
         </Button>
       </Link>
+
+      {/* Trust micro-label */}
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:self-center">
+        <Shield className="w-3.5 h-3.5 text-emerald-500" />
+        <span>No credit card required · Ready in 3 minutes</span>
+      </div>
     </div>
   );
 };

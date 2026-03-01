@@ -125,9 +125,27 @@ interface HeroStatsRowProps {
   activePersona: HeroPersona;
 }
 
+const StatSkeleton = () => (
+  <div className="flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-card/60 backdrop-blur-sm border border-border/50">
+    <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
+    <div className="w-12 h-7 bg-muted rounded animate-pulse" />
+    <div className="w-16 h-3 bg-muted/70 rounded animate-pulse" />
+  </div>
+);
+
 export const HeroStatsRow = ({ isVisible, activePersona }: HeroStatsRowProps) => {
-  const { data: dbCounts } = useHeroStats();
+  const { data: dbCounts, isLoading } = useHeroStats();
   const stats = HERO_PERSONA_STATS[activePersona];
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {stats.map((stat) => (
+          <StatSkeleton key={`skeleton-${stat.key}`} />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
