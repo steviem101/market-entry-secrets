@@ -108,7 +108,7 @@ Previous messages in this conversation: ${messages?.length || 0}`;
     console.error('Error in ai-chat function:', error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : String(error),
+        error: 'An internal error occurred. Please try again.',
         success: false
       }),
       {

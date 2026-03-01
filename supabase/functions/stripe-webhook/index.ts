@@ -102,10 +102,13 @@ serve(async (req: Request) => {
         }
       }
 
-      const VALID_TIERS = ["free", "growth", "scale", "enterprise"];
+      const VALID_TIERS = ["free", "growth", "scale", "enterprise", "lead_purchase"];
       if (!tier || !VALID_TIERS.includes(tier)) {
-        logError("stripe-webhook", `Invalid or missing tier in metadata: '${tier}', defaulting to 'growth'`, { eventId: event.id, tier });
-        tier = "growth";
+        logError("stripe-webhook", `Invalid or missing tier in metadata: '${tier}', rejecting`, { eventId: event.id, tier });
+        return new Response(
+          JSON.stringify({ error: "Invalid or missing tier in checkout metadata" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
 
       if (supabaseUserId) {

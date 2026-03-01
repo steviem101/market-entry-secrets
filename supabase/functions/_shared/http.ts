@@ -12,7 +12,7 @@ export function buildCorsHeaders(req: Request): Record<string, string> {
   // Only reflect origins that are in the allowlist; fall back to first allowed origin
   const allowedOrigin = ALLOWED_ORIGINS.includes(origin)
     ? origin
-    : ALLOWED_ORIGINS[0] ?? "*";
+    : ALLOWED_ORIGINS[0] || "https://market-entry-secrets.lovable.app";
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
