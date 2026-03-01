@@ -40,11 +40,11 @@ export const useLocations = () => {
       const { data, error } = await supabase
         .from('locations')
         .select('*')
-        .eq('active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
-      return data as LocationData[];
+      // Filter active client-side (column may not exist in older DB schemas)
+      return (data as LocationData[]).filter(l => l.active !== false);
     }
   });
 };
@@ -57,11 +57,10 @@ export const useFeaturedLocations = () => {
         .from('locations')
         .select('*')
         .eq('featured', true)
-        .eq('active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
-      return data as LocationData[];
+      return (data as LocationData[]).filter(l => l.active !== false);
     }
   });
 };
