@@ -17,7 +17,7 @@ export const LocationsHero = () => {
           </h1>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Discover the best Australian locations for your market entry. From Sydney's financial district to Melbourne's innovation hubs, find the perfect location for your business expansion.
+            Discover the best Australian and New Zealand locations for your market entry. From Sydney's financial district to Auckland's tech scene, find the perfect location for your business expansion.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">

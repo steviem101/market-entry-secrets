@@ -38,6 +38,9 @@ export const LocationCard = ({ location }: LocationCardProps) => {
             <Badge className={getTypeColor(location.location_type)}>
               {location.location_type.charAt(0).toUpperCase() + location.location_type.slice(1)}
             </Badge>
+            <Badge variant="outline" className="text-xs">
+              {location.country === 'New Zealand' ? 'NZ' : 'AU'}
+            </Badge>
           </div>
           {location.business_environment_score && (
             <div className="flex items-center gap-1 text-sm text-muted-foreground">

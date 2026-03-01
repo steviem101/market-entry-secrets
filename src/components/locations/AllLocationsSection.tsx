@@ -7,9 +7,10 @@ import { useMemo } from "react";
 interface AllLocationsSectionProps {
   searchTerm: string;
   filterType: string;
+  filterCountry: string;
 }
 
-export const AllLocationsSection = ({ searchTerm, filterType }: AllLocationsSectionProps) => {
+export const AllLocationsSection = ({ searchTerm, filterType, filterCountry }: AllLocationsSectionProps) => {
   const { data: locations, isLoading } = useLocations();
 
   const filteredLocations = useMemo(() => {
@@ -18,15 +19,16 @@ export const AllLocationsSection = ({ searchTerm, filterType }: AllLocationsSect
     return locations.filter((location) => {
       const matchesSearch = location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            location.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           location.key_industries.some(industry => 
+                           location.key_industries.some(industry =>
                              industry.toLowerCase().includes(searchTerm.toLowerCase())
                            );
-      
+
       const matchesType = filterType === "all" || location.location_type === filterType;
-      
-      return matchesSearch && matchesType;
+      const matchesCountry = filterCountry === "all" || location.country === filterCountry;
+
+      return matchesSearch && matchesType && matchesCountry;
     });
-  }, [locations, searchTerm, filterType]);
+  }, [locations, searchTerm, filterType, filterCountry]);
 
   if (isLoading) {
     return (
