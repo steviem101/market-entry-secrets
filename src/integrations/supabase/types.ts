@@ -14,6 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
+      agency_contacts: {
+        Row: {
+          agency_id: string | null
+          avatar_url: string | null
+          created_at: string | null
+          display_order: number | null
+          email: string | null
+          full_name: string
+          id: string
+          is_primary: boolean | null
+          linkedin_url: string | null
+          phone: string | null
+          title: string | null
+        }
+        Insert: {
+          agency_id?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          email?: string | null
+          full_name: string
+          id?: string
+          is_primary?: boolean | null
+          linkedin_url?: string | null
+          phone?: string | null
+          title?: string | null
+        }
+        Update: {
+          agency_id?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_primary?: boolean | null
+          linkedin_url?: string | null
+          phone?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_contacts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies_report_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_contacts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "trade_investment_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_resources: {
+        Row: {
+          agency_id: string | null
+          created_at: string | null
+          deadline_date: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          max_value_aud: number | null
+          resource_type: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          agency_id?: string | null
+          created_at?: string | null
+          deadline_date?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_value_aud?: number | null
+          resource_type?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          agency_id?: string | null
+          created_at?: string | null
+          deadline_date?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_value_aud?: number | null
+          resource_type?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_resources_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies_report_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_resources_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "trade_investment_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_chat_conversations: {
         Row: {
           created_at: string
@@ -137,6 +248,7 @@ export type Database = {
           image: string | null
           is_anonymous: boolean
           location: string
+          location_id: string | null
           name: string
           origin_country: string | null
           specialties: string[]
@@ -156,6 +268,7 @@ export type Database = {
           image?: string | null
           is_anonymous?: boolean
           location: string
+          location_id?: string | null
           name: string
           origin_country?: string | null
           specialties?: string[]
@@ -175,6 +288,7 @@ export type Database = {
           image?: string | null
           is_anonymous?: boolean
           location?: string
+          location_id?: string | null
           name?: string
           origin_country?: string | null
           specialties?: string[]
@@ -182,7 +296,15 @@ export type Database = {
           updated_at?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "community_members_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       content_bodies: {
         Row: {
@@ -713,6 +835,7 @@ export type Database = {
           image_url: string | null
           is_featured: boolean
           location: string
+          location_id: string | null
           organizer: string
           organizer_email: string | null
           organizer_website: string | null
@@ -738,6 +861,7 @@ export type Database = {
           image_url?: string | null
           is_featured?: boolean
           location: string
+          location_id?: string | null
           organizer: string
           organizer_email?: string | null
           organizer_website?: string | null
@@ -763,6 +887,7 @@ export type Database = {
           image_url?: string | null
           is_featured?: boolean
           location?: string
+          location_id?: string | null
           organizer?: string
           organizer_email?: string | null
           organizer_website?: string | null
@@ -777,7 +902,15 @@ export type Database = {
           updated_at?: string
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       industry_sectors: {
         Row: {
@@ -848,6 +981,7 @@ export type Database = {
           founded: string
           id: string
           location: string
+          location_id: string | null
           logo: string | null
           name: string
           services: string[]
@@ -866,6 +1000,7 @@ export type Database = {
           founded: string
           id?: string
           location: string
+          location_id?: string | null
           logo?: string | null
           name: string
           services?: string[]
@@ -884,6 +1019,7 @@ export type Database = {
           founded?: string
           id?: string
           location?: string
+          location_id?: string | null
           logo?: string | null
           name?: string
           services?: string[]
@@ -891,7 +1027,15 @@ export type Database = {
           website?: string | null
           why_work_with_us?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "innovation_ecosystem_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       investors: {
         Row: {
@@ -959,6 +1103,170 @@ export type Database = {
           updated_at?: string | null
           website?: string | null
           why_work_with_us?: string | null
+        }
+        Relationships: []
+      }
+      lead_database_records: {
+        Row: {
+          buying_signals: string[] | null
+          city: string | null
+          company_description: string | null
+          company_name: string | null
+          contact_name: string | null
+          country: string | null
+          created_at: string | null
+          email: string | null
+          employee_count_range: string | null
+          founded_year: number | null
+          id: string
+          is_preview: boolean | null
+          job_title: string | null
+          lead_database_id: string | null
+          linkedin_url: string | null
+          location: string | null
+          notes: string | null
+          phone: string | null
+          revenue_range: string | null
+          sector: string | null
+          state: string | null
+          technologies_used: string[] | null
+          website_url: string | null
+        }
+        Insert: {
+          buying_signals?: string[] | null
+          city?: string | null
+          company_description?: string | null
+          company_name?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          employee_count_range?: string | null
+          founded_year?: number | null
+          id?: string
+          is_preview?: boolean | null
+          job_title?: string | null
+          lead_database_id?: string | null
+          linkedin_url?: string | null
+          location?: string | null
+          notes?: string | null
+          phone?: string | null
+          revenue_range?: string | null
+          sector?: string | null
+          state?: string | null
+          technologies_used?: string[] | null
+          website_url?: string | null
+        }
+        Update: {
+          buying_signals?: string[] | null
+          city?: string | null
+          company_description?: string | null
+          company_name?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          employee_count_range?: string | null
+          founded_year?: number | null
+          id?: string
+          is_preview?: boolean | null
+          job_title?: string | null
+          lead_database_id?: string | null
+          linkedin_url?: string | null
+          location?: string | null
+          notes?: string | null
+          phone?: string | null
+          revenue_range?: string | null
+          sector?: string | null
+          state?: string | null
+          technologies_used?: string[] | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_database_records_lead_database_id_fkey"
+            columns: ["lead_database_id"]
+            isOneToOne: false
+            referencedRelation: "lead_databases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_databases: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          is_free: boolean | null
+          last_updated: string | null
+          list_type: string | null
+          location: string | null
+          preview_available: boolean | null
+          price_aud: number | null
+          provider_logo_url: string | null
+          provider_name: string | null
+          quality_score: number | null
+          record_count: number | null
+          sample_fields: string[] | null
+          sector: string | null
+          short_description: string | null
+          slug: string
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_free?: boolean | null
+          last_updated?: string | null
+          list_type?: string | null
+          location?: string | null
+          preview_available?: boolean | null
+          price_aud?: number | null
+          provider_logo_url?: string | null
+          provider_name?: string | null
+          quality_score?: number | null
+          record_count?: number | null
+          sample_fields?: string[] | null
+          sector?: string | null
+          short_description?: string | null
+          slug: string
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          is_free?: boolean | null
+          last_updated?: string | null
+          list_type?: string | null
+          location?: string | null
+          preview_available?: boolean | null
+          price_aud?: number | null
+          provider_logo_url?: string | null
+          provider_name?: string | null
+          quality_score?: number | null
+          record_count?: number | null
+          sample_fields?: string[] | null
+          sector?: string | null
+          short_description?: string | null
+          slug?: string
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1272,8 +1580,10 @@ export type Database = {
       }
       locations: {
         Row: {
+          active: boolean
           business_environment_score: number | null
           content_keywords: string[]
+          country: string
           created_at: string
           description: string
           economic_indicators: Json | null
@@ -1291,6 +1601,7 @@ export type Database = {
           location_type: string
           name: string
           parent_location: string | null
+          parent_location_id: string | null
           population: number | null
           service_keywords: string[]
           slug: string
@@ -1299,8 +1610,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active?: boolean
           business_environment_score?: number | null
           content_keywords?: string[]
+          country?: string
           created_at?: string
           description: string
           economic_indicators?: Json | null
@@ -1318,6 +1631,7 @@ export type Database = {
           location_type: string
           name: string
           parent_location?: string | null
+          parent_location_id?: string | null
           population?: number | null
           service_keywords?: string[]
           slug: string
@@ -1326,8 +1640,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active?: boolean
           business_environment_score?: number | null
           content_keywords?: string[]
+          country?: string
           created_at?: string
           description?: string
           economic_indicators?: Json | null
@@ -1345,6 +1661,7 @@ export type Database = {
           location_type?: string
           name?: string
           parent_location?: string | null
+          parent_location_id?: string | null
           population?: number | null
           service_keywords?: string[]
           slug?: string
@@ -1352,7 +1669,15 @@ export type Database = {
           startup_ecosystem_strength?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "locations_parent_location_id_fkey"
+            columns: ["parent_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       market_entry_reports: {
         Row: {
@@ -1423,6 +1748,39 @@ export type Database = {
           id?: string | null
           last_edited_time?: string | null
           url?: string | null
+        }
+        Relationships: []
+      }
+      organisation_categories: {
+        Row: {
+          colour: string | null
+          description: string | null
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+        }
+        Insert: {
+          colour?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+        }
+        Update: {
+          colour?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
         }
         Relationships: []
       }
@@ -1540,6 +1898,7 @@ export type Database = {
           founded: string
           id: string
           location: string
+          location_id: string | null
           logo: string | null
           name: string
           services: string[]
@@ -1558,6 +1917,7 @@ export type Database = {
           founded: string
           id?: string
           location: string
+          location_id?: string | null
           logo?: string | null
           name: string
           services?: string[]
@@ -1576,6 +1936,7 @@ export type Database = {
           founded?: string
           id?: string
           location?: string
+          location_id?: string | null
           logo?: string | null
           name?: string
           services?: string[]
@@ -1583,7 +1944,15 @@ export type Database = {
           website?: string | null
           why_work_with_us?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_providers_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       testimonials: {
         Row: {
@@ -1636,59 +2005,169 @@ export type Database = {
       trade_investment_agencies: {
         Row: {
           basic_info: string | null
+          category_slug: string | null
           contact: string | null
           contact_persons: Json | null
           created_at: string
           description: string
+          description_full: string | null
+          email: string | null
           employees: string
           experience_tiles: Json | null
           founded: string
+          founded_year: string | null
+          government_level: string | null
+          grants_available: boolean | null
+          has_multiple_locations: boolean | null
           id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          is_free_to_access: boolean | null
+          is_government_funded: boolean | null
+          is_verified: boolean | null
+          jurisdiction: string[] | null
+          last_updated_at: string | null
+          linkedin_url: string | null
           location: string
+          location_city: string | null
+          location_country: string | null
+          location_id: string | null
+          location_state: string | null
           logo: string | null
+          max_grant_aud: number | null
+          membership_fee_aud: number | null
+          membership_required: boolean | null
+          meta_description: string | null
+          meta_title: string | null
           name: string
+          organisation_type: string | null
+          phone: string | null
+          sectors_supported: string[] | null
           services: string[]
+          slug: string | null
+          support_types: string[] | null
+          tagline: string | null
+          target_company_origin: string[] | null
+          target_company_stage: string[] | null
           updated_at: string
+          view_count: number | null
           website: string | null
+          website_url: string | null
           why_work_with_us: string | null
         }
         Insert: {
           basic_info?: string | null
+          category_slug?: string | null
           contact?: string | null
           contact_persons?: Json | null
           created_at?: string
           description: string
+          description_full?: string | null
+          email?: string | null
           employees: string
           experience_tiles?: Json | null
           founded: string
+          founded_year?: string | null
+          government_level?: string | null
+          grants_available?: boolean | null
+          has_multiple_locations?: boolean | null
           id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_free_to_access?: boolean | null
+          is_government_funded?: boolean | null
+          is_verified?: boolean | null
+          jurisdiction?: string[] | null
+          last_updated_at?: string | null
+          linkedin_url?: string | null
           location: string
+          location_city?: string | null
+          location_country?: string | null
+          location_id?: string | null
+          location_state?: string | null
           logo?: string | null
+          max_grant_aud?: number | null
+          membership_fee_aud?: number | null
+          membership_required?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
           name: string
+          organisation_type?: string | null
+          phone?: string | null
+          sectors_supported?: string[] | null
           services?: string[]
+          slug?: string | null
+          support_types?: string[] | null
+          tagline?: string | null
+          target_company_origin?: string[] | null
+          target_company_stage?: string[] | null
           updated_at?: string
+          view_count?: number | null
           website?: string | null
+          website_url?: string | null
           why_work_with_us?: string | null
         }
         Update: {
           basic_info?: string | null
+          category_slug?: string | null
           contact?: string | null
           contact_persons?: Json | null
           created_at?: string
           description?: string
+          description_full?: string | null
+          email?: string | null
           employees?: string
           experience_tiles?: Json | null
           founded?: string
+          founded_year?: string | null
+          government_level?: string | null
+          grants_available?: boolean | null
+          has_multiple_locations?: boolean | null
           id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_free_to_access?: boolean | null
+          is_government_funded?: boolean | null
+          is_verified?: boolean | null
+          jurisdiction?: string[] | null
+          last_updated_at?: string | null
+          linkedin_url?: string | null
           location?: string
+          location_city?: string | null
+          location_country?: string | null
+          location_id?: string | null
+          location_state?: string | null
           logo?: string | null
+          max_grant_aud?: number | null
+          membership_fee_aud?: number | null
+          membership_required?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
           name?: string
+          organisation_type?: string | null
+          phone?: string | null
+          sectors_supported?: string[] | null
           services?: string[]
+          slug?: string | null
+          support_types?: string[] | null
+          tagline?: string | null
+          target_company_origin?: string[] | null
+          target_company_stage?: string[] | null
           updated_at?: string
+          view_count?: number | null
           website?: string | null
+          website_url?: string | null
           why_work_with_us?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trade_investment_agencies_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_intake_forms: {
         Row: {
@@ -1889,7 +2368,63 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      agencies_report_view: {
+        Row: {
+          basic_info: string | null
+          category_colour: string | null
+          category_icon: string | null
+          category_name: string | null
+          category_slug: string | null
+          contact: string | null
+          contact_persons: Json | null
+          description: string | null
+          description_full: string | null
+          email: string | null
+          employees: string | null
+          experience_tiles: Json | null
+          founded: string | null
+          founded_year: string | null
+          government_level: string | null
+          grants_available: boolean | null
+          has_multiple_locations: boolean | null
+          id: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          is_free_to_access: boolean | null
+          is_government_funded: boolean | null
+          is_verified: boolean | null
+          jurisdiction: string[] | null
+          last_updated_at: string | null
+          linkedin_url: string | null
+          location: string | null
+          location_city: string | null
+          location_country: string | null
+          location_state: string | null
+          logo: string | null
+          max_grant_aud: number | null
+          membership_fee_aud: number | null
+          membership_required: boolean | null
+          meta_description: string | null
+          meta_title: string | null
+          name: string | null
+          organisation_type: string | null
+          phone: string | null
+          primary_contacts: Json | null
+          resources: Json | null
+          sectors_supported: string[] | null
+          services: string[] | null
+          slug: string | null
+          support_types: string[] | null
+          tagline: string | null
+          target_company_origin: string[] | null
+          target_company_stage: string[] | null
+          view_count: number | null
+          website: string | null
+          website_url: string | null
+          why_work_with_us: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
