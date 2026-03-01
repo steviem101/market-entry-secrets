@@ -11,13 +11,23 @@ export const useSectorTradeAgencies = (sectorSlug: string) => {
     queryFn: async () => {
       if (!sectorConfig) return [];
       
-      const { data, error } = await (supabase as any)
+      // Try with is_active filter (available after migration)
+      let result = await (supabase as any)
         .from('trade_investment_agencies')
         .select('*')
         .eq('is_active', true)
         .order('name');
 
-      if (error) throw error;
+      // Fallback if is_active column doesn't exist yet
+      if (result.error?.message?.includes('is_active')) {
+        result = await (supabase as any)
+          .from('trade_investment_agencies')
+          .select('*')
+          .order('name');
+      }
+
+      if (result.error) throw result.error;
+      const data = result.data;
 
       // Filter based on sector keywords
       return (data || []).filter((agency: any) => {

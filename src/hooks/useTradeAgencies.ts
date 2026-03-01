@@ -5,18 +5,27 @@ export const useTradeAgencies = () => {
   return useQuery({
     queryKey: ['trade-investment-agencies'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      // Try with is_active filter (available after migration)
+      let result = await (supabase as any)
         .from('trade_investment_agencies')
         .select('*')
         .eq('is_active', true)
         .order('name');
 
-      if (error) {
-        console.error('Error fetching agencies:', error);
-        throw error;
+      // Fallback if is_active column doesn't exist yet
+      if (result.error?.message?.includes('is_active')) {
+        result = await (supabase as any)
+          .from('trade_investment_agencies')
+          .select('*')
+          .order('name');
       }
 
-      return data;
+      if (result.error) {
+        console.error('Error fetching agencies:', result.error);
+        throw result.error;
+      }
+
+      return result.data;
     }
   });
 };
@@ -53,7 +62,9 @@ export const useRelatedTradeAgencies = (currentId: string, categorySlug: string,
     queryKey: ['related-trade-agencies', currentId],
     queryFn: async () => {
       const locationPrefix = location?.split(',')[0]?.trim() || '';
-      const { data, error } = await (supabase as any)
+
+      // Try with new columns (category_slug, is_active) from migration
+      let result = await (supabase as any)
         .from('trade_investment_agencies')
         .select('*')
         .neq('id', currentId)
@@ -61,10 +72,20 @@ export const useRelatedTradeAgencies = (currentId: string, categorySlug: string,
         .eq('is_active', true)
         .limit(3);
 
-      if (error) throw error;
-      return data || [];
+      // Fallback if new columns don't exist yet
+      if (result.error?.message?.includes('category_slug') || result.error?.message?.includes('is_active')) {
+        result = await (supabase as any)
+          .from('trade_investment_agencies')
+          .select('*')
+          .neq('id', currentId)
+          .ilike('location', `%${locationPrefix}%`)
+          .limit(3);
+      }
+
+      if (result.error) throw result.error;
+      return result.data || [];
     },
-    enabled: !!currentId && !!categorySlug
+    enabled: !!currentId
   });
 };
 
