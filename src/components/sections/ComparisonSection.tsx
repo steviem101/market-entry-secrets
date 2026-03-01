@@ -84,51 +84,53 @@ export const ComparisonSection = () => {
             </p>
           </div>
 
-          {/* Comparison Table */}
-          <div className="rounded-xl border border-border overflow-hidden bg-card/50 backdrop-blur-sm">
-            {/* Table Header */}
-            <div className="grid grid-cols-4 gap-0 bg-muted/50 border-b border-border">
-              <div className="p-4 text-sm font-medium text-muted-foreground">
-                Feature
+          {/* Comparison Table — scrollable on mobile */}
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="rounded-xl border border-border overflow-hidden bg-card/50 backdrop-blur-sm min-w-[540px]">
+              {/* Table Header */}
+              <div className="grid grid-cols-4 gap-0 bg-muted/50 border-b border-border">
+                <div className="p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">
+                  Feature
+                </div>
+                <div className="p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground text-center border-l border-border/50">
+                  Google / LinkedIn
+                </div>
+                <div className="p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground text-center border-l border-border/50">
+                  Consultants
+                </div>
+                <div className="p-3 sm:p-4 text-xs sm:text-sm font-bold text-primary text-center border-l border-border/50 bg-primary/5">
+                  MES
+                </div>
               </div>
-              <div className="p-4 text-sm font-medium text-muted-foreground text-center border-l border-border/50">
-                Google / LinkedIn
-              </div>
-              <div className="p-4 text-sm font-medium text-muted-foreground text-center border-l border-border/50">
-                Consultants
-              </div>
-              <div className="p-4 text-sm font-bold text-primary text-center border-l border-border/50 bg-primary/5">
-                Market Entry Secrets
-              </div>
-            </div>
 
-            {/* Rows */}
-            {ROWS.map((row, i) => (
-              <div
-                key={row.feature}
-                className={`grid grid-cols-4 gap-0 ${
-                  i < ROWS.length - 1 ? "border-b border-border/50" : ""
-                }`}
-              >
-                <div className="p-4 text-sm text-foreground font-medium">
-                  {row.feature}
+              {/* Rows */}
+              {ROWS.map((row, i) => (
+                <div
+                  key={row.feature}
+                  className={`grid grid-cols-4 gap-0 ${
+                    i < ROWS.length - 1 ? "border-b border-border/50" : ""
+                  }`}
+                >
+                  <div className="p-3 sm:p-4 text-xs sm:text-sm text-foreground font-medium">
+                    {row.feature}
+                  </div>
+                  <div className="p-3 sm:p-4 flex justify-center items-center border-l border-border/50">
+                    <StatusIcon status={row.google} />
+                  </div>
+                  <div className="p-3 sm:p-4 flex justify-center items-center border-l border-border/50">
+                    <StatusIcon status={row.consultant} />
+                  </div>
+                  <div className="p-3 sm:p-4 flex flex-col items-center justify-center border-l border-border/50 bg-primary/5">
+                    <StatusIcon status={row.mes} />
+                    {row.mesDetail && (
+                      <span className="text-xs text-primary/80 mt-1 text-center">
+                        {row.mesDetail}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="p-4 flex justify-center items-center border-l border-border/50">
-                  <StatusIcon status={row.google} />
-                </div>
-                <div className="p-4 flex justify-center items-center border-l border-border/50">
-                  <StatusIcon status={row.consultant} />
-                </div>
-                <div className="p-4 flex flex-col items-center justify-center border-l border-border/50 bg-primary/5">
-                  <StatusIcon status={row.mes} />
-                  {row.mesDetail && (
-                    <span className="text-xs text-primary/80 mt-1 text-center">
-                      {row.mesDetail}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>

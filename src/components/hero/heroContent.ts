@@ -23,7 +23,7 @@ export const HERO_PERSONAS: Record<HeroPersona, PersonaContent> = {
     subheadline:
       "Answer a few questions about your company, sector, and goals. MES combines 500+ vetted providers, real case studies, and AI-powered intelligence to generate a plan for entering the ANZ market.",
     primaryCTA: { label: "Create my free market entry report →", href: "/report-creator?persona=international" },
-    secondaryCTA: { label: "View a sample report", href: "/report/sample" },
+    secondaryCTA: { label: "Explore providers", href: "/service-providers" },
     toggleDescription: "Entering the ANZ market",
     mockupScenario: {
       companyName: "TechStart Solutions",
@@ -40,7 +40,7 @@ export const HERO_PERSONAS: Record<HeroPersona, PersonaContent> = {
     subheadline:
       "Get a growth plan tailored to your stage: funding sources, accelerators, hiring strategy, customer acquisition channels, and the right mentors to scale your business.",
     primaryCTA: { label: "Create my free growth report →", href: "/report-creator?persona=startup" },
-    secondaryCTA: { label: "View a sample report", href: "/report/sample" },
+    secondaryCTA: { label: "Find a mentor", href: "/mentors" },
     toggleDescription: "Growing your Aussie startup",
     mockupScenario: {
       companyName: "Alpine Fintech",
