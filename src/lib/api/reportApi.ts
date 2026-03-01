@@ -58,7 +58,7 @@ export const reportApi = {
     for (let i = 0; i < maxAttempts; i++) {
       const { data, error } = await (supabase as any)
         .from('user_reports')
-        .select('status, report_json')
+        .select('status')
         .eq('id', reportId)
         .single();
 
@@ -72,7 +72,13 @@ export const reportApi = {
       }
 
       if (status === 'failed') {
-        const errorMsg = (data.report_json as any)?.error || 'Report generation failed';
+        // Fetch only the error field from report_json on failure
+        const { data: failData } = await (supabase as any)
+          .from('user_reports')
+          .select('report_json')
+          .eq('id', reportId)
+          .single();
+        const errorMsg = (failData?.report_json as any)?.error || 'Report generation failed';
         return { status: 'failed', error: errorMsg };
       }
 
