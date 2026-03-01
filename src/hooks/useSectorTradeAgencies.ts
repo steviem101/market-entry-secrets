@@ -11,17 +11,18 @@ export const useSectorTradeAgencies = (sectorSlug: string) => {
     queryFn: async () => {
       if (!sectorConfig) return [];
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('trade_investment_agencies')
         .select('*')
+        .eq('is_active', true)
         .order('name');
 
       if (error) throw error;
 
       // Filter based on sector keywords
-      return data.filter(agency => {
-        const searchText = `${agency.name} ${agency.description} ${agency.services?.join(' ')}`.toLowerCase();
-        return sectorConfig.keywords.some(keyword => 
+      return (data || []).filter((agency: any) => {
+        const searchText = `${agency.name || ''} ${agency.description || ''} ${agency.services?.join(' ') || ''}`.toLowerCase();
+        return sectorConfig.keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });

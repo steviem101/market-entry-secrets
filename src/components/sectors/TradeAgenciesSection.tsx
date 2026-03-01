@@ -39,12 +39,13 @@ const TradeAgenciesSection = ({ tradeAgencies }: TradeAgenciesSectionProps) => {
             founded: agency.founded,
             employees: agency.employees,
             services: agency.services || [],
-            website: agency.website,
-            contact: agency.contact,
+            website: agency.website_url || agency.website,
+            contact: agency.email || agency.contact,
             logo: agency.logo,
             experienceTiles: agency.experience_tiles ? (Array.isArray(agency.experience_tiles) ? agency.experience_tiles as any[] : []) : [],
             contactPersons: agency.contact_persons ? (Array.isArray(agency.contact_persons) ? agency.contact_persons as any[] : []) : []
           }}
+          detailUrl={`/government-support/${agency.slug || agency.id}`}
           onViewProfile={handleViewProfile}
           onContact={handleContact}
         />
