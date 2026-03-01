@@ -76,15 +76,60 @@ export interface MentorCategory {
   is_active: boolean;
 }
 
+const mapMentor = (m: any): Mentor => ({
+  id: m.id,
+  name: m.name,
+  slug: m.slug || null,
+  title: m.title,
+  company: m.company || null,
+  description: m.description,
+  bio_full: m.bio_full || null,
+  tagline: m.tagline || null,
+  location: m.location,
+  location_city: m.location_city || null,
+  location_state: m.location_state || null,
+  location_country: m.location_country || null,
+  experience: m.experience,
+  years_experience: m.years_experience ?? null,
+  specialties: m.specialties || [],
+  sectors: m.sectors || null,
+  markets_served: m.markets_served || null,
+  persona_fit: m.persona_fit || null,
+  languages: m.languages || null,
+  engagement_model: m.engagement_model || null,
+  session_rate_aud: m.session_rate_aud ?? null,
+  availability: m.availability || null,
+  is_verified: m.is_verified ?? false,
+  is_featured: m.is_featured ?? false,
+  is_active: m.is_active ?? true,
+  category_slug: m.category_slug || null,
+  image: m.image || null,
+  avatar_url: m.avatar_url || null,
+  cover_image_url: m.cover_image_url || null,
+  website: m.website || null,
+  linkedin_url: m.linkedin_url || null,
+  contact: m.contact || null,
+  email: m.email || null,
+  phone: m.phone || null,
+  view_count: m.view_count ?? 0,
+  contact_request_count: m.contact_request_count ?? 0,
+  meta_title: m.meta_title || null,
+  meta_description: m.meta_description || null,
+  experience_tiles: m.experience_tiles || null,
+  origin_country: m.origin_country || null,
+  associated_countries: m.associated_countries || null,
+  is_anonymous: m.is_anonymous ?? false,
+});
+
 export const useMentors = () => {
   return useQuery({
     queryKey: ["mentors"],
     queryFn: async (): Promise<Mentor[]> => {
+      // Only use columns that exist in the original schema.
+      // is_active and is_featured are added by migration and may not exist yet.
       const { data, error } = await (supabase as any)
         .from("community_members")
         .select("*")
-        .eq("is_active", true)
-        .order("is_featured", { ascending: false })
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -92,50 +137,16 @@ export const useMentors = () => {
         throw error;
       }
 
-      return (data || []).map((m: any) => ({
-        id: m.id,
-        name: m.name,
-        slug: m.slug || null,
-        title: m.title,
-        company: m.company || null,
-        description: m.description,
-        bio_full: m.bio_full || null,
-        tagline: m.tagline || null,
-        location: m.location,
-        location_city: m.location_city || null,
-        location_state: m.location_state || null,
-        location_country: m.location_country || null,
-        experience: m.experience,
-        years_experience: m.years_experience ?? null,
-        specialties: m.specialties || [],
-        sectors: m.sectors || null,
-        markets_served: m.markets_served || null,
-        persona_fit: m.persona_fit || null,
-        languages: m.languages || null,
-        engagement_model: m.engagement_model || null,
-        session_rate_aud: m.session_rate_aud ?? null,
-        availability: m.availability || null,
-        is_verified: m.is_verified ?? false,
-        is_featured: m.is_featured ?? false,
-        is_active: m.is_active ?? true,
-        category_slug: m.category_slug || null,
-        image: m.image || null,
-        avatar_url: m.avatar_url || null,
-        cover_image_url: m.cover_image_url || null,
-        website: m.website || null,
-        linkedin_url: m.linkedin_url || null,
-        contact: m.contact || null,
-        email: m.email || null,
-        phone: m.phone || null,
-        view_count: m.view_count ?? 0,
-        contact_request_count: m.contact_request_count ?? 0,
-        meta_title: m.meta_title || null,
-        meta_description: m.meta_description || null,
-        experience_tiles: m.experience_tiles || null,
-        origin_country: m.origin_country || null,
-        associated_countries: m.associated_countries || null,
-        is_anonymous: m.is_anonymous ?? false,
-      }));
+      const mentors = (data || [])
+        .map(mapMentor)
+        .filter((m: Mentor) => m.is_active);
+
+      // Sort featured first in JS (column may not exist for DB ordering)
+      mentors.sort((a: Mentor, b: Mentor) =>
+        (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0)
+      );
+
+      return mentors;
     },
   });
 };
@@ -146,78 +157,51 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
     queryFn: async (): Promise<Mentor | null> => {
       if (!mentorSlug) return null;
 
-      // Try slug first, fall back to id lookup for pre-migration records
-      let query = (supabase as any)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mentorSlug);
+
+      if (isUuid) {
+        // Direct ID lookup — always works regardless of migration state
+        const { data, error } = await (supabase as any)
+          .from("community_members")
+          .select("*")
+          .eq("id", mentorSlug)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error fetching mentor by id:", error);
+          throw error;
+        }
+        return data ? mapMentor(data) : null;
+      }
+
+      // Try slug lookup (post-migration column)
+      const { data, error } = await (supabase as any)
         .from("community_members")
         .select("*")
-        .eq("is_active", true);
-
-      // Check if mentorSlug looks like a UUID (fallback for records without slugs)
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mentorSlug);
-      if (isUuid) {
-        query = query.eq("id", mentorSlug);
-      } else {
-        query = query.eq("slug", mentorSlug);
-      }
-
-      if (categorySlug && categorySlug !== "experts") {
-        query = query.eq("category_slug", categorySlug);
-      }
-
-      const { data, error } = await query.maybeSingle();
+        .eq("slug", mentorSlug)
+        .maybeSingle();
 
       if (error) {
-        console.error("Error fetching mentor:", error);
+        // If slug column doesn't exist yet, fall back to name-based lookup
+        if (error.message?.includes("column") || error.code === "42703") {
+          const nameGuess = mentorSlug.replace(/-/g, " ");
+          const { data: fallbackData, error: fallbackError } = await (supabase as any)
+            .from("community_members")
+            .select("*")
+            .ilike("name", nameGuess)
+            .maybeSingle();
+
+          if (fallbackError) {
+            console.error("Error fetching mentor by name:", fallbackError);
+            throw fallbackError;
+          }
+          return fallbackData ? mapMentor(fallbackData) : null;
+        }
+        console.error("Error fetching mentor by slug:", error);
         throw error;
       }
 
-      if (!data) return null;
-
-      const m = data;
-      return {
-        id: m.id,
-        name: m.name,
-        slug: m.slug || null,
-        title: m.title,
-        company: m.company || null,
-        description: m.description,
-        bio_full: m.bio_full || null,
-        tagline: m.tagline || null,
-        location: m.location,
-        location_city: m.location_city || null,
-        location_state: m.location_state || null,
-        location_country: m.location_country || null,
-        experience: m.experience,
-        years_experience: m.years_experience ?? null,
-        specialties: m.specialties || [],
-        sectors: m.sectors || null,
-        markets_served: m.markets_served || null,
-        persona_fit: m.persona_fit || null,
-        languages: m.languages || null,
-        engagement_model: m.engagement_model || null,
-        session_rate_aud: m.session_rate_aud ?? null,
-        availability: m.availability || null,
-        is_verified: m.is_verified ?? false,
-        is_featured: m.is_featured ?? false,
-        is_active: m.is_active ?? true,
-        category_slug: m.category_slug || null,
-        image: m.image || null,
-        avatar_url: m.avatar_url || null,
-        cover_image_url: m.cover_image_url || null,
-        website: m.website || null,
-        linkedin_url: m.linkedin_url || null,
-        contact: m.contact || null,
-        email: m.email || null,
-        phone: m.phone || null,
-        view_count: m.view_count ?? 0,
-        contact_request_count: m.contact_request_count ?? 0,
-        meta_title: m.meta_title || null,
-        meta_description: m.meta_description || null,
-        experience_tiles: m.experience_tiles || null,
-        origin_country: m.origin_country || null,
-        associated_countries: m.associated_countries || null,
-        is_anonymous: m.is_anonymous ?? false,
-      };
+      return data ? mapMentor(data) : null;
     },
     enabled: !!mentorSlug,
   });
@@ -227,18 +211,23 @@ export const useMentorCategories = () => {
   return useQuery({
     queryKey: ["mentor-categories"],
     queryFn: async (): Promise<MentorCategory[]> => {
-      const { data, error } = await (supabase as any)
-        .from("mentor_categories")
-        .select("*")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+      try {
+        const { data, error } = await (supabase as any)
+          .from("mentor_categories")
+          .select("*")
+          .eq("is_active", true)
+          .order("display_order", { ascending: true });
 
-      if (error) {
-        console.error("Error fetching mentor categories:", error);
-        throw error;
+        if (error) {
+          // Table may not exist yet — return empty so filters still render
+          console.warn("mentor_categories not available yet:", error.message);
+          return [];
+        }
+
+        return data || [];
+      } catch {
+        return [];
       }
-
-      return data || [];
     },
   });
 };
@@ -249,18 +238,23 @@ export const useMentorExperience = (mentorId: string | undefined) => {
     queryFn: async (): Promise<MentorExperience[]> => {
       if (!mentorId) return [];
 
-      const { data, error } = await (supabase as any)
-        .from("mentor_experience_with")
-        .select("*")
-        .eq("mentor_id", mentorId)
-        .order("display_order", { ascending: true });
+      try {
+        const { data, error } = await (supabase as any)
+          .from("mentor_experience_with")
+          .select("*")
+          .eq("mentor_id", mentorId)
+          .order("display_order", { ascending: true });
 
-      if (error) {
-        console.error("Error fetching mentor experience:", error);
-        throw error;
+        if (error) {
+          // Table may not exist yet — profile page falls back to experience_tiles JSONB
+          console.warn("mentor_experience_with not available yet:", error.message);
+          return [];
+        }
+
+        return data || [];
+      } catch {
+        return [];
       }
-
-      return data || [];
     },
     enabled: !!mentorId,
   });
@@ -272,18 +266,22 @@ export const useMentorTestimonials = (mentorId: string | undefined) => {
     queryFn: async (): Promise<MentorTestimonial[]> => {
       if (!mentorId) return [];
 
-      const { data, error } = await (supabase as any)
-        .from("mentor_testimonials")
-        .select("*")
-        .eq("mentor_id", mentorId)
-        .order("created_at", { ascending: false });
+      try {
+        const { data, error } = await (supabase as any)
+          .from("mentor_testimonials")
+          .select("*")
+          .eq("mentor_id", mentorId)
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching mentor testimonials:", error);
-        throw error;
+        if (error) {
+          console.warn("mentor_testimonials not available yet:", error.message);
+          return [];
+        }
+
+        return data || [];
+      } catch {
+        return [];
       }
-
-      return data || [];
     },
     enabled: !!mentorId,
   });

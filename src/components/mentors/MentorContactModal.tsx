@@ -37,6 +37,7 @@ export const MentorContactModal = ({ mentor, isOpen, onClose }: MentorContactMod
 
     setSubmitting(true);
     try {
+      // Try the new dedicated table first
       const { error } = await (supabase as any)
         .from("mentor_contact_requests")
         .insert({
@@ -48,7 +49,25 @@ export const MentorContactModal = ({ mentor, isOpen, onClose }: MentorContactMod
           message: form.message,
         });
 
-      if (error) throw error;
+      // If table doesn't exist yet, fall back to directory_submissions
+      if (error) {
+        const { error: fallbackError } = await supabase
+          .from("directory_submissions")
+          .insert({
+            submission_type: "mentor_contact",
+            contact_email: form.email,
+            form_data: {
+              mentor_id: mentor.id,
+              mentor_name: mentor.name,
+              requester_name: form.name,
+              requester_company: form.company || null,
+              requester_country: form.country || null,
+              message: form.message,
+            },
+          });
+
+        if (fallbackError) throw fallbackError;
+      }
 
       toast({ title: "Contact request sent!", description: `Your message has been sent to ${mentor.name}.` });
       setForm({ name: "", email: "", company: "", country: "", message: "" });
