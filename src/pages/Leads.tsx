@@ -4,6 +4,8 @@ import { LeadCard } from "@/components/LeadCard";
 import { LeadsHero } from "@/components/leads/LeadsHero";
 import { LeadPreviewModal } from "@/components/leads/LeadPreviewModal";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
+import { ListPagination } from "@/components/common/ListPagination";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp } from "lucide-react";
@@ -16,6 +18,8 @@ import { UsageBanner } from "@/components/UsageBanner";
 import { getStandardTypes } from "@/utils/sectorMapping";
 import { useLeadDatabases, useLeadDatabaseStats } from "@/hooks/useLeadDatabases";
 import type { LeadDatabase } from "@/types/leadDatabase";
+
+const PAGE_SIZE = 12;
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
@@ -52,6 +56,7 @@ const Leads = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [previewLead, setPreviewLead] = useState<LeadDatabase | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: leadDatabases, isLoading, error } = useLeadDatabases();
   const { data: stats } = useLeadDatabaseStats();
@@ -71,6 +76,12 @@ const Leads = () => {
 
   const sortedLeads = filteredLeads ? sortLeads(filteredLeads, selectedSort) : [];
 
+  const totalPages = Math.ceil(sortedLeads.length / PAGE_SIZE);
+  const paginatedLeads = sortedLeads.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
   const types = getStandardTypes.leads;
   const locations = Array.from(new Set(leadDatabases?.map(lead => lead.location).filter(Boolean) as string[] || []));
   const sectors = Array.from(new Set(leadDatabases?.map(lead => lead.sector).filter(Boolean) as string[] || [])).sort();
@@ -81,6 +92,7 @@ const Leads = () => {
     setSelectedSector("all");
     setSearchTerm("");
     setSelectedSort("newest");
+    setCurrentPage(1);
   };
 
   const handlePreview = (lead: LeadDatabase) => {
@@ -99,13 +111,11 @@ const Leads = () => {
 
   if (error) {
     return (
-      <>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-red-500">
-            Error loading lead databases: {(error as Error).message}
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center text-red-500">
+          Error loading lead databases: {(error as Error).message}
         </div>
-      </>
+      </div>
     );
   }
 
@@ -127,13 +137,13 @@ const Leads = () => {
 
       <StandardDirectoryFilters
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={(v) => { setSearchTerm(v); setCurrentPage(1); }}
         selectedLocation={selectedLocation}
-        onLocationChange={setSelectedLocation}
+        onLocationChange={(v) => { setSelectedLocation(v); setCurrentPage(1); }}
         selectedType={selectedType}
-        onTypeChange={setSelectedType}
+        onTypeChange={(v) => { setSelectedType(v); setCurrentPage(1); }}
         selectedSector={selectedSector}
-        onSectorChange={setSelectedSector}
+        onSectorChange={(v) => { setSelectedSector(v); setCurrentPage(1); }}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         onClearFilters={handleClearFilters}
@@ -147,7 +157,6 @@ const Leads = () => {
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
 
-        {/* Results */}
         <section className="py-8">
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -157,14 +166,14 @@ const Leads = () => {
             </div>
           ) : !authLoading && hasReachedLimit && !user ? (
             <PaywallModal contentType="leads" />
-          ) : sortedLeads && sortedLeads.length > 0 ? (
+          ) : sortedLeads.length > 0 ? (
             <>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-foreground">
-                  {sortedLeads.length} Database{sortedLeads.length !== 1 ? 's' : ''} Available
+                  Showing {paginatedLeads.length} of {sortedLeads.length} Database{sortedLeads.length !== 1 ? 's' : ''}
                 </h2>
                 <div className="w-48">
-                  <Select value={selectedSort} onValueChange={setSelectedSort}>
+                  <Select value={selectedSort} onValueChange={(v) => { setSelectedSort(v); setCurrentPage(1); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
@@ -179,7 +188,7 @@ const Leads = () => {
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {sortedLeads.map(lead => (
+                {paginatedLeads.map(lead => (
                   <LeadCard
                     key={lead.id}
                     lead={lead}
@@ -188,23 +197,24 @@ const Leads = () => {
                   />
                 ))}
               </div>
+              <ListPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </>
           ) : (
-            <div className="text-center py-16">
-              <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-medium text-foreground mb-2">No lead databases found</h3>
-              <p className="text-muted-foreground mb-4">
-                Try adjusting your search criteria or filters
-              </p>
-              <Button onClick={handleClearFilters} variant="outline">
-                Clear all filters
-              </Button>
-            </div>
+            <EmptyState
+              icon={<TrendingUp className="w-16 h-16" />}
+              title="No lead databases found"
+              description="Try adjusting your search criteria or filters"
+              actionLabel="Clear all filters"
+              onAction={handleClearFilters}
+            />
           )}
         </section>
       </div>
 
-      {/* Preview Modal */}
       {previewLead && (
         <LeadPreviewModal
           open={!!previewLead}
@@ -217,7 +227,6 @@ const Leads = () => {
         />
       )}
 
-      {/* Auth Dialog */}
       <AuthDialog
         open={showAuthDialog}
         onOpenChange={setShowAuthDialog}

@@ -13,6 +13,8 @@ import NotFound from "./NotFound";
 import SectorHero from "@/components/sectors/SectorHero";
 import SectorStats from "@/components/sectors/SectorStats";
 import SectorContent from "@/components/sectors/SectorContent";
+import { SEOHead } from "@/components/common/SEOHead";
+import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 
 const SectorPage = () => {
   const { sectorId } = useParams<{ sectorId: string }>();
@@ -29,14 +31,12 @@ const SectorPage = () => {
 
   if (sectorLoading) {
     return (
-      <>
-        <div className="container mx-auto px-4 py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="text-muted-foreground mt-4">Loading sector...</p>
-          </div>
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground mt-4">Loading sector...</p>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -48,14 +48,36 @@ const SectorPage = () => {
 
   return (
     <>
-      
-      {/* Hero Section */}
-      <SectorHero 
+      <SEOHead
+        title={`${sectorConfig.name} | Industry Sectors | Market Entry Secrets`}
+        description={sectorConfig.hero_description || `Market entry resources for the ${sectorConfig.name} sector in Australia.`}
+        canonicalPath={`/sectors/${sectorConfig.slug}`}
+        jsonLd={{
+          type: "Article",
+          data: {
+            name: sectorConfig.name,
+            headline: sectorConfig.hero_title || sectorConfig.name,
+            description: sectorConfig.hero_description,
+            about: {
+              "@type": "Thing",
+              name: sectorConfig.name,
+            },
+          },
+        }}
+      />
+
+      <EntityBreadcrumb
+        segments={[
+          { label: "Sectors", href: "/sectors" },
+          { label: sectorConfig.name },
+        ]}
+      />
+
+      <SectorHero
         title={sectorConfig.hero_title}
         description={sectorConfig.hero_description}
       />
 
-      {/* Stats and Content Section */}
       <div className="container mx-auto px-4 py-8">
         <SectorStats
           serviceProviders={serviceProviders}
@@ -87,7 +109,6 @@ const SectorPage = () => {
           />
         )}
       </div>
-      
     </>
   );
 };

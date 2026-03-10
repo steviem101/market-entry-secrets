@@ -4,14 +4,18 @@ import { Helmet } from "react-helmet-async";
 import { InnovationEcosystemHero } from "@/components/innovation-ecosystem/InnovationEcosystemHero";
 import InnovationEcosystemFilters from "@/components/innovation-ecosystem/InnovationEcosystemFilters";
 import InnovationEcosystemResults from "@/components/innovation-ecosystem/InnovationEcosystemResults";
+import { ListPagination } from "@/components/common/ListPagination";
 import { UsageBanner } from "@/components/UsageBanner";
 import { EnrichEcosystemButton } from "@/components/innovation-ecosystem/EnrichEcosystemButton";
 import { useInnovationEcosystem } from "@/hooks/useInnovationEcosystem";
+
+const PAGE_SIZE = 12;
 
 const InnovationEcosystem = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [selectedService, setSelectedService] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
 
   const { data: organizations, isLoading, error } = useInnovationEcosystem();
@@ -23,7 +27,13 @@ const InnovationEcosystem = () => {
     const matchesLocation = selectedLocation === "all" || org.location.toLowerCase().includes(selectedLocation.toLowerCase());
     const matchesService = selectedService === "all" || org.services?.includes(selectedService);
     return matchesSearch && matchesLocation && matchesService;
-  });
+  }) || [];
+
+  const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
+  const paginatedOrganizations = filteredOrganizations.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   const uniqueLocations = [...new Set(organizations?.map(org => org.location) || [])].sort();
   const uniqueServices = [...new Set(organizations?.flatMap(org => org.services || []) || [])].sort();
@@ -32,17 +42,16 @@ const InnovationEcosystem = () => {
     setSearchTerm("");
     setSelectedLocation("all");
     setSelectedService("all");
+    setCurrentPage(1);
   };
 
   if (error) {
     return (
-      <>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-red-500">
-            Error loading innovation ecosystem: {error.message}
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center text-red-500">
+          Error loading innovation ecosystem: {error.message}
         </div>
-      </>
+      </div>
     );
   }
 
@@ -78,19 +87,29 @@ const InnovationEcosystem = () => {
 
         <InnovationEcosystemFilters
           searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          setSearchTerm={(v: string) => { setSearchTerm(v); setCurrentPage(1); }}
           selectedLocation={selectedLocation}
-          setSelectedLocation={setSelectedLocation}
+          setSelectedLocation={(v: string) => { setSelectedLocation(v); setCurrentPage(1); }}
           selectedService={selectedService}
-          setSelectedService={setSelectedService}
+          setSelectedService={(v: string) => { setSelectedService(v); setCurrentPage(1); }}
           uniqueLocations={uniqueLocations}
           uniqueServices={uniqueServices}
         />
 
+        <p className="text-muted-foreground text-sm mb-4">
+          Showing {paginatedOrganizations.length} of {filteredOrganizations.length} organisations
+        </p>
+
         <InnovationEcosystemResults
-          filteredOrganizations={filteredOrganizations}
+          filteredOrganizations={paginatedOrganizations}
           isLoading={isLoading}
           onClearFilters={clearAllFilters}
+        />
+
+        <ListPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
         />
       </div>
     </>

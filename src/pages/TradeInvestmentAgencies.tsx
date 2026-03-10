@@ -3,8 +3,11 @@ import { Helmet } from "react-helmet-async";
 import { TradeInvestmentAgenciesHero } from "@/components/trade-investment-agencies/TradeInvestmentAgenciesHero";
 import TradeInvestmentAgenciesFilters from "@/components/trade-investment-agencies/TradeInvestmentAgenciesFilters";
 import TradeInvestmentAgenciesResults from "@/components/trade-investment-agencies/TradeInvestmentAgenciesResults";
+import { ListPagination } from "@/components/common/ListPagination";
 import { UsageBanner } from "@/components/UsageBanner";
 import { useTradeAgencies, useOrganisationCategories } from "@/hooks/useTradeAgencies";
+
+const PAGE_SIZE = 12;
 
 const TradeInvestmentAgencies = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,6 +15,7 @@ const TradeInvestmentAgencies = () => {
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: agencies, isLoading, error } = useTradeAgencies();
   const { data: categories = [] } = useOrganisationCategories();
@@ -35,7 +39,13 @@ const TradeInvestmentAgencies = () => {
     const matchesCategory = selectedCategory === "all" ||
       (a.category_slug && a.category_slug === selectedCategory);
     return matchesSearch && matchesLocation && matchesSector && matchesType && matchesCategory;
-  });
+  }) || [];
+
+  const totalPages = Math.ceil(filteredAgencies.length / PAGE_SIZE);
+  const paginatedAgencies = filteredAgencies.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   const uniqueLocations = [...new Set(agencies?.map(agency => agency.location) || [])];
   const uniqueSectors = [...new Set(
@@ -53,6 +63,7 @@ const TradeInvestmentAgencies = () => {
     setSelectedSector("all");
     setSelectedType("all");
     setSelectedCategory("all");
+    setCurrentPage(1);
   };
 
   if (error) {
@@ -93,25 +104,35 @@ const TradeInvestmentAgencies = () => {
 
         <TradeInvestmentAgenciesFilters
           searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          setSearchTerm={(v: string) => { setSearchTerm(v); setCurrentPage(1); }}
           selectedLocation={selectedLocation}
-          setSelectedLocation={setSelectedLocation}
+          setSelectedLocation={(v: string) => { setSelectedLocation(v); setCurrentPage(1); }}
           selectedSector={selectedSector}
-          setSelectedSector={setSelectedSector}
+          setSelectedSector={(v: string) => { setSelectedSector(v); setCurrentPage(1); }}
           selectedType={selectedType}
-          setSelectedType={setSelectedType}
+          setSelectedType={(v: string) => { setSelectedType(v); setCurrentPage(1); }}
           selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
+          setSelectedCategory={(v: string) => { setSelectedCategory(v); setCurrentPage(1); }}
           uniqueLocations={uniqueLocations}
           uniqueSectors={uniqueSectors}
           uniqueTypes={uniqueTypes}
           categories={categories}
         />
 
+        <p className="text-muted-foreground text-sm mb-4">
+          Showing {paginatedAgencies.length} of {filteredAgencies.length} organisations
+        </p>
+
         <TradeInvestmentAgenciesResults
-          filteredAgencies={filteredAgencies}
+          filteredAgencies={paginatedAgencies}
           isLoading={isLoading}
           onClearFilters={clearAllFilters}
+        />
+
+        <ListPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
         />
       </div>
     </>

@@ -1,7 +1,8 @@
 import { useParams } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { FreemiumGate } from "@/components/FreemiumGate";
+import { SEOHead } from "@/components/common/SEOHead";
+import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { InnovationOrgHero } from "@/components/innovation-ecosystem/detail/InnovationOrgHero";
 import { InnovationOrgContent } from "@/components/innovation-ecosystem/detail/InnovationOrgContent";
 import { useInnovationOrgById, useRelatedInnovationOrgs } from "@/hooks/useInnovationEcosystem";
@@ -31,19 +32,23 @@ const InnovationOrgPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{org.name} | Innovation Ecosystem | Market Entry Secrets</title>
-        <meta
-          name="description"
-          content={`${org.name} - ${org.description.slice(0, 150)}...`}
-        />
-        <meta property="og:title" content={`${org.name} | Innovation Ecosystem`} />
-        <meta
-          property="og:description"
-          content={`${org.description.slice(0, 150)}`}
-        />
-        <link rel="canonical" href={`https://market-entry-secrets.lovable.app/innovation-ecosystem/${org.id}`} />
-      </Helmet>
+      <SEOHead
+        title={`${org.name} | Innovation Ecosystem | Market Entry Secrets`}
+        description={org.description.slice(0, 160)}
+        canonicalPath={`/innovation-ecosystem/${org.id}`}
+        ogImage={org.logo}
+        jsonLd={{
+          type: "Organization",
+          data: {
+            name: org.name,
+            description: org.description,
+            ...(org.website ? { url: org.website } : {}),
+            ...(org.logo ? { logo: org.logo } : {}),
+            ...(org.location ? { address: { "@type": "PostalAddress", addressLocality: org.location } } : {}),
+            ...(org.founded ? { foundingDate: String(org.founded) } : {}),
+          },
+        }}
+      />
 
       <FreemiumGate
         contentType="innovation_ecosystem"
@@ -52,6 +57,12 @@ const InnovationOrgPage = () => {
         contentDescription={org.description}
       >
         <main>
+          <EntityBreadcrumb
+            segments={[
+              { label: "Innovation Ecosystem", href: "/innovation-ecosystem" },
+              { label: org.name },
+            ]}
+          />
           <InnovationOrgHero org={org} />
           <InnovationOrgContent org={org} relatedOrgs={relatedOrgs} />
         </main>

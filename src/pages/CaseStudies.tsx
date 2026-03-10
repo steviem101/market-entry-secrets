@@ -11,8 +11,11 @@ import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useAuth } from "@/hooks/useAuth";
 import { PaywallModal } from "@/components/PaywallModal";
 import { UsageBanner } from "@/components/UsageBanner";
+import { ListPagination } from "@/components/common/ListPagination";
 import { SubmissionButton } from "@/components/directory-submissions/SubmissionButton";
 import { useCaseStudies } from "@/hooks/useCaseStudies";
+
+const PAGE_SIZE = 12;
 
 const parseMoneyToNumber = (value: string | null | undefined): number => {
   if (!value) return 0;
@@ -54,6 +57,7 @@ const CaseStudies = () => {
   const [costsFilter, setCostsFilter] = useState("any");
   const [industryFilter, setIndustryFilter] = useState("any");
   const [countryFilter, setCountryFilter] = useState("any");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Derive unique filter options from data
   const industries = Array.from(
@@ -187,7 +191,7 @@ const CaseStudies = () => {
           </div>
 
           <p className="text-muted-foreground mt-4">
-            Showing {filteredCaseStudies.length} market entry case studies
+            Showing {Math.min(PAGE_SIZE, filteredCaseStudies.length - (currentPage - 1) * PAGE_SIZE)} of {filteredCaseStudies.length} market entry case studies
           </p>
         </div>
       </div>
@@ -306,12 +310,13 @@ const CaseStudies = () => {
                     setCostsFilter("any");
                     setIndustryFilter("any");
                     setCountryFilter("any");
+                    setCurrentPage(1);
                   }}>
                     Clear Filters
                   </Button>
                 </div>
               )}
-              {filteredCaseStudies.map((cs) => {
+              {filteredCaseStudies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((cs) => {
                 const profile = cs.content_company_profiles?.[0];
                 const primaryFounder = cs.content_founders?.find((f: any) => f.is_primary) || cs.content_founders?.[0];
 
@@ -376,6 +381,11 @@ const CaseStudies = () => {
                   </Link>
                 );
               })}
+              <ListPagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredCaseStudies.length / PAGE_SIZE)}
+                onPageChange={setCurrentPage}
+              />
             </div>
             )}
           </main>

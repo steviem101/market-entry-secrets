@@ -3,11 +3,13 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Heart, Globe, Twitter, Clock, Calendar, Eye } from "lucide-react";
+import { Heart, Globe, Twitter, Clock, Calendar, Eye } from "lucide-react";
 import { useCaseStudy } from "@/hooks/useCaseStudies";
 import { useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { FreemiumGate } from "@/components/FreemiumGate";
+import { SEOHead } from "@/components/common/SEOHead";
+import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import DOMPurify from "dompurify";
 
 interface CaseStudySection {
@@ -105,15 +107,38 @@ const CaseStudyDetail = () => {
   // Get content bodies that don't belong to any section
   const generalContent = caseStudy.content_bodies?.filter((body: any) => !body.section_id) || [];
 
+  const companyName = companyProfile?.company_name || caseStudy.title;
+  const metaDescription = caseStudy.subtitle || caseStudy.meta_description || caseStudy.title;
+
   return (
     <>
+      <SEOHead
+        title={`${companyName} | Case Study | Market Entry Secrets`}
+        description={metaDescription}
+        canonicalPath={`/case-studies/${caseStudy.slug}`}
+        jsonLd={{
+          type: "Article",
+          data: {
+            headline: caseStudy.title,
+            description: metaDescription,
+            ...(caseStudy.publish_date ? { datePublished: caseStudy.publish_date } : {}),
+            ...(companyProfile?.origin_country ? { about: { "@type": "Organization", name: companyName, location: companyProfile.origin_country } } : {}),
+            publisher: {
+              "@type": "Organization",
+              name: "Market Entry Secrets",
+            },
+          },
+        }}
+      />
+
       <div className="container mx-auto px-4 py-8">
-        <Link to="/case-studies">
-          <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Case Studies
-          </Button>
-        </Link>
+        <EntityBreadcrumb
+          segments={[
+            { label: "Case Studies", href: "/case-studies" },
+            { label: companyName },
+          ]}
+          className="mb-4 px-0"
+        />
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar Navigation — hidden on mobile/tablet */}
