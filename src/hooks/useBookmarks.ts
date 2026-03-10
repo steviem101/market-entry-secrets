@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface Bookmark {
   id: string;
-  content_type: 'event' | 'community_member' | 'content' | 'lead';
+  content_type: 'event' | 'community_member' | 'content' | 'lead' | 'service_provider';
   content_id: string;
   content_title: string;
   content_description: string | null;
@@ -36,7 +36,7 @@ export const useBookmarks = () => {
       // Type assertion to handle the database response
       const typedBookmarks = (data || []).map(item => ({
         ...item,
-        content_type: item.content_type as 'event' | 'community_member' | 'content' | 'lead'
+        content_type: item.content_type as Bookmark['content_type']
       })) as Bookmark[];
       
       setBookmarks(typedBookmarks);
@@ -53,7 +53,7 @@ export const useBookmarks = () => {
   }, [toast]);
 
   const addBookmark = useCallback(async (
-    contentType: 'event' | 'community_member' | 'content' | 'lead',
+    contentType: Bookmark['content_type'],
     contentId: string,
     title: string,
     description?: string,
@@ -112,9 +112,20 @@ export const useBookmarks = () => {
 
   const removeBookmark = useCallback(async (contentType: string, contentId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to manage bookmarks",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       const { error } = await supabase
         .from('bookmarks')
         .delete()
+        .eq('user_id', user.id)
         .eq('content_type', contentType)
         .eq('content_id', contentId);
 

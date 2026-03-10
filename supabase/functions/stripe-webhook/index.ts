@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
     // insert raw log first
     await supabaseAdmin.from("payment_webhook_logs").insert({
       stripe_event_id: event.id,
-      stripe_payload: rawBody,
+      stripe_payload: JSON.parse(rawBody),
       parsed: {
         metadata,
         clientReferenceId,
@@ -184,7 +184,7 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    logError("stripe-webhook", "webhook handler error", { error: err });
+    logError("stripe-webhook", "webhook handler error", err);
     return new Response("internal error", { status: 500, headers: corsHeaders });
   }
 });

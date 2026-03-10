@@ -178,7 +178,7 @@ Your Target Market: ${target_market}
     );
 
   } catch (error) {
-    logError("send-lead-followup", "Error processing follow-up email", { error: error instanceof Error ? error.message : String(error) });
+    logError("send-lead-followup", "Error processing follow-up email", error);
     return new Response(
       JSON.stringify({ error: 'Failed to send follow-up email' }),
       { 

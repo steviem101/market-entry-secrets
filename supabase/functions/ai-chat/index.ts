@@ -60,6 +60,22 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch messages: ${messagesError.message}`);
     }
 
+    // Store the user's message in the database
+    const { error: userMsgError } = await supabaseClient
+      .from('ai_chat_messages')
+      .insert({
+        conversation_id: conversationId,
+        role: 'user',
+        content: message,
+        metadata: {
+          timestamp: new Date().toISOString()
+        }
+      });
+
+    if (userMsgError) {
+      throw new Error(`Failed to store user message: ${userMsgError.message}`);
+    }
+
     // TODO: Replace this with a real AI integration
     const aiResponse = `Thanks for your message. The AI chat feature is currently under development and not yet connected to a live model. Your message has been recorded and we'll notify you when this feature is fully available.`;
 
