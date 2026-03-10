@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/http.ts";
+import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -17,6 +18,8 @@ async function firecrawlScrape(
     if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
       formattedUrl = `https://${formattedUrl}`;
     }
+
+    if (isPrivateOrReservedUrl(formattedUrl)) return null;
 
     const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
@@ -50,6 +53,8 @@ async function firecrawlMap(
     if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
       formattedUrl = `https://${formattedUrl}`;
     }
+
+    if (isPrivateOrReservedUrl(formattedUrl)) return [];
 
     const resp = await fetch("https://api.firecrawl.dev/v1/map", {
       method: "POST",

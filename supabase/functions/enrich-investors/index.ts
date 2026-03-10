@@ -35,7 +35,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { investor_id, only_missing } = await req.json();
+    let investor_id: string | undefined;
+    let only_missing: boolean | undefined;
+    try {
+      const body = await req.json();
+      investor_id = body.investor_id;
+      only_missing = body.only_missing;
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
