@@ -116,27 +116,27 @@ const SharedReportView = () => {
           {SECTION_ORDER.map((sectionId) => {
             const section = sections[sectionId];
 
-            if (!section || section.visible === false) {
-              if (!section && SECTION_LABELS[sectionId]) return null;
-              if (section?.visible === false) {
-                return (
-                  <div
-                    key={sectionId}
-                    id={sectionId}
-                    className="rounded-xl border border-border bg-muted/30 p-8 text-center"
-                  >
-                    <p className="text-muted-foreground text-sm mb-3">
-                      This section is available in the full report.
-                    </p>
-                    <Link to="/report-creator">
-                      <Button variant="outline" size="sm" className="gap-1.5">
-                        Create Your Own Report <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                );
-              }
-              return null;
+            // No section data at all — skip silently
+            if (!section) return null;
+
+            // Section explicitly hidden (tier-gated) — show upsell
+            if (section.visible === false) {
+              return (
+                <div
+                  key={sectionId}
+                  id={sectionId}
+                  className="rounded-xl border border-border bg-muted/30 p-8 text-center"
+                >
+                  <p className="text-muted-foreground text-sm mb-3">
+                    This section is available in the full report.
+                  </p>
+                  <Link to="/report-creator">
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      Create Your Own Report <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+              );
             }
 
             const sectionMatches = section.matches || matches[sectionId] || [];

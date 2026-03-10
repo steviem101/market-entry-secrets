@@ -168,10 +168,15 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Validate returnUrl: must be absolute http(s) on an allowed origin,
+    // or a relative path (no protocol-relative //evil.com).
+    const sanitisedPath = (returnUrl && !returnUrl.startsWith("http") && !returnUrl.startsWith("//"))
+      ? returnUrl
+      : "/pricing";
     const safeReturnUrl =
       returnUrl?.startsWith("http") && isAllowedUrl(returnUrl)
         ? returnUrl
-        : `${FRONTEND_URL}${returnUrl || "/pricing"}`;
+        : `${FRONTEND_URL}${sanitisedPath}`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",

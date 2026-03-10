@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
     // insert raw log first
     await supabaseAdmin.from("payment_webhook_logs").insert({
       stripe_event_id: event.id,
-      stripe_payload: JSON.parse(rawBody),
+      stripe_payload: event.data?.object ?? {},
       parsed: {
         metadata,
         clientReferenceId,

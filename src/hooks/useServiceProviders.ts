@@ -69,7 +69,7 @@ export const useServiceProviderBySlug = (slug: string) => {
           .from("service_provider_categories")
           .select("name")
           .eq("slug", data.category_slug)
-          .single();
+          .maybeSingle();
         category_name = catData?.name || null;
       }
 

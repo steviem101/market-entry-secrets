@@ -64,8 +64,9 @@ export const useUsageTracking = (): UsageTrackingHook => {
     const viewKey = `viewed_${contentType}_${itemId}`;
     if (localStorage.getItem(viewKey)) return;
 
-    // Don't track if already at limit
-    if (viewCount >= FREE_TIER_LIMIT) return;
+    // Don't track if already at limit — read from localStorage to avoid stale closure
+    const currentCount = parseInt(localStorage.getItem('view_count') || '0', 10);
+    if (currentCount >= FREE_TIER_LIMIT) return;
 
     try {
       // Track in database
@@ -77,15 +78,17 @@ export const useUsageTracking = (): UsageTrackingHook => {
           item_id: itemId,
         });
 
-      // Track locally
+      // Track locally — use functional update to avoid stale closure
       localStorage.setItem(viewKey, 'true');
-      const newCount = viewCount + 1;
-      setViewCount(newCount);
-      localStorage.setItem('view_count', newCount.toString());
+      setViewCount(prev => {
+        const newCount = prev + 1;
+        localStorage.setItem('view_count', newCount.toString());
+        return newCount;
+      });
     } catch (error) {
       console.error('Error tracking usage:', error);
     }
-  }, [user, viewCount, sessionId]);
+  }, [user, sessionId]);
 
   const resetUsage = useCallback(() => {
     // Clear all tracking data (used when user signs up)
