@@ -1,5 +1,4 @@
 // supabase/functions/stripe-webhook/index.ts
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
@@ -13,7 +12,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const stripe = new Stripe(STRIPE_SECRET, { apiVersion: "2022-11-15" });
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   const corsHeaders = buildCorsHeaders(req);
   try {
     if (req.method !== "POST") return new Response("method not allowed", { status: 405, headers: corsHeaders });

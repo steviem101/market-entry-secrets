@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireAdmin } from "../_shared/auth.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
+import { validateExternalUrl } from "../_shared/url.ts";
 
 interface Investor {
   id: string;
@@ -112,10 +113,7 @@ Deno.serve(async (req) => {
       try {
         console.log(`  Scraping: ${inv.website}`);
 
-        let websiteUrl = inv.website.trim();
-        if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
-          websiteUrl = `https://${websiteUrl}`;
-        }
+        const websiteUrl = validateExternalUrl(inv.website);
 
         const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
           method: 'POST',

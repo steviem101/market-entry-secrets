@@ -1,5 +1,4 @@
 // supabase/functions/create-checkout/index.ts
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
@@ -18,7 +17,7 @@ const PRICE_IDS: Record<string, string> = {
 const stripe = new Stripe(STRIPE_SECRET);
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
