@@ -868,6 +868,12 @@ Rules:
   return polishedSections;
 }
 
+// Sanitize values for use in PostgREST .or() filter strings.
+// Commas delimit conditions in .or(), so must be stripped to prevent filter injection.
+// Parentheses could create nested groups, so strip those too.
+const sanitizeFilterValue = (v: string): string =>
+  v.replace(/[,()]/g, "");
+
 // ── Database matching ──────────────────────────────────────────────────
 async function searchMatches(supabase: any, intake: any) {
   const matches: Record<string, any[]> = {};
@@ -875,7 +881,7 @@ async function searchMatches(supabase: any, intake: any) {
   const industry = (intake.industry_sector || []).join(", ");
   const servicesNeeded = intake.services_needed || [];
 
-  const locationPatterns = regions.map((r: string) => r.split("/")[0]).filter(Boolean);
+  const locationPatterns = regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
 
   // Service providers
   try {
@@ -885,7 +891,7 @@ async function searchMatches(supabase: any, intake: any) {
       filters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
     }
     if (servicesNeeded.length > 0) {
-      filters.push(...servicesNeeded.map((s: string) => `services.cs.{${s}}`));
+      filters.push(...servicesNeeded.map((s: string) => `services.cs.{${sanitizeFilterValue(s)}}`));
     }
     if (filters.length > 0) {
       spQuery = spQuery.or(filters.join(","));
@@ -907,7 +913,7 @@ async function searchMatches(supabase: any, intake: any) {
       cmFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
     }
     if (servicesNeeded.length > 0) {
-      cmFilters.push(...servicesNeeded.map((s: string) => `specialties.cs.{${s}}`));
+      cmFilters.push(...servicesNeeded.map((s: string) => `specialties.cs.{${sanitizeFilterValue(s)}}`));
     }
     if (cmFilters.length > 0) {
       cmQuery = cmQuery.or(cmFilters.join(","));
@@ -928,7 +934,7 @@ async function searchMatches(supabase: any, intake: any) {
       evFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
     }
     if (intake.industry_sector?.length > 0) {
-      evFilters.push(...intake.industry_sector.map((s: string) => `sector.ilike.%${s}%`));
+      evFilters.push(...intake.industry_sector.map((s: string) => `sector.ilike.%${sanitizeFilterValue(s)}%`));
     }
     if (evFilters.length > 0) {
       evQuery = evQuery.or(evFilters.join(","));
@@ -968,7 +974,7 @@ async function searchMatches(supabase: any, intake: any) {
       ldFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
     }
     if (intake.industry_sector?.length > 0) {
-      ldFilters.push(...intake.industry_sector.map((s: string) => `industry.ilike.%${s}%`));
+      ldFilters.push(...intake.industry_sector.map((s: string) => `industry.ilike.%${sanitizeFilterValue(s)}%`));
     }
     if (ldFilters.length > 0) {
       ldQuery = ldQuery.or(ldFilters.join(","));
@@ -1043,11 +1049,11 @@ async function searchMatches(supabase: any, intake: any) {
       .limit(10);
     const lcFilters: string[] = [];
     if (intake.industry_sector?.length > 0) {
-      lcFilters.push(...intake.industry_sector.map((s: string) => `industry.ilike.%${s}%`));
-      lcFilters.push(...intake.industry_sector.map((s: string) => `linkedin_job_industry.ilike.%${s}%`));
+      lcFilters.push(...intake.industry_sector.map((s: string) => `industry.ilike.%${sanitizeFilterValue(s)}%`));
+      lcFilters.push(...intake.industry_sector.map((s: string) => `linkedin_job_industry.ilike.%${sanitizeFilterValue(s)}%`));
     }
     if (locationPatterns.length > 0) {
-      lcFilters.push(...locationPatterns.map((l: string) => `lemlist_companies.location.ilike.%${l}%`));
+      lcFilters.push(...locationPatterns.map((l: string) => `contact_location.ilike.%${l}%`));
     }
     if (lcFilters.length > 0) {
       lcQuery = lcQuery.or(lcFilters.join(","));
