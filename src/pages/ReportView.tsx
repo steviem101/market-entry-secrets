@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { ReportHeader } from '@/components/report/ReportHeader';
@@ -27,7 +27,6 @@ import {
 
 const ReportView = () => {
   const { reportId } = useParams<{ reportId: string }>();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { data: report, isLoading, error } = useReport(reportId);
@@ -54,19 +53,25 @@ const ReportView = () => {
       toast.success('Payment successful! Unlocking your premium sections...');
 
       // Poll for subscription update — webhook may take a few seconds.
-      // Use the return value from refetchSubscription to compare tiers
-      // instead of relying on the stale closure.
-      const previousTier = subscription?.tier || 'free';
+      // Compare against 'free' (default tier before purchase).
       let attempts = 0;
+      let cancelled = false;
       const poll = async () => {
+        if (cancelled) return;
         const newTier = await refetchSubscription();
         attempts++;
-        if (attempts < 5 && newTier === previousTier) {
-          setTimeout(poll, 2000);
+        if (!cancelled && attempts < 8 && newTier === 'free') {
+          timerId = window.setTimeout(poll, 2000);
         }
       };
       // Start polling after a brief delay to give the webhook time
-      setTimeout(poll, 2000);
+      let timerId = window.setTimeout(poll, 2000);
+
+      // Cleanup: cancel outstanding timer if component unmounts
+      return () => {
+        cancelled = true;
+        clearTimeout(timerId);
+      };
     } else if (initialStatus === 'cancel') {
       toast.info('Checkout was cancelled. You can upgrade anytime.');
     }

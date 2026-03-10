@@ -90,7 +90,7 @@ Deno.serve(async (req: Request) => {
 
     // Fetch user profile (with stripe_customer_id) from Supabase
     // Use maybeSingle() so new users without a profile don't crash
-    const { data: profile, error: profileError } = await supabaseAdmin
+    let { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("stripe_customer_id, first_name, last_name")
       .eq("id", supabaseUserId)
@@ -102,7 +102,8 @@ Deno.serve(async (req: Request) => {
     }
 
     // If no profile exists yet (race condition with signup trigger),
-    // create one so checkout can proceed
+    // create one so checkout can proceed, then re-fetch to get any
+    // stripe_customer_id that may have been set by a concurrent request.
     if (!profile) {
       log("create-checkout", "No profile found, creating one for new user", { supabaseUserId });
       const meta = userData.user.user_metadata || {};
@@ -111,6 +112,15 @@ Deno.serve(async (req: Request) => {
         first_name: meta.first_name || null,
         last_name: meta.last_name || null,
       }, { onConflict: "id" });
+
+      // Re-fetch to pick up any stripe_customer_id set by a concurrent request
+      const { data: refetched } = await supabaseAdmin
+        .from("profiles")
+        .select("stripe_customer_id, first_name, last_name")
+        .eq("id", supabaseUserId)
+        .single();
+
+      profile = refetched;
     }
 
     let stripeCustomerId = profile?.stripe_customer_id;

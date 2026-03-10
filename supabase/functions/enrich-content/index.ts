@@ -246,17 +246,17 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Insert into content_bodies
+        // Upsert into content_bodies (avoids duplicates if re-enriched)
         const { error: insertError } = await supabase
           .from('content_bodies')
-          .insert({
+          .upsert({
             content_id: content_id,
             section_id: section.id,
             body_text: synthesizedContent,
             body_markdown: synthesizedContent,
             content_type: 'enriched',
             sort_order: 1,
-          });
+          }, { onConflict: 'section_id,content_type' });
 
         if (insertError) {
           console.error(`Failed to insert content for ${section.title}:`, insertError);

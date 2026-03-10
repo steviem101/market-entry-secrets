@@ -85,7 +85,8 @@ export const useSubscription = () => {
       setLoading(false);
     }
     return 'free';
-  }, [user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     fetchSubscription();
@@ -105,11 +106,14 @@ export const useSubscription = () => {
 
   const canAccessFeature = (feature: 'basic' | 'premium' | 'scale' | 'enterprise') => {
     if (!subscription) return feature === 'basic';
-    
+
     const tierHierarchy = ['free', 'growth', 'scale', 'enterprise'];
     const currentTierIndex = tierHierarchy.indexOf(subscription.tier);
     const requiredTierIndex = tierHierarchy.indexOf(feature === 'basic' ? 'free' : feature);
-    
+
+    // Deny access if either tier is unrecognised
+    if (currentTierIndex === -1 || requiredTierIndex === -1) return false;
+
     return currentTierIndex >= requiredTierIndex;
   };
 

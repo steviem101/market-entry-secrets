@@ -70,14 +70,16 @@ const ReportCreator = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // After auth, auto-submit if we have a draft
+  // After auth, auto-submit if we have a draft.
+  // Defer handleGenerate so form.reset() state is flushed first.
   useEffect(() => {
     if (user && showAuth) {
       setShowAuth(false);
       const draft = loadDraft();
       if (draft) {
         form.reset(draft);
-        handleGenerate();
+        // Wait one tick so react-hook-form processes the reset before we read values
+        setTimeout(() => handleGenerate(), 0);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
