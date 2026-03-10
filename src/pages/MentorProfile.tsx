@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import {
   MapPin,
   Globe,
@@ -8,12 +7,13 @@ import {
   CheckCircle,
   Star,
   Clock,
-  ChevronRight,
-  ArrowLeft,
   Phone,
   DollarSign,
   Languages,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
+import { SEOHead } from "@/components/common/SEOHead";
+import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -130,21 +130,37 @@ const MentorProfile = () => {
   const metaDescription =
     mentor.meta_description ||
     mentor.tagline ||
-    mentor.description.slice(0, 160);
-  const canonicalUrl = `https://marketentrysecrets.com/mentors/${mentor.category_slug || "experts"}/${mentor.slug}`;
+    (mentor.description || "").slice(0, 160);
+
+  const breadcrumbSegments = [
+    { label: "Mentors", href: "/mentors" },
+    ...(mentor.category_slug
+      ? [{ label: mentor.category_slug.replace(/-/g, " "), href: `/mentors/${mentor.category_slug}` }]
+      : []),
+    { label: mentor.name },
+  ];
 
   return (
     <>
-      <Helmet>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        {(mentor.avatar_url || mentor.image) && (
-          <meta property="og:image" content={mentor.avatar_url || mentor.image || ""} />
-        )}
-        <link rel="canonical" href={canonicalUrl} />
-      </Helmet>
+      <SEOHead
+        title={metaTitle}
+        description={metaDescription}
+        canonicalPath={`/mentors/${mentor.category_slug || "experts"}/${mentor.slug}`}
+        ogImage={mentor.avatar_url || mentor.image || undefined}
+        jsonLd={{
+          type: "Person",
+          data: {
+            name: mentor.name,
+            jobTitle: mentor.title,
+            description: mentor.description,
+            ...(mentor.company ? { worksFor: { "@type": "Organization", name: mentor.company } } : {}),
+            ...(mentor.location ? { address: { "@type": "PostalAddress", addressLocality: mentor.location } } : {}),
+            ...(mentor.avatar_url || mentor.image ? { image: mentor.avatar_url || mentor.image } : {}),
+            ...(mentor.linkedin_url ? { sameAs: [mentor.linkedin_url] } : {}),
+            knowsAbout: mentor.specialties,
+          },
+        }}
+      />
 
       {/* Cover strip */}
       <div
@@ -157,25 +173,7 @@ const MentorProfile = () => {
       />
 
       <div className="container mx-auto px-4 pb-12">
-        {/* Breadcrumb */}
-        <div className="mb-4 pt-4">
-          <nav className="flex items-center text-sm text-muted-foreground gap-1">
-            <Link to="/mentors" className="hover:text-primary flex items-center gap-1">
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Mentors
-            </Link>
-            {mentor.category_slug && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <Link to={`/mentors/${mentor.category_slug}`} className="hover:text-primary capitalize">
-                  {mentor.category_slug.replace(/-/g, " ")}
-                </Link>
-              </>
-            )}
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-foreground">{mentor.name}</span>
-          </nav>
-        </div>
+        <EntityBreadcrumb segments={breadcrumbSegments} className="mb-4 pt-4 px-0" />
 
         {/* Profile header */}
         <div className="flex flex-col md:flex-row gap-6 items-start mb-8">

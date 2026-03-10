@@ -11,12 +11,16 @@ import { UsageBanner } from "@/components/UsageBanner";
 import { MentorsHero } from "@/components/mentors/MentorsHero";
 import MentorCard from "@/components/mentors/MentorCard";
 import { MentorContactModal } from "@/components/mentors/MentorContactModal";
+import { ListPagination } from "@/components/common/ListPagination";
+import { EmptyState } from "@/components/common/EmptyState";
 import {
   MentorFilters,
   useMentorFilters,
   useFilteredMentors,
 } from "@/components/mentors/MentorFilters";
 import type { Mentor } from "@/hooks/useMentors";
+
+const PAGE_SIZE = 12;
 
 const MentorsDirectory = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
@@ -27,16 +31,24 @@ const MentorsDirectory = () => {
   const { filters, setFilters } = useMentorFilters();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [contactMentor, setContactMentor] = useState<Mentor | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Pre-filter by category from URL param on mount or when param changes
   useEffect(() => {
     if (categorySlug && categorySlug !== filters.category) {
       setFilters({ ...filters, category: categorySlug });
+      setCurrentPage(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categorySlug]);
 
   const filteredMentors = useFilteredMentors(mentors, filters);
+
+  const totalPages = Math.ceil(filteredMentors.length / PAGE_SIZE);
+  const paginatedMentors = filteredMentors.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   const allLocations = Array.from(new Set(mentors.map((m) => m.location))).sort();
   const currentCategory = categories.find((c) => c.slug === filters.category);
@@ -83,6 +95,11 @@ const MentorsDirectory = () => {
     );
   }
 
+  const handleFiltersChange = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
   return (
     <>
       <Helmet>
@@ -90,7 +107,7 @@ const MentorsDirectory = () => {
         <meta name="description" content={pageDescription} />
         <link
           rel="canonical"
-          href={`https://marketentrysecrets.com/mentors${categorySlug ? `/${categorySlug}` : ""}`}
+          href={`https://market-entry-secrets.lovable.app/mentors${categorySlug ? `/${categorySlug}` : ""}`}
         />
       </Helmet>
 
@@ -101,7 +118,7 @@ const MentorsDirectory = () => {
 
       <MentorFilters
         filters={filters}
-        onFiltersChange={setFilters}
+        onFiltersChange={handleFiltersChange}
         mentors={mentors}
         categories={categories}
         showAdvanced={showAdvanced}
@@ -111,37 +128,44 @@ const MentorsDirectory = () => {
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
 
-        {/* Category breadcrumb */}
-        {currentCategory && (
-          <div className="mb-6">
+        {/* Category breadcrumb + count */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          {currentCategory && (
             <p className="text-sm text-muted-foreground">
               Showing <span className="font-medium text-foreground">{currentCategory.name}</span> mentors
-              {" "}({filteredMentors.length} found)
             </p>
-          </div>
-        )}
+          )}
+          <p className="text-muted-foreground text-sm">
+            Showing {paginatedMentors.length} of {filteredMentors.length} mentors
+          </p>
+        </div>
 
         {/* Results */}
         {!authLoading && hasReachedLimit && !user ? (
           <PaywallModal contentType="community_members" />
         ) : filteredMentors.length === 0 ? (
-          <div className="text-center py-12">
-            <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No mentors found</h3>
-            <p className="text-muted-foreground">
-              Try adjusting your search criteria or filters to find more mentors.
-            </p>
-          </div>
+          <EmptyState
+            icon={<Users className="w-16 h-16" />}
+            title="No mentors found"
+            description="Try adjusting your search criteria or filters to find more mentors."
+          />
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMentors.map((mentor) => (
-              <MentorCard
-                key={mentor.id}
-                mentor={mentor}
-                onContact={setContactMentor}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {paginatedMentors.map((mentor) => (
+                <MentorCard
+                  key={mentor.id}
+                  mentor={mentor}
+                  onContact={setContactMentor}
+                />
+              ))}
+            </div>
+            <ListPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
         )}
       </div>
 

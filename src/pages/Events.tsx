@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Calendar, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { EventsHero } from "@/components/events/EventsHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
-import { useEvents, Event } from "@/hooks/useEvents";
+import { ListPagination } from "@/components/common/ListPagination";
+import { EmptyState } from "@/components/common/EmptyState";
+import { useEvents } from "@/hooks/useEvents";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useAuth } from "@/hooks/useAuth";
 import { PaywallModal } from "@/components/PaywallModal";
@@ -12,6 +15,8 @@ import { UsageBanner } from "@/components/UsageBanner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
 import { usePersona } from "@/contexts/PersonaContext";
+
+const PAGE_SIZE = 12;
 
 const Events = () => {
   const { persona } = usePersona();
@@ -25,21 +30,19 @@ const Events = () => {
   const [selectedSector, setSelectedSector] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("upcoming");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
   const { user, loading: authLoading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
 
-  // Get unique categories, types, locations, and sectors for filters
   const categories = Array.from(new Set(events.map(event => event.category))).sort();
   const types = Array.from(new Set(events.map(event => event.type))).sort();
   const locations = Array.from(new Set(events.map(event => event.location))).sort();
   const sectors = Array.from(new Set(events.map(event => event.sector).filter(Boolean))).sort();
 
-  // Choose events based on active tab
   const baseEvents = activeTab === "upcoming" ? upcomingEvents : activeTab === "past" ? pastEvents : events;
 
-  // Filter events based on selected filters
   const filteredEvents = baseEvents.filter(event => {
     const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
     const matchesType = selectedType === "all" || event.type === selectedType;
@@ -51,9 +54,16 @@ const Events = () => {
     return matchesCategory && matchesType && matchesLocation && matchesSector && matchesPersona;
   });
 
+  const totalPages = Math.ceil(filteredEvents.length / PAGE_SIZE);
+  const paginatedEvents = filteredEvents.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
   const handleSearch = (query: string) => {
     setLocalSearchQuery(query);
     setSearchTerm(query);
+    setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
@@ -63,45 +73,53 @@ const Events = () => {
     setSelectedLocation("all");
     setSelectedSector("all");
     clearSearch();
+    setCurrentPage(1);
   };
 
-  const hasActiveFilters = selectedCategory !== "all" || selectedType !== "all" || 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = selectedCategory !== "all" || selectedType !== "all" ||
     selectedLocation !== "all" || selectedSector !== "all";
 
   if (loading) {
     return (
-      <>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="text-muted-foreground mt-4">Loading events...</p>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground mt-4">Loading events...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-4">Error Loading Events</h2>
-            <p className="text-muted-foreground mb-6">{error}</p>
-            <Button onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-4">Error Loading Events</h2>
+          <p className="text-muted-foreground mb-6">{error}</p>
+          <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
     <>
-      
-      <EventsHero 
+      <Helmet>
+        <title>Events & Conferences | Market Entry Secrets</title>
+        <meta
+          name="description"
+          content="Discover upcoming events, conferences, and networking opportunities for companies entering the Australian and New Zealand markets."
+        />
+        <link rel="canonical" href="https://market-entry-secrets.lovable.app/events" />
+      </Helmet>
+
+      <EventsHero
         totalEvents={events.length}
         totalLocations={locations.length}
         upcomingCount={upcomingEvents.length}
@@ -111,11 +129,11 @@ const Events = () => {
         searchTerm={localSearchQuery}
         onSearchChange={handleSearch}
         selectedLocation={selectedLocation}
-        onLocationChange={setSelectedLocation}
+        onLocationChange={(l) => { setSelectedLocation(l); setCurrentPage(1); }}
         selectedType={selectedType}
-        onTypeChange={setSelectedType}
+        onTypeChange={(t) => { setSelectedType(t); setCurrentPage(1); }}
         selectedSector={selectedSector}
-        onSectorChange={setSelectedSector}
+        onSectorChange={(s) => { setSelectedSector(s); setCurrentPage(1); }}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
         onClearFilters={handleClearFilters}
@@ -126,13 +144,12 @@ const Events = () => {
         searchPlaceholder="Search events, locations, or organizers..."
         searchLoading={searchLoading}
       >
-        {/* Advanced Filters - Categories */}
         <div className="flex flex-wrap gap-2">
           <span className="text-sm font-medium text-muted-foreground">Category:</span>
           <Button
             variant={selectedCategory === "all" ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedCategory("all")}
+            onClick={() => { setSelectedCategory("all"); setCurrentPage(1); }}
           >
             All Categories
           </Button>
@@ -141,7 +158,7 @@ const Events = () => {
               key={category}
               variant={selectedCategory === category ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => { setSelectedCategory(category); setCurrentPage(1); }}
             >
               {category}
             </Button>
@@ -152,58 +169,54 @@ const Events = () => {
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
 
-        {/* Persona Filter */}
         <div className="mb-6">
-          <PersonaFilter value={personaFilterValue} onChange={setPersonaFilterValue} />
+          <PersonaFilter value={personaFilterValue} onChange={(v) => { setPersonaFilterValue(v); setCurrentPage(1); }} />
         </div>
 
-        {/* Tabs for Upcoming / Past / All */}
-        <div className="mb-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <TabsList>
-              <TabsTrigger value="upcoming">
-                Upcoming ({upcomingEvents.length})
-              </TabsTrigger>
-              <TabsTrigger value="past">
-                Past ({pastEvents.length})
-              </TabsTrigger>
-              <TabsTrigger value="all">
-                All ({events.length})
-              </TabsTrigger>
+              <TabsTrigger value="upcoming">Upcoming ({upcomingEvents.length})</TabsTrigger>
+              <TabsTrigger value="past">Past ({pastEvents.length})</TabsTrigger>
+              <TabsTrigger value="all">All ({events.length})</TabsTrigger>
             </TabsList>
           </Tabs>
+          <p className="text-muted-foreground text-sm">
+            Showing {paginatedEvents.length} of {filteredEvents.length} events
+          </p>
         </div>
 
-        {/* Events Grid */}
         {filteredEvents.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No events found</h3>
-            <p className="text-muted-foreground mb-6">
-              {isSearching 
+          <EmptyState
+            icon={<Calendar className="w-16 h-16" />}
+            title="No events found"
+            description={
+              isSearching
                 ? "Try adjusting your search criteria to find more events."
                 : activeTab === "upcoming"
                   ? "No upcoming events at the moment. Check back soon!"
                   : "There are no events matching your current filters."
-              }
-            </p>
-            {(localSearchQuery || hasActiveFilters) && (
-              <Button onClick={handleClearFilters} variant="outline">
-                Clear all filters
-              </Button>
-            )}
-          </div>
+            }
+            actionLabel={(localSearchQuery || hasActiveFilters) ? "Clear all filters" : undefined}
+            onAction={(localSearchQuery || hasActiveFilters) ? handleClearFilters : undefined}
+          />
         ) : !authLoading && hasReachedLimit && !user ? (
           <PaywallModal contentType="events" />
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+          <>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {paginatedEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+            <ListPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
         )}
       </div>
-      
     </>
   );
 };
