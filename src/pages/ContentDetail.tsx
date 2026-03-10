@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Heart, Globe, Twitter, Instagram, Youtube, Clock, Calendar, Eye } from "lucide-react";
 import { useContentItem, useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
@@ -127,6 +128,12 @@ const ContentDetail = () => {
 
   return (
     <>
+      <Helmet>
+        <title>{content.title} | Market Entry Secrets</title>
+        {content.meta_description && (
+          <meta name="description" content={content.meta_description} />
+        )}
+      </Helmet>
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex items-center justify-between">

@@ -9,10 +9,14 @@ const ALLOWED_ORIGINS = [
 
 export function buildCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") ?? "";
-  // Only reflect origins that are in the allowlist; fall back to first allowed origin
+  // Only reflect the origin if it's in the allowlist.
+  // For non-browser clients (no Origin header) or server-to-server (Stripe webhooks),
+  // we still need to return a valid header, so fall back to the first allowed origin.
   const allowedOrigin = ALLOWED_ORIGINS.includes(origin)
     ? origin
-    : ALLOWED_ORIGINS[0] || "https://market-entry-secrets.lovable.app";
+    : origin === ""
+      ? ALLOWED_ORIGINS[0] || "https://market-entry-secrets.lovable.app"
+      : "null";
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
