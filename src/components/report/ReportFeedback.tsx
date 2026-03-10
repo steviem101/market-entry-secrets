@@ -31,6 +31,7 @@ export const ReportFeedback = ({ reportId, existingScore }: ReportFeedbackProps)
   const handleSubmitNotes = async () => {
     try {
       await reportApi.submitFeedback(reportId, score!, notes);
+      setShowNotes(false);
       setSubmitted(true);
       toast({ title: 'Thank you!', description: 'Your feedback helps us improve.' });
     } catch (error) {

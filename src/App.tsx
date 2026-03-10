@@ -129,8 +129,8 @@ const App = () => (
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/planner" element={<Navigate to="/report-creator" replace />} />
                   <Route path="/report-creator" element={<ReportCreator />} />
-                  <Route path="/report/:reportId" element={<ReportView />} />
                   <Route path="/report/shared/:shareToken" element={<SharedReportView />} />
+                  <Route path="/report/:reportId" element={<ReportView />} />
                   <Route path="/my-reports" element={<MyReports />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />

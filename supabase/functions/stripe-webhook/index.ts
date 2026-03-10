@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
     // insert raw log first
     await supabaseAdmin.from("payment_webhook_logs").insert({
       stripe_event_id: event.id,
-      stripe_payload: JSON.parse(rawBody),
+      stripe_payload: event.data?.object ?? {},
       parsed: {
         metadata,
         clientReferenceId,
@@ -157,6 +157,11 @@ Deno.serve(async (req: Request) => {
 
           if (upsertErr) {
             logError("stripe-webhook", "Error upserting user_subscriptions", { error: upsertErr });
+            // Return 500 so Stripe retries — subscription is the critical update
+            return new Response(
+              JSON.stringify({ error: "Failed to update subscription" }),
+              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
           } else {
             log("stripe-webhook", "Upserted user_subscriptions successfully", { data });
           }

@@ -128,19 +128,27 @@ Deno.serve(async (req) => {
         
         const websiteUrl = validateExternalUrl(org.website);
 
-        const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${firecrawlApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: websiteUrl,
-            formats: ['markdown'],
-            onlyMainContent: true,
-            waitFor: 2000,
-          }),
-        });
+        const scrapeController = new AbortController();
+        const scrapeTimeout = setTimeout(() => scrapeController.abort(), 30000);
+        let scrapeResponse: Response;
+        try {
+          scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${firecrawlApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: websiteUrl,
+              formats: ['markdown'],
+              onlyMainContent: true,
+              waitFor: 2000,
+            }),
+            signal: scrapeController.signal,
+          });
+        } finally {
+          clearTimeout(scrapeTimeout);
+        }
 
         const scrapeData = await scrapeResponse.json();
 
@@ -196,21 +204,29 @@ ${scrapedContent.substring(0, 12000)}
 Respond in valid JSON format only, no markdown code blocks:
 {"basic_info": "...", "why_work_with_us": "..."}`;
 
-        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${lovableApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are a professional content writer. Always respond with valid JSON only, no markdown formatting.' },
-              { role: 'user', content: aiPrompt }
-            ],
-            temperature: 0.7,
-          }),
-        });
+        const aiController = new AbortController();
+        const aiTimeout = setTimeout(() => aiController.abort(), 30000);
+        let aiResponse: Response;
+        try {
+          aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${lovableApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                { role: 'system', content: 'You are a professional content writer. Always respond with valid JSON only, no markdown formatting.' },
+                { role: 'user', content: aiPrompt }
+              ],
+              temperature: 0.7,
+            }),
+            signal: aiController.signal,
+          });
+        } finally {
+          clearTimeout(aiTimeout);
+        }
 
         if (!aiResponse.ok) {
           const errorText = await aiResponse.text();

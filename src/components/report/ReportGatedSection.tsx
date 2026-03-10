@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Lock } from 'lucide-react';
 import { useState } from 'react';
 import { useCheckout } from '@/hooks/useCheckout';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 
 interface ReportGatedSectionProps {
@@ -27,6 +27,7 @@ export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSecti
   const { startCheckout, loading, isAuthenticated } = useCheckout();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleUpgradeClick = async () => {
     if (!isAuthenticated) {
@@ -35,7 +36,7 @@ export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSecti
     }
 
     if (requiredTier === 'enterprise') {
-      window.location.href = '/contact';
+      navigate('/contact');
       return;
     }
 

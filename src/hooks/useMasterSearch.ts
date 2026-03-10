@@ -25,7 +25,10 @@ export const useMasterSearch = () => {
       setLoading(true);
       setError(null);
 
-      const searchTerm = `%${query.trim().toLowerCase()}%`;
+      // Sanitise input: strip characters that could inject PostgREST filter operators
+      const sanitised = query.trim().toLowerCase().replace(/[,().%\\]/g, '');
+      if (!sanitised) { setResults([]); return; }
+      const searchTerm = `%${sanitised}%`;
 
       const allResults: SearchResult[] = [];
 

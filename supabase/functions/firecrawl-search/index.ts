@@ -36,21 +36,29 @@ Deno.serve(async (req) => {
 
     console.log('Searching:', query);
 
-    const response = await fetch('https://api.firecrawl.dev/v1/search', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-        limit: options?.limit || 5,
-        lang: options?.lang || 'en',
-        country: options?.country,
-        tbs: options?.tbs,
-        scrapeOptions: options?.scrapeOptions || { formats: ['markdown'] },
-      }),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    let response: Response;
+    try {
+      response = await fetch('https://api.firecrawl.dev/v1/search', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query,
+          limit: options?.limit || 5,
+          lang: options?.lang || 'en',
+          country: options?.country,
+          tbs: options?.tbs,
+          scrapeOptions: options?.scrapeOptions || { formats: ['markdown'] },
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     const data = await response.json();
 

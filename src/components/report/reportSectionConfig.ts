@@ -106,6 +106,8 @@ export const TIER_HIERARCHY = ['free', 'growth', 'scale', 'enterprise'];
 export const userTierMeetsRequirement = (userTier: string, requiredTier: string): boolean => {
   const userIndex = TIER_HIERARCHY.indexOf(userTier);
   const requiredIndex = TIER_HIERARCHY.indexOf(requiredTier);
+  // Deny access if either tier is unrecognised (indexOf returns -1)
+  if (userIndex === -1 || requiredIndex === -1) return false;
   return userIndex >= requiredIndex;
 };
 

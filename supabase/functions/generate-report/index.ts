@@ -447,22 +447,30 @@ async function callPerplexity(
   options?: { recency?: string; domains?: string[]; model?: string }
 ): Promise<{ content: string; citations: string[] }> {
   try {
-    const resp = await fetch("https://api.perplexity.ai/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: options?.model || "sonar",
-        messages: [
-          { role: "system", content: "Be precise and concise. Focus on factual, data-driven insights with specific numbers and statistics where available." },
-          { role: "user", content: query },
-        ],
-        search_recency_filter: options?.recency || "year",
-        ...(options?.domains ? { search_domain_filter: options.domains } : {}),
-      }),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+    let resp: Response;
+    try {
+      resp = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: options?.model || "sonar",
+          messages: [
+            { role: "system", content: "Be precise and concise. Focus on factual, data-driven insights with specific numbers and statistics where available." },
+            { role: "user", content: query },
+          ],
+          search_recency_filter: options?.recency || "year",
+          ...(options?.domains ? { search_domain_filter: options.domains } : {}),
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!resp.ok) {
       const text = await resp.text();
@@ -488,28 +496,36 @@ async function callPerplexityStructured(
   schema: Record<string, any>
 ): Promise<{ content: any; citations: string[] }> {
   try {
-    const resp = await fetch("https://api.perplexity.ai/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "sonar",
-        messages: [
-          { role: "system", content: "Provide precise, data-driven answers with specific numbers and statistics." },
-          { role: "user", content: query },
-        ],
-        search_recency_filter: "year",
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "key_metrics",
-            schema,
-          },
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+    let resp: Response;
+    try {
+      resp = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
         },
-      }),
-    });
+        body: JSON.stringify({
+          model: "sonar",
+          messages: [
+            { role: "system", content: "Provide precise, data-driven answers with specific numbers and statistics." },
+            { role: "user", content: query },
+          ],
+          search_recency_filter: "year",
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "key_metrics",
+              schema,
+            },
+          },
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!resp.ok) {
       const text = await resp.text();
@@ -770,11 +786,19 @@ async function callAI(
   messages: Array<{ role: string; content: string }>,
   model = "google/gemini-3-flash-preview"
 ): Promise<string> {
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model, messages }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  let resp: Response;
+  try {
+    resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model, messages }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!resp.ok) {
     const text = await resp.text();
@@ -1222,7 +1246,7 @@ async function generateReportInBackground(
 
     // 5. Build template variables
     const tierHierarchy = ["free", "growth", "scale", "enterprise"];
-    const userTierIndex = tierHierarchy.indexOf(userTier);
+    const userTierIndex = Math.max(0, tierHierarchy.indexOf(userTier)); // Default to free (0) if unknown
 
     // Extract persona from raw_input (new flow) with fallback to "international"
     const rawInput = intake.raw_input || {};
@@ -1282,7 +1306,7 @@ async function generateReportInBackground(
       const results = await Promise.allSettled(
         templates.map(async (tmpl: any) => {
           const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
-          const visible = userTierIndex >= requiredTierIndex;
+          const visible = requiredTierIndex === -1 || userTierIndex >= requiredTierIndex;
 
           if (!visible) {
             return { name: tmpl.section_name, data: { content: "", visible: false } };
@@ -1315,7 +1339,7 @@ async function generateReportInBackground(
             console.error(`Failed to generate ${tmpl.section_name}:`, e);
             return {
               name: tmpl.section_name,
-              data: { content: "This section could not be generated. Please try again.", visible: true },
+              data: { content: "", visible: false },
             };
           }
         })

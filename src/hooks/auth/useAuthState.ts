@@ -35,24 +35,30 @@ export const useAuthState = () => {
     });
 
     // Listen for auth changes
+    let cancelled = false;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
+        if (cancelled) return;
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user && session.user.id !== currentUserId.current) {
           currentUserId.current = session.user.id;
-          // Defer to avoid Supabase auth callback deadlock, but await the result
-          setTimeout(async () => {
-            await fetchUserData(session.user.id, {
+          // Defer to avoid Supabase auth callback deadlock.
+          // Use a microtask so the fetch runs after the callback returns,
+          // but check `cancelled` to avoid acting on stale events.
+          const userId = session.user.id;
+          queueMicrotask(async () => {
+            if (cancelled || currentUserId.current !== userId) return;
+            await fetchUserData(userId, {
               setProfile,
               setRoles,
               fetchingProfile,
               fetchingRoles
             });
-            setLoading(false);
-          }, 0);
-          return; // Don't set loading false yet — setTimeout will do it after fetch
+            if (!cancelled) setLoading(false);
+          });
+          return; // Don't set loading false yet — microtask will do it after fetch
         } else if (!session) {
           currentUserId.current = null;
           setProfile(null);
@@ -64,7 +70,10 @@ export const useAuthState = () => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return {
