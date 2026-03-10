@@ -52,19 +52,27 @@ function generateSearchQuery(sectionTitle: string, contentTitle: string): string
 async function searchWeb(query: string, apiKey: string): Promise<SearchResult[]> {
   console.log('Searching for:', query);
   
-  const response = await fetch('https://api.firecrawl.dev/v1/search', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      query,
-      limit: 3,
-      lang: 'en',
-      scrapeOptions: { formats: ['markdown'] },
-    }),
-  });
+  const searchController = new AbortController();
+  const searchTimeout = setTimeout(() => searchController.abort(), 30000);
+  let response: Response;
+  try {
+    response = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        limit: 3,
+        lang: 'en',
+        scrapeOptions: { formats: ['markdown'] },
+      }),
+      signal: searchController.signal,
+    });
+  } finally {
+    clearTimeout(searchTimeout);
+  }
 
   if (!response.ok) {
     console.error('Search failed:', response.status);
@@ -104,20 +112,28 @@ Write the content now:`;
 
   console.log('Calling Lovable AI for synthesis...');
   
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-3-flash-preview',
-      messages: [
-        { role: 'system', content: 'You are a professional market research writer specializing in international business and trade.' },
-        { role: 'user', content: prompt }
-      ],
-    }),
-  });
+  const aiController = new AbortController();
+  const aiTimeout = setTimeout(() => aiController.abort(), 60000);
+  let response: Response;
+  try {
+    response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3-flash-preview',
+        messages: [
+          { role: 'system', content: 'You are a professional market research writer specializing in international business and trade.' },
+          { role: 'user', content: prompt }
+        ],
+      }),
+      signal: aiController.signal,
+    });
+  } finally {
+    clearTimeout(aiTimeout);
+  }
 
   if (!response.ok) {
     const errorText = await response.text();

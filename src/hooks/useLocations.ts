@@ -73,7 +73,7 @@ export const useLocationBySlug = (slug: string) => {
         .from('locations')
         .select('*')
         .eq('slug', slug)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data as LocationData;

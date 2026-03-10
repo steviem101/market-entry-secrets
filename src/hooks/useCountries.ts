@@ -63,7 +63,7 @@ export const useCountryBySlug = (slug: string) => {
         .from('countries')
         .select('*')
         .eq('slug', slug)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data as CountryData;

@@ -118,9 +118,13 @@ export const reportApi = {
   },
 
   async fetchMyReports() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
     const { data, error } = await (supabase as any)
       .from('user_reports')
       .select('*, user_intake_forms(company_name)')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

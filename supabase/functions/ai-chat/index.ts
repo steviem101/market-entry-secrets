@@ -33,6 +33,26 @@ Deno.serve(async (req) => {
 
     const { conversationId, message } = await req.json();
 
+    // Validate inputs
+    if (!conversationId || typeof conversationId !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid conversationId', success: false }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return new Response(
+        JSON.stringify({ error: 'Message cannot be empty', success: false }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (message.length > 10000) {
+      return new Response(
+        JSON.stringify({ error: 'Message too long (max 10000 characters)', success: false }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Verify the conversation belongs to this user
     const { data: conversation, error: convError } = await supabaseClient
       .from('ai_chat_conversations')

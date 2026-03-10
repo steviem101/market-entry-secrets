@@ -63,9 +63,9 @@ export const useSubscription = () => {
         .from('user_subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching subscription:', error);
       } else if (data) {
         const mappedTier = mapDatabaseTier(data.tier);

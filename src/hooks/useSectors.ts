@@ -60,7 +60,7 @@ export const useSectorBySlug = (slug: string) => {
         .from('industry_sectors')
         .select('*')
         .eq('slug', slug)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data as SectorData;

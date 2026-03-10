@@ -25,7 +25,14 @@ async function fetchAllPaginated(
     const url = `${baseUrl}?limit=${limit}&offset=${offset}`;
     console.log(`Fetching ${label}: offset=${offset}`);
 
-    const resp = await fetch(url, { headers });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    let resp: Response;
+    try {
+      resp = await fetch(url, { headers, signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
     if (!resp.ok) {
       const text = await resp.text();
       console.error(`Lemlist ${label} fetch error: ${resp.status}`, text);
