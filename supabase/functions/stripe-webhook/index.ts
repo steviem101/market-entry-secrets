@@ -187,4 +187,4 @@ Deno.serve(async (req: Request) => {
     logError("stripe-webhook", "webhook handler error", { error: err });
     return new Response("internal error", { status: 500, headers: corsHeaders });
   }
-}, { port: Number(Deno.env.get("PORT") ?? 8000) });
+});

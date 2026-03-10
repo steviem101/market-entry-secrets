@@ -184,7 +184,7 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-}, { port: Number(Deno.env.get("PORT") ?? 8000) });
+});
 
 
 
