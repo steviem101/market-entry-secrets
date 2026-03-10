@@ -214,27 +214,33 @@ Deno.serve(async (req) => {
     // Build a map of lemlist company _id → supabase uuid for linking contacts
     const companyIdMap = new Map<string, string>();
 
-    for (const raw of rawCompanies) {
-      try {
-        const company = transformCompany(raw);
+    // Batch upsert companies (batches of 50) to avoid edge function timeout
+    const BATCH_SIZE = 50;
+    const transformedCompanies = rawCompanies.map((raw: any) => ({
+      raw,
+      transformed: transformCompany(raw),
+    }));
 
-        const { data, error } = await supabase
-          .from("lemlist_companies")
-          .upsert(company, { onConflict: "lemlist_id" })
-          .select("id, lemlist_id")
-          .single();
+    for (let i = 0; i < transformedCompanies.length; i += BATCH_SIZE) {
+      const batch = transformedCompanies.slice(i, i + BATCH_SIZE);
+      const rows = batch.map((b: any) => b.transformed);
 
-        if (error) {
-          console.error(`Upsert company ${company.name}:`, error.message);
-          stats.errors.push(`Company ${company.name}: ${error.message}`);
-          continue;
-        }
+      const { data, error } = await supabase
+        .from("lemlist_companies")
+        .upsert(rows, { onConflict: "lemlist_id" })
+        .select("id, lemlist_id");
 
-        companyIdMap.set(raw._id, data.id);
-        stats.companies_synced++;
-      } catch (e) {
-        console.error(`Transform company error:`, e);
+      if (error) {
+        console.error(`Batch upsert companies [${i}..${i + batch.length}]:`, error.message);
+        stats.errors.push(`Company batch ${i}: ${error.message}`);
+        continue;
       }
+
+      for (const row of data || []) {
+        const original = batch.find((b: any) => b.raw._id === row.lemlist_id);
+        if (original) companyIdMap.set(original.raw._id, row.id);
+      }
+      stats.companies_synced += (data || []).length;
     }
 
     console.log(`Companies synced: ${stats.companies_synced}`);
@@ -260,6 +266,8 @@ Deno.serve(async (req) => {
       "contacts"
     );
 
+    // Batch upsert contacts (batches of 50) to avoid edge function timeout
+    const contactRows: any[] = [];
     for (const raw of rawContacts) {
       try {
         const contact = transformContact(raw);
@@ -284,26 +292,31 @@ Deno.serve(async (req) => {
         // Remove internal linking fields before upsert
         const { _companyName, _companyDomain, _companyId, ...contactData } = contact;
 
-        const upsertData = {
-          ...contactData,
-          company_id: companyId,
-        };
-
-        const { error } = await supabase
-          .from("lemlist_contacts")
-          .upsert(upsertData, { onConflict: "lemlist_id" });
-
-        if (error) {
-          console.error(`Upsert contact ${contact.full_name}:`, error.message);
-          stats.errors.push(`Contact ${contact.full_name}: ${error.message}`);
-          continue;
-        }
-
-        stats.contacts_synced++;
-        if (companyId) stats.contacts_linked++;
+        contactRows.push({
+          data: { ...contactData, company_id: companyId },
+          linked: !!companyId,
+        });
       } catch (e) {
         console.error(`Transform contact error:`, e);
       }
+    }
+
+    for (let i = 0; i < contactRows.length; i += BATCH_SIZE) {
+      const batch = contactRows.slice(i, i + BATCH_SIZE);
+      const rows = batch.map((b: any) => b.data);
+
+      const { error } = await supabase
+        .from("lemlist_contacts")
+        .upsert(rows, { onConflict: "lemlist_id" });
+
+      if (error) {
+        console.error(`Batch upsert contacts [${i}..${i + batch.length}]:`, error.message);
+        stats.errors.push(`Contact batch ${i}: ${error.message}`);
+        continue;
+      }
+
+      stats.contacts_synced += batch.length;
+      stats.contacts_linked += batch.filter((b: any) => b.linked).length;
     }
 
     console.log(`Contacts synced: ${stats.contacts_synced}, linked: ${stats.contacts_linked}`);

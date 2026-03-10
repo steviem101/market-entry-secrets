@@ -150,6 +150,14 @@ Deno.serve(async (req: Request) => {
       } catch (_e) { return false; }
     };
 
+    if (!FRONTEND_URL) {
+      logError("create-checkout", "FRONTEND_URL env var is not configured", null);
+      return new Response(JSON.stringify({ error: "Server misconfiguration" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const safeReturnUrl =
       returnUrl?.startsWith("http") && isAllowedUrl(returnUrl)
         ? returnUrl
