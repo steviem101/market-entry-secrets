@@ -17,17 +17,17 @@ import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 
 const SectorPage = () => {
-  const { sectorId } = useParams<{ sectorId: string }>();
-  const { data: sectorConfig, isLoading: sectorLoading, error } = useSectorBySlug(sectorId || '');
+  const { sectorSlug } = useParams<{ sectorSlug: string }>();
+  const { data: sectorConfig, isLoading: sectorLoading, error } = useSectorBySlug(sectorSlug || '');
 
-  const { data: serviceProviders = [], isLoading: providersLoading } = useSectorServiceProviders(sectorId || '');
-  const { data: events = [], isLoading: eventsLoading } = useSectorEvents(sectorId || '');
-  const { data: leads = [], isLoading: leadsLoading } = useSectorLeads(sectorId || '');
-  const { data: communityMembers = [], isLoading: communityLoading } = useSectorCommunityMembers(sectorId || '');
-  const { data: innovationEcosystem = [], isLoading: innovationLoading } = useSectorInnovationEcosystem(sectorId || '');
-  const { data: investors = [], isLoading: investorsLoading } = useSectorInvestors(sectorId || '');
-  const { data: tradeAgencies = [], isLoading: tradeLoading } = useSectorTradeAgencies(sectorId || '');
-  const { data: contentItems = [], isLoading: contentLoading } = useSectorContent(sectorId || '');
+  const { data: serviceProviders = [], isLoading: providersLoading } = useSectorServiceProviders(sectorSlug || '');
+  const { data: events = [], isLoading: eventsLoading } = useSectorEvents(sectorSlug || '');
+  const { data: leads = [], isLoading: leadsLoading } = useSectorLeads(sectorSlug || '');
+  const { data: communityMembers = [], isLoading: communityLoading } = useSectorCommunityMembers(sectorSlug || '');
+  const { data: innovationEcosystem = [], isLoading: innovationLoading } = useSectorInnovationEcosystem(sectorSlug || '');
+  const { data: investors = [], isLoading: investorsLoading } = useSectorInvestors(sectorSlug || '');
+  const { data: tradeAgencies = [], isLoading: tradeLoading } = useSectorTradeAgencies(sectorSlug || '');
+  const { data: contentItems = [], isLoading: contentLoading } = useSectorContent(sectorSlug || '');
 
   if (sectorLoading) {
     return (
