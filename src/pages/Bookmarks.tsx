@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { useBookmarks } from "@/hooks/useBookmarks";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 const Bookmarks = () => {
   const { bookmarks, loading, fetchBookmarks } = useBookmarks();
@@ -55,8 +56,7 @@ const Bookmarks = () => {
   };
 
   return (
-    <>
-
+    <ProtectedRoute fallbackMessage="Please sign in to view your bookmarks.">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="sm" asChild>
@@ -172,8 +172,7 @@ const Bookmarks = () => {
           </div>
         )}
       </div>
-      
-    </>
+    </ProtectedRoute>
   );
 };
 

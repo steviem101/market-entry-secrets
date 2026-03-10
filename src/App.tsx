@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,49 +9,60 @@ import { LeadGenPopupProvider } from "@/components/LeadGenPopupProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PersonaProvider } from "@/contexts/PersonaContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Layout from "@/components/Layout";
+
+// Eagerly load critical landing page
 import Index from "./pages/Index";
-import About from "./pages/About";
-import ServiceProviders from "./pages/ServiceProviders";
-import ServiceProviderPage from "./pages/ServiceProviderPage";
-import Events from "./pages/Events";
-import EventDetailPage from "./pages/EventDetailPage";
-import MentorsDirectory from "./pages/MentorsDirectory";
-import MentorProfile from "./pages/MentorProfile";
-import Content from "./pages/Content";
-import ContentDetail from "./pages/ContentDetail";
-import Contact from "./pages/Contact";
-import Locations from "./pages/Locations";
-import LocationPage from "./pages/LocationPage";
-import Countries from "./pages/Countries";
-import CountryPage from "./pages/CountryPage";
-import Sectors from "./pages/Sectors";
-import SectorPage from "./pages/SectorPage";
-import Leads from "./pages/Leads";
-import LeadDatabaseDetailPage from "./pages/LeadDatabaseDetailPage";
-import InnovationEcosystem from "./pages/InnovationEcosystem";
-import InnovationOrgPage from "./pages/InnovationOrgPage";
-import Investors from "./pages/Investors";
-import InvestorPage from "./pages/InvestorPage";
-import TradeInvestmentAgencies from "./pages/TradeInvestmentAgencies";
-import AgencyDetailPage from "./pages/AgencyDetailPage";
-import CaseStudies from "./pages/CaseStudies";
-import CaseStudyDetail from "./pages/CaseStudyDetail";
-import FAQ from "./pages/FAQ";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import PartnerWithUs from "./pages/PartnerWithUs";
-import Bookmarks from "./pages/Bookmarks";
-import MemberHub from "./pages/MemberHub";
-import MentorConnections from "./pages/MentorConnections";
-import AuthCallback from "./pages/AuthCallback";
-import Pricing from "./pages/Pricing";
-import ReportCreator from "./pages/ReportCreator";
-import ReportView from "./pages/ReportView";
-import SharedReportView from "./pages/SharedReportView";
-import MyReports from "./pages/MyReports";
-import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+
+// Lazy-load all other pages for code splitting
+const About = React.lazy(() => import("./pages/About"));
+const ServiceProviders = React.lazy(() => import("./pages/ServiceProviders"));
+const ServiceProviderPage = React.lazy(() => import("./pages/ServiceProviderPage"));
+const Events = React.lazy(() => import("./pages/Events"));
+const EventDetailPage = React.lazy(() => import("./pages/EventDetailPage"));
+const MentorsDirectory = React.lazy(() => import("./pages/MentorsDirectory"));
+const MentorProfile = React.lazy(() => import("./pages/MentorProfile"));
+const Content = React.lazy(() => import("./pages/Content"));
+const ContentDetail = React.lazy(() => import("./pages/ContentDetail"));
+const Contact = React.lazy(() => import("./pages/Contact"));
+const Locations = React.lazy(() => import("./pages/Locations"));
+const LocationPage = React.lazy(() => import("./pages/LocationPage"));
+const Countries = React.lazy(() => import("./pages/Countries"));
+const CountryPage = React.lazy(() => import("./pages/CountryPage"));
+const Sectors = React.lazy(() => import("./pages/Sectors"));
+const SectorPage = React.lazy(() => import("./pages/SectorPage"));
+const Leads = React.lazy(() => import("./pages/Leads"));
+const LeadDatabaseDetailPage = React.lazy(() => import("./pages/LeadDatabaseDetailPage"));
+const InnovationEcosystem = React.lazy(() => import("./pages/InnovationEcosystem"));
+const InnovationOrgPage = React.lazy(() => import("./pages/InnovationOrgPage"));
+const Investors = React.lazy(() => import("./pages/Investors"));
+const InvestorPage = React.lazy(() => import("./pages/InvestorPage"));
+const TradeInvestmentAgencies = React.lazy(() => import("./pages/TradeInvestmentAgencies"));
+const AgencyDetailPage = React.lazy(() => import("./pages/AgencyDetailPage"));
+const CaseStudies = React.lazy(() => import("./pages/CaseStudies"));
+const CaseStudyDetail = React.lazy(() => import("./pages/CaseStudyDetail"));
+const FAQ = React.lazy(() => import("./pages/FAQ"));
+const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
+const PartnerWithUs = React.lazy(() => import("./pages/PartnerWithUs"));
+const Bookmarks = React.lazy(() => import("./pages/Bookmarks"));
+const MemberHub = React.lazy(() => import("./pages/MemberHub"));
+const MentorConnections = React.lazy(() => import("./pages/MentorConnections"));
+const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
+const Pricing = React.lazy(() => import("./pages/Pricing"));
+const ReportCreator = React.lazy(() => import("./pages/ReportCreator"));
+const ReportView = React.lazy(() => import("./pages/ReportView"));
+const SharedReportView = React.lazy(() => import("./pages/SharedReportView"));
+const MyReports = React.lazy(() => import("./pages/MyReports"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +85,8 @@ const App = () => (
             <BrowserRouter>
               <ScrollToTop />
               <Layout>
+              <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/about" element={<About />} />
@@ -123,6 +136,8 @@ const App = () => (
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+              </Suspense>
+              </ErrorBoundary>
               </Layout>
             </BrowserRouter>
           </LeadGenPopupProvider>
