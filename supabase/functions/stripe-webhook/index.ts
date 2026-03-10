@@ -32,7 +32,7 @@ serve(async (req: Request) => {
       event = await stripe.webhooks.constructEventAsync(rawBody, sig, STRIPE_WEBHOOK_SECRET);
     } catch (err: Error | any) {
       logError("stripe-webhook", "Webhook signature verification failed", err);
-      return new Response(`Webhook signature verification failed: ${err.message}`, { status: 400, headers: corsHeaders });
+      return new Response("Webhook signature verification failed", { status: 400, headers: corsHeaders });
     }
 
     log("stripe-webhook", "Received Stripe event", { eventId: event.id, type: event.type });

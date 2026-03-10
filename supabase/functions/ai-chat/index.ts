@@ -61,19 +61,8 @@ serve(async (req) => {
       throw new Error(`Failed to fetch messages: ${messagesError.message}`);
     }
 
-    // TODO: Replace this with your custom GPT integration
-    // This is a placeholder response
-    const aiResponse = `Thank you for your message: "${message}".
-
-I'm an AI assistant specialized in Australian market entry. I can help you with:
-- Business registration and compliance
-- Finding the right service providers
-- Understanding local market dynamics
-- Connecting with mentors and advisors
-
-Your custom GPT integration will replace this placeholder response.
-
-Previous messages in this conversation: ${messages?.length || 0}`;
+    // TODO: Replace this with a real AI integration
+    const aiResponse = `Thanks for your message. The AI chat feature is currently under development and not yet connected to a live model. Your message has been recorded and we'll notify you when this feature is fully available.`;
 
     // Store the AI response in the database
     const { data: responseMessage, error: insertError } = await supabaseClient
@@ -84,6 +73,7 @@ Previous messages in this conversation: ${messages?.length || 0}`;
         content: aiResponse,
         metadata: {
           source: 'placeholder',
+          is_placeholder: true,
           timestamp: new Date().toISOString()
         }
       })
