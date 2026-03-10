@@ -21,6 +21,11 @@ export const useBookmarks = () => {
   const fetchBookmarks = useCallback(async () => {
     try {
       setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setBookmarks([]);
+        return;
+      }
       const { data, error } = await supabase
         .from('bookmarks')
         .select('*')

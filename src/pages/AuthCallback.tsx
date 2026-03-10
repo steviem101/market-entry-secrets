@@ -14,7 +14,7 @@ const AuthCallback = () => {
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Auth callback error:', error);
+          console.error('Auth callback error:', error.message);
           toast.error('Authentication failed: ' + error.message);
           navigate('/');
           return;
@@ -39,7 +39,7 @@ const AuthCallback = () => {
             });
             
             if (sessionError) {
-              console.error('Session error:', sessionError);
+              console.error('Session error:', sessionError.message);
               toast.error('Failed to verify email');
             } else {
               toast.success('Email verified successfully!');
@@ -49,7 +49,7 @@ const AuthCallback = () => {
           navigate('/');
         }
       } catch (error) {
-        console.error('Unexpected error during auth callback:', error);
+        console.error('Unexpected error during auth callback:', error instanceof Error ? error.message : 'Unknown error');
         toast.error('An unexpected error occurred');
         navigate('/');
       }

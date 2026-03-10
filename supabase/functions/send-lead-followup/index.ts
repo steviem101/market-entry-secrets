@@ -37,12 +37,30 @@ Deno.serve(async (req) => {
     if (!email || !sector || !target_market) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
-        { 
-          status: 400, 
+        {
+          status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Escape user-supplied values to prevent HTML injection in email templates
+    const escapeHtml = (str: string): string =>
+      str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+    const safeSector = escapeHtml(sector);
+    const safeEmail = escapeHtml(email);
+    const safeTargetMarket = escapeHtml(target_market);
 
     log("send-lead-followup", "Processing follow-up email request", { sector, target_market });
 
@@ -58,7 +76,7 @@ Deno.serve(async (req) => {
           <h2 style="color: #1e40af; margin-bottom: 15px;">What Happens Next?</h2>
           <div style="margin-bottom: 15px;">
             <h3 style="color: #374151; margin-bottom: 8px;">📋 Step 1: Analysis (Next 24 hours)</h3>
-            <p style="color: #666; margin: 0;">Our market entry experts will analyze your ${sector} sector and target market requirements.</p>
+            <p style="color: #666; margin: 0;">Our market entry experts will analyze your ${safeSector} sector and target market requirements.</p>
           </div>
           <div style="margin-bottom: 15px;">
             <h3 style="color: #374151; margin-bottom: 8px;">📊 Step 2: Custom Plan Creation (24-48 hours)</h3>
@@ -73,7 +91,7 @@ Deno.serve(async (req) => {
         <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
           <h2 style="color: #059669; margin-bottom: 15px;">Your Plan Will Include:</h2>
           <ul style="color: #374151; line-height: 1.6; padding-left: 20px;">
-            <li><strong>Market Size & Opportunity Analysis</strong> for the ${sector} sector</li>
+            <li><strong>Market Size & Opportunity Analysis</strong> for the ${safeSector} sector</li>
             <li><strong>Regulatory Requirements</strong> and compliance guidelines</li>
             <li><strong>Key Service Providers</strong> and potential partners</li>
             <li><strong>Target Customer Insights</strong> based on your specified market</li>
@@ -85,7 +103,7 @@ Deno.serve(async (req) => {
 
         <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
           <p style="color: #92400e; margin: 0; font-weight: 500;">
-            ⏰ <strong>Estimated Delivery:</strong> Within 48 hours to ${email}
+            ⏰ <strong>Estimated Delivery:</strong> Within 48 hours to ${safeEmail}
           </p>
         </div>
 
@@ -101,7 +119,7 @@ Deno.serve(async (req) => {
             This email was sent because you requested a Bespoke Market Entry Plan from Market Entry.
           </p>
           <p style="color: #666; font-size: 14px; margin: 0;">
-            <strong>Your Target Market:</strong> ${target_market}
+            <strong>Your Target Market:</strong> ${safeTargetMarket}
           </p>
         </div>
       </div>
@@ -117,7 +135,7 @@ What Happens Next?
 Step 1: Analysis (Next 24 hours)
 Our market entry experts will analyze your ${sector} sector and target market requirements.
 
-Step 2: Custom Plan Creation (24-48 hours)  
+Step 2: Custom Plan Creation (24-48 hours)
 We'll create a comprehensive, personalized market entry strategy specifically for your business.
 
 Step 3: Delivery (Within 48 hours)
