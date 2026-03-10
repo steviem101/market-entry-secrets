@@ -1499,7 +1499,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Pre-create the report row with "processing" status
+    // Pre-create the report row with "processing" status.
+    // Check for an existing processing report to prevent duplicates from rapid clicks.
+    const { data: existingReport } = await supabase
+      .from("user_reports")
+      .select("id")
+      .eq("user_id", intake.user_id)
+      .eq("intake_form_id", intake_form_id)
+      .eq("status", "processing")
+      .maybeSingle();
+
+    if (existingReport) {
+      log("generate-report", "Report already processing for this intake form", {
+        reportId: existingReport.id,
+        intakeFormId: intake_form_id,
+      });
+      return new Response(
+        JSON.stringify({ report_id: existingReport.id, status: "processing" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { data: report, error: reportErr } = await supabase
       .from("user_reports")
       .insert({

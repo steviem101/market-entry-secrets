@@ -38,8 +38,26 @@ export function isPrivateOrReservedUrl(rawUrl: string): boolean {
       if (pattern.test(hostname)) return true;
     }
 
+    // Block IPv6 private/link-local ranges
+    if (
+      hostname.startsWith("fe80:") ||       // Link-local
+      hostname.startsWith("fc") ||          // Unique local (fc00::/7)
+      hostname.startsWith("fd") ||          // Unique local (fc00::/7)
+      hostname.startsWith("[fe80:") ||      // Bracketed link-local
+      hostname.startsWith("[fc") ||
+      hostname.startsWith("[fd") ||
+      hostname.startsWith("[::1]") ||       // Loopback bracketed
+      hostname === "[::1]"
+    ) {
+      return true;
+    }
+
     // Block cloud metadata endpoints
-    if (hostname === "metadata.google.internal") return true;
+    if (
+      hostname === "metadata.google.internal" ||
+      hostname === "metadata.goog" ||
+      hostname === "169.254.169.254"        // AWS/GCP metadata (also caught by regex above)
+    ) return true;
 
     // Block non-http(s) schemes
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return true;

@@ -43,13 +43,20 @@ const Bookmarks = () => {
   };
 
   const getContentUrl = (bookmark: any) => {
+    const meta = bookmark.content_metadata;
     switch (bookmark.content_type) {
       case 'event':
-        return '/events';
+        return meta?.slug ? `/events/${meta.slug}` : '/events';
       case 'community_member':
-        return '/mentors';
+        return meta?.slug
+          ? `/mentors/${meta.category_slug || 'all'}/${meta.slug}`
+          : '/mentors';
       case 'content':
-        return bookmark.content_metadata?.url || '/content';
+        return meta?.slug ? `/content/${meta.slug}` : (meta?.url || '/content');
+      case 'service_provider':
+        return meta?.slug ? `/service-providers/${meta.slug}` : '/service-providers';
+      case 'lead':
+        return meta?.slug ? `/leads/${meta.slug}` : '/leads';
       default:
         return '/';
     }
