@@ -1,5 +1,4 @@
 // supabase/functions/stripe-webhook/index.ts
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
@@ -13,7 +12,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const stripe = new Stripe(STRIPE_SECRET, { apiVersion: "2022-11-15" });
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   const corsHeaders = buildCorsHeaders(req);
   try {
     if (req.method !== "POST") return new Response("method not allowed", { status: 405, headers: corsHeaders });
@@ -32,7 +31,7 @@ serve(async (req: Request) => {
       event = await stripe.webhooks.constructEventAsync(rawBody, sig, STRIPE_WEBHOOK_SECRET);
     } catch (err: Error | any) {
       logError("stripe-webhook", "Webhook signature verification failed", err);
-      return new Response(`Webhook signature verification failed: ${err.message}`, { status: 400, headers: corsHeaders });
+      return new Response("Webhook signature verification failed", { status: 400, headers: corsHeaders });
     }
 
     log("stripe-webhook", "Received Stripe event", { eventId: event.id, type: event.type });
@@ -188,4 +187,4 @@ serve(async (req: Request) => {
     logError("stripe-webhook", "webhook handler error", { error: err });
     return new Response("internal error", { status: 500, headers: corsHeaders });
   }
-}, { port: Number(Deno.env.get("PORT") ?? 8000) });
+});

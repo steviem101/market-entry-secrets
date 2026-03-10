@@ -1,10 +1,8 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
 
   // Handle CORS preflight requests
@@ -141,19 +139,15 @@ Questions while you wait? Contact us at info@marketentry.com.au
 Your Target Market: ${target_market}
     `;
 
-    // In a production environment, you would integrate with an email service like:
-    // - Resend
-    // - SendGrid
-    // - Amazon SES
-    
-    // For now, we'll log that an email would be sent and return success
-    // You can replace this with actual email sending logic
-    log("send-lead-followup", "Email content prepared (not sent - placeholder)", { sector, target_market });
+    // TODO: Integrate with an email service (Resend, SendGrid, Amazon SES)
+    // For now, log the prepared content but indicate to callers that sending is not yet implemented
+    log("send-lead-followup", "Email content prepared (not sent - no email service configured)", { sector, target_market });
 
-    // Simulated email sending - replace with actual service
     const emailResponse = {
       success: true,
-      message: 'Follow-up email sent successfully',
+      message: 'Follow-up email queued (email service not yet configured)',
+      email_prepared: true,
+      email_sent: false,
       sector: sector
     };
 

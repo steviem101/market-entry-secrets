@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireAdmin } from "../_shared/auth.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
+import { validateExternalUrl } from "../_shared/url.ts";
 
 interface Organization {
   id: string;
@@ -34,7 +35,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { organization_id, only_missing } = await req.json();
+    let organization_id: string | undefined;
+    let only_missing: boolean | undefined;
+    try {
+      const body = await req.json();
+      organization_id = body.organization_id;
+      only_missing = body.only_missing;
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -114,10 +126,7 @@ Deno.serve(async (req) => {
         // Step 1: Scrape the website using Firecrawl
         console.log(`  Scraping: ${org.website}`);
         
-        let websiteUrl = org.website.trim();
-        if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
-          websiteUrl = `https://${websiteUrl}`;
-        }
+        const websiteUrl = validateExternalUrl(org.website);
 
         const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
           method: 'POST',

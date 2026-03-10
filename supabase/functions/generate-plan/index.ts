@@ -12,6 +12,28 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    // Authenticate the caller
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization" }),
+        { status: 401, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+
     const { persona, company_name, sector, stage, origin_country, goals } =
       await req.json();
 
@@ -22,12 +44,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    log(PREFIX, "Generating plan", { persona, company_name, sector, stage });
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    log(PREFIX, "Generating plan", { persona, company_name, sector, stage, userId: user.id });
 
     // Determine the persona column name for each table
     const personaFilter = (column: string) =>
