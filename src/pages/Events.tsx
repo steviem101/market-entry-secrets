@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Calendar, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
@@ -6,7 +7,7 @@ import { EventsHero } from "@/components/events/EventsHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { ListPagination } from "@/components/common/ListPagination";
 import { EmptyState } from "@/components/common/EmptyState";
-import { useEvents, Event } from "@/hooks/useEvents";
+import { useEvents } from "@/hooks/useEvents";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
 import { useAuth } from "@/hooks/useAuth";
 import { PaywallModal } from "@/components/PaywallModal";
@@ -109,6 +110,15 @@ const Events = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Events & Conferences | Market Entry Secrets</title>
+        <meta
+          name="description"
+          content="Discover upcoming events, conferences, and networking opportunities for companies entering the Australian and New Zealand markets."
+        />
+        <link rel="canonical" href="https://market-entry-secrets.lovable.app/events" />
+      </Helmet>
+
       <EventsHero
         totalEvents={events.length}
         totalLocations={locations.length}

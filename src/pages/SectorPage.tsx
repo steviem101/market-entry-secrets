@@ -57,7 +57,7 @@ const SectorPage = () => {
           data: {
             name: sectorConfig.name,
             headline: sectorConfig.hero_title || sectorConfig.name,
-            description: sectorConfig.hero_description,
+            description: sectorConfig.hero_description || `Market entry resources for the ${sectorConfig.name} sector in Australia.`,
             about: {
               "@type": "Thing",
               name: sectorConfig.name,

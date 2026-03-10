@@ -33,7 +33,7 @@ const EventDetailPage = () => {
   }
 
   const formattedDate = format(new Date(event.date), "d MMMM yyyy");
-  const pageDescription = `${event.title} - ${formattedDate} in ${event.location}. ${event.description.slice(0, 120)}`;
+  const pageDescription = `${event.title} - ${formattedDate}${event.location ? ` in ${event.location}` : ""}. ${(event.description || "").slice(0, 120)}`;
 
   return (
     <>

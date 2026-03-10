@@ -92,6 +92,12 @@ const CaseStudies = () => {
     return matchesSearch && matchesOutcome && matchesRevenue && matchesCosts && matchesIndustry && matchesCountry;
   });
 
+  const totalPages = Math.ceil(filteredCaseStudies.length / PAGE_SIZE);
+  const paginatedCaseStudies = filteredCaseStudies.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -161,19 +167,19 @@ const CaseStudies = () => {
           <div className="flex gap-6 text-sm mb-4">
             <button
               className={`pb-1 ${outcomeFilter === "all" ? "text-foreground font-medium border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}
-              onClick={() => setOutcomeFilter("all")}
+              onClick={() => { setOutcomeFilter("all"); setCurrentPage(1); }}
             >
               All Case Studies
             </button>
             <button
               className={`pb-1 ${outcomeFilter === "successful" ? "text-foreground font-medium border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}
-              onClick={() => setOutcomeFilter("successful")}
+              onClick={() => { setOutcomeFilter("successful"); setCurrentPage(1); }}
             >
               Success Stories
             </button>
             <button
               className={`pb-1 ${outcomeFilter === "unsuccessful" ? "text-foreground font-medium border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}
-              onClick={() => setOutcomeFilter("unsuccessful")}
+              onClick={() => { setOutcomeFilter("unsuccessful"); setCurrentPage(1); }}
             >
               Failure Stories
             </button>
@@ -185,13 +191,13 @@ const CaseStudies = () => {
             <Input
               placeholder="Try 'SaaS market entry' or 'regulatory compliance'"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               className="pl-10 py-3 text-base"
             />
           </div>
 
           <p className="text-muted-foreground mt-4">
-            Showing {Math.min(PAGE_SIZE, filteredCaseStudies.length - (currentPage - 1) * PAGE_SIZE)} of {filteredCaseStudies.length} market entry case studies
+            Showing {paginatedCaseStudies.length} of {filteredCaseStudies.length} market entry case studies
           </p>
         </div>
       </div>
@@ -204,7 +210,7 @@ const CaseStudies = () => {
             <div className="space-y-6">
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Monthly Revenue</label>
-                <Select value={revenueFilter} onValueChange={setRevenueFilter}>
+                <Select value={revenueFilter} onValueChange={(v) => { setRevenueFilter(v); setCurrentPage(1); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Any Amount" />
                   </SelectTrigger>
@@ -220,7 +226,7 @@ const CaseStudies = () => {
 
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Entry Costs</label>
-                <Select value={costsFilter} onValueChange={setCostsFilter}>
+                <Select value={costsFilter} onValueChange={(v) => { setCostsFilter(v); setCurrentPage(1); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Any Amount" />
                   </SelectTrigger>
@@ -236,7 +242,7 @@ const CaseStudies = () => {
 
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Industry</label>
-                <Select value={industryFilter} onValueChange={setIndustryFilter}>
+                <Select value={industryFilter} onValueChange={(v) => { setIndustryFilter(v); setCurrentPage(1); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Any Industry" />
                   </SelectTrigger>
@@ -251,7 +257,7 @@ const CaseStudies = () => {
 
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">Origin Country</label>
-                <Select value={countryFilter} onValueChange={setCountryFilter}>
+                <Select value={countryFilter} onValueChange={(v) => { setCountryFilter(v); setCurrentPage(1); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Any Country" />
                   </SelectTrigger>
@@ -316,7 +322,7 @@ const CaseStudies = () => {
                   </Button>
                 </div>
               )}
-              {filteredCaseStudies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((cs) => {
+              {paginatedCaseStudies.map((cs) => {
                 const profile = cs.content_company_profiles?.[0];
                 const primaryFounder = cs.content_founders?.find((f: any) => f.is_primary) || cs.content_founders?.[0];
 
@@ -383,7 +389,7 @@ const CaseStudies = () => {
               })}
               <ListPagination
                 currentPage={currentPage}
-                totalPages={Math.ceil(filteredCaseStudies.length / PAGE_SIZE)}
+                totalPages={totalPages}
                 onPageChange={setCurrentPage}
               />
             </div>

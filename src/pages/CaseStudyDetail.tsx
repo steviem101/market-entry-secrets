@@ -122,7 +122,7 @@ const CaseStudyDetail = () => {
             headline: caseStudy.title,
             description: metaDescription,
             ...(caseStudy.publish_date ? { datePublished: caseStudy.publish_date } : {}),
-            ...(companyProfile?.origin_country ? { about: { "@type": "Organization", name: companyName, location: companyProfile.origin_country } } : {}),
+            ...(companyProfile?.origin_country ? { about: { "@type": "Organization", name: companyName, location: { "@type": "Place", name: companyProfile.origin_country } } } : {}),
             publisher: {
               "@type": "Organization",
               name: "Market Entry Secrets",

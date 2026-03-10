@@ -62,7 +62,7 @@ const AgencyDetailPage = () => {
         <main>
           <EntityBreadcrumb
             segments={[
-              { label: "Government & Industry Support", href: "/trade-investment-agencies" },
+              { label: "Government & Industry Support", href: "/government-support" },
               ...(agency.category_name ? [{ label: agency.category_name }] : []),
               { label: agency.name },
             ]}

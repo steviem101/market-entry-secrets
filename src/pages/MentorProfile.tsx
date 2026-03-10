@@ -11,6 +11,7 @@ import {
   DollarSign,
   Languages,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { Button } from "@/components/ui/button";
@@ -129,7 +130,7 @@ const MentorProfile = () => {
   const metaDescription =
     mentor.meta_description ||
     mentor.tagline ||
-    mentor.description.slice(0, 160);
+    (mentor.description || "").slice(0, 160);
 
   const breadcrumbSegments = [
     { label: "Mentors", href: "/mentors" },
