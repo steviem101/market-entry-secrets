@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
@@ -8,18 +9,28 @@ interface Props {
   fallback?: ReactNode;
 }
 
+interface InnerProps extends Props {
+  locationKey: string;
+}
+
 interface State {
   hasError: boolean;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+class ErrorBoundaryInner extends Component<InnerProps, State> {
+  constructor(props: InnerProps) {
     super(props);
     this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(): State {
     return { hasError: true };
+  }
+
+  componentDidUpdate(prevProps: InnerProps) {
+    if (this.state.hasError && prevProps.locationKey !== this.props.locationKey) {
+      this.setState({ hasError: false });
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
@@ -57,3 +68,12 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+export const ErrorBoundary = ({ children, fallback }: Props) => {
+  const location = useLocation();
+  return (
+    <ErrorBoundaryInner locationKey={location.key} fallback={fallback}>
+      {children}
+    </ErrorBoundaryInner>
+  );
+};

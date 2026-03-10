@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
         <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
           <h2 style="color: #059669; margin-bottom: 15px;">Your Plan Will Include:</h2>
           <ul style="color: #374151; line-height: 1.6; padding-left: 20px;">
-            <li><strong>Market Size & Opportunity Analysis</strong> for the ${sector} sector</li>
+            <li><strong>Market Size & Opportunity Analysis</strong> for the ${safeSector} sector</li>
             <li><strong>Regulatory Requirements</strong> and compliance guidelines</li>
             <li><strong>Key Service Providers</strong> and potential partners</li>
             <li><strong>Target Customer Insights</strong> based on your specified market</li>
@@ -133,13 +133,13 @@ Your Bespoke Market Entry Plan is Being Prepared
 What Happens Next?
 
 Step 1: Analysis (Next 24 hours)
-Our market entry experts will analyze your ${safeSector} sector and target market requirements.
+Our market entry experts will analyze your ${sector} sector and target market requirements.
 
-Step 2: Custom Plan Creation (24-48 hours)  
+Step 2: Custom Plan Creation (24-48 hours)
 We'll create a comprehensive, personalized market entry strategy specifically for your business.
 
 Step 3: Delivery (Within 48 hours)
-Your complete Bespoke Market Entry Plan will be delivered directly to ${safeEmail}.
+Your complete Bespoke Market Entry Plan will be delivered directly to ${email}.
 
 Your Plan Will Include:
 • Market Size & Opportunity Analysis for the ${sector} sector
@@ -150,11 +150,11 @@ Your Plan Will Include:
 • Risk Assessment and mitigation strategies
 • Timeline & Action Plan for market entry
 
-Estimated Delivery: Within 48 hours to ${safeEmail}
+Estimated Delivery: Within 48 hours to ${email}
 
 Questions while you wait? Contact us at info@marketentry.com.au
 
-Your Target Market: ${safeTargetMarket}
+Your Target Market: ${target_market}
     `;
 
     // TODO: Integrate with an email service (Resend, SendGrid, Amazon SES)
