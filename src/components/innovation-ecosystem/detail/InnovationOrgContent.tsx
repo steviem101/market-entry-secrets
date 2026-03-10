@@ -204,7 +204,7 @@ export const InnovationOrgContent = ({ org, relatedOrgs }: InnovationOrgContentP
                   contact_persons: parseJsonArray(relatedOrg.contact_persons),
                   experience_tiles: parseJsonArray(relatedOrg.experience_tiles)
                 }}
-                detailUrl={`/innovation-ecosystem/${relatedOrg.id}`}
+                detailUrl={`/innovation-ecosystem/${relatedOrg.slug}`}
               />
             ))}
           </div>

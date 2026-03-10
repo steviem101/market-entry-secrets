@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Calendar, AlertCircle } from "lucide-react";
+import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { EventsHero } from "@/components/events/EventsHero";
@@ -19,18 +21,32 @@ import { usePersona } from "@/contexts/PersonaContext";
 const PAGE_SIZE = 12;
 
 const Events = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { persona } = usePersona();
   const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
-    (persona as PersonaFilterValue) ?? 'all'
+    (searchParams.get("persona") as PersonaFilterValue) ?? (persona as PersonaFilterValue) ?? 'all'
   );
-  const [localSearchQuery, setLocalSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedLocation, setSelectedLocation] = useState<string>("all");
-  const [selectedSector, setSelectedSector] = useState<string>("all");
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchParams.get("search") ?? "");
+  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get("category") ?? "all");
+  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
+  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
+  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
   const [showFilters, setShowFilters] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("upcoming");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<string>(searchParams.get("tab") ?? "upcoming");
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (localSearchQuery) p.set("search", localSearchQuery);
+    if (selectedCategory !== "all") p.set("category", selectedCategory);
+    if (selectedType !== "all") p.set("type", selectedType);
+    if (selectedLocation !== "all") p.set("location", selectedLocation);
+    if (selectedSector !== "all") p.set("sector", selectedSector);
+    if (activeTab !== "upcoming") p.set("tab", activeTab);
+    if (personaFilterValue !== "all") p.set("persona", personaFilterValue);
+    if (currentPage > 1) p.set("page", String(currentPage));
+    setSearchParams(p, { replace: true });
+  }, [localSearchQuery, selectedCategory, selectedType, selectedLocation, selectedSector, activeTab, personaFilterValue, currentPage, setSearchParams]);
 
   const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
   const { user, loading: authLoading } = useAuth();
@@ -87,10 +103,7 @@ const Events = () => {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-4">Loading events...</p>
-        </div>
+        <CardGridSkeleton count={6} />
       </div>
     );
   }

@@ -241,8 +241,8 @@ async function enrichMatchedProviders(
   });
 
   const results = await Promise.allSettled(enrichmentPromises);
-  const enriched = results.map((r) =>
-    r.status === "fulfilled" ? r.value : providers[0]
+  const enriched = results.map((r, idx) =>
+    r.status === "fulfilled" ? r.value : providers[idx]
   );
 
   const enrichedCount = enriched.filter((p) => p.enriched_description).length;
@@ -918,7 +918,7 @@ async function searchMatches(supabase: any, intake: any) {
 
   // Events
   try {
-    let evQuery = supabase.from("events").select("id, title, date, location, category, type, organizer, sector").limit(5);
+    let evQuery = supabase.from("events").select("id, title, slug, date, location, category, type, organizer, sector").limit(5);
     const evFilters: string[] = [];
     if (locationPatterns.length > 0) {
       evFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
@@ -933,12 +933,12 @@ async function searchMatches(supabase: any, intake: any) {
 
     let eventResults = ev || [];
     if (eventResults.length === 0) {
-      const { data: allEvents } = await supabase.from("events").select("id, title, date, location, category, type, organizer, sector").order("date", { ascending: true }).limit(5);
+      const { data: allEvents } = await supabase.from("events").select("id, title, slug, date, location, category, type, organizer, sector").order("date", { ascending: true }).limit(5);
       eventResults = allEvents || [];
     }
 
     matches.events = eventResults.map((e: any) => ({
-      ...e, name: e.title, link: "/events", linkLabel: "View Event",
+      ...e, name: e.title, link: e.slug ? `/events/${e.slug}` : "/events", linkLabel: "View Event",
       subtitle: `${e.date} · ${e.location}`, tags: [e.category, e.type].filter(Boolean),
     }));
   } catch (e) { console.error("Events search error:", e); }
@@ -979,7 +979,7 @@ async function searchMatches(supabase: any, intake: any) {
 
   // Innovation ecosystem
   try {
-    let ieQuery = supabase.from("innovation_ecosystem").select("id, name, location, services, description, website").limit(5);
+    let ieQuery = supabase.from("innovation_ecosystem").select("id, slug, name, location, services, description, website").limit(5);
     const ieFilters: string[] = [];
     if (locationPatterns.length > 0) {
       ieFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
@@ -989,7 +989,7 @@ async function searchMatches(supabase: any, intake: any) {
     }
     const { data: ie } = await ieQuery;
     matches.innovation_ecosystem = (ie || []).map((o: any) => ({
-      ...o, link: "/innovation-ecosystem", linkLabel: "View Hub",
+      ...o, link: o.slug ? `/innovation-ecosystem/${o.slug}` : "/innovation-ecosystem", linkLabel: "View Hub",
       subtitle: o.location, tags: (o.services || []).slice(0, 3),
     }));
   } catch (e) { console.error("IE search error:", e); }
@@ -1013,7 +1013,7 @@ async function searchMatches(supabase: any, intake: any) {
 
   // Investors
   try {
-    let invQuery = supabase.from("investors").select("id, name, investor_type, location, sector_focus, stage_focus, check_size_min, check_size_max, website, description").limit(8);
+    let invQuery = supabase.from("investors").select("id, slug, name, investor_type, location, sector_focus, stage_focus, check_size_min, check_size_max, website, description").limit(8);
     const invFilters: string[] = [];
     if (locationPatterns.length > 0) {
       invFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
@@ -1026,7 +1026,7 @@ async function searchMatches(supabase: any, intake: any) {
     }
     const { data: inv } = await invQuery;
     matches.investors = (inv || []).map((i: any) => ({
-      ...i, link: `/investors/${i.id}`, linkLabel: "View Investor",
+      ...i, link: i.slug ? `/investors/${i.slug}` : "/investors", linkLabel: "View Investor",
       subtitle: `${i.investor_type} · ${i.location}`,
       tags: (i.stage_focus || []).slice(0, 3),
     }));

@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ServiceProvidersHero } from "@/components/service-providers/ServiceProvidersHero";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
@@ -17,21 +18,36 @@ import { usePersona } from "@/contexts/PersonaContext";
 const PAGE_SIZE = 12;
 
 const ServiceProviders = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { persona } = usePersona();
   const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
-    (persona as PersonaFilterValue) ?? 'all'
+    (searchParams.get("persona") as PersonaFilterValue) ?? (persona as PersonaFilterValue) ?? 'all'
   );
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedSector, setSelectedSector] = useState<string>("all");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<string>("featured");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
+  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
+  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
+  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
+  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get("category") ?? "all");
+  const [verifiedOnly, setVerifiedOnly] = useState(searchParams.get("verified") === "true");
+  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") ?? "featured");
   const [showFilters, setShowFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (searchTerm) p.set("search", searchTerm);
+    if (selectedLocation !== "all") p.set("location", selectedLocation);
+    if (selectedType !== "all") p.set("type", selectedType);
+    if (selectedSector !== "all") p.set("sector", selectedSector);
+    if (selectedCategory !== "all") p.set("category", selectedCategory);
+    if (verifiedOnly) p.set("verified", "true");
+    if (sortBy !== "featured") p.set("sort", sortBy);
+    if (personaFilterValue !== "all") p.set("persona", personaFilterValue);
+    if (currentPage > 1) p.set("page", String(currentPage));
+    setSearchParams(p, { replace: true });
+  }, [searchTerm, selectedLocation, selectedType, selectedSector, selectedCategory, verifiedOnly, sortBy, personaFilterValue, currentPage, setSearchParams]);
 
   const handleLocationChange = (location: string) => {
     setSelectedLocation(location);

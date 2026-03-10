@@ -37,6 +37,23 @@ export const useInnovationOrgById = (id: string) => {
   });
 };
 
+export const useInnovationOrgBySlug = (slug: string) => {
+  return useQuery({
+    queryKey: ['innovation-org-slug', slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('innovation_ecosystem')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slug
+  });
+};
+
 export const useRelatedInnovationOrgs = (currentId: string, location: string) => {
   return useQuery({
     queryKey: ['related-innovation-orgs', currentId],

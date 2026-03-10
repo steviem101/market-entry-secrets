@@ -1,23 +1,36 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { InvestorsHero } from "@/components/investors/InvestorsHero";
 import InvestorFilters from "@/components/investors/InvestorFilters";
 import InvestorResults from "@/components/investors/InvestorResults";
+import { ListPagination } from "@/components/common/ListPagination";
 import { UsageBanner } from "@/components/UsageBanner";
 import { EnrichInvestorsButton } from "@/components/investors/EnrichInvestorsButton";
 import { useInvestors } from "@/hooks/useInvestors";
 
-const Investors = () => {
-  const [searchParams] = useSearchParams();
-  const initialType = searchParams.get("type") ?? "all";
+const PAGE_SIZE = 12;
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState<string>(initialType);
-  const [selectedStage, setSelectedStage] = useState<string>("all");
-  const [selectedSector, setSelectedSector] = useState<string>("all");
+const Investors = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
+  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
+  const [selectedStage, setSelectedStage] = useState<string>(searchParams.get("stage") ?? "all");
+  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (searchTerm) p.set("search", searchTerm);
+    if (selectedType !== "all") p.set("type", selectedType);
+    if (selectedStage !== "all") p.set("stage", selectedStage);
+    if (selectedSector !== "all") p.set("sector", selectedSector);
+    if (currentPage > 1) p.set("page", String(currentPage));
+    setSearchParams(p, { replace: true });
+  }, [searchTerm, selectedType, selectedStage, selectedSector, currentPage, setSearchParams]);
 
   const { data: investors, isLoading, error } = useInvestors();
 
@@ -50,11 +63,18 @@ const Investors = () => {
     return counts;
   }, [investors]);
 
+  const totalPages = Math.ceil((filteredInvestors?.length || 0) / PAGE_SIZE);
+  const paginatedInvestors = filteredInvestors?.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
   const clearAllFilters = () => {
     setSearchTerm("");
     setSelectedType("all");
     setSelectedStage("all");
     setSelectedSector("all");
+    setCurrentPage(1);
   };
 
   if (error) {
@@ -99,21 +119,31 @@ const Investors = () => {
 
         <InvestorFilters
           searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          setSearchTerm={(v: string) => { setSearchTerm(v); setCurrentPage(1); }}
           selectedType={selectedType}
-          setSelectedType={setSelectedType}
+          setSelectedType={(v: string) => { setSelectedType(v); setCurrentPage(1); }}
           selectedStage={selectedStage}
-          setSelectedStage={setSelectedStage}
+          setSelectedStage={(v: string) => { setSelectedStage(v); setCurrentPage(1); }}
           selectedSector={selectedSector}
-          setSelectedSector={setSelectedSector}
+          setSelectedSector={(v: string) => { setSelectedSector(v); setCurrentPage(1); }}
           uniqueStages={uniqueStages}
           uniqueSectors={uniqueSectors}
         />
 
+        <p className="text-muted-foreground text-sm mb-4">
+          Showing {paginatedInvestors?.length || 0} of {filteredInvestors?.length || 0} investors
+        </p>
+
         <InvestorResults
-          filteredInvestors={filteredInvestors}
+          filteredInvestors={paginatedInvestors}
           isLoading={isLoading}
           onClearFilters={clearAllFilters}
+        />
+
+        <ListPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
         />
       </div>
     </>

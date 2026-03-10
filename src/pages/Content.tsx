@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, Search } from "lucide-react";
+import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 import { useContentItems, useContentCategories } from "@/hooks/useContent";
 import { ContentHero } from "@/components/content/ContentHero";
 import { FeaturedContent } from "@/components/content/FeaturedContent";
@@ -18,14 +19,22 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
 const VALID_CONTENT_TYPES = new Set(Object.keys(CONTENT_TYPE_LABELS));
 
 const Content = () => {
-  const [searchParams] = useSearchParams();
-  const initialType = searchParams.get("type") ?? "all";
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedType, setSelectedType] = useState(
-    VALID_CONTENT_TYPES.has(initialType) ? initialType : "all"
-  );
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") ?? "");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get("category") ?? null);
+  const [selectedType, setSelectedType] = useState(() => {
+    const t = searchParams.get("type") ?? "all";
+    return VALID_CONTENT_TYPES.has(t) ? t : "all";
+  });
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (searchQuery) p.set("search", searchQuery);
+    if (selectedCategory) p.set("category", selectedCategory);
+    if (selectedType !== "all") p.set("type", selectedType);
+    setSearchParams(p, { replace: true });
+  }, [searchQuery, selectedCategory, selectedType, setSearchParams]);
 
   const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems({
     contentType: ['guide', 'article', 'success_story']
@@ -58,10 +67,7 @@ const Content = () => {
   if (itemsLoading || categoriesLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-4">Loading content...</p>
-        </div>
+        <CardGridSkeleton count={6} />
       </div>
     );
   }
