@@ -97,9 +97,9 @@ const App = () => (
                   <Route path="/leads" element={<Leads />} />
                   <Route path="/leads/:slug" element={<LeadDatabaseDetailPage />} />
                   <Route path="/innovation-ecosystem" element={<InnovationEcosystem />} />
-                  <Route path="/innovation-ecosystem/:orgId" element={<InnovationOrgPage />} />
+                  <Route path="/innovation-ecosystem/:slug" element={<InnovationOrgPage />} />
                   <Route path="/investors" element={<Investors />} />
-                  <Route path="/investors/:investorId" element={<InvestorPage />} />
+                  <Route path="/investors/:slug" element={<InvestorPage />} />
                   <Route path="/government-support" element={<TradeInvestmentAgencies />} />
                   <Route path="/government-support/:slug" element={<AgencyDetailPage />} />
                   <Route path="/trade-investment-agencies" element={<Navigate to="/government-support" replace />} />

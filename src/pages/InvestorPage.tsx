@@ -1,14 +1,15 @@
 import { useParams } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { FreemiumGate } from "@/components/FreemiumGate";
+import { SEOHead } from "@/components/common/SEOHead";
+import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { InvestorHero } from "@/components/investors/detail/InvestorHero";
 import { InvestorContent } from "@/components/investors/detail/InvestorContent";
-import { useInvestorById, useRelatedInvestors } from "@/hooks/useInvestors";
+import { useInvestorBySlug, useRelatedInvestors } from "@/hooks/useInvestors";
 
 const InvestorPage = () => {
-  const { investorId } = useParams<{ investorId: string }>();
-  const { data: investor, isLoading, error } = useInvestorById(investorId || "");
+  const { slug } = useParams<{ slug: string }>();
+  const { data: investor, isLoading, error } = useInvestorBySlug(slug || "");
   const { data: relatedInvestors = [] } = useRelatedInvestors(
     investor?.id || "",
     investor?.investor_type || "",
@@ -32,19 +33,22 @@ const InvestorPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{investor.name} | Australian Investors | Market Entry Secrets</title>
-        <meta
-          name="description"
-          content={`${investor.name} - ${investor.description.slice(0, 150)}...`}
-        />
-        <meta property="og:title" content={`${investor.name} | Australian Investors`} />
-        <meta
-          property="og:description"
-          content={`${investor.description.slice(0, 150)}`}
-        />
-        <link rel="canonical" href={`https://market-entry-secrets.lovable.app/investors/${investor.id}`} />
-      </Helmet>
+      <SEOHead
+        title={`${investor.name} | Australian Investors | Market Entry Secrets`}
+        description={(investor.description || "").slice(0, 160)}
+        canonicalPath={`/investors/${investor.slug}`}
+        ogImage={investor.logo}
+        jsonLd={{
+          type: "Organization",
+          data: {
+            name: investor.name,
+            description: investor.description,
+            ...(investor.website ? { url: investor.website } : {}),
+            ...(investor.logo ? { logo: investor.logo } : {}),
+            ...(investor.location ? { address: { "@type": "PostalAddress", addressLocality: investor.location } } : {}),
+          },
+        }}
+      />
 
       <FreemiumGate
         contentType="investor"
@@ -53,6 +57,12 @@ const InvestorPage = () => {
         contentDescription={investor.description}
       >
         <main>
+          <EntityBreadcrumb
+            segments={[
+              { label: "Investors", href: "/investors" },
+              { label: investor.name },
+            ]}
+          />
           <InvestorHero investor={investor} />
           <InvestorContent investor={investor} relatedInvestors={relatedInvestors} />
         </main>

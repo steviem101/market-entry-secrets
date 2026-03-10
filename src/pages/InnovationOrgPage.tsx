@@ -5,11 +5,11 @@ import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { InnovationOrgHero } from "@/components/innovation-ecosystem/detail/InnovationOrgHero";
 import { InnovationOrgContent } from "@/components/innovation-ecosystem/detail/InnovationOrgContent";
-import { useInnovationOrgById, useRelatedInnovationOrgs } from "@/hooks/useInnovationEcosystem";
+import { useInnovationOrgBySlug, useRelatedInnovationOrgs } from "@/hooks/useInnovationEcosystem";
 
 const InnovationOrgPage = () => {
-  const { orgId } = useParams<{ orgId: string }>();
-  const { data: org, isLoading, error } = useInnovationOrgById(orgId || "");
+  const { slug } = useParams<{ slug: string }>();
+  const { data: org, isLoading, error } = useInnovationOrgBySlug(slug || "");
   const { data: relatedOrgs = [] } = useRelatedInnovationOrgs(
     org?.id || "",
     org?.location || ""
@@ -35,7 +35,7 @@ const InnovationOrgPage = () => {
       <SEOHead
         title={`${org.name} | Innovation Ecosystem | Market Entry Secrets`}
         description={(org.description || "").slice(0, 160)}
-        canonicalPath={`/innovation-ecosystem/${org.id}`}
+        canonicalPath={`/innovation-ecosystem/${org.slug}`}
         ogImage={org.logo}
         jsonLd={{
           type: "Organization",

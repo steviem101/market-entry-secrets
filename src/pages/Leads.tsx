@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { LeadCard } from "@/components/LeadCard";
 import { LeadsHero } from "@/components/leads/LeadsHero";
@@ -47,15 +48,27 @@ const Leads = () => {
   const { user, loading: authLoading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
   const { startLeadCheckout, loading: checkoutLoading } = useLeadCheckout();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedLocation, setSelectedLocation] = useState<string>("all");
-  const [selectedSector, setSelectedSector] = useState<string>("all");
-  const [selectedSort, setSelectedSort] = useState<string>("newest");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
+  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
+  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
+  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
+  const [selectedSort, setSelectedSort] = useState<string>(searchParams.get("sort") ?? "newest");
   const [showFilters, setShowFilters] = useState(false);
   const [previewLead, setPreviewLead] = useState<LeadDatabase | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (searchTerm) p.set("search", searchTerm);
+    if (selectedType !== "all") p.set("type", selectedType);
+    if (selectedLocation !== "all") p.set("location", selectedLocation);
+    if (selectedSector !== "all") p.set("sector", selectedSector);
+    if (selectedSort !== "newest") p.set("sort", selectedSort);
+    if (currentPage > 1) p.set("page", String(currentPage));
+    setSearchParams(p, { replace: true });
+  }, [searchTerm, selectedType, selectedLocation, selectedSector, selectedSort, currentPage, setSearchParams]);
 
   const { data: leadDatabases, isLoading, error } = useLeadDatabases();
   const { data: stats } = useLeadDatabaseStats();

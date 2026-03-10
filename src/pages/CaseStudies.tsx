@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Search, AlertCircle, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,17 +48,30 @@ const matchesCostsRange = (costs: string | null | undefined, range: string): boo
 };
 
 const CaseStudies = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
   const { data: caseStudies = [], isLoading, error } = useCaseStudies();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [outcomeFilter, setOutcomeFilter] = useState("all");
-  const [revenueFilter, setRevenueFilter] = useState("any");
-  const [costsFilter, setCostsFilter] = useState("any");
-  const [industryFilter, setIndustryFilter] = useState("any");
-  const [countryFilter, setCountryFilter] = useState("any");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
+  const [outcomeFilter, setOutcomeFilter] = useState(searchParams.get("outcome") ?? "all");
+  const [revenueFilter, setRevenueFilter] = useState(searchParams.get("revenue") ?? "any");
+  const [costsFilter, setCostsFilter] = useState(searchParams.get("costs") ?? "any");
+  const [industryFilter, setIndustryFilter] = useState(searchParams.get("industry") ?? "any");
+  const [countryFilter, setCountryFilter] = useState(searchParams.get("country") ?? "any");
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (searchTerm) p.set("search", searchTerm);
+    if (outcomeFilter !== "all") p.set("outcome", outcomeFilter);
+    if (revenueFilter !== "any") p.set("revenue", revenueFilter);
+    if (costsFilter !== "any") p.set("costs", costsFilter);
+    if (industryFilter !== "any") p.set("industry", industryFilter);
+    if (countryFilter !== "any") p.set("country", countryFilter);
+    if (currentPage > 1) p.set("page", String(currentPage));
+    setSearchParams(p, { replace: true });
+  }, [searchTerm, outcomeFilter, revenueFilter, costsFilter, industryFilter, countryFilter, currentPage, setSearchParams]);
 
   // Derive unique filter options from data
   const industries = Array.from(
@@ -101,10 +115,7 @@ const CaseStudies = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-4">Loading case studies...</p>
-        </div>
+        <CardGridSkeleton count={6} cardHeight="h-48" />
       </div>
     );
   }

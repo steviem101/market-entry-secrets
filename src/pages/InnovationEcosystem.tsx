@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { InnovationEcosystemHero } from "@/components/innovation-ecosystem/InnovationEcosystemHero";
@@ -12,11 +13,21 @@ import { useInnovationEcosystem } from "@/hooks/useInnovationEcosystem";
 const PAGE_SIZE = 12;
 
 const InnovationEcosystem = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<string>("all");
-  const [selectedService, setSelectedService] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
+  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
+  const [selectedService, setSelectedService] = useState<string>(searchParams.get("service") ?? "all");
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (searchTerm) p.set("search", searchTerm);
+    if (selectedLocation !== "all") p.set("location", selectedLocation);
+    if (selectedService !== "all") p.set("service", selectedService);
+    if (currentPage > 1) p.set("page", String(currentPage));
+    setSearchParams(p, { replace: true });
+  }, [searchTerm, selectedLocation, selectedService, currentPage, setSearchParams]);
 
   const { data: organizations, isLoading, error } = useInnovationEcosystem();
 

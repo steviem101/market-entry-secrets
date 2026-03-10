@@ -38,7 +38,7 @@ const InnovationEcosystemSection = ({ innovationEcosystem }: InnovationEcosystem
             experience_tiles: parseJsonArray(entity.experience_tiles),
             contact_persons: parseJsonArray(entity.contact_persons)
           }}
-          detailUrl={`/innovation-ecosystem/${entity.id}`}
+          detailUrl={`/innovation-ecosystem/${entity.slug}`}
         />
       ))}
     </SectorSection>

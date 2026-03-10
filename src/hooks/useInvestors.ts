@@ -37,6 +37,23 @@ export const useInvestorById = (id: string) => {
   });
 };
 
+export const useInvestorBySlug = (slug: string) => {
+  return useQuery({
+    queryKey: ['investor-slug', slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('investors')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slug
+  });
+};
+
 export const useRelatedInvestors = (currentId: string, investorType: string, location: string) => {
   return useQuery({
     queryKey: ['related-investors', currentId],

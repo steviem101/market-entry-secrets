@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { TradeInvestmentAgenciesHero } from "@/components/trade-investment-agencies/TradeInvestmentAgenciesHero";
 import TradeInvestmentAgenciesFilters from "@/components/trade-investment-agencies/TradeInvestmentAgenciesFilters";
@@ -10,12 +11,24 @@ import { useTradeAgencies, useOrganisationCategories } from "@/hooks/useTradeAge
 const PAGE_SIZE = 12;
 
 const TradeInvestmentAgencies = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<string>("all");
-  const [selectedSector, setSelectedSector] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
+  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
+  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
+  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
+  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get("category") ?? "all");
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
+
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (searchTerm) p.set("search", searchTerm);
+    if (selectedLocation !== "all") p.set("location", selectedLocation);
+    if (selectedSector !== "all") p.set("sector", selectedSector);
+    if (selectedType !== "all") p.set("type", selectedType);
+    if (selectedCategory !== "all") p.set("category", selectedCategory);
+    if (currentPage > 1) p.set("page", String(currentPage));
+    setSearchParams(p, { replace: true });
+  }, [searchTerm, selectedLocation, selectedSector, selectedType, selectedCategory, currentPage, setSearchParams]);
 
   const { data: agencies, isLoading, error } = useTradeAgencies();
   const { data: categories = [] } = useOrganisationCategories();

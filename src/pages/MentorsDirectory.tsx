@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 import { useMentors, useMentorCategories } from "@/hooks/useMentors";
 import { useAuth } from "@/hooks/useAuth";
 import { useUsageTracking } from "@/hooks/useUsageTracking";
@@ -67,10 +68,7 @@ const MentorsDirectory = () => {
           <title>{pageTitle}</title>
         </Helmet>
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-            <p className="text-muted-foreground mt-4">Loading mentors...</p>
-          </div>
+          <CardGridSkeleton count={6} />
         </div>
       </>
     );
