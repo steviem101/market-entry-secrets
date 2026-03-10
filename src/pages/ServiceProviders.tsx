@@ -6,12 +6,15 @@ import { ServiceProvidersDataProvider } from "@/components/service-providers/Ser
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
 import { ServiceProvidersAdvancedFilters } from "@/components/service-providers/ServiceProvidersAdvancedFilters";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
+import { ListPagination } from "@/components/common/ListPagination";
 import CompanyModal from "@/components/CompanyModal";
 import { Company } from "@/components/CompanyCard";
 import { UsageBanner } from "@/components/UsageBanner";
 import { mapServicesToSectors, getStandardTypes } from "@/utils/sectorMapping";
 import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
 import { usePersona } from "@/contexts/PersonaContext";
+
+const PAGE_SIZE = 12;
 
 const ServiceProviders = () => {
   const { persona } = usePersona();
@@ -28,9 +31,11 @@ const ServiceProviders = () => {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sortBy, setSortBy] = useState<string>("featured");
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleLocationChange = (location: string) => {
     setSelectedLocation(location);
+    setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
@@ -41,6 +46,12 @@ const ServiceProviders = () => {
     setSelectedCategory("all");
     setVerifiedOnly(false);
     setSortBy("featured");
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
   };
 
   const handleViewProfile = (company: Company) => {
@@ -84,6 +95,12 @@ const ServiceProviders = () => {
           const sectors = Array.from(new Set(companies.flatMap(company => mapServicesToSectors(company.services || [])))).sort();
           const allServices = Array.from(new Set(companies.flatMap(company => company.services || []))).sort();
 
+          const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
+          const paginatedCompanies = filteredCompanies.slice(
+            (currentPage - 1) * PAGE_SIZE,
+            currentPage * PAGE_SIZE
+          );
+
           return (
             <>
               <ServiceProvidersHero
@@ -94,13 +111,13 @@ const ServiceProviders = () => {
 
               <StandardDirectoryFilters
                 searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
+                onSearchChange={handleSearchChange}
                 selectedLocation={selectedLocation}
                 onLocationChange={handleLocationChange}
                 selectedType={selectedType}
-                onTypeChange={setSelectedType}
+                onTypeChange={(t) => { setSelectedType(t); setCurrentPage(1); }}
                 selectedSector={selectedSector}
-                onSectorChange={setSelectedSector}
+                onSectorChange={(s) => { setSelectedSector(s); setCurrentPage(1); }}
                 showFilters={showFilters}
                 onToggleFilters={() => setShowFilters(!showFilters)}
                 onClearFilters={handleClearFilters}
@@ -112,13 +129,13 @@ const ServiceProviders = () => {
               >
                 <ServiceProvidersAdvancedFilters
                   selectedCategory={selectedCategory}
-                  onCategoryChange={setSelectedCategory}
+                  onCategoryChange={(c) => { setSelectedCategory(c); setCurrentPage(1); }}
                   verifiedOnly={verifiedOnly}
-                  onVerifiedChange={setVerifiedOnly}
+                  onVerifiedChange={(v) => { setVerifiedOnly(v); setCurrentPage(1); }}
                   sortBy={sortBy}
-                  onSortChange={setSortBy}
+                  onSortChange={(s) => { setSortBy(s); setCurrentPage(1); }}
                   services={allServices}
-                  onServiceClick={setSearchTerm}
+                  onServiceClick={(s) => { setSearchTerm(s); setCurrentPage(1); }}
                 />
               </StandardDirectoryFilters>
 
@@ -126,16 +143,22 @@ const ServiceProviders = () => {
                 <UsageBanner />
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                  <PersonaFilter value={personaFilterValue} onChange={setPersonaFilterValue} />
+                  <PersonaFilter value={personaFilterValue} onChange={(v) => { setPersonaFilterValue(v); setCurrentPage(1); }} />
                   <p className="text-muted-foreground text-sm">
-                    {filteredCompanies.length} service providers found
+                    Showing {paginatedCompanies.length} of {filteredCompanies.length} service providers
                   </p>
                 </div>
 
                 <ServiceProvidersList
-                  companies={filteredCompanies}
+                  companies={paginatedCompanies}
                   onViewProfile={handleViewProfile}
                   onContact={handleContact}
+                />
+
+                <ListPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
                 />
               </div>
             </>
