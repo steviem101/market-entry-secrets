@@ -37,7 +37,7 @@ export const ServiceProvidersList = ({
         <CompanyCard
           key={company.id}
           company={company}
-          detailUrl={company.slug ? `/service-providers/${company.slug}` : undefined}
+          detailUrl={`/service-providers/${company.slug || company.id}`}
         />
       ))}
     </div>

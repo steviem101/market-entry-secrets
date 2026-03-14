@@ -171,7 +171,7 @@ export const ServiceProviderSidebar = ({
               <CompanyCard
                 key={related.id}
                 company={related}
-                detailUrl={related.slug ? `/service-providers/${related.slug}` : undefined}
+                detailUrl={`/service-providers/${related.slug || related.id}`}
               />
             ))}
           </div>

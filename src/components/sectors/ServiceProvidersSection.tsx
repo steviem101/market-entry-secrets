@@ -48,7 +48,7 @@ const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionPr
           }}
           onViewProfile={handleViewProfile}
           onContact={handleContact}
-          detailUrl={provider.slug ? `/service-providers/${provider.slug}` : undefined}
+          detailUrl={`/service-providers/${(provider as any).slug || provider.id}`}
         />
       ))}
     </SectorSection>

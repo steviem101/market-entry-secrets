@@ -48,14 +48,12 @@ export const CompanyModalHeader = ({ company }: CompanyModalHeaderProps) => {
             </Badge>
           )}
         </div>
-        {company.slug && (
-          <Button variant="link" size="sm" className="p-0 h-auto" asChild>
-            <Link to={`/service-providers/${company.slug}`}>
-              <ExternalLink className="w-3 h-3 mr-1" />
-              View Full Profile
-            </Link>
-          </Button>
-        )}
+        <Button variant="link" size="sm" className="p-0 h-auto" asChild>
+          <Link to={`/service-providers/${company.slug || company.id}`}>
+            <ExternalLink className="w-3 h-3 mr-1" />
+            View Full Profile
+          </Link>
+        </Button>
       </div>
       <BookmarkButton
         contentType="service_provider"
