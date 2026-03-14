@@ -2,7 +2,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Sparkles, Building2, Target, Globe, Rocket } from 'lucide-react';
+import { ArrowLeft, Sparkles, Building2, Target, Globe, Rocket, Clock, DollarSign, Swords, AlertTriangle, Users } from 'lucide-react';
 import type { IntakeFormData, ReportPersona } from './intakeSchema';
 
 interface IntakeStep3Props {
@@ -84,6 +84,16 @@ export const IntakeStep3 = ({ form, onBack, onSubmit, isGenerating, persona }: I
                 <p className="font-medium">{data.revenue_stage}</p>
               </div>
             )}
+            {data.target_regions && data.target_regions.length > 0 && (
+              <div className="col-span-2">
+                <span className="text-muted-foreground">Target Regions:</span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {data.target_regions.map((r) => (
+                    <Badge key={r} variant="secondary" className="text-xs">{r}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -102,6 +112,75 @@ export const IntakeStep3 = ({ form, onBack, onSubmit, isGenerating, persona }: I
                 ))}
               </div>
             </div>
+            {data.timeline && (
+              <div className="flex items-start gap-2">
+                <Clock className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-muted-foreground">Timeline:</span>
+                  <p className="font-medium">{data.timeline}</p>
+                </div>
+              </div>
+            )}
+            {data.budget_level && (
+              <div className="flex items-start gap-2">
+                <DollarSign className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-muted-foreground">Budget:</span>
+                  <p className="font-medium">{data.budget_level}</p>
+                </div>
+              </div>
+            )}
+            {data.known_competitors && data.known_competitors.length > 0 && (
+              <div className="flex items-start gap-2">
+                <Swords className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-muted-foreground">Known Competitors:</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {data.known_competitors.map((c, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">{c.name}</Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {data.target_customer_description && (
+              <div className="flex items-start gap-2">
+                <Users className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-muted-foreground">Target Customer Profile:</span>
+                  <p className="mt-1">{data.target_customer_description}</p>
+                </div>
+              </div>
+            )}
+            {data.end_buyer_industries && data.end_buyer_industries.length > 0 && (
+              <div>
+                <span className="text-muted-foreground">Target Customer Industries:</span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {data.end_buyer_industries.map((ind) => (
+                    <Badge key={ind} variant="secondary" className="text-xs">{ind}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {data.end_buyers && data.end_buyers.length > 0 && (
+              <div>
+                <span className="text-muted-foreground">End Buyers:</span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {data.end_buyers.map((b, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs">{b.name}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {data.key_challenges && (
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-muted-foreground">Key Challenges:</span>
+                  <p className="mt-1">{data.key_challenges}</p>
+                </div>
+              </div>
+            )}
             {data.additional_notes && (
               <div>
                 <span className="text-muted-foreground">Additional Notes:</span>

@@ -44,6 +44,7 @@ const ReportCreator = () => {
       budget_level: '',
       primary_goals: '',
       key_challenges: '',
+      target_customer_description: '',
       end_buyer_industries: [],
       end_buyers: [],
       known_competitors: [],
@@ -56,6 +57,9 @@ const ReportCreator = () => {
     form.setValue('persona', newPersona);
     // Clear goals when switching persona since the options differ
     form.setValue('selected_goals', []);
+    // Clear persona-specific fields to prevent stale data
+    form.setValue('target_market', '');
+    form.setValue('revenue_stage', '');
   };
 
   // Load draft from localStorage on mount
@@ -92,7 +96,11 @@ const ReportCreator = () => {
   };
 
   const handleStep2Next = async () => {
-    const fields = ['selected_goals', 'additional_notes'] as (keyof IntakeFormData)[];
+    const fields = [
+      'selected_goals', 'additional_notes', 'timeline', 'budget_level',
+      'key_challenges', 'target_customer_description', 'known_competitors',
+      'end_buyer_industries', 'end_buyers',
+    ] as (keyof IntakeFormData)[];
     const valid = await form.trigger(fields);
     if (valid) setStep(3);
   };

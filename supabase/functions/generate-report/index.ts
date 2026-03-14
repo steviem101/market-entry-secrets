@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/http.ts";
+import { log } from "../_shared/log.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
@@ -763,15 +764,22 @@ async function researchEndBuyerProcurement(intake: any): Promise<string> {
   if (!perplexityKey) return "";
 
   const endBuyerIndustries = (intake.end_buyer_industries || []).join(", ");
-  if (!endBuyerIndustries) return "";
+  const targetCustomerDesc = (intake.raw_input as any)?.target_customer_description || "";
+  if (!endBuyerIndustries && !targetCustomerDesc) return "";
 
   const industrySectorText = (intake.industry_sector || []).join(", ");
+  const targetContext = targetCustomerDesc
+    ? ` The company's target customers are: ${targetCustomerDesc}.`
+    : "";
+  const industryContext = endBuyerIndustries
+    ? `${endBuyerIndustries} companies`
+    : "companies";
 
-  console.log(`Researching end buyer procurement for: ${endBuyerIndustries}`);
+  console.log(`Researching end buyer procurement for: ${endBuyerIndustries || targetCustomerDesc}`);
 
   try {
     const result = await callPerplexity(perplexityKey,
-      `How do ${endBuyerIndustries} companies in Australia procure ${industrySectorText} services? Key procurement channels, typical buying cycles, RFP processes, partnership models, preferred supplier criteria, and how international companies can become approved suppliers.`
+      `How do ${industryContext} in Australia procure ${industrySectorText} services?${targetContext} Key procurement channels, typical buying cycles, RFP processes, partnership models, preferred supplier criteria, and how international companies can become approved suppliers.`
     );
     return result.content || "";
   } catch (e) {
@@ -1251,6 +1259,7 @@ async function generateReportInBackground(
     // Extract persona from raw_input (new flow) with fallback to "international"
     const rawInput = intake.raw_input || {};
     const persona = (rawInput as any).persona === "startup" ? "startup" : "international";
+    const targetCustomerDescription = (rawInput as any).target_customer_description || "";
     console.log(`Report persona: ${persona}`);
 
     const variables: Record<string, string> = {
@@ -1265,6 +1274,7 @@ async function generateReportInBackground(
       budget_level: intake.budget_level || "Not specified",
       primary_goals: intake.primary_goals || "Not specified",
       key_challenges: intake.key_challenges || "Not specified",
+      target_customer_description: targetCustomerDescription || "Not specified",
       enriched_summary: enrichedSummary,
       enriched_company_profile: companyProfile ? JSON.stringify(companyProfile) : "No enriched data available.",
       matched_providers_json: JSON.stringify(matches.service_providers || []),

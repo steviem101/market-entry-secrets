@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { Loader2, Search, Database, Brain, FileText, Check } from 'lucide-react';
 
 const STEPS = [
-  { label: 'Analysing your company...', icon: Search, duration: 15000 },
-  { label: 'Researching your market...', icon: Database, duration: 30000 },
-  { label: 'Matching service providers & mentors...', icon: Brain, duration: 45000 },
-  { label: 'Generating report sections...', icon: FileText, duration: 60000 },
+  { label: 'Scraping your website & researching competitors...', icon: Search, duration: 10000 },
+  { label: 'Running market research (6 parallel queries)...', icon: Database, duration: 25000 },
+  { label: 'Matching providers, mentors & events...', icon: Brain, duration: 15000 },
+  { label: 'Generating & polishing report sections...', icon: FileText, duration: 40000 },
 ];
 
 interface GeneratingOverlayProps {

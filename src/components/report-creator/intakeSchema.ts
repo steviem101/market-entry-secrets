@@ -150,14 +150,19 @@ export const step1Schema = z.object({
 });
 
 export const competitorSchema = z.object({
-  name: z.string().min(1, 'Competitor name is required').max(200),
+  name: z.string().max(200).default(''),
   website: z.string().max(500).transform((val) => {
     const trimmed = val.trim();
     if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
       return `https://${trimmed}`;
     }
     return trimmed;
-  }).pipe(z.string().url('Please enter a valid URL')),
+  }).pipe(
+    z.string().refine(
+      (val) => !val || /^https?:\/\/.+/.test(val),
+      { message: 'Please enter a valid URL' }
+    )
+  ),
 });
 
 export const step2Schema = z.object({
@@ -171,6 +176,7 @@ export const step2Schema = z.object({
   budget_level: z.string().optional().default(''),
   primary_goals: z.string().max(500, 'Maximum 500 characters').optional().default(''),
   key_challenges: z.string().max(500, 'Maximum 500 characters').optional().default(''),
+  target_customer_description: z.string().max(500, 'Maximum 500 characters').optional().default(''),
   end_buyer_industries: z.array(z.string()).optional().default([]),
   end_buyers: z.array(competitorSchema).max(5).optional().default([]),
   known_competitors: z.array(competitorSchema).max(5).optional().default([]),
