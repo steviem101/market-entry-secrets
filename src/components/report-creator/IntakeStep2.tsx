@@ -43,7 +43,7 @@ export const IntakeStep2 = ({ form, onNext, onBack, persona }: IntakeStep2Props)
   // Conditional visibility helpers
   const showBudget = companyStage !== 'Startup/Seed' || persona === 'international';
   const isRegulatedIndustry = selectedIndustries.some((ind: string) =>
-    /fintech|healthtech|health care|medical|pharma|banking|insurance/i.test(ind)
+    /health care|medical|pharma|banking|insurance|financial services|capital markets|investment|biotechnology/i.test(ind)
   );
 
   const StepIcon = persona === 'startup' ? Rocket : Target;

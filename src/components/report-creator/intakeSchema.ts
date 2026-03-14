@@ -150,14 +150,19 @@ export const step1Schema = z.object({
 });
 
 export const competitorSchema = z.object({
-  name: z.string().min(1, 'Competitor name is required').max(200),
+  name: z.string().max(200).default(''),
   website: z.string().max(500).transform((val) => {
     const trimmed = val.trim();
     if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
       return `https://${trimmed}`;
     }
     return trimmed;
-  }).pipe(z.string().url('Please enter a valid URL')),
+  }).pipe(
+    z.string().refine(
+      (val) => !val || /^https?:\/\/.+/.test(val),
+      { message: 'Please enter a valid URL' }
+    )
+  ),
 });
 
 export const step2Schema = z.object({

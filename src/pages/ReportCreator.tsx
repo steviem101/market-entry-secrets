@@ -57,6 +57,9 @@ const ReportCreator = () => {
     form.setValue('persona', newPersona);
     // Clear goals when switching persona since the options differ
     form.setValue('selected_goals', []);
+    // Clear persona-specific fields to prevent stale data
+    form.setValue('target_market', '');
+    form.setValue('revenue_stage', '');
   };
 
   // Load draft from localStorage on mount
