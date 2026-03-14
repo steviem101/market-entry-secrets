@@ -8,8 +8,6 @@ import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryF
 import { ServiceProvidersAdvancedFilters } from "@/components/service-providers/ServiceProvidersAdvancedFilters";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
 import { ListPagination } from "@/components/common/ListPagination";
-import CompanyModal from "@/components/CompanyModal";
-import { Company } from "@/components/CompanyCard";
 import { UsageBanner } from "@/components/UsageBanner";
 import { mapServicesToSectors, getStandardTypes } from "@/utils/sectorMapping";
 import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
@@ -23,8 +21,6 @@ const ServiceProviders = () => {
   const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
     (searchParams.get("persona") as PersonaFilterValue) ?? (persona as PersonaFilterValue) ?? 'all'
   );
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
   const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
   const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
@@ -68,15 +64,6 @@ const ServiceProviders = () => {
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
     setCurrentPage(1);
-  };
-
-  const handleViewProfile = (company: Company) => {
-    setSelectedCompany(company);
-    setShowModal(true);
-  };
-
-  const handleContact = (_company: Company) => {
-    // Contact functionality placeholder
   };
 
   return (
@@ -167,8 +154,6 @@ const ServiceProviders = () => {
 
                 <ServiceProvidersList
                   companies={paginatedCompanies}
-                  onViewProfile={handleViewProfile}
-                  onContact={handleContact}
                 />
 
                 <ListPagination
@@ -182,14 +167,6 @@ const ServiceProviders = () => {
         }}
       </ServiceProvidersDataProvider>
 
-      {selectedCompany && (
-        <CompanyModal
-          company={selectedCompany}
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          onContact={handleContact}
-        />
-      )}
     </>
   );
 };

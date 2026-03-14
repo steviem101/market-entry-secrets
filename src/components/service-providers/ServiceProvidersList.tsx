@@ -7,14 +7,10 @@ import { PaywallModal } from "@/components/PaywallModal";
 
 interface ServiceProvidersListProps {
   companies: Company[];
-  onViewProfile: (company: Company) => void;
-  onContact: (company: Company) => void;
 }
 
 export const ServiceProvidersList = ({
   companies,
-  onViewProfile,
-  onContact
 }: ServiceProvidersListProps) => {
   const { user, loading: authLoading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
@@ -41,8 +37,6 @@ export const ServiceProvidersList = ({
         <CompanyCard
           key={company.id}
           company={company}
-          onViewProfile={onViewProfile}
-          onContact={onContact}
           detailUrl={company.slug ? `/service-providers/${company.slug}` : undefined}
         />
       ))}
