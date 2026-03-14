@@ -8,6 +8,14 @@ export const reportApi = {
     const additionalNotes = data.additional_notes || '';
     const combinedGoals = [goalsText, additionalNotes].filter(Boolean).join('. ');
 
+    // Filter out empty competitor/end-buyer entries (user clicked Add but left blank)
+    const cleanedCompetitors = (data.known_competitors || []).filter(
+      (c) => c.name.trim() || c.website.trim()
+    );
+    const cleanedEndBuyers = (data.end_buyers || []).filter(
+      (b) => b.name.trim() || b.website.trim()
+    );
+
     const payload = {
       user_id: userId,
       company_name: data.company_name,
@@ -22,9 +30,9 @@ export const reportApi = {
       budget_level: data.budget_level || '',
       primary_goals: combinedGoals,
       key_challenges: data.key_challenges || '',
-      known_competitors: data.known_competitors || [],
+      known_competitors: cleanedCompetitors,
       end_buyer_industries: data.end_buyer_industries || [],
-      end_buyers: data.end_buyers || [],
+      end_buyers: cleanedEndBuyers,
       raw_input: data as unknown,
       status: 'pending',
     };

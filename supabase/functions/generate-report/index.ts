@@ -764,15 +764,22 @@ async function researchEndBuyerProcurement(intake: any): Promise<string> {
   if (!perplexityKey) return "";
 
   const endBuyerIndustries = (intake.end_buyer_industries || []).join(", ");
-  if (!endBuyerIndustries) return "";
+  const targetCustomerDesc = (intake.raw_input as any)?.target_customer_description || "";
+  if (!endBuyerIndustries && !targetCustomerDesc) return "";
 
   const industrySectorText = (intake.industry_sector || []).join(", ");
+  const targetContext = targetCustomerDesc
+    ? ` The company's target customers are: ${targetCustomerDesc}.`
+    : "";
+  const industryContext = endBuyerIndustries
+    ? `${endBuyerIndustries} companies`
+    : "companies";
 
-  console.log(`Researching end buyer procurement for: ${endBuyerIndustries}`);
+  console.log(`Researching end buyer procurement for: ${endBuyerIndustries || targetCustomerDesc}`);
 
   try {
     const result = await callPerplexity(perplexityKey,
-      `How do ${endBuyerIndustries} companies in Australia procure ${industrySectorText} services? Key procurement channels, typical buying cycles, RFP processes, partnership models, preferred supplier criteria, and how international companies can become approved suppliers.`
+      `How do ${industryContext} in Australia procure ${industrySectorText} services?${targetContext} Key procurement channels, typical buying cycles, RFP processes, partnership models, preferred supplier criteria, and how international companies can become approved suppliers.`
     );
     return result.content || "";
   } catch (e) {
