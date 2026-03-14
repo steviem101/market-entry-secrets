@@ -84,19 +84,32 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: Com
             View Profile
           </Button>
         )}
-        <Button
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            if (detailUrl) return;
-            onContact(company);
-          }}
-          className="flex-1"
-        >
-          <Phone className="w-4 h-4 mr-1" />
-          Contact
-        </Button>
+        {(company.contact_email || company.contact) ? (
+          <Button
+            size="sm"
+            className="flex-1"
+            asChild
+            onClick={(e) => e.stopPropagation()}
+          >
+            <a href={`mailto:${company.contact_email || company.contact}`}>
+              <Phone className="w-4 h-4 mr-1" />
+              Contact
+            </a>
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onContact(company);
+            }}
+            className="flex-1"
+          >
+            <Phone className="w-4 h-4 mr-1" />
+            Contact
+          </Button>
+        )}
       </div>
     </>
   );
