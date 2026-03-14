@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Json } from "@/integrations/supabase/types";
 import CompanyCardHeader from "./company-card/CompanyCardHeader";
 import CompanyCardContent from "./company-card/CompanyCardContent";
@@ -77,8 +77,19 @@ interface CompanyCardProps {
 }
 
 const CompanyCard = ({ company, onViewProfile, onContact, detailUrl }: CompanyCardProps) => {
-  const cardContent = (
-    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    if (detailUrl) {
+      navigate(detailUrl);
+    }
+  };
+
+  return (
+    <div
+      className={`bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col ${detailUrl ? 'cursor-pointer' : ''}`}
+      onClick={handleCardClick}
+    >
       <CompanyCardHeader company={company} />
       <CompanyCardContent company={company} />
       <div className="mt-auto">
@@ -91,16 +102,6 @@ const CompanyCard = ({ company, onViewProfile, onContact, detailUrl }: CompanyCa
       </div>
     </div>
   );
-
-  if (detailUrl) {
-    return (
-      <Link to={detailUrl} className="block no-underline text-inherit">
-        {cardContent}
-      </Link>
-    );
-  }
-
-  return cardContent;
 };
 
 export default CompanyCard;

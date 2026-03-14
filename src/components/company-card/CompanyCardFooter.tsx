@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Calendar, Users, Globe, Phone, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,9 +67,12 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: Com
             variant="outline"
             size="sm"
             className="flex-1"
+            asChild
             onClick={(e) => e.stopPropagation()}
           >
-            View Profile
+            <Link to={detailUrl}>
+              View Profile
+            </Link>
           </Button>
         ) : (
           <Button
