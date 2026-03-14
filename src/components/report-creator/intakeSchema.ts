@@ -159,7 +159,7 @@ export const competitorSchema = z.object({
     return trimmed;
   }).pipe(
     z.string().refine(
-      (val) => !val || /^https?:\/\/.+/.test(val),
+      (val) => !val || /^https?:\/\/[^\s]+\.[^\s]{2,}$/.test(val),
       { message: 'Please enter a valid URL' }
     )
   ),
