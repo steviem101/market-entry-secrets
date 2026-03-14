@@ -53,7 +53,7 @@ const ServiceProviderPage = () => {
       <SEOHead
         title={pageTitle}
         description={pageDescription}
-        canonicalPath={`/service-providers/${provider.slug}`}
+        canonicalPath={`/service-providers/${provider.slug || provider.id}`}
         ogImage={provider.cover_image_url || provider.logo_url || provider.logo}
         jsonLd={{
           type: "LocalBusiness",

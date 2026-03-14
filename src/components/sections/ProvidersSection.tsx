@@ -211,7 +211,7 @@ export const ProvidersSection = ({
                       company={company}
                       onViewProfile={handleViewProfile}
                       onContact={handleContact}
-                      detailUrl={company.slug ? `/service-providers/${company.slug}` : undefined}
+                      detailUrl={`/service-providers/${company.slug || company.id}`}
                     />
                   </div>
                 ))}

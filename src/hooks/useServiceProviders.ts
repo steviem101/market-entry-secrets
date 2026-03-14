@@ -54,11 +54,27 @@ export const useServiceProviderBySlug = (slug: string) => {
   return useQuery({
     queryKey: ["service-provider", slug],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_providers")
-        .select("*")
-        .eq("slug", slug)
-        .single();
+      // Try lookup by ID first (UUID format), then fall back to name-based ilike
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+      let data: any;
+      let error: any;
+
+      if (isUUID) {
+        ({ data, error } = await supabase
+          .from("service_providers")
+          .select("*")
+          .eq("id", slug)
+          .single());
+      } else {
+        // Try matching by converting slug back to a name pattern
+        const namePattern = slug.replace(/-/g, ' ');
+        ({ data, error } = await supabase
+          .from("service_providers")
+          .select("*")
+          .ilike("name", namePattern)
+          .single());
+      }
 
       if (error) throw error;
 

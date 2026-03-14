@@ -54,7 +54,7 @@ const Bookmarks = () => {
       case 'content':
         return meta?.slug ? `/content/${meta.slug}` : (meta?.url || '/content');
       case 'service_provider':
-        return meta?.slug ? `/service-providers/${meta.slug}` : '/service-providers';
+        return `/service-providers/${meta?.slug || meta?.id || ''}`;
       case 'lead':
         return meta?.slug ? `/leads/${meta.slug}` : '/leads';
       default:
