@@ -12,7 +12,7 @@ import { Building2, Globe, Rocket, ArrowRight, Check, ChevronsUpDown, X } from '
 import { cn } from '@/lib/utils';
 import {
   COUNTRY_OPTIONS, INDUSTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS,
-  TARGET_MARKET_OPTIONS, REVENUE_STAGE_OPTIONS,
+  TARGET_MARKET_OPTIONS, REVENUE_STAGE_OPTIONS, REGION_OPTIONS,
   type IntakeFormData, type ReportPersona,
 } from './intakeSchema';
 
@@ -27,6 +27,7 @@ export const IntakeStep1 = ({ form, onNext, persona, onPersonaChange }: IntakeSt
   const { register, formState: { errors }, setValue, watch } = form;
   const [industryOpen, setIndustryOpen] = useState(false);
   const selectedIndustries = watch('industry_sector') || [];
+  const selectedRegions = watch('target_regions') || [];
 
   const countryValue = watch('country_of_origin');
   const presetCountries = COUNTRY_OPTIONS.filter(c => c !== 'Other');
@@ -318,6 +319,36 @@ export const IntakeStep1 = ({ form, onNext, persona, onPersonaChange }: IntakeSt
             </Select>
           </div>
         )}
+
+        {/* Target Regions */}
+        <div className="space-y-2">
+          <Label>Target Regions in Australia</Label>
+          <p className="text-xs text-muted-foreground">Select the regions you're targeting. This helps us match relevant providers, events, and resources.</p>
+          <div className="flex flex-wrap gap-2">
+            {REGION_OPTIONS.map((region) => {
+              const isSelected = selectedRegions.includes(region);
+              return (
+                <button
+                  key={region}
+                  type="button"
+                  onClick={() => {
+                    const updated = isSelected
+                      ? selectedRegions.filter((r: string) => r !== region)
+                      : [...selectedRegions, region];
+                    setValue('target_regions', updated, { shouldValidate: true });
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                    isSelected
+                      ? 'bg-primary/10 border-primary/30 text-primary font-medium'
+                      : 'border-border text-muted-foreground hover:border-primary/30'
+                  }`}
+                >
+                  {region}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="pt-4 flex justify-end">
           <Button onClick={onNext} size="lg" className="gap-2">
