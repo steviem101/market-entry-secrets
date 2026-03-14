@@ -6,11 +6,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Target, Rocket, ArrowLeft, ArrowRight, Clock, DollarSign, Swords, Globe, Plus, X, AlertTriangle } from 'lucide-react';
+import { Target, Rocket, ArrowLeft, ArrowRight, Clock, DollarSign, Swords, Globe, Plus, X, AlertTriangle, Users } from 'lucide-react';
 import {
   INTERNATIONAL_GOALS, STARTUP_GOALS, TIMELINE_OPTIONS, BUDGET_OPTIONS,
   type IntakeFormData, type ReportPersona,
 } from './intakeSchema';
+import { EndBuyersSection } from './EndBuyersSection';
 
 interface IntakeStep2Props {
   form: UseFormReturn<IntakeFormData>;
@@ -24,6 +25,7 @@ export const IntakeStep2 = ({ form, onNext, onBack, persona }: IntakeStep2Props)
   const selectedGoals = watch('selected_goals') || [];
   const additionalNotes = watch('additional_notes') || '';
   const keyChallenges = watch('key_challenges') || '';
+  const targetCustomerDesc = watch('target_customer_description') || '';
   const knownCompetitors = watch('known_competitors') || [];
   const selectedIndustries = watch('industry_sector') || [];
   const companyStage = watch('company_stage') || '';
@@ -192,6 +194,31 @@ export const IntakeStep2 = ({ form, onNext, onBack, persona }: IntakeStep2Props)
             </Button>
           )}
         </div>
+
+        {/* Target Customer Description */}
+        <div className="space-y-2">
+          <Label htmlFor="target_customer_description" className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" />
+            Target Customer Profile
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Who are you trying to sell to in Australia? This helps us match lead data and tailor go-to-market recommendations.
+          </p>
+          <Textarea
+            id="target_customer_description"
+            placeholder={persona === 'startup'
+              ? 'e.g. B2B SaaS companies with 50-500 employees in financial services, looking for workflow automation...'
+              : 'e.g. mid-market retailers in NSW and VIC, procurement teams at enterprise mining companies...'}
+            maxLength={500}
+            className="resize-none"
+            rows={3}
+            {...register('target_customer_description')}
+          />
+          <p className="text-xs text-muted-foreground text-right">{targetCustomerDesc.length}/500</p>
+        </div>
+
+        {/* End Buyers */}
+        <EndBuyersSection form={form} />
 
         {/* Key Challenges / Concerns */}
         <div className="space-y-2">

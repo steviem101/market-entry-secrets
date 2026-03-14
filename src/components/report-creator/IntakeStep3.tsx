@@ -2,7 +2,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Sparkles, Building2, Target, Globe, Rocket, Clock, DollarSign, Swords, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Sparkles, Building2, Target, Globe, Rocket, Clock, DollarSign, Swords, AlertTriangle, Users } from 'lucide-react';
 import type { IntakeFormData, ReportPersona } from './intakeSchema';
 
 interface IntakeStep3Props {
@@ -140,6 +140,35 @@ export const IntakeStep3 = ({ form, onBack, onSubmit, isGenerating, persona }: I
                       <Badge key={i} variant="secondary" className="text-xs">{c.name}</Badge>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
+            {data.target_customer_description && (
+              <div className="flex items-start gap-2">
+                <Users className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-muted-foreground">Target Customer Profile:</span>
+                  <p className="mt-1">{data.target_customer_description}</p>
+                </div>
+              </div>
+            )}
+            {data.end_buyer_industries && data.end_buyer_industries.length > 0 && (
+              <div>
+                <span className="text-muted-foreground">Target Customer Industries:</span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {data.end_buyer_industries.map((ind) => (
+                    <Badge key={ind} variant="secondary" className="text-xs">{ind}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {data.end_buyers && data.end_buyers.length > 0 && (
+              <div>
+                <span className="text-muted-foreground">End Buyers:</span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {data.end_buyers.map((b, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs">{b.name}</Badge>
+                  ))}
                 </div>
               </div>
             )}
