@@ -44,7 +44,21 @@ export const reportApi = {
       body: { intake_form_id: intakeFormId },
     });
 
-    if (error) throw error;
+    if (error) {
+      // Provide a more helpful error message for common failure modes
+      const msg = error.message || '';
+      if (msg.includes('Failed to send a request') || msg.includes('FetchError')) {
+        throw new Error(
+          'Unable to reach the report generation service. This may be a temporary issue — please try again in a moment.'
+        );
+      }
+      if (msg.includes('non-2xx')) {
+        throw new Error(
+          'The report generation service returned an error. Please try again or contact support if the issue persists.'
+        );
+      }
+      throw error;
+    }
     return data as { report_id: string; status: string; [key: string]: unknown };
   },
 
