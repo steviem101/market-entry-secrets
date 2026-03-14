@@ -1,13 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { InvestorsHero } from "@/components/investors/InvestorsHero";
 import InvestorFilters from "@/components/investors/InvestorFilters";
 import InvestorResults from "@/components/investors/InvestorResults";
 import { ListPagination } from "@/components/common/ListPagination";
 import { UsageBanner } from "@/components/UsageBanner";
-import { EnrichInvestorsButton } from "@/components/investors/EnrichInvestorsButton";
 import { useInvestors } from "@/hooks/useInvestors";
 
 const PAGE_SIZE = 12;
@@ -20,8 +18,6 @@ const Investors = () => {
   const [selectedStage, setSelectedStage] = useState<string>(searchParams.get("stage") ?? "all");
   const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
-  const queryClient = useQueryClient();
-
   useEffect(() => {
     const p = new URLSearchParams();
     if (searchTerm) p.set("search", searchTerm);
@@ -109,13 +105,7 @@ const Investors = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-4">
-          <UsageBanner />
-          <EnrichInvestorsButton
-            investors={investors || []}
-            onEnrichmentComplete={() => queryClient.invalidateQueries({ queryKey: ['investors'] })}
-          />
-        </div>
+        <UsageBanner />
 
         <InvestorFilters
           searchTerm={searchTerm}
