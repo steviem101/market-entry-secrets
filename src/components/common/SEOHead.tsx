@@ -14,6 +14,7 @@ interface SEOHeadProps {
   description: string;
   canonicalPath: string;
   ogImage?: string;
+  ogType?: "website" | "article";
   jsonLd?: {
     type: JsonLdType;
     data: Record<string, unknown>;
@@ -27,6 +28,7 @@ export const SEOHead = ({
   description,
   canonicalPath,
   ogImage,
+  ogType = "website",
   jsonLd,
 }: SEOHeadProps) => {
   const canonicalUrl = `${BASE_URL}${canonicalPath}`;
@@ -50,7 +52,7 @@ export const SEOHead = ({
       <meta property="og:title" content={title} />
       <meta property="og:description" content={truncatedDescription} />
       <meta property="og:url" content={canonicalUrl} />
-      <meta property="og:type" content="website" />
+      <meta property="og:type" content={ogType} />
       {ogImage && <meta property="og:image" content={ogImage} />}
       <link rel="canonical" href={canonicalUrl} />
       {structuredData && (
