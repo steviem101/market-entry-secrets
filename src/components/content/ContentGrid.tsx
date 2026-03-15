@@ -11,6 +11,7 @@ interface ContentGridProps {
   categories: any[];
   totalContent: number;
   excludeFeatured?: boolean;
+  attachmentCounts?: Record<string, number>;
 }
 
 export const ContentGrid = ({
@@ -18,7 +19,8 @@ export const ContentGrid = ({
   selectedCategory,
   categories,
   totalContent,
-  excludeFeatured = false
+  excludeFeatured = false,
+  attachmentCounts = {}
 }: ContentGridProps) => {
   const { user, loading } = useAuth();
   const { hasReachedLimit } = useUsageTracking();
@@ -61,7 +63,7 @@ export const ContentGrid = ({
         <div className="relative">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 blur-sm pointer-events-none select-none" aria-hidden="true">
             {displayContent.slice(0, 6).map((content) => (
-              <ContentCard key={content.id} content={content} />
+              <ContentCard key={content.id} content={content} attachmentCount={attachmentCounts[content.id] || 0} />
             ))}
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
