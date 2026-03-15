@@ -134,24 +134,35 @@ export const reportApi = {
   },
 
   async fetchReport(reportId: string) {
-    // Fetch report metadata (without full report_json content for gated sections)
+    // Fetch report including report_json so we have a fallback
     const { data: meta, error: metaError } = await (supabase as any)
       .from('user_reports')
-      .select('id, user_id, intake_form_id, tier_at_generation, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at')
+      .select('id, user_id, intake_form_id, tier_at_generation, report_json, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at')
       .eq('id', reportId)
       .single();
 
     if (metaError) throw metaError;
 
-    // Use the server-side tier-gated function to get filtered report_json
-    const { data: gatedJson, error: rpcError } = await supabase
-      .rpc('get_tier_gated_report', { p_report_id: reportId });
+    // Try the server-side tier-gated function for filtered report_json.
+    // Fall back to the raw report_json if the RPC function doesn't exist
+    // (e.g. migration not yet applied).
+    let reportJson = meta.report_json ?? {};
+    try {
+      const { data: gatedJson, error: rpcError } = await supabase
+        .rpc('get_tier_gated_report', { p_report_id: reportId });
 
-    if (rpcError) throw rpcError;
+      if (!rpcError && gatedJson != null) {
+        reportJson = gatedJson;
+      } else if (rpcError) {
+        console.warn('get_tier_gated_report RPC failed, using raw report_json:', rpcError.message);
+      }
+    } catch (e) {
+      console.warn('get_tier_gated_report RPC unavailable, using raw report_json:', e);
+    }
 
     return {
       ...meta,
-      report_json: gatedJson ?? {},
+      report_json: reportJson,
     } as {
       id: string;
       user_id: string;

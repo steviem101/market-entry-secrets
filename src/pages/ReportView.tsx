@@ -122,6 +122,43 @@ const ReportView = () => {
     );
   }
 
+  // Handle reports that are still processing or have failed
+  if (report.status === 'processing') {
+    return (
+      <>
+        <main className="min-h-screen pt-20 pb-16 px-4">
+          <div className="container mx-auto text-center py-20">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Report Still Generating</h1>
+            <p className="text-muted-foreground mb-4">
+              Your report is being generated. This usually takes 2-4 minutes.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              This page will refresh automatically. You can also check{' '}
+              <a href="/my-reports" className="text-primary underline">My Reports</a> later.
+            </p>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (report.status === 'failed') {
+    const errorMsg = (report.report_json as any)?.error;
+    return (
+      <>
+        <main className="min-h-screen pt-20 pb-16 px-4">
+          <div className="container mx-auto text-center py-20">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Report Generation Failed</h1>
+            <p className="text-muted-foreground mb-4">
+              {errorMsg || 'Something went wrong during report generation. Please try again.'}
+            </p>
+            <a href="/report-creator" className="text-primary underline">Create a new report</a>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   const reportJson = report.report_json as any;
   const sections = reportJson?.sections || {};
   const companyName = reportJson?.company_name || 'Market Entry Report';
