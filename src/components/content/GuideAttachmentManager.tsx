@@ -60,16 +60,18 @@ export const GuideAttachmentManager = ({ contentItemId }: GuideAttachmentManager
 
   if (!isOpen) {
     return (
-      <Button variant="outline" size="sm" onClick={() => setIsOpen(true)} className="gap-2">
-        <FileText className="w-4 h-4" />
-        Manage Attachments ({attachments.length})
-      </Button>
+      <div className="mb-4">
+        <Button variant="outline" size="sm" onClick={() => setIsOpen(true)} className="gap-2">
+          <FileText className="w-4 h-4" />
+          Manage Attachments ({attachments.length})
+        </Button>
+      </div>
     );
   }
 
   return (
     <>
-      <Card className="mb-6">
+      <Card className="mb-6 border-dashed">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-foreground">Manage Attachments</h3>

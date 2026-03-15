@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ const Content = () => {
     contentType: ['guide', 'article', 'success_story']
   });
   const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useContentCategories();
-  const contentItemIds = contentItems.map(item => item.id);
+  const contentItemIds = useMemo(() => contentItems.map(item => item.id), [contentItems]);
   const { data: attachmentCounts = {} } = useAttachmentCounts(contentItemIds);
 
   const filteredContent = contentItems.filter(item => {

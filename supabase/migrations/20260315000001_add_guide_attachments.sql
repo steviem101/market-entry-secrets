@@ -37,6 +37,11 @@ CREATE POLICY "Authenticated users can delete guide attachments"
   ON guide_attachments FOR DELETE
   USING (auth.role() = 'authenticated');
 
+-- Trigger to auto-update updated_at
+CREATE TRIGGER handle_guide_attachments_updated_at
+  BEFORE UPDATE ON guide_attachments
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
 -- Function to increment download count
 CREATE OR REPLACE FUNCTION increment_download_count(attachment_id UUID)
 RETURNS void AS $$

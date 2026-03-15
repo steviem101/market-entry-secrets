@@ -56,7 +56,7 @@ const ContentDetail = () => {
   const { data: allContent = [] } = useContentItems({
     contentType: ['guide', 'article', 'success_story']
   });
-  const relatedGuides = content
+  const relatedGuides = content && content.category_id
     ? allContent
         .filter(item => item.id !== content.id && item.category_id === content.category_id)
         .slice(0, 3)
@@ -165,7 +165,7 @@ const ContentDetail = () => {
           data: {
             headline: content.title,
             description: descriptionText,
-            datePublished: content.publish_date,
+            ...(content.publish_date && { datePublished: content.publish_date }),
             dateModified: content.updated_at,
             author: { "@type": "Organization", name: "Market Entry Secrets" },
             publisher: {
@@ -198,9 +198,6 @@ const ContentDetail = () => {
           </Link>
 
           <div className="flex items-center gap-2">
-            {isAdmin && (
-              <GuideAttachmentManager contentItemId={content.id} />
-            )}
             {isAdmin && sections.length > 0 && (
               <ContentEnrichmentButton
                 contentId={content.id}
@@ -214,6 +211,11 @@ const ContentDetail = () => {
             )}
           </div>
         </div>
+
+        {/* Admin attachment manager — renders below action bar when expanded */}
+        {isAdmin && (
+          <GuideAttachmentManager contentItemId={content.id} />
+        )}
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar Navigation — hidden on mobile/tablet */}
@@ -272,14 +274,18 @@ const ContentDetail = () => {
                     <Badge variant="secondary">{categoryName}</Badge>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {new Date(content.publish_date).toLocaleDateString()}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {content.read_time} min read
-                    </div>
+                    {content.publish_date && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(content.publish_date).toLocaleDateString()}
+                      </div>
+                    )}
+                    {content.read_time != null && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {content.read_time} min read
+                      </div>
+                    )}
                     <div className="flex items-center gap-1">
                       <Eye className="w-4 h-4" />
                       {content.view_count || 0} views
@@ -521,14 +527,18 @@ const ContentDetail = () => {
                       <span className="text-muted-foreground">Category</span>
                       <span className="font-medium">{categoryName}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Published</span>
-                      <span className="font-medium">{new Date(content.publish_date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Read Time</span>
-                      <span className="font-medium">{content.read_time} min</span>
-                    </div>
+                    {content.publish_date && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Published</span>
+                        <span className="font-medium">{new Date(content.publish_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                    {content.read_time != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Read Time</span>
+                        <span className="font-medium">{content.read_time} min</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Views</span>
                       <span className="font-medium">{content.view_count || 0}</span>

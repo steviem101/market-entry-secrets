@@ -77,13 +77,15 @@ export const ContentCard = ({ content, featured = false, attachmentCount = 0 }: 
 
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-2">
-            <Badge
-              variant="outline"
-              className="flex items-center gap-1 text-xs"
-            >
-              <IconComponent className="w-3 h-3" />
-              {content.content_categories?.name}
-            </Badge>
+            {content.content_categories?.name && (
+              <Badge
+                variant="outline"
+                className="flex items-center gap-1 text-xs"
+              >
+                <IconComponent className="w-3 h-3" />
+                {content.content_categories.name}
+              </Badge>
+            )}
             <Badge variant="secondary" className="text-xs">
               {typeLabel}
             </Badge>
@@ -100,14 +102,18 @@ export const ContentCard = ({ content, featured = false, attachmentCount = 0 }: 
           )}
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
-              {new Date(content.publish_date).toLocaleDateString()}
-            </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              {content.read_time} min
-            </div>
+            {content.publish_date && (
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {new Date(content.publish_date).toLocaleDateString()}
+              </div>
+            )}
+            {content.read_time != null && (
+              <div className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                {content.read_time} min
+              </div>
+            )}
             {content.view_count > 0 && (
               <div className="flex items-center gap-1">
                 <Eye className="w-3.5 h-3.5" />

@@ -148,15 +148,18 @@ export const useDeleteAttachment = () => {
 
 // Fetch attachment counts for multiple content items
 export const useAttachmentCounts = (contentItemIds: string[]) => {
+  // Sort IDs for stable query key (React Query uses deep comparison but
+  // a sorted copy avoids unnecessary refetches if order changes)
+  const sortedIds = [...contentItemIds].sort();
   return useQuery({
-    queryKey: ['guide-attachment-counts', contentItemIds],
+    queryKey: ['guide-attachment-counts', sortedIds],
     queryFn: async () => {
-      if (contentItemIds.length === 0) return {};
+      if (sortedIds.length === 0) return {};
 
       const { data, error } = await (supabase as any)
         .from('guide_attachments')
         .select('content_item_id')
-        .in('content_item_id', contentItemIds);
+        .in('content_item_id', sortedIds);
 
       if (error) throw error;
 
@@ -166,7 +169,7 @@ export const useAttachmentCounts = (contentItemIds: string[]) => {
       });
       return counts;
     },
-    enabled: contentItemIds.length > 0
+    enabled: sortedIds.length > 0
   });
 };
 

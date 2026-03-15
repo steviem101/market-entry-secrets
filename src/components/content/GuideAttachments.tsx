@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Download, FileText, FileSpreadsheet, File, Lock } from "lucide-react";
 import {
   GuideAttachment,
