@@ -15,7 +15,7 @@ import { ListPagination } from "@/components/common/ListPagination";
 import { SubmissionButton } from "@/components/directory-submissions/SubmissionButton";
 import { useCaseStudies } from "@/hooks/useCaseStudies";
 import { SEOHead } from "@/components/common/SEOHead";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 
 const PAGE_SIZE = 12;
 
@@ -75,46 +75,6 @@ const getCountryFlag = (country: string | null | undefined): string => {
   if (!country) return "\u{1F30D}";
   return COUNTRY_FLAGS[country] || "\u{1F30D}";
 };
-
-const CardSkeleton = ({ isGrid }: { isGrid: boolean }) => (
-  <div className={`rounded-lg border bg-card ${isGrid ? 'p-5' : 'p-5 flex gap-5'}`}>
-    {isGrid ? (
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-10 rounded-lg" />
-          <div className="flex-1">
-            <Skeleton className="h-4 w-24 mb-1" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-          <Skeleton className="h-5 w-16 rounded-full" />
-        </div>
-        <Skeleton className="h-5 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-        <div className="flex gap-2 pt-2">
-          <Skeleton className="h-6 w-20 rounded-full" />
-          <Skeleton className="h-6 w-16 rounded-full" />
-        </div>
-        <div className="flex justify-between pt-2 border-t">
-          <Skeleton className="h-3 w-20" />
-          <Skeleton className="h-3 w-16" />
-        </div>
-      </div>
-    ) : (
-      <>
-        <Skeleton className="h-12 w-12 rounded-lg flex-shrink-0" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-4 w-full" />
-          <div className="flex gap-4 pt-1">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-16" />
-          </div>
-        </div>
-      </>
-    )}
-  </div>
-);
 
 const CaseStudies = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -248,27 +208,9 @@ const CaseStudies = () => {
 
   if (isLoading) {
     return (
-      <>
-        <section className="bg-gradient-to-br from-sky-50 via-blue-50/50 to-indigo-50/30 py-16 md:py-20">
-          <div className="container mx-auto px-4 text-center">
-            <Skeleton className="h-12 w-12 rounded-full mx-auto mb-6" />
-            <Skeleton className="h-12 w-full max-w-sm mx-auto mb-4" />
-            <Skeleton className="h-6 w-full max-w-md mx-auto mb-8" />
-            <div className="flex justify-center gap-6">
-              <Skeleton className="h-20 w-32 rounded-lg" />
-              <Skeleton className="h-20 w-32 rounded-lg" />
-              <Skeleton className="h-20 w-32 rounded-lg" />
-            </div>
-          </div>
-        </section>
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <CardSkeleton key={i} isGrid={true} />
-            ))}
-          </div>
-        </div>
-      </>
+      <div className="container mx-auto px-4 py-8">
+        <CardGridSkeleton count={6} cardHeight="h-48" />
+      </div>
     );
   }
 
