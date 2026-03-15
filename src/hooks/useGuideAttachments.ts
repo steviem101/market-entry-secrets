@@ -31,10 +31,17 @@ export const useGuideAttachments = (contentItemId: string | undefined) => {
         .eq('content_item_id', contentItemId)
         .order('sort_order');
 
-      if (error) throw error;
+      // Gracefully handle table not existing yet (42P01 = undefined_table)
+      if (error) {
+        if (error.code === '42P01' || error.message?.includes('guide_attachments')) {
+          return [] as GuideAttachment[];
+        }
+        throw error;
+      }
       return data as GuideAttachment[];
     },
-    enabled: !!contentItemId
+    enabled: !!contentItemId,
+    retry: false
   });
 };
 
@@ -102,9 +109,12 @@ export const useUploadAttachment = () => {
       toast({ title: 'File uploaded', description: 'Attachment added successfully.' });
     },
     onError: (error: any) => {
+      const isMissingBucket = error.message?.includes('Bucket not found') || error.statusCode === '404';
       toast({
         title: 'Upload failed',
-        description: error.message || 'Failed to upload file.',
+        description: isMissingBucket
+          ? 'Storage bucket not configured. Run the guide_attachments migration first.'
+          : (error.message || 'Failed to upload file.'),
         variant: 'destructive',
       });
     }
@@ -161,7 +171,13 @@ export const useAttachmentCounts = (contentItemIds: string[]) => {
         .select('content_item_id')
         .in('content_item_id', sortedIds);
 
-      if (error) throw error;
+      // Gracefully handle table not existing yet
+      if (error) {
+        if (error.code === '42P01' || error.message?.includes('guide_attachments')) {
+          return {} as Record<string, number>;
+        }
+        throw error;
+      }
 
       const counts: Record<string, number> = {};
       (data || []).forEach((row: { content_item_id: string }) => {
@@ -169,7 +185,8 @@ export const useAttachmentCounts = (contentItemIds: string[]) => {
       });
       return counts;
     },
-    enabled: sortedIds.length > 0
+    enabled: sortedIds.length > 0,
+    retry: false
   });
 };
 
