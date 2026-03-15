@@ -48,25 +48,53 @@ export const reportApi = {
   },
 
   async generateReport(intakeFormId: string) {
+    // Ensure the session token is fresh before calling the edge function.
+    // A stale/expired JWT causes Supabase's gateway to return a 401 without
+    // CORS headers, which the browser surfaces as a network error (FetchError).
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.warn('Session refresh failed before report generation:', refreshError.message);
+    }
+
+    // Check we have a valid session before calling the edge function
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('Your session has expired. Please sign in again and retry.');
+    }
+
     const { data, error } = await supabase.functions.invoke('generate-report', {
       body: { intake_form_id: intakeFormId },
     });
 
     if (error) {
-      // Provide a more helpful error message for common failure modes
       const msg = error.message || '';
-      if (msg.includes('Failed to send a request') || msg.includes('FetchError')) {
+      console.error('generate-report invoke error:', msg, error);
+
+      if (msg.includes('Failed to send a request') || msg.includes('FetchError') || msg.includes('TypeError')) {
         throw new Error(
           'Unable to reach the report generation service. This may be a temporary issue — please try again in a moment.'
         );
       }
       if (msg.includes('non-2xx')) {
+        const statusMatch = msg.match(/(\d{3})/);
+        const status = statusMatch ? statusMatch[1] : 'unknown';
+        if (status === '401') {
+          throw new Error(
+            'Your session has expired. Please sign in again and retry.'
+          );
+        }
         throw new Error(
           'The report generation service returned an error. Please try again or contact support if the issue persists.'
         );
       }
       throw error;
     }
+
+    // Handle edge case where invoke returns a non-error response but contains an error body
+    if (data && typeof data === 'object' && 'error' in data && !('report_id' in data)) {
+      throw new Error((data as any).error || 'Report generation failed');
+    }
+
     return data as { report_id: string; status: string; [key: string]: unknown };
   },
 
