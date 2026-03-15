@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Globe, Clock, Calendar, Eye, Share2, ExternalLink, ArrowRight, Sparkles, Copy, CheckCheck } from "lucide-react";
+import { Heart, Globe, Clock, Calendar, Eye, Share2, ExternalLink, ArrowRight, Sparkles, CheckCheck } from "lucide-react";
 import { useCaseStudy, useRelatedCaseStudies } from "@/hooks/useCaseStudies";
 import { useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
@@ -70,8 +70,14 @@ const CaseStudyDetail = () => {
     companyProfile?.origin_country
   );
 
-  // Get section IDs for scroll spy
-  const sectionIds = caseStudy?.content_sections?.map((section: any) => section.slug) || [];
+  // Group content bodies by section — filter out sections with no bodies
+  const groupedContent = caseStudy?.content_sections?.map((section: any) => ({
+    ...section,
+    bodies: caseStudy.content_bodies?.filter((body: any) => body.section_id === section.id) || []
+  })).filter((section: any) => section.bodies.length > 0) || [];
+
+  // Get section IDs for scroll spy — must match the filtered sections actually rendered in DOM
+  const sectionIds = groupedContent.map((section: any) => section.slug);
   const { activeSection, scrollToSection } = useScrollSpy({ sectionIds });
 
   // Increment view count once when content loads
@@ -141,12 +147,6 @@ const CaseStudyDetail = () => {
   }
 
   const primaryFounder = caseStudy.content_founders?.find((f: any) => f.is_primary) || caseStudy.content_founders?.[0];
-
-  // Group content bodies by section
-  const groupedContent = caseStudy.content_sections?.map((section: any) => ({
-    ...section,
-    bodies: caseStudy.content_bodies?.filter((body: any) => body.section_id === section.id) || []
-  })).filter((section: any) => section.bodies.length > 0) || [];
 
   const sections: CaseStudySection[] = groupedContent.map((section: any) => ({
     id: section.id,

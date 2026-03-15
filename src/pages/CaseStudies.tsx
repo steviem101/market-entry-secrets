@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, AlertCircle, BookOpen, LayoutGrid, LayoutList, ArrowRight, Calendar, Clock, Eye, X, SlidersHorizontal, Globe, Building2 } from "lucide-react";
+import { Search, AlertCircle, BookOpen, LayoutGrid, LayoutList, ArrowRight, Calendar, Clock, Eye, X, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,9 +130,10 @@ const CaseStudies = () => {
   const [countryFilter, setCountryFilter] = useState(searchParams.get("country") ?? "any");
   const [sortBy, setSortBy] = useState(searchParams.get("sort") ?? "recent");
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
-  const [viewMode, setViewMode] = useState<"grid" | "list">(
-    (searchParams.get("view") as "grid" | "list") ?? "grid"
-  );
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    const param = searchParams.get("view");
+    return param === "list" ? "list" : "grid";
+  });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
@@ -251,8 +252,8 @@ const CaseStudies = () => {
         <section className="bg-gradient-to-br from-sky-50 via-blue-50/50 to-indigo-50/30 py-16 md:py-20">
           <div className="container mx-auto px-4 text-center">
             <Skeleton className="h-12 w-12 rounded-full mx-auto mb-6" />
-            <Skeleton className="h-12 w-96 mx-auto mb-4" />
-            <Skeleton className="h-6 w-[480px] mx-auto mb-8" />
+            <Skeleton className="h-12 w-full max-w-sm mx-auto mb-4" />
+            <Skeleton className="h-6 w-full max-w-md mx-auto mb-8" />
             <div className="flex justify-center gap-6">
               <Skeleton className="h-20 w-32 rounded-lg" />
               <Skeleton className="h-20 w-32 rounded-lg" />
