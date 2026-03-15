@@ -1129,8 +1129,12 @@ async function generateReportInBackground(
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY") || "";
+
+    if (!lovableKey) {
+      throw new Error("LOVABLE_API_KEY is not configured. Cannot generate report sections.");
+    }
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
@@ -1359,6 +1363,8 @@ async function generateReportInBackground(
         if (result.status === "fulfilled" && result.value) {
           sections[result.value.name] = result.value.data;
           if (result.value.data.visible) sectionsGenerated.push(result.value.name);
+        } else if (result.status === "rejected") {
+          console.error("Section generation failed:", result.reason);
         }
       }
 
@@ -1550,8 +1556,21 @@ Deno.serve(async (req) => {
     // Kick off background processing — does NOT block the response
     // @ts-ignore: EdgeRuntime.waitUntil is available in Supabase Edge Functions
     EdgeRuntime.waitUntil(
-      generateReportInBackground(intake_form_id, reportId).catch((err) => {
+      generateReportInBackground(intake_form_id, reportId).catch(async (err) => {
         console.error("Unhandled error in background report generation:", err);
+        // Ensure report is marked as failed so it doesn't stay stuck in "processing"
+        try {
+          const sb = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+          );
+          await sb.from("user_reports").update({
+            status: "failed",
+            report_json: { error: err instanceof Error ? err.message : "Unknown error during report generation" },
+          }).eq("id", reportId);
+        } catch (updateErr) {
+          console.error("Failed to update report status to failed:", updateErr);
+        }
       })
     );
 

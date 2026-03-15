@@ -1,5 +1,40 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { IntakeFormData } from '@/components/report-creator/intakeSchema';
+import { TIER_REQUIREMENTS, TIER_HIERARCHY } from '@/components/report/reportSectionConfig';
+
+/** Client-side fallback: strip gated section content when RPC is unavailable */
+async function applyClientSideTierGating(reportJson: Record<string, unknown>): Promise<Record<string, unknown>> {
+  // Get user's current tier
+  const { data: { user } } = await supabase.auth.getUser();
+  let userTier = 'free';
+  if (user) {
+    const { data } = await (supabase as any)
+      .from('user_subscriptions')
+      .select('tier')
+      .eq('user_id', user.id)
+      .single();
+    if (data?.tier) {
+      userTier = data.tier === 'premium' ? 'growth' : data.tier === 'concierge' ? 'enterprise' : data.tier;
+    }
+  }
+  const userTierIndex = TIER_HIERARCHY.indexOf(userTier);
+
+  const sections = (reportJson as any)?.sections;
+  if (!sections || typeof sections !== 'object') return reportJson;
+
+  const filtered = { ...reportJson, sections: { ...sections } };
+  for (const [key, requiredTier] of Object.entries(TIER_REQUIREMENTS)) {
+    const reqIndex = TIER_HIERARCHY.indexOf(requiredTier);
+    if (userTierIndex < reqIndex && (filtered as any).sections[key]) {
+      (filtered as any).sections[key] = {
+        title: (filtered as any).sections[key]?.title || key,
+        visible: false,
+        required_tier: requiredTier,
+      };
+    }
+  }
+  return filtered;
+}
 
 export const reportApi = {
   async submitIntakeForm(data: IntakeFormData, userId: string) {
@@ -144,8 +179,7 @@ export const reportApi = {
     if (metaError) throw metaError;
 
     // Try the server-side tier-gated function for filtered report_json.
-    // Fall back to the raw report_json if the RPC function doesn't exist
-    // (e.g. migration not yet applied).
+    // Fall back to client-side filtering if the RPC function doesn't exist.
     let reportJson = meta.report_json ?? {};
     try {
       const { data: gatedJson, error: rpcError } = await supabase
@@ -154,10 +188,12 @@ export const reportApi = {
       if (!rpcError && gatedJson != null) {
         reportJson = gatedJson;
       } else if (rpcError) {
-        console.warn('get_tier_gated_report RPC failed, using raw report_json:', rpcError.message);
+        console.warn('get_tier_gated_report RPC failed, applying client-side filtering:', rpcError.message);
+        reportJson = applyClientSideTierGating(reportJson);
       }
     } catch (e) {
-      console.warn('get_tier_gated_report RPC unavailable, using raw report_json:', e);
+      console.warn('get_tier_gated_report RPC unavailable, applying client-side filtering:', e);
+      reportJson = applyClientSideTierGating(reportJson);
     }
 
     return {

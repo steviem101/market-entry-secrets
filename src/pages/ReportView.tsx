@@ -77,8 +77,10 @@ const ReportView = () => {
     }
   }, []);
 
-  // Wait for auth to settle before showing report (especially after Stripe redirect)
-  if (isLoading || (authLoading && cameFromStripe)) {
+  // Wait for auth to settle before showing report. Without this, the report
+  // query fires before auth.uid() is available, RLS returns no rows, and the
+  // page shows "Report Not Found" even though the user owns the report.
+  if (isLoading || authLoading) {
     return (
       <>
         <main className="min-h-screen pt-20 pb-16 px-4">
