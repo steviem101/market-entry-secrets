@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, Search } from "lucide-react";
 import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 import { useContentItems, useContentCategories } from "@/hooks/useContent";
+import { useAttachmentCounts } from "@/hooks/useGuideAttachments";
 import { ContentHero } from "@/components/content/ContentHero";
 import { FeaturedContent } from "@/components/content/FeaturedContent";
 import { ContentGrid } from "@/components/content/ContentGrid";
@@ -40,6 +41,8 @@ const Content = () => {
     contentType: ['guide', 'article', 'success_story']
   });
   const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useContentCategories();
+  const contentItemIds = useMemo(() => contentItems.map(item => item.id), [contentItems]);
+  const { data: attachmentCounts = {} } = useAttachmentCounts(contentItemIds);
 
   const filteredContent = contentItems.filter(item => {
     const matchesSearch = searchQuery === "" ||
@@ -54,6 +57,11 @@ const Content = () => {
 
     return matchesSearch && matchesCategory && matchesType;
   });
+
+  // Only show categories that have at least 1 piece of content
+  const categoriesWithContent = categories.filter(category =>
+    contentItems.some(item => item.category_id === category.id)
+  );
 
   const featuredContent = contentItems.filter(item => item.featured);
   const hasActiveFilters = selectedCategory !== null || selectedType !== "all";
@@ -93,7 +101,7 @@ const Content = () => {
     <>
       <ContentHero
         totalContent={contentItems.length}
-        totalCategories={categories.length}
+        totalCategories={categoriesWithContent.length}
       />
 
       {/* Simplified Filter Bar: Search + Type Tabs + Category Pills */}
@@ -129,7 +137,7 @@ const Content = () => {
             ))}
           </div>
 
-          {/* Category Pills */}
+          {/* Category Pills — only show categories with content */}
           <div className="flex flex-wrap gap-2">
             <Button
               variant={selectedCategory === null ? "default" : "outline"}
@@ -138,7 +146,7 @@ const Content = () => {
             >
               All Categories
             </Button>
-            {categories.map((category) => (
+            {categoriesWithContent.map((category) => (
               <Button
                 key={category.id}
                 variant={selectedCategory === category.id ? "default" : "outline"}
@@ -173,14 +181,16 @@ const Content = () => {
         <FeaturedContent
           featuredContent={featuredContent}
           selectedCategory={selectedCategory}
+          attachmentCounts={attachmentCounts}
         />
 
         <ContentGrid
           filteredContent={filteredContent}
           selectedCategory={selectedCategory}
-          categories={categories}
+          categories={categoriesWithContent}
           totalContent={contentItems.length}
           excludeFeatured={selectedCategory === null && featuredContent.length > 0}
+          attachmentCounts={attachmentCounts}
         />
       </div>
     </>

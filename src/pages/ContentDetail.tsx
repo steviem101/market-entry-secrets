@@ -5,13 +5,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Heart, Globe, Twitter, Instagram, Youtube, Clock, Calendar, Eye } from "lucide-react";
-import { useContentItem, useIncrementViewCount } from "@/hooks/useContent";
+import { ArrowLeft, Heart, Twitter, Clock, Calendar, Eye, Share2, Check, BookOpen, Users, Sparkles, ChevronRight } from "lucide-react";
+import { useContentItem, useContentItems, useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { useAuth } from "@/hooks/useAuth";
 import { ContentEnrichmentButton } from "@/components/content/ContentEnrichmentButton";
 import { FreemiumGate } from "@/components/FreemiumGate";
+import { SEOHead } from "@/components/common/SEOHead";
+import { GuideAttachments } from "@/components/content/GuideAttachments";
+import { GuideAttachmentManager } from "@/components/content/GuideAttachmentManager";
+import { useGuideAttachments } from "@/hooks/useGuideAttachments";
 import DOMPurify from "dompurify";
 
 interface ContentSection {
@@ -41,14 +44,26 @@ const getSavedStories = (): string[] => {
 const ContentDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [savedStories, setSavedStories] = useState<string[]>(getSavedStories);
+  const [copied, setCopied] = useState(false);
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: content, isLoading, error } = useContentItem(slug || '');
   const incrementViewCount = useIncrementViewCount();
+  const { data: attachments = [] } = useGuideAttachments(content?.id);
+
+  // Fetch related content (same category, different slug)
+  const { data: allContent = [] } = useContentItems({
+    contentType: ['guide', 'article', 'success_story']
+  });
+  const relatedGuides = content && content.category_id
+    ? allContent
+        .filter(item => item.id !== content.id && item.category_id === content.category_id)
+        .slice(0, 3)
+    : [];
 
   // Get section IDs for scroll spy
-  const sectionIds = content?.content_sections?.map(section => section.slug) || [];
+  const sectionIds = content?.content_sections?.map((section: any) => section.slug) || [];
   const { activeSection, scrollToSection } = useScrollSpy({ sectionIds });
 
   // Increment view count once when content loads
@@ -65,12 +80,22 @@ const ContentDetail = () => {
 
     setSavedStories(prev => {
       const next = prev.includes(content.id)
-        ? prev.filter(id => id !== content.id)
+        ? prev.filter((id: string) => id !== content.id)
         : [...prev, content.id];
       localStorage.setItem(SAVED_STORIES_KEY, JSON.stringify(next));
       return next;
     });
   }, [content]);
+
+  const handleShare = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+    }
+  }, []);
 
   if (isLoading) {
     return (
@@ -100,14 +125,14 @@ const ContentDetail = () => {
   }
 
   const companyProfile = content.content_company_profiles?.[0];
-  const primaryFounder = content.content_founders?.find(f => f.is_primary) || content.content_founders?.[0];
+  const primaryFounder = content.content_founders?.find((f: any) => f.is_primary) || content.content_founders?.[0];
   // Group content bodies by section
-  const groupedContent = content.content_sections?.map(section => ({
+  const groupedContent = content.content_sections?.map((section: any) => ({
     ...section,
-    bodies: content.content_bodies?.filter(body => body.section_id === section.id) || []
+    bodies: content.content_bodies?.filter((body: any) => body.section_id === section.id) || []
   })) || [];
 
-  const sections: ContentSection[] = content.content_sections?.map(section => ({
+  const sections: ContentSection[] = content.content_sections?.map((section: any) => ({
     id: section.id,
     title: section.title,
     slug: section.slug,
@@ -115,47 +140,82 @@ const ContentDetail = () => {
   })) || [];
 
   // For enrichment button - track which sections have content
-  const sectionsWithContentStatus = content.content_sections?.map(section => ({
+  const sectionsWithContentStatus = content.content_sections?.map((section: any) => ({
     id: section.id,
     title: section.title,
-    hasContent: (content.content_bodies?.filter(body => body.section_id === section.id) || []).length > 0
+    hasContent: (content.content_bodies?.filter((body: any) => body.section_id === section.id) || []).length > 0
   })) || [];
 
   // Get content bodies that don't belong to any section
-  const generalContent = content.content_bodies?.filter(body => !body.section_id) || [];
+  const generalContent = content.content_bodies?.filter((body: any) => !body.section_id) || [];
 
   const badgeLabel = CONTENT_TYPE_BADGE_LABELS[content.content_type] || content.content_type.toUpperCase();
+  const categoryName = content.content_categories?.name || "Guide";
+  const descriptionText = content.subtitle || content.meta_description || `Expert guidance for entering the Australian market.`;
 
   return (
     <>
-      <Helmet>
-        <title>{content.title} | Market Entry Secrets</title>
-        {content.meta_description && (
-          <meta name="description" content={content.meta_description} />
-        )}
-      </Helmet>
+      <SEOHead
+        title={`${content.title} | Market Entry Secrets`}
+        description={descriptionText}
+        canonicalPath={`/content/${content.slug}`}
+        ogType="article"
+        jsonLd={{
+          type: "Article",
+          data: {
+            headline: content.title,
+            description: descriptionText,
+            ...(content.publish_date && { datePublished: content.publish_date }),
+            dateModified: content.updated_at,
+            author: { "@type": "Organization", name: "Market Entry Secrets" },
+            publisher: {
+              "@type": "Organization",
+              name: "Market Entry Secrets",
+              url: "https://market-entry-secrets.lovable.app"
+            }
+          }
+        }}
+      />
 
       <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumbs */}
+        <nav aria-label="Breadcrumb" className="mb-6">
+          <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <li><Link to="/" className="hover:text-foreground transition-colors">Home</Link></li>
+            <li><ChevronRight className="w-3.5 h-3.5" /></li>
+            <li><Link to="/content" className="hover:text-foreground transition-colors">Market Entry Guides</Link></li>
+            <li><ChevronRight className="w-3.5 h-3.5" /></li>
+            <li className="text-foreground font-medium truncate max-w-[200px]">{content.title}</li>
+          </ol>
+        </nav>
+
         <div className="mb-6 flex items-center justify-between">
           <Link to="/content">
-            <Button variant="ghost" className="mb-4">
+            <Button variant="ghost" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Content
             </Button>
           </Link>
 
-          {isAdmin && sections.length > 0 && (
-            <ContentEnrichmentButton
-              contentId={content.id}
-              contentTitle={content.title}
-              sectionCount={sections.length}
-              sections={sectionsWithContentStatus}
-              onEnrichmentComplete={() => {
-                queryClient.invalidateQueries({ queryKey: ['content-item', slug] });
-              }}
-            />
-          )}
+          <div className="flex items-center gap-2">
+            {isAdmin && sections.length > 0 && (
+              <ContentEnrichmentButton
+                contentId={content.id}
+                contentTitle={content.title}
+                sectionCount={sections.length}
+                sections={sectionsWithContentStatus}
+                onEnrichmentComplete={() => {
+                  queryClient.invalidateQueries({ queryKey: ['content-item', slug] });
+                }}
+              />
+            )}
+          </div>
         </div>
+
+        {/* Admin attachment manager — renders below action bar when expanded */}
+        {isAdmin && (
+          <GuideAttachmentManager contentItemId={content.id} />
+        )}
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar Navigation — hidden on mobile/tablet */}
@@ -165,20 +225,22 @@ const ContentDetail = () => {
                 <h2 className="text-sm font-medium text-muted-foreground mb-2">
                   {companyProfile?.company_name || content.title}
                 </h2>
-                <h3 className="text-lg font-semibold mb-4 text-foreground">
-                  {companyProfile?.monthly_revenue && `Revenue: ${companyProfile.monthly_revenue}/Month`}
-                </h3>
+                {companyProfile?.monthly_revenue && (
+                  <h3 className="text-lg font-semibold mb-4 text-foreground">
+                    Revenue: {companyProfile.monthly_revenue}/Month
+                  </h3>
+                )}
               </div>
 
               {sections.length > 0 && (
-                <nav className="space-y-2">
+                <nav className="space-y-1">
                   {sections.map((section) => (
                     <button
                       key={section.id}
                       onClick={() => scrollToSection(section.slug)}
                       className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                         section.isActive
-                          ? "bg-primary/10 text-primary font-medium"
+                          ? "bg-primary/10 text-primary font-medium border-l-2 border-primary"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       }`}
                     >
@@ -198,6 +260,7 @@ const ContentDetail = () => {
               contentTitle={content.title}
               contentDescription={content.subtitle || content.meta_description}
             >
+            {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-4 mb-6">
                 <img
@@ -205,25 +268,42 @@ const ContentDetail = () => {
                   alt={companyProfile?.company_name || content.title}
                   className="w-16 h-16 rounded-lg object-cover"
                 />
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground mb-1">
-                    {companyProfile?.company_name || content.title}
-                  </h1>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <Badge variant="outline">{badgeLabel}</Badge>
+                    <Badge variant="secondary">{categoryName}</Badge>
+                  </div>
                   <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                    <span>{badgeLabel}</span>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {new Date(content.publish_date).toLocaleDateString()}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {content.read_time} min read
-                    </div>
+                    {content.publish_date && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(content.publish_date).toLocaleDateString()}
+                      </div>
+                    )}
+                    {content.read_time != null && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {content.read_time} min read
+                      </div>
+                    )}
                     <div className="flex items-center gap-1">
                       <Eye className="w-4 h-4" />
-                      {content.view_count} views
+                      {content.view_count || 0} views
                     </div>
                   </div>
+                </div>
+                {/* Share + Save buttons */}
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={handleShare} className="text-muted-foreground hover:text-foreground">
+                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Share2 className="w-4 h-4" />}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={toggleSave} className="text-muted-foreground hover:text-foreground">
+                    <Heart
+                      className={`w-4 h-4 ${
+                        savedStories.includes(content.id) ? "fill-current text-red-500" : ""
+                      }`}
+                    />
+                  </Button>
                 </div>
               </div>
 
@@ -272,19 +352,6 @@ const ContentDetail = () => {
                           </Badge>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={toggleSave}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <Heart
-                          className={`w-4 h-4 mr-1 ${
-                            savedStories.includes(content.id) ? "fill-current text-red-500" : ""
-                          }`}
-                        />
-                        SAVE
-                      </Button>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
@@ -316,7 +383,6 @@ const ContentDetail = () => {
                             <div className="text-xs text-muted-foreground">REVENUE/MO</div>
                           </div>
                         )}
-
                         {companyProfile.founder_count != null && (
                           <div className="text-center">
                             <div className="text-xl sm:text-2xl font-bold text-foreground">
@@ -325,7 +391,6 @@ const ContentDetail = () => {
                             <div className="text-xs text-muted-foreground">FOUNDERS</div>
                           </div>
                         )}
-
                         {companyProfile.employee_count != null && (
                           <div className="text-center">
                             <div className="text-xl sm:text-2xl font-bold text-foreground">
@@ -340,15 +405,22 @@ const ContentDetail = () => {
                 </Card>
               )}
 
+              {/* Downloadable Attachments (inline) */}
+              {attachments.length > 0 && (
+                <GuideAttachments attachments={attachments} variant="inline" />
+              )}
+
               {/* General Content (not in sections) */}
               {generalContent.length > 0 && (
                 <div className="prose prose-lg max-w-none mb-12">
-                  {generalContent.map((body) => (
+                  {generalContent.map((body: any) => (
                     <div key={body.id} className="mb-8">
                       {body.question && (
-                        <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">
-                          {body.question}
-                        </h2>
+                        <div className="bg-muted/50 border-l-4 border-primary rounded-r-lg p-4 mb-4">
+                          <h2 className="text-xl font-semibold text-foreground m-0">
+                            {body.question}
+                          </h2>
+                        </div>
                       )}
                       <div
                         className="text-muted-foreground leading-relaxed"
@@ -361,18 +433,20 @@ const ContentDetail = () => {
 
               {/* Sectioned Content */}
               <div className="prose prose-lg max-w-none">
-                {groupedContent.map((section) => (
+                {groupedContent.map((section: any) => (
                   <div key={section.id} id={section.slug} className="mb-16 scroll-mt-8">
                     <h2 className="text-3xl font-bold text-foreground mb-8 border-b border-border pb-4">
                       {section.title}
                     </h2>
 
-                    {section.bodies.map((body) => (
+                    {section.bodies.map((body: any) => (
                       <div key={body.id} className="mb-8">
                         {body.question && (
-                          <h3 className="text-xl font-semibold text-foreground mt-6 mb-4">
-                            {body.question}
-                          </h3>
+                          <div className="bg-muted/50 border-l-4 border-primary rounded-r-lg p-4 mb-4 not-prose">
+                            <h3 className="text-lg font-semibold text-foreground m-0">
+                              {body.question}
+                            </h3>
+                          </div>
                         )}
                         <div
                           className="text-muted-foreground leading-relaxed"
@@ -385,11 +459,101 @@ const ContentDetail = () => {
               </div>
             </div>
             </FreemiumGate>
+
+            {/* Bottom: Related Guides */}
+            {relatedGuides.length > 0 && (
+              <section className="mt-16 pt-8 border-t">
+                <h2 className="text-2xl font-bold mb-6">Related Guides</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {relatedGuides.map((guide: any) => (
+                    <Link key={guide.id} to={`/content/${guide.slug}`} className="block group">
+                      <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-full">
+                        <CardContent className="p-5">
+                          <Badge variant="outline" className="mb-2 text-xs">
+                            {guide.content_categories?.name || categoryName}
+                          </Badge>
+                          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
+                            {guide.title}
+                          </h3>
+                          {guide.subtitle && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{guide.subtitle}</p>
+                          )}
+                          {guide.read_time != null && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Clock className="w-3 h-3" />
+                              {guide.read_time} min read
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Bottom CTAs */}
+            <section className="mt-12 pt-8 border-t space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/content" className="flex-1">
+                  <Button variant="outline" className="w-full gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    Browse All Guides
+                  </Button>
+                </Link>
+                <Link to="/service-providers" className="flex-1">
+                  <Button variant="outline" className="w-full gap-2">
+                    <Users className="w-4 h-4" />
+                    Find Vetted Service Providers
+                  </Button>
+                </Link>
+                <Link to="/report-creator" className="flex-1">
+                  <Button className="w-full gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Get Your Market Entry Report
+                  </Button>
+                </Link>
+              </div>
+            </section>
           </main>
 
           {/* Right Sidebar — hidden on mobile/tablet */}
           <aside className="hidden lg:block w-80 flex-shrink-0">
             <div className="sticky top-8 space-y-6">
+              {/* Guide Metadata Card */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-foreground mb-4">Guide Details</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Category</span>
+                      <span className="font-medium">{categoryName}</span>
+                    </div>
+                    {content.publish_date && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Published</span>
+                        <span className="font-medium">{new Date(content.publish_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                    {content.read_time != null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Read Time</span>
+                        <span className="font-medium">{content.read_time} min</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Views</span>
+                      <span className="font-medium">{content.view_count || 0}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Download Files Card */}
+              {attachments.length > 0 && (
+                <GuideAttachments attachments={attachments} variant="sidebar" />
+              )}
+
               {/* About Company Card */}
               {companyProfile && (
                 <Card>
@@ -429,18 +593,44 @@ const ContentDetail = () => {
                 </Card>
               )}
 
-              {/* Market Entry Guide Card */}
-              <Card className="bg-card">
+              {/* Report CTA */}
+              <Card className="bg-primary/5 border-primary/20">
                 <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-3">Market Entry Secrets</h3>
+                  <h3 className="font-semibold text-foreground mb-3">Planning Your Market Entry?</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    See exactly how online businesses get to millions in revenue
+                    Get a personalised AI-generated market entry report with competitor analysis, regulatory insights, and an action plan.
                   </p>
-                  <Button className="w-full bg-foreground text-background hover:bg-foreground/90">
-                    Join Market Entry Secrets
-                  </Button>
+                  <Link to="/report-creator">
+                    <Button className="w-full gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      Get Your Report
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
+
+              {/* Related Guides in sidebar */}
+              {relatedGuides.length > 0 && (
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-foreground mb-4">Related Guides</h3>
+                    <div className="space-y-3">
+                      {relatedGuides.slice(0, 3).map((guide: any) => (
+                        <Link
+                          key={guide.id}
+                          to={`/content/${guide.slug}`}
+                          className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-start gap-2">
+                            <BookOpen className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                            <span className="line-clamp-2">{guide.title}</span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </aside>
         </div>
