@@ -34,7 +34,6 @@ const ReportCreator = () => {
       industry_sector: [],
       company_stage: '',
       employee_count: '',
-      target_market: '',
       revenue_stage: '',
       selected_goals: [],
       additional_notes: '',
@@ -58,7 +57,6 @@ const ReportCreator = () => {
     // Clear goals when switching persona since the options differ
     form.setValue('selected_goals', []);
     // Clear persona-specific fields to prevent stale data
-    form.setValue('target_market', '');
     form.setValue('revenue_stage', '');
   };
 

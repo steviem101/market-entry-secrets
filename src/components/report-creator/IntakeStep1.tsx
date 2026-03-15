@@ -12,7 +12,7 @@ import { Building2, Globe, Rocket, ArrowRight, Check, ChevronsUpDown, X } from '
 import { cn } from '@/lib/utils';
 import {
   COUNTRY_OPTIONS, INDUSTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS,
-  TARGET_MARKET_OPTIONS, REVENUE_STAGE_OPTIONS, REGION_OPTIONS,
+  REVENUE_STAGE_OPTIONS, REGION_OPTIONS,
   type IntakeFormData, type ReportPersona,
 } from './intakeSchema';
 
@@ -270,7 +270,7 @@ export const IntakeStep1 = ({ form, onNext, persona, onPersonaChange }: IntakeSt
           </div>
 
           <div className="space-y-2">
-            <Label>Number of Employees *</Label>
+            <Label>Number of Employees</Label>
             <Select value={watch('employee_count')} onValueChange={(v) => setValue('employee_count', v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select range" />
@@ -288,22 +288,6 @@ export const IntakeStep1 = ({ form, onNext, persona, onPersonaChange }: IntakeSt
         </div>
 
         {/* Persona-specific fields */}
-        {persona === 'international' && (
-          <div className="space-y-2">
-            <Label>Target Market</Label>
-            <Select value={watch('target_market') || ''} onValueChange={(v) => setValue('target_market', v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select target market" />
-              </SelectTrigger>
-              <SelectContent>
-                {TARGET_MARKET_OPTIONS.map((t) => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
         {persona === 'startup' && (
           <div className="space-y-2">
             <Label>Current ARR / Revenue Stage</Label>
