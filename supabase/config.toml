@@ -22,7 +22,12 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.generate-report]
-verify_jwt = true
+# JWT validation is handled inside the function (lines 1478-1493).
+# Setting verify_jwt = true causes the Supabase API gateway to reject
+# requests with expired/invalid JWTs BEFORE the function runs, and
+# the gateway's 401 response lacks CORS headers — the browser then
+# surfaces it as a network error (FetchError) instead of a 401.
+verify_jwt = false
 
 [functions.sync-lemlist]
 verify_jwt = true

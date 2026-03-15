@@ -56,13 +56,19 @@ export const reportApi = {
       console.warn('Session refresh failed before report generation:', refreshError.message);
     }
 
+    // Check we have a valid session before calling the edge function
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('Your session has expired. Please sign in again and retry.');
+    }
+
     const { data, error } = await supabase.functions.invoke('generate-report', {
       body: { intake_form_id: intakeFormId },
     });
 
     if (error) {
       const msg = error.message || '';
-      console.error('generate-report invoke error:', msg);
+      console.error('generate-report invoke error:', msg, error);
 
       if (msg.includes('Failed to send a request') || msg.includes('FetchError') || msg.includes('TypeError')) {
         throw new Error(
@@ -70,7 +76,6 @@ export const reportApi = {
         );
       }
       if (msg.includes('non-2xx')) {
-        // Try to extract the actual status code / body for better diagnostics
         const statusMatch = msg.match(/(\d{3})/);
         const status = statusMatch ? statusMatch[1] : 'unknown';
         if (status === '401') {
@@ -84,6 +89,12 @@ export const reportApi = {
       }
       throw error;
     }
+
+    // Handle edge case where invoke returns a non-error response but contains an error body
+    if (data && typeof data === 'object' && 'error' in data && !('report_id' in data)) {
+      throw new Error((data as any).error || 'Report generation failed');
+    }
+
     return data as { report_id: string; status: string; [key: string]: unknown };
   },
 
