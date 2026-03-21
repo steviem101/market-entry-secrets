@@ -564,7 +564,7 @@ interface MarketResearch {
   used: boolean;
 }
 
-async function runMarketResearch(intake: any): Promise<MarketResearch> {
+async function runMarketResearch(intake: any, persona: string): Promise<MarketResearch> {
   const perplexityKey = Deno.env.get("PERPLEXITY_API_KEY");
   const empty: MarketResearch = {
     landscape: "", regulatory: "", news: "",
@@ -580,38 +580,48 @@ async function runMarketResearch(intake: any): Promise<MarketResearch> {
   const targetRegionsText = (intake.target_regions || []).join(", ") || "Australia";
   const industrySectorText = (intake.industry_sector || []).join(", ");
   const countryOfOrigin = intake.country_of_origin || "international";
+  const isStartup = persona === "startup";
 
-  console.log("Running expanded Perplexity market research (6 parallel queries, landscape includes key metrics)...");
+  console.log(`Running Perplexity market research (persona: ${persona}, 6 parallel queries)...`);
   const startTime = Date.now();
 
-  const [landscape, regulatory, news, bilateralTrade, costOfBusiness, grants] = await Promise.allSettled([
-    callPerplexity(perplexityKey,
-      `${industrySectorText} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.
+  // Landscape query is the same for both personas
+  const landscapeQuery = `${industrySectorText} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.
 
 IMPORTANT: At the end of your response, include a section titled "KEY METRICS" with 4-6 quantitative metrics in this exact format:
 - METRIC: [Label] | [Value] | [Context]
 For example:
 - METRIC: Market Size | $8.48B | 2024 estimate
 - METRIC: CAGR | 5.1% | 2024-2030 projected
-- METRIC: Active Players | 2,400+ | Registered companies`,
-      { model: "sonar-pro" }
-    ),
-    callPerplexity(perplexityKey,
-      `Requirements, regulations, compliance, and licensing for a ${countryOfOrigin} ${industrySectorText} company entering the Australian market. Include visa requirements, tax obligations, legal entity setup, and any industry-specific regulations.`
-    ),
+- METRIC: Active Players | 2,400+ | Registered companies`;
+
+  // Persona-forked queries
+  const regulatoryQuery = isStartup
+    ? `Regulations and compliance for ${industrySectorText} startups in Australia: licensing requirements, data protection, consumer protection laws, industry-specific regulations, and key regulatory bodies in ${targetRegionsText}.`
+    : `Requirements, regulations, compliance, and licensing for a ${countryOfOrigin} ${industrySectorText} company entering the Australian market. Include visa requirements, tax obligations, legal entity setup, and any industry-specific regulations.`;
+
+  const bilateralQuery = isStartup
+    ? `Australian ${industrySectorText} startup funding landscape in ${targetRegionsText}: recent VC activity, angel investment trends, notable deals in the last 12 months, most active investors, average deal sizes by stage (seed, Series A, Series B), and comparisons to global benchmarks.`
+    : `Trade relationship between ${countryOfOrigin} and Australia in ${industrySectorText}: bilateral agreements, free trade agreements, export statistics, success stories of ${countryOfOrigin} companies entering Australia, trade volumes, and key trade facilitation organisations.`;
+
+  const costQuery = isStartup
+    ? `Startup operating costs in Australia ${targetRegionsText} for ${industrySectorText}: co-working space pricing, average developer salaries, typical monthly burn rates for early-stage and growth-stage startups, cost of hiring first 5-10 employees, and common expense breakdowns.`
+    : `Cost of doing business in Australia ${targetRegionsText} for ${industrySectorText}: average office rent per sqm, local salaries for key roles, corporate tax rate, GST obligations, employer superannuation rate, typical setup costs for a foreign company, and any cost comparison with ${countryOfOrigin}.`;
+
+  const grantsQuery = isStartup
+    ? `Australian government grants, R&D tax incentive (43.5% refundable offset), state-specific startup grants, accelerator programs, and funding opportunities for ${industrySectorText} startups in ${targetRegionsText}. Include Export Market Development Grants (EMDG), Commercialisation Fund, and eligibility requirements.`
+    : `Australian government grants, incentives, R&D tax incentives, landing pad programs, and funding opportunities for international ${industrySectorText} companies from ${countryOfOrigin} setting up in ${targetRegionsText}. Include state-specific programs and eligibility requirements.`;
+
+  const [landscape, regulatory, news, bilateralTrade, costOfBusiness, grants] = await Promise.allSettled([
+    callPerplexity(perplexityKey, landscapeQuery, { model: "sonar-pro" }),
+    callPerplexity(perplexityKey, regulatoryQuery),
     callPerplexity(perplexityKey,
       `Recent news and developments in ${industrySectorText} in Australia in the last 6 months. Focus on market trends, regulatory changes, major deals, and new entrants.`,
       { recency: "month" }
     ),
-    callPerplexity(perplexityKey,
-      `Trade relationship between ${countryOfOrigin} and Australia in ${industrySectorText}: bilateral agreements, free trade agreements, export statistics, success stories of ${countryOfOrigin} companies entering Australia, trade volumes, and key trade facilitation organisations.`
-    ),
-    callPerplexity(perplexityKey,
-      `Cost of doing business in Australia ${targetRegionsText} for ${industrySectorText}: average office rent per sqm, local salaries for key roles, corporate tax rate, GST obligations, employer superannuation rate, typical setup costs for a foreign company, and any cost comparison with ${countryOfOrigin}.`
-    ),
-    callPerplexity(perplexityKey,
-      `Australian government grants, incentives, R&D tax incentives, landing pad programs, and funding opportunities for international ${industrySectorText} companies from ${countryOfOrigin} setting up in ${targetRegionsText}. Include state-specific programs and eligibility requirements.`
-    ),
+    callPerplexity(perplexityKey, bilateralQuery),
+    callPerplexity(perplexityKey, costQuery),
+    callPerplexity(perplexityKey, grantsQuery),
   ]);
 
   const result: MarketResearch = {
@@ -649,56 +659,6 @@ For example:
 
   console.log(`Perplexity research completed in ${Date.now() - startTime}ms — ${result.citations.length} citations`);
   return result;
-}
-
-// ── Key Metrics extraction via Perplexity structured output ────────────
-
-interface KeyMetric {
-  label: string;
-  value: string;
-  context: string;
-}
-
-async function extractKeyMetrics(intake: any): Promise<{ metrics: KeyMetric[]; citations: string[] }> {
-  const perplexityKey = Deno.env.get("PERPLEXITY_API_KEY");
-  if (!perplexityKey) return { metrics: [], citations: [] };
-
-  const industrySectorText = (intake.industry_sector || []).join(", ");
-  const targetRegionsText = (intake.target_regions || []).join(", ") || "Australia";
-
-  console.log("Extracting key market metrics via Perplexity structured output...");
-
-  try {
-    const result = await callPerplexityStructured(
-      perplexityKey,
-      `Provide key market metrics for the ${industrySectorText} industry in Australia ${targetRegionsText}. Include: total market size (in AUD or USD), projected CAGR or growth rate, number of active companies/players, key growth drivers, average industry revenue, and any other important quantitative data points. Provide 4-6 metrics with specific numbers.`,
-      {
-        type: "object",
-        properties: {
-          metrics: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                label: { type: "string", description: "Short metric name, e.g. 'Market Size', 'CAGR', 'Active Players'" },
-                value: { type: "string", description: "The metric value, e.g. '$8.48B', '5.1%', '2,400+'" },
-                context: { type: "string", description: "Brief context, e.g. '2024 estimate', '2024-2030 projected'" },
-              },
-              required: ["label", "value", "context"],
-            },
-          },
-        },
-        required: ["metrics"],
-      }
-    );
-
-    const metrics = result.content?.metrics || [];
-    console.log(`Extracted ${metrics.length} key metrics`);
-    return { metrics, citations: result.citations };
-  } catch (e) {
-    console.error("Key metrics extraction failed (continuing):", e);
-    return { metrics: [], citations: [] };
-  }
 }
 
 // ── External Event Discovery via Firecrawl Search ─────────────────────
@@ -906,12 +866,47 @@ Rules:
 const sanitizeFilterValue = (v: string): string =>
   v.replace(/[,()]/g, "");
 
+// ── Goal-to-service-tag mapping ───────────────────────────────────────
+// Form goals are long descriptions; provider service tags are short keywords.
+// Map goals → searchable service tags for better Supabase .cs.{} matching.
+const GOAL_SERVICE_TAGS: Record<string, string[]> = {
+  "Find vetted service providers (legal, tax, HR, finance)": ["Legal", "Tax", "HR", "Accounting", "Finance", "Immigration"],
+  "Connect with trade and investment agencies": ["Trade Advisory", "Government Relations", "Investment"],
+  "Access market entry case studies and success stories": ["Market Research", "Consulting"],
+  "Identify relevant industry associations and chambers of commerce": ["Industry Association", "Chamber of Commerce"],
+  "Discover upcoming market entry events and networking opportunities": ["Events", "Networking"],
+  "Find experienced mentors and advisors": ["Mentorship", "Advisory", "Consulting"],
+  "Access qualified lead lists for my target sector": ["Lead Generation", "Market Research", "Data"],
+  "Understand regulatory and compliance requirements": ["Legal", "Compliance", "Regulatory"],
+  // Startup goals
+  "Find investors and venture capital firms": ["Investment", "Venture Capital", "Funding"],
+  "Discover accelerators and incubator programs": ["Accelerator", "Incubator", "Startup"],
+  "Connect with mentors and startup advisors": ["Mentorship", "Advisory", "Startup"],
+  "Access growth-stage service providers (legal, finance, HR)": ["Legal", "Finance", "HR", "Accounting"],
+  "Find co-working spaces and innovation hubs": ["Co-working", "Innovation Hub"],
+  "Identify grant and government funding opportunities": ["Grants", "Government", "Funding"],
+  "Access lead lists and customer acquisition resources": ["Lead Generation", "Marketing", "Sales"],
+  "Connect with other founders and peer networks": ["Networking", "Community", "Founder"],
+};
+
+function expandGoalsToServiceTags(goals: string[]): string[] {
+  const tags = new Set<string>();
+  for (const goal of goals) {
+    const mapped = GOAL_SERVICE_TAGS[goal];
+    if (mapped) {
+      for (const tag of mapped) tags.add(tag);
+    }
+  }
+  return [...tags];
+}
+
 // ── Database matching ──────────────────────────────────────────────────
 async function searchMatches(supabase: any, intake: any) {
   const matches: Record<string, any[]> = {};
   const regions = intake.target_regions || [];
   const industry = (intake.industry_sector || []).join(", ");
-  const servicesNeeded = intake.services_needed || [];
+  // Expand goal descriptions into short service tags for better .cs.{} matching
+  const serviceTags = expandGoalsToServiceTags(intake.services_needed || []);
 
   const locationPatterns = regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
 
@@ -922,8 +917,8 @@ async function searchMatches(supabase: any, intake: any) {
     if (locationPatterns.length > 0) {
       filters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
     }
-    if (servicesNeeded.length > 0) {
-      filters.push(...servicesNeeded.map((s: string) => `services.cs.{${sanitizeFilterValue(s)}}`));
+    if (serviceTags.length > 0) {
+      filters.push(...serviceTags.map((s: string) => `services.cs.{${sanitizeFilterValue(s)}}`));
     }
     if (filters.length > 0) {
       spQuery = spQuery.or(filters.join(","));
@@ -944,8 +939,8 @@ async function searchMatches(supabase: any, intake: any) {
     if (locationPatterns.length > 0) {
       cmFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
     }
-    if (servicesNeeded.length > 0) {
-      cmFilters.push(...servicesNeeded.map((s: string) => `specialties.cs.{${sanitizeFilterValue(s)}}`));
+    if (serviceTags.length > 0) {
+      cmFilters.push(...serviceTags.map((s: string) => `specialties.cs.{${sanitizeFilterValue(s)}}`));
     }
     if (cmFilters.length > 0) {
       cmQuery = cmQuery.or(cmFilters.join(","));
@@ -1145,8 +1140,13 @@ async function generateReportInBackground(
 
     await supabase.from("user_intake_forms").update({ status: "processing" }).eq("id", intakeFormId);
 
+    // Extract persona early so it can be used in Perplexity query construction
+    const rawInput = intake.raw_input || {};
+    const persona = (rawInput as any).persona === "startup" ? "startup" : "international";
+    console.log(`Report persona: ${persona}`);
+
     // 2. Run ALL enrichment + research + matching in parallel
-    const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin} with ${intake.employee_count} employees. Their target end buyers are in: ${(intake.end_buyer_industries || []).join(", ") || "not specified"}.`;
+    const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin}${intake.employee_count ? ` with ${intake.employee_count} employees` : ""}. Their target end buyers are in: ${(intake.end_buyer_industries || []).join(", ") || "not specified"}.`;
 
     console.log("Starting optimised parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + providers enrichment + competitors + end buyers...");
 
@@ -1172,7 +1172,7 @@ async function generateReportInBackground(
       firecrawlKey && intake.website_url
         ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary)
         : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary }),
-      runMarketResearch(intake),
+      runMarketResearch(intake, persona),
       matchesAndEnrichTask(),
       firecrawlKey
         ? searchCompetitors(firecrawlKey, lovableKey, intake)
@@ -1256,11 +1256,11 @@ async function generateReportInBackground(
     const tierHierarchy = ["free", "growth", "scale", "enterprise"];
     const userTierIndex = Math.max(0, tierHierarchy.indexOf(userTier)); // Default to free (0) if unknown
 
-    // Extract persona from raw_input (new flow) with fallback to "international"
-    const rawInput = intake.raw_input || {};
-    const persona = (rawInput as any).persona === "startup" ? "startup" : "international";
     const targetCustomerDescription = (rawInput as any).target_customer_description || "";
-    console.log(`Report persona: ${persona}`);
+
+    // Extract additional_notes: stored separately from primary_goals (no longer concatenated)
+    const additionalNotes = (rawInput as any).additional_notes || "";
+    const revenueStage = (rawInput as any).revenue_stage || "";
 
     const variables: Record<string, string> = {
       persona,
@@ -1273,8 +1273,11 @@ async function generateReportInBackground(
       timeline: intake.timeline || "Not specified",
       budget_level: intake.budget_level || "Not specified",
       primary_goals: intake.primary_goals || "Not specified",
+      additional_notes: additionalNotes,
       key_challenges: intake.key_challenges || "Not specified",
       target_customer_description: targetCustomerDescription || "Not specified",
+      revenue_stage: revenueStage,
+      employee_count: intake.employee_count || "Not specified",
       enriched_summary: enrichedSummary,
       enriched_company_profile: companyProfile ? JSON.stringify(companyProfile) : "No enriched data available.",
       matched_providers_json: JSON.stringify(matches.service_providers || []),
@@ -1323,17 +1326,28 @@ async function generateReportInBackground(
           }
 
           let prompt = tmpl.prompt_body;
+
+          // Process conditional blocks: {{#var}}...{{/var}} — include block only if var is non-empty
+          prompt = prompt.replace(
+            /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g,
+            (_match: string, varName: string, block: string) => {
+              const val = variables[varName];
+              return val && val.trim() && val !== "Not specified" ? block : "";
+            }
+          );
+
+          // Simple variable substitution
           for (const [key, value] of Object.entries(variables)) {
             prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
           }
 
           try {
             const personaContext = persona === "startup"
-              ? "\n\nPERSONA CONTEXT: This report is for an Australian startup seeking to grow and scale. Prioritise: investors, accelerators, grants, startup-focused mentors, innovation hubs, and founder networks."
-              : "\n\nPERSONA CONTEXT: This report is for an international company entering the ANZ market. Prioritise: service providers, trade agencies, case studies, associations, compliance, events, and mentors with inbound market entry experience.";
+              ? "\n\nPERSONA CONTEXT: This report is for an Australian startup seeking to grow and scale domestically. Focus on: fundraising landscape, investor matching, accelerator/incubator programs, government grants and R&D tax incentives, growth-stage hiring, market sizing/TAM data, founder networks, and scaling strategy within the existing Australian market. The company is already based in Australia — do NOT focus on market entry logistics like visas or entity setup."
+              : "\n\nPERSONA CONTEXT: This report is for an international company entering the ANZ market from overseas. Focus on: regulatory compliance, entity setup, visa requirements, cultural and business practice differences, bilateral trade advantages, service provider matching for market entry support, trade agencies, and go-to-market strategy for a company with no existing Australian presence.";
 
             const content = await callAI(lovableKey, [
-              { role: "system", content: "You are Market Entry Secrets AI, an expert consultant on international companies entering the Australian market. Write professional, actionable content grounded in real data when available. Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\nIMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MUST include inline citation markers using the format [N] where N is the source number from the provided citations list. Place the citation immediately after the relevant claim. For example: \"The Australian AI market is projected to reach USD 8.48 billion by 2030 [3].\" If multiple sources support a claim, list them: [1][4]. Only cite sources from the provided numbered citations list — do not invent citation numbers." + personaContext },
+              { role: "system", content: "You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\nIMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MUST include inline citation markers using the format [N] where N is the source number from the provided citations list. Place the citation immediately after the relevant claim. For example: \"The Australian AI market is projected to reach USD 8.48 billion by 2030 [3].\" If multiple sources support a claim, list them: [1][4]. Only cite sources from the provided numbered citations list — do not invent citation numbers." + personaContext },
               { role: "user", content: prompt },
             ]);
 

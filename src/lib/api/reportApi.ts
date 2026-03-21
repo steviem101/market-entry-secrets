@@ -5,8 +5,6 @@ export const reportApi = {
   async submitIntakeForm(data: IntakeFormData, userId: string) {
     // Map selected_goals into services_needed for backward compat with edge function
     const goalsText = (data.selected_goals || []).join('; ');
-    const additionalNotes = data.additional_notes || '';
-    const combinedGoals = [goalsText, additionalNotes].filter(Boolean).join('. ');
 
     // Filter out empty competitor/end-buyer entries (user clicked Add but left blank)
     const cleanedCompetitors = (data.known_competitors || []).filter(
@@ -28,7 +26,7 @@ export const reportApi = {
       services_needed: data.selected_goals || data.services_needed || [],
       timeline: data.timeline || '',
       budget_level: data.budget_level || '',
-      primary_goals: combinedGoals,
+      primary_goals: goalsText,
       key_challenges: data.key_challenges || '',
       known_competitors: cleanedCompetitors,
       end_buyer_industries: data.end_buyer_industries || [],
