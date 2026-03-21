@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { COUNTRY_OPTIONS, TARGET_MARKET_OPTIONS } from '@/components/report-creator/intakeSchema';
+import { COUNTRY_OPTIONS } from '@/components/report-creator/intakeSchema';
+
+const TARGET_MARKET_OPTIONS = ['Australia', 'New Zealand', 'Both'] as const;
 
 const USE_CASE_OPTIONS = [
   { value: 'founder', label: 'Founder / Startup' },
