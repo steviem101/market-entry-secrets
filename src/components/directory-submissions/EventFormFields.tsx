@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormData } from "./types";
 import { BaseFormFields } from "./BaseFormFields";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 interface EventFormFieldsProps {
   formData: FormData;
@@ -14,6 +15,7 @@ interface EventFormFieldsProps {
 export const EventFormFields = ({ formData, onInputChange }: EventFormFieldsProps) => {
   return (
     <>
+      {/* Core Fields */}
       <BaseFormFields formData={formData} onInputChange={onInputChange} />
       <div>
         <Label htmlFor="eventTitle">Event Title *</Label>
@@ -24,7 +26,7 @@ export const EventFormFields = ({ formData, onInputChange }: EventFormFieldsProp
           required
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="eventDate">Event Date *</Label>
           <Input
@@ -36,41 +38,21 @@ export const EventFormFields = ({ formData, onInputChange }: EventFormFieldsProp
           />
         </div>
         <div>
-          <Label htmlFor="eventTime">Event Time *</Label>
-          <Input
-            id="eventTime"
-            type="time"
-            value={formData.eventTime}
-            onChange={(e) => onInputChange('eventTime', e.target.value)}
-            required
-          />
+          <Label htmlFor="eventCategory">Event Category *</Label>
+          <Select onValueChange={(value) => onInputChange('eventCategory', value)} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Select event category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="networking">Networking</SelectItem>
+              <SelectItem value="conference">Conference</SelectItem>
+              <SelectItem value="workshop">Workshop</SelectItem>
+              <SelectItem value="seminar">Seminar</SelectItem>
+              <SelectItem value="trade_show">Trade Show</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <div>
-          <Label htmlFor="expectedAttendees">Expected Attendees</Label>
-          <Input
-            id="expectedAttendees"
-            type="number"
-            value={formData.expectedAttendees}
-            onChange={(e) => onInputChange('expectedAttendees', e.target.value)}
-            placeholder="e.g., 50"
-          />
-        </div>
-      </div>
-      <div>
-        <Label htmlFor="eventCategory">Event Category *</Label>
-        <Select onValueChange={(value) => onInputChange('eventCategory', value)} required>
-          <SelectTrigger>
-            <SelectValue placeholder="Select event category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="networking">Networking</SelectItem>
-            <SelectItem value="conference">Conference</SelectItem>
-            <SelectItem value="workshop">Workshop</SelectItem>
-            <SelectItem value="seminar">Seminar</SelectItem>
-            <SelectItem value="trade_show">Trade Show</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
       <div>
         <Label htmlFor="organization">Organizing Company/Institution *</Label>
@@ -82,25 +64,51 @@ export const EventFormFields = ({ formData, onInputChange }: EventFormFieldsProp
         />
       </div>
       <div>
-        <Label htmlFor="website">Event Website</Label>
-        <Input
-          id="website"
-          type="url"
-          value={formData.website}
-          onChange={(e) => onInputChange('website', e.target.value)}
-          placeholder="https://"
-        />
-      </div>
-      <div>
         <Label htmlFor="description">Event Description *</Label>
         <Textarea
           id="description"
           value={formData.description}
           onChange={(e) => onInputChange('description', e.target.value)}
           placeholder="Describe your event, agenda, and key topics..."
+          rows={3}
           required
         />
       </div>
+
+      {/* Optional Fields */}
+      <CollapsibleSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="eventTime">Event Time</Label>
+            <Input
+              id="eventTime"
+              type="time"
+              value={formData.eventTime}
+              onChange={(e) => onInputChange('eventTime', e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="expectedAttendees">Expected Attendees</Label>
+            <Input
+              id="expectedAttendees"
+              type="number"
+              value={formData.expectedAttendees}
+              onChange={(e) => onInputChange('expectedAttendees', e.target.value)}
+              placeholder="e.g., 50"
+            />
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="website">Event Website</Label>
+          <Input
+            id="website"
+            type="url"
+            value={formData.website}
+            onChange={(e) => onInputChange('website', e.target.value)}
+            placeholder="https://"
+          />
+        </div>
+      </CollapsibleSection>
     </>
   );
 };
