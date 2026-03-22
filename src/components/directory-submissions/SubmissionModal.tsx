@@ -1,9 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { CheckCircle2 } from "lucide-react";
 import { SubmissionType } from "./submissionConfig";
 import { FormData, initialFormData } from "./types";
 import { EventFormFields } from "./EventFormFields";
@@ -21,12 +23,51 @@ interface SubmissionModalProps {
 }
 
 export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: SubmissionModalProps) => {
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const { user, profile } = useAuth();
+  const prefilled = useMemo<FormData>(() => {
+    if (!user || !profile) return initialFormData;
+    const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
+    return {
+      ...initialFormData,
+      ...(name && { name }),
+      ...(user.email && { email: user.email }),
+      ...(profile.location && { location: profile.location }),
+      ...(profile.company_name && { organization: profile.company_name }),
+      ...(profile.website && { website: profile.website }),
+    };
+  }, [user, profile]);
+
+  const [formData, setFormData] = useState<FormData>(prefilled);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (isOpen) setFormData(prefilled);
+  }, [isOpen, prefilled]);
+
+  const handleClose = () => {
+    setIsSubmitted(false);
+    setFormData(prefilled);
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Client-side rate limit: 1 submission per 30 seconds
+    const cooldownKey = "mes_submission_cooldown";
+    const lastSubmit = localStorage.getItem(cooldownKey);
+    if (lastSubmit && Date.now() - parseInt(lastSubmit) < 30000) {
+      toast({
+        title: "Please wait",
+        description: "You can submit again in a few seconds.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -36,32 +77,30 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
         ...formData
       };
 
+      const insertData: Record<string, unknown> = {
+        submission_type: submissionType,
+        contact_email: formData.email,
+        form_data: structuredFormData,
+      };
+      if (user?.id) {
+        insertData.submitter_user_id = user.id;
+      }
+
       const { error } = await supabase
         .from('directory_submissions')
-        .insert({
-          submission_type: submissionType,
-          contact_email: formData.email,
-          form_data: structuredFormData as any
-        });
+        .insert(insertData as any);
 
       if (error) throw error;
 
-      const successMessage = submissionType === 'data_request'
-        ? "Your data request has been received. Our team will review your requirements and respond to your email within 48 hours."
-        : "Your submission has been received. Our team will review it and respond to your email within 48 hours.";
-
-      toast({
-        title: submissionType === 'data_request' ? "Request Received!" : "Submission Received!",
-        description: successMessage,
-      });
-
+      localStorage.setItem(cooldownKey, Date.now().toString());
+      setSubmittedEmail(formData.email);
       setFormData(initialFormData);
-      onClose();
+      setIsSubmitted(true);
     } catch (error) {
       console.error('Submission error:', error);
       toast({
         title: submissionType === 'data_request' ? "Request Failed" : "Submission Failed",
-        description: submissionType === 'data_request' 
+        description: submissionType === 'data_request'
           ? "There was an error submitting your request. Please try again."
           : "There was an error submitting your application. Please try again.",
         variant: "destructive",
@@ -114,52 +153,81 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white shadow-2xl border-0 p-0">
-        {/* Header Section */}
-        <div className="bg-white border-b border-gray-100 p-8 pb-6">
-          <DialogHeader className="space-y-4">
-            <div className="text-left">
-              <DialogTitle className="text-3xl font-bold text-gray-900 mb-3">
-                {title}
-              </DialogTitle>
-              <p className="text-lg text-gray-600 leading-relaxed max-w-2xl">
-                {getSubtitleText()}
+        {isSubmitted ? (
+          /* Success Confirmation State */
+          <div className="p-12 text-center space-y-6">
+            <div className="flex justify-center">
+              <CheckCircle2 className="w-16 h-16 text-green-500" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {submissionType === 'data_request' ? 'Request Received!' : 'Submission Received!'}
+              </h2>
+              <p className="text-gray-600 max-w-md mx-auto">
+                Our team will review your {submissionType === 'data_request' ? 'request' : 'submission'} and
+                respond to <span className="font-medium text-gray-900">{submittedEmail}</span> within 48 hours.
               </p>
             </div>
-          </DialogHeader>
-        </div>
-
-        {/* Form Section */}
-        <div className="p-8 pt-6">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="bg-gray-50 rounded-xl p-6">
-              {renderFormFields()}
+            <Button
+              onClick={handleClose}
+              className="px-8 py-3 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Close
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Header Section */}
+            <div className="bg-white border-b border-gray-100 p-8 pb-6">
+              <DialogHeader className="space-y-4">
+                <div className="text-left">
+                  <DialogTitle className="text-3xl font-bold text-gray-900 mb-3">
+                    {title}
+                  </DialogTitle>
+                  <p className="text-lg text-gray-600 leading-relaxed max-w-2xl">
+                    {getSubtitleText()}
+                  </p>
+                </div>
+              </DialogHeader>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose}
-                className="px-8 py-3 text-base font-medium border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="px-8 py-3 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                {isSubmitting 
-                  ? (submissionType === 'data_request' ? 'Submitting Request...' : 'Submitting Application...') 
-                  : (submissionType === 'data_request' ? 'Submit Request' : 'Submit Application')
-                }
-              </Button>
+            {/* Form Section */}
+            <div className="p-8 pt-6">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="bg-gray-50 rounded-xl p-6">
+                  {renderFormFields()}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center pt-6 border-t border-gray-100">
+                  <p className="text-sm text-gray-500">We'll review and respond within 48 hours.</p>
+                  <div className="flex gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleClose}
+                      className="px-8 py-3 text-base font-medium border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-8 py-3 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                      {isSubmitting
+                        ? (submissionType === 'data_request' ? 'Submitting...' : 'Submitting...')
+                        : (submissionType === 'data_request' ? 'Submit Request' : 'Submit Application')
+                      }
+                    </Button>
+                  </div>
+                </div>
+              </form>
             </div>
-          </form>
-        </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

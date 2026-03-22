@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormData } from "./types";
 import { BaseFormFields } from "./BaseFormFields";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 interface ContentFormFieldsProps {
   formData: FormData;
@@ -14,6 +15,7 @@ interface ContentFormFieldsProps {
 export const ContentFormFields = ({ formData, onInputChange }: ContentFormFieldsProps) => {
   return (
     <>
+      {/* Core Fields */}
       <BaseFormFields formData={formData} onInputChange={onInputChange} />
       <div>
         <Label htmlFor="contentTitle">Success Story Title *</Label>
@@ -36,41 +38,21 @@ export const ContentFormFields = ({ formData, onInputChange }: ContentFormFields
           />
         </div>
         <div>
-          <Label htmlFor="industry">Industry *</Label>
-          <Input
-            id="industry"
-            value={formData.industry}
-            onChange={(e) => onInputChange('industry', e.target.value)}
-            placeholder="e.g., Technology, Manufacturing"
-            required
-          />
+          <Label htmlFor="contentCategory">Content Category *</Label>
+          <Select onValueChange={(value) => onInputChange('contentCategory', value)} value={formData.contentCategory}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select content category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="market_entry">Market Entry</SelectItem>
+              <SelectItem value="expansion">Business Expansion</SelectItem>
+              <SelectItem value="partnership">Partnership Success</SelectItem>
+              <SelectItem value="regulatory">Regulatory Navigation</SelectItem>
+              <SelectItem value="funding">Funding & Investment</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
-      <div>
-        <Label htmlFor="contentCategory">Content Category *</Label>
-        <Select onValueChange={(value) => onInputChange('contentCategory', value)} value={formData.contentCategory}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select content category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="market_entry">Market Entry</SelectItem>
-            <SelectItem value="expansion">Business Expansion</SelectItem>
-            <SelectItem value="partnership">Partnership Success</SelectItem>
-            <SelectItem value="regulatory">Regulatory Navigation</SelectItem>
-            <SelectItem value="funding">Funding & Investment</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label htmlFor="website">Company Website</Label>
-        <Input
-          id="website"
-          type="url"
-          value={formData.website}
-          onChange={(e) => onInputChange('website', e.target.value)}
-          placeholder="https://"
-        />
       </div>
       <div>
         <Label htmlFor="successStory">Your Success Story *</Label>
@@ -83,16 +65,38 @@ export const ContentFormFields = ({ formData, onInputChange }: ContentFormFields
           required
         />
       </div>
-      <div>
-        <Label htmlFor="outcomes">Key Outcomes & Results *</Label>
-        <Textarea
-          id="outcomes"
-          value={formData.outcomes}
-          onChange={(e) => onInputChange('outcomes', e.target.value)}
-          placeholder="Quantify your success: revenue growth, market share, partnerships gained, etc."
-          required
-        />
-      </div>
+
+      {/* Optional Fields */}
+      <CollapsibleSection>
+        <div>
+          <Label htmlFor="industry">Industry</Label>
+          <Input
+            id="industry"
+            value={formData.industry}
+            onChange={(e) => onInputChange('industry', e.target.value)}
+            placeholder="e.g., Technology, Manufacturing"
+          />
+        </div>
+        <div>
+          <Label htmlFor="website">Company Website</Label>
+          <Input
+            id="website"
+            type="url"
+            value={formData.website}
+            onChange={(e) => onInputChange('website', e.target.value)}
+            placeholder="https://"
+          />
+        </div>
+        <div>
+          <Label htmlFor="outcomes">Key Outcomes & Results</Label>
+          <Textarea
+            id="outcomes"
+            value={formData.outcomes}
+            onChange={(e) => onInputChange('outcomes', e.target.value)}
+            placeholder="Quantify your success: revenue growth, market share, partnerships gained, etc."
+          />
+        </div>
+      </CollapsibleSection>
     </>
   );
 };

@@ -57,6 +57,7 @@ const ReportView = React.lazy(() => import("./pages/ReportView"));
 const SharedReportView = React.lazy(() => import("./pages/SharedReportView"));
 const MyReports = React.lazy(() => import("./pages/MyReports"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
+const AdminSubmissions = React.lazy(() => import("./pages/AdminSubmissions"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -133,6 +134,7 @@ const App = () => (
                   <Route path="/report/:reportId" element={<ReportView />} />
                   <Route path="/my-reports" element={<MyReports />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/admin/submissions" element={<AdminSubmissions />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

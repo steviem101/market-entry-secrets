@@ -8,8 +8,10 @@ import { Mail, Phone, MapPin, Building2 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const Contact = () => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -26,22 +28,27 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
+      const insertData: Record<string, unknown> = {
+        submission_type: 'contact_inquiry',
+        contact_email: formData.email,
+        form_data: {
+          submission_version: 2,
+          content_type: 'contact_inquiry',
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          email: formData.email,
+          company: formData.company,
+          subject: formData.subject,
+          message: formData.message,
+          inquiryType: formData.inquiryType,
+        },
+      };
+      if (user?.id) {
+        insertData.submitter_user_id = user.id;
+      }
+
       const { error } = await supabase
         .from('directory_submissions')
-        .insert({
-          submission_type: 'contact_inquiry' as any,
-          contact_email: formData.email,
-          form_data: {
-            submission_version: 2,
-            content_type: 'contact_inquiry',
-            name: `${formData.firstName} ${formData.lastName}`.trim(),
-            email: formData.email,
-            company: formData.company,
-            subject: formData.subject,
-            message: formData.message,
-            inquiryType: formData.inquiryType,
-          } as any,
-        });
+        .insert(insertData as any);
 
       if (error) throw error;
 

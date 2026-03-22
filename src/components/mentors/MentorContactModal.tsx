@@ -54,22 +54,27 @@ export const MentorContactModal = ({ mentor, isOpen, onClose }: MentorContactMod
         const { error: fallbackError } = await supabase
           .from("directory_submissions")
           .insert({
-            submission_type: "mentor_contact",
+            submission_type: "mentor_contact" as any,
             contact_email: form.email,
             form_data: {
+              submission_version: 2,
+              content_type: "mentor_contact",
               mentor_id: mentor.id,
               mentor_name: mentor.name,
               requester_name: form.name,
               requester_company: form.company || null,
               requester_country: form.country || null,
               message: form.message,
-            },
+            } as any,
           });
 
         if (fallbackError) throw fallbackError;
       }
 
-      toast({ title: "Contact request sent!", description: `Your message has been sent to ${mentor.name}.` });
+      toast({
+        title: "Contact request sent!",
+        description: `Your message has been sent. We'll connect you with ${mentor.name} within 48 hours.`,
+      });
       setForm({ name: "", email: "", company: "", country: "", message: "" });
       onClose();
     } catch (err) {
