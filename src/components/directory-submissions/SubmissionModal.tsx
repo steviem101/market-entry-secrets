@@ -64,13 +64,18 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
         ...formData
       };
 
+      const insertData: Record<string, unknown> = {
+        submission_type: submissionType,
+        contact_email: formData.email,
+        form_data: structuredFormData,
+      };
+      if (user?.id) {
+        insertData.submitter_user_id = user.id;
+      }
+
       const { error } = await supabase
         .from('directory_submissions')
-        .insert({
-          submission_type: submissionType,
-          contact_email: formData.email,
-          form_data: structuredFormData as any
-        });
+        .insert(insertData as any);
 
       if (error) throw error;
 
