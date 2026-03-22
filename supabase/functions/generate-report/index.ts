@@ -850,7 +850,8 @@ async function searchMatches(supabase: any, intake: any) {
 
   // Service providers
   try {
-    let spQuery = supabase.from("service_providers").select("id, name, slug, location, services, description, website, website_url, is_verified, tagline, logo_url, category_slug").limit(10);
+    const spSelectFields = "id, name, slug, location, services, description, website, website_url, is_verified, tagline, logo_url, category_slug";
+    let spQuery = supabase.from("service_providers").select(spSelectFields).limit(10);
     const filters: string[] = [];
     if (locationPatterns.length > 0) {
       filters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
@@ -862,7 +863,33 @@ async function searchMatches(supabase: any, intake: any) {
       spQuery = spQuery.or(filters.join(","));
     }
     const { data: sp } = await spQuery;
-    matches.service_providers = (sp || []).map((p: any) => ({
+    console.log(`SP exact match: ${(sp || []).length} results (tags: ${serviceTags.join(", ")}, locations: ${locationPatterns.join(", ")})`);
+
+    let spResults = sp || [];
+
+    // Fallback: if exact array containment matched nothing, try broader text search
+    // This handles cases where DB has "Legal & Compliance" but we search for "Legal"
+    if (spResults.length === 0 && (serviceTags.length > 0 || locationPatterns.length > 0)) {
+      const fallbackFilters: string[] = [];
+      if (serviceTags.length > 0) {
+        // Cast services array to text and use ilike for substring matching
+        fallbackFilters.push(...serviceTags.map((s: string) => `services::text.ilike.%${sanitizeFilterValue(s)}%`));
+      }
+      if (locationPatterns.length > 0) {
+        fallbackFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+      }
+      if (fallbackFilters.length > 0) {
+        const { data: spFallback } = await supabase
+          .from("service_providers")
+          .select(spSelectFields)
+          .or(fallbackFilters.join(","))
+          .limit(10);
+        spResults = spFallback || [];
+        console.log(`SP text fallback: ${spResults.length} results`);
+      }
+    }
+
+    matches.service_providers = spResults.map((p: any) => ({
       ...p,
       link: p.slug ? `/service-providers/${p.slug}` : "/service-providers",
       linkLabel: "View Profile",
@@ -872,7 +899,8 @@ async function searchMatches(supabase: any, intake: any) {
 
   // Community members
   try {
-    let cmQuery = supabase.from("community_members").select("id, name, title, location, specialties, company, website").limit(5);
+    const cmSelectFields = "id, name, title, location, specialties, company, website";
+    let cmQuery = supabase.from("community_members").select(cmSelectFields).limit(5);
     const cmFilters: string[] = [];
     if (locationPatterns.length > 0) {
       cmFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
@@ -884,7 +912,31 @@ async function searchMatches(supabase: any, intake: any) {
       cmQuery = cmQuery.or(cmFilters.join(","));
     }
     const { data: cm } = await cmQuery;
-    matches.community_members = (cm || []).map((m: any) => ({
+    console.log(`CM exact match: ${(cm || []).length} results`);
+
+    let cmResults = cm || [];
+
+    // Fallback: text-based search if exact array containment matched nothing
+    if (cmResults.length === 0 && (serviceTags.length > 0 || locationPatterns.length > 0)) {
+      const cmFallbackFilters: string[] = [];
+      if (serviceTags.length > 0) {
+        cmFallbackFilters.push(...serviceTags.map((s: string) => `specialties::text.ilike.%${sanitizeFilterValue(s)}%`));
+      }
+      if (locationPatterns.length > 0) {
+        cmFallbackFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+      }
+      if (cmFallbackFilters.length > 0) {
+        const { data: cmFallback } = await supabase
+          .from("community_members")
+          .select(cmSelectFields)
+          .or(cmFallbackFilters.join(","))
+          .limit(5);
+        cmResults = cmFallback || [];
+        console.log(`CM text fallback: ${cmResults.length} results`);
+      }
+    }
+
+    matches.community_members = cmResults.map((m: any) => ({
       ...m, link: "/community", linkLabel: "View Profile",
       subtitle: [m.title, m.company].filter(Boolean).join(", "),
       tags: (m.specialties || []).slice(0, 3),
@@ -1000,6 +1052,7 @@ async function searchMatches(supabase: any, intake: any) {
       invQuery = invQuery.or(invFilters.join(","));
     }
     const { data: inv } = await invQuery;
+    console.log(`Investors matched: ${(inv || []).length} (sectors: ${(intake.industry_sector || []).join(", ")}, locations: ${locationPatterns.join(", ")})`);
     matches.investors = (inv || []).map((i: any) => ({
       ...i, link: i.slug ? `/investors/${i.slug}` : "/investors", linkLabel: "View Investor",
       subtitle: `${i.investor_type} · ${i.location}`,
@@ -1036,12 +1089,16 @@ async function searchMatches(supabase: any, intake: any) {
     console.log(`Lemlist contacts matched: ${(lc || []).length}`);
   } catch (e) { console.error("Lemlist contacts search error:", e); }
 
+  // Summary log for all matches
+  const matchSummary = Object.entries(matches).map(([k, v]) => `${k}: ${(v || []).length}`).join(", ");
+  console.log(`Match summary: ${matchSummary}`);
+
   return matches;
 }
 
 function getMatchesForSection(sectionName: string, matches: Record<string, any[]>): any[] {
   switch (sectionName) {
-    case "service_providers": return matches.service_providers || [];
+    case "service_providers": return [...(matches.service_providers || []), ...(matches.trade_investment_agencies || []), ...(matches.innovation_ecosystem || [])];
     case "mentor_recommendations": return matches.community_members || [];
     case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
     case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
@@ -1226,6 +1283,8 @@ async function generateReportInBackground(
       matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
       matched_investors_json: JSON.stringify(matches.investors || []),
+      matched_trade_agencies_json: JSON.stringify(matches.trade_investment_agencies || []),
+      matched_innovation_ecosystem_json: JSON.stringify(matches.innovation_ecosystem || []),
       competitor_analysis_json: JSON.stringify(competitorResult.competitors),
       known_competitors_json: JSON.stringify(intake.known_competitors || []),
       end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",
