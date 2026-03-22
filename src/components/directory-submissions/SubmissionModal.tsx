@@ -1,8 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2 } from "lucide-react";
 import { SubmissionType } from "./submissionConfig";
@@ -22,15 +23,33 @@ interface SubmissionModalProps {
 }
 
 export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: SubmissionModalProps) => {
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const { user, profile } = useAuth();
+  const prefilled = useMemo<FormData>(() => {
+    if (!user || !profile) return initialFormData;
+    const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
+    return {
+      ...initialFormData,
+      ...(name && { name }),
+      ...(user.email && { email: user.email }),
+      ...(profile.location && { location: profile.location }),
+      ...(profile.company_name && { organization: profile.company_name }),
+      ...(profile.website && { website: profile.website }),
+    };
+  }, [user, profile]);
+
+  const [formData, setFormData] = useState<FormData>(prefilled);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (isOpen) setFormData(prefilled);
+  }, [isOpen, prefilled]);
+
   const handleClose = () => {
     setIsSubmitted(false);
-    setFormData(initialFormData);
+    setFormData(prefilled);
     onClose();
   };
 
