@@ -9,8 +9,12 @@ const ALLOWED_ORIGINS = [
 
 function isAllowedOrigin(origin: string): boolean {
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-  // Allow all Lovable preview/editor subdomains (e.g. id--xhziwveaiuhzdoutpgrh.lovable.app)
-  if (/^https:\/\/[a-z0-9._-]+\.lovable\.app$/i.test(origin)) return true;
+  // Allow all Lovable preview/editor subdomains
+  // Covers *.lovable.app (e.g. id--xhziwveaiuhzdoutpgrh.lovable.app)
+  // and *.lovable.dev (e.g. preview subdomains on lovable.dev)
+  if (/^https:\/\/[a-z0-9._-]+\.lovable\.(app|dev)$/i.test(origin)) return true;
+  // Allow top-level lovable.dev itself (editor origin)
+  if (origin === "https://lovable.dev") return true;
   return false;
 }
 

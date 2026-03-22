@@ -1416,8 +1416,15 @@ async function generateReportInBackground(
 
 // ── Main handler ───────────────────────────────────────────────────────
 Deno.serve(async (req) => {
+  const origin = req.headers.get("origin") ?? "(no origin)";
   const corsHeaders = buildCorsHeaders(req);
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  if (req.method === "OPTIONS") {
+    console.log(`[CORS] OPTIONS preflight from origin: ${origin} → Allow-Origin: ${corsHeaders["Access-Control-Allow-Origin"]}`);
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  console.log(`[generate-report] ${req.method} request from origin: ${origin}`);
 
   try {
     const { intake_form_id } = await req.json();
