@@ -39,7 +39,7 @@ export const EventFormFields = ({ formData, onInputChange }: EventFormFieldsProp
         </div>
         <div>
           <Label htmlFor="eventCategory">Event Category *</Label>
-          <Select onValueChange={(value) => onInputChange('eventCategory', value)} required>
+          <Select value={formData.eventCategory} onValueChange={(value) => onInputChange('eventCategory', value)} required>
             <SelectTrigger>
               <SelectValue placeholder="Select event category" />
             </SelectTrigger>

@@ -53,7 +53,7 @@ export const DataRequestFormFields = ({ formData, onInputChange }: DataRequestFo
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="businessSize">Business Size</Label>
-            <Select onValueChange={(value) => onInputChange('businessSize', value)}>
+            <Select value={formData.businessSize} onValueChange={(value) => onInputChange('businessSize', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select business size" />
               </SelectTrigger>

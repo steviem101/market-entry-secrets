@@ -304,7 +304,7 @@ const AdminSubmissions = () => {
                               {key.replace(/([A-Z])/g, " $1").replace(/_/g, " ")}
                             </span>
                             <span className="col-span-2 text-gray-900 whitespace-pre-wrap">
-                              {String(val)}
+                              {typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val)}
                             </span>
                           </div>
                         )
@@ -337,8 +337,8 @@ const AdminSubmissions = () => {
                         <div className="flex gap-2 justify-end">
                           <Button
                             variant="outline"
-                            onClick={() => {
-                              handleStatusChange(
+                            onClick={async () => {
+                              await handleStatusChange(
                                 selectedSubmission.id,
                                 "in_review"
                               );
@@ -350,8 +350,8 @@ const AdminSubmissions = () => {
                           </Button>
                           <Button
                             variant="destructive"
-                            onClick={() => {
-                              handleStatusChange(
+                            onClick={async () => {
+                              await handleStatusChange(
                                 selectedSubmission.id,
                                 "rejected"
                               );
@@ -362,8 +362,8 @@ const AdminSubmissions = () => {
                             Reject
                           </Button>
                           <Button
-                            onClick={() => {
-                              handleStatusChange(
+                            onClick={async () => {
+                              await handleStatusChange(
                                 selectedSubmission.id,
                                 "approved"
                               );
