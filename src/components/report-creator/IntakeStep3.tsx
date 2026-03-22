@@ -68,10 +68,12 @@ export const IntakeStep3 = ({ form, onBack, onSubmit, isGenerating, persona }: I
               <span className="text-muted-foreground">Stage:</span>
               <p className="font-medium">{data.company_stage}</p>
             </div>
-            <div>
-              <span className="text-muted-foreground">Employees:</span>
-              <p className="font-medium">{data.employee_count}</p>
-            </div>
+            {data.employee_count && (
+              <div>
+                <span className="text-muted-foreground">Employees:</span>
+                <p className="font-medium">{data.employee_count}</p>
+              </div>
+            )}
             {persona === 'startup' && data.revenue_stage && (
               <div>
                 <span className="text-muted-foreground">Revenue Stage:</span>

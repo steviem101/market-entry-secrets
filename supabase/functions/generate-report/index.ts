@@ -490,68 +490,6 @@ async function callPerplexity(
   }
 }
 
-/** Perplexity structured output for extracting key metrics as JSON */
-async function callPerplexityStructured(
-  apiKey: string,
-  query: string,
-  schema: Record<string, any>
-): Promise<{ content: any; citations: string[] }> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
-    let resp: Response;
-    try {
-      resp = await fetch("https://api.perplexity.ai/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "sonar",
-          messages: [
-            { role: "system", content: "Provide precise, data-driven answers with specific numbers and statistics." },
-            { role: "user", content: query },
-          ],
-          search_recency_filter: "year",
-          response_format: {
-            type: "json_schema",
-            json_schema: {
-              name: "key_metrics",
-              schema,
-            },
-          },
-        }),
-        signal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeout);
-    }
-
-    if (!resp.ok) {
-      const text = await resp.text();
-      console.error("Perplexity structured error:", resp.status, text);
-      return { content: null, citations: [] };
-    }
-
-    const data = await resp.json();
-    const raw = data.choices?.[0]?.message?.content || "";
-    let parsed = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      console.error("Failed to parse Perplexity structured output:", raw.slice(0, 200));
-    }
-    return {
-      content: parsed,
-      citations: data.citations || [],
-    };
-  } catch (e) {
-    console.error("Perplexity structured call failed:", e);
-    return { content: null, citations: [] };
-  }
-}
-
 // ── Market research step (expanded) ────────────────────────────────────
 interface MarketResearch {
   landscape: string;
