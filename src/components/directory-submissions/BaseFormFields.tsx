@@ -42,33 +42,18 @@ export const BaseFormFields = ({ formData, onInputChange }: BaseFormFieldsProps)
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="text-base font-medium text-gray-700">
-            Phone Number
-          </Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => onInputChange('phone', e.target.value)}
-            className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            placeholder="+61 400 000 000"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="location" className="text-base font-medium text-gray-700">
-            Location *
-          </Label>
-          <Input
-            id="location"
-            value={formData.location}
-            onChange={(e) => onInputChange('location', e.target.value)}
-            required
-            className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            placeholder="City, Country"
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="location" className="text-base font-medium text-gray-700">
+          Location *
+        </Label>
+        <Input
+          id="location"
+          value={formData.location}
+          onChange={(e) => onInputChange('location', e.target.value)}
+          required
+          className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+          placeholder="City, Country"
+        />
       </div>
     </div>
   );

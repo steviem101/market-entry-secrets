@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin, Building2 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -18,22 +19,49 @@ const Contact = () => {
     message: "",
     inquiryType: "general"
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, just show a success message
-    toast.success("Message sent! We'll get back to you within 24 hours.");
-    
-    // Reset form
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      company: "",
-      subject: "",
-      message: "",
-      inquiryType: "general"
-    });
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase
+        .from('directory_submissions')
+        .insert({
+          submission_type: 'contact_inquiry' as any,
+          contact_email: formData.email,
+          form_data: {
+            submission_version: 2,
+            content_type: 'contact_inquiry',
+            name: `${formData.firstName} ${formData.lastName}`.trim(),
+            email: formData.email,
+            company: formData.company,
+            subject: formData.subject,
+            message: formData.message,
+            inquiryType: formData.inquiryType,
+          } as any,
+        });
+
+      if (error) throw error;
+
+      toast.success("Message received! Our team will respond to your email within 48 hours.");
+
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        company: "",
+        subject: "",
+        message: "",
+        inquiryType: "general"
+      });
+    } catch (error) {
+      console.error('Contact form error:', error);
+      toast.error("Failed to send message. Please try again or email us directly.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -156,7 +184,9 @@ const Contact = () => {
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full">Send Message</Button>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? "Sending..." : "Send Message"}
+                  </Button>
                 </form>
               </CardContent>
             </Card>

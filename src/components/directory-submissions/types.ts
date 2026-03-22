@@ -2,7 +2,6 @@
 export interface FormData {
   name: string;
   email: string;
-  phone: string;
   organization: string;
   location: string;
   description: string;
@@ -30,11 +29,6 @@ export interface FormData {
   startupCosts: string;
   businessModel: string;
   outcomeResult: string;
-  founderName: string;
-  founderTitle: string;
-  founderLinkedin: string;
-  employeeCount: string;
-  founderCount: string;
   // Guide specific fields
   guideTitle: string;
   guideSubtitle: string;
@@ -46,7 +40,6 @@ export interface FormData {
 export const initialFormData: FormData = {
   name: '',
   email: '',
-  phone: '',
   organization: '',
   location: '',
   description: '',
@@ -73,11 +66,6 @@ export const initialFormData: FormData = {
   startupCosts: '',
   businessModel: '',
   outcomeResult: '',
-  founderName: '',
-  founderTitle: '',
-  founderLinkedin: '',
-  employeeCount: '',
-  founderCount: '',
   guideTitle: '',
   guideSubtitle: '',
   guideBody: '',
