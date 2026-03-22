@@ -55,6 +55,19 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Client-side rate limit: 1 submission per 30 seconds
+    const cooldownKey = "mes_submission_cooldown";
+    const lastSubmit = localStorage.getItem(cooldownKey);
+    if (lastSubmit && Date.now() - parseInt(lastSubmit) < 30000) {
+      toast({
+        title: "Please wait",
+        description: "You can submit again in a few seconds.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -79,6 +92,7 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
 
       if (error) throw error;
 
+      localStorage.setItem(cooldownKey, Date.now().toString());
       setSubmittedEmail(formData.email);
       setFormData(initialFormData);
       setIsSubmitted(true);
