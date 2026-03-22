@@ -60,17 +60,28 @@ export const reportApi = {
       throw new Error('Your session has expired. Please sign in again and retry.');
     }
 
+    console.log('[reportApi] Invoking generate-report with intake_form_id:', intakeFormId);
     const { data, error } = await supabase.functions.invoke('generate-report', {
       body: { intake_form_id: intakeFormId },
     });
 
     if (error) {
       const msg = error.message || '';
-      console.error('generate-report invoke error:', msg, error);
+      const errorName = error.name || '';
+      console.error('generate-report invoke error:', { name: errorName, message: msg, error });
 
-      if (msg.includes('Failed to send a request') || msg.includes('FetchError') || msg.includes('TypeError')) {
+      if (
+        msg.includes('Failed to send a request') ||
+        msg.includes('FetchError') ||
+        msg.includes('TypeError') ||
+        msg.includes('Failed to fetch') ||
+        msg.includes('NetworkError') ||
+        msg.includes('CORS') ||
+        errorName === 'FunctionsFetchError'
+      ) {
+        console.error('[reportApi] Network/CORS error detected. Check browser DevTools Network tab for blocked requests.');
         throw new Error(
-          'Unable to reach the report generation service. This may be a temporary issue — please try again in a moment.'
+          'Unable to reach the report generation service. This may be a CORS or network issue — please check the browser console for details.'
         );
       }
       if (msg.includes('non-2xx')) {
