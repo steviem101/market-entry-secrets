@@ -46,12 +46,12 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
 
       if (error) throw error;
 
-      const successMessage = submissionType === 'data_request' 
-        ? "Request submitted successfully! We'll review your requirements and get back to you soon."
-        : "Submission successful! Thank you for your submission. We'll review it and get back to you soon.";
+      const successMessage = submissionType === 'data_request'
+        ? "Your data request has been received. Our team will review your requirements and respond to your email within 48 hours."
+        : "Your submission has been received. Our team will review it and respond to your email within 48 hours.";
 
       toast({
-        title: submissionType === 'data_request' ? "Request Submitted!" : "Submission Successful!",
+        title: submissionType === 'data_request' ? "Request Received!" : "Submission Received!",
         description: successMessage,
       });
 

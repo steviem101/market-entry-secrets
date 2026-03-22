@@ -49,27 +49,15 @@ export const CaseStudyFormFields = ({ formData, onInputChange }: CaseStudyFormFi
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="originCountry">Origin Country *</Label>
-              <Input
-                id="originCountry"
-                value={formData.originCountry}
-                onChange={(e) => onInputChange('originCountry', e.target.value)}
-                placeholder="e.g., United States, United Kingdom"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="targetMarket">Target Market</Label>
-              <Input
-                id="targetMarket"
-                value={formData.targetMarket}
-                onChange={(e) => onInputChange('targetMarket', e.target.value)}
-                placeholder="Australia"
-                disabled
-              />
-            </div>
+          <div>
+            <Label htmlFor="originCountry">Origin Country *</Label>
+            <Input
+              id="originCountry"
+              value={formData.originCountry}
+              onChange={(e) => onInputChange('originCountry', e.target.value)}
+              placeholder="e.g., United States, United Kingdom"
+              required
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -148,65 +136,6 @@ export const CaseStudyFormFields = ({ formData, onInputChange }: CaseStudyFormFi
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-gray-200 pt-6 mt-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Team Details</h3>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="founderCount">Number of Founders</Label>
-              <Input
-                id="founderCount"
-                type="number"
-                value={formData.founderCount}
-                onChange={(e) => onInputChange('founderCount', e.target.value)}
-                placeholder="e.g., 2"
-              />
-            </div>
-            <div>
-              <Label htmlFor="employeeCount">Number of AU Employees</Label>
-              <Input
-                id="employeeCount"
-                type="number"
-                value={formData.employeeCount}
-                onChange={(e) => onInputChange('employeeCount', e.target.value)}
-                placeholder="e.g., 15"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="founderName">Primary Founder/Contact Name *</Label>
-              <Input
-                id="founderName"
-                value={formData.founderName}
-                onChange={(e) => onInputChange('founderName', e.target.value)}
-                placeholder="e.g., Marcus Chen"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="founderTitle">Title/Role</Label>
-              <Input
-                id="founderTitle"
-                value={formData.founderTitle}
-                onChange={(e) => onInputChange('founderTitle', e.target.value)}
-                placeholder="e.g., Co-founder & CEO"
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="founderLinkedin">LinkedIn Profile</Label>
-            <Input
-              id="founderLinkedin"
-              type="url"
-              value={formData.founderLinkedin}
-              onChange={(e) => onInputChange('founderLinkedin', e.target.value)}
-              placeholder="https://linkedin.com/in/..."
-            />
           </div>
         </div>
       </div>
