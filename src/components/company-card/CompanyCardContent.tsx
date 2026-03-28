@@ -80,6 +80,7 @@ const CompanyCardContent = ({ company }: CompanyCardContentProps) => {
             {experienceTiles.slice(0, 3).map((tile, index) => (
               <div key={tile.id} className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg p-1">
                 <img
+                  loading="lazy"
                   src={tile.logo || getExperienceTileImage(index)}
                   alt={tile.name}
                   className="w-full h-full object-cover rounded"

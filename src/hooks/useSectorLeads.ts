@@ -1,15 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSectorBySlug } from "@/hooks/useSectors";
 import type { LeadDatabase } from "@/types/leadDatabase";
 
-export const useSectorLeads = (sectorSlug: string) => {
-  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
-
+export const useSectorLeads = (sectorSlug: string, leadKeywords: string[] | undefined, industries: string[] | undefined) => {
   return useQuery({
     queryKey: ['sector-leads', sectorSlug],
     queryFn: async () => {
-      if (!sectorConfig) return [];
+      if (!leadKeywords?.length && !industries?.length) return [];
 
       const { data, error } = await (supabase as any)
         .from('lead_databases')
@@ -22,13 +19,13 @@ export const useSectorLeads = (sectorSlug: string) => {
       // Filter based on sector keywords and industries
       return (data as LeadDatabase[]).filter(lead => {
         const searchText = `${lead.title} ${lead.description || ''} ${lead.sector || ''} ${lead.list_type || ''} ${lead.tags?.join(' ') || ''}`.toLowerCase();
-        return sectorConfig.lead_keywords.some((keyword: string) =>
+        return (leadKeywords || []).some((keyword: string) =>
           searchText.includes(keyword.toLowerCase())
-        ) || sectorConfig.industries.some((industry: string) =>
+        ) || (industries || []).some((industry: string) =>
           (lead.sector || '').toLowerCase().includes(industry.toLowerCase())
         );
       });
     },
-    enabled: !!sectorConfig
+    enabled: !!(leadKeywords?.length || industries?.length)
   });
 };

@@ -1,16 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useLocationBySlug } from "@/hooks/useLocations";
 
-export const useLocationServiceProviders = (locationSlug: string) => {
-  const { data: locationConfig } = useLocationBySlug(locationSlug);
-  
+export const useLocationServiceProviders = (locationSlug: string, keywords: string[] | undefined) => {
   return useQuery({
     queryKey: ['location-service-providers', locationSlug],
     queryFn: async () => {
-      if (!locationConfig) return [];
-      
+      if (!keywords?.length) return [];
+
       const { data, error } = await supabase
         .from('service_providers')
         .select('*')
@@ -21,11 +18,11 @@ export const useLocationServiceProviders = (locationSlug: string) => {
       // Filter based on location keywords
       return data.filter(provider => {
         const searchText = `${provider.name} ${provider.description} ${provider.services?.join(' ')} ${provider.location}`.toLowerCase();
-        return locationConfig.service_keywords.some(keyword => 
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
     },
-    enabled: !!locationConfig
+    enabled: !!keywords?.length
   });
 };

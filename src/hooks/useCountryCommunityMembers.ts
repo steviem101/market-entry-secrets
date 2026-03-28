@@ -1,17 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCountryBySlug } from "@/hooks/useCountries";
 
-export const useCountryCommunityMembers = (countrySlug: string) => {
-  const { data: countryConfig } = useCountryBySlug(countrySlug);
-
+export const useCountryCommunityMembers = (countrySlug: string, countryName: string | undefined, keywords: string[] | undefined) => {
   return useQuery({
     queryKey: ['country-community-members', countrySlug],
     queryFn: async () => {
-      if (!countryConfig) {
-        return [];
-      }
+      if (!countryName || !keywords?.length) return [];
 
       const { data, error } = await supabase
         .from('community_members')
@@ -26,26 +21,26 @@ export const useCountryCommunityMembers = (countrySlug: string) => {
       // Filter based on origin country or associated countries
       const filteredMembers = data.filter(member => {
         // Check if origin_country matches
-        if (member.origin_country?.toLowerCase() === countryConfig.name.toLowerCase()) {
+        if (member.origin_country?.toLowerCase() === countryName.toLowerCase()) {
           return true;
         }
 
         // Check if country is in associated_countries array
         if (member.associated_countries?.some(country =>
-          country.toLowerCase() === countryConfig.name.toLowerCase()
+          country.toLowerCase() === countryName.toLowerCase()
         )) {
           return true;
         }
 
         // Fallback to keyword matching
         const searchText = `${member.name} ${member.title} ${member.description} ${member.specialties?.join(' ')} ${member.experience} ${member.location}`.toLowerCase();
-        return countryConfig.keywords.some(keyword =>
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
 
       return filteredMembers;
     },
-    enabled: !!countryConfig
+    enabled: !!countryName && !!keywords?.length
   });
 };

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -27,57 +28,47 @@ export interface Event {
   target_personas?: string[] | null;
 }
 
+const fetchEvents = async (query?: string): Promise<Event[]> => {
+  let queryBuilder = supabase
+    .from('events')
+    .select('*')
+    .order('date', { ascending: true });
+
+  if (query && query.trim()) {
+    queryBuilder = queryBuilder.or(
+      `title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%,organizer.ilike.%${query}%`
+    );
+  }
+
+  const { data, error } = await queryBuilder;
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+};
+
 export const useEvents = () => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  const fetchEvents = useCallback(async (query?: string, isSearch = false) => {
-    try {
-      if (isSearch) {
-        setSearchLoading(true);
-      } else {
-        setLoading(true);
-      }
-
-      let queryBuilder = supabase
-        .from('events')
-        .select('*')
-        .order('date', { ascending: true });
-
-      if (query && query.trim()) {
-        queryBuilder = queryBuilder.or(
-          `title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%,organizer.ilike.%${query}%`
-        );
-      }
-
-      const { data, error } = await queryBuilder;
-
-      if (error) {
-        throw error;
-      }
-
-      setEvents(data || []);
-    } catch (err) {
-      console.error('Error fetching events:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch events');
-    } finally {
-      if (isSearch) {
-        setSearchLoading(false);
-      } else {
-        setLoading(false);
-      }
-    }
-  }, []);
+  const {
+    data: events = [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['events', debouncedSearchQuery],
+    queryFn: () => fetchEvents(debouncedSearchQuery || undefined),
+  });
 
   // Split events into upcoming and past
   const { upcomingEvents, pastEvents } = useMemo(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    
+
     const upcoming: Event[] = [];
     const past: Event[] = [];
 
@@ -98,21 +89,10 @@ export const useEvents = () => {
     return { upcomingEvents: upcoming, pastEvents: past };
   }, [events]);
 
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
-
-  useEffect(() => {
-    if (debouncedSearchQuery !== searchQuery) {
-      return;
-    }
-    
-    if (debouncedSearchQuery.trim()) {
-      fetchEvents(debouncedSearchQuery, true);
-    } else if (searchQuery === "") {
-      fetchEvents("", false);
-    }
-  }, [debouncedSearchQuery, fetchEvents]);
+  // searchLoading: true when the user has typed but debounce hasn't settled,
+  // or when a search-triggered fetch is in flight (but not the initial load)
+  const searchLoading = (searchQuery !== debouncedSearchQuery && !!searchQuery.trim()) ||
+    (isFetching && !!debouncedSearchQuery && !isLoading);
 
   const setSearchTerm = useCallback((query: string) => {
     setSearchQuery(query);
@@ -122,14 +102,14 @@ export const useEvents = () => {
     setSearchQuery("");
   }, []);
 
-  return { 
-    events, 
+  return {
+    events,
     upcomingEvents,
     pastEvents,
-    loading, 
+    loading: isLoading,
     searchLoading,
-    error, 
-    refetch: fetchEvents,
+    error: error ? (error instanceof Error ? error.message : 'Failed to fetch events') : null,
+    refetch,
     setSearchTerm,
     clearSearch,
     searchQuery,

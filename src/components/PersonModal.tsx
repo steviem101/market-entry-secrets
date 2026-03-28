@@ -130,8 +130,9 @@ const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) =
               <div className="grid grid-cols-4 gap-3">
                 {person.experienceTiles.map((tile, index) => (
                   <div key={tile.id} className="flex flex-col items-center p-3 bg-white border rounded-lg">
-                    <img 
-                      src={tile.logo || getExperienceTileImage(index)} 
+                    <img
+                      loading="lazy"
+                      src={tile.logo || getExperienceTileImage(index)}
                       alt={tile.name}
                       className="w-12 h-12 object-contain mb-2"
                     />

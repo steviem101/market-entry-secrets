@@ -1,16 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSectorBySlug } from "@/hooks/useSectors";
 
-export const useSectorTradeAgencies = (sectorSlug: string) => {
-  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
-  
+export const useSectorTradeAgencies = (sectorSlug: string, keywords: string[] | undefined) => {
   return useQuery({
     queryKey: ['sector-trade-agencies', sectorSlug],
     queryFn: async () => {
-      if (!sectorConfig) return [];
-      
+      if (!keywords?.length) return [];
+
       // Try with is_active filter (available after migration)
       let result = await (supabase as any)
         .from('trade_investment_agencies')
@@ -32,11 +29,11 @@ export const useSectorTradeAgencies = (sectorSlug: string) => {
       // Filter based on sector keywords
       return (data || []).filter((agency: any) => {
         const searchText = `${agency.name || ''} ${agency.description || ''} ${agency.services?.join(' ') || ''}`.toLowerCase();
-        return sectorConfig.keywords.some(keyword =>
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
     },
-    enabled: !!sectorConfig
+    enabled: !!keywords?.length
   });
 };

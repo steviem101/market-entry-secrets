@@ -1,17 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCountryBySlug } from "@/hooks/useCountries";
 
-export const useCountryServiceProviders = (countrySlug: string) => {
-  const { data: countryConfig } = useCountryBySlug(countrySlug);
-
+export const useCountryServiceProviders = (countrySlug: string, keywords: string[] | undefined) => {
   return useQuery({
     queryKey: ['country-service-providers', countrySlug],
     queryFn: async () => {
-      if (!countryConfig) {
-        return [];
-      }
+      if (!keywords?.length) return [];
 
       const { data, error } = await supabase
         .from('service_providers')
@@ -26,13 +21,13 @@ export const useCountryServiceProviders = (countrySlug: string) => {
       // Filter based on country keywords
       const filteredProviders = data.filter(provider => {
         const searchText = `${provider.name} ${provider.description} ${provider.services?.join(' ')} ${provider.location}`.toLowerCase();
-        return countryConfig.service_keywords.some(keyword =>
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
 
       return filteredProviders;
     },
-    enabled: !!countryConfig
+    enabled: !!keywords?.length
   });
 };

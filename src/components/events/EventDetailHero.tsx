@@ -35,6 +35,7 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
             <div className="flex-shrink-0">
               {event.event_logo_url ? (
                 <img
+                  loading="lazy"
                   src={event.event_logo_url}
                   alt={`${event.title} logo`}
                   className="w-20 h-20 rounded-xl object-cover border border-border"

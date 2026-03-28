@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Calendar, MapPin, Users, Clock, User, CalendarPlus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ interface EventCardProps {
   useModal?: boolean;
 }
 
-export const EventCard = ({ event, onViewDetails, useModal = false }: EventCardProps) => {
+export const EventCard = memo(({ event, onViewDetails, useModal = false }: EventCardProps) => {
   const eventDate = new Date(event.date);
   const isEventPast = isPast(eventDate);
   const daysUntil = differenceInDays(eventDate, new Date());
@@ -139,4 +140,6 @@ export const EventCard = ({ event, onViewDetails, useModal = false }: EventCardP
   );
 
   return cardContent;
-};
+});
+
+EventCard.displayName = "EventCard";

@@ -50,29 +50,28 @@ export const useCaseStudy = (slug: string) => {
 
       if (contentError) throw contentError;
 
-      // Get sections for this case study
-      const { data: sections, error: sectionsError } = await supabase
-        .from('content_sections')
-        .select('*')
-        .eq('content_id', contentItem.id)
-        .eq('is_active', true)
-        .order('sort_order');
+      // Fetch sections and bodies in parallel
+      const [sectionsResult, bodiesResult] = await Promise.all([
+        supabase
+          .from('content_sections')
+          .select('*')
+          .eq('content_id', contentItem.id)
+          .eq('is_active', true)
+          .order('sort_order'),
+        supabase
+          .from('content_bodies')
+          .select('*')
+          .eq('content_id', contentItem.id)
+          .order('sort_order'),
+      ]);
 
-      if (sectionsError) throw sectionsError;
-
-      // Get all content bodies (both sectioned and non-sectioned)
-      const { data: bodies, error: bodiesError } = await supabase
-        .from('content_bodies')
-        .select('*')
-        .or(`content_id.eq.${contentItem.id},section_id.in.(${sections?.map(s => s.id).join(',') || 'null'})`)
-        .order('sort_order');
-
-      if (bodiesError) throw bodiesError;
+      if (sectionsResult.error) throw sectionsResult.error;
+      if (bodiesResult.error) throw bodiesResult.error;
 
       return {
         ...contentItem,
-        content_sections: sections || [],
-        content_bodies: bodies || []
+        content_sections: sectionsResult.data || [],
+        content_bodies: bodiesResult.data || []
       };
     },
     enabled: !!slug

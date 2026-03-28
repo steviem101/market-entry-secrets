@@ -37,6 +37,7 @@ export const InnovationOrgHero = ({ org }: InnovationOrgHeroProps) => {
           <div className="w-28 h-28 bg-white rounded-xl shadow-sm border flex items-center justify-center flex-shrink-0 overflow-hidden">
             {org.logo ? (
               <img
+                loading="lazy"
                 src={org.logo}
                 alt={`${org.name} logo`}
                 className="w-full h-full object-contain p-3"

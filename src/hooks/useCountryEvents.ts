@@ -1,17 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCountryBySlug } from "@/hooks/useCountries";
 
-export const useCountryEvents = (countrySlug: string) => {
-  const { data: countryConfig } = useCountryBySlug(countrySlug);
-
+export const useCountryEvents = (countrySlug: string, keywords: string[] | undefined) => {
   return useQuery({
     queryKey: ['country-events', countrySlug],
     queryFn: async () => {
-      if (!countryConfig) {
-        return [];
-      }
+      if (!keywords?.length) return [];
 
       const { data, error } = await supabase
         .from('events')
@@ -26,13 +21,13 @@ export const useCountryEvents = (countrySlug: string) => {
       // Filter based on country keywords
       const filteredEvents = data.filter(event => {
         const searchText = `${event.title} ${event.description} ${event.category} ${event.location}`.toLowerCase();
-        return countryConfig.event_keywords.some(keyword =>
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
 
       return filteredEvents;
     },
-    enabled: !!countryConfig
+    enabled: !!keywords?.length
   });
 };

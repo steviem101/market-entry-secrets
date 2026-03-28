@@ -26,7 +26,8 @@ export const useTradeAgencies = () => {
       }
 
       return result.data;
-    }
+    },
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -53,7 +54,8 @@ export const useTradeAgencyBySlug = (slug: string) => {
       if (error) throw error;
       return data;
     },
-    enabled: !!slug
+    enabled: !!slug,
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -85,7 +87,8 @@ export const useRelatedTradeAgencies = (currentId: string, categorySlug: string,
       if (result.error) throw result.error;
       return result.data || [];
     },
-    enabled: !!currentId
+    enabled: !!currentId,
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -105,7 +108,8 @@ export const useOrganisationCategories = () => {
       }
 
       return data || [];
-    }
+    },
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -126,7 +130,8 @@ export const useAgencyContacts = (agencyId: string) => {
 
       return data || [];
     },
-    enabled: !!agencyId
+    enabled: !!agencyId,
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -147,6 +152,7 @@ export const useAgencyResources = (agencyId: string) => {
 
       return data || [];
     },
-    enabled: !!agencyId
+    enabled: !!agencyId,
+    staleTime: 15 * 60 * 1000
   });
 };

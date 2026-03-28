@@ -45,7 +45,8 @@ export const useLocations = () => {
       if (error) throw error;
       // Filter active client-side (column may not exist in older DB schemas)
       return (data as LocationData[]).filter(l => l.active !== false);
-    }
+    },
+    staleTime: 30 * 60 * 1000
   });
 };
 
@@ -61,7 +62,8 @@ export const useFeaturedLocations = () => {
 
       if (error) throw error;
       return (data as LocationData[]).filter(l => l.active !== false);
-    }
+    },
+    staleTime: 30 * 60 * 1000
   });
 };
 
@@ -78,6 +80,7 @@ export const useLocationBySlug = (slug: string) => {
       if (error) throw error;
       return data as LocationData;
     },
-    enabled: !!slug
+    enabled: !!slug,
+    staleTime: 30 * 60 * 1000
   });
 };

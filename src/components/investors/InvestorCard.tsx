@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ function formatCheckSize(min: number | null, max: number | null): string | null 
   return `Up to ${fmt(max!)}`;
 }
 
-const InvestorCard = ({ investor }: InvestorCardProps) => {
+const InvestorCard = memo(({ investor }: InvestorCardProps) => {
   const typeConfig = TYPE_CONFIG[investor.investor_type] || TYPE_CONFIG.other;
   const checkSize = formatCheckSize(investor.check_size_min, investor.check_size_max);
 
@@ -58,6 +59,7 @@ const InvestorCard = ({ investor }: InvestorCardProps) => {
           >
             {investor.logo ? (
               <img
+                loading="lazy"
                 src={investor.logo}
                 alt={`${investor.name} logo`}
                 className="w-full h-full object-contain p-1.5"
@@ -154,6 +156,8 @@ const InvestorCard = ({ investor }: InvestorCardProps) => {
       </div>
     </div>
   );
-};
+});
+
+InvestorCard.displayName = "InvestorCard";
 
 export default InvestorCard;

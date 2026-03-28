@@ -1,15 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useLocationBySlug } from "@/hooks/useLocations";
 
-export const useLocationInnovationEcosystem = (locationSlug: string) => {
-  const { data: locationConfig } = useLocationBySlug(locationSlug);
-
+export const useLocationInnovationEcosystem = (locationSlug: string, keywords: string[] | undefined) => {
   return useQuery({
     queryKey: ['location-innovation-ecosystem', locationSlug],
     queryFn: async () => {
-      if (!locationConfig) return [];
+      if (!keywords?.length) return [];
 
       const { data, error } = await supabase
         .from('innovation_ecosystem')
@@ -20,11 +17,11 @@ export const useLocationInnovationEcosystem = (locationSlug: string) => {
 
       return data.filter(org => {
         const searchText = `${org.name} ${org.description} ${org.services?.join(' ')} ${org.location}`.toLowerCase();
-        return locationConfig.service_keywords.some(keyword =>
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
     },
-    enabled: !!locationConfig
+    enabled: !!keywords?.length
   });
 };

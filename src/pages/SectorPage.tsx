@@ -20,14 +20,14 @@ const SectorPage = () => {
   const { sectorSlug } = useParams<{ sectorSlug: string }>();
   const { data: sectorConfig, isLoading: sectorLoading, error } = useSectorBySlug(sectorSlug || '');
 
-  const { data: serviceProviders = [], isLoading: providersLoading } = useSectorServiceProviders(sectorSlug || '');
-  const { data: events = [], isLoading: eventsLoading } = useSectorEvents(sectorSlug || '');
-  const { data: leads = [], isLoading: leadsLoading } = useSectorLeads(sectorSlug || '');
-  const { data: communityMembers = [], isLoading: communityLoading } = useSectorCommunityMembers(sectorSlug || '');
-  const { data: innovationEcosystem = [], isLoading: innovationLoading } = useSectorInnovationEcosystem(sectorSlug || '');
-  const { data: investors = [], isLoading: investorsLoading } = useSectorInvestors(sectorSlug || '');
-  const { data: tradeAgencies = [], isLoading: tradeLoading } = useSectorTradeAgencies(sectorSlug || '');
-  const { data: contentItems = [], isLoading: contentLoading } = useSectorContent(sectorSlug || '');
+  const { data: serviceProviders = [], isLoading: providersLoading } = useSectorServiceProviders(sectorSlug || '', sectorConfig?.service_keywords);
+  const { data: events = [], isLoading: eventsLoading } = useSectorEvents(sectorSlug || '', sectorConfig?.event_keywords);
+  const { data: leads = [], isLoading: leadsLoading } = useSectorLeads(sectorSlug || '', sectorConfig?.lead_keywords, sectorConfig?.industries);
+  const { data: communityMembers = [], isLoading: communityLoading } = useSectorCommunityMembers(sectorSlug || '', sectorConfig?.keywords);
+  const { data: innovationEcosystem = [], isLoading: innovationLoading } = useSectorInnovationEcosystem(sectorSlug || '', sectorConfig?.keywords);
+  const { data: investors = [], isLoading: investorsLoading } = useSectorInvestors(sectorSlug || '', sectorConfig?.keywords);
+  const { data: tradeAgencies = [], isLoading: tradeLoading } = useSectorTradeAgencies(sectorSlug || '', sectorConfig?.keywords);
+  const { data: contentItems = [], isLoading: contentLoading } = useSectorContent(sectorSlug || '', sectorConfig?.content_keywords);
 
   if (sectorLoading) {
     return (

@@ -1,16 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSectorBySlug } from "@/hooks/useSectors";
 
-export const useSectorEvents = (sectorSlug: string) => {
-  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
-  
+export const useSectorEvents = (sectorSlug: string, keywords: string[] | undefined) => {
   return useQuery({
     queryKey: ['sector-events', sectorSlug],
     queryFn: async () => {
-      if (!sectorConfig) return [];
-      
+      if (!keywords?.length) return [];
+
       const { data, error } = await supabase
         .from('events')
         .select('*')
@@ -21,11 +18,11 @@ export const useSectorEvents = (sectorSlug: string) => {
       // Filter based on sector keywords
       return data.filter(event => {
         const searchText = `${event.title} ${event.description} ${event.category}`.toLowerCase();
-        return sectorConfig.event_keywords.some(keyword => 
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
     },
-    enabled: !!sectorConfig
+    enabled: !!keywords?.length
   });
 };

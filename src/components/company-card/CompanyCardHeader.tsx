@@ -17,6 +17,7 @@ const CompanyCardHeader = ({ company }: CompanyCardHeaderProps) => {
       <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
         {logoSrc ? (
           <img
+            loading="lazy"
             src={logoSrc}
             alt={`${company.name} logo`}
             className="w-full h-full object-contain p-2"

@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { Calendar, MapPin, Users, Building2, Briefcase, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ interface FeaturedItemCardProps {
   onViewDetails: (item: FeaturedItem) => void;
 }
 
-export const FeaturedItemCard = ({ item, onViewDetails }: FeaturedItemCardProps) => {
+export const FeaturedItemCard = memo(({ item, onViewDetails }: FeaturedItemCardProps) => {
   const getTypeIcon = () => {
     switch (item.type) {
       case 'service_provider':
@@ -69,7 +70,7 @@ export const FeaturedItemCard = ({ item, onViewDetails }: FeaturedItemCardProps)
           </Badge>
           {item.logo && (
             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden">
-              <img src={item.logo} alt={item.name} className="w-full h-full object-cover" />
+              <img loading="lazy" src={item.logo} alt={item.name} className="w-full h-full object-cover" />
             </div>
           )}
         </div>
@@ -144,4 +145,6 @@ export const FeaturedItemCard = ({ item, onViewDetails }: FeaturedItemCardProps)
       </CardContent>
     </Card>
   );
-};
+});
+
+FeaturedItemCard.displayName = "FeaturedItemCard";

@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +39,7 @@ interface ContentCardProps {
   attachmentCount?: number;
 }
 
-export const ContentCard = ({ content, featured = false, attachmentCount = 0 }: ContentCardProps) => {
+export const ContentCard = memo(({ content, featured = false, attachmentCount = 0 }: ContentCardProps) => {
   const IconComponent = iconMap[content.content_categories?.icon] || BookOpen;
   const categoryColor = content.content_categories?.color || "teal";
   const colors = CATEGORY_COLORS[categoryColor] || CATEGORY_COLORS.teal;
@@ -51,6 +52,7 @@ export const ContentCard = ({ content, featured = false, attachmentCount = 0 }: 
         <div className={`relative w-full ${featured ? 'h-48' : 'h-40'} overflow-hidden`}>
           {content.thumbnail_url ? (
             <img
+              loading="lazy"
               src={content.thumbnail_url}
               alt={content.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -125,4 +127,6 @@ export const ContentCard = ({ content, featured = false, attachmentCount = 0 }: 
       </Card>
     </Link>
   );
-};
+});
+
+ContentCard.displayName = "ContentCard";

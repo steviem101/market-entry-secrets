@@ -19,6 +19,7 @@ export const ServiceProviderProfileHero = ({ provider }: ServiceProviderProfileH
       <div className="h-48 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         {provider.cover_image_url && (
           <img
+            loading="lazy"
             src={provider.cover_image_url}
             alt={`${provider.name} cover`}
             className="w-full h-full object-cover"
@@ -32,6 +33,7 @@ export const ServiceProviderProfileHero = ({ provider }: ServiceProviderProfileH
           <div className="w-32 h-32 bg-white border-4 border-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0">
             {logoSrc ? (
               <img
+                loading="lazy"
                 src={logoSrc}
                 alt={`${provider.name} logo`}
                 className="w-full h-full object-contain p-3"

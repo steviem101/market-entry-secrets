@@ -38,6 +38,7 @@ export const useCommunityMembers = () => {
             []) :
           []
       }));
-    }
+    },
+    staleTime: 15 * 60 * 1000
   });
 };

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from './types';
@@ -7,10 +7,13 @@ import { fetchUserData } from './userDataService';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfileState] = useState<UserProfile | null>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoadingState] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
+
+  const setProfile = useCallback((p: UserProfile | null) => setProfileState(p), []);
+  const setLoading = useCallback((l: boolean) => setLoadingState(l), []);
   
   // Add refs to prevent duplicate API calls
   const fetchingProfile = useRef(false);

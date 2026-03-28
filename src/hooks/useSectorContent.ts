@@ -1,16 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSectorBySlug } from "@/hooks/useSectors";
 
-export const useSectorContent = (sectorSlug: string) => {
-  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
-  
+export const useSectorContent = (sectorSlug: string, keywords: string[] | undefined) => {
   return useQuery({
     queryKey: ['sector-content', sectorSlug],
     queryFn: async () => {
-      if (!sectorConfig) return [];
-      
+      if (!keywords?.length) return [];
+
       const { data, error } = await supabase
         .from('content_items')
         .select(`
@@ -32,14 +29,14 @@ export const useSectorContent = (sectorSlug: string) => {
         if (content.sector_tags?.includes(sectorSlug)) {
           return true;
         }
-        
+
         // Fallback to keyword matching in title and subtitle
         const searchText = `${content.title} ${content.subtitle || ''}`.toLowerCase();
-        return sectorConfig.content_keywords.some(keyword => 
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
     },
-    enabled: !!sectorConfig
+    enabled: !!keywords?.length
   });
 };

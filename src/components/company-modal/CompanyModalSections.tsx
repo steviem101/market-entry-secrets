@@ -55,8 +55,9 @@ export const CompanyModalSections = ({
             {experienceTiles.map((tile, index) => (
               <div key={tile.id} className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
                 <div className="w-12 h-12 bg-white border rounded-lg p-1">
-                  <img 
-                    src={tile.logo || getExperienceTileImage(index)} 
+                  <img
+                    loading="lazy"
+                    src={tile.logo || getExperienceTileImage(index)}
                     alt={tile.name}
                     className="w-full h-full object-cover rounded"
                   />
