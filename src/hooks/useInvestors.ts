@@ -39,20 +39,37 @@ export const useInvestorById = (id: string) => {
   });
 };
 
-export const useInvestorBySlug = (slug: string) => {
+export const useInvestorBySlug = (slugOrId: string) => {
   return useQuery({
-    queryKey: ['investor-slug', slug],
+    queryKey: ['investor-slug', slugOrId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      // Try slug lookup first
+      const { data: slugData, error: slugError } = await (supabase as any)
         .from('investors')
         .select('*')
-        .eq('slug', slug)
-        .single();
+        .eq('slug', slugOrId)
+        .maybeSingle();
 
-      if (error) throw error;
-      return data;
+      if (slugData) return slugData;
+
+      // Fallback to id lookup if slug didn't match and value looks like a UUID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+      if (isUUID) {
+        const { data: idData, error: idError } = await (supabase as any)
+          .from('investors')
+          .select('*')
+          .eq('id', slugOrId)
+          .single();
+
+        if (idError) throw idError;
+        return idData;
+      }
+
+      // Neither slug nor valid UUID — throw original error or not-found
+      if (slugError) throw slugError;
+      return null;
     },
-    enabled: !!slug,
+    enabled: !!slugOrId,
     staleTime: 15 * 60 * 1000
   });
 };
