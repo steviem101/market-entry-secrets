@@ -50,26 +50,29 @@ export const useCaseStudy = (slug: string) => {
 
       if (contentError) throw contentError;
 
-      // Fetch sections and bodies in parallel (both keyed off content_id)
-      const [sectionsResult, bodiesResult] = await Promise.all([
-        supabase
-          .from('content_sections')
-          .select('*')
-          .eq('content_id', contentItem.id)
-          .eq('is_active', true)
-          .order('sort_order'),
-        supabase
-          .from('content_bodies')
-          .select('*')
-          .eq('content_id', contentItem.id)
-          .order('sort_order'),
-      ]);
+      // Fetch sections first, then bodies matching content_id OR section_id
+      const { data: sections, error: sectionsError } = await supabase
+        .from('content_sections')
+        .select('*')
+        .eq('content_id', contentItem.id)
+        .eq('is_active', true)
+        .order('sort_order');
 
-      if (sectionsResult.error) throw sectionsResult.error;
-      if (bodiesResult.error) throw bodiesResult.error;
+      if (sectionsError) throw sectionsError;
 
-      const sections = sectionsResult.data;
-      const bodies = bodiesResult.data;
+      // Fetch bodies matching content_id OR belonging to any of this content's sections
+      const sectionIds = sections?.map(s => s.id).join(',') || '';
+      const orFilter = sectionIds
+        ? `content_id.eq.${contentItem.id},section_id.in.(${sectionIds})`
+        : `content_id.eq.${contentItem.id}`;
+
+      const { data: bodies, error: bodiesError } = await supabase
+        .from('content_bodies')
+        .select('*')
+        .or(orFilter)
+        .order('sort_order');
+
+      if (bodiesError) throw bodiesError;
 
       return {
         ...contentItem,

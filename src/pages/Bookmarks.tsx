@@ -1,5 +1,4 @@
 
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Heart, Calendar, Users, FileText, MapPin, Building, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +9,7 @@ import { useBookmarks } from "@/hooks/useBookmarks";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 const Bookmarks = () => {
-  const { bookmarks, loading, fetchBookmarks } = useBookmarks();
-
-  useEffect(() => {
-    fetchBookmarks();
-  }, [fetchBookmarks]);
+  const { bookmarks, loading } = useBookmarks();
 
   const getTypeIcon = (type: string) => {
     switch (type) {

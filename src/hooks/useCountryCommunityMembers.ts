@@ -18,6 +18,7 @@ export const useCountryCommunityMembers = (countrySlug: string, countryName: str
 
       const filters = [
         `origin_country.ilike.%${countryName}%`,
+        `associated_countries.cs.{${countryName}}`,
         ...keywordFilters,
       ];
 
