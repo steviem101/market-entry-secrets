@@ -36,7 +36,7 @@ const InvestorPage = () => {
       <SEOHead
         title={`${investor.name} | Australian Investors | Market Entry Secrets`}
         description={(investor.description || "").slice(0, 160)}
-        canonicalPath={`/investors/${(investor as any).slug}`}
+        canonicalPath={`/investors/${investor.slug || slug}`}
         ogImage={investor.logo}
         jsonLd={{
           type: "Organization",

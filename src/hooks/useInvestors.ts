@@ -5,7 +5,7 @@ export const useInvestors = () => {
   return useQuery({
     queryKey: ['investors'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('investors')
         .select('*')
         .order('name');
@@ -25,7 +25,7 @@ export const useInvestorById = (id: string) => {
   return useQuery({
     queryKey: ['investor', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('investors')
         .select('*')
         .eq('id', id)
@@ -62,7 +62,7 @@ export const useRelatedInvestors = (currentId: string, investorType: string, loc
     queryKey: ['related-investors', currentId],
     queryFn: async () => {
       const locationPrefix = location.split(',')[0].trim();
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('investors')
         .select('*')
         .neq('id', currentId)

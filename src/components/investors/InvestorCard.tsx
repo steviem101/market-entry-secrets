@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, MapPin } from "lucide-react";
+import { Globe, MapPin, ArrowRight } from "lucide-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { getCompanyInitials } from "@/components/company-card/CompanyCardHelpers";
 
@@ -54,7 +54,7 @@ const InvestorCard = memo(({ investor }: InvestorCardProps) => {
       <div className="p-5 pb-3">
         <div className="flex items-start gap-4">
           <Link
-            to={`/investors/${investor.slug}`}
+            to={`/investors/${investor.slug || investor.id}`}
             className="w-14 h-14 bg-white rounded-lg border flex items-center justify-center flex-shrink-0 overflow-hidden"
           >
             {investor.logo ? (
@@ -79,7 +79,7 @@ const InvestorCard = memo(({ investor }: InvestorCardProps) => {
           </Link>
 
           <div className="flex-1 min-w-0">
-            <Link to={`/investors/${investor.slug}`} className="hover:underline">
+            <Link to={`/investors/${investor.slug || investor.id}`} className="hover:underline">
               <h3 className="font-semibold text-foreground text-base truncate">{investor.name}</h3>
             </Link>
             <div className="flex items-center gap-2 mt-1">
@@ -133,6 +133,12 @@ const InvestorCard = memo(({ investor }: InvestorCardProps) => {
 
       {/* Footer */}
       <div className="px-5 pb-4 pt-2 border-t border-border/50 flex items-center gap-2">
+        <Button size="sm" asChild className="flex-1">
+          <Link to={`/investors/${investor.slug || investor.id}`}>
+            View Profile
+            <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+          </Link>
+        </Button>
         {investor.website && (
           <Button variant="outline" size="sm" asChild className="flex-1">
             <a href={investor.website} target="_blank" rel="noopener noreferrer">

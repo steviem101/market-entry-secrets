@@ -7,7 +7,7 @@ export const useSectorInvestors = (sectorSlug: string, keywords: string[] | unde
     queryFn: async () => {
       if (!keywords?.length) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('investors')
         .select('*')
         .order('name');
