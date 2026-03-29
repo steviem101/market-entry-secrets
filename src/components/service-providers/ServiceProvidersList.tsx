@@ -1,9 +1,7 @@
 
 import { Grid3X3 } from "lucide-react";
 import CompanyCard, { Company } from "@/components/CompanyCard";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/PaywallModal";
+import { ListingPageGate } from "@/components/ListingPageGate";
 
 interface ServiceProvidersListProps {
   companies: Company[];
@@ -12,9 +10,6 @@ interface ServiceProvidersListProps {
 export const ServiceProvidersList = ({
   companies,
 }: ServiceProvidersListProps) => {
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
-
   if (companies.length === 0) {
     return (
       <div className="text-center py-12">
@@ -27,19 +22,17 @@ export const ServiceProvidersList = ({
     );
   }
 
-  if (!authLoading && hasReachedLimit && !user) {
-    return <PaywallModal contentType="service_providers" />;
-  }
-
   return (
-    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-      {companies.map((company) => (
-        <CompanyCard
-          key={company.id}
-          company={company}
-          detailUrl={`/service-providers/${company.slug || company.id}`}
-        />
-      ))}
-    </div>
+    <ListingPageGate contentType="service_providers">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {companies.map((company) => (
+          <CompanyCard
+            key={company.id}
+            company={company}
+            detailUrl={`/service-providers/${company.slug || company.id}`}
+          />
+        ))}
+      </div>
+    </ListingPageGate>
   );
 };

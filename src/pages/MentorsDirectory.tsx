@@ -5,9 +5,7 @@ import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 import { useMentors, useMentorCategories } from "@/hooks/useMentors";
-import { useAuth } from "@/hooks/useAuth";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { PaywallModal } from "@/components/PaywallModal";
+import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { MentorsHero } from "@/components/mentors/MentorsHero";
 import MentorCard from "@/components/mentors/MentorCard";
@@ -25,8 +23,6 @@ const PAGE_SIZE = 12;
 
 const MentorsDirectory = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
   const { data: mentors = [], isLoading, error } = useMentors();
   const { data: categories = [] } = useMentorCategories();
   const { filters, setFilters } = useMentorFilters();
@@ -139,16 +135,14 @@ const MentorsDirectory = () => {
         </div>
 
         {/* Results */}
-        {!authLoading && hasReachedLimit && !user ? (
-          <PaywallModal contentType="community_members" />
-        ) : filteredMentors.length === 0 ? (
+        {filteredMentors.length === 0 ? (
           <EmptyState
             icon={<Users className="w-16 h-16" />}
             title="No mentors found"
             description="Try adjusting your search criteria or filters to find more mentors."
           />
         ) : (
-          <>
+          <ListingPageGate contentType="community_members">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {paginatedMentors.map((mentor) => (
                 <MentorCard
@@ -163,7 +157,7 @@ const MentorsDirectory = () => {
               totalPages={totalPages}
               onPageChange={setCurrentPage}
             />
-          </>
+          </ListingPageGate>
         )}
       </div>
 

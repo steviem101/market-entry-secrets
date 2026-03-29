@@ -9,11 +9,9 @@ import { ListPagination } from "@/components/common/ListPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp } from "lucide-react";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { useAuth } from "@/hooks/useAuth";
 import { useLeadCheckout } from "@/hooks/useLeadCheckout";
 import { AuthDialog } from "@/components/auth/AuthDialog";
-import { PaywallModal } from "@/components/PaywallModal";
+import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { getStandardTypes } from "@/utils/sectorMapping";
 import { useLeadDatabases, useLeadDatabaseStats } from "@/hooks/useLeadDatabases";
@@ -45,8 +43,6 @@ const sortLeads = (leads: LeadDatabase[], sortBy: string): LeadDatabase[] => {
 };
 
 const Leads = () => {
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
   const { startLeadCheckout, loading: checkoutLoading } = useLeadCheckout();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
@@ -176,8 +172,6 @@ const Leads = () => {
                 <div key={i} className="h-80 bg-muted rounded-lg animate-pulse" />
               ))}
             </div>
-          ) : !authLoading && hasReachedLimit && !user ? (
-            <PaywallModal contentType="leads" />
           ) : sortedLeads.length > 0 ? (
             <>
               <div className="flex items-center justify-between mb-6">
@@ -199,16 +193,18 @@ const Leads = () => {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {paginatedLeads.map(lead => (
-                  <LeadCard
-                    key={lead.id}
-                    lead={lead}
-                    onPreview={handlePreview}
-                    onCheckout={handleCheckout}
-                  />
-                ))}
-              </div>
+              <ListingPageGate contentType="leads">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {paginatedLeads.map(lead => (
+                    <LeadCard
+                      key={lead.id}
+                      lead={lead}
+                      onPreview={handlePreview}
+                      onCheckout={handleCheckout}
+                    />
+                  ))}
+                </div>
+              </ListingPageGate>
               <ListPagination
                 currentPage={currentPage}
                 totalPages={totalPages}

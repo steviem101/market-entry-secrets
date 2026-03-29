@@ -10,9 +10,7 @@ import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryF
 import { ListPagination } from "@/components/common/ListPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useEvents } from "@/hooks/useEvents";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/PaywallModal";
+import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
@@ -49,8 +47,6 @@ const Events = () => {
   }, [localSearchQuery, selectedCategory, selectedType, selectedLocation, selectedSector, activeTab, personaFilterValue, currentPage, setSearchParams]);
 
   const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
 
   const categories = Array.from(new Set(events.map(event => event.category))).sort();
   const types = Array.from(new Set(events.map(event => event.type))).sort();
@@ -213,15 +209,15 @@ const Events = () => {
             actionLabel={(localSearchQuery || hasActiveFilters) ? "Clear all filters" : undefined}
             onAction={(localSearchQuery || hasActiveFilters) ? handleClearFilters : undefined}
           />
-        ) : !authLoading && hasReachedLimit && !user ? (
-          <PaywallModal contentType="events" />
         ) : (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {paginatedEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
+            <ListingPageGate contentType="events">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {paginatedEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </ListingPageGate>
             <ListPagination
               currentPage={currentPage}
               totalPages={totalPages}

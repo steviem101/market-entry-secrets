@@ -1,9 +1,7 @@
 import { TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyCard from "@/components/CompanyCard";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/PaywallModal";
+import { ListingPageGate } from "@/components/ListingPageGate";
 import { parseJsonArray } from "@/components/company-card/CompanyCardHelpers";
 
 interface TradeInvestmentAgenciesResultsProps {
@@ -17,8 +15,6 @@ const TradeInvestmentAgenciesResults = ({
   isLoading,
   onClearFilters,
 }: TradeInvestmentAgenciesResultsProps) => {
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
 
   if (isLoading) {
     return (
@@ -49,12 +45,6 @@ const TradeInvestmentAgenciesResults = ({
     );
   }
 
-  const displayedAgencies = user ? filteredAgencies : filteredAgencies.slice(0, 3);
-
-  if (!authLoading && hasReachedLimit && !user) {
-    return <PaywallModal contentType="trade_investment_agencies" />;
-  }
-
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
@@ -62,8 +52,9 @@ const TradeInvestmentAgenciesResults = ({
           {filteredAgencies.length} Organisation{filteredAgencies.length !== 1 ? 's' : ''} Found
         </h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayedAgencies.map((agency) => (
+      <ListingPageGate contentType="trade_investment_agencies">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredAgencies.map((agency) => (
           <CompanyCard
             key={agency.id}
             company={{
@@ -85,7 +76,8 @@ const TradeInvestmentAgenciesResults = ({
             detailUrl={`/government-support/${agency.slug || agency.id}`}
           />
         ))}
-      </div>
+        </div>
+      </ListingPageGate>
     </section>
   );
 };
