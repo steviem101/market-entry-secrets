@@ -1,6 +1,6 @@
 
 import { memo } from "react";
-import { User, MapPin, Calendar, Globe, Phone, Briefcase } from "lucide-react";
+import { User, MapPin, Calendar, Globe, Handshake, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -170,8 +170,8 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
           onClick={() => onContact(person)}
           className="flex-1"
         >
-          <Phone className="w-4 h-4 mr-1" />
-          Contact
+          <Handshake className="w-4 h-4 mr-1" />
+          Get Warm Intro
         </Button>
       </div>
     </div>

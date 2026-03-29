@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Calendar, Users, Globe, Phone, Star } from "lucide-react";
+import { Calendar, Users, Globe, Handshake, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Company } from "@/components/CompanyCard";
@@ -96,8 +96,8 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: Com
             onClick={(e) => e.stopPropagation()}
           >
             <a href={`mailto:${company.contact_email || company.contact}`}>
-              <Phone className="w-4 h-4 mr-1" />
-              Contact
+              <Handshake className="w-4 h-4 mr-1" />
+              Get Warm Intro
             </a>
           </Button>
         ) : (
@@ -110,8 +110,8 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: Com
             }}
             className="flex-1"
           >
-            <Phone className="w-4 h-4 mr-1" />
-            Contact
+            <Handshake className="w-4 h-4 mr-1" />
+            Get Warm Intro
           </Button>
         )}
       </div>

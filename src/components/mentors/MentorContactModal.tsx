@@ -72,8 +72,8 @@ export const MentorContactModal = ({ mentor, isOpen, onClose }: MentorContactMod
       }
 
       toast({
-        title: "Contact request sent!",
-        description: `Your message has been sent. We'll connect you with ${mentor.name} within 48 hours.`,
+        title: "Intro request sent!",
+        description: `Your request has been sent. We'll connect you with ${mentor.name} within 48 hours.`,
       });
       setForm({ name: "", email: "", company: "", country: "", message: "" });
       onClose();
@@ -89,7 +89,7 @@ export const MentorContactModal = ({ mentor, isOpen, onClose }: MentorContactMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Contact {mentor.name}</DialogTitle>
+          <DialogTitle>Get a Warm Intro to {mentor.name}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">

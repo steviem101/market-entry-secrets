@@ -1,5 +1,5 @@
 
-import { Phone } from "lucide-react";
+import { Handshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Company } from "../CompanyCard";
 
@@ -23,8 +23,8 @@ export const CompanyModalFooter = ({ company, onClose, onContact }: CompanyModal
         onClick={() => onContact(company)}
         className="flex-1"
       >
-        <Phone className="w-4 h-4 mr-2" />
-        Contact
+        <Handshake className="w-4 h-4 mr-2" />
+        Get Warm Intro
       </Button>
     </div>
   );
