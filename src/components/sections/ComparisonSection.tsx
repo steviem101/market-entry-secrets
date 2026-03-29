@@ -8,145 +8,28 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-
-type Status = "no" | "partial" | "yes";
-
-interface ComparisonRow {
-  feature: string;
-  google: { status: Status; tooltip: string };
-  consultant: { status: Status; tooltip: string };
-  mes: { status: Status; detail: string };
-}
-
-const ROWS: ComparisonRow[] = [
-  {
-    feature: "Time to first insight",
-    google: {
-      status: "partial",
-      tooltip: "Results are instant but require hours of manual research and synthesis",
-    },
-    consultant: {
-      status: "no",
-      tooltip: "Engagements typically take days to weeks before first deliverable",
-    },
-    mes: { status: "yes", detail: "AI report in under 10 minutes" },
-  },
-  {
-    feature: "Cost",
-    google: {
-      status: "yes",
-      tooltip: "Free to search, but your time is the hidden cost",
-    },
-    consultant: {
-      status: "no",
-      tooltip: "Market entry projects typically start at $10K–$50K+",
-    },
-    mes: { status: "yes", detail: "From $0 (free tier)" },
-  },
-  {
-    feature: "Vetted provider matching",
-    google: {
-      status: "no",
-      tooltip: "No vetting — results ranked by SEO, not relevance or quality",
-    },
-    consultant: {
-      status: "partial",
-      tooltip: "May recommend partners from their own network, which can be limited",
-    },
-    mes: { status: "yes", detail: "AI-matched from curated directory" },
-  },
-  {
-    feature: "Custom AI market report",
-    google: {
-      status: "no",
-      tooltip: "No structured report output — just links to sift through",
-    },
-    consultant: {
-      status: "partial",
-      tooltip: "Custom reports available but take weeks and cost thousands",
-    },
-    mes: { status: "yes", detail: "SWOT, competitors, leads & more" },
-  },
-  {
-    feature: "ANZ ecosystem access",
-    google: {
-      status: "no",
-      tooltip: "No curated directory of mentors, trade agencies, or innovation hubs",
-    },
-    consultant: {
-      status: "partial",
-      tooltip: "Access limited to the consultant's personal network",
-    },
-    mes: {
-      status: "yes",
-      detail: "Mentors, trade agencies & innovation hubs",
-    },
-  },
-  {
-    feature: "ANZ-specific data",
-    google: {
-      status: "partial",
-      tooltip: "Some data exists but scattered across many sources, not aggregated",
-    },
-    consultant: {
-      status: "partial",
-      tooltip: "Quality depends on the individual consultant's local knowledge",
-    },
-    mes: { status: "yes", detail: "Purpose-built for ANZ market entry" },
-  },
-  {
-    feature: "Continuously updated",
-    google: {
-      status: "partial",
-      tooltip: "Web results update, but you have to re-do your research each time",
-    },
-    consultant: {
-      status: "no",
-      tooltip: "Reports are point-in-time — updates require a new engagement",
-    },
-    mes: { status: "yes", detail: "Live data at report generation" },
-  },
-];
-
-const StatusIcon = ({ status }: { status: Status }) => {
-  if (status === "yes")
-    return <Check className="w-5 h-5 text-emerald-500" />;
-  if (status === "partial")
-    return <Minus className="w-5 h-5 text-amber-500" />;
-  return <X className="w-5 h-5 text-red-400" />;
-};
-
-const CompetitorCell = ({
-  status,
-  tooltip,
-}: {
-  status: Status;
-  tooltip: string;
-}) => (
-  <TooltipProvider delayDuration={200}>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="p-3 sm:p-4 flex justify-center items-center border-l border-border/50 cursor-help">
-          <StatusIcon status={status} />
-        </div>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-[220px] text-xs">
-        {tooltip}
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-);
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { useAnimatedCounter } from "@/hooks/useAnimatedCounter";
+import { ScoreRing } from "@/components/sections/comparison/ScoreRing";
+import { ComparisonRow } from "@/components/sections/comparison/ComparisonRow";
+import { COMPARISON_ROWS } from "@/components/sections/comparison/comparisonData";
 
 export const ComparisonSection = () => {
   const persona = useSectionPersona();
   const navigate = useNavigate();
+  const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.15 });
+
+  const googleScore = COMPARISON_ROWS.filter(r => r.google.status === "yes").length;
+  const consultantScore = COMPARISON_ROWS.filter(r => r.consultant.status === "yes").length;
+  const mesScore = COMPARISON_ROWS.filter(r => r.mes.status === "yes").length;
+  const total = COMPARISON_ROWS.length;
 
   return (
-    <section className="py-20 bg-gradient-to-b from-background to-muted/20">
+    <section className="py-20 bg-gradient-to-b from-background to-muted/20" ref={elementRef}>
       <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Why Teams Choose{" "}
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -160,68 +43,60 @@ export const ComparisonSection = () => {
             </p>
           </div>
 
-          {/* Comparison Table — scrollable on mobile */}
-          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="rounded-xl border border-border overflow-hidden bg-card/50 backdrop-blur-sm min-w-[540px]">
-              {/* Table Header */}
-              <div className="grid grid-cols-4 gap-0 bg-muted/50 border-b border-border">
-                <div className="p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground">
-                  Feature
-                </div>
-                <div className="p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground text-center border-l border-border/50">
-                  Google / LinkedIn
-                </div>
-                <div className="p-3 sm:p-4 text-xs sm:text-sm font-medium text-muted-foreground text-center border-l border-border/50">
-                  Consultants
-                </div>
-                <div className="p-3 sm:p-4 text-xs sm:text-sm font-bold text-primary text-center border-l border-primary/20 bg-primary/10">
-                  MES
-                </div>
-              </div>
+          {/* Score Rings */}
+          <div className="flex justify-center gap-6 sm:gap-10 mb-12">
+            <ScoreRing
+              label="Google / LinkedIn"
+              score={googleScore}
+              total={total}
+              variant="weak"
+              animate={isVisible}
+            />
+            <ScoreRing
+              label="Consultants"
+              score={consultantScore}
+              total={total}
+              variant="weak"
+              animate={isVisible}
+            />
+            <ScoreRing
+              label="MES"
+              score={mesScore}
+              total={total}
+              variant="strong"
+              animate={isVisible}
+            />
+          </div>
 
-              {/* Rows */}
-              {ROWS.map((row, i) => (
-                <div
-                  key={row.feature}
-                  className={`grid grid-cols-4 gap-0 ${
-                    i < ROWS.length - 1 ? "border-b border-border/50" : ""
-                  }`}
-                >
-                  <div className="p-3 sm:p-4 text-xs sm:text-sm text-foreground font-medium">
-                    {row.feature}
-                  </div>
-                  <CompetitorCell
-                    status={row.google.status}
-                    tooltip={row.google.tooltip}
-                  />
-                  <CompetitorCell
-                    status={row.consultant.status}
-                    tooltip={row.consultant.tooltip}
-                  />
-                  <div className="p-3 sm:p-4 flex flex-col items-center justify-center border-l border-primary/20 bg-primary/10">
-                    <StatusIcon status={row.mes.status} />
-                    <span className="text-xs text-primary font-medium mt-1 text-center">
-                      {row.mes.detail}
-                    </span>
-                  </div>
-                </div>
-              ))}
+          {/* Feature Rows */}
+          <div className="space-y-3">
+            {COMPARISON_ROWS.map((row, i) => (
+              <ComparisonRow
+                key={row.feature}
+                row={row}
+                index={i}
+                animate={isVisible}
+              />
+            ))}
+          </div>
 
-              {/* CTA Row */}
-              <div className="grid grid-cols-4 gap-0 border-t border-border bg-muted/30">
-                <div className="col-span-3" />
-                <div className="p-3 sm:p-4 flex justify-center border-l border-primary/20 bg-primary/10">
-                  <Button
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() => navigate("/report-creator")}
-                  >
-                    Try it free
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {/* CTA */}
+          <div
+            className="mt-10 flex justify-center transition-all duration-700"
+            style={{
+              opacity: isVisible ? 1 : 0,
+              transform: isVisible ? "translateY(0)" : "translateY(20px)",
+              transitionDelay: `${COMPARISON_ROWS.length * 100 + 400}ms`,
+            }}
+          >
+            <Button
+              size="lg"
+              className="gap-2 shadow-lg shadow-primary/20"
+              onClick={() => navigate("/report-creator")}
+            >
+              Try it free
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>
