@@ -38,10 +38,6 @@ export const TestimonialsSection = () => {
     );
   }
 
-  if (error) {
-    console.error("Error loading testimonials:", error);
-  }
-
   return (
     <section className="relative py-16 overflow-hidden">
       {/* Simplified background */}

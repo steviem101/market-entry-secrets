@@ -38,8 +38,6 @@ Deno.serve(async (req) => {
     // Format and validate URL (SSRF protection)
     const formattedUrl = validateExternalUrl(url);
 
-    console.log('Mapping URL:', formattedUrl);
-
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
     let response: Response;
@@ -65,23 +63,20 @@ Deno.serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Firecrawl API error:', data);
+      console.error('Firecrawl API error:', response.status);
       return new Response(
-        JSON.stringify({ success: false, error: data.error || `Request failed with status ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: 'Map request failed' }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('Map successful, found', data.links?.length || 0, 'URLs');
     return new Response(
       JSON.stringify(data),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error mapping:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to map';
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: 'Internal error during map request' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

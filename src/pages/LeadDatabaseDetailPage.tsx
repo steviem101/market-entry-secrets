@@ -82,7 +82,7 @@ const LeadDatabaseDetailPage = () => {
           property="og:description"
           content={db.short_description || db.description?.slice(0, 150) || ''}
         />
-        <link rel="canonical" href={`https://market-entry-secrets.lovable.app/leads/${db.slug}`} />
+        <link rel="canonical" href={`${window.location.origin}/leads/${db.slug}`} />
       </Helmet>
 
       <FreemiumGate

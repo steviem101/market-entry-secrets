@@ -102,7 +102,7 @@ const TradeInvestmentAgencies = () => {
           property="og:description"
           content="Connect with government agencies, industry associations, and chambers supporting market entry into Australia and New Zealand."
         />
-        <link rel="canonical" href="https://market-entry-secrets.lovable.app/government-support" />
+        <link rel="canonical" href={`${window.location.origin}/government-support`} />
       </Helmet>
 
       <TradeInvestmentAgenciesHero

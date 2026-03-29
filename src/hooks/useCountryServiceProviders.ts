@@ -22,7 +22,6 @@ export const useCountryServiceProviders = (countrySlug: string, keywords: string
         .limit(100);
 
       if (error) {
-        console.error('Error fetching service providers:', error);
         throw error;
       }
 

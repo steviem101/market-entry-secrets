@@ -40,7 +40,7 @@ const mapDatabaseTier = (dbTier: DatabaseSubscriptionTier): SubscriptionTier => 
     case 'concierge':
       return 'enterprise';
     default:
-      console.warn(`Unknown database tier: ${dbTier}, defaulting to free`);
+      // Unknown database tier — default to free
       return 'free';
   }
 };
@@ -66,7 +66,7 @@ export const useSubscription = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching subscription:', error);
+        // Subscription fetch failed — default to free tier
       } else if (data) {
         const mappedTier = mapDatabaseTier(data.tier);
         const mappedSubscription: UserSubscription = {
@@ -79,8 +79,8 @@ export const useSubscription = () => {
         setSubscription(mappedSubscription);
         return mappedTier;
       }
-    } catch (error) {
-      console.error('Error fetching subscription:', error);
+    } catch {
+      // Subscription fetch failed — default to free tier
     } finally {
       setLoading(false);
     }

@@ -27,7 +27,6 @@ export const useTestimonials = () => {
         .order('sort_order', { ascending: true });
 
       if (error) {
-        console.error('Error fetching testimonials:', error);
         throw error;
       }
 

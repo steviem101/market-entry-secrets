@@ -96,8 +96,7 @@ export const SubmissionModal = ({ isOpen, onClose, submissionType, title }: Subm
       setSubmittedEmail(formData.email);
       setFormData(initialFormData);
       setIsSubmitted(true);
-    } catch (error) {
-      console.error('Submission error:', error);
+    } catch {
       toast({
         title: submissionType === 'data_request' ? "Request Failed" : "Submission Failed",
         description: submissionType === 'data_request'

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { PricingSection } from '@/components/sections/PricingSection';
 import { PaymentStatusModal } from '@/components/PaymentStatusModal';
 import { PageTransition } from '@/components/PageTransition';
+import { SEOHead } from "@/components/common/SEOHead";
 
 const Pricing = () => {
   const [searchParams] = useSearchParams();
@@ -31,6 +32,11 @@ const Pricing = () => {
   return (
     <PageTransition>
       <>
+        <SEOHead
+          title="Pricing | Market Entry Secrets"
+          description="Choose the right plan for your Australian market entry journey."
+          canonicalPath="/pricing"
+        />
         <main>
           <PricingSection />
         </main>

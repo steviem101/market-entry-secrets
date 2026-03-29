@@ -28,7 +28,6 @@ export const useCountryLeads = (countrySlug: string, leadKeywords: string[] | un
         .limit(100);
 
       if (error) {
-        console.error('Error fetching lead databases:', error);
         throw error;
       }
 

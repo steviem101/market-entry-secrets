@@ -77,8 +77,7 @@ export const MentorContactModal = ({ mentor, isOpen, onClose }: MentorContactMod
       });
       setForm({ name: "", email: "", company: "", country: "", message: "" });
       onClose();
-    } catch (err) {
-      console.error("Error sending contact request:", err);
+    } catch {
       toast({ title: "Failed to send message", description: "Please try again later.", variant: "destructive" });
     } finally {
       setSubmitting(false);

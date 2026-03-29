@@ -11,34 +11,37 @@ import { PricingSection } from "@/components/sections/PricingSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { FloatingCTAButton } from "@/components/FloatingCTAButton";
 
-const JSON_LD_ORGANIZATION = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Market Entry Secrets",
-  url: "https://market-entry-secrets.lovable.app",
-  description:
-    "AI-powered market entry intelligence platform helping international companies enter the Australian and New Zealand markets.",
-  areaServed: ["Australia", "New Zealand"],
-  serviceType: "Market Entry Intelligence",
-};
-
-const JSON_LD_WEBSITE = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "Market Entry Secrets",
-  url: "https://market-entry-secrets.lovable.app",
-  potentialAction: {
-    "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate:
-        "https://market-entry-secrets.lovable.app/service-providers?q={search_term_string}",
-    },
-    "query-input": "required name=search_term_string",
-  },
-};
+const FALLBACK_URL = "https://market-entry-secrets.lovable.app";
 
 const Index = () => {
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : FALLBACK_URL;
+
+  const JSON_LD_ORGANIZATION = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Market Entry Secrets",
+    url: siteUrl,
+    description:
+      "AI-powered market entry intelligence platform helping international companies enter the Australian and New Zealand markets.",
+    areaServed: ["Australia", "New Zealand"],
+    serviceType: "Market Entry Intelligence",
+  };
+
+  const JSON_LD_WEBSITE = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Market Entry Secrets",
+    url: siteUrl,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate:
+          `${siteUrl}/service-providers?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
   return (
     <>
       <Helmet>
@@ -53,7 +56,7 @@ const Index = () => {
           content="AI-powered market entry intelligence for international companies entering Australia. Connect with 500+ vetted service providers, mentors, and get a custom market entry report in minutes."
         />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://market-entry-secrets.lovable.app/" />
+        <link rel="canonical" href={`${siteUrl}/`} />
         <script type="application/ld+json">
           {JSON.stringify(JSON_LD_ORGANIZATION)}
         </script>

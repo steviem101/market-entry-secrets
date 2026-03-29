@@ -96,7 +96,7 @@ const Investors = () => {
           property="og:description"
           content="Discover VCs, angels, accelerators, grants, and venture debt providers in Australia."
         />
-        <link rel="canonical" href="https://market-entry-secrets.lovable.app/investors" />
+        <link rel="canonical" href={`${window.location.origin}/investors`} />
       </Helmet>
 
       <InvestorsHero

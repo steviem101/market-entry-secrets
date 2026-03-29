@@ -79,7 +79,7 @@ const ServiceProviders = () => {
           property="og:description"
           content="Connect with verified service providers for your market entry into Australia and New Zealand."
         />
-        <link rel="canonical" href="https://market-entry-secrets.lovable.app/service-providers" />
+        <link rel="canonical" href={`${window.location.origin}/service-providers`} />
       </Helmet>
 
       <ServiceProvidersDataProvider

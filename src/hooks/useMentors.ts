@@ -133,7 +133,6 @@ export const useMentors = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching mentors:", error);
         throw error;
       }
 
@@ -168,7 +167,6 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
           .maybeSingle();
 
         if (error) {
-          console.error("Error fetching mentor by id:", error);
           throw error;
         }
         return data ? mapMentor(data) : null;
@@ -192,12 +190,10 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
             .maybeSingle();
 
           if (fallbackError) {
-            console.error("Error fetching mentor by name:", fallbackError);
             throw fallbackError;
           }
           return fallbackData ? mapMentor(fallbackData) : null;
         }
-        console.error("Error fetching mentor by slug:", error);
         throw error;
       }
 
@@ -220,7 +216,6 @@ export const useMentorCategories = () => {
 
         if (error) {
           // Table may not exist yet — return empty so filters still render
-          console.warn("mentor_categories not available yet:", error.message);
           return [];
         }
 
@@ -247,7 +242,6 @@ export const useMentorExperience = (mentorId: string | undefined) => {
 
         if (error) {
           // Table may not exist yet — profile page falls back to experience_tiles JSONB
-          console.warn("mentor_experience_with not available yet:", error.message);
           return [];
         }
 
@@ -274,7 +268,6 @@ export const useMentorTestimonials = (mentorId: string | undefined) => {
           .order("created_at", { ascending: false });
 
         if (error) {
-          console.warn("mentor_testimonials not available yet:", error.message);
           return [];
         }
 

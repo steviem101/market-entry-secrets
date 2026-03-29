@@ -21,7 +21,6 @@ export const useTradeAgencies = () => {
       }
 
       if (result.error) {
-        console.error('Error fetching agencies:', result.error);
         throw result.error;
       }
 
@@ -103,7 +102,6 @@ export const useOrganisationCategories = () => {
         .order('display_order');
 
       if (error) {
-        console.error('Error fetching categories:', error);
         return [];
       }
 
@@ -124,7 +122,6 @@ export const useAgencyContacts = (agencyId: string) => {
         .order('display_order');
 
       if (error) {
-        console.error('Error fetching agency contacts:', error);
         return [];
       }
 
@@ -146,7 +143,6 @@ export const useAgencyResources = (agencyId: string) => {
         .eq('is_active', true);
 
       if (error) {
-        console.error('Error fetching agency resources:', error);
         return [];
       }
 

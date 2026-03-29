@@ -38,8 +38,6 @@ Deno.serve(async (req) => {
     // Format and validate URL (SSRF protection)
     const formattedUrl = validateExternalUrl(url);
 
-    console.log('Scraping URL:', formattedUrl);
-
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
     let response: Response;
@@ -66,23 +64,20 @@ Deno.serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Firecrawl API error:', data);
+      console.error('Firecrawl API error:', response.status);
       return new Response(
-        JSON.stringify({ success: false, error: data.error || `Request failed with status ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: 'Scrape request failed' }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('Scrape successful');
     return new Response(
       JSON.stringify(data),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error scraping:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to scrape';
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: 'Internal error during scrape request' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -6,6 +6,7 @@ import FeaturedSectorsSection from "@/components/sectors/FeaturedSectorsSection"
 import AllSectorsSection from "@/components/sectors/AllSectorsSection";
 import SectorsCallToAction from "@/components/sectors/SectorsCallToAction";
 import { UsageBanner } from "@/components/UsageBanner";
+import { SEOHead } from "@/components/common/SEOHead";
 
 const Sectors = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,7 +40,11 @@ const Sectors = () => {
 
   return (
     <>
-      
+      <SEOHead
+        title="Industry Sectors | Market Entry Secrets"
+        description="Explore Australian market entry resources by industry sector."
+        canonicalPath="/sectors"
+      />
       <div className="container mx-auto px-4 pt-4">
         <UsageBanner />
       </div>

@@ -14,7 +14,6 @@ export const useCommunityMembers = () => {
         .limit(500);
 
       if (error) {
-        console.error('Error fetching community members:', error);
         throw error;
       }
 

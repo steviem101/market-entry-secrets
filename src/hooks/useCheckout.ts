@@ -35,7 +35,6 @@ export const useCheckout = () => {
       });
 
       if (error) {
-        console.error('[useCheckout] Edge function error:', error);
         toast.error('Unable to start checkout. Please try again.');
         return { success: false };
       }
@@ -57,7 +56,6 @@ export const useCheckout = () => {
         }
         return { success: true };
       } else {
-        console.error('[useCheckout] No checkout URL returned:', data);
         toast.error(data?.error || 'Unable to start checkout');
         return { success: false };
       }

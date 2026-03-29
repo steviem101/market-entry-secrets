@@ -9,6 +9,7 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { SEOHead } from "@/components/common/SEOHead";
 
 const Contact = () => {
   const { user } = useAuth();
@@ -63,8 +64,7 @@ const Contact = () => {
         message: "",
         inquiryType: "general"
       });
-    } catch (error) {
-      console.error('Contact form error:', error);
+    } catch {
       toast.error("Failed to send message. Please try again or email us directly.");
     } finally {
       setIsSubmitting(false);
@@ -80,7 +80,11 @@ const Contact = () => {
 
   return (
     <>
-      
+      <SEOHead
+        title="Contact Us | Market Entry Secrets"
+        description="Get in touch with Market Entry Secrets for help entering the Australian market."
+        canonicalPath="/contact"
+      />
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">

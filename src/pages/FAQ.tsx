@@ -3,11 +3,16 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { SEOHead } from "@/components/common/SEOHead";
 
 const FAQ = () => {
   return (
     <>
-      
+      <SEOHead
+        title="FAQ | Market Entry Secrets"
+        description="Frequently asked questions about entering the Australian market and using Market Entry Secrets."
+        canonicalPath="/faq"
+      />
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-foreground mb-8 text-center">Frequently Asked Questions</h1>

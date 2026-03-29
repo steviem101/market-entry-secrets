@@ -21,7 +21,7 @@ interface SEOHeadProps {
   };
 }
 
-const BASE_URL = "https://market-entry-secrets.lovable.app";
+const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app";
 
 export const SEOHead = ({
   title,

@@ -85,8 +85,8 @@ export const useUsageTracking = (): UsageTrackingHook => {
         localStorage.setItem('view_count', newCount.toString());
         return newCount;
       });
-    } catch (error) {
-      console.error('Error tracking usage:', error);
+    } catch {
+      // Silently ignore usage tracking failures
     }
   }, [user, sessionId]);
 

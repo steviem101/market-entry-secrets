@@ -30,7 +30,6 @@ export const useCountryContent = (countrySlug: string, keywords: string[] | unde
         .limit(100);
 
       if (error) {
-        console.error('Error fetching content:', error);
         throw error;
       }
 

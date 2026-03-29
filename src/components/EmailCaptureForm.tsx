@@ -45,7 +45,6 @@ export const EmailCaptureForm = ({ onSubmit, className = "", source = "homepage_
         ]);
 
       if (error) {
-        console.error('Error saving email lead:', error);
         toast({
           title: "Submission Error",
           description: "There was an issue saving your email. Please try again.",
@@ -73,8 +72,7 @@ export const EmailCaptureForm = ({ onSubmit, className = "", source = "homepage_
         setEmail("");
       }, 3000);
       
-    } catch (error) {
-      console.error('Error submitting email:', error);
+    } catch {
       toast({
         title: "Submission Error",
         description: "There was an unexpected error. Please try again.",
