@@ -42,12 +42,12 @@ const Investors = () => {
   });
 
   const uniqueStages = useMemo(
-    () => [...new Set(investors?.flatMap(inv => inv.stage_focus || []) || [])].sort(),
+    () => [...new Set(investors?.flatMap(inv => inv.stage_focus || []) || [])].sort() as string[],
     [investors]
   );
 
   const uniqueSectors = useMemo(
-    () => [...new Set(investors?.flatMap(inv => inv.sector_focus || []) || [])].sort(),
+    () => [...new Set(investors?.flatMap(inv => inv.sector_focus || []) || [])].sort() as string[],
     [investors]
   );
 
