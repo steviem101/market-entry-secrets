@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface Bookmark {
   id: string;
-  content_type: 'event' | 'community_member' | 'content' | 'lead' | 'service_provider';
+  content_type: string;
   content_id: string;
   content_title: string;
   content_description: string | null;
@@ -54,7 +54,7 @@ export const useBookmarks = () => {
   }, [toast]);
 
   const addBookmark = useCallback(async (
-    contentType: Bookmark['content_type'],
+    contentType: string,
     contentId: string,
     title: string,
     description?: string,
