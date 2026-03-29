@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useLocationInnovationEcosystem = (locationSlug: string, keywords: string[] | undefined) => {
   return useQuery({
-    queryKey: ['location-innovation-ecosystem', locationSlug],
+    queryKey: ['location-innovation-ecosystem', locationSlug, keywords],
     queryFn: async () => {
       if (!keywords?.length) return [];
 

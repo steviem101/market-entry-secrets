@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useSectorEvents = (sectorSlug: string, keywords: string[] | undefined) => {
   return useQuery({
-    queryKey: ['sector-events', sectorSlug],
+    queryKey: ['sector-events', sectorSlug, keywords],
     queryFn: async () => {
       if (!keywords?.length) return [];
 

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useLocationContent = (locationSlug: string, keywords: string[] | undefined) => {
   return useQuery({
-    queryKey: ['location-content', locationSlug],
+    queryKey: ['location-content', locationSlug, keywords],
     queryFn: async () => {
       if (!keywords?.length) return [];
 

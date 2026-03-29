@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useLocationTradeAgencies = (locationSlug: string, keywords: string[] | undefined) => {
   return useQuery({
-    queryKey: ['location-trade-agencies', locationSlug],
+    queryKey: ['location-trade-agencies', locationSlug, keywords],
     queryFn: async () => {
       if (!keywords?.length) return [];
 

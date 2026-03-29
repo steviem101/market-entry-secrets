@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useSectorInnovationEcosystem = (sectorSlug: string, keywords: string[] | undefined) => {
   return useQuery({
-    queryKey: ['sector-innovation-ecosystem', sectorSlug],
+    queryKey: ['sector-innovation-ecosystem', sectorSlug, keywords],
     queryFn: async () => {
       if (!keywords?.length) return [];
 

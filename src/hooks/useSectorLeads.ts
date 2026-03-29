@@ -4,7 +4,7 @@ import type { LeadDatabase } from "@/types/leadDatabase";
 
 export const useSectorLeads = (sectorSlug: string, leadKeywords: string[] | undefined, industries: string[] | undefined) => {
   return useQuery({
-    queryKey: ['sector-leads', sectorSlug],
+    queryKey: ['sector-leads', sectorSlug, leadKeywords, industries],
     queryFn: async () => {
       if (!leadKeywords?.length && !industries?.length) return [];
 
