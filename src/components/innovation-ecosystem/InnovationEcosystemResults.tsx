@@ -78,7 +78,7 @@ const InnovationEcosystemResults = ({
               contact_persons: parseJsonArray(org.contact_persons),
               experience_tiles: parseJsonArray(org.experience_tiles)
             }}
-            detailUrl={`/innovation-ecosystem/${org.slug}`}
+            detailUrl={`/innovation-ecosystem/${org.slug || org.id}`}
           />
         ))}
         </div>

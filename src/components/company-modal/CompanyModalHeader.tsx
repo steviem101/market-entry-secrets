@@ -34,14 +34,18 @@ export const CompanyModalHeader = ({ company }: CompanyModalHeaderProps) => {
             <MapPin className="w-4 h-4" />
             {company.location}
           </div>
-          <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            Founded {foundedDisplay}
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            {teamDisplay} employees
-          </div>
+          {foundedDisplay && (
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              Founded {foundedDisplay}
+            </div>
+          )}
+          {teamDisplay && (
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              {teamDisplay} employees
+            </div>
+          )}
           {company.category_name && (
             <Badge variant="outline" className="text-xs border-primary/30 text-primary">
               {company.category_name}
