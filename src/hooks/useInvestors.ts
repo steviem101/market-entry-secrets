@@ -8,7 +8,8 @@ export const useInvestors = () => {
       const { data, error } = await (supabase as any)
         .from('investors')
         .select('*')
-        .order('name');
+        .order('name')
+        .limit(500);
 
       if (error) {
         console.error('Error fetching investors:', error);

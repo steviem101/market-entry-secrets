@@ -51,7 +51,8 @@ export const ServiceProvidersDataProvider = ({
       const { data, error } = await supabase
         .from('service_providers')
         .select('*')
-        .order('name');
+        .order('name')
+        .limit(500);
 
       if (error) throw error;
 

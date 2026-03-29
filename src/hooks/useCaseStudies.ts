@@ -50,7 +50,7 @@ export const useCaseStudy = (slug: string) => {
 
       if (contentError) throw contentError;
 
-      // Fetch sections first (needed for section IDs in bodies query)
+      // Fetch sections first, then bodies matching content_id OR section_id
       const { data: sections, error: sectionsError } = await supabase
         .from('content_sections')
         .select('*')
@@ -60,12 +60,16 @@ export const useCaseStudy = (slug: string) => {
 
       if (sectionsError) throw sectionsError;
 
-      // Fetch bodies — some are linked via content_id, others via section_id
-      const sectionIds = sections?.map(s => s.id).join(',') || 'null';
+      // Fetch bodies matching content_id OR belonging to any of this content's sections
+      const sectionIds = sections?.map(s => s.id).join(',') || '';
+      const orFilter = sectionIds
+        ? `content_id.eq.${contentItem.id},section_id.in.(${sectionIds})`
+        : `content_id.eq.${contentItem.id}`;
+
       const { data: bodies, error: bodiesError } = await supabase
         .from('content_bodies')
         .select('*')
-        .or(`content_id.eq.${contentItem.id},section_id.in.(${sectionIds})`)
+        .or(orFilter)
         .order('sort_order');
 
       if (bodiesError) throw bodiesError;

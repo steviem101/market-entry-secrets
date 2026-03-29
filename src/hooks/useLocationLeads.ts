@@ -8,23 +8,33 @@ export const useLocationLeads = (locationSlug: string, leadKeywords: string[] | 
     queryFn: async () => {
       if (!leadKeywords?.length && !keyIndustries?.length) return [];
 
+      const filters: string[] = [];
+
+      (leadKeywords || []).forEach((kw: string) => {
+        filters.push(
+          `title.ilike.%${kw}%`,
+          `description.ilike.%${kw}%`,
+          `sector.ilike.%${kw}%`,
+          `list_type.ilike.%${kw}%`,
+          `location.ilike.%${kw}%`,
+        );
+      });
+
+      (keyIndustries || []).forEach((industry: string) => {
+        filters.push(`sector.ilike.%${industry}%`);
+      });
+
       const { data, error } = await (supabase as any)
         .from('lead_databases')
         .select('*')
         .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .or(filters.join(','))
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
 
-      // Filter based on location keywords and industries
-      return (data as LeadDatabase[]).filter(lead => {
-        const searchText = `${lead.title} ${lead.description || ''} ${lead.sector || ''} ${lead.list_type || ''} ${lead.location || ''} ${lead.tags?.join(' ') || ''}`.toLowerCase();
-        return (leadKeywords || []).some((keyword: string) =>
-          searchText.includes(keyword.toLowerCase())
-        ) || (keyIndustries || []).some((industry: string) =>
-          (lead.sector || '').toLowerCase().includes(industry.toLowerCase())
-        );
-      });
+      return data as LeadDatabase[];
     },
     enabled: !!(leadKeywords?.length || keyIndustries?.length)
   });

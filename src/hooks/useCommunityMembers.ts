@@ -10,7 +10,8 @@ export const useCommunityMembers = () => {
       const { data, error } = await supabase
         .from('community_members')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(500);
 
       if (error) {
         console.error('Error fetching community members:', error);

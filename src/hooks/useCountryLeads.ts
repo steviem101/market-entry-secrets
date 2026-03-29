@@ -8,33 +8,31 @@ export const useCountryLeads = (countrySlug: string, leadKeywords: string[] | un
     queryFn: async () => {
       if (!leadKeywords?.length && !keyIndustries?.length) return [];
 
+      // Build OR filter: keyword match in text fields + industry match in sector
+      const filters = [
+        ...(leadKeywords || []).flatMap(kw => [
+          `title.ilike.%${kw}%`,
+          `description.ilike.%${kw}%`,
+          `sector.ilike.%${kw}%`,
+          `location.ilike.%${kw}%`,
+        ]),
+        ...(keyIndustries || []).map(ind => `sector.ilike.%${ind}%`),
+      ];
+
       const { data, error } = await (supabase as any)
         .from('lead_databases')
         .select('*')
         .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .or(filters.join(','))
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) {
         console.error('Error fetching lead databases:', error);
         throw error;
       }
 
-      // Filter based on country keywords and industries
-      return (data as LeadDatabase[]).filter(lead => {
-        const searchText = `${lead.title} ${lead.description || ''} ${lead.sector || ''} ${lead.list_type || ''} ${lead.location || ''} ${lead.tags?.join(' ') || ''}`.toLowerCase();
-
-        // Check keyword matching
-        const keywordMatch = (leadKeywords || []).some((keyword: string) =>
-          searchText.includes(keyword.toLowerCase())
-        );
-
-        // Check industry matching
-        const industryMatch = (keyIndustries || []).some((industry: string) =>
-          (lead.sector || '').toLowerCase().includes(industry.toLowerCase())
-        );
-
-        return keywordMatch || industryMatch;
-      });
+      return data as LeadDatabase[];
     },
     enabled: !!(leadKeywords?.length || keyIndustries?.length)
   });

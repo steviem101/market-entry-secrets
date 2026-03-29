@@ -16,6 +16,7 @@ import { ReportKeyMetrics } from '@/components/report/ReportKeyMetrics';
 import { useReport } from '@/hooks/useReport';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   SECTION_LABELS,
@@ -25,7 +26,7 @@ import {
   estimateReadingTime,
 } from '@/components/report/reportSectionConfig';
 
-const ReportView = () => {
+const ReportViewInner = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -259,5 +260,11 @@ const ReportView = () => {
     </>
   );
 };
+
+const ReportView = () => (
+  <ProtectedRoute fallbackMessage="Please sign in to view your report.">
+    <ReportViewInner />
+  </ProtectedRoute>
+);
 
 export default ReportView;

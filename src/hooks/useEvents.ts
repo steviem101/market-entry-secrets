@@ -32,7 +32,8 @@ const fetchEvents = async (query?: string): Promise<Event[]> => {
   let queryBuilder = supabase
     .from('events')
     .select('*')
-    .order('date', { ascending: true });
+    .order('date', { ascending: true })
+    .limit(500);
 
   if (query && query.trim()) {
     queryBuilder = queryBuilder.or(

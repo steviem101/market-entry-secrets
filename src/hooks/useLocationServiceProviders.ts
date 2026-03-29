@@ -8,20 +8,22 @@ export const useLocationServiceProviders = (locationSlug: string, keywords: stri
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      const filters = keywords.flatMap(kw => [
+        `name.ilike.%${kw}%`,
+        `description.ilike.%${kw}%`,
+        `location.ilike.%${kw}%`,
+      ]);
+
       const { data, error } = await supabase
         .from('service_providers')
         .select('*')
-        .order('name');
+        .or(filters.join(','))
+        .order('name')
+        .limit(100);
 
       if (error) throw error;
 
-      // Filter based on location keywords
-      return (data || []).filter(provider => {
-        const searchText = `${provider.name} ${provider.description} ${provider.services?.join(' ')} ${provider.location}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
+      return data || [];
     },
     enabled: !!keywords?.length
   });

@@ -8,19 +8,22 @@ export const useLocationInnovationEcosystem = (locationSlug: string, keywords: s
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      const filters = keywords.flatMap(kw => [
+        `name.ilike.%${kw}%`,
+        `description.ilike.%${kw}%`,
+        `location.ilike.%${kw}%`,
+      ]);
+
       const { data, error } = await supabase
         .from('innovation_ecosystem')
         .select('*')
-        .order('name');
+        .or(filters.join(','))
+        .order('name')
+        .limit(100);
 
       if (error) throw error;
 
-      return data.filter(org => {
-        const searchText = `${org.name} ${org.description} ${org.services?.join(' ')} ${org.location}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
+      return data;
     },
     enabled: !!keywords?.length
   });

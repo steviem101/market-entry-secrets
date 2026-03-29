@@ -8,20 +8,24 @@ export const useLocationCommunityMembers = (locationSlug: string, keywords: stri
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      const filters = keywords.flatMap(kw => [
+        `name.ilike.%${kw}%`,
+        `title.ilike.%${kw}%`,
+        `description.ilike.%${kw}%`,
+        `experience.ilike.%${kw}%`,
+        `location.ilike.%${kw}%`,
+      ]);
+
       const { data, error } = await supabase
         .from('community_members')
         .select('*')
-        .order('created_at', { ascending: false });
+        .or(filters.join(','))
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
 
-      // Filter based on location keywords
-      return data.filter(member => {
-        const searchText = `${member.name} ${member.title} ${member.description} ${member.specialties?.join(' ')} ${member.experience} ${member.location}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
+      return data;
     },
     enabled: !!keywords?.length
   });

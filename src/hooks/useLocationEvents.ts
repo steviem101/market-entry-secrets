@@ -8,20 +8,23 @@ export const useLocationEvents = (locationSlug: string, keywords: string[] | und
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      const filters = keywords.flatMap(kw => [
+        `title.ilike.%${kw}%`,
+        `description.ilike.%${kw}%`,
+        `category.ilike.%${kw}%`,
+        `location.ilike.%${kw}%`,
+      ]);
+
       const { data, error } = await supabase
         .from('events')
         .select('*')
-        .order('date', { ascending: true });
+        .or(filters.join(','))
+        .order('date', { ascending: true })
+        .limit(100);
 
       if (error) throw error;
 
-      // Filter based on location keywords
-      return data.filter(event => {
-        const searchText = `${event.title} ${event.description} ${event.category} ${event.location}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
+      return data;
     },
     enabled: !!keywords?.length
   });

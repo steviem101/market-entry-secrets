@@ -43,13 +43,14 @@ export const useCountryTradeOrganizations = (countrySlug: string) => {
       const { data, error } = await supabase
         .from('country_trade_organizations')
         .select('*')
-        .eq('country_id', country.id);
+        .eq('country_id', country.id)
+        .limit(100);
 
       if (error) {
         console.error('Error fetching trade organizations:', error);
         throw error;
       }
-      
+
       return data as TradeOrganizationData[];
     },
     enabled: !!countrySlug

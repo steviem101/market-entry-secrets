@@ -8,19 +8,22 @@ export const useLocationTradeAgencies = (locationSlug: string, keywords: string[
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      const filters = keywords.flatMap(kw => [
+        `name.ilike.%${kw}%`,
+        `description.ilike.%${kw}%`,
+        `location.ilike.%${kw}%`,
+      ]);
+
       const { data, error } = await supabase
         .from('trade_investment_agencies')
         .select('*')
-        .order('name');
+        .or(filters.join(','))
+        .order('name')
+        .limit(100);
 
       if (error) throw error;
 
-      return data.filter(agency => {
-        const searchText = `${agency.name} ${agency.description} ${agency.services?.join(' ')} ${agency.location}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
+      return data;
     },
     enabled: !!keywords?.length
   });

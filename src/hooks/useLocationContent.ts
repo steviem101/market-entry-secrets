@@ -8,6 +8,11 @@ export const useLocationContent = (locationSlug: string, keywords: string[] | un
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      const filters = keywords.flatMap(kw => [
+        `title.ilike.%${kw}%`,
+        `subtitle.ilike.%${kw}%`,
+      ]);
+
       const { data, error } = await supabase
         .from('content_items')
         .select(`
@@ -19,17 +24,13 @@ export const useLocationContent = (locationSlug: string, keywords: string[] | un
           )
         `)
         .eq('status', 'published')
-        .order('publish_date', { ascending: false });
+        .or(filters.join(','))
+        .order('publish_date', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
 
-      // Filter based on keyword matching in title and subtitle
-      return data.filter(content => {
-        const searchText = `${content.title} ${content.subtitle || ''}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
+      return data;
     },
     enabled: !!keywords?.length
   });

@@ -8,38 +8,33 @@ export const useCountryCommunityMembers = (countrySlug: string, countryName: str
     queryFn: async () => {
       if (!countryName || !keywords?.length) return [];
 
+      // Build OR filter: match origin_country, or keyword match in text fields
+      const keywordFilters = keywords.flatMap(kw => [
+        `name.ilike.%${kw}%`,
+        `title.ilike.%${kw}%`,
+        `description.ilike.%${kw}%`,
+        `location.ilike.%${kw}%`,
+      ]);
+
+      const filters = [
+        `origin_country.ilike.%${countryName}%`,
+        `associated_countries.cs.{${countryName}}`,
+        ...keywordFilters,
+      ];
+
       const { data, error } = await supabase
         .from('community_members')
         .select('*')
-        .order('created_at', { ascending: false });
+        .or(filters.join(','))
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) {
         console.error('Error fetching community members:', error);
         throw error;
       }
 
-      // Filter based on origin country or associated countries
-      const filteredMembers = data.filter(member => {
-        // Check if origin_country matches
-        if (member.origin_country?.toLowerCase() === countryName.toLowerCase()) {
-          return true;
-        }
-
-        // Check if country is in associated_countries array
-        if (member.associated_countries?.some(country =>
-          country.toLowerCase() === countryName.toLowerCase()
-        )) {
-          return true;
-        }
-
-        // Fallback to keyword matching
-        const searchText = `${member.name} ${member.title} ${member.description} ${member.specialties?.join(' ')} ${member.experience} ${member.location}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
-
-      return filteredMembers;
+      return data;
     },
     enabled: !!countryName && !!keywords?.length
   });
