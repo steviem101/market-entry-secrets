@@ -912,6 +912,62 @@ export type Database = {
           },
         ]
       }
+      guide_attachments: {
+        Row: {
+          content_item_id: string
+          created_at: string | null
+          display_name: string
+          download_count: number | null
+          file_name: string
+          file_path: string
+          file_size_bytes: number | null
+          file_type: string
+          id: string
+          is_premium: boolean | null
+          mime_type: string | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          content_item_id: string
+          created_at?: string | null
+          display_name: string
+          download_count?: number | null
+          file_name: string
+          file_path: string
+          file_size_bytes?: number | null
+          file_type: string
+          id?: string
+          is_premium?: boolean | null
+          mime_type?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          content_item_id?: string
+          created_at?: string | null
+          display_name?: string
+          download_count?: number | null
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number | null
+          file_type?: string
+          id?: string
+          is_premium?: boolean | null
+          mime_type?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_attachments_content_item_id_fkey"
+            columns: ["content_item_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       industry_sectors: {
         Row: {
           content_keywords: string[]
@@ -2427,12 +2483,17 @@ export type Database = {
       }
     }
     Functions: {
+      get_tier_gated_report: { Args: { p_report_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_download_count: {
+        Args: { attachment_id: string }
+        Returns: undefined
       }
     }
     Enums: {
