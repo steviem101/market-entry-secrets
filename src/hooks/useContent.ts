@@ -68,25 +68,26 @@ export const useContentItem = (slug: string) => {
 
       if (contentError) throw contentError;
 
-      // Fetch sections first (needed for section IDs in bodies query)
-      const { data: sections, error: sectionsError } = await supabase
-        .from('content_sections')
-        .select('*')
-        .eq('content_id', contentItem.id)
-        .eq('is_active', true)
-        .order('sort_order');
+      // Fetch sections and bodies in parallel (both keyed off content_id)
+      const [sectionsResult, bodiesResult] = await Promise.all([
+        supabase
+          .from('content_sections')
+          .select('*')
+          .eq('content_id', contentItem.id)
+          .eq('is_active', true)
+          .order('sort_order'),
+        supabase
+          .from('content_bodies')
+          .select('*')
+          .eq('content_id', contentItem.id)
+          .order('sort_order'),
+      ]);
 
-      if (sectionsError) throw sectionsError;
+      if (sectionsResult.error) throw sectionsResult.error;
+      if (bodiesResult.error) throw bodiesResult.error;
 
-      // Fetch bodies — some are linked via content_id, others via section_id
-      const sectionIds = sections?.map(s => s.id).join(',') || 'null';
-      const { data: bodies, error: bodiesError } = await supabase
-        .from('content_bodies')
-        .select('*')
-        .or(`content_id.eq.${contentItem.id},section_id.in.(${sectionIds})`)
-        .order('sort_order');
-
-      if (bodiesError) throw bodiesError;
+      const sections = sectionsResult.data;
+      const bodies = bodiesResult.data;
 
       return {
         ...contentItem,

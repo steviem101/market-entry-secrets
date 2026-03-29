@@ -8,7 +8,8 @@ export const useInnovationEcosystem = () => {
       const { data, error } = await supabase
         .from('innovation_ecosystem')
         .select('*')
-        .order('name');
+        .order('name')
+        .limit(500);
 
       if (error) {
         console.error('Error fetching innovation ecosystem:', error);

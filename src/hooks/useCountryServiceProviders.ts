@@ -8,25 +8,25 @@ export const useCountryServiceProviders = (countrySlug: string, keywords: string
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      const filters = keywords.flatMap(kw => [
+        `name.ilike.%${kw}%`,
+        `description.ilike.%${kw}%`,
+        `location.ilike.%${kw}%`,
+      ]);
+
       const { data, error } = await supabase
         .from('service_providers')
         .select('*')
-        .order('name');
+        .or(filters.join(','))
+        .order('name')
+        .limit(100);
 
       if (error) {
         console.error('Error fetching service providers:', error);
         throw error;
       }
 
-      // Filter based on country keywords
-      const filteredProviders = (data || []).filter(provider => {
-        const searchText = `${provider.name} ${provider.description} ${provider.services?.join(' ')} ${provider.location}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
-
-      return filteredProviders;
+      return data || [];
     },
     enabled: !!keywords?.length
   });

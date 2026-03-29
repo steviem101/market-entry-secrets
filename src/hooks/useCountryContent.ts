@@ -8,6 +8,12 @@ export const useCountryContent = (countrySlug: string, keywords: string[] | unde
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      // Build ilike filters for keyword matching in title/subtitle
+      const filters = keywords.flatMap(kw => [
+        `title.ilike.%${kw}%`,
+        `subtitle.ilike.%${kw}%`,
+      ]);
+
       const { data, error } = await supabase
         .from('content_items')
         .select(`
@@ -19,22 +25,16 @@ export const useCountryContent = (countrySlug: string, keywords: string[] | unde
           )
         `)
         .eq('status', 'published')
-        .order('publish_date', { ascending: false });
+        .or(filters.join(','))
+        .order('publish_date', { ascending: false })
+        .limit(100);
 
       if (error) {
         console.error('Error fetching content:', error);
         throw error;
       }
 
-      // Filter based on keyword matching in title and subtitle
-      const filteredContent = data.filter(content => {
-        const searchText = `${content.title} ${content.subtitle || ''}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
-
-      return filteredContent;
+      return data;
     },
     enabled: !!keywords?.length
   });

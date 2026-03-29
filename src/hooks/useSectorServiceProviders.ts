@@ -8,20 +8,21 @@ export const useSectorServiceProviders = (sectorSlug: string, keywords: string[]
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      const filters = keywords.flatMap(kw => [
+        `name.ilike.%${kw}%`,
+        `description.ilike.%${kw}%`,
+      ]);
+
       const { data, error } = await supabase
         .from('service_providers')
         .select('*')
-        .order('name');
+        .or(filters.join(','))
+        .order('name')
+        .limit(100);
 
       if (error) throw error;
 
-      // Filter based on sector keywords
-      return (data || []).filter(provider => {
-        const searchText = `${provider.name} ${provider.description} ${provider.services?.join(' ')}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
+      return data || [];
     },
     enabled: !!keywords?.length
   });

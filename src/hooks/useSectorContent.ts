@@ -8,6 +8,15 @@ export const useSectorContent = (sectorSlug: string, keywords: string[] | undefi
     queryFn: async () => {
       if (!keywords?.length) return [];
 
+      // Build OR filter: check sector_tags array overlap, or keyword match in title/subtitle
+      const filters = [
+        `sector_tags.cs.{${sectorSlug}}`,
+        ...keywords.flatMap(kw => [
+          `title.ilike.%${kw}%`,
+          `subtitle.ilike.%${kw}%`,
+        ]),
+      ];
+
       const { data, error } = await supabase
         .from('content_items')
         .select(`
@@ -19,23 +28,12 @@ export const useSectorContent = (sectorSlug: string, keywords: string[] | undefi
           )
         `)
         .eq('status', 'published')
-        .order('publish_date', { ascending: false });
+        .or(filters.join(','))
+        .order('publish_date', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
-
-      // Filter based on sector tags or keywords in title/subtitle
-      return data.filter(content => {
-        // Check sector_tags array first
-        if (content.sector_tags?.includes(sectorSlug)) {
-          return true;
-        }
-
-        // Fallback to keyword matching in title and subtitle
-        const searchText = `${content.title} ${content.subtitle || ''}`.toLowerCase();
-        return keywords.some(keyword =>
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
+      return data;
     },
     enabled: !!keywords?.length
   });

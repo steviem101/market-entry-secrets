@@ -1,7 +1,9 @@
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface Bookmark {
   id: string;
@@ -13,45 +15,98 @@ export interface Bookmark {
   created_at: string;
 }
 
-export const useBookmarks = () => {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+const BOOKMARKS_KEY = ['bookmarks'];
 
-  const fetchBookmarks = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setBookmarks([]);
-        return;
-      }
+export const useBookmarks = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: bookmarks = [], isLoading: loading, refetch } = useQuery({
+    queryKey: BOOKMARKS_KEY,
+    queryFn: async (): Promise<Bookmark[]> => {
+      if (!user) return [];
+
       const { data, error } = await supabase
         .from('bookmarks')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(500);
 
       if (error) throw error;
-      
-      // Type assertion to handle the database response
-      const typedBookmarks = (data || []).map(item => ({
+
+      return (data || []).map(item => ({
         ...item,
-        content_type: item.content_type as Bookmark['content_type']
+        content_type: item.content_type as Bookmark['content_type'],
       })) as Bookmark[];
-      
-      setBookmarks(typedBookmarks);
-    } catch (error) {
-      console.error('Error fetching bookmarks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load bookmarks",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async (params: {
+      contentType: string;
+      contentId: string;
+      title: string;
+      description?: string;
+      metadata?: Record<string, any>;
+    }) => {
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('bookmarks')
+        .insert({
+          user_id: user.id,
+          content_type: params.contentType,
+          content_id: params.contentId,
+          content_title: params.title,
+          content_description: params.description || null,
+          content_metadata: params.metadata || null,
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast({ title: "Already bookmarked", description: "This item is already in your bookmarks" });
+          return false;
+        }
+        throw error;
+      }
+      return true;
+    },
+    onSuccess: (added, params) => {
+      if (added) {
+        toast({ title: "Bookmarked!", description: `${params.title} has been added to your bookmarks` });
+      }
+      queryClient.invalidateQueries({ queryKey: BOOKMARKS_KEY });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to add bookmark", variant: "destructive" });
+    },
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: async (params: { contentType: string; contentId: string }) => {
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('bookmarks')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('content_type', params.contentType)
+        .eq('content_id', params.contentId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Removed", description: "Bookmark has been removed" });
+      queryClient.invalidateQueries({ queryKey: BOOKMARKS_KEY });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to remove bookmark", variant: "destructive" });
+    },
+  });
 
   const addBookmark = useCallback(async (
     contentType: string,
@@ -60,95 +115,30 @@ export const useBookmarks = () => {
     description?: string,
     metadata?: Record<string, any>
   ) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to bookmark items",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      const { error } = await supabase
-        .from('bookmarks')
-        .insert({
-          user_id: user.id,
-          content_type: contentType,
-          content_id: contentId,
-          content_title: title,
-          content_description: description || null,
-          content_metadata: metadata || null,
-        });
-
-      if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          toast({
-            title: "Already bookmarked",
-            description: "This item is already in your bookmarks",
-          });
-          return false;
-        }
-        throw error;
-      }
-
-      toast({
-        title: "Bookmarked!",
-        description: `${title} has been added to your bookmarks`,
-      });
-      
-      fetchBookmarks(); // Refresh bookmarks
-      return true;
-    } catch (error) {
-      console.error('Error adding bookmark:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add bookmark",
-        variant: "destructive",
-      });
+    if (!user) {
+      toast({ title: "Authentication required", description: "Please log in to bookmark items", variant: "destructive" });
       return false;
     }
-  }, [toast, fetchBookmarks]);
+    try {
+      const result = await addMutation.mutateAsync({ contentType, contentId, title, description, metadata });
+      return result;
+    } catch {
+      return false;
+    }
+  }, [user, toast, addMutation]);
 
   const removeBookmark = useCallback(async (contentType: string, contentId: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to manage bookmarks",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      const { error } = await supabase
-        .from('bookmarks')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('content_type', contentType)
-        .eq('content_id', contentId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Removed",
-        description: "Bookmark has been removed",
-      });
-      
-      fetchBookmarks(); // Refresh bookmarks
-      return true;
-    } catch (error) {
-      console.error('Error removing bookmark:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove bookmark",
-        variant: "destructive",
-      });
+    if (!user) {
+      toast({ title: "Authentication required", description: "Please log in to manage bookmarks", variant: "destructive" });
       return false;
     }
-  }, [toast, fetchBookmarks]);
+    try {
+      await removeMutation.mutateAsync({ contentType, contentId });
+      return true;
+    } catch {
+      return false;
+    }
+  }, [user, toast, removeMutation]);
 
   const isBookmarked = useCallback((contentType: string, contentId: string) => {
     return bookmarks.some(b => b.content_type === contentType && b.content_id === contentId);
@@ -157,7 +147,7 @@ export const useBookmarks = () => {
   return {
     bookmarks,
     loading,
-    fetchBookmarks,
+    fetchBookmarks: refetch,
     addBookmark,
     removeBookmark,
     isBookmarked,

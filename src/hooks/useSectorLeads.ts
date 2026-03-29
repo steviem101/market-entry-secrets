@@ -8,23 +8,26 @@ export const useSectorLeads = (sectorSlug: string, leadKeywords: string[] | unde
     queryFn: async () => {
       if (!leadKeywords?.length && !industries?.length) return [];
 
+      // Build OR filter: keyword match + industry match in sector column
+      const filters = [
+        ...(leadKeywords || []).flatMap(kw => [
+          `title.ilike.%${kw}%`,
+          `description.ilike.%${kw}%`,
+          `sector.ilike.%${kw}%`,
+        ]),
+        ...(industries || []).map(ind => `sector.ilike.%${ind}%`),
+      ];
+
       const { data, error } = await (supabase as any)
         .from('lead_databases')
         .select('*')
         .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .or(filters.join(','))
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
-
-      // Filter based on sector keywords and industries
-      return (data as LeadDatabase[]).filter(lead => {
-        const searchText = `${lead.title} ${lead.description || ''} ${lead.sector || ''} ${lead.list_type || ''} ${lead.tags?.join(' ') || ''}`.toLowerCase();
-        return (leadKeywords || []).some((keyword: string) =>
-          searchText.includes(keyword.toLowerCase())
-        ) || (industries || []).some((industry: string) =>
-          (lead.sector || '').toLowerCase().includes(industry.toLowerCase())
-        );
-      });
+      return data as LeadDatabase[];
     },
     enabled: !!(leadKeywords?.length || industries?.length)
   });
