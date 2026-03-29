@@ -229,7 +229,7 @@ export const reportApi = {
   },
 
   async fetchSharedReport(shareToken: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .rpc('get_shared_report', { p_share_token: shareToken })
       .single();
 

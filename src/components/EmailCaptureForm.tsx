@@ -36,7 +36,7 @@ export const EmailCaptureForm = ({ onSubmit, className = "", source = "homepage_
     try {
       // Save email to Supabase
       const { error } = await supabase
-        .from('lead_submissions')
+        .from('email_leads')
         .insert([
           {
             email: email,

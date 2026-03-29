@@ -126,9 +126,9 @@ const TradeInvestmentAgencies = () => {
           setSelectedType={(v: string) => { setSelectedType(v); setCurrentPage(1); }}
           selectedCategory={selectedCategory}
           setSelectedCategory={(v: string) => { setSelectedCategory(v); setCurrentPage(1); }}
-          uniqueLocations={uniqueLocations}
-          uniqueSectors={uniqueSectors}
-          uniqueTypes={uniqueTypes}
+          uniqueLocations={uniqueLocations as string[]}
+          uniqueSectors={uniqueSectors as string[]}
+          uniqueTypes={uniqueTypes as string[]}
           categories={categories}
         />
 

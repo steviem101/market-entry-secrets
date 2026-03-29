@@ -41,7 +41,7 @@ export const useInnovationOrgBySlug = (slug: string) => {
   return useQuery({
     queryKey: ['innovation-org-slug', slug],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('innovation_ecosystem')
         .select('*')
         .eq('slug', slug)

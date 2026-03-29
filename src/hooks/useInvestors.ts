@@ -41,7 +41,7 @@ export const useInvestorBySlug = (slug: string) => {
   return useQuery({
     queryKey: ['investor-slug', slug],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('investors')
         .select('*')
         .eq('slug', slug)
