@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireAdmin } from "../_shared/auth.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
 import { validateExternalUrl } from "../_shared/url.ts";
+import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 
 interface Investor {
   id: string;
@@ -194,7 +195,7 @@ Based on the following scraped content from their website, extract and write:
 2. WHY_WORK_WITH_US: A concise paragraph (3-5 sentences) highlighting the key benefits for startups seeking funding from this investor — what value-add they provide beyond capital (mentorship, network, operational support, etc.).
 
 Website content:
-${scrapedContent.substring(0, 12000)}
+${sanitizeScrapedContent(scrapedContent, 12000)}
 
 Respond in valid JSON format only, no markdown code blocks:
 {"basic_info": "...", "why_work_with_us": "..."}`;

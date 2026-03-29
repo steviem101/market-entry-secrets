@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireAdmin } from "../_shared/auth.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
 import { validateExternalUrl } from "../_shared/url.ts";
+import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 
 interface Organization {
   id: string;
@@ -229,7 +230,7 @@ ${needsLocation ? '6. CITY_LOCATION: The specific city and state where the organ
 ${needsContact ? '7. CONTACT_EMAIL: A general contact email address for the organization. Look for info@, hello@, contact@, or general enquiry emails.' : ''}
 
 Website content:
-${scrapedContent.substring(0, 12000)}
+${sanitizeScrapedContent(scrapedContent, 12000)}
 
 Respond in valid JSON format only, no markdown code blocks:
 {${needsBasicInfo ? '"basic_info": "..." or null,' : ''}${needsWhyWork ? '"why_work_with_us": "..." or null,' : ''}${needsFounded ? '"founded": "YYYY" or null,' : ''}${needsEmployees ? '"employees": "range" or null,' : ''}${needsLogo ? '"logo_url": "https://..." or null,' : ''}${needsLocation ? '"city_location": "City, ST" or null,' : ''}${needsContact ? '"contact_email": "email" or null,' : ''}"_done": true}`;
