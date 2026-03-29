@@ -4,8 +4,24 @@ import { ListingPageGate } from "@/components/ListingPageGate";
 import SectorSection from "./SectorSection";
 import { useSectorHandlers } from "@/hooks/useSectorHandlers";
 
+interface SectorServiceProvider {
+  id: string;
+  name?: string;
+  description?: string;
+  location?: string;
+  founded?: string;
+  employees?: string;
+  services?: string[];
+  website?: string;
+  contact?: string;
+  logo?: string;
+  slug?: string;
+  experience_tiles?: unknown[];
+  contact_persons?: unknown[];
+}
+
 interface ServiceProvidersSectionProps {
-  serviceProviders: any[];
+  serviceProviders: SectorServiceProvider[];
 }
 
 const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionProps) => {
@@ -36,12 +52,12 @@ const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionPr
             contact: provider.contact || undefined,
             logo: provider.logo || undefined,
             slug: provider.slug || undefined,
-            experienceTiles: provider.experience_tiles ? (Array.isArray(provider.experience_tiles) ? provider.experience_tiles as any[] : []) : [],
-            contactPersons: provider.contact_persons ? (Array.isArray(provider.contact_persons) ? provider.contact_persons as any[] : []) : []
+            experienceTiles: Array.isArray(provider.experience_tiles) ? provider.experience_tiles : [],
+            contactPersons: Array.isArray(provider.contact_persons) ? provider.contact_persons : []
           }}
           onViewProfile={handleViewProfile}
           onContact={handleContact}
-          detailUrl={`/service-providers/${(provider as any).slug || provider.id}`}
+          detailUrl={`/service-providers/${provider.slug || provider.id}`}
         />
       ))}
       </SectorSection>

@@ -96,7 +96,7 @@ export const useMasterSearch = () => {
       const allResults: SearchResult[] = [];
 
       if (eventsResult.data) {
-        (eventsResult.data as any[]).forEach(event => {
+        eventsResult.data.forEach((event: any) => {
           allResults.push({
             id: event.id, title: event.title,
             description: event.description || 'Event', type: 'event', url: `/events`,
@@ -106,7 +106,7 @@ export const useMasterSearch = () => {
       }
 
       if (membersResult.data) {
-        (membersResult.data as any[]).forEach(member => {
+        membersResult.data.forEach((member: any) => {
           allResults.push({
             id: member.id, title: member.name,
             description: member.description || 'Community member', type: 'community_member', url: `/community`,
@@ -116,7 +116,7 @@ export const useMasterSearch = () => {
       }
 
       if (agenciesResult.data) {
-        (agenciesResult.data as any[]).forEach(agency => {
+        agenciesResult.data.forEach((agency: any) => {
           allResults.push({
             id: agency.id, title: agency.name,
             description: agency.description || 'Government & Industry Support', type: 'content', url: `/government-support`,
@@ -126,7 +126,7 @@ export const useMasterSearch = () => {
       }
 
       if (serviceProvidersResult.data) {
-        (serviceProvidersResult.data as any[]).forEach(provider => {
+        serviceProvidersResult.data.forEach((provider: any) => {
           allResults.push({
             id: provider.id, title: provider.name,
             description: provider.description || 'Service Provider', type: 'service_provider', url: `/service-providers`,
@@ -136,7 +136,7 @@ export const useMasterSearch = () => {
       }
 
       if (innovationResult.data) {
-        (innovationResult.data as any[]).forEach(hub => {
+        innovationResult.data.forEach((hub: any) => {
           allResults.push({
             id: hub.id, title: hub.name,
             description: hub.description || 'Innovation Hub', type: 'innovation_hub', url: hub.slug ? `/innovation-ecosystem/${hub.slug}` : `/innovation-ecosystem`,
@@ -146,7 +146,7 @@ export const useMasterSearch = () => {
       }
 
       if (leadsResult.data) {
-        (leadsResult.data as any[]).forEach((lead: any) => {
+        leadsResult.data.forEach((lead: any) => {
           allResults.push({
             id: lead.id, title: lead.title,
             description: lead.short_description || lead.description || 'Lead Database', type: 'lead', url: `/leads/${lead.slug}`,
@@ -156,7 +156,7 @@ export const useMasterSearch = () => {
       }
 
       if (contentResult.data) {
-        (contentResult.data as any[]).forEach(content => {
+        contentResult.data.forEach((content: any) => {
           allResults.push({
             id: content.id, title: content.title,
             description: content.subtitle || content.meta_description || 'Market entry content', type: 'content', url: `/content/${content.slug}`,

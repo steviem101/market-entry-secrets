@@ -105,7 +105,7 @@ export const useRelatedCaseStudies = (currentId: string | undefined, industry: s
 
       // Score and sort by relevance (same industry first, then same country)
       const scored = (data || []).map(item => {
-        const profile = item.content_company_profiles?.[0] as any;
+        const profile = item.content_company_profiles?.[0];
         let score = 0;
         if (industry && profile?.industry === industry) score += 2;
         if (originCountry && profile?.origin_country === originCountry) score += 1;

@@ -125,7 +125,7 @@ const Events = () => {
           name="description"
           content="Discover upcoming events, conferences, and networking opportunities for companies entering the Australian and New Zealand markets."
         />
-        <link rel="canonical" href={`${window.location.origin}/events`} />
+        <link rel="canonical" href={`${typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app"}/events`} />
       </Helmet>
 
       <EventsHero
