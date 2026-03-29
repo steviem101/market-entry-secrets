@@ -36,7 +36,7 @@ const TradeAgenciesSection = ({ tradeAgencies }: TradeAgenciesSectionProps) => {
               contact: agency.email || agency.contact,
               logo: agency.logo,
               experienceTiles: [],
-              contactPersons: agency.contact_persons ? (Array.isArray(agency.contact_persons) ? agency.contact_persons as any[] : []) : []
+              contactPersons: Array.isArray(agency.contact_persons) ? agency.contact_persons : []
             }}
             detailUrl={`/government-support/${agency.slug || agency.id}`}
             onViewProfile={handleViewProfile}

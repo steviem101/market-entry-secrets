@@ -175,7 +175,7 @@ const CaseStudies = () => {
         profile?.company_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesOutcome = outcomeFilter === "all" ||
-        (profile as any)?.outcome === outcomeFilter;
+        profile?.outcome === outcomeFilter;
 
       const matchesRevenue = matchesRevenueRange(profile?.monthly_revenue, revenueFilter);
       const matchesCosts = matchesCostsRange(profile?.startup_costs, costsFilter);
@@ -234,11 +234,11 @@ const CaseStudies = () => {
 
   // Stats
   const successCount = useMemo(() =>
-    caseStudies.filter(cs => (cs.content_company_profiles?.[0] as any)?.outcome === 'successful').length,
+    caseStudies.filter(cs => cs.content_company_profiles?.[0]?.outcome === 'successful').length,
     [caseStudies]
   );
   const failureCount = useMemo(() =>
-    caseStudies.filter(cs => (cs.content_company_profiles?.[0] as any)?.outcome === 'unsuccessful').length,
+    caseStudies.filter(cs => cs.content_company_profiles?.[0]?.outcome === 'unsuccessful').length,
     [caseStudies]
   );
 
@@ -284,7 +284,7 @@ const CaseStudies = () => {
   const renderCard = (cs: any, isGrid: boolean) => {
     const profile = cs.content_company_profiles?.[0];
     const primaryFounder = cs.content_founders?.find((f: any) => f.is_primary) || cs.content_founders?.[0];
-    const outcome = (profile as any)?.outcome;
+    const outcome = profile?.outcome;
     const borderColor = outcome === "successful"
       ? "hover:border-l-emerald-500"
       : outcome === "unsuccessful"

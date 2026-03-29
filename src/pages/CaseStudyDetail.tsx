@@ -160,7 +160,7 @@ const CaseStudyDetail = () => {
 
   const companyName = companyProfile?.company_name || caseStudy.title;
   const metaDescription = caseStudy.subtitle || caseStudy.meta_description || caseStudy.title;
-  const outcome = (companyProfile as any)?.outcome;
+  const outcome = companyProfile?.outcome;
   const isSaved = savedStories.includes(caseStudy.id);
 
   return (

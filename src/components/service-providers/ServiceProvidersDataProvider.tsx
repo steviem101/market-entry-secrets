@@ -68,13 +68,13 @@ export const ServiceProvidersDataProvider = ({
         let contactPersons: ContactPerson[] = [];
 
         if (provider.experience_tiles && Array.isArray(provider.experience_tiles)) {
-          experienceTiles = (provider.experience_tiles as any[]).filter(tile =>
+          experienceTiles = provider.experience_tiles.filter((tile: any) =>
             tile && typeof tile === 'object' && tile.id && tile.name
           ) as ExperienceTile[];
         }
 
         if (provider.contact_persons && Array.isArray(provider.contact_persons)) {
-          contactPersons = (provider.contact_persons as any[]).filter(person =>
+          contactPersons = provider.contact_persons.filter((person: any) =>
             person && typeof person === 'object' && person.id && person.name
           ) as ContactPerson[];
         }

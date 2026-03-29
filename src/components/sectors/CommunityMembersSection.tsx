@@ -37,7 +37,7 @@ const CommunityMembersSection = ({ communityMembers }: CommunityMembersSectionPr
               image: member.image,
               company: member.company,
               isAnonymous: member.is_anonymous,
-              experienceTiles: member.experience_tiles ? (Array.isArray(member.experience_tiles) ? member.experience_tiles as any[] : []) : []
+              experienceTiles: Array.isArray(member.experience_tiles) ? member.experience_tiles : []
             }}
             onViewProfile={handleViewProfile}
             onContact={handleContact}
