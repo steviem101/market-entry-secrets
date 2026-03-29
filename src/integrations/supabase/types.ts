@@ -251,6 +251,7 @@ export type Database = {
           location_id: string | null
           name: string
           origin_country: string | null
+          slug: string
           specialties: string[]
           title: string
           updated_at: string
@@ -271,6 +272,7 @@ export type Database = {
           location_id?: string | null
           name: string
           origin_country?: string | null
+          slug: string
           specialties?: string[]
           title: string
           updated_at?: string
@@ -291,6 +293,7 @@ export type Database = {
           location_id?: string | null
           name?: string
           origin_country?: string | null
+          slug?: string
           specialties?: string[]
           title?: string
           updated_at?: string
@@ -715,6 +718,7 @@ export type Database = {
           name: string
           organization_type: string
           services: string[]
+          slug: string
           updated_at: string
           website: string | null
           why_work_with_us: string | null
@@ -735,6 +739,7 @@ export type Database = {
           name: string
           organization_type?: string
           services?: string[]
+          slug: string
           updated_at?: string
           website?: string | null
           why_work_with_us?: string | null
@@ -755,6 +760,7 @@ export type Database = {
           name?: string
           organization_type?: string
           services?: string[]
+          slug?: string
           updated_at?: string
           website?: string | null
           why_work_with_us?: string | null
@@ -1041,6 +1047,7 @@ export type Database = {
           logo: string | null
           name: string
           services: string[]
+          slug: string
           updated_at: string
           website: string | null
           why_work_with_us: string | null
@@ -1060,6 +1067,7 @@ export type Database = {
           logo?: string | null
           name: string
           services?: string[]
+          slug: string
           updated_at?: string
           website?: string | null
           why_work_with_us?: string | null
@@ -1079,6 +1087,7 @@ export type Database = {
           logo?: string | null
           name?: string
           services?: string[]
+          slug?: string
           updated_at?: string
           website?: string | null
           why_work_with_us?: string | null
@@ -1111,6 +1120,7 @@ export type Database = {
           logo: string | null
           name: string
           sector_focus: string[] | null
+          slug: string
           stage_focus: string[] | null
           updated_at: string | null
           website: string | null
@@ -1133,6 +1143,7 @@ export type Database = {
           logo?: string | null
           name: string
           sector_focus?: string[] | null
+          slug: string
           stage_focus?: string[] | null
           updated_at?: string | null
           website?: string | null
@@ -1155,6 +1166,7 @@ export type Database = {
           logo?: string | null
           name?: string
           sector_focus?: string[] | null
+          slug?: string
           stage_focus?: string[] | null
           updated_at?: string | null
           website?: string | null
@@ -1958,6 +1970,7 @@ export type Database = {
           logo: string | null
           name: string
           services: string[]
+          slug: string
           updated_at: string
           website: string | null
           why_work_with_us: string | null
@@ -1977,6 +1990,7 @@ export type Database = {
           logo?: string | null
           name: string
           services?: string[]
+          slug: string
           updated_at?: string
           website?: string | null
           why_work_with_us?: string | null
@@ -1996,6 +2010,7 @@ export type Database = {
           logo?: string | null
           name?: string
           services?: string[]
+          slug?: string
           updated_at?: string
           website?: string | null
           why_work_with_us?: string | null
@@ -2100,7 +2115,7 @@ export type Database = {
           phone: string | null
           sectors_supported: string[] | null
           services: string[]
-          slug: string | null
+          slug: string
           support_types: string[] | null
           tagline: string | null
           target_company_origin: string[] | null
@@ -2152,7 +2167,7 @@ export type Database = {
           phone?: string | null
           sectors_supported?: string[] | null
           services?: string[]
-          slug?: string | null
+          slug: string
           support_types?: string[] | null
           tagline?: string | null
           target_company_origin?: string[] | null
@@ -2204,7 +2219,7 @@ export type Database = {
           phone?: string | null
           sectors_supported?: string[] | null
           services?: string[]
-          slug?: string | null
+          slug?: string
           support_types?: string[] | null
           tagline?: string | null
           target_company_origin?: string[] | null
@@ -2483,6 +2498,7 @@ export type Database = {
       }
     }
     Functions: {
+      generate_slug: { Args: { input_text: string }; Returns: string }
       get_tier_gated_report: { Args: { p_report_id: string }; Returns: Json }
       has_role: {
         Args: {

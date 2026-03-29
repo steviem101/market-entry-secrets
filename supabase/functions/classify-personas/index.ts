@@ -63,11 +63,11 @@ Deno.serve(async (req: Request) => {
 
     log(PREFIX, `Fetching untagged records from ${config.table}`, { batch_size: safeBatchSize, dry_run });
 
-    const { data: records, error: fetchError } = await supabase
+    const { data: records, error: fetchError } = await (supabase as any)
       .from(config.table)
       .select("id, " + config.fields.join(", "))
       .or(`${config.column}.is.null,${config.column}.eq.{}`)
-      .limit(safeBatchSize);
+      .limit(safeBatchSize) as { data: any[] | null; error: any };
 
     if (fetchError) {
       logError(PREFIX, "Failed to fetch records", fetchError);
