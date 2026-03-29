@@ -1,85 +1,49 @@
 
 
-# Claude Code Preprocessor File (CLAUDE.md) for Market Entry Secrets
+## Comparison Section Redesign — Ideas Review
 
-This will create a single `CLAUDE.md` file at the project root -- the standard preprocessor file that Claude Code reads automatically before every task. It will contain the complete project knowledge, architecture, conventions, database schema, edge function patterns, security constraints, and coding guidelines needed for productive autonomous work on this codebase.
+### Current Problems
+- Flat, spreadsheet-like table with lots of white space in the Google/Consultant columns (just a tiny icon centered in a large cell)
+- No visual drama or storytelling — it reads like a feature checklist, not a persuasive argument
+- The MES column blends in rather than dominating visually
+- Competitor columns are visually identical to each other — no differentiation
+- No animation or progressive reveal to build narrative tension
 
----
+### Radical Redesign Ideas
 
-## What the file will cover
+**Idea A: "Scorecard Knockout" — Stacked horizontal bars**
+Replace the table with horizontal feature rows where each alternative gets a visual "bar" or "pill" showing its strength. MES gets a full-width vibrant bar, competitors get short/empty bars. Think progress bars that visually demolish the competition. Each row animates in on scroll. The MES column becomes a glowing, full-strength indicator while competitors fade/shrink. Much more visceral than check/X icons.
 
-### 1. Project Identity and Stack
-- Market Entry Secrets: B2B SaaS directory + AI report platform for ANZ market entry
-- React 18 + Vite + TypeScript + Tailwind CSS + shadcn/ui frontend
-- Supabase (Lovable Cloud) backend: Postgres, Auth, Edge Functions, Storage
-- Stripe payments, Firecrawl scraping, Perplexity research, Lovable AI Gateway (Gemini)
+**Idea B: "Three Cards, One Winner" — Side-by-side cards with visual scoring**
+Three vertical cards (Google, Consultants, MES) where each card shows a stacked score. Google and Consultant cards are muted/greyed with strike-through or faded features. The MES card is elevated, glowing, with a "crown" or spotlight effect. A running score counter at the bottom (e.g., "2/7", "1/7", "7/7") with animated count-up. The losing cards literally look defeated.
 
-### 2. Critical Build and Type Safety Rules
-- The auto-generated `src/integrations/supabase/types.ts` file must never be hand-edited
-- When Supabase types don't match runtime tables (e.g. `user_intake_forms`, `user_reports`), cast via `(supabase as any)` -- this is the established pattern throughout `reportApi.ts`
-- The `directory_submissions` insert requires exactly `{ submission_type, contact_email, form_data }` -- no extra top-level keys
-- Edge functions use Deno runtime with `esm.sh` imports, not npm
+**Idea C: "Before & After Verdict" — Interactive toggle comparison**
+Instead of showing all three simultaneously, show a two-panel comparison: the user toggles between "vs Google" and "vs Consultants". Each view is a dramatic side-by-side with MES always on the right, winning. This halves the white space, doubles the visual real estate per comparison, and adds interactivity. Each feature row gets a mini verdict badge.
 
-### 3. Complete Route Map
-All 30+ routes with their page components and purposes.
+**Idea D: "Score Ring Dashboard" — Radial score visualization**
+Three circular/radial score rings at the top (Google: 2/7, Consultants: 1/7, MES: 7/7) with animated fill. Below, a compact feature list with colored dots. The rings immediately communicate the winner before you even read the details. Think dashboard/analytics aesthetic.
 
-### 4. Database Schema Reference
-All tables grouped by domain (directory, content, auth/user, reports, payments) with key columns and RLS notes.
-
-### 5. Edge Function Inventory
-All 10 edge functions with their purpose, auth requirements (`verify_jwt` settings from `config.toml`), and external API dependencies.
-
-### 6. Authentication Architecture
-- `AuthProvider` -> `useAuthState` -> `useAuth` hook composition
-- `useRoleHelpers` for admin/moderator checks
-- `requireAdmin()` shared helper for edge functions
-- Database triggers: `handle_new_user` (profile + role), `handle_new_user_subscription` (free tier)
-
-### 7. Report Generation Pipeline
-The 5-phase parallel pipeline in `generate-report`:
-1. Deep company scrape (Firecrawl map + scrape)
-2. Perplexity market research (6 parallel queries)
-3. Database directory matching (7 tables)
-4. Competitor + end buyer scraping
-5. AI section generation (batched) + polish pass
-
-### 8. Subscription and Tier System
-- Tiers: free -> growth -> scale -> enterprise
-- Legacy mapping: premium -> growth, concierge -> enterprise
-- `useSubscription` hook with `canAccessFeature()` and tier hierarchy
-- `useCheckout` hook for Stripe checkout flow
-- Report section gating via `TIER_REQUIREMENTS` in `ReportView.tsx`
-
-### 9. Coding Conventions and Patterns
-- Directory pages: Hero + Filters + Results grid (consistent pattern)
-- Hooks per domain: `useEvents`, `useCommunityMembers`, `useSectorEvents`, etc.
-- `useMasterSearch` searches 7 tables with ilike queries
-- All pages include `Navigation` + `Footer` via `Layout` wrapper + SEO via `react-helmet-async`
-- Toast notifications: `useToast` (shadcn) and `sonner` (both are available)
-- Edge function shared modules: `_shared/http.ts` (CORS), `_shared/log.ts` (logging), `_shared/auth.ts` (admin check)
-
-### 10. Security Constraints
-- RLS policies: admin-only on `email_leads`, `lemlist_*`, `lead_submissions`; own-profile on `profiles`
-- Edge functions: JWT verification enabled on all functions via `config.toml`
-- `create-checkout`: URL allowlist validation for redirect URLs
-- `sync-lemlist`: admin role check via `requireAdmin()`
-- Never log PII (emails, tokens) to console
-
-### 11. Environment Secrets Reference
-All required secrets: `STRIPE_SECRET`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_GROWTH_PRICE_ID`, `STRIPE_SCALE_PRICE_ID`, `FIRECRAWL_API_KEY`, `PERPLEXITY_API_KEY`, `LOVABLE_API_KEY`, `FRONTEND_URL`
-
-### 12. Known Gotchas
-- `form_data` column is `Json` type -- pass structured objects, not flat form fields at the insert root level
-- `user_intake_forms` and `user_reports` tables are not in the auto-generated types -- always use `(supabase as any)` cast
-- Stripe webhook uses raw body (`ArrayBuffer` -> `TextDecoder`) for signature verification
-- The `callAI` function targets `ai.gateway.lovable.dev` (Lovable AI Gateway), not OpenAI directly
-- Freemium gate: 3 free views tracked in localStorage + `user_usage` table; signed-in users bypass
+**Idea E: "Feature Spotlight Carousel" — One feature at a time**
+Each feature gets its own full-width card that scrolls horizontally or auto-plays. Each card shows the three alternatives with dramatic visual treatment — large icons, bold verdict text, and a short killer stat. This turns 7 bland rows into 7 impactful moments. Dots/progress indicator at the bottom.
 
 ---
 
-## Technical Details
+### Recommended Approach: Hybrid of A + D
 
-**File:** `CLAUDE.md` (new file at project root)
+Combine radial score rings as a header summary with redesigned rows that use visual bars/fills instead of lonely icons:
 
-The file will be approximately 400-500 lines of markdown, structured as a flat reference document optimized for LLM context window consumption. No nested folders or multiple files -- Claude Code reads `CLAUDE.md` automatically.
+1. **Score summary header**: Three score rings (animated on scroll) — Google 2/7, Consultants 1/7, MES 7/7 — immediately establishes the winner
+2. **Redesigned rows**: Replace empty icon cells with tinted status pills that include a short label (not just an icon). E.g., a red pill saying "No vetting" vs a green pill saying "AI-matched". This eliminates white space by filling cells with meaningful micro-copy
+3. **MES column glow**: Stronger visual differentiation — gradient left border, subtle pulse animation, elevated shadow
+4. **Staggered scroll animation**: Rows fade/slide in sequentially as user scrolls, building narrative momentum
+5. **Competitor tooltips on hover**: Keep the detailed tooltips but now they augment visible text rather than being the only context
+
+### Files to Modify
+- `src/components/sections/ComparisonSection.tsx` — Full redesign of layout, data structure, and rendering
+
+### Technical Notes
+- Score rings can use CSS `conic-gradient` or the existing `Progress` component
+- Scroll animations via `useIntersectionObserver` (already in the codebase)
+- All colors use existing design system tokens
+- Mobile: score rings stack horizontally in a scrollable row; table remains horizontally scrollable
 
