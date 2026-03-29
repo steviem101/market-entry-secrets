@@ -1,4 +1,4 @@
-import { MapPin, CheckCircle, Star, Globe, Mail, Phone } from "lucide-react";
+import { MapPin, CheckCircle, Star, Globe, Handshake, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/BookmarkButton";
@@ -108,8 +108,8 @@ export const ServiceProviderProfileHero = ({ provider }: ServiceProviderProfileH
               {(provider.contact_email || provider.contact) && (
                 <Button asChild>
                   <a href={`mailto:${provider.contact_email || provider.contact}`}>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Contact
+                    <Handshake className="w-4 h-4 mr-2" />
+                    Get Warm Intro
                   </a>
                 </Button>
               )}

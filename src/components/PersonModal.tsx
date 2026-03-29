@@ -1,5 +1,5 @@
 
-import { X, MapPin, Globe, Phone, Mail, Building } from "lucide-react";
+import { X, MapPin, Globe, Handshake, Mail, Building } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,8 +155,8 @@ const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) =
               </Button>
             )}
             <Button onClick={() => onContact(person)} className="flex-1">
-              <Phone className="w-4 h-4 mr-2" />
-              Contact
+              <Handshake className="w-4 h-4 mr-2" />
+              Get Warm Intro
             </Button>
           </div>
         </div>

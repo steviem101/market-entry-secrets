@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { MapPin, Phone, CheckCircle, Star, Globe, Clock } from "lucide-react";
+import { MapPin, Handshake, CheckCircle, Star, Globe, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -259,8 +259,8 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
           onClick={() => onContact(mentor)}
           className="flex-1"
         >
-          <Phone className="w-4 h-4 mr-1" />
-          Contact
+          <Handshake className="w-4 h-4 mr-1" />
+          Get Warm Intro
         </Button>
       </div>
     </div>

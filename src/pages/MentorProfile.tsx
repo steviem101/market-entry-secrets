@@ -7,7 +7,7 @@ import {
   CheckCircle,
   Star,
   Clock,
-  Phone,
+  Handshake,
   DollarSign,
   Languages,
 } from "lucide-react";
@@ -245,8 +245,8 @@ const MentorProfile = () => {
                   variant="outline"
                 />
                 <Button onClick={() => setShowContact(true)}>
-                  <Phone className="w-4 h-4 mr-2" />
-                  Contact
+                  <Handshake className="w-4 h-4 mr-2" />
+                  Get Warm Intro
                 </Button>
               </div>
             </div>
@@ -508,12 +508,12 @@ const MentorProfile = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Interested in connecting with {mentor.name}? Send a contact
-                  request and they'll get back to you.
+                  Interested in connecting with {mentor.name}? Request a warm
+                  intro and we'll facilitate the connection.
                 </p>
                 <Button className="w-full" onClick={() => setShowContact(true)}>
-                  <Phone className="w-4 h-4 mr-2" />
-                  Send Contact Request
+                  <Handshake className="w-4 h-4 mr-2" />
+                  Request Warm Intro
                 </Button>
               </CardContent>
             </Card>
