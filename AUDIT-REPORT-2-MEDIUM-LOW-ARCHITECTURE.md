@@ -90,6 +90,44 @@
 
 ---
 
+### MED-9: 17 pages missing SEO metadata (Helmet tags)
+
+- **What:** 17 pages have no `<Helmet>` or `<SEOHead>` component, meaning no custom title, meta description, Open Graph tags, or canonical URL.
+- **Where:** Missing on: `About`, `AuthCallback`, `Bookmarks`, `Community`, `Contact`, `Content`, `Countries`, `FAQ`, `Locations`, `MemberHub`, `NotFound`, `PartnerWithUs`, `Pricing`, `PrivacyPolicy`, `ResetPassword`, `Sectors`, `TermsOfService`
+- **Impact:** Poor SEO for key landing pages (Pricing, Contact, FAQ, Content listing, Locations, Countries, Sectors). These are high-value pages for organic search traffic.
+- **Fix complexity:** Quick win — add `<SEOHead>` to each page (component already exists at `src/components/common/SEOHead.tsx`)
+
+### MED-10: ~100+ instances of `any` type throughout codebase
+
+- **What:** Heavy use of `any` type, concentrated in detail pages and report components.
+- **Where:** Highest density:
+  - `src/pages/ContentDetail.tsx` — 13 instances (lines 66, 128, 130, 132, 135, 143, etc.)
+  - `src/pages/CaseStudyDetail.tsx` — 12 instances
+  - `src/pages/MemberHub.tsx` — 4 instances
+  - `src/components/report/CitationRenderer.tsx` — 5 instances
+  - `src/components/trade-investment-agencies/detail/AgencyContent.tsx` — 6 instances
+- **Impact:** Defeats TypeScript's purpose. Runtime errors that the compiler should catch.
+- **Fix complexity:** Medium effort — define proper interfaces for report JSON, content sections, etc.
+
+### MED-11: ContentDetail.tsx and CaseStudyDetail.tsx share heavily duplicated logic
+
+- **What:** These two 600+ line files contain near-identical patterns for save stories, content grouping, share/copy, and founder display.
+- **Where:**
+  - Save stories: `ContentDetail.tsx:34-42` vs `CaseStudyDetail.tsx:24-32`
+  - Share/copy: `ContentDetail.tsx:90-98` vs `CaseStudyDetail.tsx:107-117`
+  - Founder extraction: `ContentDetail.tsx:128` vs `CaseStudyDetail.tsx:149`
+- **Impact:** Bug fixes need to be applied in two places. High risk of drift.
+- **Fix complexity:** Medium effort
+- **Suggested fix:** Extract shared logic into a `useDetailPageLogic` hook.
+
+### MED-12: No ARIA labels or accessibility attributes found
+
+- **What:** No `aria-label` or `aria-describedby` attributes found across the codebase. Limited `alt` text on images. No skip-to-content link.
+- **Impact:** Fails WCAG accessibility standards. Could be a legal liability and hurts SEO.
+- **Fix complexity:** Medium-high effort (needs systematic pass across all interactive elements)
+
+---
+
 ## 5. Low Priority / Improvement Opportunities
 
 ### LOW-1: `useLeadDatabases` makes 2 queries that could be 1
@@ -135,6 +173,14 @@
 - Good lazy-loading strategy with `React.lazy()` for all non-critical routes
 - ErrorBoundary at the app level
 - shadcn/ui provides consistent component library
+
+- Excellent auth race condition protection (microtask queue, cancelled flags, ref guards)
+- Content flash prevention (null state pattern in FreemiumGate, skeleton in ProtectedRoute)
+- Zero inline styles — consistent Tailwind usage
+- No memory leaks — all event listeners and timers properly cleaned up
+- Empty states handled with reusable `EmptyState` component
+- Broken image fallbacks implemented on key components
+- Sitemap and robots.txt present
 
 **Weaknesses:**
 - No centralized data layer — every hook independently creates Supabase queries
