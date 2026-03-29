@@ -15,7 +15,7 @@ const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionPr
 
   return (
     <ListingPageGate contentType="service_providers">
-    <SectorSection
+      <SectorSection
       title="Specialized Service Providers"
       viewAllLink="/service-providers"
       viewAllText="View All Providers"
@@ -44,7 +44,7 @@ const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionPr
           detailUrl={`/service-providers/${(provider as any).slug || provider.id}`}
         />
       ))}
-    </SectorSection>
+      </SectorSection>
     </ListingPageGate>
   );
 };

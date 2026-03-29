@@ -20,7 +20,7 @@ export const ListingPageGate = ({ children, contentType }: ListingPageGateProps)
   return (
     <div className="relative">
       <div
-        className="max-h-[600px] overflow-hidden pointer-events-none select-none"
+        className="max-h-[600px] overflow-hidden pointer-events-none select-none relative"
         aria-hidden="true"
       >
         <div className="blur-sm opacity-65">
