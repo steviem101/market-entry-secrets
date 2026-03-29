@@ -79,6 +79,7 @@ export const InnovationOrgContent = ({ org, relatedOrgs }: InnovationOrgContentP
                   <div key={tile.id || index} className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
                     <div className="w-12 h-12 bg-white border rounded-lg p-1 flex-shrink-0">
                       <img
+                        loading="lazy"
                         src={tile.logo || getExperienceTileImage(index)}
                         alt={tile.name}
                         className="w-full h-full object-cover rounded"

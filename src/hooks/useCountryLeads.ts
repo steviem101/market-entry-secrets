@@ -1,17 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCountryBySlug } from "@/hooks/useCountries";
 import type { LeadDatabase } from "@/types/leadDatabase";
 
-export const useCountryLeads = (countrySlug: string) => {
-  const { data: countryConfig } = useCountryBySlug(countrySlug);
-
+export const useCountryLeads = (countrySlug: string, leadKeywords: string[] | undefined, keyIndustries: string[] | undefined) => {
   return useQuery({
-    queryKey: ['country-leads', countrySlug],
+    queryKey: ['country-leads', countrySlug, leadKeywords, keyIndustries],
     queryFn: async () => {
-      if (!countryConfig) {
-        return [];
-      }
+      if (!leadKeywords?.length && !keyIndustries?.length) return [];
 
       const { data, error } = await (supabase as any)
         .from('lead_databases')
@@ -29,18 +24,18 @@ export const useCountryLeads = (countrySlug: string) => {
         const searchText = `${lead.title} ${lead.description || ''} ${lead.sector || ''} ${lead.list_type || ''} ${lead.location || ''} ${lead.tags?.join(' ') || ''}`.toLowerCase();
 
         // Check keyword matching
-        const keywordMatch = countryConfig.lead_keywords.some((keyword: string) =>
+        const keywordMatch = (leadKeywords || []).some((keyword: string) =>
           searchText.includes(keyword.toLowerCase())
         );
 
         // Check industry matching
-        const industryMatch = countryConfig.key_industries.some((industry: string) =>
+        const industryMatch = (keyIndustries || []).some((industry: string) =>
           (lead.sector || '').toLowerCase().includes(industry.toLowerCase())
         );
 
         return keywordMatch || industryMatch;
       });
     },
-    enabled: !!countryConfig
+    enabled: !!(leadKeywords?.length || keyIndustries?.length)
   });
 };

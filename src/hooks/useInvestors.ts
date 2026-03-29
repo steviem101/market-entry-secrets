@@ -16,7 +16,8 @@ export const useInvestors = () => {
       }
 
       return data;
-    }
+    },
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -33,7 +34,8 @@ export const useInvestorById = (id: string) => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id
+    enabled: !!id,
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -50,7 +52,8 @@ export const useInvestorBySlug = (slug: string) => {
       if (error) throw error;
       return data;
     },
-    enabled: !!slug
+    enabled: !!slug,
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -69,6 +72,7 @@ export const useRelatedInvestors = (currentId: string, investorType: string, loc
       if (error) throw error;
       return data;
     },
-    enabled: !!currentId && !!investorType
+    enabled: !!currentId && !!investorType,
+    staleTime: 15 * 60 * 1000
   });
 };

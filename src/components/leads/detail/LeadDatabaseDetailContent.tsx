@@ -257,6 +257,7 @@ export const LeadDatabaseDetailContent = ({
                   <div className="flex items-center gap-3">
                     {db.provider_logo_url ? (
                       <img
+                        loading="lazy"
                         src={db.provider_logo_url}
                         alt={db.provider_name}
                         className="w-10 h-10 rounded-lg object-cover border"

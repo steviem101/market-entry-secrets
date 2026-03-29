@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { User, MapPin, Calendar, Globe, Phone, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +35,7 @@ interface PersonCardProps {
   onContact: (person: Person) => void;
 }
 
-const PersonCard = ({ person, onViewProfile, onContact }: PersonCardProps) => {
+const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) => {
   const displayName = person.isAnonymous ? person.title : person.name;
   const shouldBlurImage = person.isAnonymous;
 
@@ -138,8 +139,9 @@ const PersonCard = ({ person, onViewProfile, onContact }: PersonCardProps) => {
           <div className="flex gap-2 overflow-x-auto">
             {person.experienceTiles.slice(0, 3).map((tile, index) => (
               <div key={tile.id} className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg p-1">
-                <img 
-                  src={tile.logo || getExperienceTileImage(index)} 
+                <img
+                  loading="lazy"
+                  src={tile.logo || getExperienceTileImage(index)}
                   alt={tile.name}
                   className="w-full h-full object-contain"
                 />
@@ -174,6 +176,8 @@ const PersonCard = ({ person, onViewProfile, onContact }: PersonCardProps) => {
       </div>
     </div>
   );
-};
+});
+
+PersonCard.displayName = "PersonCard";
 
 export default PersonCard;

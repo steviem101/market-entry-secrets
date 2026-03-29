@@ -1,17 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useCountryBySlug } from "@/hooks/useCountries";
 
-export const useCountryContent = (countrySlug: string) => {
-  const { data: countryConfig } = useCountryBySlug(countrySlug);
-
+export const useCountryContent = (countrySlug: string, keywords: string[] | undefined) => {
   return useQuery({
-    queryKey: ['country-content', countrySlug],
+    queryKey: ['country-content', countrySlug, keywords],
     queryFn: async () => {
-      if (!countryConfig) {
-        return [];
-      }
+      if (!keywords?.length) return [];
 
       const { data, error } = await supabase
         .from('content_items')
@@ -34,13 +29,13 @@ export const useCountryContent = (countrySlug: string) => {
       // Filter based on keyword matching in title and subtitle
       const filteredContent = data.filter(content => {
         const searchText = `${content.title} ${content.subtitle || ''}`.toLowerCase();
-        return countryConfig.content_keywords.some(keyword =>
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
 
       return filteredContent;
     },
-    enabled: !!countryConfig
+    enabled: !!keywords?.length
   });
 };

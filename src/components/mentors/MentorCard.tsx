@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { MapPin, Phone, CheckCircle, Star, Globe, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,7 @@ const ExperienceTileItem = ({ tile }: { tile: { id?: string; name: string; logo?
     <div className="flex-shrink-0 w-10 h-10 rounded-lg border bg-white flex items-center justify-center overflow-hidden" title={tile.name}>
       {tile.logo ? (
         <img
+          loading="lazy"
           src={tile.logo}
           alt={tile.name}
           className="w-full h-full object-contain p-0.5"
@@ -82,7 +84,7 @@ const ExperienceTileItem = ({ tile }: { tile: { id?: string; name: string; logo?
   );
 };
 
-const MentorCard = ({ mentor, onContact }: MentorCardProps) => {
+const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
   const navigate = useNavigate();
   const displayName = mentor.is_anonymous ? mentor.title : mentor.name;
   const profileUrl = `/mentors/${mentor.category_slug || "experts"}/${mentor.slug || mentor.id}`;
@@ -263,6 +265,8 @@ const MentorCard = ({ mentor, onContact }: MentorCardProps) => {
       </div>
     </div>
   );
-};
+});
+
+MentorCard.displayName = "MentorCard";
 
 export default MentorCard;

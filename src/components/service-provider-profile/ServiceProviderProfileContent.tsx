@@ -103,6 +103,7 @@ export const ServiceProviderProfileContent = ({
                     className="bg-white border rounded-lg p-3 flex flex-col items-center gap-2"
                   >
                     <img
+                      loading="lazy"
                       src={tile.logo || getExperienceTileImage(index)}
                       alt={tile.name}
                       className="w-12 h-12 object-contain"

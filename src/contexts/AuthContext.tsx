@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { useAuthState } from '@/hooks/auth/useAuthState';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile, UserRole } from '@/hooks/auth/types';
@@ -18,15 +18,19 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const authState = useAuthState();
+  const { user, profile, roles, session, loading, setProfile, setLoading } = useAuthState();
 
-  const showOnboarding = !authState.loading
-    && authState.user !== null
-    && authState.profile !== null
-    && authState.profile.onboarding_completed === false;
+  const value = useMemo(() => ({
+    user, profile, roles, session, loading, setProfile, setLoading
+  }), [user, profile, roles, session, loading, setProfile, setLoading]);
+
+  const showOnboarding = !loading
+    && user !== null
+    && profile !== null
+    && profile.onboarding_completed === false;
 
   return (
-    <AuthContext.Provider value={authState}>
+    <AuthContext.Provider value={value}>
       {children}
       <OnboardingDialog
         open={showOnboarding}

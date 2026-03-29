@@ -64,6 +64,7 @@ export const InvestorHero = ({ investor }: InvestorHeroProps) => {
           <div className="w-28 h-28 bg-white rounded-xl shadow-sm border flex items-center justify-center flex-shrink-0 overflow-hidden">
             {investor.logo ? (
               <img
+                loading="lazy"
                 src={investor.logo}
                 alt={`${investor.name} logo`}
                 className="w-full h-full object-contain p-3"

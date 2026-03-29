@@ -58,6 +58,7 @@ export const LeadDatabaseDetailHero = ({ db, onCheckout, onPreview, checkoutLoad
               <div className="flex-shrink-0">
                 {db.provider_logo_url ? (
                   <img
+                    loading="lazy"
                     src={db.provider_logo_url}
                     alt={`${db.provider_name} logo`}
                     className="w-20 h-20 rounded-xl object-cover border border-border"

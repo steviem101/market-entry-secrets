@@ -1,14 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSectorBySlug } from "@/hooks/useSectors";
 
-export const useSectorInvestors = (sectorSlug: string) => {
-  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
-
+export const useSectorInvestors = (sectorSlug: string, keywords: string[] | undefined) => {
   return useQuery({
-    queryKey: ['sector-investors', sectorSlug],
+    queryKey: ['sector-investors', sectorSlug, keywords],
     queryFn: async () => {
-      if (!sectorConfig) return [];
+      if (!keywords?.length) return [];
 
       const { data, error } = await supabase
         .from('investors')
@@ -19,11 +16,11 @@ export const useSectorInvestors = (sectorSlug: string) => {
 
       return data.filter(investor => {
         const searchText = `${investor.name} ${investor.description} ${(investor.sector_focus || []).join(' ')}`.toLowerCase();
-        return sectorConfig.keywords.some(keyword =>
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
     },
-    enabled: !!sectorConfig
+    enabled: !!keywords?.length
   });
 };

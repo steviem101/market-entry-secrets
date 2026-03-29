@@ -20,13 +20,13 @@ interface LocationContentProps {
 }
 
 export const LocationContent = ({ location }: LocationContentProps) => {
-  const { data: serviceProviders = [] } = useLocationServiceProviders(location.slug);
-  const { data: events = [] } = useLocationEvents(location.slug);
-  const { data: contentItems = [] } = useLocationContent(location.slug);
-  const { data: leads = [] } = useLocationLeads(location.slug);
-  const { data: communityMembers = [] } = useLocationCommunityMembers(location.slug);
-  const { data: innovationEcosystem = [] } = useLocationInnovationEcosystem(location.slug);
-  const { data: tradeAgencies = [] } = useLocationTradeAgencies(location.slug);
+  const { data: serviceProviders = [] } = useLocationServiceProviders(location.slug, location.service_keywords);
+  const { data: events = [] } = useLocationEvents(location.slug, location.event_keywords);
+  const { data: contentItems = [] } = useLocationContent(location.slug, location.content_keywords);
+  const { data: leads = [] } = useLocationLeads(location.slug, location.lead_keywords, location.key_industries);
+  const { data: communityMembers = [] } = useLocationCommunityMembers(location.slug, location.keywords);
+  const { data: innovationEcosystem = [] } = useLocationInnovationEcosystem(location.slug, location.service_keywords);
+  const { data: tradeAgencies = [] } = useLocationTradeAgencies(location.slug, location.service_keywords);
 
   return (
     <div className="container mx-auto px-4 py-16 space-y-16">

@@ -17,11 +17,11 @@ interface CountryContentProps {
 }
 
 export const CountryContent = ({ country }: CountryContentProps) => {
-  const { data: serviceProviders = [] } = useCountryServiceProviders(country.slug);
-  const { data: events = [] } = useCountryEvents(country.slug);
-  const { data: contentItems = [] } = useCountryContent(country.slug);
-  const { data: leads = [] } = useCountryLeads(country.slug);
-  const { data: communityMembers = [] } = useCountryCommunityMembers(country.slug);
+  const { data: serviceProviders = [] } = useCountryServiceProviders(country.slug, country.service_keywords);
+  const { data: events = [] } = useCountryEvents(country.slug, country.event_keywords);
+  const { data: contentItems = [] } = useCountryContent(country.slug, country.content_keywords);
+  const { data: leads = [] } = useCountryLeads(country.slug, country.lead_keywords, country.key_industries);
+  const { data: communityMembers = [] } = useCountryCommunityMembers(country.slug, country.name, country.keywords);
 
   return (
     <div className="space-y-0">

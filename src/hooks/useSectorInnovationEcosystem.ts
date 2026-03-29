@@ -1,16 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSectorBySlug } from "@/hooks/useSectors";
 
-export const useSectorInnovationEcosystem = (sectorSlug: string) => {
-  const { data: sectorConfig } = useSectorBySlug(sectorSlug);
-  
+export const useSectorInnovationEcosystem = (sectorSlug: string, keywords: string[] | undefined) => {
   return useQuery({
-    queryKey: ['sector-innovation-ecosystem', sectorSlug],
+    queryKey: ['sector-innovation-ecosystem', sectorSlug, keywords],
     queryFn: async () => {
-      if (!sectorConfig) return [];
-      
+      if (!keywords?.length) return [];
+
       const { data, error } = await supabase
         .from('innovation_ecosystem')
         .select('*')
@@ -21,11 +18,11 @@ export const useSectorInnovationEcosystem = (sectorSlug: string) => {
       // Filter based on sector keywords
       return data.filter(entity => {
         const searchText = `${entity.name} ${entity.description} ${entity.services?.join(' ')}`.toLowerCase();
-        return sectorConfig.keywords.some(keyword => 
+        return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())
         );
       });
     },
-    enabled: !!sectorConfig
+    enabled: !!keywords?.length
   });
 };

@@ -32,7 +32,8 @@ export const useSectors = () => {
 
       if (error) throw error;
       return data as SectorData[];
-    }
+    },
+    staleTime: 30 * 60 * 1000
   });
 };
 
@@ -48,7 +49,8 @@ export const useFeaturedSectors = () => {
 
       if (error) throw error;
       return data as SectorData[];
-    }
+    },
+    staleTime: 30 * 60 * 1000
   });
 };
 
@@ -65,6 +67,7 @@ export const useSectorBySlug = (slug: string) => {
       if (error) throw error;
       return data as SectorData;
     },
-    enabled: !!slug
+    enabled: !!slug,
+    staleTime: 30 * 60 * 1000
   });
 };

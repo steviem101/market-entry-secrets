@@ -92,6 +92,7 @@ export const useServiceProviderBySlug = (slug: string) => {
       return normalizeProvider(data, category_name);
     },
     enabled: !!slug,
+    staleTime: 15 * 60 * 1000,
   });
 };
 
@@ -123,6 +124,7 @@ export const useRelatedServiceProviders = (
       return (data || []).map((row: any) => normalizeProvider(row));
     },
     enabled: !!currentId,
+    staleTime: 15 * 60 * 1000,
   });
 };
 
@@ -147,6 +149,7 @@ export const useServiceProviderCategories = () => {
         is_active: boolean;
       }>;
     },
+    staleTime: 15 * 60 * 1000,
   });
 };
 
@@ -175,6 +178,7 @@ export const useServiceProviderReviews = (providerId: string) => {
       }>;
     },
     enabled: !!providerId,
+    staleTime: 15 * 60 * 1000,
   });
 };
 
@@ -203,5 +207,6 @@ export const useServiceProviderContacts = (providerId: string) => {
       }>;
     },
     enabled: !!providerId,
+    staleTime: 15 * 60 * 1000,
   });
 };

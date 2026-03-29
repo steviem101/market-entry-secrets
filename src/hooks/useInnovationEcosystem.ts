@@ -16,7 +16,8 @@ export const useInnovationEcosystem = () => {
       }
 
       return data;
-    }
+    },
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -33,7 +34,8 @@ export const useInnovationOrgById = (id: string) => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id
+    enabled: !!id,
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -50,7 +52,8 @@ export const useInnovationOrgBySlug = (slug: string) => {
       if (error) throw error;
       return data;
     },
-    enabled: !!slug
+    enabled: !!slug,
+    staleTime: 15 * 60 * 1000
   });
 };
 
@@ -69,6 +72,7 @@ export const useRelatedInnovationOrgs = (currentId: string, location: string) =>
       if (error) throw error;
       return data;
     },
-    enabled: !!currentId && !!location
+    enabled: !!currentId && !!location,
+    staleTime: 15 * 60 * 1000
   });
 };

@@ -35,7 +35,8 @@ export const useCountries = () => {
 
       if (error) throw error;
       return data as CountryData[];
-    }
+    },
+    staleTime: 30 * 60 * 1000
   });
 };
 
@@ -51,7 +52,8 @@ export const useFeaturedCountries = () => {
 
       if (error) throw error;
       return data as CountryData[];
-    }
+    },
+    staleTime: 30 * 60 * 1000
   });
 };
 
@@ -68,6 +70,7 @@ export const useCountryBySlug = (slug: string) => {
       if (error) throw error;
       return data as CountryData;
     },
-    enabled: !!slug
+    enabled: !!slug,
+    staleTime: 30 * 60 * 1000
   });
 };
