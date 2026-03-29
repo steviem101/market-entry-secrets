@@ -42,55 +42,55 @@ export const useMasterSearch = () => {
         leadsResult,
         contentResult
       ] = await Promise.all([
-        supabase
+        Promise.resolve(supabase
           .from('events')
           .select('id, title, description, date, time, location, organizer, category, type, attendees')
           .or(`title.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},organizer.ilike.${searchTerm},category.ilike.${searchTerm},type.ilike.${searchTerm}`)
           .limit(SEARCH_LIMIT)
-          .then(r => r).catch(() => ({ data: null, error: true })),
+        ).catch(() => ({ data: null, error: true })),
 
-        supabase
+        Promise.resolve(supabase
           .from('community_members')
           .select('id, name, description, title, company, location, experience, specialties, is_anonymous')
           .or(`name.ilike.${searchTerm},title.ilike.${searchTerm},description.ilike.${searchTerm},company.ilike.${searchTerm},location.ilike.${searchTerm},experience.ilike.${searchTerm}`)
           .limit(SEARCH_LIMIT)
-          .then(r => r).catch(() => ({ data: null, error: true })),
+        ).catch(() => ({ data: null, error: true })),
 
-        supabase
+        Promise.resolve(supabase
           .from('trade_investment_agencies')
           .select('id, name, description, location, founded, employees, services, website, contact')
           .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`)
           .limit(SEARCH_LIMIT)
-          .then(r => r).catch(() => ({ data: null, error: true })),
+        ).catch(() => ({ data: null, error: true })),
 
-        supabase
+        Promise.resolve(supabase
           .from('service_providers')
           .select('id, name, description, location, founded, employees, services, website, contact')
           .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`)
           .limit(SEARCH_LIMIT)
-          .then(r => r).catch(() => ({ data: null, error: true })),
+        ).catch(() => ({ data: null, error: true })),
 
-        supabase
+        Promise.resolve(supabase
           .from('innovation_ecosystem')
           .select('id, name, description, location, founded, employees, services, website, contact')
           .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`)
           .limit(SEARCH_LIMIT)
-          .then(r => r).catch(() => ({ data: null, error: true })),
+        ).catch(() => ({ data: null, error: true })),
 
-        (supabase as any)
+        Promise.resolve((supabase as any)
           .from('lead_databases')
           .select('id, title, slug, description, short_description, list_type, sector, location, provider_name, record_count, price_aud')
           .eq('status', 'active')
           .or(`title.ilike.${searchTerm},description.ilike.${searchTerm},list_type.ilike.${searchTerm},sector.ilike.${searchTerm},location.ilike.${searchTerm},provider_name.ilike.${searchTerm}`)
           .limit(SEARCH_LIMIT)
-          .then((r: any) => r).catch(() => ({ data: null, error: true })),
+        ).catch(() => ({ data: null, error: true })),
 
-        supabase
+        Promise.resolve(supabase
           .from('content_items')
           .select('id, title, slug, subtitle, meta_description, content_type, featured, read_time, publish_date, sector_tags, content_categories(name)')
           .or(`title.ilike.${searchTerm},subtitle.ilike.${searchTerm},meta_description.ilike.${searchTerm}`)
           .limit(SEARCH_LIMIT)
-          .then(r => r).catch(() => ({ data: null, error: true })),
+        ).catch(() => ({ data: null, error: true })),
       ]);
 
       const allResults: SearchResult[] = [];
