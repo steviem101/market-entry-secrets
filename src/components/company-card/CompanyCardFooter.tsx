@@ -45,7 +45,7 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: Com
         )}
         {websiteUrl && (
           <a
-            href={websiteUrl}
+            href={websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center hover:text-primary transition-colors"

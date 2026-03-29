@@ -16,7 +16,7 @@ export const useSectorServiceProviders = (sectorSlug: string, keywords: string[]
       if (error) throw error;
 
       // Filter based on sector keywords
-      return data.filter(provider => {
+      return (data || []).filter(provider => {
         const searchText = `${provider.name} ${provider.description} ${provider.services?.join(' ')}`.toLowerCase();
         return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())

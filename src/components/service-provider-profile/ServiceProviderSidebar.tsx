@@ -147,7 +147,7 @@ export const ServiceProviderSidebar = ({
                 <Avatar className="w-10 h-10">
                   {contact.avatar_url && <AvatarImage src={contact.avatar_url} alt={contact.full_name} />}
                   <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                    {contact.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    {(contact.full_name || '').split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
