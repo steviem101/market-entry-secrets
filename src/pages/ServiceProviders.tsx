@@ -92,7 +92,7 @@ const ServiceProviders = () => {
         sortBy={sortBy}
         personaFilter={personaFilterValue}
       >
-        {({ companies, loading, filteredCompanies, uniqueTypes, uniqueSectors, totalCompanies, uniqueLocations, totalServices }) => {
+        {({ companies, loading, filteredCompanies, uniqueTypes, uniqueSectors, totalCompanies, uniqueLocations, uniqueLocationValues, totalServices }) => {
           const hasActiveFilters = selectedLocation !== "all" || selectedType !== "all" || selectedSector !== "all" || searchTerm !== "" || selectedCategory !== "all" || verifiedOnly;
           const types = getStandardTypes.serviceProviders;
           const sectors = Array.from(new Set(companies.flatMap(company => mapServicesToSectors(company.services || [])))).sort();
@@ -125,7 +125,7 @@ const ServiceProviders = () => {
                 onToggleFilters={() => setShowFilters(!showFilters)}
                 onClearFilters={handleClearFilters}
                 hasActiveFilters={hasActiveFilters}
-                locations={Array.isArray(uniqueLocations) ? uniqueLocations : []}
+                locations={uniqueLocationValues}
                 types={types}
                 sectors={sectors}
                 searchPlaceholder="Search service providers..."

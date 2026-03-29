@@ -12,22 +12,10 @@ interface ServiceProvidersFiltersProps {
   onSectorChange: (sector: string) => void;
   uniqueTypes: string[];
   uniqueSectors: string[];
+  uniqueLocationValues: string[];
   hasActiveFilters: boolean;
   onClearAllFilters: () => void;
 }
-
-const australianCities = [
-  "Sydney, NSW",
-  "Melbourne, VIC", 
-  "Brisbane, QLD",
-  "Perth, WA",
-  "Adelaide, SA",
-  "Canberra, ACT",
-  "Darwin, NT",
-  "Hobart, TAS",
-  "Gold Coast, QLD",
-  "Newcastle, NSW"
-];
 
 export const ServiceProvidersFilters = ({
   selectedLocations,
@@ -38,6 +26,7 @@ export const ServiceProvidersFilters = ({
   onSectorChange,
   uniqueTypes,
   uniqueSectors,
+  uniqueLocationValues,
   hasActiveFilters,
   onClearAllFilters
 }: ServiceProvidersFiltersProps) => {
@@ -65,7 +54,7 @@ export const ServiceProvidersFilters = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
-              {australianCities.map((city) => (
+              {uniqueLocationValues.map((city) => (
                 <SelectItem key={city} value={city}>
                   {city}
                 </SelectItem>
