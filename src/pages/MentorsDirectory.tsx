@@ -142,22 +142,24 @@ const MentorsDirectory = () => {
             description="Try adjusting your search criteria or filters to find more mentors."
           />
         ) : (
-          <ListingPageGate contentType="community_members">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {paginatedMentors.map((mentor) => (
-                <MentorCard
-                  key={mentor.id}
-                  mentor={mentor}
-                  onContact={setContactMentor}
-                />
-              ))}
-            </div>
+          <>
+            <ListingPageGate contentType="community_members">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {paginatedMentors.map((mentor) => (
+                  <MentorCard
+                    key={mentor.id}
+                    mentor={mentor}
+                    onContact={setContactMentor}
+                  />
+                ))}
+              </div>
+            </ListingPageGate>
             <ListPagination
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
             />
-          </ListingPageGate>
+          </>
         )}
       </div>
 

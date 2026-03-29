@@ -18,7 +18,7 @@ export const ListingPageGate = ({ children, contentType }: ListingPageGateProps)
   }
 
   return (
-    <div className="relative">
+    <div className="relative min-h-[520px]">
       <div
         className="max-h-[600px] overflow-hidden pointer-events-none select-none relative"
         aria-hidden="true"
