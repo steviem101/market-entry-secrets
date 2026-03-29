@@ -32,14 +32,20 @@ const InnovationEcosystem = () => {
                          org.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          org.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = selectedLocation === "all" || org.location.toLowerCase().includes(selectedLocation.toLowerCase());
-    const matchesService = selectedService === "all" || org.services?.includes(selectedService);
+    const matchesService = selectedService === "all" || org.services?.some((s: string) => s.toLowerCase() === selectedService.toLowerCase());
     return matchesSearch && matchesLocation && matchesService;
   }) || [];
 
   const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
+  const clampedPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  useEffect(() => {
+    if (clampedPage !== currentPage) {
+      setCurrentPage(clampedPage);
+    }
+  }, [clampedPage, currentPage]);
   const paginatedOrganizations = filteredOrganizations.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    (clampedPage - 1) * PAGE_SIZE,
+    clampedPage * PAGE_SIZE
   );
 
   const uniqueLocations = [...new Set(organizations?.map(org => org.location) || [])].sort();
@@ -103,12 +109,13 @@ const InnovationEcosystem = () => {
 
         <InnovationEcosystemResults
           filteredOrganizations={paginatedOrganizations}
+          totalFilteredCount={filteredOrganizations.length}
           isLoading={isLoading}
           onClearFilters={clearAllFilters}
         />
 
         <ListPagination
-          currentPage={currentPage}
+          currentPage={clampedPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         />

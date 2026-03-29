@@ -2,7 +2,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Search, ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface InnovationEcosystemFiltersProps {
   searchTerm: string;
@@ -25,6 +28,8 @@ const InnovationEcosystemFilters = ({
   uniqueLocations,
   uniqueServices
 }: InnovationEcosystemFiltersProps) => {
+  const [serviceOpen, setServiceOpen] = useState(false);
+
   const clearAllFilters = () => {
     setSelectedLocation("all");
     setSelectedService("all");
@@ -63,20 +68,55 @@ const InnovationEcosystemFilters = ({
             </Select>
           </div>
 
-          <div className="w-full sm:w-48">
-            <Select value={selectedService} onValueChange={setSelectedService}>
-              <SelectTrigger>
-                <SelectValue placeholder="Service" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Services</SelectItem>
-                {uniqueServices.map((service) => (
-                  <SelectItem key={service} value={service}>
-                    {service}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="w-full sm:w-52">
+            <Popover open={serviceOpen} onOpenChange={setServiceOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={serviceOpen}
+                  className="w-full justify-between font-normal"
+                >
+                  <span className="truncate">
+                    {selectedService === "all" ? "All Services" : selectedService}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[250px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search services..." />
+                  <CommandList>
+                    <CommandEmpty>No service found.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="all"
+                        onSelect={() => {
+                          setSelectedService("all");
+                          setServiceOpen(false);
+                        }}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", selectedService === "all" ? "opacity-100" : "opacity-0")} />
+                        All Services
+                      </CommandItem>
+                      {uniqueServices.map((service) => (
+                        <CommandItem
+                          key={service}
+                          value={service}
+                          onSelect={() => {
+                            setSelectedService(service);
+                            setServiceOpen(false);
+                          }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", selectedService === service ? "opacity-100" : "opacity-0")} />
+                          {service}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 

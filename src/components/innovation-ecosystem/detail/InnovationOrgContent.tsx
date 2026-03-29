@@ -128,14 +128,18 @@ export const InnovationOrgContent = ({ org, relatedOrgs }: InnovationOrgContentP
                 <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <span>{org.location}</span>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <span>Founded {org.founded}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <span>{org.employees} employees</span>
-              </div>
+              {org.founded && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span>Founded {org.founded}</span>
+                </div>
+              )}
+              {org.employees && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span>{org.employees} employees</span>
+                </div>
+              )}
               {org.website && (
                 <div className="flex items-center gap-3 text-sm">
                   <Globe className="w-4 h-4 text-muted-foreground flex-shrink-0" />
