@@ -4,6 +4,7 @@ import { LocationsHero } from "@/components/locations/LocationsHero";
 import { FeaturedLocationsSection } from "@/components/locations/FeaturedLocationsSection";
 import { AllLocationsSection } from "@/components/locations/AllLocationsSection";
 import { LocationsCallToAction } from "@/components/locations/LocationsCallToAction";
+import { UsageBanner } from "@/components/UsageBanner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Globe, Search } from "lucide-react";
@@ -17,6 +18,9 @@ const Locations = () => {
     <>
 
       <main className="pt-4">
+        <div className="container mx-auto px-4 pt-4">
+          <UsageBanner />
+        </div>
         <LocationsHero />
 
         <FeaturedLocationsSection />

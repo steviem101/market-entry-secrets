@@ -7,6 +7,7 @@ import { LocationContent } from "@/components/locations/LocationContent";
 import { GovernmentAgencySection } from "@/components/locations/GovernmentAgencySection";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
+import { FreemiumGate } from "@/components/FreemiumGate";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
 const LocationPage = () => {
@@ -42,18 +43,25 @@ const LocationPage = () => {
         }}
       />
 
-      <main className="pt-4">
-        <EntityBreadcrumb
-          segments={[
-            { label: "Locations", href: "/locations" },
-            { label: location.name },
-          ]}
-        />
-        <LocationHero location={location} />
-        <LocationStats location={location} />
-        <GovernmentAgencySection location={location} />
-        <LocationContent location={location} />
-      </main>
+      <FreemiumGate
+        contentType="locations"
+        itemId={location.id}
+        contentTitle={location.name}
+        contentDescription={`Market entry guide for ${location.name}`}
+      >
+        <main className="pt-4">
+          <EntityBreadcrumb
+            segments={[
+              { label: "Locations", href: "/locations" },
+              { label: location.name },
+            ]}
+          />
+          <LocationHero location={location} />
+          <LocationStats location={location} />
+          <GovernmentAgencySection location={location} />
+          <LocationContent location={location} />
+        </main>
+      </FreemiumGate>
     </>
   );
 };

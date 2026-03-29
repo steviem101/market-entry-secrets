@@ -15,6 +15,7 @@ import SectorStats from "@/components/sectors/SectorStats";
 import SectorContent from "@/components/sectors/SectorContent";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
+import { FreemiumGate } from "@/components/FreemiumGate";
 
 const SectorPage = () => {
   const { sectorSlug } = useParams<{ sectorSlug: string }>();
@@ -66,37 +67,26 @@ const SectorPage = () => {
         }}
       />
 
-      <EntityBreadcrumb
-        segments={[
-          { label: "Sectors", href: "/sectors" },
-          { label: sectorConfig.name },
-        ]}
-      />
-
-      <SectorHero
-        title={sectorConfig.hero_title}
-        description={sectorConfig.hero_description}
-      />
-
-      <div className="container mx-auto px-4 py-8">
-        <SectorStats
-          serviceProviders={serviceProviders}
-          events={events}
-          leads={leads}
-          communityMembers={communityMembers}
-          innovationEcosystem={innovationEcosystem}
-          investors={investors}
-          tradeAgencies={tradeAgencies}
-          contentItems={contentItems}
+      <FreemiumGate
+        contentType="sectors"
+        itemId={sectorConfig.id}
+        contentTitle={sectorConfig.name}
+        contentDescription={sectorConfig.hero_description || `Market entry resources for the ${sectorConfig.name} sector`}
+      >
+        <EntityBreadcrumb
+          segments={[
+            { label: "Sectors", href: "/sectors" },
+            { label: sectorConfig.name },
+          ]}
         />
 
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="text-muted-foreground mt-4">Loading sector data...</p>
-          </div>
-        ) : (
-          <SectorContent
+        <SectorHero
+          title={sectorConfig.hero_title}
+          description={sectorConfig.hero_description}
+        />
+
+        <div className="container mx-auto px-4 py-8">
+          <SectorStats
             serviceProviders={serviceProviders}
             events={events}
             leads={leads}
@@ -105,10 +95,28 @@ const SectorPage = () => {
             investors={investors}
             tradeAgencies={tradeAgencies}
             contentItems={contentItems}
-            sectorName={sectorConfig.name}
           />
-        )}
-      </div>
+
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-muted-foreground mt-4">Loading sector data...</p>
+            </div>
+          ) : (
+            <SectorContent
+              serviceProviders={serviceProviders}
+              events={events}
+              leads={leads}
+              communityMembers={communityMembers}
+              innovationEcosystem={innovationEcosystem}
+              investors={investors}
+              tradeAgencies={tradeAgencies}
+              contentItems={contentItems}
+              sectorName={sectorConfig.name}
+            />
+          )}
+        </div>
+      </FreemiumGate>
     </>
   );
 };
