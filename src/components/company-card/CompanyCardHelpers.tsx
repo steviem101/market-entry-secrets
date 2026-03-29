@@ -40,10 +40,13 @@ export const getContactPersonImage = (index: number) => {
 
 // Generate company initials for fallback
 export const getCompanyInitials = (name: string) => {
-  return name
+  if (!name) return '??';
+  const initials = name
     .split(' ')
+    .filter(Boolean)
     .map(word => word[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
+  return initials || '??';
 };
