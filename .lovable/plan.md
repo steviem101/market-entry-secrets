@@ -1,49 +1,41 @@
 
 
-## Comparison Section Redesign — Ideas Review
+## CTA + Social Proof Area — Review & Redesign Ideas
 
 ### Current Problems
-- Flat, spreadsheet-like table with lots of white space in the Google/Consultant columns (just a tiny icon centered in a large cell)
-- No visual drama or storytelling — it reads like a feature checklist, not a persuasive argument
-- The MES column blends in rather than dominating visually
-- Competitor columns are visually identical to each other — no differentiation
-- No animation or progressive reveal to build narrative tension
 
-### Radical Redesign Ideas
+1. **Too many elements competing on one row**: Primary button, secondary button, AND a trust micro-label all crammed horizontally — causes wrapping and visual clutter
+2. **The trust micro-label ("No credit card...") floats awkwardly** next to the buttons, especially at medium breakpoints where it wraps to a third line
+3. **Social proof row is disconnected**: Stars + 10 flag circles + text all on one line feels busy — 10 flags is too many, they blur together
+4. **Flag circles have low-contrast borders** (`border-primary/15`) making them look washed out
+5. **The primary CTA label includes a redundant arrow** — the text already ends with "→" AND there's an ArrowRight icon
+6. **No visual hierarchy between the CTA area and social proof** — they blend into one cluttered block
 
-**Idea A: "Scorecard Knockout" — Stacked horizontal bars**
-Replace the table with horizontal feature rows where each alternative gets a visual "bar" or "pill" showing its strength. MES gets a full-width vibrant bar, competitors get short/empty bars. Think progress bars that visually demolish the competition. Each row animates in on scroll. The MES column becomes a glowing, full-strength indicator while competitors fade/shrink. Much more visceral than check/X icons.
+### Redesign Ideas
 
-**Idea B: "Three Cards, One Winner" — Side-by-side cards with visual scoring**
-Three vertical cards (Google, Consultants, MES) where each card shows a stacked score. Google and Consultant cards are muted/greyed with strike-through or faded features. The MES card is elevated, glowing, with a "crown" or spotlight effect. A running score counter at the bottom (e.g., "2/7", "1/7", "7/7") with animated count-up. The losing cards literally look defeated.
+**Idea A: Stack the trust label under the primary CTA**
+Move "No credit card required · Ready in 3 minutes" directly beneath the primary button (not beside it). This keeps the button row to just 2 buttons and puts the trust reassurance right where the eye lands after reading the CTA.
 
-**Idea C: "Before & After Verdict" — Interactive toggle comparison**
-Instead of showing all three simultaneously, show a two-panel comparison: the user toggles between "vs Google" and "vs Consultants". Each view is a dramatic side-by-side with MES always on the right, winning. This halves the white space, doubles the visual real estate per comparison, and adds interactivity. Each feature row gets a mini verdict badge.
+**Idea B: Merge social proof INTO the trust line**
+Combine stars + trust text into one compact line: `★★★★★ Trusted by 500+ companies from 12+ countries`. Drop the individual flag circles entirely — they add visual noise without adding real information. The text alone is more impactful.
 
-**Idea D: "Score Ring Dashboard" — Radial score visualization**
-Three circular/radial score rings at the top (Google: 2/7, Consultants: 1/7, MES: 7/7) with animated fill. Below, a compact feature list with colored dots. The rings immediately communicate the winner before you even read the details. Think dashboard/analytics aesthetic.
+**Idea C: Reduce flags to 5 + avatar-style overlay**
+Keep only 5 flags (the most recognizable markets), make them slightly larger, and use tighter overlap. This reduces visual noise by 50%.
 
-**Idea E: "Feature Spotlight Carousel" — One feature at a time**
-Each feature gets its own full-width card that scrolls horizontally or auto-plays. Each card shows the three alternatives with dramatic visual treatment — large icons, bold verdict text, and a short killer stat. This turns 7 bland rows into 7 impactful moments. Dots/progress indicator at the bottom.
+**Idea D: Replace flags with actual company logos or user avatars**
+Small grayscale logos of recognizable companies (or generic avatar circles with initials) are more credible than flag emojis. Flags look decorative; logos look like proof.
 
 ---
 
-### Recommended Approach: Hybrid of A + D
+### Recommended Approach: A + B combined
 
-Combine radial score rings as a header summary with redesigned rows that use visual bars/fills instead of lonely icons:
-
-1. **Score summary header**: Three score rings (animated on scroll) — Google 2/7, Consultants 1/7, MES 7/7 — immediately establishes the winner
-2. **Redesigned rows**: Replace empty icon cells with tinted status pills that include a short label (not just an icon). E.g., a red pill saying "No vetting" vs a green pill saying "AI-matched". This eliminates white space by filling cells with meaningful micro-copy
-3. **MES column glow**: Stronger visual differentiation — gradient left border, subtle pulse animation, elevated shadow
-4. **Staggered scroll animation**: Rows fade/slide in sequentially as user scrolls, building narrative momentum
-5. **Competitor tooltips on hover**: Keep the detailed tooltips but now they augment visible text rather than being the only context
+1. **CTA row**: Just the two buttons side by side — nothing else
+2. **Trust line**: Directly beneath the primary button: `Shield icon + "No credit card · Ready in 3 min"`
+3. **Social proof**: One clean line: `★★★★★ Trusted by 500+ companies from 12+ countries` — no flag circles
+4. **Fix duplicate arrow**: Remove the "→" from the CTA label text (the ArrowRight icon already handles this)
 
 ### Files to Modify
-- `src/components/sections/ComparisonSection.tsx` — Full redesign of layout, data structure, and rendering
-
-### Technical Notes
-- Score rings can use CSS `conic-gradient` or the existing `Progress` component
-- Scroll animations via `useIntersectionObserver` (already in the codebase)
-- All colors use existing design system tokens
-- Mobile: score rings stack horizontally in a scrollable row; table remains horizontally scrollable
+- `src/components/hero/HeroCTAGroup.tsx` — restructure layout, move trust label below buttons
+- `src/components/hero/HeroSocialProof.tsx` — simplify to stars + text only, remove flags
+- `src/components/hero/heroContent.ts` — remove trailing "→" from CTA labels
 
