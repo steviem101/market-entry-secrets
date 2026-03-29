@@ -11,27 +11,31 @@ export const CompanyModalDetails = ({ company }: CompanyModalDetailsProps) => {
     <section>
       <h3 className="text-lg font-semibold mb-3">Company Details</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="flex items-center">
-          <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
-          <div>
-            <div className="text-sm text-muted-foreground">Year founded</div>
-            <div className="font-medium">{company.founded}</div>
+        {company.founded && (
+          <div className="flex items-center">
+            <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
+            <div>
+              <div className="text-sm text-muted-foreground">Year founded</div>
+              <div className="font-medium">{company.founded}</div>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center">
-          <Users className="w-4 h-4 mr-2 text-muted-foreground" />
-          <div>
-            <div className="text-sm text-muted-foreground">No of Employees</div>
-            <div className="font-medium">{company.employees}</div>
+        )}
+        {company.employees && (
+          <div className="flex items-center">
+            <Users className="w-4 h-4 mr-2 text-muted-foreground" />
+            <div>
+              <div className="text-sm text-muted-foreground">No of Employees</div>
+              <div className="font-medium">{company.employees}</div>
+            </div>
           </div>
-        </div>
+        )}
         {company.website && (
           <div className="flex items-center">
             <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
             <div>
               <div className="text-sm text-muted-foreground">Website</div>
               <a 
-                href={company.website} 
+                href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="font-medium text-primary hover:underline flex items-center"

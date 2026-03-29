@@ -32,7 +32,6 @@ const CompanyCardHeader = ({ company }: CompanyCardHeaderProps) => {
         ) : null}
         <div
           className={`w-full h-full flex items-center justify-center text-primary font-bold text-lg ${logoSrc ? 'hidden' : 'flex'}`}
-          style={{ display: logoSrc ? 'none' : 'flex' }}
         >
           {getCompanyInitials(company.name)}
         </div>

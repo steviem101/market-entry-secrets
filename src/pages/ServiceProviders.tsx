@@ -99,9 +99,13 @@ const ServiceProviders = () => {
           const allServices = Array.from(new Set(companies.flatMap(company => company.services || []))).sort();
 
           const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
+          const clampedPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+          if (clampedPage !== currentPage) {
+            setTimeout(() => setCurrentPage(clampedPage), 0);
+          }
           const paginatedCompanies = filteredCompanies.slice(
-            (currentPage - 1) * PAGE_SIZE,
-            currentPage * PAGE_SIZE
+            (clampedPage - 1) * PAGE_SIZE,
+            clampedPage * PAGE_SIZE
           );
 
           return (
@@ -157,7 +161,7 @@ const ServiceProviders = () => {
                 />
 
                 <ListPagination
-                  currentPage={currentPage}
+                  currentPage={clampedPage}
                   totalPages={totalPages}
                   onPageChange={setCurrentPage}
                 />
