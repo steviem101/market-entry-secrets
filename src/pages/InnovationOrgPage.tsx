@@ -35,7 +35,7 @@ const InnovationOrgPage = () => {
       <SEOHead
         title={`${org.name} | Innovation Ecosystem | Market Entry Secrets`}
         description={(org.description || "").slice(0, 160)}
-        canonicalPath={`/innovation-ecosystem/${org.slug}`}
+        canonicalPath={`/innovation-ecosystem/${(org as any).slug}`}
         ogImage={org.logo}
         jsonLd={{
           type: "Organization",
