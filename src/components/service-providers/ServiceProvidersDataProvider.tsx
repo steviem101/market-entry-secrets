@@ -62,7 +62,7 @@ export const ServiceProvidersDataProvider = ({
       const categoryMap = new Map<string, string>();
       (categories || []).forEach((c: any) => categoryMap.set(c.slug, c.name));
 
-      const transformedData: Company[] = data.map((provider: any) => {
+      const transformedData: Company[] = (data || []).map((provider: any) => {
         let experienceTiles: ExperienceTile[] = [];
         let contactPersons: ContactPerson[] = [];
 

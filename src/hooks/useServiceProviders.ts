@@ -67,13 +67,25 @@ export const useServiceProviderBySlug = (slug: string) => {
           .eq("id", slug)
           .single());
       } else {
-        // Try matching by converting slug back to a name pattern
-        const namePattern = slug.replace(/-/g, ' ');
+        // Try exact slug match first (most reliable)
         ({ data, error } = await supabase
           .from("service_providers")
           .select("*")
-          .ilike("name", namePattern)
-          .single());
+          .eq("slug", slug)
+          .maybeSingle());
+
+        // Fall back to name-based ilike if slug didn't match
+        if (!data && !error) {
+          const namePattern = slug.replace(/-/g, ' ');
+          const result = await supabase
+            .from("service_providers")
+            .select("*")
+            .ilike("name", `%${namePattern}%`)
+            .limit(1);
+          data = result.data?.[0] || null;
+          error = result.error;
+          if (!data) error = { message: "Not found" } as any;
+        }
       }
 
       if (error) throw error;
@@ -160,7 +172,7 @@ export const useServiceProviderReviews = (providerId: string) => {
       const { data, error } = await (supabase as any)
         .from("service_provider_reviews")
         .select("*")
-        .eq("provider_id", providerId)
+        .eq("service_provider_id", providerId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -189,7 +201,7 @@ export const useServiceProviderContacts = (providerId: string) => {
       const { data, error } = await (supabase as any)
         .from("service_provider_contacts")
         .select("*")
-        .eq("provider_id", providerId)
+        .eq("service_provider_id", providerId)
         .order("sort_order");
 
       if (error) throw error;

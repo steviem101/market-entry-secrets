@@ -16,7 +16,7 @@ export const useLocationServiceProviders = (locationSlug: string, keywords: stri
       if (error) throw error;
 
       // Filter based on location keywords
-      return data.filter(provider => {
+      return (data || []).filter(provider => {
         const searchText = `${provider.name} ${provider.description} ${provider.services?.join(' ')} ${provider.location}`.toLowerCase();
         return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())

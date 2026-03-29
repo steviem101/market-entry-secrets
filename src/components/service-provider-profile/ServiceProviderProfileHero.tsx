@@ -123,7 +123,7 @@ export const ServiceProviderProfileHero = ({ provider }: ServiceProviderProfileH
               )}
               {websiteUrl && (
                 <Button variant="outline" asChild>
-                  <a href={websiteUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`} target="_blank" rel="noopener noreferrer">
                     <Globe className="w-4 h-4 mr-2" />
                     Visit Website
                   </a>

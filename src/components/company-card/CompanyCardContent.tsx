@@ -104,7 +104,7 @@ const CompanyCardContent = ({ company }: CompanyCardContentProps) => {
               <Avatar key={person.id} className="w-10 h-10">
                 <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  {person.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                  {(person.name || '').split(' ').filter(Boolean).map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
             ))}

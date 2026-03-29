@@ -19,7 +19,7 @@ export const useCountryServiceProviders = (countrySlug: string, keywords: string
       }
 
       // Filter based on country keywords
-      const filteredProviders = data.filter(provider => {
+      const filteredProviders = (data || []).filter(provider => {
         const searchText = `${provider.name} ${provider.description} ${provider.services?.join(' ')} ${provider.location}`.toLowerCase();
         return keywords.some(keyword =>
           searchText.includes(keyword.toLowerCase())

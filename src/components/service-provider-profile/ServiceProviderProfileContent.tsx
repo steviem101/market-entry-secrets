@@ -127,7 +127,7 @@ export const ServiceProviderProfileContent = ({
                     <Avatar className="w-14 h-14">
                       <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {person.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
+                        {(person.name || '').split(' ').filter(Boolean).map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
