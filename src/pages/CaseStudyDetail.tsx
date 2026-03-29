@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,12 +7,14 @@ import { Heart, Globe, Clock, Calendar, Eye, Share2, ExternalLink, ArrowRight, S
 import { useCaseStudy, useRelatedCaseStudies } from "@/hooks/useCaseStudies";
 import { useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
+import { useContentActions } from "@/hooks/useContentActions";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
+import { SectionNav } from "@/components/detail/SectionNav";
+import { ContentBodyRenderer } from "@/components/detail/ContentBodyRenderer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import DOMPurify from "dompurify";
 
 interface CaseStudySection {
   id: string;
@@ -20,16 +22,6 @@ interface CaseStudySection {
   slug: string;
   isActive?: boolean;
 }
-
-const SAVED_STORIES_KEY = "mes_saved_stories";
-
-const getSavedStories = (): string[] => {
-  try {
-    return JSON.parse(localStorage.getItem(SAVED_STORIES_KEY) || "[]");
-  } catch {
-    return [];
-  }
-};
 
 const COUNTRY_FLAGS: Record<string, string> = {
   "United States": "\u{1F1FA}\u{1F1F8}",
@@ -57,11 +49,10 @@ const getCountryFlag = (country: string | null | undefined): string => {
 
 const CaseStudyDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [savedStories, setSavedStories] = useState<string[]>(getSavedStories);
-  const [copied, setCopied] = useState(false);
 
   const { data: caseStudy, isLoading, error } = useCaseStudy(slug || '');
   const incrementViewCount = useIncrementViewCount();
+  const { isSaved, toggleSave, handleShare: handleShareBase, copied } = useContentActions(caseStudy?.id);
 
   const companyProfile = caseStudy?.content_company_profiles?.[0];
   const { data: relatedCaseStudies = [] } = useRelatedCaseStudies(
@@ -89,32 +80,15 @@ const CaseStudyDetail = () => {
     }
   }, [caseStudy?.id, incrementViewCount]);
 
-  const toggleSave = useCallback(() => {
-    if (!caseStudy) return;
+  const handleShare = () => {
+    handleShareBase();
+    toast("Link copied to clipboard");
+  };
 
-    setSavedStories(prev => {
-      const next = prev.includes(caseStudy.id)
-        ? prev.filter(id => id !== caseStudy.id)
-        : [...prev, caseStudy.id];
-      localStorage.setItem(SAVED_STORIES_KEY, JSON.stringify(next));
-      return next;
-    });
-
-    const isSaved = savedStories.includes(caseStudy.id);
+  const handleToggleSave = () => {
+    toggleSave();
     toast(isSaved ? "Removed from saved stories" : "Saved to your stories");
-  }, [caseStudy, savedStories]);
-
-  const handleShare = useCallback(async () => {
-    const url = window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      toast("Link copied to clipboard");
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Failed to copy link");
-    }
-  }, []);
+  };
 
   if (isLoading) {
     return (
@@ -161,8 +135,6 @@ const CaseStudyDetail = () => {
   const companyName = companyProfile?.company_name || caseStudy.title;
   const metaDescription = caseStudy.subtitle || caseStudy.meta_description || caseStudy.title;
   const outcome = companyProfile?.outcome;
-  const isSaved = savedStories.includes(caseStudy.id);
-
   return (
     <>
       <SEOHead
@@ -239,23 +211,7 @@ const CaseStudyDetail = () => {
                 </div>
               </div>
 
-              {sections.length > 0 && (
-                <nav className="space-y-0.5">
-                  {sections.map((section) => (
-                    <button
-                      key={section.id}
-                      onClick={() => scrollToSection(section.slug)}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                        section.isActive
-                          ? "bg-primary/10 text-primary font-medium border-l-2 border-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      }`}
-                    >
-                      {section.title}
-                    </button>
-                  ))}
-                </nav>
-              )}
+              <SectionNav sections={sections} scrollToSection={scrollToSection} variant="sidebar" />
 
               {/* Sidebar actions */}
               <div className="mt-6 space-y-2">
@@ -263,7 +219,7 @@ const CaseStudyDetail = () => {
                   variant="outline"
                   size="sm"
                   className="w-full justify-start text-sm"
-                  onClick={toggleSave}
+                  onClick={handleToggleSave}
                 >
                   <Heart className={`h-4 w-4 mr-2 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                   {isSaved ? "Saved" : "Save Story"}
@@ -348,7 +304,7 @@ const CaseStudyDetail = () => {
 
                   {/* Mobile actions */}
                   <div className="flex gap-2 sm:flex-shrink-0">
-                    <Button variant="outline" size="sm" onClick={toggleSave}>
+                    <Button variant="outline" size="sm" onClick={handleToggleSave}>
                       <Heart className={`h-4 w-4 ${isSaved ? "fill-red-500 text-red-500" : ""}`} />
                     </Button>
                     <Button variant="outline" size="sm" onClick={handleShare}>
@@ -376,25 +332,7 @@ const CaseStudyDetail = () => {
                 )}
 
                 {/* Mobile section nav */}
-                {sections.length > 0 && (
-                  <div className="lg:hidden mb-6">
-                    <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
-                      {sections.map((section) => (
-                        <button
-                          key={section.id}
-                          onClick={() => scrollToSection(section.slug)}
-                          className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm transition-colors ${
-                            section.isActive
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {section.title}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <SectionNav sections={sections} scrollToSection={scrollToSection} variant="mobile" />
 
                 {/* Company Info Card */}
                 {companyProfile && (
@@ -462,49 +400,11 @@ const CaseStudyDetail = () => {
                   </Card>
                 )}
 
-                {/* General Content (not in sections) */}
-                {generalContent.length > 0 && (
-                  <div className="prose prose-lg max-w-none mb-12">
-                    {generalContent.map((body: any) => (
-                      <div key={body.id} className="mb-8">
-                        {body.question && (
-                          <h3 className="text-2xl font-bold text-foreground mt-8 mb-4">
-                            {body.question}
-                          </h3>
-                        )}
-                        <div
-                          className="text-muted-foreground leading-relaxed"
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body.body_text) }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Sectioned Content */}
-                <div className="prose prose-lg max-w-none">
-                  {groupedContent.map((section: any) => (
-                    <div key={section.id} id={section.slug} className="mb-14 scroll-mt-8">
-                      <h2 className="text-2xl font-bold text-foreground mb-6 pb-3 border-b border-border">
-                        {section.title}
-                      </h2>
-
-                      {section.bodies.map((body: any) => (
-                        <div key={body.id} className="mb-6">
-                          {body.question && (
-                            <h3 className="text-xl font-semibold text-foreground mt-6 mb-3">
-                              {body.question}
-                            </h3>
-                          )}
-                          <div
-                            className="text-muted-foreground leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body.body_text) }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
+                <ContentBodyRenderer
+                  generalContent={generalContent}
+                  groupedContent={groupedContent}
+                  questionStyle="heading"
+                />
               </div>
 
               {/* Bottom CTA: Report Creator */}

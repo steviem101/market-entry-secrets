@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Heart, Twitter, Clock, Calendar, Eye, Share2, Check, BookOpen, Users, Sparkles, ChevronRight } from "lucide-react";
 import { useContentItem, useContentItems, useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
+import { useContentActions } from "@/hooks/useContentActions";
 import { useAuth } from "@/hooks/useAuth";
 import { ContentEnrichmentButton } from "@/components/content/ContentEnrichmentButton";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { SEOHead } from "@/components/common/SEOHead";
+import { SectionNav } from "@/components/detail/SectionNav";
+import { ContentBodyRenderer } from "@/components/detail/ContentBodyRenderer";
 import { GuideAttachments } from "@/components/content/GuideAttachments";
 import { GuideAttachmentManager } from "@/components/content/GuideAttachmentManager";
 import { useGuideAttachments } from "@/hooks/useGuideAttachments";
-import DOMPurify from "dompurify";
 
 interface ContentSection {
   id: string;
@@ -31,26 +33,15 @@ const CONTENT_TYPE_BADGE_LABELS: Record<string, string> = {
   case_study: "CASE STUDY",
 };
 
-const SAVED_STORIES_KEY = "mes_saved_stories";
-
-const getSavedStories = (): string[] => {
-  try {
-    return JSON.parse(localStorage.getItem(SAVED_STORIES_KEY) || "[]");
-  } catch {
-    return [];
-  }
-};
-
 const ContentDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [savedStories, setSavedStories] = useState<string[]>(getSavedStories);
-  const [copied, setCopied] = useState(false);
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: content, isLoading, error } = useContentItem(slug || '');
   const incrementViewCount = useIncrementViewCount();
   const { data: attachments = [] } = useGuideAttachments(content?.id);
+  const { isSaved, toggleSave, handleShare, copied } = useContentActions(content?.id);
 
   // Fetch related content (same category, different slug)
   const { data: allContent = [] } = useContentItems({
@@ -75,27 +66,6 @@ const ContentDetail = () => {
     }
   }, [content?.id, incrementViewCount]);
 
-  const toggleSave = useCallback(() => {
-    if (!content) return;
-
-    setSavedStories(prev => {
-      const next = prev.includes(content.id)
-        ? prev.filter((id: string) => id !== content.id)
-        : [...prev, content.id];
-      localStorage.setItem(SAVED_STORIES_KEY, JSON.stringify(next));
-      return next;
-    });
-  }, [content]);
-
-  const handleShare = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback for older browsers
-    }
-  }, []);
 
   if (isLoading) {
     return (
@@ -232,23 +202,7 @@ const ContentDetail = () => {
                 )}
               </div>
 
-              {sections.length > 0 && (
-                <nav className="space-y-1">
-                  {sections.map((section) => (
-                    <button
-                      key={section.id}
-                      onClick={() => scrollToSection(section.slug)}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                        section.isActive
-                          ? "bg-primary/10 text-primary font-medium border-l-2 border-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      }`}
-                    >
-                      {section.title}
-                    </button>
-                  ))}
-                </nav>
-              )}
+              <SectionNav sections={sections} scrollToSection={scrollToSection} variant="sidebar" />
             </div>
           </aside>
 
@@ -300,7 +254,7 @@ const ContentDetail = () => {
                   <Button variant="ghost" size="sm" onClick={toggleSave} className="text-muted-foreground hover:text-foreground">
                     <Heart
                       className={`w-4 h-4 ${
-                        savedStories.includes(content.id) ? "fill-current text-red-500" : ""
+                        isSaved ? "fill-current text-red-500" : ""
                       }`}
                     />
                   </Button>
@@ -318,25 +272,7 @@ const ContentDetail = () => {
               )}
 
               {/* Mobile section nav */}
-              {sections.length > 0 && (
-                <div className="lg:hidden mb-6">
-                  <div className="flex overflow-x-auto gap-2 pb-2">
-                    {sections.map((section) => (
-                      <button
-                        key={section.id}
-                        onClick={() => scrollToSection(section.slug)}
-                        className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm transition-colors ${
-                          section.isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {section.title}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <SectionNav sections={sections} scrollToSection={scrollToSection} variant="mobile" />
 
               {/* Company Info Card */}
               {companyProfile && (
@@ -410,53 +346,11 @@ const ContentDetail = () => {
                 <GuideAttachments attachments={attachments} variant="inline" />
               )}
 
-              {/* General Content (not in sections) */}
-              {generalContent.length > 0 && (
-                <div className="prose prose-lg max-w-none mb-12">
-                  {generalContent.map((body: any) => (
-                    <div key={body.id} className="mb-8">
-                      {body.question && (
-                        <div className="bg-muted/50 border-l-4 border-primary rounded-r-lg p-4 mb-4">
-                          <h2 className="text-xl font-semibold text-foreground m-0">
-                            {body.question}
-                          </h2>
-                        </div>
-                      )}
-                      <div
-                        className="text-muted-foreground leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body.body_text) }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Sectioned Content */}
-              <div className="prose prose-lg max-w-none">
-                {groupedContent.map((section: any) => (
-                  <div key={section.id} id={section.slug} className="mb-16 scroll-mt-8">
-                    <h2 className="text-3xl font-bold text-foreground mb-8 border-b border-border pb-4">
-                      {section.title}
-                    </h2>
-
-                    {section.bodies.map((body: any) => (
-                      <div key={body.id} className="mb-8">
-                        {body.question && (
-                          <div className="bg-muted/50 border-l-4 border-primary rounded-r-lg p-4 mb-4 not-prose">
-                            <h3 className="text-lg font-semibold text-foreground m-0">
-                              {body.question}
-                            </h3>
-                          </div>
-                        )}
-                        <div
-                          className="text-muted-foreground leading-relaxed"
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body.body_text) }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
+              <ContentBodyRenderer
+                generalContent={generalContent}
+                groupedContent={groupedContent}
+                questionStyle="box"
+              />
             </div>
             </FreemiumGate>
 
