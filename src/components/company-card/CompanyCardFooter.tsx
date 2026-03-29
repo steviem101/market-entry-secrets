@@ -29,6 +29,7 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: Com
         </div>
       )}
 
+      {(foundedDisplay || teamDisplay || websiteUrl || (company.avg_rating != null && company.avg_rating > 0)) && (
       <div className="flex items-center gap-4 mb-4 text-xs text-muted-foreground">
         {foundedDisplay && (
           <div className="flex items-center">
@@ -64,6 +65,7 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: Com
           </div>
         )}
       </div>
+      )}
 
       <div className="flex gap-2">
         {detailUrl ? (

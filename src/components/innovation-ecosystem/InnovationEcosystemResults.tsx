@@ -30,7 +30,7 @@ const InnovationEcosystemResults = ({
     );
   }
 
-  if (!filteredOrganizations || filteredOrganizations.length === 0) {
+  if (totalFilteredCount === 0 && (!filteredOrganizations || filteredOrganizations.length === 0)) {
     return (
       <section className="py-8">
         <div className="text-center py-16">

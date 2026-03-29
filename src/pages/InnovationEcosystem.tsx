@@ -37,9 +37,15 @@ const InnovationEcosystem = () => {
   }) || [];
 
   const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
+  const clampedPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  useEffect(() => {
+    if (clampedPage !== currentPage) {
+      setCurrentPage(clampedPage);
+    }
+  }, [clampedPage, currentPage]);
   const paginatedOrganizations = filteredOrganizations.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    (clampedPage - 1) * PAGE_SIZE,
+    clampedPage * PAGE_SIZE
   );
 
   const uniqueLocations = [...new Set(organizations?.map(org => org.location) || [])].sort();
@@ -109,7 +115,7 @@ const InnovationEcosystem = () => {
         />
 
         <ListPagination
-          currentPage={currentPage}
+          currentPage={clampedPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         />

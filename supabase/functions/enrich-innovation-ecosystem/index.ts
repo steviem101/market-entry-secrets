@@ -87,8 +87,9 @@ Deno.serve(async (req) => {
     }
 
     if (only_missing) {
-      // Target records that are sparse — missing basic_info OR missing founded/employees
-      query = query.or('basic_info.is.null,founded.eq.,employees.eq.,logo.is.null');
+      // Target records missing multiple fields (truly sparse), not records just missing a logo
+      // founded='' AND employees='' identifies bulk-imported sparse records
+      query = query.eq('founded', '').eq('employees', '');
     }
 
     // Apply batch size limit (default 10 to stay within edge function timeout)
