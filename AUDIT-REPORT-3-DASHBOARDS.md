@@ -84,7 +84,7 @@
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Supabase RLS | ✅ Mostly good | Sensitive tables (profiles, reports, subscriptions, admin data) have proper policies |
+| Supabase RLS | ⚠️ Mixed | Sensitive tables protected, but `events` has open UPDATE/DELETE, `user_usage` leaks all records, 3 tables lack RLS entirely |
 | Edge function auth | ⚠️ Gap | `generate-report` has `verify_jwt=false` |
 | Stripe webhook | ✅ Good | Proper signature verification |
 | CORS | ✅ Good | Allowlist-based with regex for preview domains |
@@ -104,7 +104,8 @@
 | `profiles` | ✅ | Own profile SELECT/UPDATE/INSERT, admin SELECT | Good |
 | `user_roles` | ✅ | Own roles SELECT, admin ALL | Good |
 | `user_subscriptions` | ✅ | Own SELECT/UPDATE | Good |
-| `user_usage` | ✅ | Public INSERT, public SELECT | ⚠️ SELECT is too broad (`USING (true)`) |
+| `user_usage` | ✅ | Public INSERT, public SELECT | **HIGH:** SELECT uses `USING (true)` — leaks all users' data |
+| `events` | ✅ | Public SELECT, auth UPDATE/DELETE | **HIGH:** Any auth user can UPDATE/DELETE any event |
 | `bookmarks` | ✅ | Own bookmarks | Good |
 | `user_reports` | ✅ | Owner SELECT + shared via share_token | Good |
 | `ai_chat_conversations` | ✅ | Own CRUD | Good |
@@ -121,7 +122,10 @@
 | `service_provider_reviews` | ✅ | Approved SELECT, admin ALL | Good |
 | `service_provider_contacts` | ✅ | Public SELECT, admin ALL | Good |
 | `leads` (old table) | ✅ | Public SELECT, authenticated ALL | ⚠️ Authenticated ALL is too broad |
-| Directory tables (service_providers, events, etc.) | Unknown | Likely public SELECT | Need DB inspection to confirm |
+| `locations` | ❌ **No RLS** | None | ⚠️ Public reference data but should enable RLS for best practice |
+| `countries` | ❌ **No RLS** | None | ⚠️ Same as locations |
+| `industry_sectors` | ❌ **No RLS** | None | ⚠️ Public reference data |
+| Directory tables (service_providers, innovation_ecosystem, etc.) | Varies | Likely public SELECT | Need live DB inspection to confirm |
 
 ---
 
@@ -149,9 +153,11 @@ All edge functions use `esm.sh` CDN imports — no SRI/checksum verification. Ve
 
 ### Week 1: Security & Data
 
-1. Add rate limiting to `generate-report`, `classify-personas`, `generate-plan` (1 day)
-2. Fix SQL filter injection in `generate-report` — use parameterized queries (0.5 day)
-3. Add `.limit()` to all unbounded hooks (0.5 day)
+1. **Fix events table RLS** — restrict UPDATE/DELETE to admin role (0.5 hour)
+2. **Fix user_usage SELECT policy** — scope to own records (0.5 hour)
+3. Add rate limiting to `generate-report`, `classify-personas`, `generate-plan` (1 day)
+4. Fix SQL filter injection in `generate-report` — use parameterized queries (0.5 day)
+5. Add `.limit()` to all unbounded hooks (0.5 day)
 4. Move client-side filtering to database queries in country/location/sector hooks (2 days)
 5. Add `ProtectedRoute` to ReportView (0.5 hour)
 

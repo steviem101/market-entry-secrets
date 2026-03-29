@@ -151,7 +151,22 @@ The MES platform is a functional MVP with solid foundational choices (React + Su
 - **Fix complexity:** Medium effort
 - **Suggested fix:** Strip HTML tags and known prompt injection patterns from scraped content before including in prompts. Add content length limits.
 
-### HIGH-6: ReportView page lacks ProtectedRoute wrapper
+### HIGH-6: Events table RLS allows ANY authenticated user to UPDATE/DELETE any event
+
+- **What:** The events table has overly permissive RLS policies: `FOR UPDATE TO authenticated USING (true)` and `FOR DELETE TO authenticated USING (true)`. Any signed-in user can modify or delete any event in the database.
+- **Where:** `supabase/migrations/20250612062940-ce5aeea5-a66e-4061-9adf-bf9c948ef143.sql:40-51`
+- **Impact:** A malicious authenticated user could delete all events or modify event data (titles, dates, links) to inject phishing URLs.
+- **Fix complexity:** Quick win — change policies to require admin role
+- **Suggested fix:** Replace `USING (true)` with `USING (public.has_role(auth.uid(), 'admin'))` for UPDATE and DELETE policies.
+
+### HIGH-7: `user_usage` table SELECT policy is too broad
+
+- **What:** The user_usage table has `FOR SELECT USING (true)` — any user (even anonymous) can read ALL usage tracking records for all users.
+- **Where:** `supabase/migrations/20250901000000_repair_preview_objects.sql` — `"Users can view their own usage"` policy uses `USING (true)` instead of scoping to the user's own records.
+- **Impact:** Leaks usage patterns of all users. Low severity data but violates least-privilege principle.
+- **Fix complexity:** Quick win — change to `USING (auth.uid() = user_id)`
+
+### HIGH-8: ReportView page lacks ProtectedRoute wrapper
 
 - **What:** The `/report/:reportId` route has no `ProtectedRoute` wrapper in App.tsx. It relies on internal checks and the Supabase RLS policy. If a report ID is guessable or leaked, anyone can view it.
 - **Where:** `src/App.tsx:134`, `src/pages/ReportView.tsx:28-34`
