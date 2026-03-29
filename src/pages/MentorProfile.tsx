@@ -14,6 +14,7 @@ import {
 import { Helmet } from "react-helmet-async";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
+import { FreemiumGate } from "@/components/FreemiumGate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -161,6 +162,13 @@ const MentorProfile = () => {
           },
         }}
       />
+
+      <FreemiumGate
+        contentType="mentors"
+        itemId={mentor.id}
+        contentTitle={mentor.name}
+        contentDescription={mentor.tagline || mentor.description}
+      >
 
       {/* Cover strip */}
       <div
@@ -519,6 +527,8 @@ const MentorProfile = () => {
         isOpen={showContact}
         onClose={() => setShowContact(false)}
       />
+
+      </FreemiumGate>
     </>
   );
 };

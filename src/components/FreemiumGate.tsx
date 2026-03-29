@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { useAuth } from '@/hooks/useAuth';
 import { PaywallModal } from './PaywallModal';
@@ -13,33 +13,44 @@ interface FreemiumGateProps {
   onView?: () => void;
 }
 
-export const FreemiumGate = ({ 
-  children, 
-  contentType, 
-  itemId, 
+export const FreemiumGate = ({
+  children,
+  contentType,
+  itemId,
   contentTitle,
   contentDescription,
-  onView 
+  onView
 }: FreemiumGateProps) => {
   const { user, loading } = useAuth();
   const { canView, trackView, hasReachedLimit } = useUsageTracking();
+  // Capture whether the user could view at the moment the component first renders after auth loads.
+  // This prevents the 3rd view from flashing content then switching to the paywall.
+  const [allowed, setAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (loading) return;
-    // Only track if user can view and is not signed in
-    if (canView && !user) {
-      trackView(contentType, itemId);
-      onView?.();
-    } else if (user && onView) {
-      // Still call onView for signed-in users for any analytics
-      onView();
+
+    // On first render after auth resolves, decide once whether this page view is allowed
+    if (allowed === null) {
+      if (user) {
+        setAllowed(true);
+        onView?.();
+      } else if (canView) {
+        // Allow this view and track it
+        setAllowed(true);
+        trackView(contentType, itemId);
+        onView?.();
+      } else {
+        // Limit already reached — block
+        setAllowed(false);
+      }
     }
-  }, [canView, contentType, itemId, trackView, onView, user, loading]);
+  }, [loading, allowed, canView, contentType, itemId, trackView, onView, user]);
 
   // Don't show paywall while auth is still loading — prevents flash for signed-in users
-  if (loading) return null;
+  if (loading || allowed === null) return null;
 
-  if (hasReachedLimit && !user) {
+  if (!allowed) {
     return (
       <PaywallModal
         contentType={contentType}

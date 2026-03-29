@@ -17,10 +17,15 @@ const contentTypeInfo = {
   'case-study': { icon: FileText, label: 'Case Studies', description: 'real market entry stories and lessons learned' },
   service_providers: { icon: Users, label: 'Service Providers', description: 'professional services' },
   community_members: { icon: Users, label: 'Community Members', description: 'mentors and experts' },
+  mentors: { icon: Users, label: 'Mentors & Advisors', description: 'experienced mentors and industry advisors' },
   leads: { icon: Database, label: 'Lead Databases', description: 'premium databases and market intelligence' },
   events: { icon: TrendingUp, label: 'Industry Events', description: 'networking opportunities' },
   trade_investment_agencies: { icon: Users, label: 'Government & Industry Support', description: 'government agencies, industry associations and chambers' },
   innovation_ecosystem: { icon: Users, label: 'Innovation Ecosystem', description: 'accelerators, incubators, and funding partners' },
+  investor: { icon: TrendingUp, label: 'Investors', description: 'venture capital firms and investment partners' },
+  locations: { icon: Eye, label: 'Locations', description: 'Australian market entry destinations' },
+  countries: { icon: Eye, label: 'Countries', description: 'source country market entry resources' },
+  sectors: { icon: TrendingUp, label: 'Industry Sectors', description: 'sector-specific market entry intelligence' },
 };
 
 export const PaywallModal = ({ contentType, contentTitle, contentDescription }: PaywallModalProps) => {

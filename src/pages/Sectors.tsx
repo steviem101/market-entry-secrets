@@ -5,6 +5,7 @@ import SectorsHero from "@/components/sectors/SectorsHero";
 import FeaturedSectorsSection from "@/components/sectors/FeaturedSectorsSection";
 import AllSectorsSection from "@/components/sectors/AllSectorsSection";
 import SectorsCallToAction from "@/components/sectors/SectorsCallToAction";
+import { UsageBanner } from "@/components/UsageBanner";
 
 const Sectors = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,7 +40,11 @@ const Sectors = () => {
   return (
     <>
       
-      <SectorsHero 
+      <div className="container mx-auto px-4 pt-4">
+        <UsageBanner />
+      </div>
+
+      <SectorsHero
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />

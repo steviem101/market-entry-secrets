@@ -5,6 +5,7 @@ import { CountryHero } from "@/components/countries/CountryHero";
 import { CountryContent } from "@/components/countries/CountryContent";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
+import { FreemiumGate } from "@/components/FreemiumGate";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
 const CountryPage = () => {
@@ -39,16 +40,23 @@ const CountryPage = () => {
         }}
       />
 
-      <main className="pt-4">
-        <EntityBreadcrumb
-          segments={[
-            { label: "Countries", href: "/countries" },
-            { label: country.name },
-          ]}
-        />
-        <CountryHero country={country} />
-        <CountryContent country={country} />
-      </main>
+      <FreemiumGate
+        contentType="countries"
+        itemId={country.id}
+        contentTitle={country.name}
+        contentDescription={`Resources for ${country.name} companies entering the Australian market`}
+      >
+        <main className="pt-4">
+          <EntityBreadcrumb
+            segments={[
+              { label: "Countries", href: "/countries" },
+              { label: country.name },
+            ]}
+          />
+          <CountryHero country={country} />
+          <CountryContent country={country} />
+        </main>
+      </FreemiumGate>
     </>
   );
 };
