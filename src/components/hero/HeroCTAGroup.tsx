@@ -19,7 +19,7 @@ export const HeroCTAGroup = ({ persona }: HeroCTAGroupProps) => {
       const timer = setTimeout(() => {
         setDisplayPersona(persona);
         setIsTransitioning(false);
-      }, 300); // Slightly more delay for stagger after subheadline
+      }, 300);
       return () => clearTimeout(timer);
     } else {
       setIsTransitioning(false);
@@ -30,38 +30,40 @@ export const HeroCTAGroup = ({ persona }: HeroCTAGroupProps) => {
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center sm:items-start lg:items-start justify-center lg:justify-start gap-3 transition-all duration-200 ${
+      className={`flex flex-col items-center lg:items-start gap-3 transition-all duration-200 ${
         isTransitioning
           ? "opacity-0 -translate-y-2"
           : "opacity-100 translate-y-0"
       }`}
     >
-      <Link to={content.primaryCTA.href}>
-        <Button
-          size="lg"
-          className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-6 text-base rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 group relative overflow-hidden"
-        >
-          {/* Shimmer effect */}
-          <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
-          <span className="relative flex items-center gap-2">
-            {content.primaryCTA.label}
-            <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-          </span>
-        </Button>
-      </Link>
+      {/* Button row — just the two buttons */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
+        <Link to={content.primaryCTA.href}>
+          <Button
+            size="lg"
+            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-6 text-base rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 group relative overflow-hidden"
+          >
+            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
+            <span className="relative flex items-center gap-2">
+              {content.primaryCTA.label}
+              <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+            </span>
+          </Button>
+        </Link>
 
-      <Link to={content.secondaryCTA.href}>
-        <Button
-          size="lg"
-          variant="outline"
-          className="bg-background/80 backdrop-blur-sm border-primary/20 text-foreground hover:bg-primary/5 hover:border-primary/30 hover:text-foreground px-8 py-6 text-base rounded-xl transition-all duration-300"
-        >
-          {content.secondaryCTA.label}
-        </Button>
-      </Link>
+        <Link to={content.secondaryCTA.href}>
+          <Button
+            size="lg"
+            variant="outline"
+            className="bg-background/80 backdrop-blur-sm border-primary/20 text-foreground hover:bg-primary/5 hover:border-primary/30 hover:text-foreground px-8 py-6 text-base rounded-xl transition-all duration-300"
+          >
+            {content.secondaryCTA.label}
+          </Button>
+        </Link>
+      </div>
 
-      {/* Trust micro-label */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:self-center">
+      {/* Trust micro-label — directly beneath buttons */}
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Shield className="w-3.5 h-3.5 text-emerald-500" />
         <span>No credit card required · Ready in 3 minutes</span>
       </div>
