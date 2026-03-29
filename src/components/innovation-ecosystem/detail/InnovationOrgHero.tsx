@@ -67,14 +67,18 @@ export const InnovationOrgHero = ({ org }: InnovationOrgHeroProps) => {
                 <MapPin className="w-4 h-4" />
                 {org.location}
               </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                Founded {org.founded}
-              </div>
-              <div className="flex items-center gap-1">
-                <Users className="w-4 h-4" />
-                {org.employees} employees
-              </div>
+              {org.founded && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  Founded {org.founded}
+                </div>
+              )}
+              {org.employees && (
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  {org.employees} employees
+                </div>
+              )}
             </div>
 
             <p className="text-gray-600 mb-6 max-w-2xl line-clamp-2">

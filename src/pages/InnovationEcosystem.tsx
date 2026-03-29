@@ -32,7 +32,7 @@ const InnovationEcosystem = () => {
                          org.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          org.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = selectedLocation === "all" || org.location.toLowerCase().includes(selectedLocation.toLowerCase());
-    const matchesService = selectedService === "all" || org.services?.includes(selectedService);
+    const matchesService = selectedService === "all" || org.services?.some((s: string) => s.toLowerCase() === selectedService.toLowerCase());
     return matchesSearch && matchesLocation && matchesService;
   }) || [];
 
@@ -103,6 +103,7 @@ const InnovationEcosystem = () => {
 
         <InnovationEcosystemResults
           filteredOrganizations={paginatedOrganizations}
+          totalFilteredCount={filteredOrganizations.length}
           isLoading={isLoading}
           onClearFilters={clearAllFilters}
         />

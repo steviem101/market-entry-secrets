@@ -30,14 +30,18 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: Com
       )}
 
       <div className="flex items-center gap-4 mb-4 text-xs text-muted-foreground">
-        <div className="flex items-center">
-          <Calendar className="w-3 h-3 mr-1" />
-          <span className="truncate">{foundedDisplay}</span>
-        </div>
-        <div className="flex items-center">
-          <Users className="w-3 h-3 mr-1" />
-          <span className="truncate">{teamDisplay}</span>
-        </div>
+        {foundedDisplay && (
+          <div className="flex items-center">
+            <Calendar className="w-3 h-3 mr-1" />
+            <span className="truncate">{foundedDisplay}</span>
+          </div>
+        )}
+        {teamDisplay && (
+          <div className="flex items-center">
+            <Users className="w-3 h-3 mr-1" />
+            <span className="truncate">{teamDisplay}</span>
+          </div>
+        )}
         {websiteUrl && (
           <a
             href={websiteUrl}
