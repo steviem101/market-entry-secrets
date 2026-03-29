@@ -50,6 +50,8 @@ export const useInvestorBySlug = (slugOrId: string) => {
         .eq('slug', slugOrId)
         .maybeSingle();
 
+      // Throw immediately on real errors (network, permission) — not "no match"
+      if (slugError) throw slugError;
       if (slugData) return slugData;
 
       // Fallback to id lookup if slug didn't match and value looks like a UUID
@@ -65,8 +67,6 @@ export const useInvestorBySlug = (slugOrId: string) => {
         return idData;
       }
 
-      // Neither slug nor valid UUID — throw original error or not-found
-      if (slugError) throw slugError;
       return null;
     },
     enabled: !!slugOrId,

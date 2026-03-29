@@ -39,7 +39,7 @@ function formatCheckSize(min: number | null, max: number | null): string | null 
 
 export const InvestorContent = ({ investor, relatedInvestors }: InvestorContentProps) => {
   const details = investor.details || {};
-  const portfolioCompanies = details.portfolio_companies || [];
+  const portfolioCompanies = Array.isArray(details.portfolio_companies) ? details.portfolio_companies : [];
   const checkSize = formatCheckSize(investor.check_size_min, investor.check_size_max);
 
   return (
