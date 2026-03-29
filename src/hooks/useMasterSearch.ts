@@ -72,7 +72,7 @@ export const useMasterSearch = () => {
 
         Promise.resolve(supabase
           .from('innovation_ecosystem')
-          .select('id, name, description, location, founded, employees, services, website, contact')
+          .select('id, name, slug, description, location, founded, employees, services, website, contact')
           .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},location.ilike.${searchTerm},founded.ilike.${searchTerm},basic_info.ilike.${searchTerm},why_work_with_us.ilike.${searchTerm}`)
           .limit(SEARCH_LIMIT)
         ).catch(() => ({ data: null, error: true })),
@@ -139,7 +139,7 @@ export const useMasterSearch = () => {
         (innovationResult.data as any[]).forEach(hub => {
           allResults.push({
             id: hub.id, title: hub.name,
-            description: hub.description || 'Innovation Hub', type: 'innovation_hub', url: `/innovation-ecosystem`,
+            description: hub.description || 'Innovation Hub', type: 'innovation_hub', url: hub.slug ? `/innovation-ecosystem/${hub.slug}` : `/innovation-ecosystem`,
             metadata: { location: hub.location, founded: hub.founded, employees: hub.employees, services: hub.services, website: hub.website, contact: hub.contact }
           });
         });
