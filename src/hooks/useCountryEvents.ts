@@ -24,7 +24,6 @@ export const useCountryEvents = (countrySlug: string, keywords: string[] | undef
         .limit(100);
 
       if (error) {
-        console.error('Error fetching events:', error);
         throw error;
       }
 

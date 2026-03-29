@@ -8,6 +8,7 @@ import { UsageBanner } from "@/components/UsageBanner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Globe, Search } from "lucide-react";
+import { SEOHead } from "@/components/common/SEOHead";
 
 const Locations = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,7 +17,11 @@ const Locations = () => {
 
   return (
     <>
-
+      <SEOHead
+        title="Australian Locations | Market Entry Secrets"
+        description="Discover market entry opportunities across Australian cities and regions."
+        canonicalPath="/locations"
+      />
       <main className="pt-4">
         <div className="container mx-auto px-4 pt-4">
           <UsageBanner />

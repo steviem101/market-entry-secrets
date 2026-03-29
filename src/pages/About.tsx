@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, TrendingUp, Shield, Target, Lightbulb } from "lucide-react";
+import { SEOHead } from "@/components/common/SEOHead";
 
 const About = () => {
   const values = [
@@ -29,7 +30,11 @@ const About = () => {
 
   return (
     <>
-      
+      <SEOHead
+        title="About | Market Entry Secrets"
+        description="Learn about Market Entry Secrets - helping international companies enter the Australian and ANZ markets with AI-powered intelligence."
+        canonicalPath="/about"
+      />
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 gradient-overlay" />

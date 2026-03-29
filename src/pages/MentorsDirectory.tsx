@@ -101,7 +101,7 @@ const MentorsDirectory = () => {
         <meta name="description" content={pageDescription} />
         <link
           rel="canonical"
-          href={`https://market-entry-secrets.lovable.app/mentors${categorySlug ? `/${categorySlug}` : ""}`}
+          href={`${window.location.origin}/mentors${categorySlug ? `/${categorySlug}` : ""}`}
         />
       </Helmet>
 

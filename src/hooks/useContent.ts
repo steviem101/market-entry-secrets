@@ -125,10 +125,10 @@ export const useIncrementViewCount = () => {
       });
 
       if (error) {
-        console.error('Error incrementing view count:', error);
+        // Silently ignore view count increment failures
       }
-    } catch (err) {
-      console.error('Failed to increment view count:', err);
+    } catch {
+      // Silently ignore view count increment failures
     }
   }, []);
 };

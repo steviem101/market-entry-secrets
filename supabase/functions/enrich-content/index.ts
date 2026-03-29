@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { requireAdmin } from "../_shared/auth.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
+import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 
 interface ContentSection {
   id: string;
@@ -90,7 +91,7 @@ async function synthesizeContent(
   apiKey: string
 ): Promise<string> {
   const sourcesText = sources
-    .map((s, i) => `Source ${i + 1} (${s.title || s.url}):\n${s.markdown || s.description || 'No content available'}`)
+    .map((s, i) => `Source ${i + 1} (${s.title || s.url}):\n${sanitizeScrapedContent(s.markdown || s.description || 'No content available', 8000)}`)
     .join('\n\n---\n\n');
 
   const prompt = `You are a market research expert writing content for a professional business audience. Based on the following web sources about "${sectionTitle}", write a comprehensive, well-structured section.

@@ -4,11 +4,9 @@ import { Separator } from "@/components/ui/separator";
 import MarketEntryLogo from "./MarketEntryLogo";
 import { EmailCaptureForm } from "./EmailCaptureForm";
 import { 
-  Mail, 
-  MapPin, 
-  Facebook, 
-  Linkedin, 
-  Instagram
+  Mail,
+  MapPin,
+  Linkedin
 } from "lucide-react";
 
 export const Footer = () => {
@@ -73,12 +71,6 @@ export const Footer = () => {
             <div className="flex gap-4">
               <a href="https://www.linkedin.com/company/market-entry-secrets" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
                 <Linkedin className="w-5 h-5 text-primary" />
-              </a>
-              <a href="#" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
-                <Facebook className="w-5 h-5 text-primary" />
-              </a>
-              <a href="#" target="_blank" rel="noopener noreferrer" className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors">
-                <Instagram className="w-5 h-5 text-primary" />
               </a>
             </div>
           </div>

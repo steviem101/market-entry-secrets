@@ -44,8 +44,7 @@ export const useAdminSubmissions = ({ typeFilter, statusFilter }: UseAdminSubmis
       const { data, error } = await query;
       if (error) throw error;
       setSubmissions(data || []);
-    } catch (error) {
-      console.error("Failed to fetch submissions:", error);
+    } catch {
       toast({
         title: "Failed to load submissions",
         description: "Check that you have admin permissions.",
@@ -84,8 +83,7 @@ export const useAdminSubmissions = ({ typeFilter, statusFilter }: UseAdminSubmis
       );
 
       toast({ title: `Status updated to "${status}"` });
-    } catch (error) {
-      console.error("Failed to update status:", error);
+    } catch {
       toast({
         title: "Failed to update status",
         description: "Please try again.",

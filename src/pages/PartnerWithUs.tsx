@@ -7,11 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Users, Building, Calendar, Handshake, ArrowRight } from "lucide-react";
+import { SEOHead } from "@/components/common/SEOHead";
 
 const PartnerWithUs = () => {
   return (
     <>
-      
+      <SEOHead
+        title="Partner With Us | Market Entry Secrets"
+        description="Partner with Market Entry Secrets to help international companies enter the Australian market."
+        canonicalPath="/partner"
+      />
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto">
           {/* Header */}

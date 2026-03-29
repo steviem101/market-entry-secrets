@@ -35,7 +35,6 @@ export const useCountryTradeOrganizations = (countrySlug: string) => {
         .single();
 
       if (countryError || !country) {
-        console.error('Country not found:', countryError);
         return [];
       }
 
@@ -47,7 +46,6 @@ export const useCountryTradeOrganizations = (countrySlug: string) => {
         .limit(100);
 
       if (error) {
-        console.error('Error fetching trade organizations:', error);
         throw error;
       }
 

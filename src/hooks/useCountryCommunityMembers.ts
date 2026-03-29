@@ -30,7 +30,6 @@ export const useCountryCommunityMembers = (countrySlug: string, countryName: str
         .limit(100);
 
       if (error) {
-        console.error('Error fetching community members:', error);
         throw error;
       }
 

@@ -51,7 +51,7 @@ export const reportApi = {
     // CORS headers, which the browser surfaces as a network error (FetchError).
     const { error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) {
-      console.warn('Session refresh failed before report generation:', refreshError.message);
+      // Session refresh failed — proceed anyway; getSession check below will catch expired sessions
     }
 
     // Check we have a valid session before calling the edge function
@@ -60,7 +60,6 @@ export const reportApi = {
       throw new Error('Your session has expired. Please sign in again and retry.');
     }
 
-    console.log('[reportApi] Invoking generate-report with intake_form_id:', intakeFormId);
     const { data, error } = await supabase.functions.invoke('generate-report', {
       body: { intake_form_id: intakeFormId },
     });
@@ -68,7 +67,6 @@ export const reportApi = {
     if (error) {
       const msg = error.message || '';
       const errorName = error.name || '';
-      console.error('generate-report invoke error:', { name: errorName, message: msg, error });
 
       if (
         msg.includes('Failed to send a request') ||
@@ -79,7 +77,6 @@ export const reportApi = {
         msg.includes('CORS') ||
         errorName === 'FunctionsFetchError'
       ) {
-        console.error('[reportApi] Network/CORS error detected. Check browser DevTools Network tab for blocked requests.');
         throw new Error(
           'Unable to reach the report generation service. This may be a CORS or network issue — please check the browser console for details.'
         );

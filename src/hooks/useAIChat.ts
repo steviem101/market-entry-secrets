@@ -66,7 +66,6 @@ export const useAIChat = () => {
       setMessages([]);
       return data;
     } catch (err) {
-      console.error('Error creating conversation:', err);
       setError(err instanceof Error ? err.message : 'Failed to create conversation');
     } finally {
       setLoading(false);
@@ -128,7 +127,6 @@ export const useAIChat = () => {
       setMessages(prev => [...prev, convertedAssistantMessage]);
 
     } catch (err) {
-      console.error('Error sending message:', err);
       setError(err instanceof Error ? err.message : 'Failed to send message');
     } finally {
       setLoading(false);
@@ -162,7 +160,6 @@ export const useAIChat = () => {
       const convertedMessages = (messages || []).map(msg => convertToChatMessage(msg as DatabaseMessage));
       setMessages(convertedMessages);
     } catch (err) {
-      console.error('Error loading conversation:', err);
       setError(err instanceof Error ? err.message : 'Failed to load conversation');
     } finally {
       setLoading(false);
@@ -183,7 +180,6 @@ export const useAIChat = () => {
 
       setConversations(data || []);
     } catch (err) {
-      console.error('Error loading conversations:', err);
       setError(err instanceof Error ? err.message : 'Failed to load conversations');
     }
   }, []);

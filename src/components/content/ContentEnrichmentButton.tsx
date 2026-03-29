@@ -84,8 +84,7 @@ export const ContentEnrichmentButton = ({
           variant: 'destructive',
         });
       }
-    } catch (error) {
-      console.error('Enrichment error:', error);
+    } catch {
       toast({
         title: 'Error',
         description: 'An unexpected error occurred during enrichment',

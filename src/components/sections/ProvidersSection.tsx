@@ -87,8 +87,7 @@ export const ProvidersSection = ({
       });
 
       setCompanies(transformedData);
-    } catch (error) {
-      console.error('Error fetching service providers:', error);
+    } catch {
       toast.error('Failed to load service providers');
     } finally {
       setLoading(false);

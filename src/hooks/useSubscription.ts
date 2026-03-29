@@ -1,5 +1,6 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -16,81 +17,64 @@ interface UserSubscription {
 // Database type mapping - extended to handle potential future tiers
 type DatabaseSubscriptionTier = 'free' | 'premium' | 'concierge' | 'growth' | 'scale' | 'enterprise';
 
-interface DatabaseUserSubscription {
-  id: string;
-  user_id: string;
-  tier: DatabaseSubscriptionTier;
-  created_at: string;
-  updated_at: string;
-}
-
 // Map database tiers to our new tier structure
 const mapDatabaseTier = (dbTier: DatabaseSubscriptionTier): SubscriptionTier => {
   switch (dbTier) {
     case 'free':
       return 'free';
     case 'premium':
-      return 'growth';
     case 'growth':
       return 'growth';
     case 'scale':
       return 'scale';
     case 'enterprise':
-      return 'enterprise';
     case 'concierge':
       return 'enterprise';
     default:
-      console.warn(`Unknown database tier: ${dbTier}, defaulting to free`);
       return 'free';
   }
 };
 
+const fetchSubscriptionData = async (userId: string): Promise<UserSubscription | null> => {
+  const { data, error } = await supabase
+    .from('user_subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    user_id: data.user_id,
+    tier: mapDatabaseTier(data.tier),
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  };
+};
+
 export const useSubscription = () => {
   const { user } = useAuth();
-  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchSubscription = useCallback(async (): Promise<SubscriptionTier> => {
-    if (!user) {
-      setSubscription(null);
-      setLoading(false);
+  const { data: subscription = null, isLoading: loading } = useQuery({
+    queryKey: ['user-subscription', user?.id],
+    queryFn: () => fetchSubscriptionData(user!.id),
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // refetch that returns the tier — used by ReportView for Stripe polling
+  const refetch = useCallback(async (): Promise<SubscriptionTier> => {
+    if (!user) return 'free';
+    try {
+      const fresh = await fetchSubscriptionData(user.id);
+      queryClient.setQueryData(['user-subscription', user.id], fresh);
+      return fresh?.tier ?? 'free';
+    } catch {
       return 'free';
     }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('user_subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching subscription:', error);
-      } else if (data) {
-        const mappedTier = mapDatabaseTier(data.tier);
-        const mappedSubscription: UserSubscription = {
-          id: data.id,
-          user_id: data.user_id,
-          tier: mappedTier,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-        };
-        setSubscription(mappedSubscription);
-        return mappedTier;
-      }
-    } catch (error) {
-      console.error('Error fetching subscription:', error);
-    } finally {
-      setLoading(false);
-    }
-    return 'free';
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
-
-  useEffect(() => {
-    fetchSubscription();
-  }, [fetchSubscription]);
+  }, [user, queryClient]);
 
   const isPremium = () => {
     return subscription?.tier === 'growth' || subscription?.tier === 'scale' || subscription?.tier === 'enterprise';
@@ -111,7 +95,6 @@ export const useSubscription = () => {
     const currentTierIndex = tierHierarchy.indexOf(subscription.tier);
     const requiredTierIndex = tierHierarchy.indexOf(feature === 'basic' ? 'free' : feature);
 
-    // Deny access if either tier is unrecognised
     if (currentTierIndex === -1 || requiredTierIndex === -1) return false;
 
     return currentTierIndex >= requiredTierIndex;
@@ -124,6 +107,6 @@ export const useSubscription = () => {
     isScale,
     isEnterprise,
     canAccessFeature,
-    refetch: fetchSubscription,
+    refetch,
   };
 };

@@ -10,6 +10,7 @@ import { ContentHero } from "@/components/content/ContentHero";
 import { FeaturedContent } from "@/components/content/FeaturedContent";
 import { ContentGrid } from "@/components/content/ContentGrid";
 import { UsageBanner } from "@/components/UsageBanner";
+import { SEOHead } from "@/components/common/SEOHead";
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
   guide: "Guides",
@@ -99,6 +100,11 @@ const Content = () => {
 
   return (
     <>
+      <SEOHead
+        title="Articles & Guides | Market Entry Secrets"
+        description="Expert articles, guides, and insights for companies entering the Australian market."
+        canonicalPath="/content"
+      />
       <ContentHero
         totalContent={contentItems.length}
         totalCategories={categoriesWithContent.length}

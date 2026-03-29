@@ -23,8 +23,8 @@ export const ReportFeedback = ({ reportId, existingScore }: ReportFeedbackProps)
     setShowNotes(true);
     try {
       await reportApi.submitFeedback(reportId, value);
-    } catch (error) {
-      console.error('Feedback error:', error);
+    } catch {
+      // feedback submission failed silently
     }
   };
 
@@ -34,8 +34,8 @@ export const ReportFeedback = ({ reportId, existingScore }: ReportFeedbackProps)
       setShowNotes(false);
       setSubmitted(true);
       toast({ title: 'Thank you!', description: 'Your feedback helps us improve.' });
-    } catch (error) {
-      console.error('Feedback error:', error);
+    } catch {
+      // feedback submission failed silently
     }
   };
 

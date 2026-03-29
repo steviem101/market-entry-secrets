@@ -171,7 +171,7 @@ const ContentDetail = () => {
             publisher: {
               "@type": "Organization",
               name: "Market Entry Secrets",
-              url: "https://market-entry-secrets.lovable.app"
+              url: typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app"
             }
           }
         }}

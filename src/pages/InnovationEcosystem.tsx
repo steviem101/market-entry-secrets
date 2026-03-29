@@ -81,7 +81,7 @@ const InnovationEcosystem = () => {
           property="og:description"
           content="Discover incubators, accelerators, innovation hubs, and startup ecosystems worldwide."
         />
-        <link rel="canonical" href="https://market-entry-secrets.lovable.app/innovation-ecosystem" />
+        <link rel="canonical" href={`${window.location.origin}/innovation-ecosystem`} />
       </Helmet>
 
       <InnovationEcosystemHero

@@ -12,7 +12,6 @@ export const useInnovationEcosystem = () => {
         .limit(500);
 
       if (error) {
-        console.error('Error fetching innovation ecosystem:', error);
         throw error;
       }
 

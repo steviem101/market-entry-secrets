@@ -157,15 +157,46 @@ Questions while you wait? Contact us at info@marketentry.com.au
 Your Target Market: ${target_market}
     `;
 
-    // TODO: Integrate with an email service (Resend, SendGrid, Amazon SES)
-    // For now, log the prepared content but indicate to callers that sending is not yet implemented
-    log("send-lead-followup", "Email content prepared (not sent - no email service configured)", { sector, target_market });
+    // Send email via Resend API
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    let emailSent = false;
+
+    if (resendApiKey) {
+      try {
+        const resendResponse = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "Market Entry Secrets <noreply@marketentrysecrets.com>",
+            to: [email],
+            subject: "Your Bespoke Market Entry Plan is Being Prepared",
+            html: emailHtml,
+            text: emailText,
+          }),
+        });
+
+        if (resendResponse.ok) {
+          emailSent = true;
+          log("send-lead-followup", "Email sent successfully via Resend", { email: safeEmail, sector });
+        } else {
+          const errorBody = await resendResponse.text();
+          logError("send-lead-followup", `Resend API error: ${resendResponse.status}`, new Error(errorBody));
+        }
+      } catch (sendErr) {
+        logError("send-lead-followup", "Failed to send via Resend", sendErr);
+      }
+    } else {
+      log("send-lead-followup", "RESEND_API_KEY not configured - email not sent", { sector, target_market });
+    }
 
     const emailResponse = {
       success: true,
-      message: 'Follow-up email queued (email service not yet configured)',
+      message: emailSent ? 'Follow-up email sent successfully' : 'Email prepared but sending not configured',
       email_prepared: true,
-      email_sent: false,
+      email_sent: emailSent,
       sector: sector
     };
 

@@ -2,6 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/http.ts";
 import { log } from "../_shared/log.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
+import { checkRateLimit } from "../_shared/rateLimit.ts";
+import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -32,7 +34,8 @@ async function firecrawlScrape(
     if (!resp.ok) return null;
 
     const data = await resp.json();
-    return data.data?.markdown || data.markdown || null;
+    const md = data.data?.markdown || data.markdown || null;
+    return md ? sanitizeScrapedContent(md) : null;
   } catch {
     return null;
   } finally {
@@ -106,7 +109,7 @@ async function firecrawlSearch(
       url: r.url || "",
       title: r.title || "",
       description: r.description || "",
-      markdown: (r.markdown || "").slice(0, 1500),
+      markdown: sanitizeScrapedContent((r.markdown || ""), 1500),
     }));
   } catch {
     return [];
@@ -799,10 +802,12 @@ Rules:
 }
 
 // Sanitize values for use in PostgREST .or() filter strings.
-// Commas delimit conditions in .or(), so must be stripped to prevent filter injection.
-// Parentheses could create nested groups, so strip those too.
+// Strip all PostgREST operator characters to prevent filter injection:
+// commas (condition delimiters), parentheses (nested groups),
+// periods (operator separators like .eq. .ilike.), curly braces (array literals).
+// Only allow alphanumeric, spaces, hyphens, apostrophes, ampersands, and slashes.
 const sanitizeFilterValue = (v: string): string =>
-  v.replace(/[,()]/g, "");
+  v.replace(/[^a-zA-Z0-9 \-'&/]/g, "").trim().substring(0, 100);
 
 // ── Goal-to-service-tag mapping ───────────────────────────────────────
 // Form goals are long descriptions; provider service tags are short keywords.
@@ -1465,6 +1470,15 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Forbidden" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── Rate limiting: max 5 reports per 60 minutes per user ─────────
+    const rateLimitError = await checkRateLimit(user.id, "generate-report", 5, 60);
+    if (rateLimitError) {
+      return new Response(
+        JSON.stringify({ error: rateLimitError }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

@@ -88,7 +88,6 @@ export const useReportGeneration = () => {
       return { needsAuth: false };
     } catch (error: any) {
       const errorMsg = error?.message || 'Unknown error';
-      console.error('Report generation error:', errorMsg);
       toast({
         title: 'Generation Failed',
         description: errorMsg.length > 200 ? errorMsg.slice(0, 200) + '…' : errorMsg,

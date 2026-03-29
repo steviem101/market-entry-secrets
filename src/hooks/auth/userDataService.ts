@@ -31,13 +31,12 @@ const fetchUserProfile = async (userId: string, { setProfile, fetchingProfile }:
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching profile:', error);
       return;
     }
 
     setProfile(data);
-  } catch (error) {
-    console.error('Error fetching profile:', error);
+  } catch {
+    // Profile fetch failed
   } finally {
     fetchingProfile.current = false;
   }
@@ -55,13 +54,12 @@ const fetchUserRoles = async (userId: string, { setRoles, fetchingRoles }: UserD
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error fetching roles:', error);
       return;
     }
 
     setRoles(data || []);
-  } catch (error) {
-    console.error('Error fetching roles:', error);
+  } catch {
+    // Roles fetch failed
   } finally {
     fetchingRoles.current = false;
   }
