@@ -7,9 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/PaywallModal";
+import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { ListPagination } from "@/components/common/ListPagination";
 import { SubmissionButton } from "@/components/directory-submissions/SubmissionButton";
@@ -118,8 +116,6 @@ const CardSkeleton = ({ isGrid }: { isGrid: boolean }) => (
 
 const CaseStudies = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
   const { data: caseStudies = [], isLoading, error } = useCaseStudies();
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
@@ -778,36 +774,27 @@ const CaseStudies = () => {
 
           {/* Case Studies Grid/List */}
           <main className="flex-1 min-w-0">
-            {!authLoading && hasReachedLimit && !user ? (
-              <div className="relative">
-                <div className={`${viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" : "space-y-4"} blur-sm pointer-events-none select-none`} aria-hidden="true">
-                  {filteredCaseStudies.slice(0, 3).map((cs) => renderCard(cs, viewMode === "grid"))}
+            {filteredCaseStudies.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="bg-muted/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Search className="h-7 w-7 text-muted-foreground" />
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <PaywallModal contentType="case-study" />
-                </div>
+                <h3 className="text-lg font-semibold mb-2">No case studies found</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  No case studies match your current filters. Try broadening your search or clearing filters.
+                </p>
+                <Button variant="outline" onClick={clearAllFilters}>
+                  <X className="h-4 w-4 mr-2" />
+                  Clear All Filters
+                </Button>
               </div>
             ) : (
               <>
-                {filteredCaseStudies.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="bg-muted/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                      <Search className="h-7 w-7 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">No case studies found</h3>
-                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                      No case studies match your current filters. Try broadening your search or clearing filters.
-                    </p>
-                    <Button variant="outline" onClick={clearAllFilters}>
-                      <X className="h-4 w-4 mr-2" />
-                      Clear All Filters
-                    </Button>
-                  </div>
-                ) : (
+                <ListingPageGate contentType="case-study">
                   <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" : "space-y-4"}>
                     {paginatedCaseStudies.map((cs) => renderCard(cs, viewMode === "grid"))}
                   </div>
-                )}
+                </ListingPageGate>
                 <div className="mt-8">
                   <ListPagination
                     currentPage={currentPage}

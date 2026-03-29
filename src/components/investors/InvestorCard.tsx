@@ -54,7 +54,7 @@ const InvestorCard = memo(({ investor }: InvestorCardProps) => {
       <div className="p-5 pb-3">
         <div className="flex items-start gap-4">
           <Link
-            to={`/investors/${investor.slug}`}
+            to={`/investors/${investor.slug || investor.id}`}
             className="w-14 h-14 bg-white rounded-lg border flex items-center justify-center flex-shrink-0 overflow-hidden"
           >
             {investor.logo ? (
@@ -79,7 +79,7 @@ const InvestorCard = memo(({ investor }: InvestorCardProps) => {
           </Link>
 
           <div className="flex-1 min-w-0">
-            <Link to={`/investors/${investor.slug}`} className="hover:underline">
+            <Link to={`/investors/${investor.slug || investor.id}`} className="hover:underline">
               <h3 className="font-semibold text-foreground text-base truncate">{investor.name}</h3>
             </Link>
             <div className="flex items-center gap-2 mt-1">

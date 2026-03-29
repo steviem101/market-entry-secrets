@@ -1,8 +1,6 @@
 
 import CompanyCard from "@/components/CompanyCard";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/PaywallModal";
+import { ListingPageGate } from "@/components/ListingPageGate";
 import SectorSection from "./SectorSection";
 import { useSectorHandlers } from "@/hooks/useSectorHandlers";
 
@@ -12,17 +10,12 @@ interface ServiceProvidersSectionProps {
 
 const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionProps) => {
   const { handleViewProfile, handleContact } = useSectorHandlers();
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
 
   if (serviceProviders.length === 0) return null;
 
-  if (!authLoading && hasReachedLimit && !user) {
-    return <PaywallModal contentType="service_providers" />;
-  }
-
   return (
-    <SectorSection
+    <ListingPageGate contentType="service_providers">
+      <SectorSection
       title="Specialized Service Providers"
       viewAllLink="/service-providers"
       viewAllText="View All Providers"
@@ -51,7 +44,8 @@ const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionPr
           detailUrl={`/service-providers/${(provider as any).slug || provider.id}`}
         />
       ))}
-    </SectorSection>
+      </SectorSection>
+    </ListingPageGate>
   );
 };
 

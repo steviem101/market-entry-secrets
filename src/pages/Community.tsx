@@ -5,9 +5,7 @@ import { AlertCircle, Users } from "lucide-react";
 import { useCommunityMembers } from "@/hooks/useCommunityMembers";
 import PersonCard, { Person } from "@/components/PersonCard";
 import PersonModal from "@/components/PersonModal";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/PaywallModal";
+import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
@@ -16,8 +14,6 @@ import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilt
 import { usePersona } from "@/contexts/PersonaContext";
 
 const Community = () => {
-  const { user, loading: authLoading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
   const { persona } = usePersona();
   const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
     (persona as PersonaFilterValue) ?? 'all'
@@ -189,9 +185,7 @@ const Community = () => {
         </div>
 
         {/* Members Grid */}
-        {!authLoading && hasReachedLimit && !user ? (
-          <PaywallModal contentType="community_members" />
-        ) : filteredMembers.length === 0 ? (
+        {filteredMembers.length === 0 ? (
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No experts found</h3>
@@ -200,16 +194,18 @@ const Community = () => {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMembers.map((member) => (
-              <PersonCard
-                key={member.id}
-                person={member}
-                onViewProfile={handleViewProfile}
-                onContact={handleContact}
-              />
-            ))}
-          </div>
+          <ListingPageGate contentType="community_members">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredMembers.map((member) => (
+                <PersonCard
+                  key={member.id}
+                  person={member}
+                  onViewProfile={handleViewProfile}
+                  onContact={handleContact}
+                />
+              ))}
+            </div>
+          </ListingPageGate>
         )}
       </div>
 

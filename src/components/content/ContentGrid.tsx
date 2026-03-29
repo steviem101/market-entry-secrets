@@ -1,9 +1,7 @@
 
 import { BookOpen } from "lucide-react";
 import { ContentCard } from "./ContentCard";
-import { useUsageTracking } from "@/hooks/useUsageTracking";
-import { useAuth } from "@/hooks/useAuth";
-import { PaywallModal } from "@/components/PaywallModal";
+import { ListingPageGate } from "@/components/ListingPageGate";
 
 interface ContentGridProps {
   filteredContent: any[];
@@ -22,8 +20,6 @@ export const ContentGrid = ({
   excludeFeatured = false,
   attachmentCounts = {}
 }: ContentGridProps) => {
-  const { user, loading } = useAuth();
-  const { hasReachedLimit } = useUsageTracking();
   const categoryName = selectedCategory
     ? categories.find(c => c.id === selectedCategory)?.name || 'Content'
     : 'All Guides';
@@ -55,33 +51,16 @@ export const ContentGrid = ({
     ? filteredContent.filter(item => !item.featured)
     : filteredContent;
 
-  if (!loading && hasReachedLimit && !user) {
-    return (
-      <section>
-        <h2 className="text-2xl font-bold mb-6">{categoryName}</h2>
-        {/* Show blurred preview cards behind the paywall */}
-        <div className="relative">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 blur-sm pointer-events-none select-none" aria-hidden="true">
-            {displayContent.slice(0, 6).map((content) => (
-              <ContentCard key={content.id} content={content} attachmentCount={attachmentCounts[content.id] || 0} />
-            ))}
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <PaywallModal contentType="content" />
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section>
       <h2 className="text-2xl font-bold mb-6">{categoryName}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayContent.map((content) => (
-          <ContentCard key={content.id} content={content} attachmentCount={attachmentCounts[content.id] || 0} />
-        ))}
-      </div>
+      <ListingPageGate contentType="content">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayContent.map((content) => (
+            <ContentCard key={content.id} content={content} attachmentCount={attachmentCounts[content.id] || 0} />
+          ))}
+        </div>
+      </ListingPageGate>
     </section>
   );
 };

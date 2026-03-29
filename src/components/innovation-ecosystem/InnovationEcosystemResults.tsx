@@ -1,7 +1,7 @@
 import { Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyCard from "@/components/CompanyCard";
-import { useAuth } from "@/hooks/useAuth";
+import { ListingPageGate } from "@/components/ListingPageGate";
 import { parseJsonArray } from "@/components/company-card/CompanyCardHelpers";
 
 interface InnovationEcosystemResultsProps {
@@ -15,7 +15,6 @@ const InnovationEcosystemResults = ({
   isLoading,
   onClearFilters,
 }: InnovationEcosystemResultsProps) => {
-  const { user } = useAuth();
 
   if (isLoading) {
     return (
@@ -49,9 +48,6 @@ const InnovationEcosystemResults = ({
     );
   }
 
-  // Limit to 3 items for non-authenticated users
-  const displayedOrganizations = user ? filteredOrganizations : filteredOrganizations.slice(0, 3);
-
   return (
     <section className="py-8">
       <div className="flex items-center justify-between mb-6">
@@ -59,9 +55,10 @@ const InnovationEcosystemResults = ({
           {filteredOrganizations.length} Innovator{filteredOrganizations.length !== 1 ? 's' : ''} Found
         </h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayedOrganizations.map((org) => (
-          <CompanyCard
+      <ListingPageGate contentType="innovation_ecosystem">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredOrganizations.map((org) => (
+            <CompanyCard
             key={org.id}
             company={{
               id: org.id,
@@ -82,14 +79,8 @@ const InnovationEcosystemResults = ({
             detailUrl={`/innovation-ecosystem/${org.slug}`}
           />
         ))}
-      </div>
-      {!user && filteredOrganizations.length > 3 && (
-        <div className="text-center mt-8 py-6 bg-muted/50 rounded-lg">
-          <p className="text-muted-foreground mb-2">
-            Sign in to see all {filteredOrganizations.length} organizations
-          </p>
         </div>
-      )}
+      </ListingPageGate>
     </section>
   );
 };
