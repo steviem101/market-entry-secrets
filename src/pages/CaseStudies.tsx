@@ -114,6 +114,41 @@ const CardSkeleton = ({ isGrid }: { isGrid: boolean }) => (
   </div>
 );
 
+const getOutcomeConfig = (outcome: string | null | undefined) => {
+  switch (outcome) {
+    case "successful":
+      return { label: "Success", borderColor: "hover:border-l-emerald-500", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700" };
+    case "unsuccessful":
+      return { label: "Failure", borderColor: "hover:border-l-red-400", badgeClass: "border-red-200 bg-red-50 text-red-700" };
+    case "scaling":
+      return { label: "Scaling", borderColor: "hover:border-l-blue-400", badgeClass: "border-blue-200 bg-blue-50 text-blue-700" };
+    case "acquired":
+      return { label: "Acquired", borderColor: "hover:border-l-violet-400", badgeClass: "border-violet-200 bg-violet-50 text-violet-700" };
+    case "ipo":
+      return { label: "IPO", borderColor: "hover:border-l-amber-400", badgeClass: "border-amber-200 bg-amber-50 text-amber-700" };
+    default:
+      return { label: outcome || "Unknown", borderColor: "hover:border-l-gray-400", badgeClass: "border-gray-200 bg-gray-50 text-gray-700" };
+  }
+};
+
+const renderOriginArrow = (profile: any) => {
+  if (!profile?.origin_country) return null;
+  const isAustralian = profile.origin_country === "Australia";
+  if (isAustralian) {
+    const target = profile.target_market || "Global";
+    return (
+      <>
+        {getCountryFlag("Australia")} Australia <ArrowRight className="inline h-3 w-3" /> {target === "Global" ? "🌍" : getCountryFlag(target)} {target}
+      </>
+    );
+  }
+  return (
+    <>
+      {getCountryFlag(profile.origin_country)} {profile.origin_country} <ArrowRight className="inline h-3 w-3" /> {getCountryFlag("Australia")} Australia
+    </>
+  );
+};
+
 const CaseStudies = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: caseStudies = [], isLoading, error } = useCaseStudies();
@@ -285,11 +320,8 @@ const CaseStudies = () => {
     const profile = cs.content_company_profiles?.[0];
     const primaryFounder = cs.content_founders?.find((f: any) => f.is_primary) || cs.content_founders?.[0];
     const outcome = profile?.outcome;
-    const borderColor = outcome === "successful"
-      ? "hover:border-l-emerald-500"
-      : outcome === "unsuccessful"
-        ? "hover:border-l-red-400"
-        : "hover:border-l-blue-400";
+    const outcomeConfig = getOutcomeConfig(outcome);
+    const borderColor = outcomeConfig.borderColor;
 
     if (isGrid) {
       return (
@@ -314,20 +346,16 @@ const CaseStudies = () => {
                   </p>
                   {profile?.origin_country && (
                     <p className="text-xs text-muted-foreground">
-                      {getCountryFlag(profile.origin_country)} {profile.origin_country} <ArrowRight className="inline h-3 w-3" /> {getCountryFlag("Australia")} Australia
+                      {renderOriginArrow(profile)}
                     </p>
                   )}
                 </div>
                 {outcome && (
                   <Badge
                     variant="outline"
-                    className={`text-xs flex-shrink-0 ${
-                      outcome === "successful"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-red-200 bg-red-50 text-red-700"
-                    }`}
+                    className={`text-xs flex-shrink-0 ${outcomeConfig.badgeClass}`}
                   >
-                    {outcome === "successful" ? "Success" : "Failure"}
+                    {outcomeConfig.label}
                   </Badge>
                 )}
               </div>
@@ -410,13 +438,9 @@ const CaseStudies = () => {
                   {outcome && (
                     <Badge
                       variant="outline"
-                      className={`text-xs ${
-                        outcome === "successful"
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : "border-red-200 bg-red-50 text-red-700"
-                      }`}
+                      className={`text-xs ${outcomeConfig.badgeClass}`}
                     >
-                      {outcome === "successful" ? "Success" : "Failure"}
+                      {outcomeConfig.label}
                     </Badge>
                   )}
                 </div>
@@ -428,7 +452,7 @@ const CaseStudies = () => {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   {profile?.origin_country && (
                     <span>
-                      {getCountryFlag(profile.origin_country)} {profile.origin_country} <ArrowRight className="inline h-3 w-3" /> {getCountryFlag("Australia")} Australia
+                      {renderOriginArrow(profile)}
                     </span>
                   )}
                   {profile?.industry && (
@@ -665,6 +689,9 @@ const CaseStudies = () => {
               {[
                 { value: "all", label: "All" },
                 { value: "successful", label: "Success Stories" },
+                { value: "scaling", label: "Scaling" },
+                { value: "acquired", label: "Acquired" },
+                { value: "ipo", label: "IPO" },
                 { value: "unsuccessful", label: "Failure Stories" },
               ].map(tab => (
                 <button

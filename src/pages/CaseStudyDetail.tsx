@@ -47,6 +47,23 @@ const getCountryFlag = (country: string | null | undefined): string => {
   return COUNTRY_FLAGS[country] || "\u{1F30D}";
 };
 
+const getOutcomeConfig = (outcome: string | null | undefined) => {
+  switch (outcome) {
+    case "successful":
+      return { label: "Success", storyLabel: "Success Story", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700" };
+    case "unsuccessful":
+      return { label: "Failure", storyLabel: "Failure Story", badgeClass: "border-red-200 bg-red-50 text-red-700" };
+    case "scaling":
+      return { label: "Scaling", storyLabel: "Scaling Story", badgeClass: "border-blue-200 bg-blue-50 text-blue-700" };
+    case "acquired":
+      return { label: "Acquired", storyLabel: "Acquisition Story", badgeClass: "border-violet-200 bg-violet-50 text-violet-700" };
+    case "ipo":
+      return { label: "IPO", storyLabel: "IPO Story", badgeClass: "border-amber-200 bg-amber-50 text-amber-700" };
+    default:
+      return { label: outcome || "Unknown", storyLabel: outcome || "Unknown", badgeClass: "border-gray-200 bg-gray-50 text-gray-700" };
+  }
+};
+
 const CaseStudyDetail = () => {
   const { slug } = useParams<{ slug: string }>();
 
@@ -135,11 +152,13 @@ const CaseStudyDetail = () => {
   const companyName = companyProfile?.company_name || caseStudy.title;
   const metaDescription = caseStudy.subtitle || caseStudy.meta_description || caseStudy.title;
   const outcome = companyProfile?.outcome;
+  const outcomeConfig = getOutcomeConfig(outcome);
+  const isAustralianOrigin = companyProfile?.origin_country === "Australia";
   return (
     <>
       <SEOHead
-        title={`How ${companyName} Entered the Australian Market | Market Entry Secrets`}
-        description={`${metaDescription.slice(0, 150)}. Learn the entry strategy, challenges, and lessons from ${companyName}'s expansion into Australia.`}
+        title={isAustralianOrigin ? `How ${companyName} Scaled from Startup to Success in Australia | Market Entry Secrets` : `How ${companyName} Entered the Australian Market | Market Entry Secrets`}
+        description={`${metaDescription.slice(0, 150)}. ${isAustralianOrigin ? `Discover the scaling strategy and lessons from ${companyName}'s growth from Australia.` : `Learn the entry strategy, challenges, and lessons from ${companyName}'s expansion into Australia.`}`}
         canonicalPath={`/case-studies/${caseStudy.slug}`}
         ogType="article"
         ogImage={companyProfile?.company_logo || undefined}
@@ -198,13 +217,9 @@ const CaseStudyDetail = () => {
                     {outcome && (
                       <Badge
                         variant="outline"
-                        className={`text-xs mt-0.5 ${
-                          outcome === "successful"
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border-red-200 bg-red-50 text-red-700"
-                        }`}
+                        className={`text-xs mt-0.5 ${outcomeConfig.badgeClass}`}
                       >
-                        {outcome === "successful" ? "Success" : "Failure"}
+                        {outcomeConfig.label}
                       </Badge>
                     )}
                   </div>
@@ -266,21 +281,21 @@ const CaseStudyDetail = () => {
                       {outcome && (
                         <Badge
                           variant="outline"
-                          className={`${
-                            outcome === "successful"
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                              : "border-red-200 bg-red-50 text-red-700"
-                          }`}
+                          className={`${outcomeConfig.badgeClass}`}
                         >
-                          {outcome === "successful" ? "Success Story" : "Failure Story"}
+                          {outcomeConfig.storyLabel}
                         </Badge>
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                      <span>Market Entry Case Study</span>
+                      <span>{isAustralianOrigin ? "Australian Startup" : "Market Entry Case Study"}</span>
                       {companyProfile?.origin_country && companyProfile?.target_market && (
                         <span>
-                          {getCountryFlag(companyProfile.origin_country)} {companyProfile.origin_country} <ArrowRight className="inline h-3 w-3" /> {getCountryFlag("Australia")} {companyProfile.target_market}
+                          {isAustralianOrigin ? (
+                            <>{getCountryFlag("Australia")} Australia <ArrowRight className="inline h-3 w-3" /> {companyProfile.target_market === "Global" ? "🌍" : getCountryFlag(companyProfile.target_market)} {companyProfile.target_market}</>
+                          ) : (
+                            <>{getCountryFlag(companyProfile.origin_country)} {companyProfile.origin_country} <ArrowRight className="inline h-3 w-3" /> {getCountryFlag("Australia")} {companyProfile.target_market}</>
+                          )}
                         </span>
                       )}
                       {caseStudy.publish_date && (
@@ -455,13 +470,9 @@ const CaseStudyDetail = () => {
                                 {rOutcome && (
                                   <Badge
                                     variant="outline"
-                                    className={`text-xs ml-auto flex-shrink-0 ${
-                                      rOutcome === "successful"
-                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                        : "border-red-200 bg-red-50 text-red-700"
-                                    }`}
+                                    className={`text-xs ml-auto flex-shrink-0 ${getOutcomeConfig(rOutcome).badgeClass}`}
                                   >
-                                    {rOutcome === "successful" ? "Success" : "Failure"}
+                                    {getOutcomeConfig(rOutcome).label}
                                   </Badge>
                                 )}
                               </div>
