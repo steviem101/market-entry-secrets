@@ -5,13 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Building2, Globe, Rocket, ArrowRight, Check, ChevronsUpDown, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Building2, Globe, Rocket, ArrowRight } from 'lucide-react';
+import { IndustrySelect } from '@/components/common/IndustrySelect';
 import {
-  COUNTRY_OPTIONS, INDUSTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS,
+  COUNTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS,
   REVENUE_STAGE_OPTIONS, REGION_OPTIONS,
   type IntakeFormData, type ReportPersona,
 } from './intakeSchema';
@@ -25,8 +22,6 @@ interface IntakeStep1Props {
 
 export const IntakeStep1 = ({ form, onNext, persona, onPersonaChange }: IntakeStep1Props) => {
   const { register, formState: { errors }, setValue, watch } = form;
-  const [industryOpen, setIndustryOpen] = useState(false);
-  const selectedIndustries = watch('industry_sector') || [];
   const selectedRegions = watch('target_regions') || [];
 
   const countryValue = watch('country_of_origin');
@@ -48,19 +43,6 @@ export const IntakeStep1 = ({ form, onNext, persona, onPersonaChange }: IntakeSt
     setCustomCountry(value);
     setValue('country_of_origin', value, { shouldValidate: true });
   };
-  const toggleIndustry = (industry: string) => {
-    const current = selectedIndustries;
-    if (current.includes(industry)) {
-      setValue('industry_sector', current.filter((i) => i !== industry), { shouldValidate: true });
-    } else {
-      setValue('industry_sector', [...current, industry], { shouldValidate: true });
-    }
-  };
-
-  const removeIndustry = (industry: string) => {
-    setValue('industry_sector', selectedIndustries.filter((i) => i !== industry), { shouldValidate: true });
-  };
-
   const toggleOptions = [
     { key: 'international' as const, icon: Globe, label: 'International Entry', desc: 'Entering the ANZ market' },
     { key: 'startup' as const, icon: Rocket, label: 'Startup Growth', desc: 'Growing your Aussie startup' },
@@ -186,65 +168,11 @@ export const IntakeStep1 = ({ form, onNext, persona, onPersonaChange }: IntakeSt
 
           <div className="space-y-2">
             <Label>Industry / Sector *</Label>
-            <Popover open={industryOpen} onOpenChange={setIndustryOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={industryOpen}
-                  className={cn(
-                    "w-full justify-between font-normal h-10",
-                    selectedIndustries.length === 0 && "text-muted-foreground"
-                  )}
-                >
-                  {selectedIndustries.length === 0
-                    ? "Select industries"
-                    : `${selectedIndustries.length} selected`}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search industry..." />
-                  <CommandList>
-                    <CommandEmpty>No industry found.</CommandEmpty>
-                    <CommandGroup>
-                      {INDUSTRY_OPTIONS.map((industry) => (
-                        <CommandItem
-                          key={industry}
-                          value={industry}
-                          onSelect={() => toggleIndustry(industry)}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedIndustries.includes(industry) ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {industry}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            {selectedIndustries.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {selectedIndustries.map((ind) => (
-                  <Badge key={ind} variant="secondary" className="text-xs gap-1 pr-1">
-                    {ind}
-                    <button
-                      type="button"
-                      onClick={() => removeIndustry(ind)}
-                      className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <IndustrySelect
+              value={watch('industry_sector') || []}
+              onChange={(v) => setValue('industry_sector', v, { shouldValidate: true })}
+              placeholder="Select industries"
+            />
             {errors.industry_sector && (
               <p className="text-xs text-destructive">{errors.industry_sector.message}</p>
             )}

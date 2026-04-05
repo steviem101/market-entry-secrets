@@ -1,14 +1,10 @@
-import { useState } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Check, ChevronsUpDown, X, Plus, Globe, Users } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { INDUSTRY_OPTIONS, type IntakeFormData } from './intakeSchema';
+import { Globe, X, Plus, Users } from 'lucide-react';
+import { IndustrySelect } from '@/components/common/IndustrySelect';
+import { type IntakeFormData } from './intakeSchema';
 
 interface EndBuyersSectionProps {
   form: UseFormReturn<IntakeFormData>;
@@ -16,22 +12,8 @@ interface EndBuyersSectionProps {
 
 export const EndBuyersSection = ({ form }: EndBuyersSectionProps) => {
   const { setValue, watch, formState: { errors } } = form;
-  const [industryOpen, setIndustryOpen] = useState(false);
   const endBuyerIndustries = watch('end_buyer_industries') || [];
   const endBuyers = watch('end_buyers') || [];
-
-  const toggleIndustry = (industry: string) => {
-    const current = endBuyerIndustries;
-    if (current.includes(industry)) {
-      setValue('end_buyer_industries', current.filter((i) => i !== industry), { shouldValidate: true });
-    } else {
-      setValue('end_buyer_industries', [...current, industry], { shouldValidate: true });
-    }
-  };
-
-  const removeIndustry = (industry: string) => {
-    setValue('end_buyer_industries', endBuyerIndustries.filter((i) => i !== industry), { shouldValidate: true });
-  };
 
   return (
     <div className="space-y-4">
@@ -48,65 +30,12 @@ export const EndBuyersSection = ({ form }: EndBuyersSectionProps) => {
       {/* End Buyer Industries */}
       <div className="space-y-2">
         <Label className="text-sm">Target Customer Industries</Label>
-        <Popover open={industryOpen} onOpenChange={setIndustryOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={industryOpen}
-              className={cn(
-                "w-full justify-between font-normal h-10",
-                endBuyerIndustries.length === 0 && "text-muted-foreground"
-              )}
-            >
-              {endBuyerIndustries.length === 0
-                ? "Select industries your customers belong to"
-                : `${endBuyerIndustries.length} selected`}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-            <Command>
-              <CommandInput placeholder="Search industry..." />
-              <CommandList>
-                <CommandEmpty>No industry found.</CommandEmpty>
-                <CommandGroup>
-                  {INDUSTRY_OPTIONS.map((industry) => (
-                    <CommandItem
-                      key={industry}
-                      value={industry}
-                      onSelect={() => toggleIndustry(industry)}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          endBuyerIndustries.includes(industry) ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {industry}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        {endBuyerIndustries.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-1.5">
-            {endBuyerIndustries.map((ind) => (
-              <Badge key={ind} variant="secondary" className="text-xs gap-1 pr-1">
-                {ind}
-                <button
-                  type="button"
-                  onClick={() => removeIndustry(ind)}
-                  className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        )}
+        <IndustrySelect
+          value={endBuyerIndustries}
+          onChange={(v) => setValue('end_buyer_industries', v, { shouldValidate: true })}
+          placeholder="Select industries your customers belong to"
+          maxSelections={5}
+        />
       </div>
 
       {/* Example End Buyers */}
