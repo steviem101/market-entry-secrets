@@ -1,0 +1,290 @@
+sector	industry_group	sub_industry
+Accommodation and Food Services	Food and Beverage Services
+Accommodation and Food Services	Food and Beverage Services	Bars, Taverns, and Nightclubs
+Accommodation and Food Services	Food and Beverage Services	Caterers
+Accommodation and Food Services	Food and Beverage Services	Mobile Food Services
+Accommodation and Food Services	Food and Beverage Services	Restaurants
+Accommodation and Food Services	Hospitality
+Accommodation and Food Services	Hospitality	Bed-and-Breakfasts, Hostels, Homestays
+Accommodation and Food Services	Hospitality	Hotels and Motels
+Administrative and Support Services	Collection Agencies
+Administrative and Support Services	Events Services
+Administrative and Support Services	Facilities Services
+Administrative and Support Services	Fundraising
+Administrative and Support Services	Office Administration
+Administrative and Support Services	Security and Investigations
+Administrative and Support Services	Staffing and Recruiting
+Administrative and Support Services	Telephone Call Centers
+Administrative and Support Services	Translation and Localization
+Administrative and Support Services	Travel Arrangements
+Administrative and Support Services	Writing and Editing
+Construction	Building Construction
+Construction	Civil Engineering
+Construction	Specialty Trade Contractors
+Consumer Services	Civic and Social Organizations
+Consumer Services	Household Services
+Consumer Services	Non-profit Organizations
+Consumer Services	Personal and Laundry Services
+Consumer Services	Philanthropic Fundraising Services
+Consumer Services	Religious Institutions
+Consumer Services	Repair and Maintenance
+Education	E-Learning Providers
+Education	Higher Education
+Education	Primary and Secondary Education
+Education	Professional Training and Coaching
+Education	Technical and Vocational Training
+Entertainment Providers	Artists and Writers
+Entertainment Providers	Museums, Historical Sites, and Zoos
+Entertainment Providers	Museums, Historical Sites, and Zoos	Historical Sites
+Entertainment Providers	Museums, Historical Sites, and Zoos	Museums
+Entertainment Providers	Museums, Historical Sites, and Zoos	Zoos and Botanical Gardens
+Entertainment Providers	Musicians
+Entertainment Providers	Performing Arts and Spectator Sports
+Entertainment Providers	Performing Arts and Spectator Sports	Circuses and Magic Shows
+Entertainment Providers	Performing Arts and Spectator Sports	Dance Companies
+Entertainment Providers	Performing Arts and Spectator Sports	Performing Arts
+Entertainment Providers	Performing Arts and Spectator Sports	Theater Companies
+Entertainment Providers	Recreational Facilities
+Entertainment Providers	Recreational Facilities	Amusement Parks and Arcades
+Entertainment Providers	Recreational Facilities	Gambling Facilities and Casinos
+Entertainment Providers	Recreational Facilities	Golf Courses and Country Clubs
+Entertainment Providers	Recreational Facilities	Skiing Facilities
+Entertainment Providers	Recreational Facilities	Wellness and Fitness Services
+Entertainment Providers	Spectator Sports
+Entertainment Providers	Spectator Sports	Racetracks
+Entertainment Providers	Spectator Sports	Sports Teams and Clubs
+Farming, Ranching, Forestry	Farming
+Farming, Ranching, Forestry	Ranching and Fisheries
+Farming, Ranching, Forestry	Forestry and Logging
+Financial Services	Capital Markets
+Financial Services	Capital Markets	Investment Advice
+Financial Services	Capital Markets	Investment Banking
+Financial Services	Capital Markets	Investment Management
+Financial Services	Capital Markets	Securities and Commodity Exchanges
+Financial Services	Capital Markets	Venture Capital and Private Equity Principals
+Financial Services	Credit Intermediation
+Financial Services	Credit Intermediation	Banking
+Financial Services	Credit Intermediation	International Trade and Development
+Financial Services	Credit Intermediation	Loan Brokers
+Financial Services	Credit Intermediation	Savings Institutions
+Financial Services	Funds and Trusts
+Financial Services	Funds and Trusts	Insurance and Employee Benefit Funds
+Financial Services	Funds and Trusts	Pension Funds
+Financial Services	Funds and Trusts	Trusts and Estates
+Financial Services	Insurance
+Financial Services	Insurance	Claims Adjusting, Actuarial Services
+Financial Services	Insurance	Insurance Agencies and Brokerages
+Financial Services	Insurance	Insurance Carriers
+Government Administration	Administration of Justice
+Government Administration	Administration of Justice	Correctional Institutions
+Government Administration	Administration of Justice	Courts of Law
+Government Administration	Administration of Justice	Fire Protection
+Government Administration	Administration of Justice	Law Enforcement
+Government Administration	Administration of Justice	Public Safety
+Government Administration	Economic Programs
+Government Administration	Economic Programs	Transportation Programs
+Government Administration	Economic Programs	Utilities Administration
+Government Administration	Environmental Quality Programs
+Government Administration	Environmental Quality Programs	Air, Water, and Waste Program Management
+Government Administration	Environmental Quality Programs	Conservation Programs
+Government Administration	Health and Human Services
+Government Administration	Health and Human Services	Education Administration Programs
+Government Administration	Health and Human Services	Public Assistance Programs
+Government Administration	Health and Human Services	Public Health
+Government Administration	Housing and Community Development
+Government Administration	Housing and Community Development	Community Development and Urban Planning
+Government Administration	Housing and Community Development	Housing Programs
+Government Administration	Military and International Affairs
+Government Administration	Military and International Affairs	Armed Forces
+Government Administration	Military and International Affairs	International Affairs
+Government Administration	Public Policy
+Government Administration	Public Policy Offices
+Government Administration	Public Policy Offices	Executive Offices
+Government Administration	Public Policy Offices	Legislative Offices
+Government Administration	Space Research and Technology
+Holding Companies	Holding Companies
+Hospitals and Health Care	Community Services
+Hospitals and Health Care	Hospitals, Individual and Family Services
+Hospitals and Health Care	Medical Practices
+Hospitals and Health Care	Nursing Homes and Residential Care Facilities
+Manufacturing	Apparel Manufacturing
+Manufacturing	Apparel Manufacturing	Fashion Accessories Manufacturing
+Manufacturing	Appliances, Electrical, and Electronics Manufacturing
+Manufacturing	Appliances, Electrical, and Electronics Manufacturing	Electric Lighting Equipment Manufacturing
+Manufacturing	Appliances, Electrical, and Electronics Manufacturing	Electrical Equipment Manufacturing
+Manufacturing	Appliances, Electrical, and Electronics Manufacturing	Household Appliance Manufacturing
+Manufacturing	Chemical Manufacturing
+Manufacturing	Chemical Manufacturing	Agricultural Chemical Manufacturing
+Manufacturing	Chemical Manufacturing	Artificial Rubber and Synthetic Fiber Manufacturing
+Manufacturing	Chemical Manufacturing	Chemical Raw Materials Manufacturing
+Manufacturing	Chemical Manufacturing	Paint, Coating, and Adhesive Manufacturing
+Manufacturing	Chemical Manufacturing	Personal Care Product Manufacturing
+Manufacturing	Chemical Manufacturing	Pharmaceutical Manufacturing
+Manufacturing	Chemical Manufacturing	Soap and Cleaning Product Manufacturing
+Manufacturing	Computers and Electronics Manufacturing
+Manufacturing	Computers and Electronics Manufacturing	Audio and Video Equipment Manufacturing
+Manufacturing	Computers and Electronics Manufacturing	Communications Equipment Manufacturing
+Manufacturing	Computers and Electronics Manufacturing	Computer Hardware Manufacturing
+Manufacturing	Computers and Electronics Manufacturing	Magnetic and Optical Media Manufacturing
+Manufacturing	Computers and Electronics Manufacturing	Measuring and Control Instrument Manufacturing
+Manufacturing	Computers and Electronics Manufacturing	Semiconductor Manufacturing
+Manufacturing	Fabricated Metal Products
+Manufacturing	Fabricated Metal Products	Architectural and Structural Metal Manufacturing
+Manufacturing	Fabricated Metal Products	Boilers, Tanks, and Shipping Container Manufacturing
+Manufacturing	Fabricated Metal Products	Construction Hardware Manufacturing
+Manufacturing	Fabricated Metal Products	Cutlery and Handtool Manufacturing
+Manufacturing	Fabricated Metal Products	Metal Treatments
+Manufacturing	Fabricated Metal Products	Metal Valve, Ball, and Roller Manufacturing
+Manufacturing	Fabricated Metal Products	Spring and Wire Product Manufacturing
+Manufacturing	Fabricated Metal Products	Turned Products and Fastener Manufacturing
+Manufacturing	Food and Beverage Manufacturing
+Manufacturing	Food and Beverage Manufacturing	Animal Feed Manufacturing
+Manufacturing	Food and Beverage Manufacturing	Baked Goods Manufacturing
+Manufacturing	Food and Beverage Manufacturing	Beverage Manufacturing
+Manufacturing	Food and Beverage Manufacturing	Dairy Product Manufacturing
+Manufacturing	Food and Beverage Manufacturing	Fruit and Vegetable Preserves Manufacturing
+Manufacturing	Food and Beverage Manufacturing	Meat Products Manufacturing
+Manufacturing	Food and Beverage Manufacturing	Seafood Product Manufacturing
+Manufacturing	Food and Beverage Manufacturing	Sugar and Confectionery Product Manufacturing
+Manufacturing	Furniture and Home Furnishings Manufacturing
+Manufacturing	Furniture and Home Furnishings Manufacturing	Household and Institutional Furniture Manufacturing
+Manufacturing	Furniture and Home Furnishings Manufacturing	Mattress and Blinds Manufacturing
+Manufacturing	Furniture and Home Furnishings Manufacturing	Office Furniture and Fixtures Manufacturing
+Manufacturing	Glass, Ceramics and Concrete Manufacturing
+Manufacturing	Glass, Ceramics and Concrete Manufacturing	Abrasives and Nonmetallic Minerals Manufacturing
+Manufacturing	Glass, Ceramics and Concrete Manufacturing	Clay and Refractory Products Manufacturing
+Manufacturing	Glass, Ceramics and Concrete Manufacturing	Glass Product Manufacturing
+Manufacturing	Glass, Ceramics and Concrete Manufacturing	Lime and Gypsum Products Manufacturing
+Manufacturing	Leather Product Manufacturing
+Manufacturing	Leather Product Manufacturing	Footwear Manufacturing
+Manufacturing	Leather Product Manufacturing	Women's Handbag Manufacturing
+Manufacturing	Machinery Manufacturing
+Manufacturing	Machinery Manufacturing	Agriculture, Construction, Mining Machinery Manufacturing
+Manufacturing	Machinery Manufacturing	Automation Machinery Manufacturing
+Manufacturing	Machinery Manufacturing	Commercial and Service Industry Machinery Manufacturing
+Manufacturing	Machinery Manufacturing	Engines and Power Transmission Equipment Manufacturing
+Manufacturing	Machinery Manufacturing	HVAC and Refrigeration Equipment Manufacturing
+Manufacturing	Machinery Manufacturing	Industrial Machinery Manufacturing
+Manufacturing	Machinery Manufacturing	Metalworking Machinery Manufacturing
+Manufacturing	Medical Equipment Manufacturing
+Manufacturing	Oil and Coal Product Manufacturing
+Manufacturing	Paper and Forest Product Manufacturing
+Manufacturing	Plastics and Rubber Product Manufacturing
+Manufacturing	Plastics and Rubber Product Manufacturing	Packaging and Containers Manufacturing
+Manufacturing	Plastics and Rubber Product Manufacturing	Plastics Manufacturing
+Manufacturing	Plastics and Rubber Product Manufacturing	Rubber Products Manufacturing
+Manufacturing	Primary Metal Manufacturing
+Manufacturing	Printing Services
+Manufacturing	Sporting Goods Manufacturing
+Manufacturing	Textile Manufacturing
+Manufacturing	Tobacco Manufacturing
+Manufacturing	Transportation Equipment Manufacturing
+Manufacturing	Transportation Equipment Manufacturing	Aviation and Aerospace Component Manufacturing
+Manufacturing	Transportation Equipment Manufacturing	Defense and Space Manufacturing
+Manufacturing	Transportation Equipment Manufacturing	Motor Vehicle Manufacturing
+Manufacturing	Transportation Equipment Manufacturing	Motor Vehicle Parts Manufacturing
+Manufacturing	Transportation Equipment Manufacturing	Railroad Equipment Manufacturing
+Manufacturing	Transportation Equipment Manufacturing	Shipbuilding
+Manufacturing	Wood Product Manufacturing
+Oil, Gas, and Mining	Mining
+Oil, Gas, and Mining	Oil and Gas
+Professional Services	Accounting
+Professional Services	Advertising Services
+Professional Services	Advertising Services	Government Relations Services
+Professional Services	Advertising Services	Market Research
+Professional Services	Advertising Services	Photography
+Professional Services	Advertising Services	Public Relations and Communications Services
+Professional Services	Architecture and Planning
+Professional Services	Business Consulting and Services
+Professional Services	Business Consulting and Services	Environmental Services
+Professional Services	Business Consulting and Services	Human Resources Services
+Professional Services	Business Consulting and Services	Marketing Services
+Professional Services	Business Consulting and Services	Operations Consulting
+Professional Services	Business Consulting and Services	Outsourcing and Offshoring Consulting
+Professional Services	Business Consulting and Services	Strategic Management Services
+Professional Services	Design Services
+Professional Services	Design Services	Graphic Design
+Professional Services	Design Services	Interior Design
+Professional Services	Engineering Services
+Professional Services	IT Services and IT Consulting
+Professional Services	IT Services and IT Consulting	Computer and Network Security
+Professional Services	IT Services and IT Consulting	IT System Custom Software Development
+Professional Services	IT Services and IT Consulting	IT System Data Services
+Professional Services	IT Services and IT Consulting	IT System Design Services
+Professional Services	IT Services and IT Consulting	IT System Installation and Disposal
+Professional Services	IT Services and IT Consulting	IT System Operations and Maintenance
+Professional Services	IT Services and IT Consulting	IT System Testing and Evaluation
+Professional Services	IT Services and IT Consulting	IT System Training and Support
+Professional Services	Legal Services
+Professional Services	Legal Services	Alternative Dispute Resolution
+Professional Services	Legal Services	Law Practice
+Professional Services	Research Services
+Professional Services	Research Services	Biotechnology Research
+Professional Services	Research Services	Nanotechnology Research
+Professional Services	Research Services	Think Tanks
+Professional Services	Services for Renewable Energy
+Professional Services	Veterinary Services
+Real Estate and Equipment Rental Services	Equipment Rental Services
+Real Estate and Equipment Rental Services	Real Estate
+Retail	Food and Beverage Retail
+Retail	Online and Mail Order Retail
+Retail	Retail Apparel and Fashion
+Retail	Retail Appliances, Electrical, and Electronic Equipment
+Retail	Retail Art Dealers
+Retail	Retail Art Supplies
+Retail	Retail Books and Printed News
+Retail	Retail Building Materials and Garden Equipment
+Retail	Retail Florists
+Retail	Retail Furniture and Home Furnishings
+Retail	Retail Gasoline
+Retail	Retail Health and Personal Care Products
+Retail	Retail Luxury Goods and Jewelry
+Retail	Retail Motor Vehicles
+Retail	Retail Musical Instruments
+Retail	Retail Office Equipment
+Retail	Retail Office Supplies and Gifts
+Retail	Retail Recyclable Materials and Used Merchandise
+Technology, Information and Media	Book and Periodical Publishing
+Technology, Information and Media	Broadcast Media Production and Distribution
+Technology, Information and Media	Data Infrastructure and Analytics
+Technology, Information and Media	Information Services
+Technology, Information and Media	Internet Marketplace Platforms
+Technology, Information and Media	Movies, Videos, and Sound
+Technology, Information and Media	Social Networking Platforms
+Technology, Information and Media	Software Development
+Technology, Information and Media	Software Development	Computer Games
+Technology, Information and Media	Telecommunications
+Transportation, Logistics, Supply Chain and Storage	Airlines and Aviation
+Transportation, Logistics, Supply Chain and Storage	Freight and Package Transportation
+Transportation, Logistics, Supply Chain and Storage	Ground Passenger Transportation
+Transportation, Logistics, Supply Chain and Storage	Maritime Transportation
+Transportation, Logistics, Supply Chain and Storage	Pipeline Transportation
+Transportation, Logistics, Supply Chain and Storage	Postal Services
+Transportation, Logistics, Supply Chain and Storage	Rail Transportation
+Transportation, Logistics, Supply Chain and Storage	Truck Transportation
+Transportation, Logistics, Supply Chain and Storage	Warehousing and Storage
+Utilities	Electric Power Generation
+Utilities	Electric Power Transmission, Control, and Distribution
+Utilities	Natural Gas Distribution
+Utilities	Water, Waste, Steam, and Air Conditioning Services
+Wholesale	Wholesale Alcoholic Beverages
+Wholesale	Wholesale Apparel and Sewing Supplies
+Wholesale	Wholesale Appliances, Electrical, and Electronics
+Wholesale	Wholesale Building Materials
+Wholesale	Wholesale Chemical and Allied Products
+Wholesale	Wholesale Computer Equipment
+Wholesale	Wholesale Drugs and Sundries
+Wholesale	Wholesale Food and Beverage
+Wholesale	Wholesale Footwear
+Wholesale	Wholesale Furniture and Home Furnishings
+Wholesale	Wholesale Hardware, Plumbing, Heating Equipment
+Wholesale	Wholesale Import and Export
+Wholesale	Wholesale Luxury Goods and Jewelry
+Wholesale	Wholesale Machinery
+Wholesale	Wholesale Metals and Minerals
+Wholesale	Wholesale Motor Vehicles and Parts
+Wholesale	Wholesale Paper Products
+Wholesale	Wholesale Petroleum and Petroleum Products
+Wholesale	Wholesale Photography Equipment and Supplies
+Wholesale	Wholesale Raw Farm Products
+Wholesale	Wholesale Recyclable Materials
