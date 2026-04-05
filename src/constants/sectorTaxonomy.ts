@@ -1,13 +1,13 @@
 // Sector taxonomy constants for the Lead Database section.
-// Maps broad sector categories (used in lead_databases.sector) to display metadata.
+// Now sourced from the LinkedIn Industry Taxonomy (2026).
 
-import { INDUSTRY_OPTIONS } from '@/components/report-creator/intakeSchema';
+import { INDUSTRY_GROUP_OPTIONS, SECTOR_GRADIENTS as LINKEDIN_SECTOR_GRADIENTS } from '@/constants/linkedinTaxonomy';
 
 /**
- * Full industry taxonomy from the report generator intake form (149 industries).
- * Re-exported here as the canonical SECTOR_TAXONOMY constant.
+ * Full industry taxonomy from the LinkedIn hierarchy (152 industry groups).
+ * Re-exported as SECTOR_TAXONOMY for backward compatibility.
  */
-export const SECTOR_TAXONOMY = INDUSTRY_OPTIONS;
+export const SECTOR_TAXONOMY = INDUSTRY_GROUP_OPTIONS;
 
 /**
  * Gradient classes for each broad sector category used in lead_databases.sector.
