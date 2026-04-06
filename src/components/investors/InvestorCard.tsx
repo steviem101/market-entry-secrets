@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Globe, MapPin, ArrowRight } from "lucide-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { getCompanyInitials } from "@/components/company-card/CompanyCardHelpers";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface InvestorCardProps {
   investor: {
@@ -55,27 +55,17 @@ const InvestorCard = memo(({ investor }: InvestorCardProps) => {
         <div className="flex items-start gap-4">
           <Link
             to={`/investors/${investor.slug || investor.id}`}
-            className="w-14 h-14 bg-white rounded-lg border flex items-center justify-center flex-shrink-0 overflow-hidden"
+            className="flex-shrink-0"
           >
-            {investor.logo ? (
-              <img
-                loading="lazy"
-                src={investor.logo}
-                alt={`${investor.name} logo`}
-                className="w-full h-full object-contain p-1.5"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-100 to-purple-100 text-violet-600 font-bold text-lg ${investor.logo ? 'hidden' : 'flex'}`}
-              style={{ display: investor.logo ? 'none' : 'flex' }}
-            >
-              {getCompanyInitials(investor.name)}
-            </div>
+            <CompanyLogo
+              websiteUrl={investor.website}
+              existingLogoUrl={investor.logo}
+              companyName={investor.name}
+              size="lg"
+              className="w-14 h-14 bg-white rounded-lg border"
+              fallbackClassName="bg-gradient-to-br from-violet-100 to-purple-100 text-violet-600"
+              imgClassName="object-contain p-1.5"
+            />
           </Link>
 
           <div className="flex-1 min-w-0">

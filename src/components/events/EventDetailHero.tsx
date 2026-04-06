@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Clock, Users, User, ArrowLeft, ExternalLink } from "lucide-react";
+import { Calendar, MapPin, Clock, Users, ArrowLeft, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/BookmarkButton";
@@ -6,6 +6,7 @@ import { AddToCalendarButton } from "./AddToCalendarButton";
 import { EventDetail } from "@/hooks/useEventBySlug";
 import { Link } from "react-router-dom";
 import { differenceInDays, isPast, format } from "date-fns";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface EventDetailHeroProps {
   event: EventDetail;
@@ -33,21 +34,15 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Logo */}
             <div className="flex-shrink-0">
-              {event.event_logo_url ? (
-                <img
-                  loading="lazy"
-                  src={event.event_logo_url}
-                  alt={`${event.title} logo`}
-                  className="w-20 h-20 rounded-xl object-cover border border-border"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Calendar className="w-10 h-10 text-primary" />
-                </div>
-              )}
+              <CompanyLogo
+                websiteUrl={event.organizer_website || event.website_url}
+                existingLogoUrl={event.event_logo_url}
+                companyName={event.organizer || event.title}
+                size="xl"
+                className="w-20 h-20 rounded-xl border border-border"
+                fallbackClassName="bg-primary/10 text-primary"
+                imgClassName="object-cover"
+              />
             </div>
 
             <div className="flex-1 min-w-0">

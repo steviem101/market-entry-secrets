@@ -15,6 +15,7 @@ import { SectionNav } from "@/components/detail/SectionNav";
 import { ContentBodyRenderer } from "@/components/detail/ContentBodyRenderer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { getLogoUrl } from "@/lib/logoUtils";
 
 interface CaseStudySection {
   id: string;
@@ -185,7 +186,7 @@ const CaseStudyDetail = () => {
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="h-10 w-10 rounded-lg border">
                     <AvatarImage
-                      src={companyProfile?.company_logo || primaryFounder?.image}
+                      src={companyProfile?.company_logo || getLogoUrl(companyProfile?.website, 40) || primaryFounder?.image}
                       alt={companyName}
                       className="object-cover"
                     />
@@ -250,7 +251,7 @@ const CaseStudyDetail = () => {
                 <div className="flex flex-col sm:flex-row items-start gap-4 mb-6">
                   <Avatar className="h-16 w-16 rounded-xl border-2 border-border flex-shrink-0">
                     <AvatarImage
-                      src={companyProfile?.company_logo || primaryFounder?.image}
+                      src={companyProfile?.company_logo || getLogoUrl(companyProfile?.website, 64) || primaryFounder?.image}
                       alt={companyName}
                       className="object-cover"
                     />
@@ -441,7 +442,7 @@ const CaseStudyDetail = () => {
                               <div className="flex items-center gap-2.5 mb-2">
                                 <Avatar className="h-8 w-8 rounded-md border">
                                   <AvatarImage
-                                    src={rProfile?.company_logo || rFounder?.image}
+                                    src={rProfile?.company_logo || getLogoUrl(rProfile?.website, 32) || rFounder?.image}
                                     alt={rProfile?.company_name}
                                     className="object-cover"
                                   />

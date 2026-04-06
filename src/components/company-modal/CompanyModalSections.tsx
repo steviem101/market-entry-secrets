@@ -2,21 +2,21 @@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Company } from "../CompanyCard";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface CompanyModalSectionsProps {
   company: Company;
   experienceTiles: any[];
   contactPersons: any[];
-  getExperienceTileImage: (index: number) => string;
+  getExperienceTileImage?: (index: number) => string;
   getContactPersonImage: (index: number) => string;
 }
 
-export const CompanyModalSections = ({ 
-  company, 
-  experienceTiles, 
-  contactPersons, 
-  getExperienceTileImage, 
-  getContactPersonImage 
+export const CompanyModalSections = ({
+  company,
+  experienceTiles,
+  contactPersons,
+  getContactPersonImage
 }: CompanyModalSectionsProps) => {
   return (
     <div className="space-y-6">
@@ -52,16 +52,16 @@ export const CompanyModalSections = ({
         <section>
           <h3 className="text-lg font-semibold mb-3">Working with</h3>
           <div className="flex flex-wrap gap-3">
-            {experienceTiles.map((tile, index) => (
+            {experienceTiles.map((tile) => (
               <div key={tile.id} className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
-                <div className="w-12 h-12 bg-white border rounded-lg p-1">
-                  <img
-                    loading="lazy"
-                    src={tile.logo || getExperienceTileImage(index)}
-                    alt={tile.name}
-                    className="w-full h-full object-cover rounded"
-                  />
-                </div>
+                <CompanyLogo
+                  existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                  companyName={tile.name}
+                  size="md"
+                  className="w-12 h-12 bg-white border rounded-lg"
+                  fallbackClassName="bg-white text-primary"
+                  imgClassName="object-cover rounded"
+                />
                 <span className="text-sm font-medium">{tile.name}</span>
               </div>
             ))}

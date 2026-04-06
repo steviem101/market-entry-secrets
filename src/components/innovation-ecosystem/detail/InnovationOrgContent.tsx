@@ -4,10 +4,10 @@ import { Globe, MapPin, Calendar, Users, Mail } from "lucide-react";
 import CompanyCard from "@/components/CompanyCard";
 import {
   parseJsonArray,
-  getExperienceTileImage,
   getContactPersonImage,
   getCompanyInitials
 } from "@/components/company-card/CompanyCardHelpers";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface InnovationOrgContentProps {
   org: {
@@ -77,14 +77,14 @@ export const InnovationOrgContent = ({ org, relatedOrgs }: InnovationOrgContentP
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {experienceTiles.map((tile: any, index: number) => (
                   <div key={tile.id || index} className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
-                    <div className="w-12 h-12 bg-white border rounded-lg p-1 flex-shrink-0">
-                      <img
-                        loading="lazy"
-                        src={tile.logo || getExperienceTileImage(index)}
-                        alt={tile.name}
-                        className="w-full h-full object-cover rounded"
-                      />
-                    </div>
+                    <CompanyLogo
+                      existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                      companyName={tile.name}
+                      size="md"
+                      className="w-12 h-12 bg-white border rounded-lg flex-shrink-0"
+                      fallbackClassName="bg-white text-primary"
+                      imgClassName="object-cover rounded"
+                    />
                     <span className="text-sm font-medium truncate">{tile.name}</span>
                   </div>
                 ))}

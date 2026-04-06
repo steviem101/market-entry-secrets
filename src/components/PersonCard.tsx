@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 export interface ExperienceTile {
   id: string;
@@ -38,17 +39,6 @@ interface PersonCardProps {
 const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) => {
   const displayName = person.isAnonymous ? person.title : person.name;
   const shouldBlurImage = person.isAnonymous;
-
-  // Placeholder images for experience tiles (company logos/work samples)
-  const getExperienceTileImage = (index: number) => {
-    const images = [
-      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=150&h=150&fit=crop&crop=center",
-      "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150&h=150&fit=crop&crop=center",
-      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=150&h=150&fit=crop&crop=center",
-      "https://images.unsplash.com/photo-1558655146-d09347e92766?w=150&h=150&fit=crop&crop=center"
-    ];
-    return images[index % images.length];
-  };
 
   // Placeholder images for person profile pictures
   const getPersonImage = (index: number) => {
@@ -137,15 +127,16 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
         <div className="mb-4">
           <h4 className="text-sm font-medium text-muted-foreground mb-2">Experience with:</h4>
           <div className="flex gap-2 overflow-x-auto">
-            {person.experienceTiles.slice(0, 3).map((tile, index) => (
-              <div key={tile.id} className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg p-1">
-                <img
-                  loading="lazy"
-                  src={tile.logo || getExperienceTileImage(index)}
-                  alt={tile.name}
-                  className="w-full h-full object-contain"
-                />
-              </div>
+            {person.experienceTiles.slice(0, 3).map((tile) => (
+              <CompanyLogo
+                key={tile.id}
+                existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                companyName={tile.name}
+                size="md"
+                className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg"
+                fallbackClassName="bg-white text-primary"
+                imgClassName="object-contain"
+              />
             ))}
             {person.experienceTiles.length > 3 && (
               <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-lg flex items-center justify-center">

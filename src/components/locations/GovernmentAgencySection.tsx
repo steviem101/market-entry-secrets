@@ -1,8 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building2, ExternalLink, Phone, Mail } from "lucide-react";
+import { ExternalLink, Mail } from "lucide-react";
 import { LocationData } from "@/hooks/useLocations";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface GovernmentAgencySectionProps {
   location: LocationData;
@@ -22,9 +23,13 @@ export const GovernmentAgencySection = ({ location }: GovernmentAgencySectionPro
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Building2 className="h-6 w-6 text-primary" />
-                </div>
+                <CompanyLogo
+                  websiteUrl={location.government_agency_website}
+                  companyName={location.government_agency_name || "Agency"}
+                  size="md"
+                  className="bg-primary/10"
+                  fallbackClassName="bg-primary/10 text-primary"
+                />
                 <div>
                   <CardTitle className="text-xl">{location.government_agency_name}</CardTitle>
                   <p className="text-muted-foreground">

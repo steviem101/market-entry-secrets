@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Company } from "@/components/CompanyCard";
-import { getCompanyInitials } from "@/components/company-card/CompanyCardHelpers";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface ServiceProviderProfileHeroProps {
   provider: Company;
@@ -30,27 +30,15 @@ export const ServiceProviderProfileHero = ({ provider }: ServiceProviderProfileH
       <div className="container mx-auto px-4">
         <div className="relative -mt-16 flex flex-col md:flex-row items-start gap-6 pb-8">
           {/* Logo */}
-          <div className="w-32 h-32 bg-white border-4 border-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-            {logoSrc ? (
-              <img
-                loading="lazy"
-                src={logoSrc}
-                alt={`${provider.name} logo`}
-                className="w-full h-full object-contain p-3"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={`w-full h-full flex items-center justify-center text-primary font-bold text-3xl bg-gradient-to-br from-primary/10 to-primary/20 ${logoSrc ? 'hidden' : 'flex'}`}
-              style={{ display: logoSrc ? 'none' : 'flex' }}
-            >
-              {getCompanyInitials(provider.name)}
-            </div>
-          </div>
+          <CompanyLogo
+            websiteUrl={websiteUrl}
+            existingLogoUrl={logoSrc}
+            companyName={provider.name}
+            size="2xl"
+            className="bg-white border-4 border-white rounded-xl shadow-lg"
+            fallbackClassName="bg-gradient-to-br from-primary/10 to-primary/20 text-primary"
+            imgClassName="object-contain p-3"
+          />
 
           {/* Provider info */}
           <div className="flex-1 pt-4 md:pt-8">

@@ -3,39 +3,24 @@ import { MapPin, CheckCircle, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Company } from "@/components/CompanyCard";
-import { getCompanyInitials } from "./CompanyCardHelpers";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface CompanyCardHeaderProps {
   company: Company;
 }
 
 const CompanyCardHeader = ({ company }: CompanyCardHeaderProps) => {
-  const logoSrc = company.logo_url || company.logo;
-
   return (
     <div className="flex items-start gap-4 mb-4">
-      <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-        {logoSrc ? (
-          <img
-            loading="lazy"
-            src={logoSrc}
-            alt={`${company.name} logo`}
-            className="w-full h-full object-contain p-2"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              const fallbackElement = e.currentTarget.nextElementSibling as HTMLElement;
-              if (fallbackElement) {
-                fallbackElement.style.display = 'flex';
-              }
-            }}
-          />
-        ) : null}
-        <div
-          className={`w-full h-full flex items-center justify-center text-primary font-bold text-lg ${logoSrc ? 'hidden' : 'flex'}`}
-        >
-          {getCompanyInitials(company.name)}
-        </div>
-      </div>
+      <CompanyLogo
+        websiteUrl={company.website_url || company.website}
+        existingLogoUrl={company.logo_url || company.logo}
+        companyName={company.name}
+        size="lg"
+        className="bg-gradient-to-br from-primary/10 to-primary/20"
+        fallbackClassName="bg-gradient-to-br from-primary/10 to-primary/20 text-primary"
+        imgClassName="object-contain p-2"
+      />
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">

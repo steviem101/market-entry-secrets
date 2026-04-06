@@ -21,6 +21,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { MentorContactModal } from "@/components/mentors/MentorContactModal";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 import {
   useMentorBySlug,
   useMentorExperience,
@@ -299,41 +300,20 @@ const MentorProfile = () => {
                 <h2 className="text-xl font-semibold mb-3">Experience With</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {allExperiences.map((exp) => {
-                    const initials = exp.company_name
-                      .split(" ")
-                      .map((w) => w[0])
-                      .join("")
-                      .toUpperCase()
-                      .slice(0, 2);
                     return (
                       <div
                         key={exp.id}
                         className="flex flex-col items-center p-4 bg-card border rounded-lg"
                       >
-                        <div className="w-14 h-14 rounded-lg border bg-white flex items-center justify-center overflow-hidden mb-2">
-                          {exp.company_logo_url ? (
-                            <img
-                              src={exp.company_logo_url}
-                              alt={exp.company_name}
-                              className="w-full h-full object-contain p-1"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = "none";
-                                const parent = target.parentElement;
-                                if (parent) {
-                                  const fallback = document.createElement("span");
-                                  fallback.className = "text-sm font-semibold text-primary";
-                                  fallback.textContent = initials;
-                                  parent.appendChild(fallback);
-                                }
-                              }}
-                            />
-                          ) : (
-                            <span className="text-sm font-semibold text-primary">
-                              {initials}
-                            </span>
-                          )}
-                        </div>
+                        <CompanyLogo
+                          websiteUrl={exp.company_website}
+                          existingLogoUrl={exp.company_logo_url}
+                          companyName={exp.company_name}
+                          size="lg"
+                          className="w-14 h-14 rounded-lg border bg-white mb-2"
+                          fallbackClassName="bg-white text-primary"
+                          imgClassName="object-contain p-1"
+                        />
                         <span className="text-sm text-center font-medium">
                           {exp.company_name}
                         </span>

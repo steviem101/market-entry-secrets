@@ -3,7 +3,7 @@ import { MapPin, Calendar, Users, Globe, ArrowLeft, ChevronRight, Shield, Award 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { getCompanyInitials } from "@/components/company-card/CompanyCardHelpers";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface AgencyHeroProps {
   agency: {
@@ -56,27 +56,15 @@ export const AgencyHero = ({ agency, categoryName }: AgencyHeroProps) => {
 
         <div className="flex flex-col md:flex-row gap-8 items-start">
           {/* Logo / Initials */}
-          <div className="w-28 h-28 bg-white rounded-xl shadow-sm border flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {agency.logo ? (
-              <img
-                loading="lazy"
-                src={agency.logo}
-                alt={`${agency.name} logo`}
-                className="w-full h-full object-contain p-3"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-emerald-100 text-green-600 font-bold text-3xl ${agency.logo ? 'hidden' : 'flex'}`}
-              style={{ display: agency.logo ? 'none' : 'flex' }}
-            >
-              {getCompanyInitials(agency.name)}
-            </div>
-          </div>
+          <CompanyLogo
+            websiteUrl={siteUrl}
+            existingLogoUrl={agency.logo}
+            companyName={agency.name}
+            size="xl"
+            className="bg-white rounded-xl shadow-sm border"
+            fallbackClassName="bg-gradient-to-br from-green-100 to-emerald-100 text-green-600"
+            imgClassName="object-contain p-3"
+          />
 
           {/* Info */}
           <div className="flex-1 min-w-0">

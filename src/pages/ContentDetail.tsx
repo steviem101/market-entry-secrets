@@ -18,6 +18,7 @@ import { ContentBodyRenderer } from "@/components/detail/ContentBodyRenderer";
 import { GuideAttachments } from "@/components/content/GuideAttachments";
 import { GuideAttachmentManager } from "@/components/content/GuideAttachmentManager";
 import { useGuideAttachments } from "@/hooks/useGuideAttachments";
+import { getLogoUrl } from "@/lib/logoUtils";
 
 interface ContentSection {
   id: string;
@@ -218,7 +219,7 @@ const ContentDetail = () => {
             <div className="mb-8">
               <div className="flex items-center gap-4 mb-6">
                 <img
-                  src={primaryFounder?.image || companyProfile?.company_logo || "/placeholder.svg"}
+                  src={primaryFounder?.image || companyProfile?.company_logo || getLogoUrl(companyProfile?.website, 64) || "/placeholder.svg"}
                   alt={companyProfile?.company_name || content.title}
                   className="w-16 h-16 rounded-lg object-cover"
                 />

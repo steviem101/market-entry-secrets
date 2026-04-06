@@ -3,7 +3,7 @@ import { MapPin, Globe, ArrowLeft, ChevronRight, DollarSign, Target } from "luci
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { getCompanyInitials } from "@/components/company-card/CompanyCardHelpers";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface InvestorHeroProps {
   investor: {
@@ -61,27 +61,15 @@ export const InvestorHero = ({ investor }: InvestorHeroProps) => {
 
         <div className="flex flex-col md:flex-row gap-8 items-start">
           {/* Logo / Initials */}
-          <div className="w-28 h-28 bg-white rounded-xl shadow-sm border flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {investor.logo ? (
-              <img
-                loading="lazy"
-                src={investor.logo}
-                alt={`${investor.name} logo`}
-                className="w-full h-full object-contain p-3"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-100 to-purple-100 text-violet-600 font-bold text-3xl ${investor.logo ? 'hidden' : 'flex'}`}
-              style={{ display: investor.logo ? 'none' : 'flex' }}
-            >
-              {getCompanyInitials(investor.name)}
-            </div>
-          </div>
+          <CompanyLogo
+            websiteUrl={investor.website}
+            existingLogoUrl={investor.logo}
+            companyName={investor.name}
+            size="xl"
+            className="bg-white rounded-xl shadow-sm border"
+            fallbackClassName="bg-gradient-to-br from-violet-100 to-purple-100 text-violet-600"
+            imgClassName="object-contain p-3"
+          />
 
           {/* Info */}
           <div className="flex-1 min-w-0">

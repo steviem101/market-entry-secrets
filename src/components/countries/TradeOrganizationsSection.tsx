@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Mail, Building, Users } from "lucide-react";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface TradeOrganizationsSectionProps {
   countrySlug: string;
@@ -49,19 +50,29 @@ const TradeOrganizationsSection = ({ countrySlug }: TradeOrganizationsSectionPro
             <Card key={org.id} className="overflow-hidden">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-2xl mb-2">{org.name}</CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <Badge variant="outline" className="capitalize">
-                        {org.organization_type.replace('_', ' ')}
-                      </Badge>
-                      <div className="flex items-center">
-                        <Building className="h-4 w-4 mr-1" />
-                        Est. {org.founded}
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {org.employees} employees
+                  <div className="flex items-start gap-4">
+                    <CompanyLogo
+                      websiteUrl={org.website}
+                      existingLogoUrl={org.logo}
+                      companyName={org.name}
+                      size="lg"
+                      className="bg-white border"
+                      fallbackClassName="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600"
+                    />
+                    <div>
+                      <CardTitle className="text-2xl mb-2">{org.name}</CardTitle>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <Badge variant="outline" className="capitalize">
+                          {org.organization_type.replace('_', ' ')}
+                        </Badge>
+                        <div className="flex items-center">
+                          <Building className="h-4 w-4 mr-1" />
+                          Est. {org.founded}
+                        </div>
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          {org.employees} employees
+                        </div>
                       </div>
                     </div>
                   </div>
