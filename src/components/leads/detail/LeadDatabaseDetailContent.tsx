@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { LeadCard } from "@/components/LeadCard";
 import { getSectorMeta, DEFAULT_FEATURES_BY_TYPE } from "@/constants/sectorTaxonomy";
 import type { LeadDatabase } from "@/types/leadDatabase";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface LeadDatabaseDetailContentProps {
   db: LeadDatabase;
@@ -255,18 +256,14 @@ export const LeadDatabaseDetailContent = ({
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-3">
-                    {db.provider_logo_url ? (
-                      <img
-                        loading="lazy"
-                        src={db.provider_logo_url}
-                        alt={db.provider_name}
-                        className="w-10 h-10 rounded-lg object-cover border"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <Database className="w-5 h-5 text-primary" />
-                      </div>
-                    )}
+                    <CompanyLogo
+                      existingLogoUrl={db.provider_logo_url}
+                      companyName={db.provider_name || "Provider"}
+                      size="md"
+                      className="rounded-lg border"
+                      fallbackClassName="bg-primary/10 text-primary"
+                      imgClassName="object-cover"
+                    />
                     <div>
                       <p className="font-medium">{db.provider_name}</p>
                       <p className="text-sm text-muted-foreground">Verified Provider</p>

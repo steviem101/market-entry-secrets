@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Person } from "./PersonCard";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface PersonModalProps {
   person: Person | null;
@@ -128,13 +129,15 @@ const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) =
             <div>
               <h3 className="text-lg font-semibold mb-3">Experience with:</h3>
               <div className="grid grid-cols-4 gap-3">
-                {person.experienceTiles.map((tile, index) => (
+                {person.experienceTiles.map((tile) => (
                   <div key={tile.id} className="flex flex-col items-center p-3 bg-white border rounded-lg">
-                    <img
-                      loading="lazy"
-                      src={tile.logo || getExperienceTileImage(index)}
-                      alt={tile.name}
-                      className="w-12 h-12 object-contain mb-2"
+                    <CompanyLogo
+                      existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                      companyName={tile.name}
+                      size="md"
+                      className="w-12 h-12 mb-2"
+                      fallbackClassName="bg-muted text-primary"
+                      imgClassName="object-contain"
                     />
                     <span className="text-xs text-center text-muted-foreground">
                       {tile.name}

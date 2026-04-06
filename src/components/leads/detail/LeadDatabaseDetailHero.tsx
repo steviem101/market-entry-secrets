@@ -5,6 +5,7 @@ import { BookmarkButton } from "@/components/BookmarkButton";
 import { Link } from "react-router-dom";
 import { getSectorGradient, getSectorMeta } from "@/constants/sectorTaxonomy";
 import type { LeadDatabase } from "@/types/leadDatabase";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface LeadDatabaseDetailHeroProps {
   db: LeadDatabase;
@@ -56,21 +57,14 @@ export const LeadDatabaseDetailHero = ({ db, onCheckout, onPreview, checkoutLoad
             <div className="flex flex-col md:flex-row gap-6 items-start">
               {/* Icon */}
               <div className="flex-shrink-0">
-                {db.provider_logo_url ? (
-                  <img
-                    loading="lazy"
-                    src={db.provider_logo_url}
-                    alt={`${db.provider_name} logo`}
-                    className="w-20 h-20 rounded-xl object-cover border border-border"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className={`w-20 h-20 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center`}>
-                    <Database className="w-10 h-10 text-white/80" />
-                  </div>
-                )}
+                <CompanyLogo
+                  existingLogoUrl={db.provider_logo_url}
+                  companyName={db.provider_name || db.title}
+                  size="xl"
+                  className="w-20 h-20 rounded-xl border border-border"
+                  fallbackClassName={`bg-gradient-to-br ${gradient} text-white/80`}
+                  imgClassName="object-cover"
+                />
               </div>
 
               <div className="flex-1 min-w-0">

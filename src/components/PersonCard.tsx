@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 export interface ExperienceTile {
   id: string;
@@ -137,15 +138,16 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
         <div className="mb-4">
           <h4 className="text-sm font-medium text-muted-foreground mb-2">Experience with:</h4>
           <div className="flex gap-2 overflow-x-auto">
-            {person.experienceTiles.slice(0, 3).map((tile, index) => (
-              <div key={tile.id} className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg p-1">
-                <img
-                  loading="lazy"
-                  src={tile.logo || getExperienceTileImage(index)}
-                  alt={tile.name}
-                  className="w-full h-full object-contain"
-                />
-              </div>
+            {person.experienceTiles.slice(0, 3).map((tile) => (
+              <CompanyLogo
+                key={tile.id}
+                existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                companyName={tile.name}
+                size="md"
+                className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg"
+                fallbackClassName="bg-white text-primary"
+                imgClassName="object-contain"
+              />
             ))}
             {person.experienceTiles.length > 3 && (
               <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-lg flex items-center justify-center">

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FeaturedItem } from "@/hooks/useFeaturedItems";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface FeaturedItemCardProps {
   item: FeaturedItem;
@@ -68,11 +69,15 @@ export const FeaturedItemCard = memo(({ item, onViewDetails }: FeaturedItemCardP
               <span className="text-xs font-medium">{getTypeLabel()}</span>
             </div>
           </Badge>
-          {item.logo && (
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden">
-              <img loading="lazy" src={item.logo} alt={item.name} className="w-full h-full object-cover" />
-            </div>
-          )}
+          <CompanyLogo
+            websiteUrl={item.website}
+            existingLogoUrl={item.logo}
+            companyName={item.name}
+            size="sm"
+            className="w-8 h-8 rounded-full bg-white"
+            fallbackClassName="bg-muted text-muted-foreground"
+            imgClassName="object-cover"
+          />
         </div>
 
         {/* Main content */}

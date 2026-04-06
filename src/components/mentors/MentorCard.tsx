@@ -6,6 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { useNavigate } from "react-router-dom";
 import type { Mentor } from "@/hooks/useMentors";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface MentorCardProps {
   mentor: Mentor;
@@ -50,36 +51,16 @@ const MarketFlag = ({ market }: { market: string }) => {
 };
 
 const ExperienceTileItem = ({ tile }: { tile: { id?: string; name: string; logo?: string } }) => {
-  const initials = tile.name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
   return (
-    <div className="flex-shrink-0 w-10 h-10 rounded-lg border bg-white flex items-center justify-center overflow-hidden" title={tile.name}>
-      {tile.logo ? (
-        <img
-          loading="lazy"
-          src={tile.logo}
-          alt={tile.name}
-          className="w-full h-full object-contain p-0.5"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-            const parent = target.parentElement;
-            if (parent) {
-              const fallback = document.createElement("span");
-              fallback.className = "text-xs font-semibold text-primary";
-              fallback.textContent = initials;
-              parent.appendChild(fallback);
-            }
-          }}
-        />
-      ) : (
-        <span className="text-xs font-semibold text-primary">{initials}</span>
-      )}
+    <div className="flex-shrink-0" title={tile.name}>
+      <CompanyLogo
+        existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+        companyName={tile.name}
+        size="sm"
+        className="w-10 h-10 rounded-lg border bg-white"
+        fallbackClassName="bg-white text-primary"
+        imgClassName="object-contain p-0.5"
+      />
     </div>
   );
 };

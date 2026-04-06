@@ -1,9 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Company } from "@/components/CompanyCard";
-import { parseJsonArray, getExperienceTileImage, getContactPersonImage } from "@/components/company-card/CompanyCardHelpers";
+import { parseJsonArray, getContactPersonImage } from "@/components/company-card/CompanyCardHelpers";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ServiceProviderReviews } from "./ServiceProviderReviews";
 import { ServiceProviderSidebar } from "./ServiceProviderSidebar";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface Review {
   id: string;
@@ -97,16 +98,18 @@ export const ServiceProviderProfileContent = ({
             <section>
               <h2 className="text-2xl font-semibold mb-4">Experience With</h2>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-                {experienceTiles.map((tile, index) => (
+                {experienceTiles.map((tile) => (
                   <div
                     key={tile.id}
                     className="bg-white border rounded-lg p-3 flex flex-col items-center gap-2"
                   >
-                    <img
-                      loading="lazy"
-                      src={tile.logo || getExperienceTileImage(index)}
-                      alt={tile.name}
-                      className="w-12 h-12 object-contain"
+                    <CompanyLogo
+                      existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                      companyName={tile.name}
+                      size="md"
+                      className="w-12 h-12"
+                      fallbackClassName="bg-muted text-primary"
+                      imgClassName="object-contain"
                     />
                     <span className="text-xs text-center text-muted-foreground truncate w-full">
                       {tile.name}
