@@ -11,7 +11,7 @@ export const useAuthState = () => {
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
-  
+
   // Add refs to prevent duplicate API calls
   const fetchingProfile = useRef(false);
   const fetchingRoles = useRef(false);
