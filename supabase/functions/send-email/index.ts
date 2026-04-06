@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
+import { buildCorsHeaders } from "../_shared/http.ts";
 import { sendViaResendTemplate } from "../_shared/email/resend.ts";
 import {
   resolveTemplateId,
@@ -12,10 +13,12 @@ const EMAIL_INTERNAL_SECRET = Deno.env.get("EMAIL_INTERNAL_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+let _corsHeaders: Record<string, string> = {};
+
 function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ..._corsHeaders },
   });
 }
 
@@ -45,12 +48,14 @@ function buildIdempotencyKey(
 }
 
 serve(async (req: Request) => {
+  _corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204 });
+    return new Response(null, { status: 204, headers: _corsHeaders });
   }
 
   if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+    return new Response("Method not allowed", { status: 405, headers: _corsHeaders });
   }
 
   // ── Auth: internal secret OR JWT (for self-service welcome only) ──
