@@ -79,8 +79,11 @@ serve(async (req: Request) => {
     }
 
     // Override with authenticated user's data
+    if (!user.email) {
+      return jsonResponse({ error: "User has no email address" }, 400);
+    }
     body.user_id = user.id;
-    body.recipient_email = user.email!;
+    body.recipient_email = user.email;
   } else {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }

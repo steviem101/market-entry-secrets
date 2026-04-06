@@ -2,6 +2,16 @@
 
 import type { TemplateResult } from "./types.ts";
 
+/** Escape user-supplied strings before interpolating into HTML */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const BRAND = {
   primaryColor: "#2B7A8C",
   accentBg: "rgba(43,122,140,0.08)",
@@ -88,7 +98,7 @@ function stepCard(title: string, description: string): string {
 // ── Templates ────────────────────────────────────────────────────
 
 function welcomeTemplate(data: Record<string, unknown>): TemplateResult {
-  const firstName = (data.first_name as string) || "there";
+  const firstName = escapeHtml((data.first_name as string) || "there");
   const subject = `Welcome to Market Entry Secrets, ${firstName}!`;
 
   const body = `
@@ -114,9 +124,9 @@ function welcomeTemplate(data: Record<string, unknown>): TemplateResult {
 function reportCompletedTemplate(
   data: Record<string, unknown>
 ): TemplateResult {
-  const firstName = (data.first_name as string) || "there";
-  const companyName = (data.company_name as string) || "your company";
-  const reportUrl = data.report_url as string;
+  const firstName = escapeHtml((data.first_name as string) || "there");
+  const companyName = escapeHtml((data.company_name as string) || "your company");
+  const reportUrl = (data.report_url as string) || `${BRAND.siteUrl}/my-reports`;
   const subject = `Your Market Entry Report for ${companyName} is Ready`;
 
   const body = `
@@ -145,9 +155,9 @@ function paymentConfirmationTemplate(
   data: Record<string, unknown>
 ): TemplateResult {
   const tier = (data.tier as string) || "Growth";
-  const amount = data.amount as string | null;
-  const currency = (data.currency as string) || "AUD";
-  const tierDisplay = tier.charAt(0).toUpperCase() + tier.slice(1);
+  const amount = data.amount ? escapeHtml(String(data.amount)) : null;
+  const currency = escapeHtml((data.currency as string) || "AUD");
+  const tierDisplay = escapeHtml(tier.charAt(0).toUpperCase() + tier.slice(1));
   const subject = `Payment Confirmed — ${tierDisplay} Plan`;
 
   const amountLine = amount
