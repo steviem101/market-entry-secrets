@@ -1,118 +1,64 @@
-// Utility functions to map data to standardized sectors
+// Utility functions to map data to standardized LinkedIn sectors
+import { LINKEDIN_SECTORS } from '@/constants/linkedinTaxonomy';
 
-export const STANDARD_SECTORS = [
-  'Technology',
-  'Healthcare', 
-  'Finance',
-  'Manufacturing',
-  'Education',
-  'Government',
-  'Retail',
-  'Agriculture',
-  'Energy',
-  'Tourism',
-  'Other'
+export const STANDARD_SECTORS: string[] = [...LINKEDIN_SECTORS];
+
+/**
+ * Keyword → LinkedIn sector mapping rules.
+ * Each rule is [keywords[], sector]. First match wins.
+ */
+const SECTOR_RULES: [string[], string][] = [
+  [['software', 'saas', 'ai ', 'data', 'cyber', 'cloud', 'internet', 'media', 'broadcast', 'publishing', 'telecom'], 'Technology, Information and Media'],
+  [['health', 'medical', 'hospital', 'pharma', 'clinical'], 'Hospitals and Health Care'],
+  [['financ', 'banking', 'investment', 'insurance', 'capital', 'credit', 'fintech'], 'Financial Services'],
+  [['manufactur', 'industrial', 'chemical', 'semiconductor', 'machinery', 'automotive'], 'Manufacturing'],
+  [['education', 'training', 'e-learning', 'university', 'school'], 'Education'],
+  [['government', 'public policy', 'defence', 'defense', 'military', 'justice'], 'Government Administration'],
+  [['retail', 'commerce', 'shopping', 'fashion', 'luxury'], 'Retail'],
+  [['agricultur', 'farming', 'ranch', 'forestry'], 'Farming, Ranching, Forestry'],
+  [['energy', 'mining', 'oil', 'gas', 'petroleum'], 'Oil, Gas, and Mining'],
+  [['electric', 'power', 'utility', 'water', 'waste'], 'Utilities'],
+  [['tourism', 'travel', 'hotel', 'hospitality', 'food', 'beverage', 'restaurant'], 'Accommodation and Food Services'],
+  [['construct', 'building', 'civil engineer'], 'Construction'],
+  [['transport', 'logistics', 'freight', 'shipping', 'aviation', 'airline', 'warehouse'], 'Transportation, Logistics, Supply Chain and Storage'],
+  [['legal', 'law', 'accounting', 'consult', 'advisory', 'architect', 'engineer', 'design', 'research', 'advertis', 'marketing', 'pr ', 'recruit'], 'Professional Services'],
+  [['real estate', 'property', 'rental'], 'Real Estate and Equipment Rental Services'],
+  [['wholesale', 'import', 'export', 'distribution'], 'Wholesale'],
+  [['nonprofit', 'non-profit', 'charity', 'social', 'community', 'religious'], 'Consumer Services'],
+  [['security', 'staffing', 'facilities', 'event', 'translation'], 'Administrative and Support Services'],
+  [['entertainment', 'sport', 'music', 'art', 'museum', 'perform'], 'Entertainment Providers'],
 ];
+
+function matchSector(text: string): string | null {
+  const lower = text.toLowerCase();
+  for (const [keywords, sector] of SECTOR_RULES) {
+    if (keywords.some(kw => lower.includes(kw))) {
+      return sector;
+    }
+  }
+  return null;
+}
 
 export const mapSpecialtiesToSectors = (specialties: string[]): string[] => {
   const sectors = new Set<string>();
-  
-  specialties.forEach(specialty => {
-    const lowerSpecialty = specialty.toLowerCase();
-    
-    if (lowerSpecialty.includes('tech') || lowerSpecialty.includes('software') || 
-        lowerSpecialty.includes('digital') || lowerSpecialty.includes('innovation')) {
-      sectors.add('Technology');
-    } else if (lowerSpecialty.includes('health') || lowerSpecialty.includes('medical')) {
-      sectors.add('Healthcare');
-    } else if (lowerSpecialty.includes('finance') || lowerSpecialty.includes('banking') || 
-               lowerSpecialty.includes('investment')) {
-      sectors.add('Finance');
-    } else if (lowerSpecialty.includes('manufactur') || lowerSpecialty.includes('industrial')) {
-      sectors.add('Manufacturing');
-    } else if (lowerSpecialty.includes('education') || lowerSpecialty.includes('training')) {
-      sectors.add('Education');
-    } else if (lowerSpecialty.includes('government') || lowerSpecialty.includes('public')) {
-      sectors.add('Government');
-    } else if (lowerSpecialty.includes('retail') || lowerSpecialty.includes('commerce')) {
-      sectors.add('Retail');
-    } else if (lowerSpecialty.includes('agricultur') || lowerSpecialty.includes('food')) {
-      sectors.add('Agriculture');
-    } else if (lowerSpecialty.includes('energy') || lowerSpecialty.includes('mining')) {
-      sectors.add('Energy');
-    } else if (lowerSpecialty.includes('tourism') || lowerSpecialty.includes('travel')) {
-      sectors.add('Tourism');
-    } else {
-      sectors.add('Other');
-    }
+  specialties.forEach(s => {
+    const sector = matchSector(s);
+    if (sector) sectors.add(sector);
   });
-  
   return Array.from(sectors);
 };
 
 export const mapServicesToSectors = (services: string[]): string[] => {
   const sectors = new Set<string>();
-  
-  services.forEach(service => {
-    const lowerService = service.toLowerCase();
-    
-    if (lowerService.includes('tech') || lowerService.includes('software') || 
-        lowerService.includes('digital') || lowerService.includes('it')) {
-      sectors.add('Technology');
-    } else if (lowerService.includes('health') || lowerService.includes('medical')) {
-      sectors.add('Healthcare');
-    } else if (lowerService.includes('finance') || lowerService.includes('accounting') || 
-               lowerService.includes('banking')) {
-      sectors.add('Finance');
-    } else if (lowerService.includes('manufactur') || lowerService.includes('industrial')) {
-      sectors.add('Manufacturing');
-    } else if (lowerService.includes('education') || lowerService.includes('training')) {
-      sectors.add('Education');
-    } else if (lowerService.includes('government') || lowerService.includes('public')) {
-      sectors.add('Government');
-    } else if (lowerService.includes('retail') || lowerService.includes('commerce')) {
-      sectors.add('Retail');
-    } else if (lowerService.includes('agricultur') || lowerService.includes('food')) {
-      sectors.add('Agriculture');
-    } else if (lowerService.includes('energy') || lowerService.includes('mining')) {
-      sectors.add('Energy');
-    } else if (lowerService.includes('tourism') || lowerService.includes('travel')) {
-      sectors.add('Tourism');
-    } else {
-      sectors.add('Other');
-    }
+  services.forEach(s => {
+    const sector = matchSector(s);
+    if (sector) sectors.add(sector);
   });
-  
   return Array.from(sectors);
 };
 
 export const mapIndustryToSector = (industry: string): string => {
-  const lowerIndustry = industry.toLowerCase();
-  
-  if (lowerIndustry.includes('tech') || lowerIndustry.includes('software') || 
-      lowerIndustry.includes('digital')) {
-    return 'Technology';
-  } else if (lowerIndustry.includes('health') || lowerIndustry.includes('medical')) {
-    return 'Healthcare';
-  } else if (lowerIndustry.includes('finance') || lowerIndustry.includes('banking')) {
-    return 'Finance';
-  } else if (lowerIndustry.includes('manufactur') || lowerIndustry.includes('industrial')) {
-    return 'Manufacturing';
-  } else if (lowerIndustry.includes('education')) {
-    return 'Education';
-  } else if (lowerIndustry.includes('government') || lowerIndustry.includes('public')) {
-    return 'Government';
-  } else if (lowerIndustry.includes('retail') || lowerIndustry.includes('commerce')) {
-    return 'Retail';
-  } else if (lowerIndustry.includes('agricultur') || lowerIndustry.includes('food')) {
-    return 'Agriculture';
-  } else if (lowerIndustry.includes('energy') || lowerIndustry.includes('mining')) {
-    return 'Energy';
-  } else if (lowerIndustry.includes('tourism') || lowerIndustry.includes('travel')) {
-    return 'Tourism';
-  } else {
-    return 'Other';
-  }
+  return matchSector(industry) || 'Professional Services';
 };
 
 export const getStandardTypes = {
