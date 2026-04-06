@@ -40,17 +40,6 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
   const displayName = person.isAnonymous ? person.title : person.name;
   const shouldBlurImage = person.isAnonymous;
 
-  // Placeholder images for experience tiles (company logos/work samples)
-  const getExperienceTileImage = (index: number) => {
-    const images = [
-      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=150&h=150&fit=crop&crop=center",
-      "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=150&h=150&fit=crop&crop=center",
-      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=150&h=150&fit=crop&crop=center",
-      "https://images.unsplash.com/photo-1558655146-d09347e92766?w=150&h=150&fit=crop&crop=center"
-    ];
-    return images[index % images.length];
-  };
-
   // Placeholder images for person profile pictures
   const getPersonImage = (index: number) => {
     const images = [

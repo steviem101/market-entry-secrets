@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getLogoUrl } from "@/lib/logoUtils";
 import { getCompanyInitials } from "@/components/company-card/CompanyCardHelpers";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,7 @@ const CompanyLogo = ({
 }: CompanyLogoProps) => {
   const sizeConfig = SIZE_MAP[size];
   const [imgFailed, setImgFailed] = useState(false);
+  const [useSecondary, setUseSecondary] = useState(false);
 
   // Determine which image source to try
   const logoDevUrl = getLogoUrl(websiteUrl, sizeConfig.px);
@@ -47,7 +48,12 @@ const CompanyLogo = ({
   // If the existing logo fails, try Logo.dev as secondary (only if they're different)
   const secondarySrc = existingLogoUrl && logoDevUrl && existingLogoUrl !== logoDevUrl ? logoDevUrl : null;
 
-  const [useSecondary, setUseSecondary] = useState(false);
+  // Reset state when source URLs change (prevents stale failure state in lists)
+  useEffect(() => {
+    setImgFailed(false);
+    setUseSecondary(false);
+  }, [existingLogoUrl, websiteUrl]);
+
   const currentSrc = useSecondary ? secondarySrc : primarySrc;
   const showImage = currentSrc && !imgFailed;
 
@@ -58,6 +64,8 @@ const CompanyLogo = ({
       setImgFailed(true);
     }
   };
+
+  const initials = getCompanyInitials(companyName);
 
   return (
     <div
@@ -78,7 +86,7 @@ const CompanyLogo = ({
         />
       ) : (
         <span className={cn("font-bold", sizeConfig.text)}>
-          {getCompanyInitials(companyName)}
+          {initials || "?"}
         </span>
       )}
     </div>

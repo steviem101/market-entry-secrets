@@ -8,16 +8,15 @@ interface CompanyModalSectionsProps {
   company: Company;
   experienceTiles: any[];
   contactPersons: any[];
-  getExperienceTileImage: (index: number) => string;
+  getExperienceTileImage?: (index: number) => string;
   getContactPersonImage: (index: number) => string;
 }
 
-export const CompanyModalSections = ({ 
-  company, 
-  experienceTiles, 
-  contactPersons, 
-  getExperienceTileImage, 
-  getContactPersonImage 
+export const CompanyModalSections = ({
+  company,
+  experienceTiles,
+  contactPersons,
+  getContactPersonImage
 }: CompanyModalSectionsProps) => {
   return (
     <div className="space-y-6">

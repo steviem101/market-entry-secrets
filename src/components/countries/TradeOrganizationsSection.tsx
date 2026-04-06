@@ -60,20 +60,20 @@ const TradeOrganizationsSection = ({ countrySlug }: TradeOrganizationsSectionPro
                       fallbackClassName="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600"
                     />
                     <div>
-                    <CardTitle className="text-2xl mb-2">{org.name}</CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <Badge variant="outline" className="capitalize">
-                        {org.organization_type.replace('_', ' ')}
-                      </Badge>
-                      <div className="flex items-center">
-                        <Building className="h-4 w-4 mr-1" />
-                        Est. {org.founded}
+                      <CardTitle className="text-2xl mb-2">{org.name}</CardTitle>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <Badge variant="outline" className="capitalize">
+                          {org.organization_type.replace('_', ' ')}
+                        </Badge>
+                        <div className="flex items-center">
+                          <Building className="h-4 w-4 mr-1" />
+                          Est. {org.founded}
+                        </div>
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          {org.employees} employees
+                        </div>
                       </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {org.employees} employees
-                      </div>
-                    </div>
                     </div>
                   </div>
                 </div>
