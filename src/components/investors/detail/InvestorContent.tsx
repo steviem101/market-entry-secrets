@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Globe, Mail, DollarSign, Target, Building2 } from "lucide-react";
+import { MapPin, Globe, Mail, DollarSign, Target, Building2, Newspaper, ExternalLink } from "lucide-react";
 import InvestorCard from "../InvestorCard";
 
 interface InvestorContentProps {
@@ -128,6 +128,38 @@ export const InvestorContent = ({ investor, relatedInvestors }: InvestorContentP
                 {details.cohort_size && <div><span className="font-medium">Cohort Size:</span> <span className="text-muted-foreground">{details.cohort_size}</span></div>}
                 {details.equity && <div><span className="font-medium">Equity:</span> <span className="text-muted-foreground">{details.equity}</span></div>}
                 {details.focus && <div><span className="font-medium">Focus:</span> <span className="text-muted-foreground">{details.focus}</span></div>}
+              </div>
+            </section>
+          )}
+
+          {/* Latest News */}
+          {Array.isArray(details.latest_news) && details.latest_news.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-4">Latest News</h2>
+              <div className="space-y-3">
+                {details.latest_news.map((item: { headline?: string; url?: string; date?: string }, index: number) => (
+                  <div key={index} className="flex items-start gap-3 bg-muted/50 rounded-lg p-4">
+                    <Newspaper className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      {item.url ? (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+                        >
+                          {item.headline || "News item"}
+                          <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                        </a>
+                      ) : (
+                        <span className="text-sm font-medium">{item.headline || "News item"}</span>
+                      )}
+                      {item.date && (
+                        <p className="text-xs text-muted-foreground mt-1">{item.date}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
           )}
