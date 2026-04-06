@@ -2,7 +2,8 @@
 
 import type { ResendResult } from "./types.ts";
 
-const FROM_EMAIL = "Market Entry Secrets <noreply@marketentrysecrets.com>";
+const FROM_EMAIL = "Market Entry Secrets <hello@marketentrysecrets.com>";
+const REPLY_TO_EMAIL = "stephen@marketentrysecrets.com";
 const RESEND_TIMEOUT_MS = 10_000;
 
 /**
@@ -32,6 +33,7 @@ export async function sendViaResendTemplate(
       },
       body: JSON.stringify({
         from: FROM_EMAIL,
+        reply_to: REPLY_TO_EMAIL,
         to: [to],
         template: {
           id: templateId,
@@ -83,6 +85,7 @@ export async function sendViaResend(
       },
       body: JSON.stringify({
         from: FROM_EMAIL,
+        reply_to: REPLY_TO_EMAIL,
         to: [to],
         subject,
         html,
