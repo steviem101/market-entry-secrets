@@ -60,6 +60,20 @@ export const useAuthState = () => {
               fetchingRoles
             });
             if (!cancelled) setLoading(false);
+
+            // Fire welcome email on both SIGNED_UP and SIGNED_IN because
+            // SIGNED_UP doesn't always fire (e.g. OAuth). The send-email
+            // function deduplicates via idempotency_key = "welcome:{userId}".
+            if (_event === 'SIGNED_UP' || _event === 'SIGNED_IN') {
+              supabase.functions.invoke('send-email', {
+                body: {
+                  email_type: 'welcome',
+                  recipient_email: session.user.email,
+                  user_id: session.user.id,
+                  data: { first_name: session.user.user_metadata?.first_name || 'there' },
+                },
+              }).catch(() => {}); // fire-and-forget
+            }
           });
           return; // Don't set loading false yet — microtask will do it after fetch
         } else if (!session) {

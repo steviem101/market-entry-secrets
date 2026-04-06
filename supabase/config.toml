@@ -38,6 +38,9 @@ verify_jwt = false
 [functions.ai-chat]
 verify_jwt = true
 
+[functions.send-email]
+verify_jwt = false
+
 [functions.send-lead-followup]
 verify_jwt = true
 
