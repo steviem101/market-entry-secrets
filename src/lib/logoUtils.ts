@@ -32,7 +32,7 @@ export function extractDomain(url: string): string | null {
  * Builds a Logo.dev image URL for a given domain.
  */
 export function getLogoDevUrl(domain: string, size: number = 64): string {
-  return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=${size}&format=png&fallback=404`;
+  return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=${size}&format=png`;
 }
 
 /**
