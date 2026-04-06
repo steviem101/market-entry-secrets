@@ -30,6 +30,12 @@ function buildIdempotencyKey(
       return data?.stripe_event_id
         ? `payment_confirmation:${data.stripe_event_id}`
         : null;
+    case "nurture_ecosystem":
+    case "nurture_case_studies":
+    case "nurture_ai_report":
+    case "nurture_events":
+    case "nurture_upgrade":
+      return userId ? `${emailType}:${userId}` : null;
     default:
       return null;
   }
