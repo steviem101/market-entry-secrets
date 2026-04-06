@@ -220,8 +220,12 @@ ON CONFLICT (legacy_value) DO NOTHING;
 
 
 -- ============================================================================
--- 2. UPDATE THE TRIGGER TO ACCEPT BOTH LEGACY AND NEW VALUES
+-- 2. DROP OLD HARDCODED TRIGGER AND UPDATE TO ACCEPT BOTH LEGACY AND NEW VALUES
 -- ============================================================================
+
+-- Drop the old trigger that enforced the hardcoded 149-item list
+DROP TRIGGER IF EXISTS validate_industry_sector_trigger ON public.user_intake_forms;
+DROP FUNCTION IF EXISTS public.validate_industry_sector();
 
 CREATE OR REPLACE FUNCTION public.validate_industry_sector_values(industries text[])
 RETURNS boolean
