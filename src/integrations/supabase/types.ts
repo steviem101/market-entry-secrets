@@ -1443,6 +1443,69 @@ export type Database = {
         }
         Relationships: []
       }
+      legacy_industry_mapping: {
+        Row: {
+          created_at: string
+          id: string
+          legacy_value: string
+          linkedin_industry_group: string
+          linkedin_sector: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          legacy_value: string
+          linkedin_industry_group: string
+          linkedin_sector: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          legacy_value?: string
+          linkedin_industry_group?: string
+          linkedin_sector?: string
+        }
+        Relationships: []
+      }
+      linkedin_industries: {
+        Row: {
+          created_at: string
+          display_name: string
+          display_order: number
+          id: string
+          industry_group: string
+          is_active: boolean
+          sector: string
+          sector_slug: string
+          slug: string
+          sub_industry: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          display_order?: number
+          id?: string
+          industry_group: string
+          is_active?: boolean
+          sector: string
+          sector_slug: string
+          slug: string
+          sub_industry?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          display_order?: number
+          id?: string
+          industry_group?: string
+          is_active?: boolean
+          sector?: string
+          sector_slug?: string
+          slug?: string
+          sub_industry?: string | null
+        }
+        Relationships: []
+      }
       lemlist_companies: {
         Row: {
           created_at: string

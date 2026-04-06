@@ -27,7 +27,7 @@ export function useLinkedInIndustries() {
     queryKey: ['linkedin-industries'],
     queryFn: async (): Promise<LinkedInIndustryRow[]> => {
       const { data, error } = await supabase
-        .from('linkedin_industries' as any)
+        .from('linkedin_industries')
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
