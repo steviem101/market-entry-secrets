@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Calendar, MapPin, Users, Clock, User, CalendarPlus } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, CalendarPlus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { AddToCalendarButton } from "@/components/events/AddToCalendarButton";
 import { Event } from "@/hooks/useEvents";
 import { Link } from "react-router-dom";
 import { differenceInDays, isPast, format } from "date-fns";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface EventCardProps {
   event: Event;
@@ -101,9 +102,14 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
           </div>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <User className="w-3 h-3 text-primary" />
-              </div>
+              <CompanyLogo
+                websiteUrl={event.organizer_website || event.website_url}
+                existingLogoUrl={event.event_logo_url}
+                companyName={event.organizer}
+                size="sm"
+                className="rounded-full"
+                fallbackClassName="bg-primary/10 text-primary rounded-full"
+              />
               <span className="text-sm text-muted-foreground truncate">{event.organizer}</span>
             </div>
             <div className="flex items-center gap-1 text-sm text-muted-foreground flex-shrink-0">

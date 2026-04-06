@@ -14,6 +14,7 @@ import { SubmissionButton } from "@/components/directory-submissions/SubmissionB
 import { useCaseStudies } from "@/hooks/useCaseStudies";
 import { SEOHead } from "@/components/common/SEOHead";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getLogoUrl } from "@/lib/logoUtils";
 
 const PAGE_SIZE = 12;
 
@@ -300,7 +301,7 @@ const CaseStudies = () => {
               <div className="flex items-center gap-3 mb-3">
                 <Avatar className="h-10 w-10 rounded-lg border">
                   <AvatarImage
-                    src={profile?.company_logo || primaryFounder?.image}
+                    src={profile?.company_logo || getLogoUrl(profile?.website, 40) || primaryFounder?.image}
                     alt={profile?.company_name}
                     className="object-cover"
                   />
@@ -393,7 +394,7 @@ const CaseStudies = () => {
             <div className="flex items-start gap-4">
               <Avatar className="h-12 w-12 rounded-lg border flex-shrink-0">
                 <AvatarImage
-                  src={profile?.company_logo || primaryFounder?.image}
+                  src={profile?.company_logo || getLogoUrl(profile?.website, 48) || primaryFounder?.image}
                   alt={profile?.company_name}
                   className="object-cover"
                 />

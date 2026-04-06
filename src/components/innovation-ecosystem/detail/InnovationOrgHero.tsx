@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { MapPin, Calendar, Users, Globe, ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { getCompanyInitials } from "@/components/company-card/CompanyCardHelpers";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface InnovationOrgHeroProps {
   org: {
@@ -34,27 +34,15 @@ export const InnovationOrgHero = ({ org }: InnovationOrgHeroProps) => {
 
         <div className="flex flex-col md:flex-row gap-8 items-start">
           {/* Logo / Initials */}
-          <div className="w-28 h-28 bg-white rounded-xl shadow-sm border flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {org.logo ? (
-              <img
-                loading="lazy"
-                src={org.logo}
-                alt={`${org.name} logo`}
-                className="w-full h-full object-contain p-3"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-amber-100 text-orange-600 font-bold text-3xl ${org.logo ? 'hidden' : 'flex'}`}
-              style={{ display: org.logo ? 'none' : 'flex' }}
-            >
-              {getCompanyInitials(org.name)}
-            </div>
-          </div>
+          <CompanyLogo
+            websiteUrl={org.website}
+            existingLogoUrl={org.logo}
+            companyName={org.name}
+            size="xl"
+            className="bg-white rounded-xl shadow-sm border"
+            fallbackClassName="bg-gradient-to-br from-orange-100 to-amber-100 text-orange-600"
+            imgClassName="object-contain p-3"
+          />
 
           {/* Info */}
           <div className="flex-1 min-w-0">
