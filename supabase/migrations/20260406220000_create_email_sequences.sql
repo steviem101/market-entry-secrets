@@ -19,14 +19,16 @@ CREATE TABLE IF NOT EXISTS public.email_sequences (
 
 ALTER TABLE public.email_sequences ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "System can insert email sequences"
-  ON public.email_sequences FOR INSERT WITH CHECK (true);
+-- Service-role-only access (RLS bypassed by service role key).
+-- Edge functions use service role; no client-side access needed.
+CREATE POLICY "Service role can insert email sequences"
+  ON public.email_sequences FOR INSERT WITH CHECK (false);
 
-CREATE POLICY "System can update email sequences"
-  ON public.email_sequences FOR UPDATE USING (true);
+CREATE POLICY "Service role can update email sequences"
+  ON public.email_sequences FOR UPDATE USING (false);
 
-CREATE POLICY "System can select email sequences"
-  ON public.email_sequences FOR SELECT USING (true);
+CREATE POLICY "Service role can select email sequences"
+  ON public.email_sequences FOR SELECT USING (false);
 
 CREATE INDEX IF NOT EXISTS idx_email_sequences_next_send
   ON public.email_sequences(next_send_at)

@@ -42,6 +42,15 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 204 });
   }
 
+  // Auth: require internal secret (used by pg_cron and manual invocations)
+  const secret = req.headers.get("x-internal-secret");
+  if (secret !== EMAIL_INTERNAL_SECRET) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
@@ -283,7 +292,7 @@ async function fetchDynamicData(
       supabase.from("service_providers").select("id", { count: "exact", head: true }),
       supabase
         .from("content_items")
-        .select("title, slug")
+        .select("id, title, slug")
         .eq("content_type", "case_study")
         .eq("status", "published")
         .order("created_at", { ascending: false })
