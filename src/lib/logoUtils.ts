@@ -1,4 +1,4 @@
-const LOGO_DEV_TOKEN = "pk_ZDgrKooYR4myUNCcckiOsg";
+const LOGO_DEV_TOKEN = "pk_L3JbJjCeT0-mUdhpPlS6SA";
 
 /**
  * Extracts the bare domain from a URL string.
