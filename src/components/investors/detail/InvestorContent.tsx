@@ -1,6 +1,26 @@
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Globe, Mail, DollarSign, Target, Building2, Newspaper, ExternalLink } from "lucide-react";
+import { MapPin, Globe, Mail, DollarSign, Target, Building2, Newspaper, ExternalLink, BookOpen } from "lucide-react";
 import InvestorCard from "../InvestorCard";
+
+type SourceEntry = { label: string; url: string };
+
+function normalizeSources(raw: unknown): SourceEntry[] {
+  if (!raw) return [];
+  const humanize = (key: string) =>
+    key.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((item): item is { label?: string; url?: string } => typeof item === "object" && item !== null)
+      .filter((item) => typeof item.url === "string" && item.url.startsWith("http"))
+      .map((item) => ({ label: item.label || item.url!, url: item.url! }));
+  }
+  if (typeof raw === "object") {
+    return Object.entries(raw as Record<string, unknown>)
+      .filter(([, v]) => typeof v === "string" && (v as string).startsWith("http"))
+      .map(([k, v]) => ({ label: humanize(k), url: v as string }));
+  }
+  return [];
+}
 
 interface InvestorContentProps {
   investor: {
@@ -41,6 +61,7 @@ export const InvestorContent = ({ investor, relatedInvestors }: InvestorContentP
   const details = investor.details || {};
   const portfolioCompanies = Array.isArray(details.portfolio_companies) ? details.portfolio_companies : [];
   const checkSize = formatCheckSize(investor.check_size_min, investor.check_size_max);
+  const sources = normalizeSources(details.sources);
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -161,6 +182,30 @@ export const InvestorContent = ({ investor, relatedInvestors }: InvestorContentP
                   </div>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* Sources / References */}
+          {sources.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-4">Sources</h2>
+              <ul className="space-y-2">
+                {sources.map((source, index) => (
+                  <li key={index} className="flex items-start gap-3 text-sm">
+                    <BookOpen className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline inline-flex items-center gap-1 break-all"
+                    >
+                      {source.label}
+                      <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-muted-foreground mt-3">Research citations used to build this profile.</p>
             </section>
           )}
         </div>
