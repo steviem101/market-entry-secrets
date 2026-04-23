@@ -377,3 +377,25 @@ Both `useToast` (shadcn) and `sonner` (`toast()`) are available. Use either.
 | Navigation items | `src/components/navigation/NavigationItems.tsx` |
 | Edge function shared modules | `supabase/functions/_shared/` |
 | Supabase config | `supabase/config.toml` |
+
+---
+
+## 14. Local MCP Setup (Supabase)
+
+`/daily-backlog` and `/implement-item` can query the live MES Platform database when the Supabase MCP server is configured. Setup:
+
+1. Generate a personal access token at https://supabase.com/dashboard/account/tokens.
+2. Export it in your shell (or use direnv — see `.envrc.example`):
+   ```bash
+   export SUPABASE_ACCESS_TOKEN=sbp_...
+   ```
+3. Copy the template:
+   ```bash
+   cp .mcp.example.json .mcp.json
+   ```
+   `.mcp.json` is gitignored. The template uses `${SUPABASE_ACCESS_TOKEN}` interpolation — never hardcode the token.
+4. Restart your Claude Code session. Run `/mcp` to confirm `supabase` is connected; tools like `mcp__supabase__list_tables` and `mcp__supabase__execute_sql` should appear.
+
+The server is pinned to `--project-ref=xhziwveaiuhzdoutpgrh` (MES Platform) and `--read-only`. DDL goes through `supabase/migrations/` files, not live SQL, so read-only is the right default even during `/implement-item` Phase 3.
+
+If the token leaks, rotate it immediately at the dashboard link above.

@@ -1,6 +1,9 @@
 # MCP config (contains secrets)
 .mcp.json
 
+# direnv (may contain secrets)
+.envrc
+
 # Logs
 logs
 *.log
