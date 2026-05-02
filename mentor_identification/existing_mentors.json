@@ -1,0 +1,15 @@
+[
+  {"name": "Anonymous Expert", "company": "Big 4 Consulting Firm", "title": "Former Big 4 Consulting Partner", "location": "Melbourne, VIC", "slug": "anonymous-expert"},
+  {"name": "Anonymous Venture Capitalist", "company": "Tier-1 VC Fund", "title": "Investment & Funding Expert", "location": "Sydney, NSW", "slug": "anonymous-venture-capitalist"},
+  {"name": "David Kim", "company": "Kim Financial Advisory", "title": "Fintech & Banking Specialist", "location": "Sydney, NSW", "slug": "david-kim"},
+  {"name": "Dr. Sarah Chen", "company": "Strategic Markets Consulting", "title": "Market Entry Strategy Director", "location": "Sydney, NSW", "slug": "dr-sarah-chen"},
+  {"name": "Emma Thompson", "company": "TalentBridge Australia", "title": "HR & Talent Acquisition Lead", "location": "Adelaide, SA", "slug": "emma-thompson"},
+  {"name": "James McDonald", "company": "McDonald Logistics Consulting", "title": "Supply Chain & Logistics Expert", "location": "Perth, WA", "slug": "james-mcdonald"},
+  {"name": "Lisa Anderson", "company": "Anderson Health Consulting", "title": "Healthcare & Life Sciences Expert", "location": "Melbourne, VIC", "slug": "lisa-anderson"},
+  {"name": "Michael O'Sullivan", "company": "O'Sullivan Partners", "title": "Legal & Regulatory Expert", "location": "Melbourne, VIC", "slug": "michael-o-sullivan"},
+  {"name": "Michael Thompson", "company": "RegTech Solutions", "title": "Regulatory Affairs Specialist", "location": "Brisbane, QLD", "slug": "michael-thompson"},
+  {"name": "Priya Sharma", "company": "Local Marketing Solutions", "title": "Digital Marketing Specialist", "location": "Brisbane, QLD", "slug": "priya-sharma"},
+  {"name": "Rachel Green", "company": "Green Retail Strategies", "title": "E-commerce & Retail Expert", "location": "Melbourne, VIC", "slug": "rachel-green"},
+  {"name": "Sarah Chen", "company": "Chen Strategic Consulting", "title": "Market Entry Strategist", "location": "Sydney, NSW", "slug": "sarah-chen"},
+  {"name": "Tony Nguyen", "company": "Nguyen Tech Advisory", "title": "Technology & SaaS Specialist", "location": "Brisbane, QLD", "slug": "tony-nguyen"}
+]

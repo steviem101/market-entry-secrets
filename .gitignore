@@ -39,3 +39,7 @@ supabase/.temp/
 # Scrape / enrichment exports (contain contact PII; do not commit)
 Phantom_-_*.csv
 phantom_*.csv
+SM_-_LI_Network_*.xlsx
+mentor_identification/anz_contacts.csv
+mentor_identification/anz_contacts.xlsx
+mentor_identification/mes_mentor_candidates.*
