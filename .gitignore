@@ -40,6 +40,8 @@ supabase/.temp/
 Phantom_-_*.csv
 phantom_*.csv
 SM_-_LI_Network_*.xlsx
+existing_picks.csv
 mentor_identification/anz_contacts.csv
 mentor_identification/anz_contacts.xlsx
+mentor_identification/scored_contacts.csv
 mentor_identification/mes_mentor_candidates.*
