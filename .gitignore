@@ -48,3 +48,4 @@ mentor_identification/tightened_scored.csv
 mentor_identification/tightening_diagnostic.csv
 mentor_identification/archetype_classification.csv
 mentor_identification/mes_mentor_candidates.*
+mentor_identification/__pycache__/
