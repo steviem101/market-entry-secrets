@@ -867,9 +867,11 @@ print("Scoring contacts...")
 records = []
 for i, row in df.iterrows():
     r = score_contact(row)
-    # Apply exclusion AFTER scoring (so we still know who they were)
-    # Per spec: exclude picks + supabase. Keep MES-tagged.
-    if r["already_in_google_sheet"] or r["already_in_supabase"]:
+    # Exclude only those already on the platform (Supabase community_members).
+    # Google Sheet picks are KEPT — that sheet is a content-scraping list, not
+    # a 'mentors already chosen' list. They get scored normally and the
+    # already_in_google_sheet flag stays True so the user can filter them.
+    if r["already_in_supabase"]:
         continue
     records.append(r)
 

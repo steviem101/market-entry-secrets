@@ -500,14 +500,19 @@ print("New mentor_category distribution (full pool):")
 print(df["mentor_category"].value_counts().head(25))
 
 # ---------------------------------------------------------------------------
-# Apply Recipe Y filter: archetype + score >= 14, drop "general" bucket
+# Apply Recipe Y filter: archetype + score >= 14, drop "general" bucket.
+# OVERRIDE: contacts on the Google Sheet picks list always pass through
+# (user has pre-vetted them as relevant mentors).
 # ---------------------------------------------------------------------------
-qualified = df[
+recipe_y_pass = (
     df["any_archetype"]
     & (df["total_score"] >= 14)
     & (df["mentor_category"] != "general")
-].copy()
-print(f"\nRecipe Y qualified (after dropping 'general'): {len(qualified)}")
+)
+picks_override = df["already_in_google_sheet"]
+qualified = df[recipe_y_pass | picks_override].copy()
+print(f"\nRecipe Y qualified (after dropping 'general', plus picks override): {len(qualified)}")
+print(f"  Of which Google Sheet picks (rescued by override): {(picks_override & ~recipe_y_pass).sum()}")
 print("Recipe Y mentor_category distribution:")
 print(qualified["mentor_category"].value_counts().head(25))
 
