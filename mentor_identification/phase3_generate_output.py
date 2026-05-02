@@ -442,14 +442,72 @@ def categorize(row) -> str:
 
 print("Re-categorizing...")
 df["mentor_category"] = df.apply(categorize, axis=1)
+
+# ---------------------------------------------------------------------------
+# Split financial_services_fx_insurance into fintech_founder vs traditional FS
+# ---------------------------------------------------------------------------
+TRADITIONAL_FS_COMPANIES = [
+    "nab", "national australia bank", "commonwealth bank", "commbank",
+    "westpac", "anz bank", "australia and new zealand banking",
+    "macquarie bank", "macquarie group", "suncorp", "iag",
+    "qbe", "aon", "marsh", "willis towers", "zurich australia",
+    "allianz", "tal life", "amp limited", "asb bank",
+    "bank of new zealand", "bnz", "kiwibank", "judo bank",
+]
+FINTECH_KEYWORDS = [
+    "fintech", "insurtech", "regtech", "wealthtech", "neobank",
+    "payments platform", "lending platform", "buy now pay later", "bnpl",
+    "crypto", "web3", "stablecoin", "defi",
+    "trading platform", "investment app", "robo[\\s-]advis",
+    "digital bank", "challenger bank", "open banking",
+    "embedded finance", "earned wage access",
+]
+
+def split_financial_services(row):
+    if row["mentor_category"] != "financial_services_fx_insurance":
+        return row["mentor_category"]
+    title = (row.get("linkedinJobTitle") or "").lower()
+    company = (row.get("companyName") or "").lower()
+    headline = (row.get("linkedinHeadline") or "").lower()
+    desc = (row.get("linkedinDescription") or "").lower()
+    text = f"{title} {company} {headline} {desc}"
+    # Explicit fintech keyword → fintech_founder regardless of role
+    if any(re.search(rf"\b{kw}\b", text) for kw in FINTECH_KEYWORDS):
+        return "fintech_founder"
+    # Founder/co-founder at non-traditional company → fintech_founder
+    if bool(row.get("is_founder")):
+        if not any(t in company for t in TRADITIONAL_FS_COMPANIES):
+            return "fintech_founder"
+    return "financial_services"
+
+df["mentor_category"] = df.apply(split_financial_services, axis=1)
+
+# ---------------------------------------------------------------------------
+# Consolidate sector_expert_* into single 'sector_expert' bucket; lift the
+# vertical into a new sector_vertical column.
+# ---------------------------------------------------------------------------
+SECTOR_ALIASES = {"defense": "defence"}  # dedupe spelling variants
+df["sector_vertical"] = df["mentor_category"].apply(
+    lambda c: SECTOR_ALIASES.get(
+        c.replace("sector_expert_", ""), c.replace("sector_expert_", "")
+    ) if isinstance(c, str) and c.startswith("sector_expert_") else ""
+)
+df["mentor_category"] = df["mentor_category"].apply(
+    lambda c: "sector_expert" if isinstance(c, str) and c.startswith("sector_expert_") else c
+)
+
 print("New mentor_category distribution (full pool):")
 print(df["mentor_category"].value_counts().head(25))
 
 # ---------------------------------------------------------------------------
-# Apply Recipe Y filter: archetype + score >= 14
+# Apply Recipe Y filter: archetype + score >= 14, drop "general" bucket
 # ---------------------------------------------------------------------------
-qualified = df[df["any_archetype"] & (df["total_score"] >= 14)].copy()
-print(f"\nRecipe Y qualified: {len(qualified)}")
+qualified = df[
+    df["any_archetype"]
+    & (df["total_score"] >= 14)
+    & (df["mentor_category"] != "general")
+].copy()
+print(f"\nRecipe Y qualified (after dropping 'general'): {len(qualified)}")
 print("Recipe Y mentor_category distribution:")
 print(qualified["mentor_category"].value_counts().head(25))
 
@@ -483,7 +541,7 @@ COLUMNS = [
     "seniority_score", "relevance_score", "industry_score", "network_score",
     "persona_fit_score", "intl_founder_score",
     "is_founder", "origin_country", "origin_signals",
-    "persona_fit_label", "mentor_category",
+    "persona_fit_label", "mentor_category", "sector_vertical",
     "linkedinJobTitle", "companyName", "companyIndustry", "location",
     "linkedinHeadline", "linkedinProfileUrl",
     "professionalEmail1", "personalEmail1",
