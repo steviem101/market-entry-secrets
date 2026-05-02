@@ -449,6 +449,7 @@ def categorize(row) -> str:
 #   +1  Helper language in description ("I help", "helping companies scale")
 #   +1  Scale claim ("100+ founders", "20 years experience")
 # ---------------------------------------------------------------------------
+# Word-bounded suffixes (e.g. "Tribe Global Ventures" — "ventures" as a token)
 VENTURE_BRAND_SUFFIXES = [
     r"\bventures?\b", r"\bpartners\b", r"\badvisory\b", r"\badvisors\b",
     r"\badvisers\b", r"\bhq\b", r"\bstudio\b", r"\bhub\b", r"\blabs?\b",
@@ -457,26 +458,71 @@ VENTURE_BRAND_SUFFIXES = [
     r"\binstitute\b", r"\bfoundation\b", r"\bnetwork\b",
     r"\bcapital\b", r"\bequity\b", r"\bgroup\b",
 ]
+# CamelCase / concatenated brand suffixes — match end-of-word (no left \b),
+# so "earlywork" matches via "work$" and "leapsheep" via "sheep$".
+CAMELCASE_BRAND_SUFFIXES = [
+    r"work$", r"works$", r"lab$", r"labs$", r"pad$", r"hub$", r"works?\b",
+    r"bridge$", r"sheep$", r"venture$", r"ventures$", r"capital$",
+]
 FOUNDER_OR_CSUITE_RE = re.compile(
     r"\b(founder|co-?founder|cofounder|ceo|chief\s+executive|"
     r"managing\s+(director|partner)|principal|owner)\b"
 )
+
+# Helper / advisor positioning verbs — broader, more flexible
 HELPER_LANGUAGE = [
-    r"\bi\s+help\b",
-    r"\bhelping\s+(companies|startups|founders|businesses|brands|teams|leaders|smes?|scale[- ]?ups?)\b",
-    r"\bi\s+(advise|advised|coach|coached|mentor|mentored|work\s+with)\b",
-    r"\bhelping\s+\w+\s+(scale|grow|launch|enter|expand|raise)\b",
-    r"\bi\s+specialise\s+in\b", r"\bi\s+specialize\s+in\b",
-    r"\b(my|our)\s+mission\b.{0,40}(help|advise|support)\b",
+    # First-person direct statements
+    r"\bi\s+(help|coach|advise|mentor|guide|support|empower|connect|enable|"
+    r"work\s+with)\b",
+    r"\bi'm\s+(all\s+about|passionate\s+about|focused\s+on|driven\s+by)\b",
+    r"\bi\s+specialis[ez]e\s+in\b",
+    r"\bmy\s+(mission|passion|focus|work)\b.{0,40}\b(help|advise|support|"
+    r"coach|mentor|guide|empower|connect|enable|build)\b",
+    # Verb + audience patterns (more flexible than original)
+    r"\b(help|helping|coach|coaching|advis(e|ing)|mentor(ing)?|guid(e|ing)|"
+    r"support(ing)?|empower(ing)?|enabl(e|ing))\b.{0,40}\b(startups?|founders?|"
+    r"companies|businesses|brands|teams|leaders|smes?|scale[- ]?ups?|"
+    r"operators?|entrepreneurs?)\b",
+    # Specific verb-noun combinations seen in the validated picks
+    r"\bcoaching\s+(startup|founder|company|team|leader|sme|scale)",
+    r"\bconnecting\s+(startups?|founders?|companies|ecosystems?|"
+    r"communities|networks|investors)",
+    r"\bbuilding\s+(a|an|the)?\s*\w+\s+(community|network|platform|"
+    r"ecosystem|career|movement)\b",
 ]
-SCALE_CLAIM = [
-    r"\b\d{2,4}\+?\s+(founders?|companies|startups|businesses|teams|clients|hires?|operators?|brands)\b",
-    r"\bover\s+\d{2,4}\s+(founders?|companies|startups|businesses|teams|clients|hires?)\b",
+
+# Scale claims — explicit numeric proof points
+SCALE_CLAIM_NUMERIC = [
+    # "100+ founders supported" / "20+ companies helped"
+    r"\b\d{2,4}\+?\s+(founders?|companies|startups|businesses|teams|clients|"
+    r"hires?|operators?|brands|smes?|scale[- ]?ups?|portfolio)\b",
+    r"\bover\s+\d{2,4}\s+(founders?|companies|startups|businesses|teams|"
+    r"clients|hires?)\b",
     r"\bmore\s+than\s+\d{2,4}\s+(founders?|companies|startups|businesses)\b",
-    r"\b(1[5-9]|[2-9]\d|\d{3,})\+?\s+years?\s+(of\s+)?(experience|building|operator|operating|leading|advising)\b",
-    r"\bsupported\s+\d{2,4}\b",
-    r"\bbuilt\s+\d{2,4}\b",
+    r"\bsupported\s+\d{2,4}\b", r"\bbuilt\s+\d{2,4}\b",
+    r"\bcoached\s+\d{2,4}\b", r"\badvised\s+\d{2,4}\b",
 ]
+# Years claims — only count when paired with advisor verbs (not generic)
+SCALE_CLAIM_YEARS = [
+    r"\b(1[5-9]|[2-9]\d|\d{3,})\+?\s+years?\s+(of\s+)?\b"
+    r"(advising|coaching|founding|building|operating|leading|scaling|"
+    r"consulting|mentoring|investing|partnering)\b",
+    r"\b(1[5-9]|[2-9]\d|\d{3,})\+?\s+years?\s+(in|at|across)\s+"
+    r"(saas|tech|fintech|startups?|ventures?|founders?|advisory|investing)\b",
+]
+
+# Explicit advisor-positioning in title/headline (catches profiles with empty
+# descriptions, e.g. Ray Fleming "Advisor, Market Entry" at Ignite Partners)
+ADVISOR_TITLE_FALLBACK = [
+    r"\b(advisor|adviser|mentor|coach)\b.{0,30}\b(market\s+entry|founder|"
+    r"startup|scale[- ]?up|growth|expansion|gtm|investor|board)\b",
+    r"\b(market\s+entry|growth|gtm|founder|startup|scale[- ]?up)\s+"
+    r"(advisor|adviser|mentor|coach|consultant|partner)\b",
+    r"\b(non-?executive\s+director|board\s+(advisor|adviser|member))\b",
+    r"\bmentor\s+in\s+residence\b",
+    r"\bentrepreneur\s+in\s+residence\b",
+]
+
 
 def operator_advisor_pedigree(row):
     title = (row.get("linkedinJobTitle") or "").lower()
@@ -487,22 +533,44 @@ def operator_advisor_pedigree(row):
     desc_text = desc + " " + headline
     score = 0
     signals = []
+
     # +1: Founder/CEO/MD title + venture/advisory company name
+    # Try word-bounded suffixes first; fall back to camelCase suffix matching.
     if FOUNDER_OR_CSUITE_RE.search(title_text):
+        matched = False
         for pat in VENTURE_BRAND_SUFFIXES:
             if re.search(pat, company):
-                score += 1
                 signals.append(f"founder_at_{pat.strip(chr(92)+'b').strip()}")
+                score += 1
+                matched = True
                 break
-    # +1: Helper language
+        if not matched:
+            company_compact = re.sub(r"[^a-z0-9]", "", company)
+            for pat in CAMELCASE_BRAND_SUFFIXES:
+                if re.search(pat, company_compact):
+                    signals.append(f"founder_at_camelcase_{pat.strip('$').strip()}")
+                    score += 1
+                    break
+
+    # +1: Helper / advisor positioning language in description or headline
     if any(re.search(pat, desc_text) for pat in HELPER_LANGUAGE):
         score += 1
         signals.append("helper_language")
-    # +1: Scale claim
-    if any(re.search(pat, desc_text) for pat in SCALE_CLAIM):
+    elif any(re.search(pat, title_text) for pat in ADVISOR_TITLE_FALLBACK):
+        # Empty-description fallback: explicit advisor positioning in title
         score += 1
-        signals.append("scale_claim")
-    return score, "; ".join(signals)
+        signals.append("advisor_in_title")
+
+    # +1: Scale claim — numeric proof OR years-with-advisor-context (not
+    # generic "20 years experience" at a corporate job)
+    if any(re.search(pat, desc_text) for pat in SCALE_CLAIM_NUMERIC):
+        score += 1
+        signals.append("scale_claim_numeric")
+    elif any(re.search(pat, desc_text) for pat in SCALE_CLAIM_YEARS):
+        score += 1
+        signals.append("scale_claim_years_advisor")
+
+    return min(score, 3), "; ".join(signals)
 
 print("Computing Operator-Advisor Pedigree boost...")
 boost_results = df.apply(operator_advisor_pedigree, axis=1)
