@@ -440,7 +440,81 @@ def categorize(row) -> str:
     return candidates[0]
 
 
-print("Re-categorizing...")
+# ---------------------------------------------------------------------------
+# Operator-Advisor Pedigree boost (Recipe A test).
+#
+# Surfaces candidates who match the structural pattern of the 18 user-validated
+# Google Sheet mentors:
+#   +1  Founder/CEO/MD title + company name has venture/advisory suffix
+#   +1  Helper language in description ("I help", "helping companies scale")
+#   +1  Scale claim ("100+ founders", "20 years experience")
+# ---------------------------------------------------------------------------
+VENTURE_BRAND_SUFFIXES = [
+    r"\bventures?\b", r"\bpartners\b", r"\badvisory\b", r"\badvisors\b",
+    r"\badvisers\b", r"\bhq\b", r"\bstudio\b", r"\bhub\b", r"\blabs?\b",
+    r"\bacademy\b", r"\bcollective\b", r"\binspire\b", r"\bignite\b",
+    r"\blaunchpad\b", r"\blaunch\s*pad\b", r"\bworks\b", r"\bhouse\b",
+    r"\binstitute\b", r"\bfoundation\b", r"\bnetwork\b",
+    r"\bcapital\b", r"\bequity\b", r"\bgroup\b",
+]
+FOUNDER_OR_CSUITE_RE = re.compile(
+    r"\b(founder|co-?founder|cofounder|ceo|chief\s+executive|"
+    r"managing\s+(director|partner)|principal|owner)\b"
+)
+HELPER_LANGUAGE = [
+    r"\bi\s+help\b",
+    r"\bhelping\s+(companies|startups|founders|businesses|brands|teams|leaders|smes?|scale[- ]?ups?)\b",
+    r"\bi\s+(advise|advised|coach|coached|mentor|mentored|work\s+with)\b",
+    r"\bhelping\s+\w+\s+(scale|grow|launch|enter|expand|raise)\b",
+    r"\bi\s+specialise\s+in\b", r"\bi\s+specialize\s+in\b",
+    r"\b(my|our)\s+mission\b.{0,40}(help|advise|support)\b",
+]
+SCALE_CLAIM = [
+    r"\b\d{2,4}\+?\s+(founders?|companies|startups|businesses|teams|clients|hires?|operators?|brands)\b",
+    r"\bover\s+\d{2,4}\s+(founders?|companies|startups|businesses|teams|clients|hires?)\b",
+    r"\bmore\s+than\s+\d{2,4}\s+(founders?|companies|startups|businesses)\b",
+    r"\b(1[5-9]|[2-9]\d|\d{3,})\+?\s+years?\s+(of\s+)?(experience|building|operator|operating|leading|advising)\b",
+    r"\bsupported\s+\d{2,4}\b",
+    r"\bbuilt\s+\d{2,4}\b",
+]
+
+def operator_advisor_pedigree(row):
+    title = (row.get("linkedinJobTitle") or "").lower()
+    headline = (row.get("linkedinHeadline") or "").lower()
+    desc = (row.get("linkedinDescription") or "").lower()
+    company = (row.get("companyName") or "").lower()
+    title_text = title + " " + headline
+    desc_text = desc + " " + headline
+    score = 0
+    signals = []
+    # +1: Founder/CEO/MD title + venture/advisory company name
+    if FOUNDER_OR_CSUITE_RE.search(title_text):
+        for pat in VENTURE_BRAND_SUFFIXES:
+            if re.search(pat, company):
+                score += 1
+                signals.append(f"founder_at_{pat.strip(chr(92)+'b').strip()}")
+                break
+    # +1: Helper language
+    if any(re.search(pat, desc_text) for pat in HELPER_LANGUAGE):
+        score += 1
+        signals.append("helper_language")
+    # +1: Scale claim
+    if any(re.search(pat, desc_text) for pat in SCALE_CLAIM):
+        score += 1
+        signals.append("scale_claim")
+    return score, "; ".join(signals)
+
+print("Computing Operator-Advisor Pedigree boost...")
+boost_results = df.apply(operator_advisor_pedigree, axis=1)
+df["operator_advisor_boost"] = boost_results.apply(lambda x: x[0])
+df["operator_advisor_signals"] = boost_results.apply(lambda x: x[1])
+df["total_score_pre_boost"] = df["total_score"]
+df["total_score"] = df["total_score"] + df["operator_advisor_boost"]
+print("  Boost distribution:")
+print(df["operator_advisor_boost"].value_counts().sort_index())
+print(f"  Avg boost: {df['operator_advisor_boost'].mean():.2f}")
+
+print("\nRe-categorizing...")
 df["mentor_category"] = df.apply(categorize, axis=1)
 
 # ---------------------------------------------------------------------------
@@ -542,7 +616,9 @@ qualified = qualified.sort_values(
 
 # Final column order matching the spec
 COLUMNS = [
-    "fullName", "rating", "total_score", "archetypes", "reasoning",
+    "fullName", "rating", "total_score", "total_score_pre_boost",
+    "operator_advisor_boost", "operator_advisor_signals",
+    "archetypes", "reasoning",
     "seniority_score", "relevance_score", "industry_score", "network_score",
     "persona_fit_score", "intl_founder_score",
     "is_founder", "origin_country", "origin_signals",
