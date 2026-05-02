@@ -1,8 +1,28 @@
--- Combined angel investor enrichment SQL
+-- Combined angel investor enrichment SQL — DASHBOARD-SAFE VERSION
 -- Paste this entire file into Supabase SQL Editor and click Run
 -- https://supabase.com/dashboard/project/xhziwveaiuhzdoutpgrh/sql/new
--- 23 UPDATE statements across 5 migration files (pilot + batch 01a-01d)
--- Each migration is its own BEGIN/COMMIT transaction; safe to rerun (idempotent).
+--
+-- Includes a defensive ALTER TABLE prelude that adds any columns the live
+-- DB is missing (because earlier schema migrations may not have been applied
+-- yet). All ADDs use IF NOT EXISTS, so this is idempotent.
+
+-- ======================================================================
+-- PRELUDE: ensure all columns referenced by the UPDATEs exist
+-- ======================================================================
+BEGIN;
+
+ALTER TABLE public.investors
+  ADD COLUMN IF NOT EXISTS meta_title text,
+  ADD COLUMN IF NOT EXISTS meta_description text,
+  ADD COLUMN IF NOT EXISTS currently_investing boolean DEFAULT true,
+  ADD COLUMN IF NOT EXISTS leads_deals boolean,
+  ADD COLUMN IF NOT EXISTS country text DEFAULT 'Australia',
+  ADD COLUMN IF NOT EXISTS application_url text,
+  ADD COLUMN IF NOT EXISTS fund_size text,
+  ADD COLUMN IF NOT EXISTS year_fund_closed text,
+  ADD COLUMN IF NOT EXISTS portfolio_companies text[];
+
+COMMIT;
 
 
 -- ======================================================================
