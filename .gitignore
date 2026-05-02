@@ -44,4 +44,7 @@ existing_picks.csv
 mentor_identification/anz_contacts.csv
 mentor_identification/anz_contacts.xlsx
 mentor_identification/scored_contacts.csv
+mentor_identification/tightened_scored.csv
+mentor_identification/tightening_diagnostic.csv
+mentor_identification/archetype_classification.csv
 mentor_identification/mes_mentor_candidates.*
