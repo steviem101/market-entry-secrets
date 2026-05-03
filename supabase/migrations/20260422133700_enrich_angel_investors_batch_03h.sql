@@ -112,10 +112,10 @@ CSV cheque size $20–$40K. Stated thesis: **Sector agnostic — current...** (t
       'linkedin','https://au.linkedin.com/in/peterdavisau',
       'davis_enterprises','https://au.linkedin.com/company/davisenterprisesholdings'
     ),
-    'corrections','CSV name was truncated ("Peter Davis Davis Enterp..."). CSV portfolio truncated ("Puralink, Aquila, Fluency, ..."). Three retained verbatim. CSV email field had LinkedIn URL.'
+    'corrections','CSV name was truncated ("Peter Davis Davis Enterp..."); DB record is "Peter Davis, Davis Enterprises Holdings". CSV portfolio truncated ("Puralink, Aquila, Fluency, ..."). Three retained verbatim. CSV email field had LinkedIn URL.'
   ),
   updated_at = now()
-WHERE name = 'Peter Davis Davis Enterp...';
+WHERE name = 'Peter Davis, Davis Enterprises Holdings';
 
 UPDATE investors SET
   description = 'Sydney-based Managing Director at Grant Samuel (top-tier Australian corporate-advisory firm) and active angel investor. Consumer-products focus. Portfolio includes Heaps Normal (non-alcoholic beer) and PMNP. $10k–$50k cheques.',
