@@ -572,15 +572,130 @@ def operator_advisor_pedigree(row):
 
     return min(score, 3), "; ".join(signals)
 
+# ---------------------------------------------------------------------------
+# Recipe B: Cross-border focus boost (+1 max)
+#   Fires on profiles that explicitly position around cross-border/expansion,
+#   multi-country operating, or international advisory work.
+# ---------------------------------------------------------------------------
+CROSS_BORDER_PATTERNS = [
+    r"\b(international|global|cross[- ]?border|go[- ]?global)\s+"
+    r"(expansion|growth|advisory|business|strategy|sales|partnerships?)\b",
+    r"\bexpand(ing)?\s+(into|to)\s+(australia|apac|asia[- ]?pacific|"
+    r"the\s+(us|uk|eu)|new\s+zealand|nz|anz|the\s+world|globally)\b",
+    r"\b(scaling|scale)\s+(to|into|across)\s+(the\s+)?\w+\b.{0,20}"
+    r"\b(world|globally|apac|asia|markets?)\b",
+    r"\bgo[- ]to[- ]market\b.{0,20}\b(apac|asia|international|global|"
+    r"australia|new\s+zealand|us|uk|eu)\b",
+    r"\b(apac|asia[- ]?pacific|anz|asean)\s+(gtm|expansion|growth|"
+    r"strategy|operations|leader|director|head|vp)\b",
+    r"\b(country|regional)\s+(manager|director|head|leader)\b",
+    # Multi-country footprint: "AU | UK | US" or "Sydney/London/NYC"
+    r"\b(au|aus|australia|uk|us|usa|sg|singapore|nz|hk|eu)\b\s*[|/,]\s*"
+    r"\b(au|aus|australia|uk|us|usa|sg|singapore|nz|hk|eu)\b\s*[|/,]\s*"
+    r"\b(au|aus|australia|uk|us|usa|sg|singapore|nz|hk|eu|me)\b",
+    r"\b(sydney|melbourne|brisbane)\b\s*[|/,]\s*"
+    r"\b(london|new\s+york|nyc|san\s+francisco|sf|singapore|hong\s+kong|tokyo)\b",
+    # Cross-border-specific roles / mission
+    r"\bmarket\s+entry\b",
+    r"\binternational\s+business\s+development\b",
+    r"\binternational\s+expansion\s+(specialist|consultant|director|lead)\b",
+    r"\bsoft\s+landing\b", r"\blanding\s+pad\b",
+    r"\b(asia[- ]?pacific|apac)\s+(community|ecosystem|gtm|growth)\b",
+    # International founder positioning
+    r"\b(originally\s+from|relocated\s+from|moved\s+from|grew\s+up\s+in)\s+"
+    r"(uk|united\s+kingdom|us|united\s+states|america|ireland|germany|france|"
+    r"singapore|hong\s+kong|new\s+zealand|south\s+africa|india|the\s+netherlands)\b",
+]
+CROSS_BORDER_TITLE_PATTERNS = [
+    r"\b(country|regional|apac|anz)\s+(manager|director|head|lead|ceo|vp)\b",
+    r"\b(international|global|cross[- ]?border)\b",
+    r"\b(asia[- ]?pacific|apac|anz)\s+\w*\s*(strategy|expansion|growth|operations)\b",
+]
+
+def cross_border_boost(row):
+    headline = (row.get("linkedinHeadline") or "").lower()
+    desc = (row.get("linkedinDescription") or "").lower()
+    title = (row.get("linkedinJobTitle") or "").lower()
+    text = title + " " + headline + " " + desc
+    for pat in CROSS_BORDER_PATTERNS:
+        if re.search(pat, text):
+            return 1, "cross_border_focus"
+    for pat in CROSS_BORDER_TITLE_PATTERNS:
+        if re.search(pat, title + " " + headline):
+            return 1, "cross_border_title"
+    return 0, ""
+
+
+# ---------------------------------------------------------------------------
+# Recipe C: Recognition signals boost (+1 max)
+#   Fires on industry recognition / governance credentials / award signals.
+# ---------------------------------------------------------------------------
+RECOGNITION_PATTERNS = [
+    r"\b(linkedin\s+)?top\s+voice\b",
+    r"\b(ecosystem|startup|community|founder|industry|innovation)\s+hero\s+of\s+the\s+year\b",
+    r"\bhero\s+of\s+the\s+year\b",
+    r"\b(founder|entrepreneur|innovator|leader)\s+of\s+the\s+year\b",
+    r"\b(forbes|fast\s+company)\s+(30\s+under\s+30|30u30|tech\s+50)\b",
+    r"\bfortune\s+(40\s+under\s+40|40u40)\b",
+    r"\bsmart\s+(company|50)\b.{0,20}\b(under|top)\b",
+    r"\b(ted|tedx)\s+(speaker|talk|fellow)\b",
+    r"\baward[- ]winning\b",
+    r"\b(launchvic|launchnsw)\b.{0,30}\b(grant|recipient|supported|funded|alumni)\b",
+    r"\baustrade\s+landing\s+pad\b",
+    r"\bsbe\s+australia\b",
+    r"\b(gaicd|maicd|faicd)\b",  # Australian Institute of Company Directors
+    # Common award/recognition keywords with year proximity
+    r"\b(named|recognised|recognized|awarded|honoured|honored|listed)\b"
+    r".{0,30}\b(20[12]\d)\b",
+    r"\b(20[12]\d)\b\s*\b(award|winner|recipient|finalist|honoree)s?\b",
+    r"\b(womens?\s+leadership|women\s+in\s+(business|tech|finance))\s+award\b",
+]
+
+def recognition_boost(row):
+    headline = (row.get("linkedinHeadline") or "").lower()
+    desc = (row.get("linkedinDescription") or "").lower()
+    title = (row.get("linkedinJobTitle") or "").lower()
+    text = title + " " + headline + " " + desc
+    fired = []
+    for pat in RECOGNITION_PATTERNS:
+        m = re.search(pat, text)
+        if m:
+            # Add a friendly tag for the matched phrase
+            tag = m.group(0)[:30].replace(",", "").strip()
+            fired.append(f"recognition:{tag}")
+    if fired:
+        return 1, "; ".join(fired[:3])  # cap at 3 fired patterns shown
+    return 0, ""
+
+
 print("Computing Operator-Advisor Pedigree boost...")
 boost_results = df.apply(operator_advisor_pedigree, axis=1)
 df["operator_advisor_boost"] = boost_results.apply(lambda x: x[0])
 df["operator_advisor_signals"] = boost_results.apply(lambda x: x[1])
+
+print("Computing Cross-Border Focus boost (Recipe B)...")
+cb_results = df.apply(cross_border_boost, axis=1)
+df["cross_border_boost"] = cb_results.apply(lambda x: x[0])
+df["cross_border_signals"] = cb_results.apply(lambda x: x[1])
+
+print("Computing Recognition boost (Recipe C)...")
+rec_results = df.apply(recognition_boost, axis=1)
+df["recognition_boost"] = rec_results.apply(lambda x: x[0])
+df["recognition_signals"] = rec_results.apply(lambda x: x[1])
+
 df["total_score_pre_boost"] = df["total_score"]
-df["total_score"] = df["total_score"] + df["operator_advisor_boost"]
-print("  Boost distribution:")
-print(df["operator_advisor_boost"].value_counts().sort_index())
-print(f"  Avg boost: {df['operator_advisor_boost'].mean():.2f}")
+df["total_score"] = (
+    df["total_score"]
+    + df["operator_advisor_boost"]
+    + df["cross_border_boost"]
+    + df["recognition_boost"]
+)
+
+print(f"\n  Operator-Advisor distribution: {dict(df['operator_advisor_boost'].value_counts().sort_index())}")
+print(f"  Cross-Border distribution:     {dict(df['cross_border_boost'].value_counts().sort_index())}")
+print(f"  Recognition distribution:      {dict(df['recognition_boost'].value_counts().sort_index())}")
+total_boost = df['operator_advisor_boost'] + df['cross_border_boost'] + df['recognition_boost']
+print(f"  TOTAL boost distribution:      {dict(total_boost.value_counts().sort_index())}")
 
 print("\nRe-categorizing...")
 df["mentor_category"] = df.apply(categorize, axis=1)
@@ -648,7 +763,7 @@ print(df["mentor_category"].value_counts().head(25))
 # ---------------------------------------------------------------------------
 recipe_y_pass = (
     df["any_archetype"]
-    & (df["total_score"] >= 14)
+    & (df["total_score"] >= 16)
     & (df["mentor_category"] != "general")
 )
 picks_override = df["already_in_google_sheet"]
@@ -686,6 +801,8 @@ qualified = qualified.sort_values(
 COLUMNS = [
     "fullName", "rating", "total_score", "total_score_pre_boost",
     "operator_advisor_boost", "operator_advisor_signals",
+    "cross_border_boost", "cross_border_signals",
+    "recognition_boost", "recognition_signals",
     "archetypes", "reasoning",
     "seniority_score", "relevance_score", "industry_score", "network_score",
     "persona_fit_score", "intl_founder_score",
