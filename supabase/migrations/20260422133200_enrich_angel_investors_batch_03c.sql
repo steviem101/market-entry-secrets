@@ -100,10 +100,10 @@ The group operates as a screening, due diligence and round-coordination function
       'website','https://melbourneangels.net.au/',
       'linkedin','https://www.linkedin.com/company/3693826'
     ),
-    'corrections','CSV portfolio truncated ("Celleo, Walking Tall, EMA..."). Two retained verbatim. CSV location truncated ("Southbank Vi...") resolved to Southbank, VIC.'
+    'corrections','CSV portfolio truncated ("Celleo, Walking Tall, EMA..."). Two retained verbatim. CSV location truncated ("Southbank Vi...") resolved to Southbank, VIC. CSV name "Melbourne Angels Inc." matches DB record "Melbourne Angels".'
   ),
   updated_at = now()
-WHERE name = 'Melbourne Angels Inc.';
+WHERE name = 'Melbourne Angels';
 
 UPDATE investors SET
   description = 'Melbourne-based angel investor with energy, technology and construction focus. Founder of Box Forest. Portfolio includes Bygen (biochar) and Conry. $25k–$50k cheques.',
