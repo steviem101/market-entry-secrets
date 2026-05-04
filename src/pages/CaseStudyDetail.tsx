@@ -8,11 +8,19 @@ import { useCaseStudy, useRelatedCaseStudies } from "@/hooks/useCaseStudies";
 import { useIncrementViewCount } from "@/hooks/useContent";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { useContentActions } from "@/hooks/useContentActions";
+import { useAutolinkCorpus } from "@/hooks/useAutolinkCorpus";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { SectionNav } from "@/components/detail/SectionNav";
 import { ContentBodyRenderer } from "@/components/detail/ContentBodyRenderer";
+import { ReadingProgressBar } from "@/components/case-study/ReadingProgressBar";
+import { HeroImage } from "@/components/case-study/HeroImage";
+import { TLDRBlock } from "@/components/case-study/TLDRBlock";
+import { QuickFactsStrip } from "@/components/case-study/QuickFactsStrip";
+import { AuthorByline } from "@/components/case-study/AuthorByline";
+import { SourcesSection } from "@/components/case-study/SourcesSection";
+import type { CaseStudyQuote, CaseStudySource, QuickFact } from "@/lib/case-study/types";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getLogoUrl } from "@/lib/logoUtils";
@@ -52,6 +60,7 @@ const CaseStudyDetail = () => {
   const { slug } = useParams<{ slug: string }>();
 
   const { data: caseStudy, isLoading, error } = useCaseStudy(slug || '');
+  const { data: linkerCorpus = [] } = useAutolinkCorpus();
   const incrementViewCount = useIncrementViewCount();
   const { isSaved, toggleSave, handleShare: handleShareBase, copied } = useContentActions(caseStudy?.id);
 
@@ -136,14 +145,27 @@ const CaseStudyDetail = () => {
   const companyName = companyProfile?.company_name || caseStudy.title;
   const metaDescription = caseStudy.subtitle || caseStudy.meta_description || caseStudy.title;
   const outcome = companyProfile?.outcome;
+
+  const sources: CaseStudySource[] = (caseStudy as any).case_study_sources || [];
+  const quotes: CaseStudyQuote[] = (caseStudy as any).case_study_quotes || [];
+  const heroImageUrl = (caseStudy as any).hero_image_url as string | null | undefined;
+  const heroImageAlt = (caseStudy as any).hero_image_alt as string | null | undefined;
+  const heroImageCredit = (caseStudy as any).hero_image_credit as string | null | undefined;
+  const tldr = (caseStudy as any).tldr as string[] | null | undefined;
+  const quickFacts = (caseStudy as any).quick_facts as QuickFact[] | null | undefined;
+  const lastVerifiedAt = (caseStudy as any).last_verified_at as string | null | undefined;
+  const researchedBy = (caseStudy as any).researched_by as string | null | undefined;
+  const researchedByAvatarUrl = (caseStudy as any).researched_by_avatar_url as string | null | undefined;
+
   return (
     <>
+      <ReadingProgressBar />
       <SEOHead
         title={`How ${companyName} Entered the Australian Market | Market Entry Secrets`}
         description={`${metaDescription.slice(0, 150)}. Learn the entry strategy, challenges, and lessons from ${companyName}'s expansion into Australia.`}
         canonicalPath={`/case-studies/${caseStudy.slug}`}
         ogType="article"
-        ogImage={companyProfile?.company_logo || undefined}
+        ogImage={heroImageUrl || companyProfile?.company_logo || undefined}
         jsonLd={{
           type: "Article",
           data: {
@@ -247,6 +269,9 @@ const CaseStudyDetail = () => {
               contentDescription={caseStudy.subtitle || caseStudy.meta_description}
             >
               <div className="mb-8">
+                {/* Hero image (renders nothing if hero_image_url is null) */}
+                <HeroImage url={heroImageUrl} alt={heroImageAlt} credit={heroImageCredit} />
+
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row items-start gap-4 mb-6">
                   <Avatar className="h-16 w-16 rounded-xl border-2 border-border flex-shrink-0">
@@ -301,6 +326,13 @@ const CaseStudyDetail = () => {
                         {caseStudy.view_count || 0} views
                       </span>
                     </div>
+                    {/* Author byline (renders nothing if researched_by and last_verified_at are null) */}
+                    <AuthorByline
+                      researchedBy={researchedBy}
+                      avatarUrl={researchedByAvatarUrl}
+                      lastVerifiedAt={lastVerifiedAt}
+                      className="mt-2"
+                    />
                   </div>
 
                   {/* Mobile actions */}
@@ -331,6 +363,9 @@ const CaseStudyDetail = () => {
                     {caseStudy.subtitle}
                   </p>
                 )}
+
+                {/* TL;DR (renders nothing if tldr is null/empty) */}
+                <TLDRBlock bullets={tldr} />
 
                 {/* Mobile section nav */}
                 <SectionNav sections={sections} scrollToSection={scrollToSection} variant="mobile" />
@@ -401,11 +436,22 @@ const CaseStudyDetail = () => {
                   </Card>
                 )}
 
+                {/* Quick facts (renders nothing if quick_facts is null/empty) */}
+                <QuickFactsStrip facts={quickFacts} />
+
                 <ContentBodyRenderer
                   generalContent={generalContent}
                   groupedContent={groupedContent}
                   questionStyle="heading"
+                  linkerCorpus={linkerCorpus}
+                  sources={sources}
+                  quotes={quotes}
+                  subjectName={companyName}
+                  googleFallback
                 />
+
+                {/* Sources list (renders nothing if no sources) */}
+                <SourcesSection sources={sources} />
               </div>
 
               {/* Bottom CTA: Report Creator */}
