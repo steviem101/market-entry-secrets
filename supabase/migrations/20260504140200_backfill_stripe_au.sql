@@ -7,7 +7,7 @@ DECLARE
   v_sec_strategy uuid; v_sec_reg uuid; v_sec_partners uuid; v_sec_results uuid;
 BEGIN
   SELECT id INTO v_case_study_id FROM public.content_items WHERE slug = 'stripe-australia-fintech-expansion';
-  IF v_case_study_id IS NULL THEN RAISE EXCEPTION 'stripe-australia-fintech-expansion not found'; END IF;
+  IF v_case_study_id IS NULL THEN RETURN; END IF;
   SELECT id INTO v_sec_strategy FROM public.content_sections WHERE content_id = v_case_study_id AND slug = 'market-strategy';
   SELECT id INTO v_sec_reg      FROM public.content_sections WHERE content_id = v_case_study_id AND slug = 'regulatory-compliance';
   SELECT id INTO v_sec_partners FROM public.content_sections WHERE content_id = v_case_study_id AND slug = 'partnerships';

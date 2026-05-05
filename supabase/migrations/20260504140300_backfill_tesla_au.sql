@@ -7,7 +7,7 @@ DECLARE
   v_case_study_id uuid;
 BEGIN
   SELECT id INTO v_case_study_id FROM public.content_items WHERE slug = 'tesla-australia-market-entry';
-  IF v_case_study_id IS NULL THEN RAISE EXCEPTION 'tesla-australia-market-entry not found'; END IF;
+  IF v_case_study_id IS NULL THEN RETURN; END IF;
 
   UPDATE public.content_items SET
     tldr = ARRAY['Model S launched in Sydney on December 9, 2014','Hornsdale Power Reserve delivered in 100 days, 2017','Heath Walker led AU marketing; Sam McLean ran policy','Supercharger network surpassed 100 AU sites by September 2024','Model Y topped AU private sales in 2023 with 28,769 units'],

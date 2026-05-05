@@ -7,7 +7,7 @@ DECLARE
   v_sec_company uuid; v_sec_market uuid; v_sec_entry uuid; v_sec_partners uuid;
 BEGIN
   SELECT id INTO v_case_study_id FROM public.content_items WHERE slug = 'slack-australian-market-entry';
-  IF v_case_study_id IS NULL THEN RAISE EXCEPTION 'slack-australian-market-entry not found'; END IF;
+  IF v_case_study_id IS NULL THEN RETURN; END IF;
   SELECT id INTO v_sec_company  FROM public.content_sections WHERE content_id = v_case_study_id AND slug = 'company';
   SELECT id INTO v_sec_market   FROM public.content_sections WHERE content_id = v_case_study_id AND slug = 'market-research';
   SELECT id INTO v_sec_entry    FROM public.content_sections WHERE content_id = v_case_study_id AND slug = 'entry-strategy';
