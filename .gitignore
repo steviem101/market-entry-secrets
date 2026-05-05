@@ -39,3 +39,4 @@ supabase/.temp/
 # Scrape / enrichment exports (contain contact PII; do not commit)
 Phantom_-_*.csv
 phantom_*.csv
+scripts/__pycache__/
