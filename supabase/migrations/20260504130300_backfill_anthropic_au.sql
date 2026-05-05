@@ -14,7 +14,7 @@ BEGIN
   FROM public.content_items
   WHERE slug = 'anthropic-australia-market-entry';
   IF v_case_study_id IS NULL THEN
-    RAISE EXCEPTION 'anthropic-australia-market-entry not found';
+    RETURN;
   END IF;
 
   SELECT id INTO v_sec_entry   FROM public.content_sections

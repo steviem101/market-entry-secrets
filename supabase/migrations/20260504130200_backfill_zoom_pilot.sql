@@ -30,7 +30,7 @@ BEGIN
   WHERE slug = 'zoom-australia-market-entry';
 
   IF v_case_study_id IS NULL THEN
-    RAISE EXCEPTION 'zoom-australia-market-entry case study not found';
+    RETURN;
   END IF;
 
   SELECT id INTO v_section_entry_strategy  FROM public.content_sections

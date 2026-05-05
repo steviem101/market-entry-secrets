@@ -23,7 +23,7 @@ BEGIN
   WHERE slug = 'buildkite-australia-startup';
 
   IF v_case_study_id IS NULL THEN
-    RAISE EXCEPTION 'buildkite-australia-startup case study not found';
+    RETURN;
   END IF;
 
   SELECT id INTO v_section_entry_strategy
