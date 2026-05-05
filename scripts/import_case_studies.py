@@ -106,6 +106,9 @@ def insert_company_profile(supabase: Client, content_id: str, case: dict[str, An
         "entry_date": case.get("entry_date") or None,
         "industry": case.get("industry") or None,
         "founder_count": len(case.get("founders") or []) or None,
+        # explicit NULL: override misleading table defaults (is_profitable=false, employee_count=1)
+        "employee_count": None,
+        "is_profitable": None,
     }
     supabase.table("content_company_profiles").insert(payload).execute()
     return 1

@@ -29,12 +29,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Daon', 'Ireland', 'Australia & New Zealand',
-      'Mid-2000s (New Zealand); formalised with Canberra office', 'Digital Identity & Biometrics', 1
+      'Mid-2000s (New Zealand); formalised with Canberra office', 'Digital Identity & Biometrics', 1, NULL, NULL
     );
   END IF;
 
@@ -155,12 +156,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Fenergo', 'Ireland', 'Australia & New Zealand',
-      'September 2014 (Sydney)', 'RegTech / Client Lifecycle Management', 3
+      'September 2014 (Sydney)', 'RegTech / Client Lifecycle Management', 3, NULL, NULL
     );
   END IF;
 
@@ -272,12 +274,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'FINEOS', 'Ireland', 'Australia & New Zealand',
-      'Early 2000s; landmark NZ deal in 2005', 'Insurance Software', 1
+      'Early 2000s; landmark NZ deal in 2005', 'Insurance Software', 1, NULL, NULL
     );
   END IF;
 
@@ -385,12 +388,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Wayflyer', 'Ireland', 'Australia & New Zealand',
-      '2021 (Sydney)', 'Revenue-Based Financing / E-Commerce Growth Capital', 2
+      '2021 (Sydney)', 'Revenue-Based Financing / E-Commerce Growth Capital', 2, NULL, NULL
     );
   END IF;
 
@@ -498,12 +502,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Tines', 'Ireland', 'Australia & New Zealand',
-      'Customer-led traction before formal hub expansion; APAC hub formalised in 2026', 'Workflow Automation / Security Automation', 2
+      'Customer-led traction before formal hub expansion; APAC hub formalised in 2026', 'Workflow Automation / Security Automation', 2, NULL, NULL
     );
   END IF;
 
@@ -608,12 +613,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Revolut', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Fintech', NULL
+      NULL, 'Fintech', NULL, NULL, NULL
     );
   END IF;
 
@@ -694,12 +700,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Wise', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Fintech', NULL
+      NULL, 'Fintech', NULL, NULL, NULL
     );
   END IF;
 
@@ -785,12 +792,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Darktrace', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Cybersecurity', NULL
+      NULL, 'Cybersecurity', NULL, NULL, NULL
     );
   END IF;
 
@@ -875,12 +883,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Quantexa', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Technology', NULL
+      NULL, 'Technology', NULL, NULL, NULL
     );
   END IF;
 
@@ -964,12 +973,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Thought Machine', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Fintech', NULL
+      NULL, 'Fintech', NULL, NULL, NULL
     );
   END IF;
 
@@ -1045,12 +1055,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Featurespace', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Technology', NULL
+      NULL, 'Technology', NULL, NULL, NULL
     );
   END IF;
 
@@ -1132,12 +1143,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Mimecast', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Cybersecurity', NULL
+      NULL, 'Cybersecurity', NULL, NULL, NULL
     );
   END IF;
 
@@ -1214,12 +1226,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'ComplyAdvantage', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'RegTech', NULL
+      NULL, 'RegTech', NULL, NULL, NULL
     );
   END IF;
 
@@ -1303,12 +1316,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Onfido', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Identity Verification', NULL
+      NULL, 'Identity Verification', NULL, NULL, NULL
     );
   END IF;
 
@@ -1387,12 +1401,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Blue Prism', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Automation', NULL
+      NULL, 'Automation', NULL, NULL, NULL
     );
   END IF;
 
@@ -1471,12 +1486,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Dext', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Automation', NULL
+      NULL, 'Automation', NULL, NULL, NULL
     );
   END IF;
 
@@ -1549,12 +1565,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'nPlan', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Construction Tech', NULL
+      NULL, 'Construction Tech', NULL, NULL, NULL
     );
   END IF;
 
@@ -1627,12 +1644,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'DaXtra Technologies', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Construction Tech', NULL
+      NULL, 'Construction Tech', NULL, NULL, NULL
     );
   END IF;
 
@@ -1708,12 +1726,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'ANNA Money', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Fintech', NULL
+      NULL, 'Fintech', NULL, NULL, NULL
     );
   END IF;
 
@@ -1795,12 +1814,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Tractable', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'InsurTech', NULL
+      NULL, 'InsurTech', NULL, NULL, NULL
     );
   END IF;
 
@@ -1880,12 +1900,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Deliveroo', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Marketplace', NULL
+      NULL, 'Marketplace', NULL, NULL, NULL
     );
   END IF;
 
@@ -1969,12 +1990,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Banked', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Fintech', NULL
+      NULL, 'Fintech', NULL, NULL, NULL
     );
   END IF;
 
@@ -2054,12 +2076,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'NCC Group', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Cybersecurity', NULL
+      NULL, 'Cybersecurity', NULL, NULL, NULL
     );
   END IF;
 
@@ -2140,12 +2163,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Contino', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Cloud Services', NULL
+      NULL, 'Cloud Services', NULL, NULL, NULL
     );
   END IF;
 
@@ -2218,12 +2242,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Sensat', 'United Kingdom', 'Australia & New Zealand',
-      NULL, 'Construction Tech', NULL
+      NULL, 'Construction Tech', NULL, NULL, NULL
     );
   END IF;
 

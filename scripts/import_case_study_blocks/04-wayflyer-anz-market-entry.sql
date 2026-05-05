@@ -27,12 +27,13 @@ BEGIN
   RETURNING id INTO v_id;
 
   IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults
     INSERT INTO content_company_profiles (
       content_id, company_name, origin_country, target_market,
-      entry_date, industry, founder_count
+      entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'Wayflyer', 'Ireland', 'Australia & New Zealand',
-      '2021 (Sydney)', 'Revenue-Based Financing / E-Commerce Growth Capital', 2
+      '2021 (Sydney)', 'Revenue-Based Financing / E-Commerce Growth Capital', 2, NULL, NULL
     );
   END IF;
 

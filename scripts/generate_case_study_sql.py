@@ -87,12 +87,13 @@ def block_for_case(case: dict) -> str:
     founder_count = len(case.get("founders") or [])
     fc_sql = str(founder_count) if founder_count else "NULL"
     lines.append("  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN")
+    lines.append("    -- explicit NULLs for is_profitable and employee_count to override misleading column defaults")
     lines.append("    INSERT INTO content_company_profiles (")
     lines.append("      content_id, company_name, origin_country, target_market,")
-    lines.append("      entry_date, industry, founder_count")
+    lines.append("      entry_date, industry, founder_count, employee_count, is_profitable")
     lines.append("    ) VALUES (")
     lines.append(f"      v_id, {sql_str(case['company_name'])}, {sql_str(case.get('origin_country'))}, {sql_str(case.get('target_market'))},")
-    lines.append(f"      {sql_str(case.get('entry_date') or None)}, {sql_str(case.get('industry') or None)}, {fc_sql}")
+    lines.append(f"      {sql_str(case.get('entry_date') or None)}, {sql_str(case.get('industry') or None)}, {fc_sql}, NULL, NULL")
     lines.append("    );")
     lines.append("  END IF;")
     lines.append("")
@@ -112,7 +113,7 @@ def block_for_case(case: dict) -> str:
     lines.append("  IF NOT EXISTS (SELECT 1 FROM content_sections WHERE content_id = v_id) THEN")
     for i, sec in enumerate(case["sections"]):
         sec_var = f"v_sec_{i}"
-        lines.append(f"    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)")
+        lines.append("    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)")
         lines.append(f"    VALUES (v_id, {sql_str(sec['title'])}, {sql_str(sec['slug'])}, {i+1}, true)")
         lines.append(f"    RETURNING id INTO {sec_var};")
         for j, body in enumerate(sec["bodies"]):
