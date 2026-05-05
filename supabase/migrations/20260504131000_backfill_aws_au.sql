@@ -9,7 +9,7 @@ DECLARE
   v_sec_lessons   uuid;
 BEGIN
   SELECT id INTO v_case_study_id FROM public.content_items WHERE slug = 'aws-australia-market-entry';
-  IF v_case_study_id IS NULL THEN RAISE EXCEPTION 'aws-australia-market-entry not found'; END IF;
+  IF v_case_study_id IS NULL THEN RETURN; END IF;
 
   SELECT id INTO v_sec_entry   FROM public.content_sections WHERE content_id = v_case_study_id AND slug = 'entry-strategy';
   SELECT id INTO v_sec_success FROM public.content_sections WHERE content_id = v_case_study_id AND slug = 'success-factors';
