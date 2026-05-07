@@ -11,6 +11,7 @@ export const useSectorCommunityMembers = (sectorSlug: string, keywords: string[]
       const { data, error } = await supabase
         .from('community_members')
         .select('*')
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

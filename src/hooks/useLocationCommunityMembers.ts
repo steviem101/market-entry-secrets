@@ -19,6 +19,7 @@ export const useLocationCommunityMembers = (locationSlug: string, keywords: stri
       const { data, error } = await supabase
         .from('community_members')
         .select('*')
+        .eq('is_active', true)
         .or(filters.join(','))
         .order('created_at', { ascending: false })
         .limit(100);

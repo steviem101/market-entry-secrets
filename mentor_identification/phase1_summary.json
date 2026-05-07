@@ -1,0 +1,126 @@
+{
+  "total_contacts_in_xlsx": 5664,
+  "total_anz_contacts": 3084,
+  "google_sheet_picks_rows": 105,
+  "google_sheet_picks_li_urls": 96,
+  "existing_mentors_supabase": 13,
+  "mes_unique_companies_normalised": 468,
+  "mes_companies_by_source": {
+    "service_providers": 95,
+    "trade_investment_agencies": 142,
+    "innovation_ecosystem": 124,
+    "content_company_profiles": 41,
+    "events_organizers": 21,
+    "country_trade_organizations": 4,
+    "community_members_companies_EXCLUDED": 13
+  },
+  "anz_with_current_mes_company_match": 229,
+  "anz_with_previous_mes_company_match": 215,
+  "anz_with_either_mes_company_match": 407,
+  "anz_already_in_picks": 18,
+  "anz_already_in_supabase_mentors": 2,
+  "mes_tagged_total": 101,
+  "mes_tagged_anz": 77,
+  "top_20_mes_company_matches": [
+    {
+      "company": "NAB (National Australia Bank)",
+      "linkedin_contacts": 57,
+      "source_table": "service_providers"
+    },
+    {
+      "company": "Enterprise Ireland",
+      "linkedin_contacts": 18,
+      "source_table": "country_trade_organizations"
+    },
+    {
+      "company": "FinTech Australia",
+      "linkedin_contacts": 11,
+      "source_table": "trade_investment_agencies"
+    },
+    {
+      "company": "Investment NSW",
+      "linkedin_contacts": 10,
+      "source_table": "trade_investment_agencies"
+    },
+    {
+      "company": "Employment Hero",
+      "linkedin_contacts": 8,
+      "source_table": "content_company_profiles"
+    },
+    {
+      "company": "Amazon Web Services (AWS)",
+      "linkedin_contacts": 7,
+      "source_table": "content_company_profiles"
+    },
+    {
+      "company": "PwC Australia",
+      "linkedin_contacts": 6,
+      "source_table": "service_providers"
+    },
+    {
+      "company": "Department for Business and Trade",
+      "linkedin_contacts": 6,
+      "source_table": "trade_investment_agencies"
+    },
+    {
+      "company": "Invest Victoria",
+      "linkedin_contacts": 6,
+      "source_table": "trade_investment_agencies"
+    },
+    {
+      "company": "Accenture Australia",
+      "linkedin_contacts": 5,
+      "source_table": "service_providers"
+    },
+    {
+      "company": "FinTech New Zealand (FinTechNZ)",
+      "linkedin_contacts": 5,
+      "source_table": "innovation_ecosystem"
+    },
+    {
+      "company": "KPMG Australia",
+      "linkedin_contacts": 5,
+      "source_table": "service_providers"
+    },
+    {
+      "company": "Xero",
+      "linkedin_contacts": 5,
+      "source_table": "content_company_profiles"
+    },
+    {
+      "company": "Trade Commissioner Service (Canada)",
+      "linkedin_contacts": 4,
+      "source_table": "trade_investment_agencies"
+    },
+    {
+      "company": "Stripe",
+      "linkedin_contacts": 4,
+      "source_table": "content_company_profiles"
+    },
+    {
+      "company": "Australian Trade and Investment Commission (Austrade)",
+      "linkedin_contacts": 4,
+      "source_table": "service_providers"
+    },
+    {
+      "company": "Stone & Chalk",
+      "linkedin_contacts": 4,
+      "source_table": "innovation_ecosystem"
+    },
+    {
+      "company": "OFX",
+      "linkedin_contacts": 4,
+      "source_table": "service_providers"
+    },
+    {
+      "company": "Judo Bank",
+      "linkedin_contacts": 4,
+      "source_table": "service_providers"
+    },
+    {
+      "company": "Enterprise Singapore",
+      "linkedin_contacts": 4,
+      "source_table": "country_trade_organizations"
+    }
+  ]
+}

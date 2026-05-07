@@ -125,22 +125,19 @@ export const useMentors = () => {
   return useQuery({
     queryKey: ["mentors"],
     queryFn: async (): Promise<Mentor[]> => {
-      // Only use columns that exist in the original schema.
-      // is_active and is_featured are added by migration and may not exist yet.
       const { data, error } = await (supabase as any)
         .from("community_members")
         .select("*")
+        .eq("is_active", true)
         .order("created_at", { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      const mentors = (data || [])
-        .map(mapMentor)
-        .filter((m: Mentor) => m.is_active);
+      const mentors = (data || []).map(mapMentor);
 
-      // Sort featured first in JS (column may not exist for DB ordering)
+      // Sort featured first
       mentors.sort((a: Mentor, b: Mentor) =>
         (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0)
       );

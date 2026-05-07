@@ -1,0 +1,2902 @@
+{
+  "absolute immigration": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Absolute Immigration"
+    }
+  ],
+  "accenture": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Accenture Australia"
+    }
+  ],
+  "acclime": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Acclime"
+    }
+  ],
+  "adapt": [
+    {
+      "source_table": "service_providers",
+      "original_name": "ADAPT"
+    }
+  ],
+  "addisons": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Addisons"
+    }
+  ],
+  "airwallex": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Airwallex"
+    }
+  ],
+  "allens": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Allens"
+    }
+  ],
+  "altios international": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Altios International"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ALTIOS International"
+    }
+  ],
+  "american chamber of commerce in": [
+    {
+      "source_table": "service_providers",
+      "original_name": "American Chamber of Commerce in Australia (AmCham Australia)"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "American Chamber of Commerce in Australia"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "American Chamber of Commerce in New Zealand Inc"
+    }
+  ],
+  "amcham": [
+    {
+      "source_table": "service_providers",
+      "original_name": "American Chamber of Commerce in Australia (AmCham Australia)"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "AmCham Australia"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "AmCham New Zealand"
+    }
+  ],
+  "abcc": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Australian British Chamber of Commerce (ABCC)"
+    }
+  ],
+  "australian british chamber of commerce": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Australian British Chamber of Commerce (ABCC)"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian British Chamber of Commerce"
+    }
+  ],
+  "amls": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Australian Multilingual Services (AMLS)"
+    }
+  ],
+  "australian multilingual services": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Australian Multilingual Services (AMLS)"
+    }
+  ],
+  "australian trade investment commission": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Australian Trade and Investment Commission (Austrade)"
+    }
+  ],
+  "austrade": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Australian Trade and Investment Commission (Austrade)"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Austrade"
+    }
+  ],
+  "a dentsu": [
+    {
+      "source_table": "service_providers",
+      "original_name": "B2B International (a dentsu company)"
+    }
+  ],
+  "b2b international": [
+    {
+      "source_table": "service_providers",
+      "original_name": "B2B International (a dentsu company)"
+    }
+  ],
+  "bdo": [
+    {
+      "source_table": "service_providers",
+      "original_name": "BDO Australia"
+    }
+  ],
+  "bench pr": [
+    {
+      "source_table": "service_providers",
+      "original_name": "BENCH PR"
+    }
+  ],
+  "bolter": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Bolter"
+    }
+  ],
+  "cloud recruit": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Cloud Recruit"
+    }
+  ],
+  "convera": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Convera"
+    }
+  ],
+  "counsel house": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Counsel House (Counsel House Pty Ltd)"
+    }
+  ],
+  "deloitte": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Deloitte Australia"
+    }
+  ],
+  "dentons": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Dentons Australia"
+    }
+  ],
+  "dla piper": [
+    {
+      "source_table": "service_providers",
+      "original_name": "DLA Piper Australia"
+    }
+  ],
+  "ellis jones": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Ellis Jones"
+    }
+  ],
+  "emergo by ul": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Emergo by UL"
+    }
+  ],
+  "employment hero": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Employment Hero"
+    },
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Employment Hero"
+    }
+  ],
+  "ewr": [
+    {
+      "source_table": "service_providers",
+      "original_name": "EWR (Elite Woodhams Relocation)"
+    }
+  ],
+  "elite woodhams relocation": [
+    {
+      "source_table": "service_providers",
+      "original_name": "EWR (Elite Woodhams Relocation)"
+    }
+  ],
+  "freyr": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Freyr Solutions"
+    }
+  ],
+  "fullstack advisory": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Fullstack Advisory"
+    }
+  ],
+  "gadens": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Gadens"
+    }
+  ],
+  "gilbert tobin": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Gilbert + Tobin (G+T Ventures)"
+    }
+  ],
+  "g t ventures": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Gilbert + Tobin (G+T Ventures)"
+    }
+  ],
+  "gracosway": [
+    {
+      "source_table": "service_providers",
+      "original_name": "GRACosway"
+    }
+  ],
+  "grant thornton": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Grant Thornton Australia"
+    }
+  ],
+  "granton": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Granton"
+    }
+  ],
+  "gridware": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Gridware"
+    }
+  ],
+  "halcyon knights": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Halcyon Knights"
+    }
+  ],
+  "hall wilcox": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Hall & Wilcox"
+    }
+  ],
+  "hatch quarter": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Hatch Quarter"
+    },
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Hatch Quarter"
+    }
+  ],
+  "hawker britton group": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Hawker Britton (Hawker Britton Group Pty Ltd)"
+    }
+  ],
+  "hawker britton": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Hawker Britton (Hawker Britton Group Pty Ltd)"
+    }
+  ],
+  "hays recruitment": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Hays Recruitment"
+    }
+  ],
+  "ics global logistics": [
+    {
+      "source_table": "service_providers",
+      "original_name": "ICS Global Logistics"
+    }
+  ],
+  "industry 4 01": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Industry 4.01"
+    }
+  ],
+  "invest victoria": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Invest Victoria"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Invest Victoria"
+    }
+  ],
+  "officially jaywing in": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Jaywing (officially Jaywing Pty Ltd in Australia)"
+    }
+  ],
+  "jaywing": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Jaywing (officially Jaywing Pty Ltd in Australia)"
+    }
+  ],
+  "judo bank": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Judo Bank"
+    }
+  ],
+  "k l gates": [
+    {
+      "source_table": "service_providers",
+      "original_name": "K&L Gates LLP"
+    }
+  ],
+  "kpmg": [
+    {
+      "source_table": "service_providers",
+      "original_name": "KPMG Australia"
+    }
+  ],
+  "landedflow": [
+    {
+      "source_table": "service_providers",
+      "original_name": "LandedFlow"
+    }
+  ],
+  "lander rogers": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Lander & Rogers"
+    }
+  ],
+  "legalvision": [
+    {
+      "source_table": "service_providers",
+      "original_name": "LegalVision"
+    }
+  ],
+  "liquid digital": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Liquid Digital"
+    }
+  ],
+  "luna startup studio": [
+    {
+      "source_table": "service_providers",
+      "original_name": "LUNA Startup Studio"
+    }
+  ],
+  "lunik": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Lunik"
+    }
+  ],
+  "marsh": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Marsh Australia"
+    }
+  ],
+  "mckinsey": [
+    {
+      "source_table": "service_providers",
+      "original_name": "McKinsey & Company"
+    }
+  ],
+  "minterellison": [
+    {
+      "source_table": "service_providers",
+      "original_name": "MinterEllison"
+    }
+  ],
+  "minterellisonruddwatts": [
+    {
+      "source_table": "service_providers",
+      "original_name": "MinterEllisonRuddWatts"
+    }
+  ],
+  "nab": [
+    {
+      "source_table": "service_providers",
+      "original_name": "NAB (National Australia Bank)"
+    }
+  ],
+  "national bank": [
+    {
+      "source_table": "service_providers",
+      "original_name": "NAB (National Australia Bank)"
+    }
+  ],
+  "nzte": [
+    {
+      "source_table": "service_providers",
+      "original_name": "New Zealand Trade and Enterprise (NZTE)"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "New Zealand Trade and Enterprise (NZTE)"
+    }
+  ],
+  "trade enterprise": [
+    {
+      "source_table": "service_providers",
+      "original_name": "New Zealand Trade and Enterprise (NZTE)"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "New Zealand Trade and Enterprise (NZTE)"
+    }
+  ],
+  "nextgen group": [
+    {
+      "source_table": "service_providers",
+      "original_name": "NEXTGEN Group (NEXTGEN Distribution)"
+    }
+  ],
+  "nextgen distribution": [
+    {
+      "source_table": "service_providers",
+      "original_name": "NEXTGEN Group (NEXTGEN Distribution)"
+    }
+  ],
+  "now digital": [
+    {
+      "source_table": "service_providers",
+      "original_name": "NOW Digital"
+    }
+  ],
+  "ofx": [
+    {
+      "source_table": "service_providers",
+      "original_name": "OFX"
+    }
+  ],
+  "ospace": [
+    {
+      "source_table": "service_providers",
+      "original_name": "oSpace (NEXTGEN)"
+    }
+  ],
+  "nextgen": [
+    {
+      "source_table": "service_providers",
+      "original_name": "oSpace (NEXTGEN)"
+    }
+  ],
+  "pendlebury immigration": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Pendlebury Immigration"
+    }
+  ],
+  "pharmout": [
+    {
+      "source_table": "service_providers",
+      "original_name": "PharmOut"
+    }
+  ],
+  "pinsent masons": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Pinsent Masons LLP"
+    }
+  ],
+  "pitcher partners": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Pitcher Partners"
+    }
+  ],
+  "pwc": [
+    {
+      "source_table": "service_providers",
+      "original_name": "PwC Australia"
+    }
+  ],
+  "r2 pharma": [
+    {
+      "source_table": "service_providers",
+      "original_name": "R2 Pharma Solutions"
+    }
+  ],
+  "radium capital": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Radium Capital"
+    }
+  ],
+  "redhill communications": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Redhill Communications"
+    }
+  ],
+  "rippling": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Rippling Australia"
+    }
+  ],
+  "salestribe": [
+    {
+      "source_table": "service_providers",
+      "original_name": "SalesTribe"
+    }
+  ],
+  "sgs": [
+    {
+      "source_table": "service_providers",
+      "original_name": "SGS Australia"
+    }
+  ],
+  "sis international research": [
+    {
+      "source_table": "service_providers",
+      "original_name": "SIS International Research"
+    }
+  ],
+  "sleek": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Sleek"
+    }
+  ],
+  "sodali": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Sodali & Co"
+    }
+  ],
+  "speak your language": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Speak Your Language"
+    }
+  ],
+  "standard ledger": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Standard Ledger"
+    }
+  ],
+  "standards limited": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Standards Australia Limited"
+    }
+  ],
+  "stockwells": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Stockwells"
+    }
+  ],
+  "stone chalk": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Stone & Chalk"
+    },
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Stone & Chalk"
+    }
+  ],
+  "techvisa": [
+    {
+      "source_table": "service_providers",
+      "original_name": "TechVisa"
+    }
+  ],
+  "tg public affairs": [
+    {
+      "source_table": "service_providers",
+      "original_name": "TG Public Affairs"
+    }
+  ],
+  "the adjutor group": [
+    {
+      "source_table": "service_providers",
+      "original_name": "The Adjutor Group (comprising Adjutor Healthcare Pty Ltd and Adjutor Clinical)"
+    }
+  ],
+  "comprising adjutor healthcare adjutor clinical": [
+    {
+      "source_table": "service_providers",
+      "original_name": "The Adjutor Group (comprising Adjutor Healthcare Pty Ltd and Adjutor Clinical)"
+    }
+  ],
+  "the instant group": [
+    {
+      "source_table": "service_providers",
+      "original_name": "The Instant Group"
+    }
+  ],
+  "the polyglot group": [
+    {
+      "source_table": "service_providers",
+      "original_name": "The Polyglot Group"
+    }
+  ],
+  "think grow": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Think & Grow"
+    }
+  ],
+  "think global logistics": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Think Global Logistics (TGL)"
+    }
+  ],
+  "tgl": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Think Global Logistics (TGL)"
+    }
+  ],
+  "thrive pr communications": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Thrive PR + Communications"
+    }
+  ],
+  "transearch international": [
+    {
+      "source_table": "service_providers",
+      "original_name": "TRANSEARCH International Australia"
+    }
+  ],
+  "treadstone": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Treadstone"
+    }
+  ],
+  "vialto partners": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Vialto Partners"
+    }
+  ],
+  "visa executive": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Visa Executive"
+    }
+  ],
+  "zeller": [
+    {
+      "source_table": "service_providers",
+      "original_name": "Zeller"
+    }
+  ],
+  "act government": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ACT Government"
+    }
+  ],
+  "advantage austria": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Advantage Austria"
+    }
+  ],
+  "aigroup australian industry group": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "AiGroup - Australian Industry Group"
+    }
+  ],
+  "alabc latin america business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ALABC - Australia Latin America Business Council"
+    }
+  ],
+  "apcci peru chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "APCCI Australia Peru Chamber of Commerce Inc"
+    }
+  ],
+  "archam argentine chamber of commerce in": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ArCham - Argentine Chamber of Commerce in Australia"
+    }
+  ],
+  "asean chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ASEAN Chamber of Commerce Inc."
+    }
+  ],
+  "asean business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ASEAN New Zealand Business Council"
+    }
+  ],
+  "associated chinese chamber of commerce industries of": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Associated Chinese Chamber of Commerce and Industries of Australia"
+    }
+  ],
+  "africa chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Africa Chamber of Commerce"
+    }
+  ],
+  "arab chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Arab Chamber of Commerce & Industry"
+    }
+  ],
+  "brazil business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Brazil Business Council"
+    }
+  ],
+  "china business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia China Business Council"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "China and New Zealand Business Council"
+    }
+  ],
+  "china business council victorian branch": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia China Business Council Victorian Branch"
+    }
+  ],
+  "aicc": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia India Chamber of Commerce (AICC)"
+    }
+  ],
+  "india chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia India Chamber of Commerce (AICC)"
+    }
+  ],
+  "indonesia business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Indonesia Business Council (AIBC)"
+    }
+  ],
+  "aibc": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Indonesia Business Council (AIBC)"
+    }
+  ],
+  "malaysia business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Malaysia Business Council (NSW Chapter)"
+    }
+  ],
+  "nsw chapter": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Malaysia Business Council (NSW Chapter)"
+    }
+  ],
+  "malaysia business council victoria": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Malaysia Business Council Victoria"
+    }
+  ],
+  "amcc": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Malaysia Chamber of Commerce (AMCC)"
+    }
+  ],
+  "malaysia chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Malaysia Chamber of Commerce (AMCC)"
+    }
+  ],
+  "philippines business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Philippines Business Council"
+    }
+  ],
+  "saudi business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Saudi Business Council"
+    }
+  ],
+  "uae business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia UAE Business Council"
+    }
+  ],
+  "vietnam business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Vietnam Business Council"
+    }
+  ],
+  "zimbabwe business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia Zimbabwe Business Council"
+    }
+  ],
+  "israel chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia-Israel Chamber of Commerce"
+    }
+  ],
+  "korea business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia-Korea Business Council"
+    }
+  ],
+  "latin america business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia-Latin America Business Council"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Latin America New Zealand Business Council"
+    }
+  ],
+  "united kingdom chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australia-United Kingdom Chamber of Commerce"
+    }
+  ],
+  "australian asian chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian Asian Chamber of Commerce and Industry"
+    }
+  ],
+  "australian bosnian herzegovinian chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian Bosnian and Herzegovinian Chamber of Commerce"
+    }
+  ],
+  "australian jordanian chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian Jordanian Chamber of Commerce & Industry (AJCCI)"
+    }
+  ],
+  "ajcci": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian Jordanian Chamber of Commerce & Industry (AJCCI)"
+    }
+  ],
+  "australian netherlands chamber of commerce sa": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian Netherlands Chamber of Commerce SA (DutchSA)"
+    }
+  ],
+  "dutchsa": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian Netherlands Chamber of Commerce SA (DutchSA)"
+    }
+  ],
+  "australian taiwanese chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian Taiwanese Chamber of Commerce (Qld) Inc"
+    }
+  ],
+  "qld": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian Taiwanese Chamber of Commerce (Qld) Inc"
+    }
+  ],
+  "australian croatian chamber of commerce nsw": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Australian-Croatian Chamber of Commerce NSW"
+    }
+  ],
+  "british consulate general brisbane": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "British Consulate General Brisbane"
+    }
+  ],
+  "british high commission in wellington": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "British High Commission in Wellington"
+    }
+  ],
+  "business france": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Business France"
+    }
+  ],
+  "business sweden": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Business Sweden"
+    }
+  ],
+  "callaghan innovation": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Callaghan Innovation"
+    }
+  ],
+  "canadian consulate global affairs canada": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Canadian Consulate / Global Affairs Canada"
+    }
+  ],
+  "chamber of commerce industry of uzbekistan": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Chamber of Commerce and Industry of Uzbekistan"
+    }
+  ],
+  "chamber of commerce industry of western": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Chamber of Commerce and Industry of Western Australia (CCIWA)"
+    }
+  ],
+  "cciwa": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Chamber of Commerce and Industry of Western Australia (CCIWA)"
+    }
+  ],
+  "consulate general of italy": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Consulate General of Italy"
+    }
+  ],
+  "consulate general of malaysia perth": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Consulate General of Malaysia, Perth"
+    }
+  ],
+  "consulate general of nepal to victoria": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Consulate General of Nepal to Victoria"
+    }
+  ],
+  "consulate general of sri lanka in melbourne": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Consulate General of Sri Lanka in Melbourne"
+    }
+  ],
+  "consulate general of the arab republic of egypt": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Consulate General of the Arab Republic of Egypt"
+    }
+  ],
+  "consulate general of the republic of austria in victoria": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Consulate General of the Republic of Austria in Victoria"
+    }
+  ],
+  "consulate general of the republic of indonesia in melbourne": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Consulate General of the Republic of Indonesia in Melbourne"
+    }
+  ],
+  "consulate general of the republic of korea in melbourne": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Consulate General of the Republic of Korea in Melbourne"
+    }
+  ],
+  "danish trade council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Danish Trade Council"
+    }
+  ],
+  "danish trade council danish connect": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Danish Trade Council / Danish Connect"
+    }
+  ],
+  "dccq dutch chamber of commerce queensland": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "DCCQ - Dutch Chamber of Commerce Queensland"
+    }
+  ],
+  "department for business trade": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Department for Business and Trade"
+    }
+  ],
+  "dutch chamber of commerce queensland": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Dutch Chamber of Commerce Queensland"
+    }
+  ],
+  "dutchsa australian netherlands chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "DutchSA - Australian Netherlands Chamber of Commerce"
+    }
+  ],
+  "eacci estonian australian chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "EACCI Estonian Australian Chamber of Commerce and Industry"
+    }
+  ],
+  "embassy consulate general of the kingdom of the netherlands in": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Embassy and Consulate-General of the Kingdom of the Netherlands in Australia"
+    }
+  ],
+  "embassy of argentina in": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Embassy of Argentina in Australia"
+    }
+  ],
+  "embassy of switzerland in": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Embassy of Switzerland in Australia"
+    }
+  ],
+  "embassy of the united states of america": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Embassy of the United States of America"
+    }
+  ],
+  "enterprise ireland": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Enterprise Ireland"
+    },
+    {
+      "source_table": "country_trade_organizations",
+      "original_name": "Enterprise Ireland"
+    }
+  ],
+  "enterprise singapore": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Enterprise Singapore"
+    },
+    {
+      "source_table": "country_trade_organizations",
+      "original_name": "Enterprise Singapore"
+    }
+  ],
+  "estonian australian chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Estonian Australian Chamber of Commerce"
+    }
+  ],
+  "estonian chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Estonian Chamber of Commerce"
+    }
+  ],
+  "eabc": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "European Australian Business Council (EABC)"
+    }
+  ],
+  "european australian business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "European Australian Business Council (EABC)"
+    }
+  ],
+  "ex french chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "EX French Australia Chamber of Commerce"
+    }
+  ],
+  "expandys": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Expandys"
+    }
+  ],
+  "export connect": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Export Connect"
+    }
+  ],
+  "eca": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Export Council of Australia (ECA)"
+    }
+  ],
+  "export council of": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Export Council of Australia (ECA)"
+    }
+  ],
+  "export development canada": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Export Development Canada"
+    }
+  ],
+  "export finance": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Export Finance Australia (previously EFIC)"
+    }
+  ],
+  "previously efic": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Export Finance Australia (previously EFIC)"
+    }
+  ],
+  "facci french australian chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "FACCI - French-Australian Chamber of Commerce & Industry"
+    }
+  ],
+  "federation of filipino chinese chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Federation of Filipino Chinese Chamber of Commerce & Industry Inc."
+    }
+  ],
+  "fiji consulate general trade commission": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Fiji Consulate General & Trade Commission - Australia & New Zealand"
+    }
+  ],
+  "facc": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Finland Australia Chamber of Commerce, Inc. (FACC)"
+    }
+  ],
+  "finland chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Finland Australia Chamber of Commerce, Inc. (FACC)"
+    }
+  ],
+  "fintech": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "FinTech Australia"
+    },
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "FinTech Australia"
+    },
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "FinTech New Zealand (FinTechNZ)"
+    },
+    {
+      "source_table": "events",
+      "original_name": "FinTech Australia"
+    }
+  ],
+  "fnzcci": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "French New Zealand Chamber of Commerce and Industry (FNZCCI)"
+    }
+  ],
+  "french chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "French New Zealand Chamber of Commerce and Industry (FNZCCI)"
+    }
+  ],
+  "french australian chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "French-Australian Chamber of Commerce & Industry"
+    }
+  ],
+  "german embassy canberra": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "German Embassy Canberra"
+    }
+  ],
+  "german chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "German-New Zealand Chamber of Commerce Inc. (GNZCC)"
+    }
+  ],
+  "gnzcc": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "German-New Zealand Chamber of Commerce Inc. (GNZCC)"
+    }
+  ],
+  "germany trade invest": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Germany Trade & Invest"
+    }
+  ],
+  "global victoria": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Global Victoria"
+    }
+  ],
+  "haymarket hq": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Haymarket HQ"
+    },
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Haymarket HQ"
+    }
+  ],
+  "hellenic australian chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Hellenic Australian Chamber of Commerce and Industry (Victoria)"
+    }
+  ],
+  "hong kong trade development council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Hong Kong Trade Development Council"
+    }
+  ],
+  "iccwa indonesian chamber of commerce western": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ICCWA - Indonesian Chamber of Commerce Western Australia"
+    }
+  ],
+  "india business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "India New Zealand Business Council"
+    }
+  ],
+  "indonesian chamber of commerce western": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Indonesian Chamber of Commerce Western Australia"
+    }
+  ],
+  "international chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "International Chamber of Commerce Australia"
+    }
+  ],
+  "invest northern ireland": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Invest Northern Ireland"
+    }
+  ],
+  "investment nsw": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Investment NSW"
+    }
+  ],
+  "irish australian chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Irish Australian Chamber of Commerce"
+    }
+  ],
+  "ita italian trade agency": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ITA - Italian Trade Agency"
+    }
+  ],
+  "italian chamber of commerce industry in melbourne": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Italian Chamber of Commerce and Industry in Australia - Melbourne Inc."
+    }
+  ],
+  "italian chamber of commerce industry in": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Italian Chamber of Commerce and Industry in Australia inc."
+    }
+  ],
+  "italian chamber of commerce in melbourne": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Italian Chamber of Commerce in Australia - Melbourne"
+    }
+  ],
+  "iccnz": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Italian Chamber of Commerce in New Zealand (ICCNZ)"
+    }
+  ],
+  "italian chamber of commerce in": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Italian Chamber of Commerce in New Zealand (ICCNZ)"
+    }
+  ],
+  "jetro japan external trade organisation": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "JETRO - Japan External Trade Organisation"
+    }
+  ],
+  "jetro japan external trade organization": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "JETRO - Japan External Trade Organization"
+    }
+  ],
+  "knzbc korea business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "KNZBC - Korea New Zealand Business Council"
+    }
+  ],
+  "kotra": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "KOTRA"
+    }
+  ],
+  "la camara the spanish australian chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "La Camara, The Spanish-Australian Chamber of Commerce and Industry"
+    }
+  ],
+  "netherlands chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Netherlands Chamber of Commerce Australia (NCCA)"
+    }
+  ],
+  "ncca": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Netherlands Chamber of Commerce Australia (NCCA)"
+    }
+  ],
+  "europe business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "New Zealand Europe Business Council Inc"
+    }
+  ],
+  "india trade alliance": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "New Zealand India Trade Alliance"
+    }
+  ],
+  "middle east business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "New Zealand Middle East Business Council"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "NZ-Middle East Business Council (NZMEBC)"
+    }
+  ],
+  "nacc": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Norwegian Australian Chamber of Commerce (NACC)"
+    }
+  ],
+  "norwegian australian chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Norwegian Australian Chamber of Commerce (NACC)"
+    }
+  ],
+  "nzmebc": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "NZ-Middle East Business Council (NZMEBC)"
+    }
+  ],
+  "paih": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Polish Investment and Trade Agency (PAIH)"
+    }
+  ],
+  "polish investment trade agency": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Polish Investment and Trade Agency (PAIH)"
+    }
+  ],
+  "portrade portuguese australian chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Portrade - Portuguese Australian Chamber of Commerce"
+    }
+  ],
+  "prochile": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ProChile"
+    },
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "ProChile Australia"
+    }
+  ],
+  "queensland japan chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Queensland Japan Chamber of Commerce & Industry"
+    }
+  ],
+  "queensland turkish chamber of commerce industry association incorporated": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Queensland Turkish Chamber of Commerce & Industry Association Incorporated"
+    }
+  ],
+  "singapore chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Singapore Chamber of Commerce (Western Australia)"
+    }
+  ],
+  "western": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Singapore Chamber of Commerce (Western Australia)"
+    }
+  ],
+  "sri lanka chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Sri Lanka and Australia Chamber of Commerce"
+    }
+  ],
+  "swan chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Swan Chamber of Commerce"
+    }
+  ],
+  "swedish australian chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Swedish Australian Chamber of Commerce"
+    }
+  ],
+  "swiss australian chamber of commerce industry": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Swiss Australian Chamber of Commerce & Industry (SACCI)"
+    }
+  ],
+  "sacci": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Swiss Australian Chamber of Commerce & Industry (SACCI)"
+    }
+  ],
+  "taiwanese chamber of commerce in": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Taiwanese Chamber of Commerce in Australia"
+    }
+  ],
+  "the brazil chamber of commerce abcc": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "The Australia-Brazil Chamber of Commerce - ABCC"
+    }
+  ],
+  "the consulate general of the sultanate of oman": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "The Consulate General Of The Sultanate Of Oman"
+    }
+  ],
+  "the japan business council": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "The Japan New Zealand Business Council"
+    }
+  ],
+  "trade investment queensland": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Trade and Investment Queensland"
+    }
+  ],
+  "canada": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Trade Commissioner Service (Canada)"
+    }
+  ],
+  "trade commissioner service": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Trade Commissioner Service (Canada)"
+    }
+  ],
+  "trade council of denmark in oceania": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Trade Council of Denmark in Oceania"
+    }
+  ],
+  "u s embassy in": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "U.S. Embassy in Australia"
+    }
+  ],
+  "uk department for international trade": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "UK Department for International Trade"
+    }
+  ],
+  "ukrainian chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "Ukrainian Chamber of Commerce"
+    }
+  ],
+  "wa chinese chamber of commerce": [
+    {
+      "source_table": "trade_investment_agencies",
+      "original_name": "WA Chinese Chamber Of Commerce"
+    }
+  ],
+  "activator launchhub": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Activator LaunchHUB"
+    }
+  ],
+  "ai forum te k hui atamai iahiko o": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "AI Forum New Zealand | Te K\u0101hui Atamai Iahiko o Aotearoa"
+    }
+  ],
+  "alta australasian legal technology alliance": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "ALTA - Australasian Legal Technology Alliance"
+    }
+  ],
+  "andhealth": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "ANDHealth+"
+    }
+  ],
+  "antler": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Antler Australia"
+    }
+  ],
+  "association for data driven marketing advertising": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Association for Data-Driven Marketing and Advertising (ADMA)"
+    }
+  ],
+  "adma": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Association for Data-Driven Marketing and Advertising (ADMA)"
+    }
+  ],
+  "atomic sky": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Atomic Sky (QuantumTX)"
+    }
+  ],
+  "quantumtx": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Atomic Sky (QuantumTX)"
+    }
+  ],
+  "ausbiotech": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "AusBiotech"
+    }
+  ],
+  "austmine": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Austmine"
+    }
+  ],
+  "aidh": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australasian Institute of Digital Health (AIDH)"
+    }
+  ],
+  "australasian institute of digital health": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australasian Institute of Digital Health (AIDH)"
+    }
+  ],
+  "australasian supply chain logistics association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australasian Supply Chain & Logistics Association (ASCLA)"
+    }
+  ],
+  "ascla": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australasian Supply Chain & Logistics Association (ASCLA)"
+    }
+  ],
+  "australasian supply chain institute": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australasian Supply Chain Institute (ASCI)"
+    }
+  ],
+  "asci": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australasian Supply Chain Institute (ASCI)"
+    }
+  ],
+  "australian agritech association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Agritech Association (AusAgritech)"
+    }
+  ],
+  "ausagritech": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Agritech Association (AusAgritech)"
+    }
+  ],
+  "australian banking association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Banking Association"
+    }
+  ],
+  "acs": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Computer Society (ACS)"
+    }
+  ],
+  "australian computer society": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Computer Society (ACS)"
+    }
+  ],
+  "australian constructors association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Constructors Association (ACA)"
+    }
+  ],
+  "aca": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Constructors Association (ACA)"
+    }
+  ],
+  "afia": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Finance Industry Association (AFIA)"
+    }
+  ],
+  "australian finance industry association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Finance Industry Association (AFIA)"
+    }
+  ],
+  "afma": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Financial Markets Association (AFMA)"
+    }
+  ],
+  "australian financial markets association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Financial Markets Association (AFMA)"
+    }
+  ],
+  "aidn": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Industry & Defence Network (AIDN)"
+    }
+  ],
+  "australian industry defence network": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Industry & Defence Network (AIDN)"
+    }
+  ],
+  "australian information industry association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Information Industry Association (AIIA)"
+    }
+  ],
+  "aiia": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Information Industry Association (AIIA)"
+    }
+  ],
+  "australian information security association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Information Security Association (AISA)"
+    }
+  ],
+  "aisa": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Information Security Association (AISA)"
+    }
+  ],
+  "australian manufacturing technology institute limited": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Manufacturing Technology Institute Limited (AMTIL)"
+    }
+  ],
+  "amtil": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Manufacturing Technology Institute Limited (AMTIL)"
+    }
+  ],
+  "auspaynet": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Payments Network (AusPayNet)"
+    }
+  ],
+  "australian payments network": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Payments Network (AusPayNet)"
+    }
+  ],
+  "arc": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Retail Council (ARC)"
+    }
+  ],
+  "australian retail council": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Retail Council (ARC)"
+    }
+  ],
+  "australian security industry association limited": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Security Industry Association Limited (ASIAL)"
+    }
+  ],
+  "asial": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Australian Security Industry Association Limited (ASIAL)"
+    }
+  ],
+  "barayamal": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Barayamal"
+    }
+  ],
+  "bay city labs": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Bay City Labs"
+    }
+  ],
+  "blackbird ventures": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Blackbird Ventures"
+    }
+  ],
+  "bluechilli": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "BlueChilli"
+    }
+  ],
+  "canberra innovation network": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Canberra Innovation Network"
+    }
+  ],
+  "catalysr ideate": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Catalysr Ideate"
+    }
+  ],
+  "catapult business accelerator": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Catapult Business Accelerator"
+    }
+  ],
+  "ceri": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "CERI"
+    }
+  ],
+  "cicada innovations": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Cicada Innovations"
+    }
+  ],
+  "climatelaunchpad": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "ClimateLaunchpad"
+    }
+  ],
+  "csiro innovation centre": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "CSIRO Innovation Centre"
+    }
+  ],
+  "curtin accelerate": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Curtin Accelerate"
+    }
+  ],
+  "curtin ignition": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Curtin Ignition"
+    }
+  ],
+  "digital economy council of": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Digital Economy Council of Australia (DECA)"
+    }
+  ],
+  "deca": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Digital Economy Council of Australia (DECA)"
+    }
+  ],
+  "digital service providers": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Digital Service Providers Australia New Zealand (DSPANZ)"
+    }
+  ],
+  "dspanz": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Digital Service Providers Australia New Zealand (DSPANZ)"
+    }
+  ],
+  "edugrowth": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Edugrowth (ClearPath)"
+    }
+  ],
+  "clearpath": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Edugrowth (ClearPath)"
+    }
+  ],
+  "edutech": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "EduTech Australia Pty Ltd"
+    }
+  ],
+  "eighteen04": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Eighteen04"
+    }
+  ],
+  "energylab acceleration program": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "EnergyLab - Acceleration Program"
+    }
+  ],
+  "energylab women in clean energy fellowship": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "EnergyLab - Women in Clean Energy Fellowship"
+    }
+  ],
+  "fintechnz": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "FinTech New Zealand (FinTechNZ)"
+    }
+  ],
+  "fishburners": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Fishburners"
+    }
+  ],
+  "founder institute sydney": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Founder Institute Sydney"
+    }
+  ],
+  "nsw gov": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Going Global Program (NSW gov)"
+    }
+  ],
+  "going global program": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Going Global Program (NSW gov)"
+    }
+  ],
+  "gold coast innovation centre": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Gold Coast Innovation Centre"
+    }
+  ],
+  "govtech": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "GovTech Australia"
+    }
+  ],
+  "griffin accelerator program": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Griffin Accelerator Program"
+    }
+  ],
+  "h2 ventures": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "H2 Ventures"
+    }
+  ],
+  "harbour city labs": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Harbour City Labs"
+    }
+  ],
+  "health 10x": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Health 10x"
+    }
+  ],
+  "hex": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "HEX"
+    }
+  ],
+  "hoist ai": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Hoist Ai"
+    }
+  ],
+  "hyper": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Hyper"
+    }
+  ],
+  "i2n accelerator program": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "I2N Accelerator Program"
+    }
+  ],
+  "i2n cleantech accelerator": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "I2N Cleantech Accelerator"
+    }
+  ],
+  "iaccelerate wollongong": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "iAccelerate Wollongong"
+    }
+  ],
+  "ilab": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "ilab"
+    }
+  ],
+  "illumina accelerator": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Illumina Accelerator"
+    }
+  ],
+  "imminently": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Imminently"
+    }
+  ],
+  "incubate": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "INCUBATE"
+    }
+  ],
+  "innovation collaboration centre": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Innovation Collaboration Centre (ICC)"
+    }
+  ],
+  "icc": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Innovation Collaboration Centre (ICC)"
+    }
+  ],
+  "innovative manufacturing accelerator": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Innovative Manufacturing Accelerator"
+    }
+  ],
+  "innovyz": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Innovyz (Circular Economy Program)"
+    }
+  ],
+  "circular economy program": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Innovyz (Circular Economy Program)"
+    }
+  ],
+  "insurtech": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Insurtech Australia"
+    }
+  ],
+  "insurtech gateway": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Insurtech Gateway Australia"
+    }
+  ],
+  "intersect": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Intersect"
+    }
+  ],
+  "kiwisaas": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "KiwiSaaS"
+    }
+  ],
+  "landing pad": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Landing Pad"
+    }
+  ],
+  "launch it": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Launch It"
+    }
+  ],
+  "ltv partners": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "LTV Partners"
+    }
+  ],
+  "macquarie university incubator": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Macquarie University Incubator"
+    }
+  ],
+  "medtech actuator": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "MedTech Actuator"
+    }
+  ],
+  "melbourne accelerator program": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Melbourne Accelerator Program (MAP)"
+    }
+  ],
+  "map": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Melbourne Accelerator Program (MAP)"
+    }
+  ],
+  "melbourne innovation district": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Melbourne Innovation District"
+    }
+  ],
+  "monash generator": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Monash Generator"
+    }
+  ],
+  "muru d": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "muru-D"
+    }
+  ],
+  "nextgenius": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "NextGenius"
+    }
+  ],
+  "on accelerate": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "ON Accelerate"
+    }
+  ],
+  "one10": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "One10"
+    }
+  ],
+  "plus eight": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Plus Eight"
+    }
+  ],
+  "proptech association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Proptech Association Australia Inc."
+    }
+  ],
+  "proptech": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Proptech Australia"
+    }
+  ],
+  "realtechx growth program": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "RealTechX Growth Program"
+    }
+  ],
+  "remarkable": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Remarkable"
+    }
+  ],
+  "river city labs": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "River City Labs"
+    }
+  ],
+  "rocket seeder": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Rocket Seeder"
+    }
+  ],
+  "runway hq": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Runway HQ"
+    }
+  ],
+  "sbe": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "SBE Australia"
+    }
+  ],
+  "slingshot": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Slingshot"
+    }
+  ],
+  "smart energy council": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Smart Energy Council"
+    }
+  ],
+  "siaa": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Space Industry Association of Australia (SIAA)"
+    }
+  ],
+  "space industry association of": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Space Industry Association of Australia (SIAA)"
+    }
+  ],
+  "sparklabs cultiv8": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Sparklabs Cultiv8"
+    }
+  ],
+  "sproutx": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "SproutX"
+    }
+  ],
+  "startmate": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Startmate"
+    }
+  ],
+  "startupbootcamp": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Startupbootcamp"
+    }
+  ],
+  "sydney genesis program": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Sydney Genesis program"
+    }
+  ],
+  "sydney knowledge hub": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Sydney Knowledge Hub"
+    }
+  ],
+  "tech": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Tech New Zealand"
+    }
+  ],
+  "tech ready women": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Tech Ready Women"
+    }
+  ],
+  "technology council of": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Technology Council of Australia"
+    }
+  ],
+  "techstars sydney": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Techstars Sydney"
+    }
+  ],
+  "the melt": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "The Melt"
+    }
+  ],
+  "the moonshine lab": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "The Moonshine Lab"
+    }
+  ],
+  "the regtech association": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "The RegTech Association"
+    }
+  ],
+  "thinclab": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "ThincLab"
+    }
+  ],
+  "thrive accelerator": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "THRIVE APAC Accelerator"
+    }
+  ],
+  "unearthed": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Unearthed"
+    }
+  ],
+  "university of sydney innovation hub": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "University of Sydney Innovation Hub"
+    }
+  ],
+  "unsw founders 10x": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "UNSW Founders 10x"
+    }
+  ],
+  "unsw health 10x": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "UNSW Health 10X"
+    }
+  ],
+  "venture dorm": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Venture Dorm"
+    }
+  ],
+  "wolfpack space hub": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Wolfpack Space Hub"
+    }
+  ],
+  "xccelerate": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Xccelerate"
+    }
+  ],
+  "y combinator": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "Y Combinator"
+    }
+  ],
+  "ygap first gens": [
+    {
+      "source_table": "innovation_ecosystem",
+      "original_name": "ygap First Gens"
+    }
+  ],
+  "afterpay": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Afterpay"
+    }
+  ],
+  "airbnb": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Airbnb"
+    }
+  ],
+  "airtasker": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Airtasker"
+    }
+  ],
+  "aws": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Amazon Web Services (AWS)"
+    }
+  ],
+  "amazon web services": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Amazon Web Services (AWS)"
+    }
+  ],
+  "amazon com": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Amazon.com"
+    }
+  ],
+  "anthropic": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Anthropic"
+    }
+  ],
+  "brighte": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Brighte"
+    }
+  ],
+  "buildkite": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Buildkite"
+    }
+  ],
+  "canva": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Canva"
+    }
+  ],
+  "culture amp": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Culture Amp"
+    }
+  ],
+  "databricks": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Databricks"
+    }
+  ],
+  "deputy": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Deputy"
+    }
+  ],
+  "docusign": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "DocuSign"
+    }
+  ],
+  "earlywork": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Earlywork"
+    }
+  ],
+  "envato": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Envato"
+    }
+  ],
+  "eucalyptus": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Eucalyptus"
+    }
+  ],
+  "github": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "GitHub"
+    }
+  ],
+  "go1": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Go1"
+    }
+  ],
+  "harrison ai": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Harrison.ai"
+    }
+  ],
+  "humanitix": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Humanitix"
+    }
+  ],
+  "immutable": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Immutable"
+    }
+  ],
+  "linktree": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Linktree"
+    }
+  ],
+  "morse micro": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Morse Micro"
+    }
+  ],
+  "netflix": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Netflix"
+    }
+  ],
+  "openai": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "OpenAI"
+    }
+  ],
+  "palantir technologies": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Palantir Technologies"
+    }
+  ],
+  "rokt": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Rokt"
+    }
+  ],
+  "safetyculture": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "SafetyCulture"
+    }
+  ],
+  "salesforce": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Salesforce"
+    }
+  ],
+  "servicenow": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "ServiceNow"
+    }
+  ],
+  "siteminder": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "SiteMinder"
+    }
+  ],
+  "slack technologies": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Slack Technologies"
+    }
+  ],
+  "snowflake": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Snowflake"
+    }
+  ],
+  "stripe": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Stripe"
+    }
+  ],
+  "tesla": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Tesla"
+    }
+  ],
+  "twilio": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Twilio"
+    }
+  ],
+  "uipath": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "UiPath"
+    }
+  ],
+  "vow": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Vow"
+    }
+  ],
+  "xero": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Xero"
+    }
+  ],
+  "zoom video communications": [
+    {
+      "source_table": "content_company_profiles",
+      "original_name": "Zoom Video Communications"
+    }
+  ],
+  "agrifutures": [
+    {
+      "source_table": "events",
+      "original_name": "AgriFutures Australia"
+    }
+  ],
+  "binance": [
+    {
+      "source_table": "events",
+      "original_name": "Binance Australia"
+    }
+  ],
+  "clarion events": [
+    {
+      "source_table": "events",
+      "original_name": "Clarion Events"
+    }
+  ],
+  "cyberrisk alliance": [
+    {
+      "source_table": "events",
+      "original_name": "CyberRisk Alliance"
+    }
+  ],
+  "diversified communications": [
+    {
+      "source_table": "events",
+      "original_name": "Diversified Communications"
+    }
+  ],
+  "emerging technology events": [
+    {
+      "source_table": "events",
+      "original_name": "Emerging Technology Events"
+    }
+  ],
+  "gdg cloud sydney": [
+    {
+      "source_table": "events",
+      "original_name": "GDG Cloud Sydney"
+    }
+  ],
+  "global startups club": [
+    {
+      "source_table": "events",
+      "original_name": "Global Startups Club"
+    }
+  ],
+  "growth forum": [
+    {
+      "source_table": "events",
+      "original_name": "Growth Forum"
+    }
+  ],
+  "informa markets": [
+    {
+      "source_table": "events",
+      "original_name": "Informa Markets"
+    }
+  ],
+  "it social sydney": [
+    {
+      "source_table": "events",
+      "original_name": "IT Social Sydney"
+    }
+  ],
+  "momentum media": [
+    {
+      "source_table": "events",
+      "original_name": "Momentum Media"
+    }
+  ],
+  "perth ai innovators": [
+    {
+      "source_table": "events",
+      "original_name": "Perth AI Innovators"
+    }
+  ],
+  "qantas events": [
+    {
+      "source_table": "events",
+      "original_name": "Qantas Events"
+    }
+  ],
+  "reed exhibitions": [
+    {
+      "source_table": "events",
+      "original_name": "Reed Exhibitions Australia"
+    }
+  ],
+  "shopify community melbourne": [
+    {
+      "source_table": "events",
+      "original_name": "Shopify Community Melbourne"
+    }
+  ],
+  "startup valley team": [
+    {
+      "source_table": "events",
+      "original_name": "Startup Valley Team"
+    }
+  ],
+  "sydney technology leaders": [
+    {
+      "source_table": "events",
+      "original_name": "Sydney Technology Leaders"
+    }
+  ],
+  "terrapinn": [
+    {
+      "source_table": "events",
+      "original_name": "Terrapinn"
+    }
+  ],
+  "xdc": [
+    {
+      "source_table": "events",
+      "original_name": "XDC Australia"
+    }
+  ],
+  "american chamber of commerce": [
+    {
+      "source_table": "country_trade_organizations",
+      "original_name": "American Chamber of Commerce Australia"
+    }
+  ],
+  "british australian chamber of commerce": [
+    {
+      "source_table": "country_trade_organizations",
+      "original_name": "British Australian Chamber of Commerce"
+    }
+  ]
+}
