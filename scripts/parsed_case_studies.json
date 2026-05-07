@@ -1,0 +1,3055 @@
+[
+  {
+    "source_file": "irish",
+    "case_number": 1,
+    "slug": "daon-anz-market-entry",
+    "title": "How Daon Entered the ANZ Market: Winning Government Trust with Biometrics — From Border Crossings to Banking",
+    "subtitle": "Winning Government Trust with Biometrics — From Border Crossings to Banking",
+    "company_name": "Daon",
+    "origin_country": "Ireland",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "Mid-2000s (New Zealand); formalised with Canberra office",
+    "industry": "Digital Identity & Biometrics",
+    "founded": "2000, Dublin, Ireland",
+    "stage_at_entry": "Established (post-US government growth)",
+    "founders": [
+      {
+        "name": "Dermot Desmond",
+        "title": "Founder",
+        "is_primary": true
+      }
+    ],
+    "tldr": [
+      "New Zealand government partner for passport facial recognition, RealMe identity infrastructure, and MSD benefit access",
+      "Canberra presence serving Australian and New Zealand government and critical infrastructure needs",
+      "Dedicated ANZ regional leadership at senior executive level",
+      "Expanded relevance in ANZ banking, telco, and fraud prevention workflows"
+    ],
+    "quick_facts": [
+      {
+        "icon": "Calendar",
+        "label": "Founded",
+        "value": "2000"
+      },
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "Dublin, Ireland"
+      },
+      {
+        "icon": "Globe",
+        "label": "ANZ Entry",
+        "value": "Mid-2000s (New Zealand); formalised with Canberra office"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Digital Identity & Biometrics"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Daon is a biometrics and identity assurance software company founded in Dublin in 2000 by Irish entrepreneur Dermot Desmond. The company builds software that verifies and authenticates people across the identity lifecycle using facial recognition, voice recognition, fingerprints, and other biometric factors. Its platform, IdentityX, serves clients across banking, telecoms, government, and critical infrastructure in over 80 countries.</p>",
+          "<p>The ANZ region offered Daon a strong fit because New Zealand government agencies were early adopters of national digital identity infrastructure, while Australia had rising demand for secure digital onboarding and fraud prevention in financial services. These are trust-sensitive sectors where biometric identity assurance creates outsized value.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Daon's ANZ expansion began through New Zealand government use cases. New Zealand passports used Daon's facial recognition technology, and in 2018 the Department of Internal Affairs integrated Daon's IdentityX into the RealMe Now mobile app so citizens could create a verified digital identity remotely using facial recognition. In 2023, New Zealand's Ministry of Social Development selected Daon to provide face biometrics for identity verification for financial support programs, extending Daon's government credibility into another high-trust public service.</p>",
+          "<p>Daon later reinforced its regional commitment with a dedicated office in Canberra, chosen to serve government and critical infrastructure customers in Australia and New Zealand. It also invested in senior local leadership through roles such as SVP, ANZ & Southeast Asia and Regional Director, Australia & New Zealand, which gave customers access to long-tenured executives rather than only remote sales support.</p>",
+          "<p>In Australia, Daon's positioning broadened into banking, telecoms, and customer authentication. Its biometric onboarding, authentication, and deepfake detection capabilities address fraud, contact-centre risk, and digital identity verification challenges relevant to ANZ institutions.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>Key results from this market entry include the following milestones.</p>",
+          "<p>New Zealand government partner for passport facial recognition, RealMe identity infrastructure, and MSD benefit access</p>",
+          "<p>Canberra presence serving Australian and New Zealand government and critical infrastructure needs</p>",
+          "<p>Dedicated ANZ regional leadership at senior executive level</p>",
+          "<p>Expanded relevance in ANZ banking, telco, and fraud prevention workflows</p>"
+        ]
+      },
+      {
+        "slug": "challenges-faced",
+        "title": "Challenges Faced",
+        "bodies": [
+          "<p>Daon's ANZ market entry was not without friction. The journey involved navigating regulatory pressure, competitive dynamics, or capital and resourcing constraints typical of cross-border expansion.</p>",
+          "<p>Working through those headwinds required disciplined execution: aligning local hires with regulatory expectations, validating the proposition with anchor customers, and committing capital to in-market presence rather than relying on remote sales support.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>Several repeatable plays stand out from Daon's ANZ entry.</p>",
+          "<p><strong>Use government as the anchor customer.</strong> New Zealand public-sector wins created trust that private-sector buyers could recognise</p>",
+          "<p><strong>Base near the buyer.</strong> Canberra positioned Daon close to government and critical infrastructure buyers</p>",
+          "<p><strong>Invest in executive-grade local leadership.</strong> Trust-heavy markets reward senior local decision-makers and continuity</p>",
+          "<p><strong>Expand from one proof point into adjacent sectors.</strong> Government credibility helped Daon address banking and telecom identity needs</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Daon, Inc. - Wikiwand",
+        "url": "https://www.wikiwand.com/en/articles/Daon,_Inc.",
+        "citation_number": 1,
+        "source_type": "other"
+      },
+      {
+        "label": "Daon, Inc. - Alchetron",
+        "url": "https://alchetron.com/Daon,-Inc.",
+        "citation_number": 2,
+        "source_type": "other"
+      },
+      {
+        "label": "Daon, Inc. - Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Daon,_Inc.",
+        "citation_number": 3,
+        "source_type": "other"
+      },
+      {
+        "label": "Innovate While You Authenticate – Daon Inc.",
+        "url": "https://ciobulletin.com/magazine/profile/innovate-while-you-authenticate-daon-inc",
+        "citation_number": 4,
+        "source_type": "other"
+      },
+      {
+        "label": "Regulatory system information: Identity and Passports",
+        "url": "https://www.dia.govt.nz/Regulatory-Stewardship---Identity-and-Passports",
+        "citation_number": 5,
+        "source_type": "government"
+      },
+      {
+        "label": "Digital Identity Solutions for Public Sector",
+        "url": "https://www.daon.com/industry/public-sector/",
+        "citation_number": 6,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Daon provides biometric onboarding for New Zealand government-backed mobile credential",
+        "url": "https://www.biometricupdate.com/201808/daon-provides-biometric-onboarding-for-new-zealand-government-backed-mobile-credential",
+        "citation_number": 7,
+        "source_type": "news"
+      },
+      {
+        "label": "Daon chosen for NZ govt’s RealMe Now App",
+        "url": "https://identityweek.net/daon-chosen-for-nz-govts-realme-now-app/",
+        "citation_number": 8,
+        "source_type": "news"
+      },
+      {
+        "label": "Daon wins contract to provide face biometrics for NZ social benefits",
+        "url": "https://www.biometricupdate.com/202311/daon-wins-contract-to-provide-face-biometrics-for-nz-social-benefits",
+        "citation_number": 9,
+        "source_type": "news"
+      },
+      {
+        "label": "Where is Daon Located? HQ & Global Offices (2025)",
+        "url": "https://www.highperformr.ai/company/daon",
+        "citation_number": 10,
+        "source_type": "other"
+      },
+      {
+        "label": "Daon, Inc.",
+        "url": "http://www.staroceans.org/wiki/A/Daon,_Inc.",
+        "citation_number": 11,
+        "source_type": "other"
+      },
+      {
+        "label": "John Duggan - SVP, ANZ & SE Asia at Daon | The Org",
+        "url": "https://theorg.com/org/daon/org-chart/john-duggan",
+        "citation_number": 12,
+        "source_type": "other"
+      },
+      {
+        "label": "Craig Katz - Regional Director Australia & NZ at Daon | The Org",
+        "url": "https://theorg.com/org/daon/org-chart/craig-katz",
+        "citation_number": 13,
+        "source_type": "other"
+      },
+      {
+        "label": "Daon's xSentinel tackles synthetic audio threats through real-time detection",
+        "url": "https://securitybrief.com.au/story/daon-s-xsentinel-tackles-synthetic-audio-threats-through-real-time-detection",
+        "citation_number": 14,
+        "source_type": "news"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "published",
+    "read_time": 2
+  },
+  {
+    "source_file": "irish",
+    "case_number": 2,
+    "slug": "fenergo-anz-market-entry",
+    "title": "How Fenergo Entered the ANZ Market: Regulatory Urgency as a Wedge — How Fenergo Won Four of Australia's Biggest Banks",
+    "subtitle": "Regulatory Urgency as a Wedge — How Fenergo Won Four of Australia's Biggest Banks",
+    "company_name": "Fenergo",
+    "origin_country": "Ireland",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "September 2014 (Sydney)",
+    "industry": "RegTech / Client Lifecycle Management",
+    "founded": "2009, Dublin, Ireland",
+    "stage_at_entry": "Growth-stage",
+    "founders": [
+      {
+        "name": "Marc Murphy",
+        "title": "Founder",
+        "is_primary": true
+      },
+      {
+        "name": "Philip Burke",
+        "title": "Founder",
+        "is_primary": false
+      },
+      {
+        "name": "Cian Kinsella",
+        "title": "Founder",
+        "is_primary": false
+      }
+    ],
+    "tldr": [
+      "Formal APAC entry via Sydney in 2014",
+      "Four of Australia's top five banks selected Fenergo by 2017",
+      "Sydney used as the foundation for wider APAC expansion",
+      "Strong financial performance and ongoing global expansion"
+    ],
+    "quick_facts": [
+      {
+        "icon": "Calendar",
+        "label": "Founded",
+        "value": "2009"
+      },
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "Dublin, Ireland"
+      },
+      {
+        "icon": "Globe",
+        "label": "ANZ Entry",
+        "value": "September 2014 (Sydney)"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "RegTech / Client Lifecycle Management"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Fenergo was founded in Dublin in 2009 to help financial institutions digitise client lifecycle management, including onboarding, KYC, AML, and ongoing regulatory compliance. Its growth has been driven by increasing compliance complexity across global financial markets, and by FY2025 it reported €149.4 million in revenue and €21.1 million in profit before tax.</p>",
+          "<p>Australia offered concentrated demand because its major banks faced escalating AML, KYC, and regulatory scrutiny, especially in the broader context of AUSTRAC enforcement and the Royal Commission era. A small number of top-tier banking wins in Australia could create outsized regional credibility because the market is dominated by a few large institutions.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Fenergo formally entered APAC in September 2014 by setting up a local team in Sydney during an Enterprise Ireland trade mission to Australia. The company hired Brett Hodge as Head of Sales for APAC, bringing years of regional financial services experience into the business from the start.</p>",
+          "<p>Its pitch to Australian banks centred on solving urgent compliance pain: automating onboarding, reducing KYC and AML friction, and helping institutions cope with growing regulatory change. By October 2017, Fenergo had been selected by four of Australia's top five banks, including institutions such as Westpac, Macquarie, ANZ Bank, Commonwealth Bank, and NAB in its APAC customer story.</p>",
+          "<p>Fenergo also used a “community approach” in Australia, bringing banks together to shape regulatory rule interpretations and product evolution, which increased buy-in and created higher switching costs. Sydney then became the base for broader APAC expansion, with Singapore opening in 2016 and additional expansion into Japan following later.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>Key results from this market entry include the following milestones.</p>",
+          "<p>Formal APAC entry via Sydney in 2014</p>",
+          "<p>Four of Australia's top five banks selected Fenergo by 2017</p>",
+          "<p>Sydney used as the foundation for wider APAC expansion</p>",
+          "<p>Strong financial performance and ongoing global expansion</p>"
+        ]
+      },
+      {
+        "slug": "challenges-faced",
+        "title": "Challenges Faced",
+        "bodies": [
+          "<p>Fenergo's ANZ market entry was not without friction. The journey involved navigating regulatory pressure, competitive dynamics, or capital and resourcing constraints typical of cross-border expansion.</p>",
+          "<p>Working through those headwinds required disciplined execution: aligning local hires with regulatory expectations, validating the proposition with anchor customers, and committing capital to in-market presence rather than relying on remote sales support.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>Several repeatable plays stand out from Fenergo's ANZ entry.</p>",
+          "<p><strong>Enter when pain is urgent, not abstract.</strong> Regulatory pressure made the purchase non-optional for banks</p>",
+          "<p><strong>Use trade-mission momentum.</strong> Enterprise Ireland support improved market access and credibility</p>",
+          "<p><strong>Hire a senior local first employee.</strong> Deep local market knowledge accelerated enterprise sales</p>",
+          "<p><strong>Turn customers into a compliance community.</strong> Shared rule-building created loyalty and product depth</p>",
+          "<p><strong>Use Sydney as an APAC launchpad.</strong> A strong Australian base enabled further regional expansion</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "What is Brief History of Fenergo Company?",
+        "url": "https://canvasbusinessmodel.com/blogs/brief-history/fenergo-brief-history",
+        "citation_number": 1,
+        "source_type": "other"
+      },
+      {
+        "label": "Fenergo's profits almost double as Irish fintech continues to expand",
+        "url": "https://resources.fenergo.com/newsroom/fenergo-profits-almost-double-as-irish-fintech-continues-to-expand",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Regulatory compliance in a modern digital landscape",
+        "url": "https://www.digital-first.com.au/insights/regulatory-compliance-in-a-modern-digital-landscape-the-challenges-and-the-solutions/",
+        "citation_number": 3,
+        "source_type": "news"
+      },
+      {
+        "label": "Compare the big 4 banks in Australia | Canstar",
+        "url": "https://www.canstar.com.au/home-loans/compare-the-big-four-banks-in-australia/",
+        "citation_number": 4,
+        "source_type": "other"
+      },
+      {
+        "label": "Fenergo expands operations to APAC to solve regulatory pressures",
+        "url": "https://resources.fenergo.com/newsroom/fenergo-expands-operations-to-apac-to-solve-regulatory-pressures",
+        "citation_number": 5,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Fenergo Selected by 4 of the Largest Australian Banks",
+        "url": "https://resources.fenergo.com/newsroom/fenergo-selected-by-4-of-the-largest-australian-banks",
+        "citation_number": 6,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Fenergo selected by four of Australia's top five banks",
+        "url": "https://www.finextra.com/pressarticle/71063/fenergo-selected-by-four-of-australias-top-five-banks",
+        "citation_number": 7,
+        "source_type": "news"
+      },
+      {
+        "label": "Fenergo Boosts APAC Presence Amid Growing RegTech Demand",
+        "url": "https://www.finews.asia/finance/33874-fenergo-boosts-apac-presence-amid-growing-regtech-demand",
+        "citation_number": 8,
+        "source_type": "news"
+      },
+      {
+        "label": "Fenergo Sydney Office: Careers, Perks + Culture",
+        "url": "https://builtinsydney.au/company/fenergo",
+        "citation_number": 9,
+        "source_type": "other"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "published",
+    "read_time": 2
+  },
+  {
+    "source_file": "irish",
+    "case_number": 3,
+    "slug": "fineos-anz-market-entry",
+    "title": "How FINEOS Entered the ANZ Market: Category Dominance Through Vertical Focus — How FINEOS Became the Standard for ANZ Insurance",
+    "subtitle": "Category Dominance Through Vertical Focus — How FINEOS Became the Standard for ANZ Insurance",
+    "company_name": "FINEOS",
+    "origin_country": "Ireland",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "Early 2000s; landmark NZ deal in 2005",
+    "industry": "Insurance Software",
+    "founded": "1993, Dublin, Ireland",
+    "stage_at_entry": "Bootstrapped growth",
+    "founders": [
+      {
+        "name": "Michael Kelly",
+        "title": "Founder",
+        "is_primary": true
+      }
+    ],
+    "tldr": [
+      "Landmark 2005 ACC New Zealand contract",
+      "Strong presence across ANZ public-sector compensation and life insurance",
+      "More than 70% of Australian life premiums represented on FINEOS Claims",
+      "13 ANZ insurance clients live in production",
+      "ASX listing in 2019 raised A$211 million"
+    ],
+    "quick_facts": [
+      {
+        "icon": "Calendar",
+        "label": "Founded",
+        "value": "1993"
+      },
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "Dublin, Ireland"
+      },
+      {
+        "icon": "Globe",
+        "label": "ANZ Entry",
+        "value": "Early 2000s; landmark NZ deal in 2005"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Insurance Software"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>FINEOS was founded in Dublin in 1993 by Michael Kelly to build specialist software for life, accident, and health insurers. The company focused on replacing legacy insurance systems with a modern platform spanning claims, policy, billing, and administration.</p>",
+          "<p>ANZ offered a structurally attractive insurance market. New Zealand's national accident compensation framework created a unique government-scale claims environment, while Australia's life insurance sector — including insurance linked to superannuation — created a large and specialised market for claims and policy administration technology.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>The defining early ANZ win came in 2005 when New Zealand's Accident Compensation Corporation selected FINEOS to replace its legacy claims management platform in a contract valued at NZ$39 million. The system later supported over 2 million claims annually across 48 locations, making it one of New Zealand's largest public sector IT programs at the time.</p>",
+          "<p>That ACC credibility opened the door to other government and quasi-government clients in the region, including the NZ Defence Force, Victoria's TAC, WorkSafe Victoria, and NSW's icare group. FINEOS also won major Australian private-sector insurance share, with FINEOS Claims adopted by carriers representing over 70% of Australian life premiums and 13 ANZ insurance clients live in production.</p>",
+          "<p>The company deepened execution capacity through a strategic ANZ partnership with Sequential in 2017, combining FINEOS software with local consulting, change management, and optimisation support. In 2019, FINEOS listed on the ASX, raising A$211 million in the largest IPO on the exchange that year, underscoring how central Australia and New Zealand had become to its growth story.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>Key results from this market entry include the following milestones.</p>",
+          "<p>Landmark 2005 ACC New Zealand contract</p>",
+          "<p>Strong presence across ANZ public-sector compensation and life insurance</p>",
+          "<p>More than 70% of Australian life premiums represented on FINEOS Claims</p>",
+          "<p>13 ANZ insurance clients live in production</p>",
+          "<p>ASX listing in 2019 raised A$211 million</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>Several repeatable plays stand out from FINEOS's ANZ entry.</p>",
+          "<p><strong>Go deep into one regulated vertical.</strong> FINEOS focused on insurance and built category authority</p>",
+          "<p><strong>Land a government-scale proof point.</strong> ACC validated the platform at national scale</p>",
+          "<p><strong>Use public-sector credibility to win private-sector accounts.</strong> Government trust helped unlock insurer adoption</p>",
+          "<p><strong>Support software with local consulting partners.</strong> Sequential improved delivery confidence and outcomes</p>",
+          "<p><strong>Treat ANZ as a strategic capital market too.</strong> The ASX listing reinforced long-term commitment and visibility</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "An Industry Leader Driven by Innovation - FINEOS",
+        "url": "https://www.fineos.com/2020/01/09/fineos-an-industry-leader-driven-by-innovation/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "What is Brief History of FINEOS Company?",
+        "url": "https://matrixbcg.com/blogs/brief-history/fineos",
+        "citation_number": 2,
+        "source_type": "other"
+      },
+      {
+        "label": "What is Growth Strategy and Future Prospects of FINEOS Company?",
+        "url": "https://matrixbcg.com/blogs/growth-strategy/fineos",
+        "citation_number": 3,
+        "source_type": "other"
+      },
+      {
+        "label": "ACC - FINEOS client page",
+        "url": "https://www.fineos.com/clients/acc-3/",
+        "citation_number": 4,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "The top 5 life insurance companies in Australia",
+        "url": "https://www.insurancebusinessmag.com/au/guides/the-top-5-life-insurance-companies-in-australia-440994.aspx",
+        "citation_number": 5,
+        "source_type": "news"
+      },
+      {
+        "label": "Fineos wins NZ$39m Accident Compensation Corporation contract",
+        "url": "https://www.finextra.com/pressarticle/3144/fineos-wins-nz39m-accident-compensation-corporation-contract",
+        "citation_number": 6,
+        "source_type": "news"
+      },
+      {
+        "label": "Fineos streamlines claims management for ACC",
+        "url": "https://www.techmonitor.ai/technology/fineos_streamlines_claims_management_for_acc",
+        "citation_number": 7,
+        "source_type": "news"
+      },
+      {
+        "label": "Further expansion in ANZ: FINEOS sponsors the Salesforce World Tour",
+        "url": "https://www.fineos.com/blog/expansion-anz-fineos-sponsors-salesforce-world-tour/",
+        "citation_number": 8,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "FINEOS and Sequential announce Strategic Partnership in ANZ",
+        "url": "https://www.fineos.com/2017/03/16/fineos-sequential-announce-strategic-partnership-anz/",
+        "citation_number": 9,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "FINEOS lists on the Australian Securities Exchange",
+        "url": "https://www.fineos.com/2019/08/16/fineos-lists-on-the-australian-securities-exchange/",
+        "citation_number": 10,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Irish fintech FINEOS, ASX's biggest IPO this year, opens higher on debut",
+        "url": "https://www.reuters.com/article/business/irish-fintech-fineos-asxs-biggest-ipo-this-year-opens-higher-on-debut-idUSKCN1V6075/",
+        "citation_number": 11,
+        "source_type": "news"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "published",
+    "read_time": 2
+  },
+  {
+    "source_file": "irish",
+    "case_number": 4,
+    "slug": "wayflyer-anz-market-entry",
+    "title": "How Wayflyer Entered the ANZ Market: Funding Growth at the Speed of E-Commerce — Wayflyer's Australian Playbook",
+    "subtitle": "Funding Growth at the Speed of E-Commerce — Wayflyer's Australian Playbook",
+    "company_name": "Wayflyer",
+    "origin_country": "Ireland",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "2021 (Sydney)",
+    "industry": "Revenue-Based Financing / E-Commerce Growth Capital",
+    "founded": "2019, Dublin, Ireland",
+    "stage_at_entry": "Early growth",
+    "founders": [
+      {
+        "name": "Aidan Corbett",
+        "title": "Founder",
+        "is_primary": true
+      },
+      {
+        "name": "Jack Pierse",
+        "title": "Founder",
+        "is_primary": false
+      }
+    ],
+    "tldr": [
+      "Sydney office established in 2021",
+      "AUD$60 million deployed to 150+ Australian brands by early 2022",
+      "Strong set of Australian customer examples and success stories",
+      "Global scale of $5 billion deployed across 5,000+ brands in 11 countries",
+      "Institutional capital support from major global lenders"
+    ],
+    "quick_facts": [
+      {
+        "icon": "Calendar",
+        "label": "Founded",
+        "value": "2019"
+      },
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "Dublin, Ireland"
+      },
+      {
+        "icon": "Globe",
+        "label": "ANZ Entry",
+        "value": "2021 (Sydney)"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Revenue-Based Financing / E-Commerce Growth Capital"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Wayflyer was founded in Dublin in 2019 to provide non-dilutive growth capital to e-commerce brands, using sales performance data to underwrite advances for inventory and marketing. The company scaled quickly, reaching unicorn status in 2022 and later reporting €95.2 million in FY2024 revenue.</p>",
+          "<p>Australia was identified early as a high-priority expansion market because e-commerce brands there faced the same working-capital gaps as sellers in larger markets, but had fewer tailored funding options. The local market was digitally mature and full of growing direct-to-consumer brands that needed fast access to inventory and marketing capital.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Wayflyer launched in Australia in 2021 and established a Sydney office at 100 Market Street, giving it a true local operating base rather than just offshore support. By early 2022, it had already deployed AUD$60 million to more than 150 Australian e-commerce brands. Named Australian customers and examples from Wayflyer-linked storytelling include AMR Hair & Beauty, Bhumi Organic Cotton, Petz Park, Stax, King Kong Apparel, Black Swallow, and Bohemian Traders.</p>",
+          "<p>Wayflyer's advantage was not only product design but capital access. Its large debt facilities, including funding from J.P. Morgan and later ATLAS SP Partners, helped it compete more effectively on speed and scale in markets like Australia. Its infrastructure partnerships also helped it deploy capital efficiently across markets.</p>",
+          "<p>By 2025, Wayflyer had deployed $5 billion to more than 5,000 brands across 11 countries, showing that its operating model could scale globally while continuing to support ANZ growth.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>Key results from this market entry include the following milestones.</p>",
+          "<p>Sydney office established in 2021</p>",
+          "<p>AUD$60 million deployed to 150+ Australian brands by early 2022</p>",
+          "<p>Strong set of Australian customer examples and success stories</p>",
+          "<p>Global scale of $5 billion deployed across 5,000+ brands in 11 countries</p>",
+          "<p>Institutional capital support from major global lenders</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>Several repeatable plays stand out from Wayflyer's ANZ entry.</p>",
+          "<p><strong>Enter ANZ early in the company journey.</strong> Wayflyer treated Australia as a core growth market, not a late add-on</p>",
+          "<p><strong>Put a real team on the ground.</strong> A Sydney office improved trust, responsiveness, and customer acquisition</p>",
+          "<p><strong>Lead with outcome stories from local brands.</strong> Australian merchant stories made the model tangible</p>",
+          "<p><strong>Bring global capital into local SME gaps.</strong> Large facilities helped Wayflyer compete where banks were underserving the market</p>",
+          "<p><strong>Position ANZ merchants as part of a global commerce network.</strong> Cross-border relevance strengthened the value proposition</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "What is Brief History of Wayflyer Company?",
+        "url": "https://canvasbusinessmodel.com/blogs/brief-history/wayflyer-brief-history",
+        "citation_number": 1,
+        "source_type": "other"
+      },
+      {
+        "label": "How Wayflyer can help your eCommerce brand reach new heights",
+        "url": "https://wayflyer.com/au/blog/with-successful-seed-funding-round-wayflyer-is-growing-to-meet-brands-needs-and-global-demand",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Ireland fintech firm Wayflyer eyes up Aussie eCommerce market boom",
+        "url": "https://ecommercenews.com.au/story/ireland-fintech-firm-wayflyer-eyes-up-aussie-ecommerce-market-boom",
+        "citation_number": 3,
+        "source_type": "news"
+      },
+      {
+        "label": "About Wayflyer | Purpose-Built Financing for Consumer Brands",
+        "url": "https://wayflyer.com/au/about-us",
+        "citation_number": 4,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "eCommerce Financing | Customer Stories | Bohemian Traders",
+        "url": "https://wayflyer.com/our-customers/bohemian-traders",
+        "citation_number": 5,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Funding Ecommerce Freedom: The Wayflyer Story | Add To Cart Podcast",
+        "url": "https://www.youtube.com/watch?v=fZgvRXpII-k",
+        "citation_number": 6,
+        "source_type": "podcast"
+      },
+      {
+        "label": "Wayflyer secures $300m in debt financing from J.P. Morgan",
+        "url": "https://wayflyer.com/au/press-releases/j-p-morgan",
+        "citation_number": 7,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Irish unicorn Wayflyer lands new $250m credit facility agreement",
+        "url": "https://www.fintechfutures.com/commercial-sme-lending/irish-unicorn-wayflyer-lands-new-250m-credit-facility-agreement",
+        "citation_number": 8,
+        "source_type": "news"
+      },
+      {
+        "label": "Wayflyer case study - Stripe",
+        "url": "https://stripe.com/customers/wayflyer",
+        "citation_number": 9,
+        "source_type": "other"
+      },
+      {
+        "label": "Wayflyer marks fifth anniversary after deploying $5 Billion to 5000+ businesses",
+        "url": "https://wayflyer.com/press-releases/fifth-anniversary",
+        "citation_number": 10,
+        "source_type": "company_blog"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "published",
+    "read_time": 2
+  },
+  {
+    "source_file": "irish",
+    "case_number": 5,
+    "slug": "tines-anz-market-entry",
+    "title": "How Tines Entered the ANZ Market: From Security Automation to AI Workflows — Tines' APAC Beachhead Strategy",
+    "subtitle": "From Security Automation to AI Workflows — Tines' APAC Beachhead Strategy",
+    "company_name": "Tines",
+    "origin_country": "Ireland",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "Customer-led traction before formal hub expansion; APAC hub formalised in 2026",
+    "industry": "Workflow Automation / Security Automation",
+    "founded": "2018, Dublin, Ireland",
+    "stage_at_entry": "Early growth",
+    "founders": [
+      {
+        "name": "Eoin Hinchy",
+        "title": "Founder",
+        "is_primary": true
+      },
+      {
+        "name": "Thomas Kinsella",
+        "title": "Founder",
+        "is_primary": false
+      }
+    ],
+    "tldr": [
+      "Marquee ANZ customers including Canva, REA Group, ANU, and nib Health Funds",
+      "Formal APAC hub expansion in Australia announced in 2026",
+      "Australian headcount growth and local data residency support",
+      "High pilot-to-production conversion and broad cross-team expansion model"
+    ],
+    "quick_facts": [
+      {
+        "icon": "Calendar",
+        "label": "Founded",
+        "value": "2018"
+      },
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "Dublin, Ireland"
+      },
+      {
+        "icon": "Globe",
+        "label": "ANZ Entry",
+        "value": "Customer-led traction before formal hub expansion; APAC hub formalised in 2026"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Workflow Automation / Security Automation"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Tines was founded in Dublin in 2018 by Eoin Hinchy and Thomas Kinsella to eliminate manual, repetitive work in security and operations through no-code workflow automation. The company later reached unicorn status in 2025 after a $125 million Series C round that valued it at $1.125 billion.</p>",
+          "<p>ANZ became attractive because enterprise teams in Australia and New Zealand faced the same automation and security pressures as US firms, but often operated with leaner teams. Early customer traction with marquee Australian names gave Tines a credible base for wider growth.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Canva became one of Tines' most important reference customers in ANZ, helping the company prove that its no-code automation platform could scale security detections and responses inside a globally recognised Australian technology company. That kind of flagship validation mattered because it created peer credibility before Tines had fully formalised its local footprint.</p>",
+          "<p>As local demand grew, Tines built out dedicated ANZ capacity. In 2026 it announced plans to double Australian headcount and launch an APAC hub in Australia, naming customers such as Canva, REA Group, Australian National University, and nib Health Funds as evidence of momentum. Tines also leaned on local ecosystem relationships, including a partnership with Restack Technology, and supported enterprise buying requirements such as AWS-based local data residency.</p>",
+          "<p>The company now positions itself beyond only security use cases. It reports that 75% of active customers use the platform across multiple teams and that 94% of pilots move into production, showing a strong land-and-expand motion that is relevant to ANZ organisations pursuing practical automation and AI deployment.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>Key results from this market entry include the following milestones.</p>",
+          "<p>Marquee ANZ customers including Canva, REA Group, ANU, and nib Health Funds</p>",
+          "<p>Formal APAC hub expansion in Australia announced in 2026</p>",
+          "<p>Australian headcount growth and local data residency support</p>",
+          "<p>High pilot-to-production conversion and broad cross-team expansion model</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>Several repeatable plays stand out from Tines's ANZ entry.</p>",
+          "<p><strong>Let a marquee customer validate the category.</strong> Canva gave Tines immediate local credibility</p>",
+          "<p><strong>Formalise the hub after demand is proven.</strong> Tines turned customer-led traction into an official APAC footprint</p>",
+          "<p><strong>Solve procurement blockers early.</strong> Local data residency matters in ANZ enterprise buying</p>",
+          "<p><strong>Use local partners for delivery depth.</strong> Restack strengthened local ecosystem fit</p>",
+          "<p><strong>Expand from one team into many.</strong> The platform's land-and-expand motion suits lean ANZ organisations</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Tines Business Breakdown & Founding Story - Contrary Research",
+        "url": "https://research.contrary.com/company/tines",
+        "citation_number": 1,
+        "source_type": "other"
+      },
+      {
+        "label": "Tines joins the unicorn league after latest funding round",
+        "url": "https://www.siliconrepublic.com/start-ups/tines-unicorn-series-c-funding",
+        "citation_number": 2,
+        "source_type": "news"
+      },
+      {
+        "label": "Tines Secures $125M in Series C Financing, Bringing Total Valuation to $1.125B",
+        "url": "https://www.prnewswire.com/news-releases/tines-secures-125m-in-series-c-financing-bringing-total-valuation-to-1-125b-302372726.html",
+        "citation_number": 3,
+        "source_type": "press_release"
+      },
+      {
+        "label": "Tines to double Australia headcount as APAC hub opens",
+        "url": "https://itbrief.com.au/story/tines-to-double-australia-headcount-as-apac-hub-opens",
+        "citation_number": 4,
+        "source_type": "news"
+      },
+      {
+        "label": "Tines B2B Case Studies & Customer Successes",
+        "url": "https://www.casestudies.com/company/tines",
+        "citation_number": 5,
+        "source_type": "other"
+      },
+      {
+        "label": "Tines on LinkedIn: How Canva Secures Employee Identities with SpyCloud and Tines",
+        "url": "https://www.linkedin.com/posts/tines-io_how-canva-secures-employee-identities-with-activity-7184600792568340480-iPGg",
+        "citation_number": 6,
+        "source_type": "linkedin"
+      },
+      {
+        "label": "How Tines is helping Canva to improve its security detections and responses",
+        "url": "https://www.tines.com/case-studies/canva/",
+        "citation_number": 7,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Tines Assembles ANZ Team for Intelligent Workflows with Restack Technology",
+        "url": "https://www.linkedin.com/posts/trevor-van-essen-411ab758_2026-is-going-to-be-a-big-year-for-tines-activity-7416309943269507072--cSP",
+        "citation_number": 8,
+        "source_type": "linkedin"
+      },
+      {
+        "label": "Irish unicorn Tines to double headcount in Australia as organisations embrace intelligent workflows",
+        "url": "https://newshub.medianet.com.au/2026/04/irish-unicorn-tines-to-double-headcount-in-australia-as-organisations-embrace-intelligent-workflows/144557/",
+        "citation_number": 9,
+        "source_type": "news"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "published",
+    "read_time": 2
+  },
+  {
+    "source_file": "uk",
+    "case_number": 1,
+    "slug": "revolut-anz-market-entry",
+    "title": "How Revolut Entered the ANZ Market",
+    "subtitle": "Revolut was founded in London in 2015 by Nikolay Storonsky and Vlad Yatsenko to reduce the cost and friction of international spending and money movement, beginning with a prepaid travel card and interbank FX model before expanding into broader financial services.",
+    "company_name": "Revolut",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Fintech",
+    "founded": "2015, London, United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "Revolut has grown from a very small founding team in Australia into a scaled local operation with a seven-figure customer base and a much broader product suite, making it one of the clearest UK fintech expansion stories for MES.",
+      "Revolut established its Australian base in Melbourne, secured regulatory approval before public launch, then expanded from travel and FX into crypto, equity trading, rewards, and business products as it deepened local market fit."
+    ],
+    "quick_facts": [
+      {
+        "icon": "Calendar",
+        "label": "Founded",
+        "value": "2015"
+      },
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "London, United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Fintech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Revolut was founded in London in 2015 by Nikolay Storonsky and Vlad Yatsenko to reduce the cost and friction of international spending and money movement, beginning with a prepaid travel card and interbank FX model before expanding into broader financial services.</p>",
+          "<p>Australia offered Revolut an English-speaking market with high smartphone adoption, frequent international travel and remittance use, and a concentrated banking sector where pricing opacity created room for a challenger proposition.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Revolut established its Australian base in Melbourne, secured regulatory approval before public launch, then expanded from travel and FX into crypto, equity trading, rewards, and business products as it deepened local market fit.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>Revolut has grown from a very small founding team in Australia into a scaled local operation with a seven-figure customer base and a much broader product suite, making it one of the clearest UK fintech expansion stories for MES.</p>"
+        ]
+      },
+      {
+        "slug": "challenges-faced",
+        "title": "Challenges Faced",
+        "bodies": [
+          "<p>Revolut's ANZ entry surfaced concrete challenges that other UK-to-ANZ entrants should anticipate, including regulatory complexity, competitive intensity, and the capital required to operate in a market with concentrated incumbents.</p>",
+          "<p>Working through those constraints required selecting the right anchor partners, sequencing investment carefully, and treating ANZ presence as a long-term commitment rather than a quick proof point.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Revolut's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Revolut story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Revolut Australia newsroom and milestones",
+        "url": "https://www.revolut.com/en-AU/news/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Invest Victoria on Revolut choosing Melbourne",
+        "url": "https://www.invest.vic.gov.au/news-events/news/2020/revolut-launches-in-australia",
+        "citation_number": 2,
+        "source_type": "government"
+      },
+      {
+        "label": "ASIC professional registers / AFSL search",
+        "url": "https://connectonline.asic.gov.au/",
+        "citation_number": 3,
+        "source_type": "government"
+      },
+      {
+        "label": "RFI Global / Australian banking and digital adoption coverage",
+        "url": "https://www.rfigroup.com/",
+        "citation_number": 4,
+        "source_type": "other"
+      },
+      {
+        "label": "Reserve Bank of Australia payments statistics",
+        "url": "https://www.rba.gov.au/statistics/",
+        "citation_number": 5,
+        "source_type": "government"
+      },
+      {
+        "label": "Industry coverage on Australian growth",
+        "url": "https://www.afr.com/companies/financial-services",
+        "citation_number": 6,
+        "source_type": "news"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 2,
+    "slug": "wise-anz-market-entry",
+    "title": "How Wise Entered the ANZ Market",
+    "subtitle": "Wise, originally TransferWise, was founded in London in 2011 to offer transparent international transfers at the mid-market rate and has since evolved into a multi-currency consumer and business financial platform.",
+    "company_name": "Wise",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Fintech",
+    "founded": "2011, London, United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "Wise's Australian business is one of the strongest proofs that a UK fintech can move from narrow corridor-led use cases into mainstream adoption in ANZ.",
+      "Wise entered Australia through remittances, built local compliance and payment infrastructure, then expanded into broader balance, business, and investment-style products as the brand became established."
+    ],
+    "quick_facts": [
+      {
+        "icon": "Calendar",
+        "label": "Founded",
+        "value": "2011"
+      },
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "London, United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Fintech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Wise, originally TransferWise, was founded in London in 2011 to offer transparent international transfers at the mid-market rate and has since evolved into a multi-currency consumer and business financial platform.</p>",
+          "<p>Australia is a natural fit for Wise because of its large migrant and expat flows, strong SME trade connections, and longstanding dissatisfaction with opaque bank foreign exchange fees.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Wise entered Australia through remittances, built local compliance and payment infrastructure, then expanded into broader balance, business, and investment-style products as the brand became established.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>Wise's Australian business is one of the strongest proofs that a UK fintech can move from narrow corridor-led use cases into mainstream adoption in ANZ.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Wise's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Wise story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Wise company newsroom",
+        "url": "https://wise.com/gb/blog",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Wise annual reports and investor updates",
+        "url": "https://wise.com/gb/investors/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "LSE company profile for Wise",
+        "url": "https://www.londonstockexchange.com/",
+        "citation_number": 3,
+        "source_type": "other"
+      },
+      {
+        "label": "Wise Australia news and product updates",
+        "url": "https://wise.com/au/blog",
+        "citation_number": 4,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian Bureau of Statistics migration data",
+        "url": "https://www.abs.gov.au/",
+        "citation_number": 5,
+        "source_type": "government"
+      },
+      {
+        "label": "Reserve Bank of Australia payments data",
+        "url": "https://www.rba.gov.au/statistics/",
+        "citation_number": 6,
+        "source_type": "government"
+      },
+      {
+        "label": "AUSTRAC remittance registration information",
+        "url": "https://www.austrac.gov.au/",
+        "citation_number": 7,
+        "source_type": "government"
+      },
+      {
+        "label": "ASIC registers",
+        "url": "https://connectonline.asic.gov.au/",
+        "citation_number": 8,
+        "source_type": "government"
+      },
+      {
+        "label": "Financial press coverage",
+        "url": "https://www.afr.com/companies/financial-services",
+        "citation_number": 9,
+        "source_type": "news"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 3,
+    "slug": "darktrace-anz-market-entry",
+    "title": "How Darktrace Entered the ANZ Market",
+    "subtitle": "Darktrace is a UK-founded cybersecurity company built around self-learning AI for threat detection and response across enterprise environments.",
+    "company_name": "Darktrace",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Cybersecurity",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "The company's ANZ growth, customer mix, and partnerships make it one of the better-known UK cybersecurity market entry examples for enterprise-led expansion.",
+      "Darktrace built a direct presence in Australia, expanded into multiple cities, and combined enterprise sales with regional partnerships to create broad market coverage."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Cybersecurity"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Darktrace is a UK-founded cybersecurity company built around self-learning AI for threat detection and response across enterprise environments.</p>",
+          "<p>Australia's elevated cyber risk environment and growing board-level concern after major breaches make it a strong market for premium cyber platforms with enterprise credibility.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Darktrace built a direct presence in Australia, expanded into multiple cities, and combined enterprise sales with regional partnerships to create broad market coverage.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>The company's ANZ growth, customer mix, and partnerships make it one of the better-known UK cybersecurity market entry examples for enterprise-led expansion.</p>"
+        ]
+      },
+      {
+        "slug": "challenges-faced",
+        "title": "Challenges Faced",
+        "bodies": [
+          "<p>Darktrace's ANZ entry surfaced concrete challenges that other UK-to-ANZ entrants should anticipate, including regulatory complexity, competitive intensity, and the capital required to operate in a market with concentrated incumbents.</p>",
+          "<p>Working through those constraints required selecting the right anchor partners, sequencing investment carefully, and treating ANZ presence as a long-term commitment rather than a quick proof point.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Darktrace's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Darktrace story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Darktrace company newsroom",
+        "url": "https://darktrace.com/news",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Darktrace investor relations",
+        "url": "https://darktrace.com/company/investors",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Customer stories",
+        "url": "https://darktrace.com/customers",
+        "citation_number": 3,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian Signals Directorate annual cyber threat reports",
+        "url": "https://www.cyber.gov.au/",
+        "citation_number": 4,
+        "source_type": "government"
+      },
+      {
+        "label": "Office of the Australian Information Commissioner breach reporting resources",
+        "url": "https://www.oaic.gov.au/",
+        "citation_number": 5,
+        "source_type": "government"
+      },
+      {
+        "label": "Channel and partner coverage",
+        "url": "https://www.crn.com.au/",
+        "citation_number": 6,
+        "source_type": "news"
+      },
+      {
+        "label": "Industry press coverage",
+        "url": "https://www.itnews.com.au/",
+        "citation_number": 7,
+        "source_type": "news"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 4,
+    "slug": "quantexa-anz-market-entry",
+    "title": "How Quantexa Entered the ANZ Market",
+    "subtitle": "Quantexa is a London-founded decision intelligence company focused on entity resolution, graph analytics, and financial crime detection for banks, insurers, and public sector clients.",
+    "company_name": "Quantexa",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Technology",
+    "founded": "London, United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "The company established itself as a serious ANZ banking technology player by winning share among major local institutions rather than trying to scale through lower-value segments first.",
+      "Quantexa used Sydney as its APAC beachhead, leveraged existing relationships with global banking clients, and rode a wave of compliance transformation among Australian banks."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "London, United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Technology"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Quantexa is a London-founded decision intelligence company focused on entity resolution, graph analytics, and financial crime detection for banks, insurers, and public sector clients.</p>",
+          "<p>Australia's heavily regulated banking environment and heightened AML scrutiny created ideal conditions for Quantexa's financial crime and contextual intelligence proposition.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Quantexa used Sydney as its APAC beachhead, leveraged existing relationships with global banking clients, and rode a wave of compliance transformation among Australian banks.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>The company established itself as a serious ANZ banking technology player by winning share among major local institutions rather than trying to scale through lower-value segments first.</p>"
+        ]
+      },
+      {
+        "slug": "challenges-faced",
+        "title": "Challenges Faced",
+        "bodies": [
+          "<p>Quantexa's ANZ entry surfaced concrete challenges that other UK-to-ANZ entrants should anticipate, including regulatory complexity, competitive intensity, and the capital required to operate in a market with concentrated incumbents.</p>",
+          "<p>Working through those constraints required selecting the right anchor partners, sequencing investment carefully, and treating ANZ presence as a long-term commitment rather than a quick proof point.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Quantexa's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Quantexa story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Quantexa newsroom",
+        "url": "https://www.quantexa.com/newsroom/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Quantexa customer stories",
+        "url": "https://www.quantexa.com/customers/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "AUSTRAC enforcement and guidance",
+        "url": "https://www.austrac.gov.au/",
+        "citation_number": 3,
+        "source_type": "government"
+      },
+      {
+        "label": "Quantexa banking sector materials",
+        "url": "https://www.quantexa.com/solutions/financial-crime/",
+        "citation_number": 4,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian banking regulatory context via APRA",
+        "url": "https://www.apra.gov.au/",
+        "citation_number": 5,
+        "source_type": "government"
+      },
+      {
+        "label": "Financial crime and AML media coverage",
+        "url": "https://www.afr.com/companies/financial-services",
+        "citation_number": 6,
+        "source_type": "news"
+      },
+      {
+        "label": "Independent business coverage",
+        "url": "https://www.finextra.com/",
+        "citation_number": 7,
+        "source_type": "news"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 5,
+    "slug": "thought-machine-anz-market-entry",
+    "title": "How Thought Machine Entered the ANZ Market",
+    "subtitle": "Thought Machine is a London-founded cloud core banking software company replacing legacy banking systems with programmable cloud-native infrastructure.",
+    "company_name": "Thought Machine",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Fintech",
+    "founded": "London, United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "The Kiwibank and Judo Bank wins give MES a strong case study in using challenger institutions as proof points for broader market trust.",
+      "Thought Machine used landmark anchor clients in New Zealand and Australia to prove delivery capability, then added a physical ANZ presence to support enterprise execution."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "London, United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Fintech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Thought Machine is a London-founded cloud core banking software company replacing legacy banking systems with programmable cloud-native infrastructure.</p>",
+          "<p>Australia and New Zealand have both challenger-bank momentum and incumbent modernisation demand, making ANZ a highly relevant region for next-generation core banking software.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Thought Machine used landmark anchor clients in New Zealand and Australia to prove delivery capability, then added a physical ANZ presence to support enterprise execution.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>The Kiwibank and Judo Bank wins give MES a strong case study in using challenger institutions as proof points for broader market trust.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Thought Machine's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Thought Machine story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Thought Machine newsroom",
+        "url": "https://www.thoughtmachine.net/news",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Thought Machine customers",
+        "url": "https://www.thoughtmachine.net/customers",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "APRA and RBNZ banking regulatory materials",
+        "url": "https://www.apra.gov.au/",
+        "citation_number": 3,
+        "source_type": "government"
+      },
+      {
+        "label": "Kiwibank / Judo Bank transformation coverage",
+        "url": "https://www.kiwibank.co.nz/",
+        "citation_number": 4,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Judo Bank announcements",
+        "url": "https://www.judo.bank/",
+        "citation_number": 5,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Synpulse implementation coverage",
+        "url": "https://www.synpulse.com/",
+        "citation_number": 6,
+        "source_type": "company_blog"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 6,
+    "slug": "featurespace-anz-market-entry",
+    "title": "How Featurespace Entered the ANZ Market",
+    "subtitle": "Featurespace is a Cambridge fraud and financial crime AI company known for behavioural analytics and real-time transaction monitoring.",
+    "company_name": "Featurespace",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Technology",
+    "founded": "Cambridge, United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "An infrastructure-grade payments client and later APAC leadership hires make this one of the strongest MES examples of how a single strategic ANZ deal can reshape regional presence.",
+      "Featurespace's ANZ path was shaped by founder-market connection and a nationally important anchor deal through eftpos, which provided credibility that far exceeded a typical first customer logo."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "Cambridge, United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Technology"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Featurespace is a Cambridge fraud and financial crime AI company known for behavioural analytics and real-time transaction monitoring.</p>",
+          "<p>Australia's payments ecosystem and bank fraud environment created a clear need for advanced behavioural fraud analytics, especially at infrastructure level rather than only at individual bank level.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Featurespace's ANZ path was shaped by founder-market connection and a nationally important anchor deal through eftpos, which provided credibility that far exceeded a typical first customer logo.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>An infrastructure-grade payments client and later APAC leadership hires make this one of the strongest MES examples of how a single strategic ANZ deal can reshape regional presence.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Featurespace's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Featurespace story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Featurespace newsroom",
+        "url": "https://www.featurespace.com/newsroom/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Featurespace customer stories",
+        "url": "https://www.featurespace.com/customers/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "HSBC acquisition coverage",
+        "url": "https://www.hsbc.com/news-and-media",
+        "citation_number": 3,
+        "source_type": "other"
+      },
+      {
+        "label": "eftpos / Australian Payments Plus announcements",
+        "url": "https://www.auspayplus.com.au/",
+        "citation_number": 4,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Featurespace fraud solution pages",
+        "url": "https://www.featurespace.com/",
+        "citation_number": 5,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Payments market coverage",
+        "url": "https://www.paymentscardsandmobile.com/",
+        "citation_number": 6,
+        "source_type": "news"
+      },
+      {
+        "label": "ANU alumni references or founder profiles",
+        "url": "https://www.anu.edu.au/",
+        "citation_number": 7,
+        "source_type": "other"
+      },
+      {
+        "label": "APAC leadership updates",
+        "url": "https://www.linkedin.com/company/featurespace/",
+        "citation_number": 8,
+        "source_type": "linkedin"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 7,
+    "slug": "mimecast-anz-market-entry",
+    "title": "How Mimecast Entered the ANZ Market",
+    "subtitle": "Mimecast is a UK-founded cloud email security and cyber resilience company that scaled globally through a strong channel-led distribution model.",
+    "company_name": "Mimecast",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Cybersecurity",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "Its partner count, customer footprint, and multi-city presence make Mimecast one of the best ANZ channel-play case studies for MES.",
+      "Mimecast launched in Australia, expanded city coverage, and built a large partner ecosystem before attempting to dominate through direct sales alone."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Cybersecurity"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Mimecast is a UK-founded cloud email security and cyber resilience company that scaled globally through a strong channel-led distribution model.</p>",
+          "<p>The ANZ market has a mature MSP, reseller, and enterprise IT channel ecosystem, making it well suited to Mimecast's partner-first growth model.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Mimecast launched in Australia, expanded city coverage, and built a large partner ecosystem before attempting to dominate through direct sales alone.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>Its partner count, customer footprint, and multi-city presence make Mimecast one of the best ANZ channel-play case studies for MES.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Mimecast's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Mimecast story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Mimecast newsroom",
+        "url": "https://www.mimecast.com/company/news/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Mimecast partner pages",
+        "url": "https://www.mimecast.com/partners/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Permira acquisition coverage",
+        "url": "https://www.permira.com/news-and-insights/",
+        "citation_number": 3,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "CRN Australia channel coverage",
+        "url": "https://www.crn.com.au/",
+        "citation_number": 4,
+        "source_type": "news"
+      },
+      {
+        "label": "ARN channel market news",
+        "url": "https://www.arnnet.com.au/",
+        "citation_number": 5,
+        "source_type": "news"
+      },
+      {
+        "label": "Company overview",
+        "url": "https://www.mimecast.com/",
+        "citation_number": 6,
+        "source_type": "company_blog"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 8,
+    "slug": "complyadvantage-anz-market-entry",
+    "title": "How ComplyAdvantage Entered the ANZ Market",
+    "subtitle": "ComplyAdvantage is a UK RegTech company focused on AML, sanctions screening, and financial crime risk intelligence.",
+    "company_name": "ComplyAdvantage",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "RegTech",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "This is a strong MES example of pre-positioning for a regulatory wave rather than reacting after the market gets crowded.",
+      "ComplyAdvantage combined a Sydney-based APAC leadership model with local compliance content and ecosystem participation to build trust ahead of the Tranche 2 regulatory expansion."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "RegTech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>ComplyAdvantage is a UK RegTech company focused on AML, sanctions screening, and financial crime risk intelligence.</p>",
+          "<p>Australia's AML reform cycle and expanding compliance burden made ANZ a strong market for a company willing to enter before demand peaked.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>ComplyAdvantage combined a Sydney-based APAC leadership model with local compliance content and ecosystem participation to build trust ahead of the Tranche 2 regulatory expansion.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>This is a strong MES example of pre-positioning for a regulatory wave rather than reacting after the market gets crowded.</p>"
+        ]
+      },
+      {
+        "slug": "challenges-faced",
+        "title": "Challenges Faced",
+        "bodies": [
+          "<p>ComplyAdvantage's ANZ entry surfaced concrete challenges that other UK-to-ANZ entrants should anticipate, including regulatory complexity, competitive intensity, and the capital required to operate in a market with concentrated incumbents.</p>",
+          "<p>Working through those constraints required selecting the right anchor partners, sequencing investment carefully, and treating ANZ presence as a long-term commitment rather than a quick proof point.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, ComplyAdvantage's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The ComplyAdvantage story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "ComplyAdvantage newsroom",
+        "url": "https://complyadvantage.com/insights/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Company pages",
+        "url": "https://complyadvantage.com/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Funding and growth coverage",
+        "url": "https://techcrunch.com/",
+        "citation_number": 3,
+        "source_type": "news"
+      },
+      {
+        "label": "AUSTRAC reform updates",
+        "url": "https://www.austrac.gov.au/",
+        "citation_number": 4,
+        "source_type": "government"
+      },
+      {
+        "label": "Australian Government AML reform materials",
+        "url": "https://www.ag.gov.au/",
+        "citation_number": 5,
+        "source_type": "government"
+      },
+      {
+        "label": "FinTech Australia member ecosystem",
+        "url": "https://www.fintechaustralia.org.au/",
+        "citation_number": 6,
+        "source_type": "news"
+      },
+      {
+        "label": "ANZ compliance media coverage",
+        "url": "https://www.afr.com/",
+        "citation_number": 7,
+        "source_type": "news"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 9,
+    "slug": "onfido-anz-market-entry",
+    "title": "How Onfido Entered the ANZ Market",
+    "subtitle": "Onfido is a UK identity verification company that uses AI and biometrics to verify users across digital onboarding flows.",
+    "company_name": "Onfido",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Identity Verification",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "This makes Onfido an MES-relevant infrastructure case study showing how following existing clients into ANZ can create significant volume without a classic local go-to-market motion.",
+      "Onfido's ANZ story is primarily a client pull-through model, with global customers like Revolut bringing Onfido into Australian onboarding journeys as they expanded."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Identity Verification"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Onfido is a UK identity verification company that uses AI and biometrics to verify users across digital onboarding flows.</p>",
+          "<p>Australia's regulated fintech, payments, and digital onboarding environment created strong demand for identity verification infrastructure that could localise to Australian documents and compliance rules.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Onfido's ANZ story is primarily a client pull-through model, with global customers like Revolut bringing Onfido into Australian onboarding journeys as they expanded.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>This makes Onfido an MES-relevant infrastructure case study showing how following existing clients into ANZ can create significant volume without a classic local go-to-market motion.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Onfido's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Onfido story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Onfido newsroom",
+        "url": "https://onfido.com/resources/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Onfido company pages",
+        "url": "https://onfido.com/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Entrust acquisition coverage",
+        "url": "https://www.entrust.com/company/newsroom",
+        "citation_number": 3,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "AUSTRAC KYC / AML materials",
+        "url": "https://www.austrac.gov.au/",
+        "citation_number": 4,
+        "source_type": "government"
+      },
+      {
+        "label": "ASIC guidance for financial onboarding",
+        "url": "https://asic.gov.au/",
+        "citation_number": 5,
+        "source_type": "government"
+      },
+      {
+        "label": "Onfido customer stories",
+        "url": "https://onfido.com/customers/",
+        "citation_number": 6,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Revolut Australia newsroom",
+        "url": "https://www.revolut.com/en-AU/news/",
+        "citation_number": 7,
+        "source_type": "company_blog"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 10,
+    "slug": "blue-prism-anz-market-entry",
+    "title": "How Blue Prism Entered the ANZ Market",
+    "subtitle": "Blue Prism is the UK company most associated with inventing and commercialising robotic process automation for enterprise back-office workflows.",
+    "company_name": "Blue Prism",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Automation",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "The Telstra automation work remains one of the best-known proof points for UK enterprise software translating into clear operational value in Australia.",
+      "Blue Prism's ANZ trajectory was amplified by a coordinated UK tech investment announcement and then scaled through systems integrator partners rather than purely direct sales."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Automation"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Blue Prism is the UK company most associated with inventing and commercialising robotic process automation for enterprise back-office workflows.</p>",
+          "<p>Australia's large enterprises and public institutions have long invested in transformation programs where automation can deliver measurable labour and process efficiency gains.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Blue Prism's ANZ trajectory was amplified by a coordinated UK tech investment announcement and then scaled through systems integrator partners rather than purely direct sales.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>The Telstra automation work remains one of the best-known proof points for UK enterprise software translating into clear operational value in Australia.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Blue Prism's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Blue Prism story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "SS&C Blue Prism newsroom",
+        "url": "https://www.blueprism.com/resources/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Company history pages",
+        "url": "https://www.blueprism.com/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "SS&C acquisition materials",
+        "url": "https://www.ssctech.com/about/news",
+        "citation_number": 3,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian enterprise transformation coverage",
+        "url": "https://www.itnews.com.au/",
+        "citation_number": 4,
+        "source_type": "news"
+      },
+      {
+        "label": "Telstra transformation materials",
+        "url": "https://www.telstra.com.au/",
+        "citation_number": 5,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Austrade / DIT coordinated investment coverage",
+        "url": "https://www.austrade.gov.au/",
+        "citation_number": 6,
+        "source_type": "government"
+      },
+      {
+        "label": "Infosys partner coverage",
+        "url": "https://www.infosys.com/",
+        "citation_number": 7,
+        "source_type": "company_blog"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 11,
+    "slug": "dext-anz-market-entry",
+    "title": "How Dext Entered the ANZ Market",
+    "subtitle": "Dext, formerly Receipt Bank, is a UK accounting automation company built around extracting financial data from receipts and invoices and feeding it into accounting software workflows.",
+    "company_name": "Dext",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Automation",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "Dext is one of the strongest MES examples of using an existing ANZ software ecosystem to scale without needing a heavy direct sales footprint first.",
+      "Dext entered via Xero integration, leaned into Xerocon and accountant community distribution, then broadened its proposition through adjacent practice intelligence tools."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Automation"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Dext, formerly Receipt Bank, is a UK accounting automation company built around extracting financial data from receipts and invoices and feeding it into accounting software workflows.</p>",
+          "<p>Because Xero is so deeply embedded in the Australian and New Zealand accounting ecosystem, Dext had a natural route into the market through platform integration and accountant channel relationships.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Dext entered via Xero integration, leaned into Xerocon and accountant community distribution, then broadened its proposition through adjacent practice intelligence tools.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>Dext is one of the strongest MES examples of using an existing ANZ software ecosystem to scale without needing a heavy direct sales footprint first.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Dext's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Dext story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Dext newsroom",
+        "url": "https://dext.com/en/news/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Dext company pages",
+        "url": "https://dext.com/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Xero app marketplace profile",
+        "url": "https://apps.xero.com/",
+        "citation_number": 3,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Xero investor or company updates",
+        "url": "https://www.xero.com/",
+        "citation_number": 4,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Xerocon event information",
+        "url": "https://www.xero.com/events/",
+        "citation_number": 5,
+        "source_type": "company_blog"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 12,
+    "slug": "nplan-anz-market-entry",
+    "title": "How nPlan Entered the ANZ Market",
+    "subtitle": "nPlan is a UK construction AI company that uses a very large historical project schedule dataset to predict delivery risk on major infrastructure projects.",
+    "company_name": "nPlan",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Construction Tech",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "For MES, this is a model case of winning a strategic anchor project in Australia to validate a category that still feels emerging to many buyers.",
+      "nPlan's ANZ story centres on a high-profile megaproject reference rather than a broad SME rollout, giving it outsized credibility for future infrastructure pursuits."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Construction Tech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>nPlan is a UK construction AI company that uses a very large historical project schedule dataset to predict delivery risk on major infrastructure projects.</p>",
+          "<p>Australia's multi-year infrastructure boom and reliance on large project consortia make it a highly attractive market for schedule risk intelligence and project controls technology.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>nPlan's ANZ story centres on a high-profile megaproject reference rather than a broad SME rollout, giving it outsized credibility for future infrastructure pursuits.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>For MES, this is a model case of winning a strategic anchor project in Australia to validate a category that still feels emerging to many buyers.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, nPlan's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The nPlan story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "nPlan newsroom",
+        "url": "https://www.nplan.io/news",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "nPlan company pages",
+        "url": "https://www.nplan.io/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Infrastructure Australia publications",
+        "url": "https://www.infrastructureaustralia.gov.au/",
+        "citation_number": 3,
+        "source_type": "government"
+      },
+      {
+        "label": "Victorian major projects information",
+        "url": "https://bigbuild.vic.gov.au/",
+        "citation_number": 4,
+        "source_type": "government"
+      },
+      {
+        "label": "North East Link project information",
+        "url": "https://bigbuild.vic.gov.au/projects/north-east-link-program",
+        "citation_number": 5,
+        "source_type": "government"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 13,
+    "slug": "daxtra-technologies-anz-market-entry",
+    "title": "How DaXtra Technologies Entered the ANZ Market",
+    "subtitle": "DaXtra is a UK recruitment technology company specialising in CV parsing, candidate matching, and recruitment search infrastructure.",
+    "company_name": "DaXtra Technologies",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Construction Tech",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "This case is especially useful for MES because it shows how a patient, infrastructure-style expansion can become deeply embedded in ANZ without loud consumer visibility.",
+      "DaXtra's Australian expansion began with a major staffing firm and then compounded steadily over many years as integrations and background workflow infrastructure locked in value."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Construction Tech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>DaXtra is a UK recruitment technology company specialising in CV parsing, candidate matching, and recruitment search infrastructure.</p>",
+          "<p>Australia's well-developed recruitment sector, especially in technology and professional services, gave DaXtra a strong environment for automation-led operational improvement.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>DaXtra's Australian expansion began with a major staffing firm and then compounded steadily over many years as integrations and background workflow infrastructure locked in value.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>This case is especially useful for MES because it shows how a patient, infrastructure-style expansion can become deeply embedded in ANZ without loud consumer visibility.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, DaXtra Technologies's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The DaXtra Technologies story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "DaXtra company website",
+        "url": "https://www.daxtra.com/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "DaXtra newsroom",
+        "url": "https://www.daxtra.com/news/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Nucleus Research coverage or matrix references",
+        "url": "https://nucleusresearch.com/",
+        "citation_number": 3,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian recruitment industry coverage",
+        "url": "https://www.recruitmentnews.com.au/",
+        "citation_number": 4,
+        "source_type": "news"
+      },
+      {
+        "label": "Peoplebank company information",
+        "url": "https://www.peoplebank.com.au/",
+        "citation_number": 5,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Recruitment CRM ecosystem pages",
+        "url": "https://www.jobadder.com/",
+        "citation_number": 6,
+        "source_type": "company_blog"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 14,
+    "slug": "anna-money-anz-market-entry",
+    "title": "How ANNA Money Entered the ANZ Market",
+    "subtitle": "ANNA Money is a UK SME financial admin and business banking platform combining payments, cards, bookkeeping, invoicing, and tax support.",
+    "company_name": "ANNA Money",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Fintech",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "This is one of the clearest MES examples of acquisition as a market entry shortcut for a UK startup entering Australia.",
+      "ANNA chose acquisition over greenfield build by buying Sydney-based GetCape, instantly gaining local infrastructure, customers, and leadership instead of spending years assembling them."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Fintech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>ANNA Money is a UK SME financial admin and business banking platform combining payments, cards, bookkeeping, invoicing, and tax support.</p>",
+          "<p>Australia's very large micro-business segment and frustration with traditional bank admin experiences make it fertile ground for digitally native SME finance products.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>ANNA chose acquisition over greenfield build by buying Sydney-based GetCape, instantly gaining local infrastructure, customers, and leadership instead of spending years assembling them.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>This is one of the clearest MES examples of acquisition as a market entry shortcut for a UK startup entering Australia.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, ANNA Money's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The ANNA Money story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "ANNA Money company pages",
+        "url": "https://anna.money/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "ANNA newsroom or blog",
+        "url": "https://anna.money/blog/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Founding and growth coverage",
+        "url": "https://techcrunch.com/",
+        "citation_number": 3,
+        "source_type": "news"
+      },
+      {
+        "label": "Australian small business statistics",
+        "url": "https://www.abs.gov.au/",
+        "citation_number": 4,
+        "source_type": "government"
+      },
+      {
+        "label": "Australian SME banking market coverage",
+        "url": "https://www.afr.com/",
+        "citation_number": 5,
+        "source_type": "news"
+      },
+      {
+        "label": "GetCape company or acquisition coverage",
+        "url": "https://www.getcape.com/",
+        "citation_number": 6,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian fintech media coverage",
+        "url": "https://www.fintechfutures.com/",
+        "citation_number": 7,
+        "source_type": "news"
+      },
+      {
+        "label": "Acquisition coverage",
+        "url": "https://www.finextra.com/",
+        "citation_number": 8,
+        "source_type": "news"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 15,
+    "slug": "tractable-anz-market-entry",
+    "title": "How Tractable Entered the ANZ Market",
+    "subtitle": "Tractable is a UK AI company using computer vision to assess motor and property damage for insurers and claims workflows.",
+    "company_name": "Tractable",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "InsurTech",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "For MES, this case shows the value of securing a dominant national insurer rather than spending years chasing smaller logos first.",
+      "Tractable used a partnership with IAG, the region's most important insurance group, as a category-defining proof point in ANZ."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "InsurTech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Tractable is a UK AI company using computer vision to assess motor and property damage for insurers and claims workflows.</p>",
+          "<p>Australia's large motor insurance market and recurring extreme weather claims spikes create strong demand for claims automation and scalable triage technology.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Tractable used a partnership with IAG, the region's most important insurance group, as a category-defining proof point in ANZ.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>For MES, this case shows the value of securing a dominant national insurer rather than spending years chasing smaller logos first.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Tractable's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Tractable story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Tractable newsroom",
+        "url": "https://tractable.ai/news/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Tractable company pages",
+        "url": "https://tractable.ai/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "IAG newsroom",
+        "url": "https://www.iag.com.au/newsroom",
+        "citation_number": 3,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian insurance market coverage",
+        "url": "https://www.ibisworld.com/au/",
+        "citation_number": 4,
+        "source_type": "other"
+      },
+      {
+        "label": "Insurance technology coverage",
+        "url": "https://www.insurtechinsights.com/",
+        "citation_number": 5,
+        "source_type": "news"
+      },
+      {
+        "label": "IAG transformation materials",
+        "url": "https://www.iag.com.au/",
+        "citation_number": 6,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Insurance media coverage",
+        "url": "https://www.insurancebusinessmag.com/au/",
+        "citation_number": 7,
+        "source_type": "news"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 16,
+    "slug": "deliveroo-anz-market-entry",
+    "title": "How Deliveroo Entered the ANZ Market",
+    "subtitle": "Deliveroo is a UK-founded food delivery marketplace that expanded aggressively internationally before later exiting Australia and then being acquired by DoorDash globally.",
+    "company_name": "Deliveroo",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Marketplace",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "This is a valuable MES case not because it succeeded long term in ANZ, but because it shows how even strong UK startups can misread capital requirements in a two-sided platform market.",
+      "Deliveroo launched early, scaled across major cities, but eventually concluded that the market structure made profitable leadership too capital intensive."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Marketplace"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Deliveroo is a UK-founded food delivery marketplace that expanded aggressively internationally before later exiting Australia and then being acquired by DoorDash globally.</p>",
+          "<p>Australia initially looked highly attractive because of urban density, restaurant culture, and mobile adoption, but the same conditions also attracted aggressive global competition.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Deliveroo launched early, scaled across major cities, but eventually concluded that the market structure made profitable leadership too capital intensive.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>This is a valuable MES case not because it succeeded long term in ANZ, but because it shows how even strong UK startups can misread capital requirements in a two-sided platform market.</p>"
+        ]
+      },
+      {
+        "slug": "challenges-faced",
+        "title": "Challenges Faced",
+        "bodies": [
+          "<p>Deliveroo's ANZ entry surfaced concrete challenges that other UK-to-ANZ entrants should anticipate, including regulatory complexity, competitive intensity, and the capital required to operate in a market with concentrated incumbents.</p>",
+          "<p>Working through those constraints required selecting the right anchor partners, sequencing investment carefully, and treating ANZ presence as a long-term commitment rather than a quick proof point.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Deliveroo's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Deliveroo story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Deliveroo corporate newsroom",
+        "url": "https://corporate.deliveroo.co.uk/media-centre/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "DoorDash acquisition coverage",
+        "url": "https://about.doordash.com/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "LSE / corporate history references",
+        "url": "https://corporate.deliveroo.co.uk/",
+        "citation_number": 3,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian food delivery market coverage",
+        "url": "https://www.afr.com/",
+        "citation_number": 4,
+        "source_type": "news"
+      },
+      {
+        "label": "Competition and consumer market reporting",
+        "url": "https://www.smartcompany.com.au/",
+        "citation_number": 5,
+        "source_type": "news"
+      },
+      {
+        "label": "Administrator / KordaMentha information",
+        "url": "https://kordamentha.com/",
+        "citation_number": 6,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian business coverage",
+        "url": "https://www.abc.net.au/news",
+        "citation_number": 7,
+        "source_type": "news"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 17,
+    "slug": "banked-anz-market-entry",
+    "title": "How Banked Entered the ANZ Market",
+    "subtitle": "Banked is a UK account-to-account payments company helping merchants and financial institutions move transactions directly over bank rails rather than card networks.",
+    "company_name": "Banked",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Fintech",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "For MES, Banked is a strong template for how UK fintech infrastructure companies can use a strategic investor-partner to enter ANZ with distribution built in.",
+      "Banked first aligned with NAB strategically through investment and then commercially through a Pay by Bank rollout, using the bank's reach to scale faster than a standalone merchant acquisition strategy would allow."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Fintech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Banked is a UK account-to-account payments company helping merchants and financial institutions move transactions directly over bank rails rather than card networks.</p>",
+          "<p>Australia's NPP and PayTo infrastructure make it one of the best-developed A2A payments environments globally, particularly when paired with a major bank partner.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Banked first aligned with NAB strategically through investment and then commercially through a Pay by Bank rollout, using the bank's reach to scale faster than a standalone merchant acquisition strategy would allow.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>For MES, Banked is a strong template for how UK fintech infrastructure companies can use a strategic investor-partner to enter ANZ with distribution built in.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Banked's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Banked story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Banked newsroom",
+        "url": "https://banked.com/news/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Banked company pages",
+        "url": "https://banked.com/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Funding coverage",
+        "url": "https://www.finextra.com/",
+        "citation_number": 3,
+        "source_type": "news"
+      },
+      {
+        "label": "Australian Payments Plus / PayTo",
+        "url": "https://www.auspayplus.com.au/",
+        "citation_number": 4,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "NAB newsroom",
+        "url": "https://news.nab.com.au/",
+        "citation_number": 5,
+        "source_type": "other"
+      },
+      {
+        "label": "Reserve Bank payments infrastructure materials",
+        "url": "https://www.rba.gov.au/",
+        "citation_number": 6,
+        "source_type": "government"
+      },
+      {
+        "label": "Payments industry coverage",
+        "url": "https://www.paymentscardsandmobile.com/",
+        "citation_number": 7,
+        "source_type": "news"
+      }
+    ],
+    "category": "Fintech Success",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 18,
+    "slug": "ncc-group-anz-market-entry",
+    "title": "How NCC Group Entered the ANZ Market",
+    "subtitle": "NCC Group is a UK cybersecurity and information assurance company with deep capabilities in penetration testing, incident response, and software assurance.",
+    "company_name": "NCC Group",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Cybersecurity",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "The case is especially useful for MES because it shows how a mature UK technology firm can enter ANZ by aligning tightly with public policy, regulation, and national strategic priorities.",
+      "NCC Group used the coordinated UK tech investment wave to establish presence, then aligned itself with government and critical infrastructure demand rather than diffuse SME demand."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Cybersecurity"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>NCC Group is a UK cybersecurity and information assurance company with deep capabilities in penetration testing, incident response, and software assurance.</p>",
+          "<p>Australia's post-breach cyber environment and expanding critical infrastructure obligations make it a strong market for advanced assurance and advisory providers.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>NCC Group used the coordinated UK tech investment wave to establish presence, then aligned itself with government and critical infrastructure demand rather than diffuse SME demand.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>The case is especially useful for MES because it shows how a mature UK technology firm can enter ANZ by aligning tightly with public policy, regulation, and national strategic priorities.</p>"
+        ]
+      },
+      {
+        "slug": "challenges-faced",
+        "title": "Challenges Faced",
+        "bodies": [
+          "<p>NCC Group's ANZ entry surfaced concrete challenges that other UK-to-ANZ entrants should anticipate, including regulatory complexity, competitive intensity, and the capital required to operate in a market with concentrated incumbents.</p>",
+          "<p>Working through those constraints required selecting the right anchor partners, sequencing investment carefully, and treating ANZ presence as a long-term commitment rather than a quick proof point.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, NCC Group's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The NCC Group story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "NCC Group newsroom",
+        "url": "https://www.nccgroup.com/us/newsroom/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "NCC Group company pages",
+        "url": "https://www.nccgroup.com/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "LSE profile",
+        "url": "https://www.londonstockexchange.com/",
+        "citation_number": 3,
+        "source_type": "other"
+      },
+      {
+        "label": "Australian Cyber Security Strategy",
+        "url": "https://www.homeaffairs.gov.au/",
+        "citation_number": 4,
+        "source_type": "government"
+      },
+      {
+        "label": "Cyber.gov.au resources",
+        "url": "https://www.cyber.gov.au/",
+        "citation_number": 5,
+        "source_type": "government"
+      },
+      {
+        "label": "Austrade materials",
+        "url": "https://www.austrade.gov.au/",
+        "citation_number": 6,
+        "source_type": "government"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 19,
+    "slug": "contino-anz-market-entry",
+    "title": "How Contino Entered the ANZ Market",
+    "subtitle": "Contino was a UK cloud and DevOps transformation consultancy serving enterprise clients with high-end engineering and platform modernisation services.",
+    "company_name": "Contino",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Cloud Services",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "This is one of the best MES examples of how a UK consultancy can use ANZ expansion not only for revenue growth but also as a strategic asset in an eventual exit.",
+      "Contino opened first in Melbourne, then accelerated through the acquisition of Nebulr to obtain local scale, banking clients, and execution capacity much faster than organic hiring would have allowed."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Cloud Services"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Contino was a UK cloud and DevOps transformation consultancy serving enterprise clients with high-end engineering and platform modernisation services.</p>",
+          "<p>Australia's major banks, insurers, and large enterprises were in the middle of cloud and DevOps transformation cycles, creating demand for premium specialist execution support.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Contino opened first in Melbourne, then accelerated through the acquisition of Nebulr to obtain local scale, banking clients, and execution capacity much faster than organic hiring would have allowed.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>This is one of the best MES examples of how a UK consultancy can use ANZ expansion not only for revenue growth but also as a strategic asset in an eventual exit.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Contino's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Contino story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Cognizant acquisition coverage",
+        "url": "https://news.cognizant.com/",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Archived Contino materials via press releases",
+        "url": "https://www.businesswire.com/",
+        "citation_number": 2,
+        "source_type": "press_release"
+      },
+      {
+        "label": "Nebulr company references",
+        "url": "https://www.nebulr.com.au/",
+        "citation_number": 3,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Australian banking and cloud transformation coverage",
+        "url": "https://www.itnews.com.au/",
+        "citation_number": 4,
+        "source_type": "news"
+      },
+      {
+        "label": "AWS partner or cloud market reporting",
+        "url": "https://aws.amazon.com/partners/",
+        "citation_number": 5,
+        "source_type": "other"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  },
+  {
+    "source_file": "uk",
+    "case_number": 20,
+    "slug": "sensat-anz-market-entry",
+    "title": "How Sensat Entered the ANZ Market",
+    "subtitle": "Sensat is a UK construction technology company focused on digital twins, spatial data, and visualisation for complex infrastructure projects.",
+    "company_name": "Sensat",
+    "origin_country": "United Kingdom",
+    "target_market": "Australia & New Zealand",
+    "entry_date": "",
+    "industry": "Construction Tech",
+    "founded": "United Kingdom",
+    "stage_at_entry": "",
+    "founders": [],
+    "tldr": [
+      "This is a strong MES example of a government-supported, infrastructure-focused UK startup using a credibility-heavy entry route rather than a high-volume sales approach.",
+      "Sensat used the Tech Nation Digital Trade Network and then a Sydney office with local go-to-market leadership to establish an ANZ foothold in infrastructure and utilities."
+    ],
+    "quick_facts": [
+      {
+        "icon": "MapPin",
+        "label": "HQ",
+        "value": "United Kingdom"
+      },
+      {
+        "icon": "Briefcase",
+        "label": "Sector",
+        "value": "Construction Tech"
+      }
+    ],
+    "sections": [
+      {
+        "slug": "entry-strategy",
+        "title": "Entry Strategy",
+        "bodies": [
+          "<p>Sensat is a UK construction technology company focused on digital twins, spatial data, and visualisation for complex infrastructure projects.</p>",
+          "<p>Australia's infrastructure pipeline and growing digital twin sophistication make it a strong market for infrastructure visualisation and collaboration software.</p>"
+        ]
+      },
+      {
+        "slug": "success-factors",
+        "title": "Success Factors",
+        "bodies": [
+          "<p>Sensat used the Tech Nation Digital Trade Network and then a Sydney office with local go-to-market leadership to establish an ANZ foothold in infrastructure and utilities.</p>"
+        ]
+      },
+      {
+        "slug": "key-metrics",
+        "title": "Key Metrics & Performance",
+        "bodies": [
+          "<p>This is a strong MES example of a government-supported, infrastructure-focused UK startup using a credibility-heavy entry route rather than a high-volume sales approach.</p>"
+        ]
+      },
+      {
+        "slug": "lessons-learned",
+        "title": "Lessons Learned",
+        "bodies": [
+          "<p>For UK operators considering ANZ entry, Sensat's playbook offers a clear template: identify a high-trust regulatory or commercial pain point, anchor with a credible local partner or customer, and treat the market as worth in-region investment rather than satellite coverage.</p>",
+          "<p>The Sensat story also reinforces that ANZ rewards companies that align with local regulatory and ecosystem realities, whether that's bank partnerships, channel networks, or vertical-specific buyer cycles.</p>"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "label": "Sensat newsroom",
+        "url": "https://www.sensat.co/news",
+        "citation_number": 1,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Sensat company pages",
+        "url": "https://www.sensat.co/",
+        "citation_number": 2,
+        "source_type": "company_blog"
+      },
+      {
+        "label": "Tech Nation / Founders Forum references",
+        "url": "https://technation.io/",
+        "citation_number": 3,
+        "source_type": "other"
+      },
+      {
+        "label": "Infrastructure Australia",
+        "url": "https://www.infrastructureaustralia.gov.au/",
+        "citation_number": 4,
+        "source_type": "government"
+      },
+      {
+        "label": "NSW Spatial Digital Twin context",
+        "url": "https://www.nsw.gov.au/",
+        "citation_number": 5,
+        "source_type": "government"
+      },
+      {
+        "label": "LinkedIn company updates for ANZ leadership",
+        "url": "https://www.linkedin.com/company/sensat/",
+        "citation_number": 6,
+        "source_type": "linkedin"
+      },
+      {
+        "label": "Infrastructure sector coverage",
+        "url": "https://www.theurbandeveloper.com/",
+        "citation_number": 7,
+        "source_type": "news"
+      }
+    ],
+    "category": "Technology Market Entry",
+    "status": "draft",
+    "read_time": 1
+  }
+]
