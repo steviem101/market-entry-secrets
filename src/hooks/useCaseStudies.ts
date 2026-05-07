@@ -74,10 +74,28 @@ export const useCaseStudy = (slug: string) => {
 
       if (bodiesError) throw bodiesError;
 
+      // case_study_sources and case_study_quotes are not in the auto-generated
+      // Supabase types yet (added in migration 20260504120100). Cast as any per
+      // the project pattern documented in CLAUDE.md §2.
+      const [{ data: sources }, { data: quotes }] = await Promise.all([
+        (supabase as any)
+          .from('case_study_sources')
+          .select('*')
+          .eq('case_study_id', contentItem.id)
+          .order('citation_number', { ascending: true, nullsFirst: false }),
+        (supabase as any)
+          .from('case_study_quotes')
+          .select('*')
+          .eq('case_study_id', contentItem.id)
+          .order('display_order', { ascending: true }),
+      ]);
+
       return {
         ...contentItem,
         content_sections: sections || [],
-        content_bodies: bodies || []
+        content_bodies: bodies || [],
+        case_study_sources: sources || [],
+        case_study_quotes: quotes || []
       };
     },
     enabled: !!slug
