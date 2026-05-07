@@ -10,6 +10,7 @@ export const useCommunityMembers = () => {
       const { data, error } = await supabase
         .from('community_members')
         .select('*')
+        .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(500);
 

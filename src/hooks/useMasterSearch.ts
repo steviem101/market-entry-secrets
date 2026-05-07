@@ -52,6 +52,7 @@ export const useMasterSearch = () => {
         Promise.resolve(supabase
           .from('community_members')
           .select('id, name, description, title, company, location, experience, specialties, is_anonymous')
+          .eq('is_active', true)
           .or(`name.ilike.${searchTerm},title.ilike.${searchTerm},description.ilike.${searchTerm},company.ilike.${searchTerm},location.ilike.${searchTerm},experience.ilike.${searchTerm}`)
           .limit(SEARCH_LIMIT)
         ).catch(() => ({ data: null, error: true })),
