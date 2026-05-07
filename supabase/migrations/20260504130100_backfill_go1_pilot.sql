@@ -22,7 +22,7 @@ BEGIN
   WHERE slug = 'go1-australia-startup';
 
   IF v_case_study_id IS NULL THEN
-    RAISE EXCEPTION 'go1-australia-startup case study not found';
+    RETURN;
   END IF;
 
   SELECT id INTO v_section_entry_strategy   FROM public.content_sections
