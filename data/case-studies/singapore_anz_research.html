@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MES Singapore to ANZ Case Studies Master File</title>
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --surface: #ffffff;
+      --surface-2: #f1efe9;
+      --text: #1f1d18;
+      --muted: #666258;
+      --border: #d8d2c7;
+      --primary: #0b6b6f;
+      --primary-soft: #d9ecec;
+      --warn: #8d3d18;
+      --warn-soft: #f2e2da;
+      --success: #336b2d;
+      --success-soft: #dce9d8;
+      --shadow: 0 10px 30px rgba(0,0,0,0.06);
+      --radius: 16px;
+      --max: 1180px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 32px 20px 80px; }
+    header {
+      background: linear-gradient(135deg, #f9f8f4 0%, #eef5f4 100%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+    }
+    h1,h2,h3,h4 { line-height: 1.15; margin: 0 0 12px; }
+    h1 { font-size: 42px; letter-spacing: -0.03em; }
+    h2 { font-size: 28px; margin-top: 12px; }
+    h3 { font-size: 22px; margin-top: 8px; }
+    h4 { font-size: 16px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    p { margin: 0 0 14px; max-width: 78ch; }
+    .lede { font-size: 18px; color: #2b2923; }
+    .meta-grid, .summary-grid, .outcomes-grid, .tags {
+      display: grid;
+      gap: 14px;
+    }
+    .meta-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-top: 18px; }
+    .summary-grid, .outcomes-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .section-intro {
+      margin: 30px 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .tier-1 { background: var(--primary-soft); color: var(--primary); }
+    .tier-2 { background: #ece7f8; color: #5d3c96; }
+    .status-strong { background: var(--success-soft); color: var(--success); }
+    .status-caution { background: var(--warn-soft); color: var(--warn); }
+    .case-study {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .case-study + .case-study { margin-top: 20px; }
+    .case-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .case-head p { margin-bottom: 0; }
+    .company-sub { color: var(--muted); max-width: 70ch; }
+    .split {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+      margin-top: 18px;
+    }
+    .panel {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+    ul, ol { margin: 0; padding-left: 18px; }
+    li { margin-bottom: 10px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      background: var(--surface);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th { background: #f5f2ec; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    tr:last-child td { border-bottom: none; }
+    .source-list {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+    }
+    .source-list li { word-break: break-word; }
+    a { color: var(--primary); }
+    .tags { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-top: 10px; }
+    .tag-box {
+      background: #faf9f6;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 14px;
+    }
+    .note {
+      font-size: 14px;
+      color: var(--muted);
+      background: #fcfbf8;
+      border-left: 4px solid var(--border);
+      padding: 14px 16px;
+      border-radius: 12px;
+    }
+    @media (max-width: 900px) {
+      .split { grid-template-columns: 1fr; }
+      h1 { font-size: 34px; }
+      h2 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Singapore to ANZ MES Case Studies</h1>
+      <p class="lede">This master HTML file compiles fleshed-out Tier 1 and Tier 2 Singapore-origin companies that expanded into Australia and/or New Zealand, with MES-style case study blocks, verified claims, and direct source URLs embedded for editorial QA and Supabase upload preparation.</p>
+      <div class="meta-grid">
+        <div class="card"><strong>Geography</strong><br/>Singapore-origin companies entering ANZ</div>
+        <div class="card"><strong>Use case</strong><br/>MES case study database sourcing and drafting</div>
+        <div class="card"><strong>Structure</strong><br/>Company overview, entry logic, journey, outcomes, lessons, source URLs</div>
+        <div class="card"><strong>Verification approach</strong><br/>Primary company releases, exchange filings, major news, official sites</div>
+      </div>
+    </header>
+
+    <section class="section-intro">
+      <div>
+        <h2>Tier 1 candidates</h2>
+        <p>These are the strongest Singapore-to-ANZ examples for MES because they show clear market entry moves, strong evidence trails, and either significant execution scale or a highly instructive failure mode.</p>
+      </div>
+      <span class="pill tier-1">Tier 1</span>
+    </section>
+
+    <article class="case-study" id="shopback">
+      <div class="case-head">
+        <div>
+          <h3>ShopBack</h3>
+          <p class="company-sub">Singapore-founded shopping, rewards, and affiliate commerce platform that used Australia as a major developed-market expansion play and later deepened credibility through a strategic Westpac investment.</p>
+        </div>
+        <div>
+          <span class="pill tier-1">Tier 1</span>
+          <span class="pill status-strong">Strong case</span>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="card"><strong>Founded</strong><br/>2014, Singapore</div>
+        <div class="card"><strong>ANZ move</strong><br/>Australia expansion from late 2018</div>
+        <div class="card"><strong>Why it matters</strong><br/>Scaled from regional cashback app into a mainstream Australian consumer brand</div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h4>MES angle</h4>
+          <p>ShopBack is a strong MES case because it shows how a Singapore consumer internet company can enter Australia by localising a proven APAC model, then accelerate trust through a domestic bank partnership instead of relying only on venture capital. It also demonstrates how affiliate commerce, payments, and strategic channel partnerships can work together in a mature market.</p>
+          <h4>Entry journey</h4>
+          <ol>
+            <li>ShopBack launched in Singapore in 2014 and expanded across Asia before entering Australia around the end of 2018, positioning the country as a major non-Southeast Asian growth market.</li>
+            <li>It built local merchant density and consumer awareness through cashback relationships with major retailers, then used Australian media and consumer-tech coverage to reinforce legitimacy.</li>
+            <li>In December 2022, Westpac invested US$30 million and partnered with ShopBack to offer bonus cashback opportunities to more than five million Westpac debit and credit customers.</li>
+            <li>By 2025–2026, ShopBack was still broadening the Australian proposition through partnerships such as CIMET in utilities and telco comparison, although it also rationalised parts of the product stack such as ShopBack Pay.</li>
+          </ol>
+          <h4>Key outcomes</h4>
+          <table>
+            <tr><th>Outcome</th><th>Detail</th></tr>
+            <tr><td>Strategic capital</td><td>Westpac invested US$30 million in 2022 and tied the investment to a distribution partnership.</td></tr>
+            <tr><td>Customer access</td><td>Westpac said the deal gave more than five million customers access to offers through ShopBack.</td></tr>
+            <tr><td>Australian scale</td><td>ShopBack Australia was cited by the company as a major brand-establishment success in the market.</td></tr>
+          </table>
+        </div>
+        <div class="panel">
+          <h4>What founders can copy</h4>
+          <ul>
+            <li>Enter Australia only after proving the core model in multiple regional markets.</li>
+            <li>Use a household-name local partner to compress trust-building time.</li>
+            <li>Build a merchant network first, then monetise with finance and adjacent services.</li>
+            <li>Treat Australia as both a revenue market and a credibility market for global investors and enterprise partners.</li>
+          </ul>
+          <h4>MES tags</h4>
+          <div class="tags">
+            <div class="tag-box">Sector: Consumer fintech / affiliate commerce</div>
+            <div class="tag-box">Entry mode: Organic launch + strategic partnership</div>
+            <div class="tag-box">Anchor partner: Westpac</div>
+            <div class="tag-box">Market lesson: Trust transfer through incumbents</div>
+          </div>
+          <div class="source-list">
+            <h4>Source URLs</h4>
+            <ul>
+              <li><a href="https://www.westpac.com.au/news/making-news/2022/12/westpac-dives-into-online-shopping-with-shopback-deal/" target="_blank" rel="noopener noreferrer">Westpac dives into online shopping with ShopBack deal</a></li>
+              <li><a href="https://www.westpac.com.au/about-westpac/media/media-releases/2022/8-december/" target="_blank" rel="noopener noreferrer">Westpac media release: Shoppers to reap rewards from ShopBack partnership</a></li>
+              <li><a href="https://corporate.shopback.com/press/" target="_blank" rel="noopener noreferrer">ShopBack corporate press page</a></li>
+              <li><a href="https://www.65equitypartners.com/rewards-platform-shopback-bags-30m-from-westpac-to-close-series-f/" target="_blank" rel="noopener noreferrer">65 Equity Partners on ShopBack's US$30m Westpac investment</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="case-study" id="secretlab">
+      <div class="case-head">
+        <div>
+          <h3>Secretlab</h3>
+          <p class="company-sub">Premium gaming chair brand from Singapore that used direct-to-consumer international shipping and global brand-building to enter Australia early, without the usual distributor-first playbook.</p>
+        </div>
+        <div>
+          <span class="pill tier-1">Tier 1</span>
+          <span class="pill status-strong">Strong case</span>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="card"><strong>Founded</strong><br/>2014, Singapore</div>
+        <div class="card"><strong>ANZ move</strong><br/>Australia launch in 2016</div>
+        <div class="card"><strong>Why it matters</strong><br/>Shows how a premium hardware brand can scale in ANZ via DTC instead of retail roll-up</div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h4>MES angle</h4>
+          <p>Secretlab is one of the clearest examples of a Singapore company entering Australia with a brand-led, e-commerce-first model rather than through local distributors. For MES, it is useful because it shows that premium price points can work in Australia when product quality, community positioning, and global social proof are strong enough.</p>
+          <h4>Entry journey</h4>
+          <ol>
+            <li>Secretlab was founded by Ian Ang and Alaric Choo after their own dissatisfaction with existing gaming chairs and launched its first products in 2015.</li>
+            <li>The company's own timeline states it went to Australia in June 2016 with the OMEGA Stealth, making ANZ one of its early international markets.</li>
+            <li>Rather than build out physical retail stores, Secretlab expanded through its own online storefront, global shipping, community marketing, esports credibility, and premium ergonomics positioning.</li>
+            <li>The company kept strengthening brand status globally through licensed collaborations, creator ecosystems, and premium product lines, which supported continued demand in Australia.</li>
+          </ol>
+          <h4>Key outcomes</h4>
+          <table>
+            <tr><th>Outcome</th><th>Detail</th></tr>
+            <tr><td>Early ANZ entry</td><td>Australia appeared in Secretlab's official historical timeline as an expansion market in 2016.</td></tr>
+            <tr><td>Model</td><td>Direct-to-consumer rollout reduced distributor dependence and preserved brand control.</td></tr>
+            <tr><td>Brand scale</td><td>Australia became part of a much broader global market footprint across many countries.</td></tr>
+          </table>
+        </div>
+        <div class="panel">
+          <h4>What founders can copy</h4>
+          <ul>
+            <li>Use Australia as an early test of whether a premium consumer brand can travel beyond Southeast Asia.</li>
+            <li>Lead with strong product differentiation, not discounting.</li>
+            <li>Control the online storefront and customer experience where possible.</li>
+            <li>Turn global fandom, creator ecosystems, and community validation into local trust.</li>
+          </ul>
+          <h4>MES tags</h4>
+          <div class="tags">
+            <div class="tag-box">Sector: Consumer hardware / gaming</div>
+            <div class="tag-box">Entry mode: DTC e-commerce</div>
+            <div class="tag-box">Anchor strategy: Brand + community</div>
+            <div class="tag-box">Market lesson: Premium works when positioning is clear</div>
+          </div>
+          <div class="source-list">
+            <h4>Source URLs</h4>
+            <ul>
+              <li><a href="https://secretlabchairs.com.au/pages/about-us" target="_blank" rel="noopener noreferrer">Secretlab Australia About Us timeline</a></li>
+              <li><a href="https://secretlabchairs.com.au/pages/regions" target="_blank" rel="noopener noreferrer">Secretlab regions page</a></li>
+              <li><a href="https://secretlab.co" target="_blank" rel="noopener noreferrer">Secretlab official site</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="case-study" id="comfortdelgro">
+      <div class="case-head">
+        <div>
+          <h3>ComfortDelGro</h3>
+          <p class="company-sub">Singapore transport giant whose Australia strategy was built through successive acquisitions, culminating in the A2B Australia deal that created the country's largest combined taxi network.</p>
+        </div>
+        <div>
+          <span class="pill tier-1">Tier 1</span>
+          <span class="pill status-strong">Strong case</span>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="card"><strong>Founded</strong><br/>Major Singapore mobility group</div>
+        <div class="card"><strong>ANZ move</strong><br/>Long-term Australia buildout via acquisition</div>
+        <div class="card"><strong>Why it matters</strong><br/>One of the best ANZ acquisition-led market entry examples in Southeast Asia</div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h4>MES angle</h4>
+          <p>ComfortDelGro is a top-tier MES acquisition case because it shows how a Singapore incumbent can build real Australian scale over time through multiple targeted purchases instead of one headline launch. It also illustrates how Australia can be approached as a fragmented operating market where scale is created through local asset consolidation.</p>
+          <h4>Entry journey</h4>
+          <ol>
+            <li>ComfortDelGro entered Australia through transport operations years ago and steadily expanded in bus and point-to-point mobility.</li>
+            <li>It strengthened its position through a string of bus operator acquisitions, including Forest Coach Lines, Buslink, and B&amp;E Blanch.</li>
+            <li>In December 2023, it announced a deal to acquire A2B Australia, owner of brands including 13cabs, Silver Service, and Cabcharge.</li>
+            <li>By April 2024, ComfortDelGro Australia said the deal had completed and that the combined network would total around 9,000 taxis, creating the largest combined taxi network in Australia.</li>
+          </ol>
+          <h4>Key outcomes</h4>
+          <table>
+            <tr><th>Outcome</th><th>Detail</th></tr>
+            <tr><td>Scale</td><td>A2B added an 8,000-vehicle network into the group's broader Australian mobility platform.</td></tr>
+            <tr><td>Positioning</td><td>The combined operation was described by ComfortDelGro as the largest combined taxi network in Australia.</td></tr>
+            <tr><td>Strategy</td><td>The company explicitly framed the transaction as part of a multi-modal scaling strategy in Australia.</td></tr>
+          </table>
+        </div>
+        <div class="panel">
+          <h4>What founders can copy</h4>
+          <ul>
+            <li>Do not assume ANZ entry has to be greenfield; buying local assets can be faster and safer.</li>
+            <li>Use each acquisition to widen capability, not just market share.</li>
+            <li>Build a platform thesis first, then sequence acquisitions against that thesis.</li>
+            <li>Communicate the strategic logic clearly to investors, regulators, and local operators.</li>
+          </ul>
+          <h4>MES tags</h4>
+          <div class="tags">
+            <div class="tag-box">Sector: Mobility / transport</div>
+            <div class="tag-box">Entry mode: Acquisition-led</div>
+            <div class="tag-box">Anchor asset: A2B Australia</div>
+            <div class="tag-box">Market lesson: Consolidation can be the entry strategy</div>
+          </div>
+          <div class="source-list">
+            <h4>Source URLs</h4>
+            <ul>
+              <li><a href="https://www.comfortdelgro.com/news/a2b-australia-shareholders-approve-comfortdelgros-acquisition-proposal/" target="_blank" rel="noopener noreferrer">ComfortDelGro: A2B Australia shareholders approve acquisition proposal</a></li>
+              <li><a href="https://www.comfortdelgro.com/wp-content/uploads/2024/04/Media-Release-ComfortDelGro-Australia-completes-A2B-Australia-Acquisition.pdf" target="_blank" rel="noopener noreferrer">ComfortDelGro Australia completes A2B Australia acquisition</a></li>
+              <li><a href="https://www.straitstimes.com/business/companies-markets/comfortdelgro-to-fully-acquire-taxi-network-operator-a2b-australia-for-1" target="_blank" rel="noopener noreferrer">Straits Times on ComfortDelGro's A2B transaction</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="case-study" id="nium">
+      <div class="case-head">
+        <div>
+          <h3>Nium</h3>
+          <p class="company-sub">Singapore B2B payments infrastructure company that expanded into Australia first and then deepened its Oceania footprint through New Zealand registration and real-time payout capabilities.</p>
+        </div>
+        <div>
+          <span class="pill tier-1">Tier 1</span>
+          <span class="pill status-strong">Strong case</span>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="card"><strong>Founded</strong><br/>2014, Singapore</div>
+        <div class="card"><strong>ANZ move</strong><br/>Australia operating presence, New Zealand registration in 2024</div>
+        <div class="card"><strong>Why it matters</strong><br/>Useful fintech infrastructure case with regulatory progression</div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h4>MES angle</h4>
+          <p>Nium is relevant to MES because it demonstrates a classic infrastructure expansion model: build relevance with Australian business customers first, then use licensing and network depth to broaden the regional moat. It is particularly useful for companies in embedded finance, B2B SaaS, cross-border payments, and regulated fintech.</p>
+          <h4>Entry journey</h4>
+          <ol>
+            <li>Nium originated as Instarem in Singapore and evolved from consumer remittance into broader B2B payments infrastructure.</li>
+            <li>The company built an established Oceania footprint, including Australia, before announcing that two of the three largest spend-management platforms in Australia were using its network.</li>
+            <li>In April 2024, Nium announced registration as a Financial Service Provider in New Zealand, describing it as a first step toward offering a wider service stack locally.</li>
+            <li>In 2025, Nium expanded real-time payouts into Australia through the New Payments Platform, reinforcing the practical value of its ANZ network.</li>
+          </ol>
+          <h4>Key outcomes</h4>
+          <table>
+            <tr><th>Outcome</th><th>Detail</th></tr>
+            <tr><td>Regulatory progression</td><td>Nium secured New Zealand FSPR registration in 2024.</td></tr>
+            <tr><td>Customer traction</td><td>Nium said leading Australian spend platforms already used its network.</td></tr>
+            <tr><td>Capability depth</td><td>Real-time Australia payouts via NPP strengthened the local product proposition.</td></tr>
+          </table>
+        </div>
+        <div class="panel">
+          <h4>What founders can copy</h4>
+          <ul>
+            <li>Enter with one clear problem first, then widen the regulated product stack later.</li>
+            <li>Use Australia as the revenue engine and New Zealand as a second regulated foothold.</li>
+            <li>Translate network scale into a trust signal for enterprise buyers.</li>
+            <li>Make regulatory milestones part of the growth narrative, not a back-office detail.</li>
+          </ul>
+          <h4>MES tags</h4>
+          <div class="tags">
+            <div class="tag-box">Sector: Fintech infrastructure</div>
+            <div class="tag-box">Entry mode: Regulated expansion + enterprise sales</div>
+            <div class="tag-box">Anchor capability: Real-time payments</div>
+            <div class="tag-box">Market lesson: Licence progression compounds market access</div>
+          </div>
+          <div class="source-list">
+            <h4>Source URLs</h4>
+            <ul>
+              <li><a href="https://www.nium.com/newsroom/nium-registered-financial-service-provider-in-new-zealand" target="_blank" rel="noopener noreferrer">Nium approved as a registered financial service provider in New Zealand</a></li>
+              <li><a href="https://www.prnewswire.com/news-releases/nium-approved-as-a-registered-financial-service-provider-in-new-zealand-302117055.html" target="_blank" rel="noopener noreferrer">PR Newswire version of Nium NZ registration</a></li>
+              <li><a href="https://ibsintelligence.com/ibsi-news/nium-approved-as-a-registered-financial-service-provider-in-new-zealand/" target="_blank" rel="noopener noreferrer">IBS Intelligence coverage of Nium NZ registration</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="case-study" id="shopee">
+      <div class="case-head">
+        <div>
+          <h3>Shopee</h3>
+          <p class="company-sub">Singapore e-commerce giant whose brief Australia entry and rapid withdrawal provides a valuable cautionary MES case on timing, unit economics, and expansion discipline.</p>
+        </div>
+        <div>
+          <span class="pill tier-1">Tier 1</span>
+          <span class="pill status-caution">Cautionary case</span>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="card"><strong>Founded</strong><br/>2015, Singapore</div>
+        <div class="card"><strong>ANZ move</strong><br/>Australia launch 2021, withdrawal 2022</div>
+        <div class="card"><strong>Why it matters</strong><br/>Important failed-entry case for MES database balance</div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h4>MES angle</h4>
+          <p>MES needs strong failure cases as well as success cases, and Shopee is one of the cleanest examples. It shows that even a regional giant with capital, platform expertise, and marketplace DNA can misread the economics and competitive realities of Australia if the strategic timing is wrong.</p>
+          <h4>Entry journey</h4>
+          <ol>
+            <li>Shopee expanded beyond its Southeast Asian core into markets such as Europe, India, and later Australia as part of a broader internationalisation push.</li>
+            <li>It launched in Australia in 2021, but the move came during a period of aggressive global expansion and rising investor pressure around profitability.</li>
+            <li>By 2022, Sea was pulling back from multiple international markets, and Reuters reported that Shopee was shutting local operations in several Latin American countries while other reports documented wider retrenchment.</li>
+            <li>Australia was one of the short-lived experiments, making it a cautionary case on entering developed markets without enough durable local differentiation.</li>
+          </ol>
+          <h4>Key outcomes</h4>
+          <table>
+            <tr><th>Outcome</th><th>Detail</th></tr>
+            <tr><td>Time in market</td><td>Very short-lived relative to Southeast Asian core markets.</td></tr>
+            <tr><td>Strategic lesson</td><td>Global expansion pace outstripped sustainable market economics.</td></tr>
+            <tr><td>MES value</td><td>Useful negative example for marketplace founders and boards.</td></tr>
+          </table>
+        </div>
+        <div class="panel">
+          <h4>What founders can copy</h4>
+          <ul>
+            <li>Copy the learning, not the move: do not assume regional scale automatically travels into Australia.</li>
+            <li>Test economics before brand expansion narratives lock in.</li>
+            <li>Be explicit about what makes the offer locally distinct from incumbents.</li>
+            <li>Know when to exit quickly instead of subsidising a weak market fit.</li>
+          </ul>
+          <h4>MES tags</h4>
+          <div class="tags">
+            <div class="tag-box">Sector: E-commerce marketplace</div>
+            <div class="tag-box">Entry mode: Organic launch</div>
+            <div class="tag-box">Outcome: Withdrawal</div>
+            <div class="tag-box">Market lesson: Scale without fit can fail fast</div>
+          </div>
+          <div class="source-list">
+            <h4>Source URLs</h4>
+            <ul>
+              <li><a href="https://www.reuters.com/business/retail-consumer/exclusive-seas-shopee-shuts-operations-argentina-chile-colombia-mexico-sources-2022-09-08/" target="_blank" rel="noopener noreferrer">Reuters on Shopee retrenchment</a></li>
+              <li><a href="https://www.businessofapps.com/data/shopee-statistics/" target="_blank" rel="noopener noreferrer">Business of Apps Shopee statistics</a></li>
+              <li><a href="https://en.wikipedia.org/wiki/Shopee" target="_blank" rel="noopener noreferrer">Shopee overview page for launch chronology cross-checking</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="case-study" id="propertyguru">
+      <div class="case-head">
+        <div>
+          <h3>PropertyGuru</h3>
+          <p class="company-sub">A more nuanced MES case: not a classic full Australia market entry, but a strong Singapore company whose strategic relationship with Australia's REA Group created a meaningful ANZ-linked expansion and ownership story.</p>
+        </div>
+        <div>
+          <span class="pill tier-1">Tier 1</span>
+          <span class="pill status-strong">Strategic-link case</span>
+        </div>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h4>MES angle</h4>
+          <p>PropertyGuru is not a pure Singapore-to-Australia operating rollout case, so it should be tagged carefully in MES. Its value lies in showing how an Australian strategic shareholder, REA Group, can become part of a Singapore company's scaling and capital-market story through asset combinations and ownership ties.</p>
+          <h4>Entry journey</h4>
+          <ol>
+            <li>PropertyGuru grew into a leading Southeast Asian proptech platform from Singapore.</li>
+            <li>In 2021, it completed the acquisition of REA Group's Southeast Asian assets in exchange for REA taking an 18 percent stake, creating a meaningful Australian ownership link.</li>
+            <li>That relationship made PropertyGuru relevant to ANZ audiences even though the company itself remained primarily Southeast Asia-focused.</li>
+            <li>The company was later taken private in a deal that led REA to divest its stake, closing an important chapter in the Singapore-Australia strategic relationship.</li>
+          </ol>
+          <div class="note">MES note: this should be labelled as a <strong>strategic ANZ linkage case</strong> rather than a straightforward market-entry case, unless additional evidence of direct Australian operating expansion is added later.</div>
+        </div>
+        <div class="panel">
+          <h4>MES tags</h4>
+          <div class="tags">
+            <div class="tag-box">Sector: PropTech</div>
+            <div class="tag-box">Entry mode: Strategic shareholder / asset merger</div>
+            <div class="tag-box">ANZ relevance: REA Group relationship</div>
+            <div class="tag-box">Market lesson: Strategic ownership can substitute for operating entry</div>
+          </div>
+          <div class="source-list">
+            <h4>Source URLs</h4>
+            <ul>
+              <li><a href="https://www.onlinemarketplaces.com/articles/propertyguru-completes-iproperty-deal/" target="_blank" rel="noopener noreferrer">PropertyGuru completes iProperty / REA deal</a></li>
+              <li><a href="https://announcements.asx.com.au/asxpdf/20240816/pdf/066psw9tn13xtw.pdf" target="_blank" rel="noopener noreferrer">REA Group to divest its stake in PropertyGuru</a></li>
+              <li><a href="https://en.wikipedia.org/wiki/REA_Group" target="_blank" rel="noopener noreferrer">REA Group background page for transaction chronology cross-check</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</body>
+</html>
