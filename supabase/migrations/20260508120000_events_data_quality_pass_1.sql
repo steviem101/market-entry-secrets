@@ -6,6 +6,19 @@
 -- Cards rendered those placeholders as if they were real schedule information, and the
 -- upcoming/past split treated the synthetic 1st-of-month date as a real one.
 
+-- 0. Schema repair for Preview Branches. These columns exist in production but were
+--    added via Supabase Studio without migration files, so a fresh Preview DB is missing
+--    them. ADD COLUMN IF NOT EXISTS is a no-op in production.
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS typical_month text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS attendees_label text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS venue text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS frequency text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS exhibitors integer;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS exhibitors_label text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS city text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS state_region text;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS location_id uuid;
+
 -- 1. date_precision column: 'exact' | 'month' | 'tbc'
 ALTER TABLE public.events
   ADD COLUMN IF NOT EXISTS date_precision text NOT NULL DEFAULT 'exact'

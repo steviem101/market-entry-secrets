@@ -28,14 +28,24 @@ $$;
 COMMENT ON FUNCTION public.roll_forward_month_precision_events() IS
   'Rolls month-precision event dates forward to their next future occurrence. Run monthly via pg_cron.';
 
--- Drop any existing schedule with the same name so this migration is re-runnable
-SELECT cron.unschedule(jobid)
-FROM cron.job
-WHERE jobname = 'roll-forward-month-precision-events';
+-- Schedule the monthly cron job. Wrapped in a DO block so the migration is a no-op on
+-- Preview branches that don't have pg_cron enabled (the function itself is still created,
+-- which is the only piece prod really needs to apply).
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    -- Drop any existing schedule with the same name so this migration is re-runnable
+    PERFORM cron.unschedule(jobid)
+    FROM cron.job
+    WHERE jobname = 'roll-forward-month-precision-events';
 
--- Schedule: 02:00 UTC on the 1st of every month
-SELECT cron.schedule(
-  'roll-forward-month-precision-events',
-  '0 2 1 * *',
-  $cron$ SELECT public.roll_forward_month_precision_events(); $cron$
-);
+    -- Schedule: 02:00 UTC on the 1st of every month
+    PERFORM cron.schedule(
+      'roll-forward-month-precision-events',
+      '0 2 1 * *',
+      'SELECT public.roll_forward_month_precision_events();'
+    );
+  ELSE
+    RAISE NOTICE 'pg_cron extension is not enabled - skipping cron schedule. Enable pg_cron in the Supabase dashboard if you want monthly auto-rollforward.';
+  END IF;
+END $$;
