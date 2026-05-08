@@ -22,15 +22,6 @@ export const formatEventDateLong = (event: EventDateFields): string => {
   return format(d, "EEEE, d MMMM yyyy");
 };
 
-/** Short two-line date badge used on cards. Returns the day field as `null` when the date is approximate. */
-export const formatEventDateBadge = (event: EventDateFields): { top: string; bottom: string | null } => {
-  const precision = event.date_precision ?? "exact";
-  const d = toDate(event.date);
-  if (precision === "tbc") return { top: "TBC", bottom: null };
-  if (precision === "month") return { top: format(d, "MMM").toUpperCase(), bottom: null };
-  return { top: format(d, "MMM").toUpperCase(), bottom: format(d, "d") };
-};
-
 /** Whether the event is past, accounting for approximate dates (month/TBC precision are never "past"). */
 export const isEventPast = (event: EventDateFields): boolean => {
   const precision = event.date_precision ?? "exact";
