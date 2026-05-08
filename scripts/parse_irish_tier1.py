@@ -83,7 +83,10 @@ FOUNDERS_BY_SLUG: dict[str, list[dict[str, Any]]] = {
         {"name": "Stuart McGoldrick", "title": "Co-founder", "is_primary": True},
         {"name": "Stephen Costello", "title": "Co-founder", "is_primary": False},
     ],
-    "t-pro-anz-market-entry": [],
+    "t-pro-anz-market-entry": [
+        {"name": "Jonathan Larbey", "title": "Founder & CEO", "is_primary": True},
+        {"name": "Mark Gilmartin", "title": "Co-founder & COO", "is_primary": False},
+    ],
     "fexco-anz-market-entry": [
         {"name": "Brian McCarthy", "title": "Founder", "is_primary": True},
     ],
