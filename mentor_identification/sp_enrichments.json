@@ -1,0 +1,66 @@
+[
+  {
+    "slug": "mckinsey-company",
+    "basic_info": "McKinsey & Company is a global management consulting firm founded in 1926, operating as a single worldwide partnership across more than 130 cities in 65 countries. In Australia and New Zealand it has offices in Sydney, Melbourne, Perth, Brisbane and Auckland, serving corporate, public and social-sector clients.",
+    "why_work_with_us": "McKinsey ANZ pairs deep local relationships with leaders in government and ASX-listed corporates with the firm's global expert networks, including McKinsey Digital and QuantumBlack for AI and analytics. International entrants gain access to McKinsey Implementation, the on-site execution group pioneered in the ANZ practice.",
+    "founded": "1926",
+    "employees": "10,000+",
+    "logo_domain": "mckinsey.com"
+  },
+  {
+    "slug": "pwc-australia",
+    "basic_info": "PwC Australia is the Australian member firm of the global PwC network, providing audit, assurance, tax, deals, consulting and risk services to large corporates, the mid-market and government. The firm operates from offices in major capital cities and employs more than 7,000 staff across the country.",
+    "why_work_with_us": "For international companies entering Australia, PwC offers an integrated platform of regulatory, tax, deals and technology advisors with direct lines into the global PwC network across 150+ countries. Over 40% of its Australian workforce now sits in tech and digital roles, supporting cloud, data and ESG transformation programs.",
+    "founded": "1998",
+    "employees": "5,000-10,000",
+    "logo_domain": "pwc.com.au"
+  },
+  {
+    "slug": "accenture-australia",
+    "basic_info": "Accenture Australia is the local arm of global professional services group Accenture, providing strategy, consulting, technology, operations, Industry X and Accenture Song services. The business employs more than 4,500 people across offices in Sydney, Melbourne, Brisbane, Canberra and Perth, alongside client-site teams.",
+    "why_work_with_us": "Accenture Australia connects entrants to a delivery network spanning 40+ industries and the firm's global technology partnerships with hyperscalers and enterprise platforms. Its local Strategy & Consulting, Technology and Song teams help international companies stand up digital, cloud and customer capabilities required for ANZ-scale operations.",
+    "founded": "1989",
+    "employees": "1,001-5,000",
+    "logo_domain": "accenture.com"
+  },
+  {
+    "slug": "legalvision",
+    "basic_info": "LegalVision is an Australian commercial law firm headquartered in Sydney, founded in 2012 and incorporated as a legal practice in 2014. It serves SMEs, startups and scaling businesses across contracts, employment, IP, commercial, privacy and disputes, with operations in Australia, New Zealand and the United Kingdom.",
+    "why_work_with_us": "LegalVision was the first law firm globally to offer an unlimited legal services membership, giving international companies fixed-fee, subscription access to a dedicated team rather than hourly billing. Its tech-enabled model and cross-border footprint suit founders setting up Australian entities and ongoing commercial documentation.",
+    "founded": "2012",
+    "employees": "201-500",
+    "logo_domain": "legalvision.com.au"
+  },
+  {
+    "slug": "cloud-recruit",
+    "basic_info": "CloudRecruit is a Sydney-based specialist tech recruitment agency placing senior software engineers, DevOps engineers, cloud architects and AI/ML talent for technology employers across Sydney, Melbourne and the wider APAC region.",
+    "why_work_with_us": "CloudRecruit focuses narrowly on cloud, DevOps, platform and engineering talent rather than generalist IT, giving international tech companies a sourcing channel tuned to senior infrastructure and engineering roles in the Australian market. The firm publishes a sub-23-day average time-to-place benchmark.",
+    "founded": null,
+    "employees": "1-10",
+    "logo_domain": "cloudrecruit.com.au"
+  },
+  {
+    "slug": "rippling-australia",
+    "basic_info": "Rippling is a US-headquartered workforce management platform founded in 2016 that unifies HR, IT and finance, including payroll, benefits, device provisioning, identity and spend, in a single system. The company launched local operations in Australia with payroll built for ATO Single Touch Payroll requirements.",
+    "why_work_with_us": "For international companies hiring in Australia, Rippling provides one platform to onboard local employees, run STP-compliant payroll, ship laptops and manage SaaS access, removing the need to stitch together separate HR, IT and finance vendors. The platform connects with 600+ apps and supports global payroll across many countries.",
+    "founded": "2016",
+    "employees": "1,001-5,000",
+    "logo_domain": "rippling.com"
+  },
+  {
+    "slug": "sleek",
+    "basic_info": "Sleek is a digital corporate services platform founded in Singapore in 2017 that helps founders and SMEs incorporate, manage compliance, accounting, payroll and tax online. It operates across Singapore, Hong Kong, the United Kingdom and Australia and has served hundreds of thousands of clients globally.",
+    "why_work_with_us": "Sleek provides international companies with a single online platform to register an Australian company, ASIC agent and registered address, set up bookkeeping and payroll, and meet ATO obligations, with fixed monthly pricing. Its multi-jurisdiction footprint suits firms running parallel entities in Singapore, Hong Kong, the UK and Australia.",
+    "founded": "2017",
+    "employees": "201-500",
+    "logo_domain": "sleek.com"
+  },
+  {
+    "slug": "techvisa",
+    "basic_info": "Techvisa is an Australian specialist migration consultancy focused on technology professionals, founders and tech employers. With offices in Sydney, Brisbane and Perth, the firm advises on skilled IT migration, employer-sponsored visas, the Global Talent program, innovation pathways and founder visas, with mobility support across the US, UK and Singapore.",
+    "why_work_with_us": "Techvisa is positioned around the technology sector rather than as a generalist migration practice, with combined backgrounds in tech recruitment and registered migration advice. The firm has worked extensively with the Global Talent program and supports international scale-ups relocating engineering, leadership and founder talent into Australia.",
+    "founded": "2015",
+    "employees": "11-50",
+    "logo_domain": "techvisa.com.au"
+  }
+]
