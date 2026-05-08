@@ -1,0 +1,691 @@
+[
+  {
+    "slug": "airbnb-australia-market-entry",
+    "company_name": "Airbnb",
+    "domain": "airbnb.com",
+    "website": "https://airbnb.com",
+    "company_logo": "https://img.logo.dev/airbnb.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/airbnb.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1988,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "amazon-australia-ecommerce-entry",
+    "company_name": "Amazon.com",
+    "domain": "amazon.com",
+    "website": "https://amazon.com",
+    "company_logo": "https://img.logo.dev/amazon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/amazon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1589,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "anna-money-anz-market-entry",
+    "company_name": "ANNA Money",
+    "domain": "anna.money",
+    "website": "https://anna.money",
+    "company_logo": "https://img.logo.dev/anna.money?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/anna.money?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2942,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "anthropic-australia-market-entry",
+    "company_name": "Anthropic",
+    "domain": "anthropic.com",
+    "website": "https://anthropic.com",
+    "company_logo": "https://img.logo.dev/anthropic.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/anthropic.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2602,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "aws-australia-market-entry",
+    "company_name": "Amazon Web Services (AWS)",
+    "domain": "aws.amazon.com",
+    "website": "https://aws.amazon.com",
+    "company_logo": "https://img.logo.dev/aws.amazon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/aws.amazon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1589,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "banked-anz-market-entry",
+    "company_name": "Banked",
+    "domain": "banked.com",
+    "website": "https://banked.com",
+    "company_logo": "https://img.logo.dev/banked.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/banked.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 753,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "blue-prism-anz-market-entry",
+    "company_name": "Blue Prism",
+    "domain": "blueprism.com",
+    "website": "https://blueprism.com",
+    "company_logo": "https://img.logo.dev/blueprism.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/blueprism.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 5474,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "clanwilliam-anz-market-entry",
+    "company_name": "Clanwilliam",
+    "domain": "clanwilliam.com",
+    "website": "https://clanwilliam.com",
+    "company_logo": "https://img.logo.dev/clanwilliam.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/clanwilliam.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 3401,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "comfortdelgro-anz-market-entry",
+    "company_name": "ComfortDelGro",
+    "domain": "comfortdelgro.com",
+    "website": "https://comfortdelgro.com",
+    "company_logo": "https://img.logo.dev/comfortdelgro.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/comfortdelgro.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2053,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "complyadvantage-anz-market-entry",
+    "company_name": "ComplyAdvantage",
+    "domain": "complyadvantage.com",
+    "website": "https://complyadvantage.com",
+    "company_logo": "https://img.logo.dev/complyadvantage.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/complyadvantage.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1193,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "contino-anz-market-entry",
+    "company_name": "Contino",
+    "domain": "contino.io",
+    "website": "https://contino.io",
+    "company_logo": "https://img.logo.dev/contino.io?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/contino.io?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2101,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "daon-anz-market-entry",
+    "company_name": "Daon",
+    "domain": "daon.com",
+    "website": "https://daon.com",
+    "company_logo": "https://img.logo.dev/daon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/daon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1971,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "darktrace-anz-market-entry",
+    "company_name": "Darktrace",
+    "domain": "darktrace.com",
+    "website": "https://darktrace.com",
+    "company_logo": "https://img.logo.dev/darktrace.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/darktrace.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2394,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "databricks-australia-market-entry",
+    "company_name": "Databricks",
+    "domain": "databricks.com",
+    "website": "https://databricks.com",
+    "company_logo": "https://img.logo.dev/databricks.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/databricks.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 536,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "daxtra-technologies-anz-market-entry",
+    "company_name": "DaXtra Technologies",
+    "domain": "daxtra.com",
+    "website": "https://daxtra.com",
+    "company_logo": "https://img.logo.dev/daxtra.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/daxtra.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 3366,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "deliveroo-anz-market-entry",
+    "company_name": "Deliveroo",
+    "domain": "deliveroo.co.uk",
+    "website": "https://deliveroo.co.uk",
+    "company_logo": "https://img.logo.dev/deliveroo.co.uk?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/deliveroo.co.uk?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2727,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "dext-anz-market-entry",
+    "company_name": "Dext",
+    "domain": "dext.com",
+    "website": "https://dext.com",
+    "company_logo": "https://img.logo.dev/dext.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/dext.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1812,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "docusign-australia-market-entry",
+    "company_name": "DocuSign",
+    "domain": "docusign.com",
+    "website": "https://docusign.com",
+    "company_logo": "https://img.logo.dev/docusign.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/docusign.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2320,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "featurespace-anz-market-entry",
+    "company_name": "Featurespace",
+    "domain": "featurespace.com",
+    "website": "https://featurespace.com",
+    "company_logo": "https://img.logo.dev/featurespace.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/featurespace.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1554,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "fenergo-anz-market-entry",
+    "company_name": "Fenergo",
+    "domain": "fenergo.com",
+    "website": "https://fenergo.com",
+    "company_logo": "https://img.logo.dev/fenergo.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/fenergo.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1464,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "fexco-anz-market-entry",
+    "company_name": "Fexco",
+    "domain": "fexco.com",
+    "website": "https://fexco.com",
+    "company_logo": "https://img.logo.dev/fexco.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/fexco.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1257,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "fineos-anz-market-entry",
+    "company_name": "FINEOS",
+    "domain": "fineos.com",
+    "website": "https://fineos.com",
+    "company_logo": "https://img.logo.dev/fineos.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/fineos.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1986,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "github-australia-market-entry",
+    "company_name": "GitHub",
+    "domain": "github.com",
+    "website": "https://github.com",
+    "company_logo": "https://img.logo.dev/github.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/github.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2237,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "kyckr-anz-market-entry",
+    "company_name": "Kyckr",
+    "domain": "kyckr.com",
+    "website": "https://kyckr.com",
+    "company_logo": "https://img.logo.dev/kyckr.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/kyckr.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2323,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "learnupon-anz-market-entry",
+    "company_name": "LearnUpon",
+    "domain": "learnupon.com",
+    "website": "https://learnupon.com",
+    "company_logo": "https://img.logo.dev/learnupon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/learnupon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 3020,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "mimecast-anz-market-entry",
+    "company_name": "Mimecast",
+    "domain": "mimecast.com",
+    "website": "https://mimecast.com",
+    "company_logo": "https://img.logo.dev/mimecast.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/mimecast.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1278,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "ncc-group-anz-market-entry",
+    "company_name": "NCC Group",
+    "domain": "nccgroup.com",
+    "website": "https://nccgroup.com",
+    "company_logo": "https://img.logo.dev/nccgroup.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/nccgroup.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 4302,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "nium-anz-market-entry",
+    "company_name": "Nium",
+    "domain": "nium.com",
+    "website": "https://nium.com",
+    "company_logo": "https://img.logo.dev/nium.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/nium.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1911,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "nplan-anz-market-entry",
+    "company_name": "nPlan",
+    "domain": "nplan.io",
+    "website": "https://nplan.io",
+    "company_logo": "https://img.logo.dev/nplan.io?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/nplan.io?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2723,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "onfido-anz-market-entry",
+    "company_name": "Onfido",
+    "domain": "onfido.com",
+    "website": "https://onfido.com",
+    "company_logo": "https://img.logo.dev/onfido.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/onfido.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 3768,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "openai-australia-market-entry",
+    "company_name": "OpenAI",
+    "domain": "openai.com",
+    "website": "https://openai.com",
+    "company_logo": "https://img.logo.dev/openai.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/openai.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2206,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "palantir-australia-market-entry",
+    "company_name": "Palantir Technologies",
+    "domain": "palantir.com",
+    "website": "https://palantir.com",
+    "company_logo": "https://img.logo.dev/palantir.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/palantir.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2545,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "propertyguru-anz-market-entry",
+    "company_name": "PropertyGuru",
+    "domain": "propertyguru.com",
+    "website": "https://propertyguru.com",
+    "company_logo": "https://img.logo.dev/propertyguru.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/propertyguru.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 3282,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "quantexa-anz-market-entry",
+    "company_name": "Quantexa",
+    "domain": "quantexa.com",
+    "website": "https://quantexa.com",
+    "company_logo": "https://img.logo.dev/quantexa.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/quantexa.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1490,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "revolut-anz-market-entry",
+    "company_name": "Revolut",
+    "domain": "revolut.com",
+    "website": "https://revolut.com",
+    "company_logo": "https://img.logo.dev/revolut.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/revolut.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1273,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "salesforce-australia-market-entry",
+    "company_name": "Salesforce",
+    "domain": "salesforce.com",
+    "website": "https://salesforce.com",
+    "company_logo": "https://img.logo.dev/salesforce.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/salesforce.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1990,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "secretlab-anz-market-entry",
+    "company_name": "Secretlab",
+    "domain": "secretlab.co",
+    "website": "https://secretlab.co",
+    "company_logo": "https://img.logo.dev/secretlab.co?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/secretlab.co?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 6342,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "sensat-anz-market-entry",
+    "company_name": "Sensat",
+    "domain": "sensat.co",
+    "website": "https://sensat.co",
+    "company_logo": "https://img.logo.dev/sensat.co?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/sensat.co?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 4249,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "servicenow-australia-market-entry",
+    "company_name": "ServiceNow",
+    "domain": "servicenow.com",
+    "website": "https://servicenow.com",
+    "company_logo": "https://img.logo.dev/servicenow.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/servicenow.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 5798,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "shopback-anz-market-entry",
+    "company_name": "ShopBack",
+    "domain": "shopback.com",
+    "website": "https://shopback.com",
+    "company_logo": "https://img.logo.dev/shopback.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/shopback.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2974,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "snowflake-australia-market-entry",
+    "company_name": "Snowflake",
+    "domain": "snowflake.com",
+    "website": "https://snowflake.com",
+    "company_logo": "https://img.logo.dev/snowflake.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/snowflake.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 4989,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "spectrum-life-anz-market-entry",
+    "company_name": "Spectrum.Life",
+    "domain": "spectrum.life",
+    "website": "https://spectrum.life",
+    "company_logo": "https://img.logo.dev/spectrum.life?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/spectrum.life?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1138,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "t-pro-anz-market-entry",
+    "company_name": "T-Pro",
+    "domain": "tpro.io",
+    "website": "https://tpro.io",
+    "company_logo": "https://img.logo.dev/tpro.io?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/tpro.io?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2465,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "tesla-australia-market-entry",
+    "company_name": "Tesla",
+    "domain": "tesla.com",
+    "website": "https://tesla.com",
+    "company_logo": "https://img.logo.dev/tesla.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/tesla.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2080,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "thought-machine-anz-market-entry",
+    "company_name": "Thought Machine",
+    "domain": "thoughtmachine.net",
+    "website": "https://thoughtmachine.net",
+    "company_logo": "https://img.logo.dev/thoughtmachine.net?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/thoughtmachine.net?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2261,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "tines-anz-market-entry",
+    "company_name": "Tines",
+    "domain": "tines.com",
+    "website": "https://tines.com",
+    "company_logo": "https://img.logo.dev/tines.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/tines.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 5508,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "tractable-anz-market-entry",
+    "company_name": "Tractable",
+    "domain": "tractable.ai",
+    "website": "https://tractable.ai",
+    "company_logo": "https://img.logo.dev/tractable.ai?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/tractable.ai?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 3113,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "twilio-australia-market-entry",
+    "company_name": "Twilio",
+    "domain": "twilio.com",
+    "website": "https://twilio.com",
+    "company_logo": "https://img.logo.dev/twilio.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/twilio.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 3549,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "uipath-australia-market-entry",
+    "company_name": "UiPath",
+    "domain": "uipath.com",
+    "website": "https://uipath.com",
+    "company_logo": "https://img.logo.dev/uipath.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/uipath.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1747,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "wayflyer-anz-market-entry",
+    "company_name": "Wayflyer",
+    "domain": "wayflyer.com",
+    "website": "https://wayflyer.com",
+    "company_logo": "https://img.logo.dev/wayflyer.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/wayflyer.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 1509,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "wise-anz-market-entry",
+    "company_name": "Wise",
+    "domain": "wise.com",
+    "website": "https://wise.com",
+    "company_logo": "https://img.logo.dev/wise.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/wise.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2143,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "xero-australia-market-entry",
+    "company_name": "Xero",
+    "domain": "xero.com",
+    "website": "https://xero.com",
+    "company_logo": "https://img.logo.dev/xero.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/xero.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 2864,
+      "looks_real": true
+    }
+  },
+  {
+    "slug": "zoom-australia-market-entry",
+    "company_name": "Zoom Video Communications",
+    "domain": "zoom.us",
+    "website": "https://zoom.us",
+    "company_logo": "https://img.logo.dev/zoom.us?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png",
+    "validation": {
+      "url": "https://img.logo.dev/zoom.us?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=64&format=png&fallback=404",
+      "status": 200,
+      "size_bytes": 3813,
+      "looks_real": true
+    }
+  }
+]
