@@ -433,8 +433,15 @@ BEGIN
       entry_date, industry, founder_count, employee_count, is_profitable
     ) VALUES (
       v_id, 'T-Pro', 'Ireland', 'Australia & New Zealand',
-      NULL, 'Healthcare AI', NULL, NULL, NULL
+      NULL, 'Healthcare AI', 2, NULL, NULL
     );
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Jonathan Larbey', 'Founder & CEO', true);
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Mark Gilmartin', 'Co-founder & COO', false);
   END IF;
 
   -- Section: entry-strategy

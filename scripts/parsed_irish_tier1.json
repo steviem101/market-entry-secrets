@@ -351,7 +351,18 @@
         "value": "Australia & New Zealand"
       }
     ],
-    "founders": [],
+    "founders": [
+      {
+        "name": "Jonathan Larbey",
+        "title": "Founder & CEO",
+        "is_primary": true
+      },
+      {
+        "name": "Mark Gilmartin",
+        "title": "Co-founder & COO",
+        "is_primary": false
+      }
+    ],
     "sections": [
       {
         "title": "Entry Strategy",
