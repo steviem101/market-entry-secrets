@@ -1,18 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { DatePrecision } from "@/lib/eventDate";
 
 export interface EventDetail {
   id: string;
   title: string;
   slug: string;
   date: string;
-  time: string;
+  date_precision?: DatePrecision | null;
+  typical_month?: string | null;
+  time?: string | null;
   location: string;
   type: string;
   category: string;
   attendees: number;
   description: string;
-  organizer: string;
+  organizer?: string | null;
   event_logo_url?: string | null;
   sector?: string | null;
   website_url?: string | null;

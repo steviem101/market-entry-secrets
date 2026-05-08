@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Calendar, MapPin, Users, Clock, CalendarPlus } from "lucide-react";
+import { MapPin, Users, Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,13 @@ import { BookmarkButton } from "@/components/BookmarkButton";
 import { AddToCalendarButton } from "@/components/events/AddToCalendarButton";
 import { Event } from "@/hooks/useEvents";
 import { Link } from "react-router-dom";
-import { differenceInDays, isPast, format } from "date-fns";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import {
+  formatEventDateBadge,
+  isEventPast as computeIsEventPast,
+  daysUntilLabel,
+  canAddToCalendar,
+} from "@/lib/eventDate";
 
 interface EventCardProps {
   event: Event;
@@ -17,11 +22,13 @@ interface EventCardProps {
 }
 
 export const EventCard = memo(({ event, onViewDetails, useModal = false }: EventCardProps) => {
-  const eventDate = new Date(event.date);
-  const isEventPast = isPast(eventDate);
-  const daysUntil = differenceInDays(eventDate, new Date());
-  const monthShort = format(eventDate, "MMM").toUpperCase();
-  const dayNum = format(eventDate, "d");
+  const isEventPast = computeIsEventPast(event);
+  const dateBadge = formatEventDateBadge(event);
+  const daysLabel = daysUntilLabel(event);
+  const showCalendarButton = !isEventPast && canAddToCalendar(event);
+  const isApproximateDate = (event.date_precision ?? "exact") !== "exact";
+  const timeLabel = event.time ?? (isApproximateDate ? "See website for time" : null);
+  const organizerLabel = event.organizer ?? "Organizer TBC";
 
   const handleViewDetails = (e: React.MouseEvent) => {
     if (useModal && onViewDetails) {
@@ -38,8 +45,12 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
           <div className="flex items-start gap-3 flex-1 min-w-0">
             {/* Date Badge */}
             <div className="flex-shrink-0 w-14 h-14 rounded-lg bg-primary/10 flex flex-col items-center justify-center text-center">
-              <span className="text-xs font-bold text-primary leading-none">{monthShort}</span>
-              <span className="text-lg font-bold text-primary leading-tight">{dayNum}</span>
+              <span className="text-xs font-bold text-primary leading-none">{dateBadge.top}</span>
+              {dateBadge.bottom ? (
+                <span className="text-lg font-bold text-primary leading-tight">{dateBadge.bottom}</span>
+              ) : (
+                <span className="text-[10px] font-medium text-primary/70 leading-tight mt-0.5">typical</span>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
@@ -47,9 +58,13 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
                   <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
                     Past Event
                   </Badge>
-                ) : daysUntil <= 14 ? (
+                ) : daysLabel ? (
                   <Badge className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    {daysUntil === 0 ? "Today" : `In ${daysUntil} days`}
+                    {daysLabel}
+                  </Badge>
+                ) : isApproximateDate ? (
+                  <Badge variant="outline" className="text-xs">
+                    Date TBC
                   </Badge>
                 ) : null}
               </div>
@@ -92,10 +107,12 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
         </div>
         
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock className="w-4 h-4 flex-shrink-0" />
-            <span>{event.time}</span>
-          </div>
+          {timeLabel ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="w-4 h-4 flex-shrink-0" />
+              <span>{timeLabel}</span>
+            </div>
+          ) : null}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="w-4 h-4 flex-shrink-0" />
             <span className="truncate flex-1">{event.location}</span>
@@ -105,12 +122,12 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
               <CompanyLogo
                 websiteUrl={event.organizer_website || event.website_url}
                 existingLogoUrl={event.event_logo_url}
-                companyName={event.organizer}
+                companyName={organizerLabel}
                 size="sm"
                 className="rounded-full"
                 fallbackClassName="bg-primary/10 text-primary rounded-full"
               />
-              <span className="text-sm text-muted-foreground truncate">{event.organizer}</span>
+              <span className="text-sm text-muted-foreground truncate">{organizerLabel}</span>
             </div>
             <div className="flex items-center gap-1 text-sm text-muted-foreground flex-shrink-0">
               <Users className="w-4 h-4" />
@@ -130,12 +147,12 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
               <Link to={`/events/${event.slug}`}>View Details</Link>
             </Button>
           )}
-          {!isEventPast && (
+          {showCalendarButton && (
             <AddToCalendarButton
               title={event.title}
               description={event.description}
               date={event.date}
-              time={event.time}
+              time={event.time ?? ""}
               location={event.location}
               size="sm"
             />

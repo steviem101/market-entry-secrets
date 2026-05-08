@@ -2,19 +2,24 @@ import { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
+import { isEventPast } from '@/lib/eventDate';
+
+import type { DatePrecision } from "@/lib/eventDate";
 
 export interface Event {
   id: string;
   title: string;
   slug: string;
   date: string;
-  time: string;
+  date_precision?: DatePrecision | null;
+  typical_month?: string | null;
+  time?: string | null;
   location: string;
   type: string;
   category: string;
   attendees: number;
   description: string;
-  organizer: string;
+  organizer?: string | null;
   event_logo_url?: string | null;
   sector?: string | null;
   website_url?: string | null;
@@ -65,26 +70,21 @@ export const useEvents = () => {
     queryFn: () => fetchEvents(debouncedSearchQuery || undefined),
   });
 
-  // Split events into upcoming and past
+  // Split events into upcoming and past. Approximate-date events (month / tbc) are
+  // always treated as upcoming because their stored date is a sort key, not a real schedule.
   const { upcomingEvents, pastEvents } = useMemo(() => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
     const upcoming: Event[] = [];
     const past: Event[] = [];
 
     events.forEach(event => {
-      const eventDate = new Date(event.date);
-      if (eventDate >= now) {
-        upcoming.push(event);
-      } else {
+      if (isEventPast(event)) {
         past.push(event);
+      } else {
+        upcoming.push(event);
       }
     });
 
-    // Upcoming: nearest first
     upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    // Past: most recent first
     past.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return { upcomingEvents: upcoming, pastEvents: past };

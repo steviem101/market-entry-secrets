@@ -78,7 +78,7 @@ export const EventDetailContent = ({ event, relatedEvents }: EventDetailContentP
                     <User className="w-6 h-6 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{event.organizer}</p>
+                    <p className="font-medium truncate">{event.organizer ?? "Organizer TBC"}</p>
                     <p className="text-sm text-muted-foreground">Organizer</p>
                   </div>
                 </div>
