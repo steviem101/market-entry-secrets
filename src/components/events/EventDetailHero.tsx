@@ -5,17 +5,26 @@ import { BookmarkButton } from "@/components/BookmarkButton";
 import { AddToCalendarButton } from "./AddToCalendarButton";
 import { EventDetail } from "@/hooks/useEventBySlug";
 import { Link } from "react-router-dom";
-import { differenceInDays, isPast, format } from "date-fns";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import {
+  formatEventDateLong,
+  isEventPast as computeIsEventPast,
+  daysUntilLabel,
+  canAddToCalendar,
+} from "@/lib/eventDate";
 
 interface EventDetailHeroProps {
   event: EventDetail;
 }
 
 export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
-  const eventDate = new Date(event.date);
-  const isEventPast = isPast(eventDate);
-  const daysUntil = differenceInDays(eventDate, new Date());
+  const isEventPast = computeIsEventPast(event);
+  const daysLabel = daysUntilLabel(event);
+  const dateLabel = formatEventDateLong(event);
+  const showCalendarButton = !isEventPast && canAddToCalendar(event);
+  const isApproximateDate = (event.date_precision ?? "exact") !== "exact";
+  const timeLabel = event.time ?? (isApproximateDate ? "See website for time" : null);
+  const organizerLabel = event.organizer ?? "Organizer TBC";
 
   return (
     <section className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 py-12 md:py-16">
@@ -37,7 +46,7 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
               <CompanyLogo
                 websiteUrl={event.organizer_website || event.website_url}
                 existingLogoUrl={event.event_logo_url}
-                companyName={event.organizer || event.title}
+                companyName={organizerLabel || event.title}
                 size="xl"
                 className="w-20 h-20 rounded-xl border border-border"
                 fallbackClassName="bg-primary/10 text-primary"
@@ -54,10 +63,12 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
                   <Badge variant="secondary" className="bg-muted text-muted-foreground">
                     Past Event
                   </Badge>
-                ) : daysUntil <= 30 ? (
+                ) : daysLabel ? (
                   <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    {daysUntil === 0 ? "Today!" : `In ${daysUntil} days`}
+                    {daysLabel}
                   </Badge>
+                ) : isApproximateDate ? (
+                  <Badge variant="outline">Date TBC</Badge>
                 ) : null}
               </div>
 
@@ -68,14 +79,14 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
-                  <span>
-                    {format(eventDate, "EEEE, d MMMM yyyy")}
-                  </span>
+                  <span>{dateLabel}</span>
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="w-5 h-5 text-primary flex-shrink-0" />
-                  <span>{event.time}</span>
-                </div>
+                {timeLabel ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Clock className="w-5 h-5 text-primary flex-shrink-0" />
+                    <span>{timeLabel}</span>
+                  </div>
+                ) : null}
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
                   <span>{event.location}</span>
@@ -107,12 +118,12 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
                     </a>
                   </Button>
                 )}
-                {!isEventPast && (
+                {showCalendarButton && (
                   <AddToCalendarButton
                     title={event.title}
                     description={event.description}
                     date={event.date}
-                    time={event.time}
+                    time={event.time ?? ""}
                     location={event.location}
                   />
                 )}
@@ -124,7 +135,7 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
                   metadata={{
                     date: event.date,
                     location: event.location,
-                    organizer: event.organizer,
+                    organizer: organizerLabel,
                     category: event.category,
                   }}
                   variant="outline"

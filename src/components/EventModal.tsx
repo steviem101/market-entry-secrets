@@ -2,8 +2,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Users, Clock, User, Mail, Globe } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, User, Mail } from "lucide-react";
 import { Event } from "@/hooks/useEvents";
+import { formatEventDateLong } from "@/lib/eventDate";
 
 interface EventModalProps {
   event: Event | null;
@@ -14,10 +15,14 @@ interface EventModalProps {
 export const EventModal = ({ event, isOpen, onClose }: EventModalProps) => {
   if (!event) return null;
 
+  const isApproximateDate = (event.date_precision ?? "exact") !== "exact";
+  const timeLabel = event.time ?? (isApproximateDate ? "See website for time" : null);
+  const organizerLabel = event.organizer ?? "Organizer TBC";
+  const dateLabel = formatEventDateLong(event);
+
   const handleContactOrganizer = () => {
-    // Create a mailto link or show contact information
     const subject = encodeURIComponent(`Inquiry about ${event.title}`);
-    const body = encodeURIComponent(`Hi,\n\nI'm interested in learning more about the event "${event.title}" scheduled for ${new Date(event.date).toLocaleDateString()} at ${event.time}.\n\nPlease provide more details.\n\nBest regards`);
+    const body = encodeURIComponent(`Hi,\n\nI'm interested in learning more about the event "${event.title}" scheduled for ${dateLabel}${timeLabel ? ` at ${timeLabel}` : ""}.\n\nPlease provide more details.\n\nBest regards`);
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
 
@@ -34,20 +39,15 @@ export const EventModal = ({ event, isOpen, onClose }: EventModalProps) => {
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Calendar className="w-5 h-5 text-primary" />
-                <span className="font-medium">
-                  {new Date(event.date).toLocaleDateString('en-AU', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
+                <span className="font-medium">{dateLabel}</span>
               </div>
 
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <Clock className="w-5 h-5 text-primary" />
-                <span className="font-medium">{event.time}</span>
-              </div>
+              {timeLabel ? (
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <Clock className="w-5 h-5 text-primary" />
+                  <span className="font-medium">{timeLabel}</span>
+                </div>
+              ) : null}
 
               <div className="flex items-center gap-3 text-muted-foreground">
                 <MapPin className="w-5 h-5 text-primary" />
@@ -63,7 +63,7 @@ export const EventModal = ({ event, isOpen, onClose }: EventModalProps) => {
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-muted-foreground">
                 <User className="w-5 h-5 text-primary" />
-                <span className="font-medium">Organized by {event.organizer}</span>
+                <span className="font-medium">Organized by {organizerLabel}</span>
               </div>
 
               <div className="flex gap-2">
@@ -93,7 +93,7 @@ export const EventModal = ({ event, isOpen, onClose }: EventModalProps) => {
                 <User className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="font-medium">{event.organizer}</p>
+                <p className="font-medium">{organizerLabel}</p>
                 <p className="text-sm text-muted-foreground">Event Organizer</p>
               </div>
             </div>
