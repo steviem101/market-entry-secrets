@@ -1952,6 +1952,7 @@ export type Database = {
           contact_persons: Json | null
           created_at: string
           description: string
+          domain: string | null
           employees: string
           experience_tiles: Json | null
           founded: string
@@ -1960,6 +1961,7 @@ export type Database = {
           location_id: string | null
           logo: string | null
           name: string
+          sectors: string[] | null
           services: string[]
           slug: string
           updated_at: string
@@ -1972,6 +1974,7 @@ export type Database = {
           contact_persons?: Json | null
           created_at?: string
           description: string
+          domain?: string | null
           employees: string
           experience_tiles?: Json | null
           founded: string
@@ -1980,6 +1983,7 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name: string
+          sectors?: string[] | null
           services?: string[]
           slug: string
           updated_at?: string
@@ -1992,6 +1996,7 @@ export type Database = {
           contact_persons?: Json | null
           created_at?: string
           description?: string
+          domain?: string | null
           employees?: string
           experience_tiles?: Json | null
           founded?: string
@@ -2000,6 +2005,7 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name?: string
+          sectors?: string[] | null
           services?: string[]
           slug?: string
           updated_at?: string

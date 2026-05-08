@@ -4,6 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Company } from "@/components/CompanyCard";
 import { parseJsonArray, getContactPersonImage } from "./CompanyCardHelpers";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { domainToWebsite } from "@/lib/logoUtils";
 
 interface CompanyCardContentProps {
   company: Company;
@@ -82,6 +83,7 @@ const CompanyCardContent = ({ company }: CompanyCardContentProps) => {
               <CompanyLogo
                 key={tile.id}
                 existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                websiteUrl={domainToWebsite(tile.domain)}
                 companyName={tile.name}
                 size="md"
                 className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg"
