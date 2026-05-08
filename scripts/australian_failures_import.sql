@@ -1,0 +1,4081 @@
+-- Case 1/27: Starbucks (starbucks-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'starbucks-australia-market-entry', 'How Starbucks Struggled in the Australian Market', 'Starbucks is one of the most-cited examples of a global brand misjudging Australian consumers. The US coffee giant entered Australia in 2000 with the same playbook that had worked in markets without an established café culture — only to find Australia had one of the world''s most sophisticated and fiercely local espresso traditions.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Starbucks is one of the most-cited examples of a global brand misjudging Australian consumers.', 'On 29 July 2008, Starbucks announced the closure of 61 of its 84 stores, with 640 jobs lost.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "F&B / Retail"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Starbucks', 'https://img.logo.dev/starbucks.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://starbucks.com', 'United States', 'Australia',
+      '2000-01-01', 'F&B / Retail', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://starbucks.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/starbucks.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Howard Schultz', 'Former CEO', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Starbucks is one of the most-cited examples of a global brand misjudging Australian consumers. The US coffee giant entered Australia in 2000 with the same playbook that had worked in markets without an established café culture — only to find Australia had one of the world''s most sophisticated and fiercely local espresso traditions.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Starbucks is one of the most-cited examples of a global brand misjudging Australian consumers. The US coffee giant entered Australia in 2000 with the same playbook that had worked in markets without an established café culture — only to find Australia had one of the world''s most sophisticated and fiercely local espresso traditions.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Starbucks launched in Sydney in 2000 and rapidly expanded to 84 stores across New South Wales, Victoria, Queensland, ACT, South Australia and Tasmania. The strategy was a direct copy-paste of the US model: large-format stores, sweetened signature drinks, and rapid suburban expansion. No adjustment was made for local tastes, existing price norms, or the deeply personal relationship Australians had with their local barista.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Starbucks launched in Sydney in 2000 and rapidly expanded to 84 stores across New South Wales, Victoria, Queensland, ACT, South Australia and Tasmania. The strategy was a direct copy-paste of the US model: large-format stores, sweetened signature drinks, and rapid suburban expansion. No adjustment was made for local tastes, existing price norms, or the deeply personal relationship Australians had with their local barista.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>In its first seven years, Starbucks accumulated A$105 million in losses. The company took on A$54 million in loans from the US parent just to stay solvent by 2007. The core problems were:</p>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<p>In its first seven years, Starbucks accumulated A$105 million in losses. The company took on A$54 million in loans from the US parent just to stay solvent by 2007. The core problems were:</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Misread culture</strong> — Australians already had a rich espresso culture characterised by personalised service, strong flat whites, and affordable pricing at independent cafés. Starbucks'' sweeter, more commercialised drinks felt alien.</li><li><strong>Overexpansion without earned trust</strong> — Starbucks opened stores before Australian consumers had chosen to adopt the brand, artificially forcing coverage rather than growing organically from urban hubs where the tourist and student population was higher.</li><li><strong>Pricing</strong> — Starbucks was significantly more expensive than local alternatives, without offering a quality differential that Australians could perceive.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Misread culture</strong> — Australians already had a rich espresso culture characterised by personalised service, strong flat whites, and affordable pricing at independent cafés. Starbucks'' sweeter, more commercialised drinks felt alien.</li><li><strong>Overexpansion without earned trust</strong> — Starbucks opened stores before Australian consumers had chosen to adopt the brand, artificially forcing coverage rather than growing organically from urban hubs where the tourist and student population was higher.</li><li><strong>Pricing</strong> — Starbucks was significantly more expensive than local alternatives, without offering a quality differential that Australians could perceive.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 2;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>On 29 July 2008, Starbucks announced the closure of 61 of its 84 stores, with 640 jobs lost. In 2014, the company handed over the remaining 24 stores to the Withers Group, which operates 7-Eleven in Australia. Today, ~61 stores remain — primarily in CBD tourist zones and international airports — serving largely foreign visitors rather than locals.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>On 29 July 2008, Starbucks announced the closure of 61 of its 84 stores, with 640 jobs lost. In 2014, the company handed over the remaining 24 stores to the Withers Group, which operates 7-Eleven in Australia. Today, ~61 stores remain — primarily in CBD tourist zones and international airports — serving largely foreign visitors rather than locals.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Starbucks''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Starbucks''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Do not assume brand equity travels</strong> — Global recognition does not substitute for earned local trust.</li><li><strong>Established local cultures are moats</strong> — Markets with deep existing preferences (coffee, food, sport) require category re-definition, not replication.</li><li><strong>Start urban and organic, not suburban and forced</strong> — Rapid coverage expansion before consumer adoption locks in fixed costs against weak revenue.</li><li><strong>Adapt the product to the market</strong> — Starbucks'' core beverage range was too sweet and too generic for Australian coffee drinkers.</li><li><strong>Study the competitive set honestly</strong> — The threat was not other chains but 60,000+ independent cafés with established customer loyalty.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Do not assume brand equity travels</strong> — Global recognition does not substitute for earned local trust.</li><li><strong>Established local cultures are moats</strong> — Markets with deep existing preferences (coffee, food, sport) require category re-definition, not replication.</li><li><strong>Start urban and organic, not suburban and forced</strong> — Rapid coverage expansion before consumer adoption locks in fixed costs against weak revenue.</li><li><strong>Adapt the product to the market</strong> — Starbucks'' core beverage range was too sweet and too generic for Australian coffee drinkers.</li><li><strong>Study the competitive set honestly</strong> — The threat was not other chains but 60,000+ independent cafés with established customer loyalty.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ABC News (2008)', 'https://www.abc.net.au/news/2008-07-31/starbucks-announces-locations-of-closing-stores/459456', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ICMR India case study', 'https://www.icmrindia.org/casestudies/catalogue/Business%20Strategy/starbucks-australian-experience-case.htm', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'GlobalDeal', 'https://www.globaldeal.io/blog/examples-of-international-expansion-failures', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'CASTUS Global', 'https://www.castusglobal.com/insights/how-starbucks-missed-the-mark-in-australia', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 2/27: Masters Home Improvement (masters-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'masters-australia-market-entry', 'How Masters Home Improvement Collapsed in the Australian Market', 'The joint venture between US hardware giant Lowe''s and Australian retail conglomerate Woolworths is widely regarded as the most catastrophic retail failure in Australian business history, accumulating more than A$3.2 billion in losses over seven years.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['The joint venture between US hardware giant Lowe''s and Australian retail conglomerate Woolworths is widely regarded as the most catastrophic retail failure in Australian business history, accumulating more than A$3.2 billion in losses over seven years.', 'In January 2016, Lowe''s announced the venture was unprofitable and requested an exit.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "Home Improvement / Retail"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Masters Home Improvement', 'https://img.logo.dev/lowes.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://lowes.com', 'United States', 'Australia',
+      '2009-01-01', 'Home Improvement / Retail', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://lowes.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/lowes.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>The joint venture between US hardware giant Lowe''s and Australian retail conglomerate Woolworths is widely regarded as the most catastrophic retail failure in Australian business history, accumulating more than A$3.2 billion in losses over seven years.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>The joint venture between US hardware giant Lowe''s and Australian retail conglomerate Woolworths is widely regarded as the most catastrophic retail failure in Australian business history, accumulating more than A$3.2 billion in losses over seven years.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>In August 2009, Woolworths announced a joint venture with Lowe''s to enter the home improvement market, targeting Bunnings Warehouse (owned by rival Wesfarmers). The plan called for 150 stores within five years. The venture was internally dubbed "Project Oxygen" — designed to "suck the oxygen" out of Bunnings. The first Masters store opened in September 2011.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>In August 2009, Woolworths announced a joint venture with Lowe''s to enter the home improvement market, targeting Bunnings Warehouse (owned by rival Wesfarmers). The plan called for 150 stores within five years. The venture was internally dubbed "Project Oxygen" — designed to "suck the oxygen" out of Bunnings. The first Masters store opened in September 2011.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Wrong partner dynamics</strong> — Lowe''s brought its US Northern Hemisphere seasonal product schedules to an Australian market with opposite seasons, creating systematic misalignment in garden and hardware ranging.</li><li><strong>Location errors</strong> — Bunnings had already secured the best large-format hardware sites. Masters was forced into secondary locations.</li><li><strong>Supplier coercion</strong> — Bunnings reportedly threatened to delist suppliers who also stocked Masters, starving the new entrant of key brands.</li><li><strong>No clear value proposition</strong> — Masters charged higher prices than Bunnings and offered an inferior product range, failing to give Australian DIY shoppers a compelling reason to switch.</li><li><strong>Strategic distraction</strong> — The hardware venture diverted Woolworths'' attention from its core grocery business, which lost ground to Coles during the same period.</li><li><strong>JV governance failure</strong> — The two partners had fundamentally different views on strategy, leading to costly court battles during the wind-down.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Wrong partner dynamics</strong> — Lowe''s brought its US Northern Hemisphere seasonal product schedules to an Australian market with opposite seasons, creating systematic misalignment in garden and hardware ranging.</li><li><strong>Location errors</strong> — Bunnings had already secured the best large-format hardware sites. Masters was forced into secondary locations.</li><li><strong>Supplier coercion</strong> — Bunnings reportedly threatened to delist suppliers who also stocked Masters, starving the new entrant of key brands.</li><li><strong>No clear value proposition</strong> — Masters charged higher prices than Bunnings and offered an inferior product range, failing to give Australian DIY shoppers a compelling reason to switch.</li><li><strong>Strategic distraction</strong> — The hardware venture diverted Woolworths'' attention from its core grocery business, which lost ground to Coles during the same period.</li><li><strong>JV governance failure</strong> — The two partners had fundamentally different views on strategy, leading to costly court battles during the wind-down.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>In January 2016, Lowe''s announced the venture was unprofitable and requested an exit. All 63 Masters stores were closed by 11 December 2016. Woolworths exited hardware entirely and Bunnings was left with near-monopoly control of the market.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>In January 2016, Lowe''s announced the venture was unprofitable and requested an exit. All 63 Masters stores were closed by 11 December 2016. Woolworths exited hardware entirely and Bunnings was left with near-monopoly control of the market.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Masters Home Improvement''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Masters Home Improvement''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>JV structures require aligned incentives</strong> — Mismatched strategic goals between JV partners are fatal, especially in asset-heavy retail.</li><li><strong>Incumbent entrenchment is a real barrier</strong> — Bunnings'' supplier relationships and site control created structural moats that capital alone cannot overcome.</li><li><strong>Seasonal and operational localisation is non-negotiable</strong> — Product ranging, seasonal campaigns, and even shelf layouts must reflect local conditions.</li><li><strong>Test before scaling</strong> — An 80-store rollout without a validated pilot in Australian conditions was an enormous risk.</li><li><strong>Distraction costs are real</strong> — Entering a new vertical while the core business is under competitive pressure compounds risk catastrophically.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>JV structures require aligned incentives</strong> — Mismatched strategic goals between JV partners are fatal, especially in asset-heavy retail.</li><li><strong>Incumbent entrenchment is a real barrier</strong> — Bunnings'' supplier relationships and site control created structural moats that capital alone cannot overcome.</li><li><strong>Seasonal and operational localisation is non-negotiable</strong> — Product ranging, seasonal campaigns, and even shelf layouts must reflect local conditions.</li><li><strong>Test before scaling</strong> — An 80-store rollout without a validated pilot in Australian conditions was an enormous risk.</li><li><strong>Distraction costs are real</strong> — Entering a new vertical while the core business is under competitive pressure compounds risk catastrophically.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Wikipedia – Masters Home Improvement', 'https://en.wikipedia.org/wiki/Masters_Home_Improvement', 1, 'other')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ABC News', 'https://www.abc.net.au/news/2015-05-06/five-reasons-woolworths-is-being-hammered-on-hardware/6450364', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Hardware Retailing', 'https://hardwareretailing.com/lowes-failed-australian-business-closes/', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Girt By blog (timeline)', 'https://www.girtby.com/blog/2019/8/28/masters-timeline-of-a-failed-hardware-endeavour', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 3/27: Deliveroo (deliveroo-anz-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_next_cn int;
+BEGIN
+  SELECT id INTO v_id FROM content_items WHERE slug = 'deliveroo-anz-market-entry';
+  IF v_id IS NULL THEN
+    RAISE NOTICE 'Skipping source-only enrichment — slug deliveroo-anz-market-entry not found';
+    RETURN;
+  END IF;
+  SELECT COALESCE(MAX(citation_number), 0) + 1 INTO v_next_cn FROM case_study_sources WHERE case_study_id = v_id;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ABC News', 'https://www.abc.net.au/news/2022-11-17/deliveroo-uber-doordash-menulog-takeaway-delivery-apps/101664354', v_next_cn + 0, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Marketing Mag', 'https://www.marketingmag.com.au/news/deliveroo-the-failure-behind-the-food-delivery-giant/', v_next_cn + 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'University of Sydney / The Conversation', 'https://www.sydney.edu.au/news-opinion/news/2022/11/17/deliveroo-exit-shows-why-gig-workers-need-more-protection.html', v_next_cn + 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Euronews', 'https://www.euronews.com/next/2022/11/16/deliveroo-australia', v_next_cn + 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 4/27: Menulog (menulog-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'menulog-australia-market-entry', 'How Menulog Struggled in the Australian Market', 'Menulog was founded in Australia in 2006 as one of the country''s first online food ordering platforms.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Menulog was founded in Australia in 2006 as one of the country''s first online food ordering platforms.', 'Menulog ceased operations on 26 November 2025, with approximately 120 staff made redundant and tens of thousands of restaurant partners and couriers losing the platform as a revenue channel.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "Netherlands (via UK)"}, {"icon": "Briefcase", "label": "Sector", "value": "Food Delivery / Marketplace"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Menulog', 'https://img.logo.dev/menulog.com.au?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://menulog.com.au', 'Netherlands (via UK)', 'Australia',
+      '2015-01-01', 'Food Delivery / Marketplace', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://menulog.com.au'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/menulog.com.au?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Menulog was founded in Australia in 2006 as one of the country''s first online food ordering platforms. After a 2015 acquisition by UK-based Just Eat (later Just Eat Takeaway.com), it became a foreign-owned operation and ultimately failed to maintain relevance. It ceased operations on 26 November 2025 after nearly 20 years.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Menulog was founded in Australia in 2006 as one of the country''s first online food ordering platforms. After a 2015 acquisition by UK-based Just Eat (later Just Eat Takeaway.com), it became a foreign-owned operation and ultimately failed to maintain relevance. It ceased operations on 26 November 2025 after nearly 20 years.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Menulog was originally a domestic startup and was therefore an acquisition-led "entry" by Just Eat in 2015. Just Eat Takeaway.com retained the Menulog brand and invested heavily in marketing, most famously signing global celebrity ambassadors including Snoop Dogg, Katy Perry, and Christina Aguilera.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Menulog was originally a domestic startup and was therefore an acquisition-led "entry" by Just Eat in 2015. Just Eat Takeaway.com retained the Menulog brand and invested heavily in marketing, most famously signing global celebrity ambassadors including Snoop Dogg, Katy Perry, and Christina Aguilera.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>High-profile marketing did not translate to market share</strong> — Despite extraordinary celebrity campaigns, Menulog''s share remained 5–10% while Uber Eats commanded 85–90% of the food delivery market.</li><li><strong>Failed to invest in logistics infrastructure</strong> — Unlike Uber Eats and DoorDash, Menulog was slow to build its own delivery fleet, relying on restaurants to self-deliver for much of its history — a structural disadvantage as consumers valued speed and reliability.</li><li><strong>Deliveroo''s collapse gave DoorDash the opportunity</strong> — After Deliveroo exited in 2022, DoorDash absorbed most of its market share, not Menulog — indicating brand weakness in Australian consumer minds.</li><li><strong>Consecutive years of significant operating losses</strong> — The business was structurally unprofitable in a market dominated by a competitor with massive cross-sell advantages (Uber''s rideshare user base feeding Uber Eats).</li><li><strong>International strategic misalignment</strong> — Parent company Just Eat Takeaway was under significant financial pressure globally and ultimately chose to "focus on accelerating growth in other markets."</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>High-profile marketing did not translate to market share</strong> — Despite extraordinary celebrity campaigns, Menulog''s share remained 5–10% while Uber Eats commanded 85–90% of the food delivery market.</li><li><strong>Failed to invest in logistics infrastructure</strong> — Unlike Uber Eats and DoorDash, Menulog was slow to build its own delivery fleet, relying on restaurants to self-deliver for much of its history — a structural disadvantage as consumers valued speed and reliability.</li><li><strong>Deliveroo''s collapse gave DoorDash the opportunity</strong> — After Deliveroo exited in 2022, DoorDash absorbed most of its market share, not Menulog — indicating brand weakness in Australian consumer minds.</li><li><strong>Consecutive years of significant operating losses</strong> — The business was structurally unprofitable in a market dominated by a competitor with massive cross-sell advantages (Uber''s rideshare user base feeding Uber Eats).</li><li><strong>International strategic misalignment</strong> — Parent company Just Eat Takeaway was under significant financial pressure globally and ultimately chose to "focus on accelerating growth in other markets."</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Menulog ceased operations on 26 November 2025, with approximately 120 staff made redundant and tens of thousands of restaurant partners and couriers losing the platform as a revenue channel. The closure left Uber Eats and DoorDash as the only two major players, raising duopoly concerns.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Menulog ceased operations on 26 November 2025, with approximately 120 staff made redundant and tens of thousands of restaurant partners and couriers losing the platform as a revenue channel. The closure left Uber Eats and DoorDash as the only two major players, raising duopoly concerns.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Menulog''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Menulog''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Marketing spend without product parity is wasted capital</strong> — Celebrity campaigns cannot substitute for structural platform superiority.</li><li><strong>Acquisition of a local player does not guarantee market leadership</strong> — Just Eat bought market entry, not market leadership.</li><li><strong>Delivery logistics infrastructure is a durable competitive moat</strong> — In food delivery, owning the rider network beats marketplace-only models.</li><li><strong>Understand parent company global priorities</strong> — When a subsidiary''s home country conflicts with the parent''s global investment thesis, the subsidiary is vulnerable.</li><li><strong>Two-player markets emerge quickly in on-demand delivery</strong> — Enter with a funded plan to be #1 or #2, or don''t enter at all.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Marketing spend without product parity is wasted capital</strong> — Celebrity campaigns cannot substitute for structural platform superiority.</li><li><strong>Acquisition of a local player does not guarantee market leadership</strong> — Just Eat bought market entry, not market leadership.</li><li><strong>Delivery logistics infrastructure is a durable competitive moat</strong> — In food delivery, owning the rider network beats marketplace-only models.</li><li><strong>Understand parent company global priorities</strong> — When a subsidiary''s home country conflicts with the parent''s global investment thesis, the subsidiary is vulnerable.</li><li><strong>Two-player markets emerge quickly in on-demand delivery</strong> — Enter with a funded plan to be #1 or #2, or don''t enter at all.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'QSR Media', 'https://qsrmedia.com.au/food-services/exclusive/menulog-exits-australia-after-20-years-uber-doordash-dominate', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ABC News', 'https://www.abc.net.au/news/2025-11-13/menulog-is-closing-down-in-australia-here-s-what-we-know/106002740', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Retail Gazette', 'https://www.retailgazette.co.uk/blog/2025/11/just-eat-takeaway-to-exit/', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Mediaweek', 'https://www.mediaweek.com.au/they-missed-the-mark-why-menulog-failed-in-australia/', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 5/27: Ola (ola-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'ola-australia-market-entry', 'How Ola Struggled in the Australian Market', 'Ola, India''s dominant rideshare company, entered Australia in 2018 as one of three Uber challengers.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Ola, India''s dominant rideshare company, entered Australia in 2018 as one of three Uber challengers.', 'Ola''s Australian and New Zealand operations closed on 12 April 2024.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "India"}, {"icon": "Briefcase", "label": "Sector", "value": "Rideshare"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Ola', 'https://img.logo.dev/olacabs.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://olacabs.com', 'India', 'Australia',
+      '2018-01-01', 'Rideshare', 2, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://olacabs.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/olacabs.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Bhavish Aggarwal', 'Co-founder & CEO', true);
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Ankit Bhati', 'Co-founder', false);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Ola, India''s dominant rideshare company, entered Australia in 2018 as one of three Uber challengers. After six years of losses and a strategic pivot ahead of an Indian stock market listing, Ola abruptly ceased Australian operations in April 2024 with just two days'' notice.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Ola, India''s dominant rideshare company, entered Australia in 2018 as one of three Uber challengers. After six years of losses and a strategic pivot ahead of an Indian stock market listing, Ola abruptly ceased Australian operations in April 2024 with just two days'' notice.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Ola launched in Perth in 2018 and expanded to Sydney, Melbourne, Brisbane, the Gold Coast, Adelaide, and Canberra. It used a price-competition strategy common to rideshare challengers globally — subsidised fares to attract drivers and riders — hoping to build enough critical mass to survive as a viable #2 player behind Uber.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Ola launched in Perth in 2018 and expanded to Sydney, Melbourne, Brisbane, the Gold Coast, Adelaide, and Canberra. It used a price-competition strategy common to rideshare challengers globally — subsidised fares to attract drivers and riders — hoping to build enough critical mass to survive as a viable #2 player behind Uber.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Never achieved profitability</strong> — Ola reported no profitable quarter in Australia across its six years of operation.</li><li><strong>Uber''s dominance was unassailable</strong> — Uber had a multi-year head start and strong brand recognition. Ola''s promotional pricing attracted deal-seekers rather than loyal users.</li><li><strong>Scaled back in 2020</strong> — The pandemic caused Ola to dramatically reduce Australian operations in 2020, and the company had not posted on social media since 2021 — a visible signal of declining investment.</li><li><strong>Indian priorities reasserted</strong> — Ola was preparing for an Indian IPO (and had already listed its electric vehicle subsidiary, Ola Electric). International markets became a distraction from the domestic growth story needed for the listing.</li><li><strong>Abrupt exit created reputational damage</strong> — The two-day notice left 1.5 million users and hundreds of drivers with no transition support, drawing criticism from the Transport Workers Union.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Never achieved profitability</strong> — Ola reported no profitable quarter in Australia across its six years of operation.</li><li><strong>Uber''s dominance was unassailable</strong> — Uber had a multi-year head start and strong brand recognition. Ola''s promotional pricing attracted deal-seekers rather than loyal users.</li><li><strong>Scaled back in 2020</strong> — The pandemic caused Ola to dramatically reduce Australian operations in 2020, and the company had not posted on social media since 2021 — a visible signal of declining investment.</li><li><strong>Indian priorities reasserted</strong> — Ola was preparing for an Indian IPO (and had already listed its electric vehicle subsidiary, Ola Electric). International markets became a distraction from the domestic growth story needed for the listing.</li><li><strong>Abrupt exit created reputational damage</strong> — The two-day notice left 1.5 million users and hundreds of drivers with no transition support, drawing criticism from the Transport Workers Union.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Ola''s Australian and New Zealand operations closed on 12 April 2024. The company simultaneously exited the UK, consolidating operations entirely in India. Its exit left the Australian rideshare market as a Uber-dominated duopoly with only DiDi as the remaining challenger.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Ola''s Australian and New Zealand operations closed on 12 April 2024. The company simultaneously exited the UK, consolidating operations entirely in India. Its exit left the Australian rideshare market as a Uber-dominated duopoly with only DiDi as the remaining challenger.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Ola''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Ola''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Subsidised-growth market entry requires commitment to profitability phases</strong> — Entering with price subsidies without a clear path to unit economics is burning money on borrowed time.</li><li><strong>Two-day exit notices are a brand-destroying legacy</strong> — How you exit a market is remembered and affects future re-entry possibilities.</li><li><strong>Be honest about parent company capital allocation priorities</strong> — If the home market demands all capital (as an IPO story), international subsidiaries face existential risk.</li><li><strong>Rideshare and marketplace businesses require critical mass</strong> — Sub-scale position in a network effects business is a structural loss-making position.</li><li><strong>Regulatory risk compounds operational risk</strong> — Australia''s evolving gig economy regulations added cost to a business already losing money.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Subsidised-growth market entry requires commitment to profitability phases</strong> — Entering with price subsidies without a clear path to unit economics is burning money on borrowed time.</li><li><strong>Two-day exit notices are a brand-destroying legacy</strong> — How you exit a market is remembered and affects future re-entry possibilities.</li><li><strong>Be honest about parent company capital allocation priorities</strong> — If the home market demands all capital (as an IPO story), international subsidiaries face existential risk.</li><li><strong>Rideshare and marketplace businesses require critical mass</strong> — Sub-scale position in a network effects business is a structural loss-making position.</li><li><strong>Regulatory risk compounds operational risk</strong> — Australia''s evolving gig economy regulations added cost to a business already losing money.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Information Age / ACS', 'https://ia.acs.org.au/article/2024/uber-competitor-ola-shuts-down-in-australia.html', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'TechCrunch', 'https://techcrunch.com/2024/04/09/india-ola-retreats-from-international-markets-exiting-uk-australia-and-new-zealand/', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'AAP News', 'https://aapnews.aap.com.au/news/uber-ride-share-rival-ola-hits-the-brakes-in-australia', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'The Conversation (UQ)', 'https://theconversation.com/rideshare-giant-ola-has-abruptly-exited-the-australian-market-what-does-this-mean-for-the-future-of-ridesharing', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 6/27: Affirm (affirm-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'affirm-australia-market-entry', 'How Affirm Withdrew from the Australian Market', 'US-based buy now, pay later (BNPL) platform Affirm entered Australia in late 2021 via a single merchant partnership with Peloton.',
+    '0563b826-2123-4627-b912-14f63e9fbfb6'::uuid, 'case_study', 'published', false,
+    2, ARRAY['US-based buy now, pay later (BNPL) platform Affirm entered Australia in late 2021 via a single merchant partnership with Peloton.', 'Affirm began winding down Australian operations from 28 February 2023 and exited fully shortly thereafter.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "Fintech / BNPL"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Affirm', 'https://img.logo.dev/affirm.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://affirm.com', 'United States', 'Australia',
+      '2021-01-01', 'Fintech / BNPL', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://affirm.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/affirm.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Max Levchin', 'Founder & CEO', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>US-based buy now, pay later (BNPL) platform Affirm entered Australia in late 2021 via a single merchant partnership with Peloton. Less than 18 months later, it exited — the first country Affirm had ever left.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>US-based buy now, pay later (BNPL) platform Affirm entered Australia in late 2021 via a single merchant partnership with Peloton. Less than 18 months later, it exited — the first country Affirm had ever left.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Affirm''s Australian entry was piggyback: it partnered exclusively with Peloton Australia to finance the purchase of exercise bikes and treadmills via instalment payments. This was a "single merchant" model, meaning Affirm had no independent Australian merchant base or consumer brand.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Affirm''s Australian entry was piggyback: it partnered exclusively with Peloton Australia to finance the purchase of exercise bikes and treadmills via instalment payments. This was a "single merchant" model, meaning Affirm had no independent Australian merchant base or consumer brand.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Single-merchant dependency</strong> — Affirm''s entire Australian business was built on Peloton — when Peloton struggled globally (post-COVID fitness decline, treadmill recalls), Affirm''s Australian revenue collapsed simultaneously.</li><li><strong>Saturated, mature BNPL market</strong> — Australia already had the world''s most developed BNPL ecosystem, with Afterpay (Block-owned), Zip, Klarna, and PayPal all established before Affirm arrived.</li><li><strong>No path to merchant diversification</strong> — Affirm noted in its annual filings that Australian operations remained "on a more limited basis" — a red flag that was never addressed before exit.</li><li><strong>Global macro pressure</strong> — In early 2023, Affirm laid off 19% of its global workforce. Australia — representing negligible revenue — was an easy cut.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Single-merchant dependency</strong> — Affirm''s entire Australian business was built on Peloton — when Peloton struggled globally (post-COVID fitness decline, treadmill recalls), Affirm''s Australian revenue collapsed simultaneously.</li><li><strong>Saturated, mature BNPL market</strong> — Australia already had the world''s most developed BNPL ecosystem, with Afterpay (Block-owned), Zip, Klarna, and PayPal all established before Affirm arrived.</li><li><strong>No path to merchant diversification</strong> — Affirm noted in its annual filings that Australian operations remained "on a more limited basis" — a red flag that was never addressed before exit.</li><li><strong>Global macro pressure</strong> — In early 2023, Affirm laid off 19% of its global workforce. Australia — representing negligible revenue — was an easy cut.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Affirm began winding down Australian operations from 28 February 2023 and exited fully shortly thereafter. It was the first country Affirm had ever closed. Peloton Australia moved its financing to rival Zip. Affirm redirected investment to North American and UK markets.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Affirm began winding down Australian operations from 28 February 2023 and exited fully shortly thereafter. It was the first country Affirm had ever closed. Peloton Australia moved its financing to rival Zip. Affirm redirected investment to North American and UK markets.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Affirm''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Affirm''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Never enter a market on the back of a single commercial partner</strong> — One merchant = one point of failure.</li><li><strong>Assess market maturity before entry</strong> — Australia''s BNPL market was already crowded with well-funded local incumbents. Late entry with less capital is a structural disadvantage.</li><li><strong>BNPL requires regulatory runway</strong> — Australia''s evolving BNPL regulation (consumer credit obligations, ASIC scrutiny) adds compliance cost that smaller international players cannot absorb.</li><li><strong>Align international entry with global strategic trajectory</strong> — If profitability focus is in core markets, international ventures become the first casualties.</li><li><strong>Size the market opportunity honestly</strong> — Australia''s 26 million population means even #1 BNPL market share is modest for a company with US-sized cost structures.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Never enter a market on the back of a single commercial partner</strong> — One merchant = one point of failure.</li><li><strong>Assess market maturity before entry</strong> — Australia''s BNPL market was already crowded with well-funded local incumbents. Late entry with less capital is a structural disadvantage.</li><li><strong>BNPL requires regulatory runway</strong> — Australia''s evolving BNPL regulation (consumer credit obligations, ASIC scrutiny) adds compliance cost that smaller international players cannot absorb.</li><li><strong>Align international entry with global strategic trajectory</strong> — If profitability focus is in core markets, international ventures become the first casualties.</li><li><strong>Size the market opportunity honestly</strong> — Australia''s 26 million population means even #1 BNPL market share is modest for a company with US-sized cost structures.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Payments Dive', 'https://www.paymentsdive.com/news/affirm-exits-australia-payments-buy-now-pay-later-bnpl/644288/', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Finextra', 'https://www.finextra.com/newsarticle/41931/bnpl-platform-affirm-quits-australia', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'VIXIO', 'https://www.vixio.com/regulatory-news/pc-affirm-quits-australia-focus-us-uk-expansion', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'eMarketer', 'https://www.emarketer.com/content/affirm-bids-farewell-australia-hone-on-us-canada-business', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 7/27: Laybuy (laybuy-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'laybuy-australia-market-entry', 'How Laybuy Struggled in the Australian Market', 'Laybuy was a New Zealand-founded BNPL company that ASX-listed in September 2020 to fund UK and Australian expansion.',
+    '0563b826-2123-4627-b912-14f63e9fbfb6'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Laybuy was a New Zealand-founded BNPL company that ASX-listed in September 2020 to fund UK and Australian expansion.', 'Laybuy Group Holdings, Laybuy Holdings, and Laybuy Australia Pty Ltd were all placed into receivership on 17 June 2024 by Deloitte.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "New Zealand"}, {"icon": "Briefcase", "label": "Sector", "value": "Fintech / BNPL"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Laybuy', 'https://img.logo.dev/laybuy.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://laybuy.com', 'New Zealand', 'Australia',
+      '2017-01-01', 'Fintech / BNPL', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://laybuy.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/laybuy.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Gary Rohloff', 'Co-founder & CEO', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Laybuy was a New Zealand-founded BNPL company that ASX-listed in September 2020 to fund UK and Australian expansion. After a brutal combination of post-COVID retail decline, rising defaults, cyberattacks, and a failed sale process, it entered receivership in June 2024.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Laybuy was a New Zealand-founded BNPL company that ASX-listed in September 2020 to fund UK and Australian expansion. After a brutal combination of post-COVID retail decline, rising defaults, cyberattacks, and a failed sale process, it entered receivership in June 2024.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Founded in Auckland in 2017, Laybuy expanded into Australia and the UK, building a base of approximately 766,000 customers and 10,500 merchants globally. It listed on the ASX in 2020 specifically to access capital for this international expansion, raising funds from retail investors who were enthusiastic about the BNPL sector''s pandemic-era boom.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Founded in Auckland in 2017, Laybuy expanded into Australia and the UK, building a base of approximately 766,000 customers and 10,500 merchants globally. It listed on the ASX in 2020 specifically to access capital for this international expansion, raising funds from retail investors who were enthusiastic about the BNPL sector''s pandemic-era boom.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Listed at the peak of BNPL mania</strong> — The ASX IPO occurred at the exact top of the BNPL valuation cycle. Rising interest rates in 2022–23 fundamentally broke the model — Laybuy funded interest-free credit via loans, and rising borrowing costs destroyed unit economics.</li><li><strong>Credit losses accelerated</strong> — Consumer spending downturn increased defaults and fraud, particularly in UK operations, further draining capital.</li><li><strong>Failed sale process</strong> — Between December 2023 and April 2024, directors sought a buyer or new investment. A deal fell through at the last minute.</li><li><strong>Delisted in 2023</strong> — Laybuy was delisted from the ASX in March 2023 — before its collapse — eliminating its ability to raise equity capital.</li><li><strong>Market concentration</strong> — Afterpay and Zip dominated Australian BNPL, leaving no space for a smaller, less well-capitalised regional player.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Listed at the peak of BNPL mania</strong> — The ASX IPO occurred at the exact top of the BNPL valuation cycle. Rising interest rates in 2022–23 fundamentally broke the model — Laybuy funded interest-free credit via loans, and rising borrowing costs destroyed unit economics.</li><li><strong>Credit losses accelerated</strong> — Consumer spending downturn increased defaults and fraud, particularly in UK operations, further draining capital.</li><li><strong>Failed sale process</strong> — Between December 2023 and April 2024, directors sought a buyer or new investment. A deal fell through at the last minute.</li><li><strong>Delisted in 2023</strong> — Laybuy was delisted from the ASX in March 2023 — before its collapse — eliminating its ability to raise equity capital.</li><li><strong>Market concentration</strong> — Afterpay and Zip dominated Australian BNPL, leaving no space for a smaller, less well-capitalised regional player.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Laybuy Group Holdings, Laybuy Holdings, and Laybuy Australia Pty Ltd were all placed into receivership on 17 June 2024 by Deloitte. Klarna acquired Laybuy''s customer base and technology platform from the receivers.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Laybuy Group Holdings, Laybuy Holdings, and Laybuy Australia Pty Ltd were all placed into receivership on 17 June 2024 by Deloitte. Klarna acquired Laybuy''s customer base and technology platform from the receivers.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Laybuy''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Laybuy''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Timing market entry around funding cycles matters</strong> — IPOing a capital-hungry fintech at the top of a sector bubble creates fragility when conditions change.</li><li><strong>Interest rate sensitivity must be modelled for BNPL</strong> — A model that funds interest-free credit through debt is existentially vulnerable to rate hikes.</li><li><strong>Niche BNPL players need a defensible vertical or geography</strong> — Without a protected niche, smaller players are outspent and outcompeted by global and local giants.</li><li><strong>Cross-border operations amplify risk</strong> — Simultaneous Australia, NZ, and UK expansion tripled complexity and cost without tripling revenue.</li><li><strong>Have a secondary capital source</strong> — Sole reliance on public markets for a loss-making startup is extremely fragile.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Timing market entry around funding cycles matters</strong> — IPOing a capital-hungry fintech at the top of a sector bubble creates fragility when conditions change.</li><li><strong>Interest rate sensitivity must be modelled for BNPL</strong> — A model that funds interest-free credit through debt is existentially vulnerable to rate hikes.</li><li><strong>Niche BNPL players need a defensible vertical or geography</strong> — Without a protected niche, smaller players are outspent and outcompeted by global and local giants.</li><li><strong>Cross-border operations amplify risk</strong> — Simultaneous Australia, NZ, and UK expansion tripled complexity and cost without tripling revenue.</li><li><strong>Have a secondary capital source</strong> — Sole reliance on public markets for a loss-making startup is extremely fragile.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Deloitte NZ', 'https://www.deloitte.com/nz/en/about/media-room/laybuy-receivership-media-statement-17-june-2024.html', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, '1News', 'https://www.1news.co.nz/2024/06/17/heartbroken-laybuy-companies-placed-into-receivership/', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Chris Lynch Media', 'https://www.chrislynchmedia.com/news-items/laybuy-liquidators-reveal-details-of-companys-collapse-and-creditor-claims/', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 8/27: Topshop (topshop-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'topshop-australia-market-entry', 'How Topshop Struggled in the Australian Market', 'British fashion giant Topshop entered Australia in 2011 via a local franchise/licence arrangement with Austradia Pty Ltd.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['British fashion giant Topshop entered Australia in 2011 via a local franchise/licence arrangement with Austradia Pty Ltd.', 'Austradia entered voluntary administration in May 2017, with administrator Ferrier Hodgson managing the process.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United Kingdom"}, {"icon": "Briefcase", "label": "Sector", "value": "Fashion Retail"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Topshop', 'https://img.logo.dev/topshop.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://topshop.com', 'United Kingdom', 'Australia',
+      '2011-01-01', 'Fashion Retail', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://topshop.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/topshop.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>British fashion giant Topshop entered Australia in 2011 via a local franchise/licence arrangement with Austradia Pty Ltd. The franchise collapsed into voluntary administration in May 2017 — and the sole surviving Sydney store eventually closed in 2020 when COVID hit.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>British fashion giant Topshop entered Australia in 2011 via a local franchise/licence arrangement with Austradia Pty Ltd. The franchise collapsed into voluntary administration in May 2017 — and the sole surviving Sydney store eventually closed in 2020 when COVID hit.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Unlike Uniqlo and H&amp;M — which entered Australia as fully owned subsidiaries — Topshop operated through an independent Australian franchisee, Austradia, which paid a licence fee to Topshop UK and purchased stock from the UK parent. At its peak, Topshop/Topman operated nine standalone stores, 17 concessions within Myer, and an online business.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Unlike Uniqlo and H&amp;M — which entered Australia as fully owned subsidiaries — Topshop operated through an independent Australian franchisee, Austradia, which paid a licence fee to Topshop UK and purchased stock from the UK parent. At its peak, Topshop/Topman operated nine standalone stores, 17 concessions within Myer, and an online business.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Franchise fee structure inflated costs</strong> — The licence fees paid to Topshop UK, combined with the cost of importing goods from the UK, made Austradia''s effective cost structure significantly higher than vertically integrated competitors like H&amp;M and Uniqlo.</li><li><strong>Vertical competitors undercut</strong> — H&amp;M and Zara owned their supply chains end-to-end, enabling lower prices. Topshop could not match them while paying franchise fees.</li><li><strong>Currency risk</strong> — The weak Australian dollar against the pound in 2015–17 made UK-sourced goods materially more expensive.</li><li><strong>High mall rents</strong> — Austradia had taken on premium mall locations with high per-square-metre rent commitments, requiring unrealistic sales targets to break even.</li><li><strong>Myer partnership added complexity</strong> — The concession model within Myer (in which Myer held a 20% interest in Austradia) added a layer of governance complexity without solving the underlying cost problems.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Franchise fee structure inflated costs</strong> — The licence fees paid to Topshop UK, combined with the cost of importing goods from the UK, made Austradia''s effective cost structure significantly higher than vertically integrated competitors like H&amp;M and Uniqlo.</li><li><strong>Vertical competitors undercut</strong> — H&amp;M and Zara owned their supply chains end-to-end, enabling lower prices. Topshop could not match them while paying franchise fees.</li><li><strong>Currency risk</strong> — The weak Australian dollar against the pound in 2015–17 made UK-sourced goods materially more expensive.</li><li><strong>High mall rents</strong> — Austradia had taken on premium mall locations with high per-square-metre rent commitments, requiring unrealistic sales targets to break even.</li><li><strong>Myer partnership added complexity</strong> — The concession model within Myer (in which Myer held a 20% interest in Austradia) added a layer of governance complexity without solving the underlying cost problems.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Austradia entered voluntary administration in May 2017, with administrator Ferrier Hodgson managing the process. Topshop UK worked with the administrator to attempt restructuring. A single Sydney store remained open into 2020 before finally closing during COVID. Topshop UK itself later collapsed globally in 2020 due to Arcadia Group''s bankruptcy.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Austradia entered voluntary administration in May 2017, with administrator Ferrier Hodgson managing the process. Topshop UK worked with the administrator to attempt restructuring. A single Sydney store remained open into 2020 before finally closing during COVID. Topshop UK itself later collapsed globally in 2020 due to Arcadia Group''s bankruptcy.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Topshop''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Topshop''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Franchise/licence structures are cost disadvantages vs. owned operations</strong> — A middleman layer between brand owner and consumer always inflates the cost stack.</li><li><strong>Study vertically integrated competitors before entering</strong> — If your direct competitors own their supply chains and you don''t, your pricing will always be disadvantaged.</li><li><strong>Mall rent is a fixed commitment regardless of performance</strong> — High base rents require high sustained revenue — a bet that rarely pays off in fashion.</li><li><strong>JV with local retailer does not solve structural problems</strong> — Myer''s stake in Austradia created governance complexity without solving the economics.</li><li><strong>Assess parent company health as a dependency</strong> — Topshop Australia''s model was entirely dependent on UK Topshop — which itself was in structural decline.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Franchise/licence structures are cost disadvantages vs. owned operations</strong> — A middleman layer between brand owner and consumer always inflates the cost stack.</li><li><strong>Study vertically integrated competitors before entering</strong> — If your direct competitors own their supply chains and you don''t, your pricing will always be disadvantaged.</li><li><strong>Mall rent is a fixed commitment regardless of performance</strong> — High base rents require high sustained revenue — a bet that rarely pays off in fashion.</li><li><strong>JV with local retailer does not solve structural problems</strong> — Myer''s stake in Austradia created governance complexity without solving the economics.</li><li><strong>Assess parent company health as a dependency</strong> — Topshop Australia''s model was entirely dependent on UK Topshop — which itself was in structural decline.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ABC News', 'https://www.abc.net.au/news/2017-05-25/topshop-goes-into-voluntary-administration/8557044', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Urban.com.au', 'https://www.urban.com.au/news/topshop-franchise-fees-may-have-triggered-local-downfall', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Link Business', 'https://linkbusiness.com.au/topshop-collapse-what-does-it-mean-for-australian-retailers/', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 9/27: Esprit (esprit-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'esprit-australia-market-entry', 'How Esprit Struggled in the Australian Market', 'Esprit, the German-headquartered but Hong Kong-listed fashion brand, had operated in Australia since the 1980s — making its exit in 2018 a three-decade relationship gone sour.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Esprit, the German-headquartered but Hong Kong-listed fashion brand, had operated in Australia since the 1980s — making its exit in 2018 a three-decade relationship gone sour.', 'In May 2018, Esprit announced closure of all 67 ANZ stores by year end, with 350 staff losing jobs.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "Germany / Hong Kong"}, {"icon": "Briefcase", "label": "Sector", "value": "Fashion Retail"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Esprit', 'https://img.logo.dev/esprit.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://esprit.com', 'Germany / Hong Kong', 'Australia',
+      '1989-01-01', 'Fashion Retail', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://esprit.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/esprit.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Esprit, the German-headquartered but Hong Kong-listed fashion brand, had operated in Australia since the 1980s — making its exit in 2018 a three-decade relationship gone sour. Despite multiple turnaround attempts, ANZ operations were loss-making for years before the plug was pulled.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Esprit, the German-headquartered but Hong Kong-listed fashion brand, had operated in Australia since the 1980s — making its exit in 2018 a three-decade relationship gone sour. Despite multiple turnaround attempts, ANZ operations were loss-making for years before the plug was pulled.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Esprit entered Australia decades before the current fast-fashion era, establishing a strong department store concession model (particularly through Myer) and standalone retail stores. At the time of exit, it had 16 retail stores, 38 Myer concessions, and 13 factory outlets — 67 directly managed points of sale across ANZ.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Esprit entered Australia decades before the current fast-fashion era, establishing a strong department store concession model (particularly through Myer) and standalone retail stores. At the time of exit, it had 16 retail stores, 38 Myer concessions, and 13 factory outlets — 67 directly managed points of sale across ANZ.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Fast fashion disruption</strong> — The arrival of H&amp;M, Zara, Uniqlo, and others from the mid-2000s onwards commoditised the fashion segment Esprit occupied — mid-market, casual basics — at significantly lower price points.</li><li><strong>Cost structure could not absorb the competition</strong> — Despite "intensive efforts" to turn around the business, the cost of running 67 stores made profitability impossible once the competitive intensity increased.</li><li><strong>Global brand dilution</strong> — Esprit''s global design vision had lost relevance — Australian consumers who once aspired to the brand found international competitors offered more trend-forward designs at lower prices.</li><li><strong>Revenue scale too small to justify maintenance</strong> — ANZ contributed HK$297 million (approximately US$38M) in FY2017 — less than 2% of global revenue. The economics of maintaining ANZ could never justify the management bandwidth.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Fast fashion disruption</strong> — The arrival of H&amp;M, Zara, Uniqlo, and others from the mid-2000s onwards commoditised the fashion segment Esprit occupied — mid-market, casual basics — at significantly lower price points.</li><li><strong>Cost structure could not absorb the competition</strong> — Despite "intensive efforts" to turn around the business, the cost of running 67 stores made profitability impossible once the competitive intensity increased.</li><li><strong>Global brand dilution</strong> — Esprit''s global design vision had lost relevance — Australian consumers who once aspired to the brand found international competitors offered more trend-forward designs at lower prices.</li><li><strong>Revenue scale too small to justify maintenance</strong> — ANZ contributed HK$297 million (approximately US$38M) in FY2017 — less than 2% of global revenue. The economics of maintaining ANZ could never justify the management bandwidth.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>In May 2018, Esprit announced closure of all 67 ANZ stores by year end, with 350 staff losing jobs. The one-off exit costs were estimated at HK$150–200 million (approximately A$25–33M). The company redirected resources to China, Hong Kong, Taiwan, Singapore, and Malaysia.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>In May 2018, Esprit announced closure of all 67 ANZ stores by year end, with 350 staff losing jobs. The one-off exit costs were estimated at HK$150–200 million (approximately A$25–33M). The company redirected resources to China, Hong Kong, Taiwan, Singapore, and Malaysia.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Esprit''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Esprit''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>ANZ market tenure does not insulate against structural shifts</strong> — Being established for 30+ years provides no protection when the competitive landscape fundamentally changes.</li><li><strong>Revenue contribution of <2% of global revenue signals strategic expendability</strong> — If Australia is too small to matter on a global P&amp;L, it will be cut in a downturn.</li><li><strong>Department store concession models amplify vulnerability</strong> — Esprit''s reliance on Myer as a channel meant its fate was tied to Myer''s declining traffic and footfall.</li><li><strong>Fast-fashion disruption arrives slowly, then all at once</strong> — The erosion of Esprit''s position took years; the exit happened fast.</li><li><strong>Exit costs must be budgeted before entry</strong> — The A$25–33M exit bill was a material cost on a business generating A$50M in revenue.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>ANZ market tenure does not insulate against structural shifts</strong> — Being established for 30+ years provides no protection when the competitive landscape fundamentally changes.</li><li><strong>Revenue contribution of <2% of global revenue signals strategic expendability</strong> — If Australia is too small to matter on a global P&amp;L, it will be cut in a downturn.</li><li><strong>Department store concession models amplify vulnerability</strong> — Esprit''s reliance on Myer as a channel meant its fate was tied to Myer''s declining traffic and footfall.</li><li><strong>Fast-fashion disruption arrives slowly, then all at once</strong> — The erosion of Esprit''s position took years; the exit happened fast.</li><li><strong>Exit costs must be budgeted before entry</strong> — The A$25–33M exit bill was a material cost on a business generating A$50M in revenue.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Inside Retail Asia', 'https://insideretail.asia/2018/05/03/end-days-for-esprit-australia-and-new-zealand-stores/', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Inside Retail NZ', 'https://insideretail.co.nz/2018/05/03/esprit-to-exit-new-zealand-australia/', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'FashionUnited', 'https://fashionunited.com/news/retail/esprit-decides-to-stop-operations-in-australia-and-new-zealand/2018050320978', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 10/27: Gap (gap-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'gap-australia-market-entry', 'How Gap Struggled in the Australian Market', 'Gap''s Australian franchise was operated by OrotonGroup — a struggling listed Australian luxury retailer — rather than by Gap itself.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Gap''s Australian franchise was operated by OrotonGroup — a struggling listed Australian luxury retailer — rather than by Gap itself.', 'In August 2017, OrotonGroup announced it would discontinue the Gap franchise.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "Fashion Retail"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Gap', 'https://img.logo.dev/gap.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://gap.com', 'United States', 'Australia',
+      '2014-01-01', 'Fashion Retail', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://gap.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/gap.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Gap''s Australian franchise was operated by OrotonGroup — a struggling listed Australian luxury retailer — rather than by Gap itself. When OrotonGroup''s financial performance deteriorated, the Gap franchise was the first thing to be cut, resulting in the closure of all six Australian stores by January 2018.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Gap''s Australian franchise was operated by OrotonGroup — a struggling listed Australian luxury retailer — rather than by Gap itself. When OrotonGroup''s financial performance deteriorated, the Gap franchise was the first thing to be cut, resulting in the closure of all six Australian stores by January 2018.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Gap entered Australia through an exclusive franchise arrangement with OrotonGroup, which held the licence to operate Gap stores in the country. This gave Gap market access without direct capital investment — but transferred the execution risk to a franchise partner that was simultaneously managing its own struggling core brand.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Gap entered Australia through an exclusive franchise arrangement with OrotonGroup, which held the licence to operate Gap stores in the country. This gave Gap market access without direct capital investment — but transferred the execution risk to a franchise partner that was simultaneously managing its own struggling core brand.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Wrong partner selection</strong> — OrotonGroup was undergoing a strategic crisis of its own — CEO churn, declining core sales, and weak trading conditions. Entrusting Gap''s growth in Australia to a distressed partner was structurally risky.</li><li><strong>Franchise model divorced execution from brand standards</strong> — When OrotonGroup''s financial performance deteriorated, there was no incentive or capital to invest in the Gap stores.</li><li><strong>Soft Australian retail demand</strong> — The Australian fashion market in 2015–18 was experiencing intense competitive pressure from H&amp;M, Zara, and Uniqlo, which had entered on a fully owned basis with lower cost structures.</li><li><strong>Limited scale</strong> — Six stores was never sufficient to build brand awareness or achieve supply chain economies.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Wrong partner selection</strong> — OrotonGroup was undergoing a strategic crisis of its own — CEO churn, declining core sales, and weak trading conditions. Entrusting Gap''s growth in Australia to a distressed partner was structurally risky.</li><li><strong>Franchise model divorced execution from brand standards</strong> — When OrotonGroup''s financial performance deteriorated, there was no incentive or capital to invest in the Gap stores.</li><li><strong>Soft Australian retail demand</strong> — The Australian fashion market in 2015–18 was experiencing intense competitive pressure from H&amp;M, Zara, and Uniqlo, which had entered on a fully owned basis with lower cost structures.</li><li><strong>Limited scale</strong> — Six stores was never sufficient to build brand awareness or achieve supply chain economies.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>In August 2017, OrotonGroup announced it would discontinue the Gap franchise. All six stores closed by end of January 2018. Gap had no direct Australian operation and simply ceased to have a physical presence.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>In August 2017, OrotonGroup announced it would discontinue the Gap franchise. All six stores closed by end of January 2018. Gap had no direct Australian operation and simply ceased to have a physical presence.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Gap''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Gap''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Partner selection is a strategic decision, not a convenience</strong> — Franchising to a distressed local partner transfers entry risk without transferring execution capability.</li><li><strong>Small-scale pilots under a franchisee are rarely recoverable</strong> — Six stores was insufficient to learn, adapt, and compete in Australian fashion retail.</li><li><strong>The franchise model suits strong brands with strong partners</strong> — Pairing a mid-strength brand (Gap''s declining global position by 2017) with a financially distressed franchisee is a recipe for exit.</li><li><strong>Direct ownership of critical international operations may be necessary</strong> — In markets where brand standards are critical, a fully owned operation gives more control than a franchise.</li><li><strong>Local competitive conditions matter more than global brand equity</strong> — Gap''s global name offered little protection against locally owned H&amp;M and Zara with lower cost bases.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Partner selection is a strategic decision, not a convenience</strong> — Franchising to a distressed local partner transfers entry risk without transferring execution capability.</li><li><strong>Small-scale pilots under a franchisee are rarely recoverable</strong> — Six stores was insufficient to learn, adapt, and compete in Australian fashion retail.</li><li><strong>The franchise model suits strong brands with strong partners</strong> — Pairing a mid-strength brand (Gap''s declining global position by 2017) with a financially distressed franchisee is a recipe for exit.</li><li><strong>Direct ownership of critical international operations may be necessary</strong> — In markets where brand standards are critical, a fully owned operation gives more control than a franchise.</li><li><strong>Local competitive conditions matter more than global brand equity</strong> — Gap''s global name offered little protection against locally owned H&amp;M and Zara with lower cost bases.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Business Insider', 'https://www.businessinsider.com/gap-stores-are-closing-in-australia-2017-8', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Inside Retail Australia', 'https://insideretail.com.au/news/gap-looking-to-close-hundreds-of-stores-201811', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ABC News (retail context)', 'https://www.abc.net.au/news/2019-02-21/australian-retailers-shut-down-by-foreign-competition/10832062', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 11/27: Carl's Jr. (carls-jr-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'carls-jr-australia-market-entry', 'How Carl''s Jr. Struggled in the Australian Market', 'The US burger chain Carl''s Jr. stormed into Australia in 2016 promising hundreds of stores and a bold challenge to McDonald''s and KFC.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['The US burger chain Carl''s Jr.', 'CJ''s Group entered voluntary administration in July 2024 with KPMG as administrators.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "QSR / Food"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Carl''s Jr.', 'https://img.logo.dev/carlsjr.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://carlsjr.com', 'United States', 'Australia',
+      '2016-01-01', 'QSR / Food', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://carlsjr.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/carlsjr.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>The US burger chain Carl''s Jr. stormed into Australia in 2016 promising hundreds of stores and a bold challenge to McDonald''s and KFC. By July 2024, its master franchisee CJ''s Group had entered voluntary administration with 24 stores affected and 20 immediately closed.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>The US burger chain Carl''s Jr. stormed into Australia in 2016 promising hundreds of stores and a bold challenge to McDonald''s and KFC. By July 2024, its master franchisee CJ''s Group had entered voluntary administration with 24 stores affected and 20 immediately closed.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Carl''s Jr. used a master franchisee model, with CJ''s Group Pty Ltd independently owning and operating 24 restaurants and holding a master licence over another 25 sub-franchised locations. The chain expanded aggressively, targeting regional NSW, Queensland, and Victoria.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Carl''s Jr. used a master franchisee model, with CJ''s Group Pty Ltd independently owning and operating 24 restaurants and holding a master licence over another 25 sub-franchised locations. The chain expanded aggressively, targeting regional NSW, Queensland, and Victoria.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Over-expansion into regional/low-density locations</strong> — The brand placed a significant number of stores in regional areas described as "the middle of nowhere" — locations with insufficient foot traffic to sustain QSR economics.</li><li><strong>Reduced discretionary spending</strong> — The cost-of-living pressures of 2023–24 hit fast-casual spending hard, particularly in regional and suburban markets.</li><li><strong>Master franchise model created a capital mismatch</strong> — CJ''s Group was simultaneously responsible for building a store network and managing day-to-day operations without the capital base of a corporate operator.</li><li><strong>Marketing never connected with locals</strong> — Unlike McDonald''s and KFC, which had decades of Australian brand equity, Carl''s Jr. never established a distinctive local identity.</li><li><strong>Fierce competition</strong> — Entering an already crowded QSR market dominated by entrenched global brands with massive marketing and loyalty programme advantages was extremely difficult without clear product differentiation.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Over-expansion into regional/low-density locations</strong> — The brand placed a significant number of stores in regional areas described as "the middle of nowhere" — locations with insufficient foot traffic to sustain QSR economics.</li><li><strong>Reduced discretionary spending</strong> — The cost-of-living pressures of 2023–24 hit fast-casual spending hard, particularly in regional and suburban markets.</li><li><strong>Master franchise model created a capital mismatch</strong> — CJ''s Group was simultaneously responsible for building a store network and managing day-to-day operations without the capital base of a corporate operator.</li><li><strong>Marketing never connected with locals</strong> — Unlike McDonald''s and KFC, which had decades of Australian brand equity, Carl''s Jr. never established a distinctive local identity.</li><li><strong>Fierce competition</strong> — Entering an already crowded QSR market dominated by entrenched global brands with massive marketing and loyalty programme advantages was extremely difficult without clear product differentiation.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>CJ''s Group entered voluntary administration in July 2024 with KPMG as administrators. Creditors elected to liquidate the operator in November 2024. Twenty stores closed immediately; approximately 29 sub-franchised and independently operated stores survived and have been absorbed under a direct franchise model. Carl''s Jr.''s parent CKE has confirmed plans to continue in Australia with five new direct-franchise stores.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>CJ''s Group entered voluntary administration in July 2024 with KPMG as administrators. Creditors elected to liquidate the operator in November 2024. Twenty stores closed immediately; approximately 29 sub-franchised and independently operated stores survived and have been absorbed under a direct franchise model. Carl''s Jr.''s parent CKE has confirmed plans to continue in Australia with five new direct-franchise stores.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Carl''s Jr.''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Carl''s Jr.''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>QSR expansion into regional markets requires verified population density and foot traffic data</strong> — Not all Australian cities and regions support international QSR economics.</li><li><strong>Master franchise capital structures need scrutiny</strong> — A master franchisee is only as stable as its own balance sheet.</li><li><strong>Brand differentiation is existential in crowded QSR markets</strong> — Without a compelling reason to choose Carl''s Jr. over McDonald''s, KFC, or Hungry Jack''s, Australians defaulted to the familiar.</li><li><strong>Price sensitivity in cost-of-living downturns hits QSR hard</strong> — Discretionary food spend is the first to compress — model downside scenarios explicitly.</li><li><strong>Sub-franchise survival after master franchise collapse is instructive</strong> — The 25 independently operated stores survived while the directly owned stores failed — sub-franchisees had stronger local skin in the game.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>QSR expansion into regional markets requires verified population density and foot traffic data</strong> — Not all Australian cities and regions support international QSR economics.</li><li><strong>Master franchise capital structures need scrutiny</strong> — A master franchisee is only as stable as its own balance sheet.</li><li><strong>Brand differentiation is existential in crowded QSR markets</strong> — Without a compelling reason to choose Carl''s Jr. over McDonald''s, KFC, or Hungry Jack''s, Australians defaulted to the familiar.</li><li><strong>Price sensitivity in cost-of-living downturns hits QSR hard</strong> — Discretionary food spend is the first to compress — model downside scenarios explicitly.</li><li><strong>Sub-franchise survival after master franchise collapse is instructive</strong> — The 25 independently operated stores survived while the directly owned stores failed — sub-franchisees had stronger local skin in the game.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, '10Play/The Project', 'https://10play.com.au/theproject/articles/carls-jr-to-shut-aussie-stores-after-going-into-voluntary-administration/tpa240730yint', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Wikipedia – Carl''s Jr.', 'https://en.wikipedia.org/wiki/Carl%27s_Jr', 2, 'other')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'QSR Media', 'https://qsrmedia.com.au/executive-insights/exclusive/carls-jr-eyes-aussie-expansion-after-master-franchise-setback', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 12/27: WeWork (wework-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'wework-australia-market-entry', 'How WeWork Collapsed in the Australian Market', 'WeWork expanded aggressively into Australia during 2018–2020, signing long leases at peak market rates across Sydney, Melbourne, Brisbane, and Perth.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['WeWork expanded aggressively into Australia during 2018–2020, signing long leases at peak market rates across Sydney, Melbourne, Brisbane, and Perth.', 'WeWork completed lease renegotiations in July 2024, retaining 15 "highest quality and best-performing" locations across four cities.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "Proptech / Coworking"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'WeWork', 'https://img.logo.dev/wework.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://wework.com', 'United States', 'Australia',
+      '2018-01-01', 'Proptech / Coworking', 2, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://wework.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/wework.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Adam Neumann', 'Co-founder & former CEO', true);
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Miguel McKelvey', 'Co-founder', false);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>WeWork expanded aggressively into Australia during 2018–2020, signing long leases at peak market rates across Sydney, Melbourne, Brisbane, and Perth. Its global bankruptcy in November 2023 sent shockwaves through the Australian commercial property market, with the company ultimately handing back keys to at least four Australian sites and renegotiating all 15 remaining leases.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>WeWork expanded aggressively into Australia during 2018–2020, signing long leases at peak market rates across Sydney, Melbourne, Brisbane, and Perth. Its global bankruptcy in November 2023 sent shockwaves through the Australian commercial property market, with the company ultimately handing back keys to at least four Australian sites and renegotiating all 15 remaining leases.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>WeWork entered Australia by signing long-term leases (some up to 15 years) on premium CBD office space across four cities, subletting to startups, SMEs, and enterprise clients on flexible terms. At its peak in Australia, WeWork held approximately 100,000 sqm across 15 locations, with estimated future lease liabilities of A$900 million.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>WeWork entered Australia by signing long-term leases (some up to 15 years) on premium CBD office space across four cities, subletting to startups, SMEs, and enterprise clients on flexible terms. At its peak in Australia, WeWork held approximately 100,000 sqm across 15 locations, with estimated future lease liabilities of A$900 million.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Long-term leases at peak market rates</strong> — WeWork locked in expensive, decade-long lease commitments at a market peak, then tried to sublet at prices that couldn''t justify the base cost.</li><li><strong>The model was real estate arbitrage dressed as tech</strong> — Once investors recognised WeWork was a leveraged property play — not a tech company — its US$47B valuation collapsed, killing the capital-raising machine that funded losses.</li><li><strong>COVID destroyed demand</strong> — The shift to remote work in 2020–21 emptied coworking spaces globally. WeWork''s Australian occupancy never fully recovered.</li><li><strong>Chapter 11 spillover</strong> — While Australian subsidiaries were not formally included in the US Chapter 11 filing, landlords and tenants were deeply uncertain about the entity''s stability. WeWork Australia posted a loss and carried A$930.4M in lease liabilities for the next five years.</li><li><strong>Negotiated exits were necessary but costly</strong> — WeWork had to renegotiate multiple Australian leases in late 2023–early 2024, closing sites in Sydney, Melbourne, Brisbane, and Perth.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Long-term leases at peak market rates</strong> — WeWork locked in expensive, decade-long lease commitments at a market peak, then tried to sublet at prices that couldn''t justify the base cost.</li><li><strong>The model was real estate arbitrage dressed as tech</strong> — Once investors recognised WeWork was a leveraged property play — not a tech company — its US$47B valuation collapsed, killing the capital-raising machine that funded losses.</li><li><strong>COVID destroyed demand</strong> — The shift to remote work in 2020–21 emptied coworking spaces globally. WeWork''s Australian occupancy never fully recovered.</li><li><strong>Chapter 11 spillover</strong> — While Australian subsidiaries were not formally included in the US Chapter 11 filing, landlords and tenants were deeply uncertain about the entity''s stability. WeWork Australia posted a loss and carried A$930.4M in lease liabilities for the next five years.</li><li><strong>Negotiated exits were necessary but costly</strong> — WeWork had to renegotiate multiple Australian leases in late 2023–early 2024, closing sites in Sydney, Melbourne, Brisbane, and Perth.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>WeWork completed lease renegotiations in July 2024, retaining 15 "highest quality and best-performing" locations across four cities. The outcome represents a dramatic downsizing — from a $900M liability footprint to a smaller, sustainable portfolio. WeWork emerged from global Chapter 11 in June 2024 and continues operating in Australia, though as a shadow of its original ambition.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>WeWork completed lease renegotiations in July 2024, retaining 15 "highest quality and best-performing" locations across four cities. The outcome represents a dramatic downsizing — from a $900M liability footprint to a smaller, sustainable portfolio. WeWork emerged from global Chapter 11 in June 2024 and continues operating in Australia, though as a shadow of its original ambition.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, WeWork''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, WeWork''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Avoid long-term lease commitments in early-stage market entry</strong> — Flexible, shorter-term lease structures reduce fixed cost exposure during market validation.</li><li><strong>Proptech/SaaS company valuations need scrutiny</strong> — WeWork''s "tech premium" disguised a highly leveraged property business. Understand what you''re actually paying for when acquiring or partnering.</li><li><strong>Macro shocks (COVID, rate rises) can destroy coworking demand overnight</strong> — Model catastrophic scenarios for demand-dependent businesses.</li><li><strong>Australian landlords are sophisticated counterparties</strong> — Long commercial lease negotiations in Australia carry material obligations — legal advice before signing is mandatory.</li><li><strong>Parent company health directly impacts subsidiary stability</strong> — WeWork Australia had no independent capital structure — entirely at the mercy of its US parent.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Avoid long-term lease commitments in early-stage market entry</strong> — Flexible, shorter-term lease structures reduce fixed cost exposure during market validation.</li><li><strong>Proptech/SaaS company valuations need scrutiny</strong> — WeWork''s "tech premium" disguised a highly leveraged property business. Understand what you''re actually paying for when acquiring or partnering.</li><li><strong>Macro shocks (COVID, rate rises) can destroy coworking demand overnight</strong> — Model catastrophic scenarios for demand-dependent businesses.</li><li><strong>Australian landlords are sophisticated counterparties</strong> — Long commercial lease negotiations in Australia carry material obligations — legal advice before signing is mandatory.</li><li><strong>Parent company health directly impacts subsidiary stability</strong> — WeWork Australia had no independent capital structure — entirely at the mercy of its US parent.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Capital Brief', 'https://www.capitalbrief.com/article/wework-tremors-are-starting-to-reach-australia-3ab6641d-bfb4-43b1-938e-3c36a3941f42/preview', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Capital Brief (restructuring)', 'https://www.capitalbrief.com/article/restructuring-firms-circle-wework-australia-amid-us-parents-bankruptcy-e3397461-2ef9-425a-b', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'The Urban Developer', 'https://www.theurbandeveloper.com/articles/landlords-wait-as-wework-founder-eyes-buyback', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'AllWork.Space', 'https://allwork.space/2023/09/weworks-collapse-will-cause-massive-losses-in-the-u-k-and-australia-too/', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'WeWork Newsroom', 'https://www.wework.com/newsroom/wework-successfully-completes-lease-negotiations-and-real-estate-rationalization-in-australia', 5, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 13/27: Amazon Australia (amazon-australia-ecommerce-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_next_cn int;
+BEGIN
+  SELECT id INTO v_id FROM content_items WHERE slug = 'amazon-australia-ecommerce-entry';
+  IF v_id IS NULL THEN
+    RAISE NOTICE 'Skipping source-only enrichment — slug amazon-australia-ecommerce-entry not found';
+    RETURN;
+  END IF;
+  SELECT COALESCE(MAX(citation_number), 0) + 1 INTO v_next_cn FROM case_study_sources WHERE case_study_id = v_id;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ABC News', 'https://www.abc.net.au/news/2018-12-26/amazon-dominate-retail-within-years-slow-start/10667884', v_next_cn + 0, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Forbes (GST block)', 'https://www.forbes.com/sites/kirimasters/2018/05/31/why-amazon-is-forcing-australian-users-to-its-underwhelming-local-site/', v_next_cn + 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'TechCrunch (GST reversal)', 'https://techcrunch.com/2018/11/22/amazon-reverses-tax-triggered-block-on-us-shop-in-australia/', v_next_cn + 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Pattern Australia', 'https://au.pattern.com/blog/australian-marketplace-shake-up-amazon-thrives-catch-closes-and-chinese-platforms-face-challenges/', v_next_cn + 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 14/27: Catch.com.au (catch-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'catch-australia-market-entry', 'How Catch.com.au Struggled in the Australian Market', 'Catch.com.au was Australia''s original daily deals and online marketplace pioneer. Acquired by Wesfarmers in 2019 for A$230 million, the platform accumulated nearly A$450 million in trading losses under Wesfarmers'' ownership before being wound down in January 2025.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Catch.com.au was Australia''s original daily deals and online marketplace pioneer.', 'Wesfarmers announced Catch''s wind-down in January 2025, with final closure by June 2025 (Q4 FY2025).']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "Australia"}, {"icon": "Briefcase", "label": "Sector", "value": "E-commerce / Marketplace"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Catch.com.au', 'https://img.logo.dev/catch.com.au?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://catch.com.au', 'Australia', 'Australia',
+      '2006-01-01', 'E-commerce / Marketplace', 2, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://catch.com.au'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/catch.com.au?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Gabby Leibovich', 'Co-founder', true);
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Hezi Leibovich', 'Co-founder', false);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Catch.com.au was Australia''s original daily deals and online marketplace pioneer. Acquired by Wesfarmers in 2019 for A$230 million, the platform accumulated nearly A$450 million in trading losses under Wesfarmers'' ownership before being wound down in January 2025.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Catch.com.au was Australia''s original daily deals and online marketplace pioneer. Acquired by Wesfarmers in 2019 for A$230 million, the platform accumulated nearly A$450 million in trading losses under Wesfarmers'' ownership before being wound down in January 2025.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>This case is instructive not as a foreign company entering Australia, but as an example of a strategic acquirer failing to integrate or protect a digital native from incoming international competition. Wesfarmers bought Catch to build e-commerce capabilities, but left it operating largely independently.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>This case is instructive not as a foreign company entering Australia, but as an example of a strategic acquirer failing to integrate or protect a digital native from incoming international competition. Wesfarmers bought Catch to build e-commerce capabilities, but left it operating largely independently.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Amazon''s scale overwhelmed Catch''s position</strong> — When Wesfarmers bought Catch in 2019, Amazon had been in Australia for less than two years. By 2025, Amazon had 10% of online shopping spend, Temu had 20% — together dismantling Catch''s competitive position.</li><li><strong>Marketplace economics require massive scale</strong> — As Wesfarmers CEO Rob Scott acknowledged, "standalone, broad-based marketplaces require significant scale and traffic to achieve profitability. International players are better able to leverage their global scale."</li><li><strong>Synergies never materialised</strong> — Despite the stated goal of building e-commerce expertise across Kmart and Target, Catch was never integrated into Wesfarmers'' ecosystem in a way that created competitive advantage.</li><li><strong>Product range differentiation lost</strong> — Under Wesfarmers, Catch lost the sharp buying and own-product capabilities that had made its original founders (Gabby and Hezi Leibovich) successful.</li><li><strong>Fulfilment centres operating at <50% capacity</strong> — A signal of structural over-investment in fixed costs relative to achievable volume.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Amazon''s scale overwhelmed Catch''s position</strong> — When Wesfarmers bought Catch in 2019, Amazon had been in Australia for less than two years. By 2025, Amazon had 10% of online shopping spend, Temu had 20% — together dismantling Catch''s competitive position.</li><li><strong>Marketplace economics require massive scale</strong> — As Wesfarmers CEO Rob Scott acknowledged, "standalone, broad-based marketplaces require significant scale and traffic to achieve profitability. International players are better able to leverage their global scale."</li><li><strong>Synergies never materialised</strong> — Despite the stated goal of building e-commerce expertise across Kmart and Target, Catch was never integrated into Wesfarmers'' ecosystem in a way that created competitive advantage.</li><li><strong>Product range differentiation lost</strong> — Under Wesfarmers, Catch lost the sharp buying and own-product capabilities that had made its original founders (Gabby and Hezi Leibovich) successful.</li><li><strong>Fulfilment centres operating at <50% capacity</strong> — A signal of structural over-investment in fixed costs relative to achievable volume.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Wesfarmers announced Catch''s wind-down in January 2025, with final closure by June 2025 (Q4 FY2025). Approximately 200 jobs were lost. The fulfilment centres were transferred to Kmart Group, which operates them more cost-effectively. Cumulative losses under Wesfarmers approached A$450M.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Wesfarmers announced Catch''s wind-down in January 2025, with final closure by June 2025 (Q4 FY2025). Approximately 200 jobs were lost. The fulfilment centres were transferred to Kmart Group, which operates them more cost-effectively. Cumulative losses under Wesfarmers approached A$450M.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Catch.com.au''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Catch.com.au''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Acquisition of a local digital player buys time, not immunity</strong> — Foreign competition (Amazon, Temu) will eventually outscale any locally owned marketplace without continuous capital investment.</li><li><strong>Marketplace integration must be deep and immediate</strong> — Half-measures that leave an acquired business "operating independently" without the full benefit of group resources create the worst of both worlds.</li><li><strong>Digital platforms have scale thresholds, not gradual curves</strong> — Below a certain transaction volume, a marketplace becomes structurally unprofitable regardless of management quality.</li><li><strong>Assess acquisition rationale carefully</strong> — Wesfarmers admitted it bought Catch for capability, not for Catch itself — a rationale that rarely justifies the acquisition price.</li><li><strong>Competitive due diligence must include forthcoming entrants, not just current players</strong> — Amazon was "new" in 2019; Temu didn''t exist. Strategic planning must scenario-model for new entrants.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Acquisition of a local digital player buys time, not immunity</strong> — Foreign competition (Amazon, Temu) will eventually outscale any locally owned marketplace without continuous capital investment.</li><li><strong>Marketplace integration must be deep and immediate</strong> — Half-measures that leave an acquired business "operating independently" without the full benefit of group resources create the worst of both worlds.</li><li><strong>Digital platforms have scale thresholds, not gradual curves</strong> — Below a certain transaction volume, a marketplace becomes structurally unprofitable regardless of management quality.</li><li><strong>Assess acquisition rationale carefully</strong> — Wesfarmers admitted it bought Catch for capability, not for Catch itself — a rationale that rarely justifies the acquisition price.</li><li><strong>Competitive due diligence must include forthcoming entrants, not just current players</strong> — Amazon was "new" in 2019; Temu didn''t exist. Strategic planning must scenario-model for new entrants.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Wesfarmers (official)', 'https://www.wesfarmers.com.au/util/news-media/article/2025/05/29/catch-wind-down-and-onedigital-update', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'The West Australian', 'https://thewest.com.au/business/retail/wesfarmers-pulls-pin-on-loss-making-online-retailer--c-17453936', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Capital Brief', 'https://www.capitalbrief.com/article/the-untold-story-of-how-wesfarmers-killed-catchcomau-ce74981e-eb68-4329-ab3b-f185f89ca565/', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Inside Retail', 'https://insideretail.com.au/business/a-catch-22-experts-weigh-in-on-the-wind-down-of-the-e-commerce-disruptor-202501', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 15/27: Groupon (groupon-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'groupon-australia-market-entry', 'How Groupon Struggled in the Australian Market', 'Groupon''s entry into Australia was one of the messiest of any tech company — it arrived to find its own brand name, domain (groupon.com.au), and trademark already registered by a local competitor, Scoopon, forcing the American coupon giant to launch under the brand "Stardeals."',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Groupon''s entry into Australia was one of the messiest of any tech company — it arrived to find its own brand name, domain (groupon.com.au), and trademark already registered by a local competitor, Scoopon, forcing the American coupon giant to launch under the brand "Stardeals."', 'Groupon eventually obtained its brand name in Australia after litigation, but never achieved the dominant market position it held in the US or Europe.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "Marketplace / Deals"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Groupon', 'https://img.logo.dev/groupon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://groupon.com', 'United States', 'Australia',
+      '2011-01-01', 'Marketplace / Deals', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://groupon.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/groupon.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Andrew Mason', 'Founder & former CEO', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Groupon''s entry into Australia was one of the messiest of any tech company — it arrived to find its own brand name, domain (groupon.com.au), and trademark already registered by a local competitor, Scoopon, forcing the American coupon giant to launch under the brand "Stardeals."</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Groupon''s entry into Australia was one of the messiest of any tech company — it arrived to find its own brand name, domain (groupon.com.au), and trademark already registered by a local competitor, Scoopon, forcing the American coupon giant to launch under the brand "Stardeals."</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Groupon entered Australia around 2010–11, intending to replicate its global group-buying model. The core strategy was daily deal emails offering heavily discounted products and services from local merchants.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Groupon entered Australia around 2010–11, intending to replicate its global group-buying model. The core strategy was daily deal emails offering heavily discounted products and services from local merchants.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Trademark and domain squatting</strong> — Australian competitor Scoopon (owned by CatchOfTheDay founders Gabby and Hezi Leibovich) had pre-registered "Groupon Pty Limited" as a company name, registered the Groupon.com.au domain, and filed for the Groupon trademark in Australia — just seven days before Groupon''s own filing. Groupon was forced to launch as "Stardeals" while fighting multiple legal battles simultaneously.</li><li><strong>Late to a crowded market</strong> — By the time Groupon entered Australia, Scoopon, LivingSocial, and local variants were already established. Groupon''s offer letter to buy Scoopon''s assets was initially accepted (at A$286,000) and then rejected — a classic IP exploitation play.</li><li><strong>Merchant model didn''t suit the market</strong> — Groupon''s model (heavily discounted deals that attracted deal-seekers who rarely became loyal customers) drew sustained criticism from Australian merchants, many of whom found the economics destructive.</li><li><strong>Fading global model</strong> — Groupon''s business model began showing structural cracks globally around 2012–13, undermining its value proposition before it had established itself locally.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Trademark and domain squatting</strong> — Australian competitor Scoopon (owned by CatchOfTheDay founders Gabby and Hezi Leibovich) had pre-registered "Groupon Pty Limited" as a company name, registered the Groupon.com.au domain, and filed for the Groupon trademark in Australia — just seven days before Groupon''s own filing. Groupon was forced to launch as "Stardeals" while fighting multiple legal battles simultaneously.</li><li><strong>Late to a crowded market</strong> — By the time Groupon entered Australia, Scoopon, LivingSocial, and local variants were already established. Groupon''s offer letter to buy Scoopon''s assets was initially accepted (at A$286,000) and then rejected — a classic IP exploitation play.</li><li><strong>Merchant model didn''t suit the market</strong> — Groupon''s model (heavily discounted deals that attracted deal-seekers who rarely became loyal customers) drew sustained criticism from Australian merchants, many of whom found the economics destructive.</li><li><strong>Fading global model</strong> — Groupon''s business model began showing structural cracks globally around 2012–13, undermining its value proposition before it had established itself locally.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Groupon eventually obtained its brand name in Australia after litigation, but never achieved the dominant market position it held in the US or Europe. The Australian group-buying market ultimately consolidated and declined, with Groupon''s Australian operation becoming a marginal, low-investment presence. The platform continues to operate in Australia but with far less relevance than intended.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Groupon eventually obtained its brand name in Australia after litigation, but never achieved the dominant market position it held in the US or Europe. The Australian group-buying market ultimately consolidated and declined, with Groupon''s Australian operation becoming a marginal, low-investment presence. The platform continues to operate in Australia but with far less relevance than intended.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Groupon''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Groupon''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Trademark and domain registration is a Day-1 entry task</strong> — Register your brand name, domain, and trademark in Australia before announcing your entry publicly.</li><li><strong>IP protection failures cause multi-year competitive disadvantages</strong> — Years spent as "Stardeals" while fighting legal battles is market share lost.</li><li><strong>Understand local competitor preparedness</strong> — Scoopon''s founders were sophisticated operators who anticipated Groupon''s entry and pre-empted it deliberately.</li><li><strong>Late entry to a crowded two-sided marketplace is structurally disadvantaged</strong> — The merchant side and consumer side were already matched by local incumbents.</li><li><strong>Business model validation in the local market must precede scale</strong> — Groupon never resolved whether its merchant model worked in Australia before investing in the brand dispute.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Trademark and domain registration is a Day-1 entry task</strong> — Register your brand name, domain, and trademark in Australia before announcing your entry publicly.</li><li><strong>IP protection failures cause multi-year competitive disadvantages</strong> — Years spent as "Stardeals" while fighting legal battles is market share lost.</li><li><strong>Understand local competitor preparedness</strong> — Scoopon''s founders were sophisticated operators who anticipated Groupon''s entry and pre-empted it deliberately.</li><li><strong>Late entry to a crowded two-sided marketplace is structurally disadvantaged</strong> — The merchant side and consumer side were already matched by local incumbents.</li><li><strong>Business model validation in the local market must precede scale</strong> — Groupon never resolved whether its merchant model worked in Australia before investing in the brand dispute.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'WebProNews', 'https://www.webpronews.com/groupon-sues-groupon-to-get-groupon-name-in-australia/', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'TechCrunch', 'https://techcrunch.com/2011/01/04/groupon-files-lawsuit-against-australian-clone-scoopon/', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Marketing Mag', 'https://www.marketingmag.com.au/news/geo-location-deals-fail-to-take-off-for-groupon-infographic/', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'CSC Digital Brand Services', 'https://www.cscdbs.com/blog/groupon-trademark-case-will-be-interesting/', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 16/27: Uber Carshare (uber-carshare-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'uber-carshare-australia-market-entry', 'How Uber Carshare Struggled in the Australian Market', 'Uber Carshare (formerly Car Next Door), a peer-to-peer car sharing platform that Uber acquired to build a mobility ecosystem in Australia, quietly exited the Australian market in late 2025 — leaving thousands of users without a platform.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Uber Carshare (formerly Car Next Door), a peer-to-peer car sharing platform that Uber acquired to build a mobility ecosystem in Australia, quietly exited the Australian market in late 2025 — leaving thousands of users without a platform.', 'Uber Carshare exited the Australian market in late 2025, leaving a gap in the car-sharing ecosystem that competitors moved to fill.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "Mobility / Car Sharing"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Uber Carshare', 'https://img.logo.dev/uber.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://uber.com', 'United States', 'Australia',
+      '2022-01-01', 'Mobility / Car Sharing', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://uber.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/uber.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Uber Carshare (formerly Car Next Door), a peer-to-peer car sharing platform that Uber acquired to build a mobility ecosystem in Australia, quietly exited the Australian market in late 2025 — leaving thousands of users without a platform.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Uber Carshare (formerly Car Next Door), a peer-to-peer car sharing platform that Uber acquired to build a mobility ecosystem in Australia, quietly exited the Australian market in late 2025 — leaving thousands of users without a platform.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Car Next Door was an Australian startup that built a P2P car-sharing marketplace. Uber acquired it as part of its strategy to diversify beyond rideshare into a full mobility platform in Australia. The rebranded "Uber Carshare" benefited from Uber''s brand recognition and app distribution.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Car Next Door was an Australian startup that built a P2P car-sharing marketplace. Uber acquired it as part of its strategy to diversify beyond rideshare into a full mobility platform in Australia. The rebranded "Uber Carshare" benefited from Uber''s brand recognition and app distribution.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Core Uber product cannibalised demand</strong> — For many use cases, Uber rides were simply more convenient than renting a car from a neighbour — limiting Uber Carshare''s addressable market.</li><li><strong>Competitive P2P market</strong> — Established players including GoGet and Flexicar (Hertz) had already entrenched corporate and individual subscribers.</li><li><strong>Unit economics were challenging</strong> — P2P car sharing requires dense supply (many cars listed in each suburb) to serve demand efficiently — building this supply takes years and sustained marketing investment.</li><li><strong>Strategic deprioritisation within Uber</strong> — As Uber globally sought profitability, non-core business lines in individual markets became early casualties.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Core Uber product cannibalised demand</strong> — For many use cases, Uber rides were simply more convenient than renting a car from a neighbour — limiting Uber Carshare''s addressable market.</li><li><strong>Competitive P2P market</strong> — Established players including GoGet and Flexicar (Hertz) had already entrenched corporate and individual subscribers.</li><li><strong>Unit economics were challenging</strong> — P2P car sharing requires dense supply (many cars listed in each suburb) to serve demand efficiently — building this supply takes years and sustained marketing investment.</li><li><strong>Strategic deprioritisation within Uber</strong> — As Uber globally sought profitability, non-core business lines in individual markets became early casualties.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Uber Carshare exited the Australian market in late 2025, leaving a gap in the car-sharing ecosystem that competitors moved to fill. The exit was described as leaving "an undeniable gap" for thousands of Australians who relied on the service.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Uber Carshare exited the Australian market in late 2025, leaving a gap in the car-sharing ecosystem that competitors moved to fill. The exit was described as leaving "an undeniable gap" for thousands of Australians who relied on the service.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Uber Carshare''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Uber Carshare''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Platform adjacency strategies require independent viability assessment</strong> — Adding a service to an app doesn''t guarantee it is strategically or economically viable on its own.</li><li><strong>P2P marketplace density is a precondition for service quality</strong> — Without sufficient supply density, customer experience degrades and churn accelerates.</li><li><strong>Corporate parent profitability focus is a constant threat to subsidiary investment</strong> — When Uber needed to cut, non-core Australian services were first.</li><li><strong>Acquisition for strategic optionality is expensive</strong> — Paying an acquisition premium for a startup that ultimately can''t survive within the parent''s portfolio is costly.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Platform adjacency strategies require independent viability assessment</strong> — Adding a service to an app doesn''t guarantee it is strategically or economically viable on its own.</li><li><strong>P2P marketplace density is a precondition for service quality</strong> — Without sufficient supply density, customer experience degrades and churn accelerates.</li><li><strong>Corporate parent profitability focus is a constant threat to subsidiary investment</strong> — When Uber needed to cut, non-core Australian services were first.</li><li><strong>Acquisition for strategic optionality is expensive</strong> — Paying an acquisition premium for a startup that ultimately can''t survive within the parent''s portfolio is costly.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'LinkedIn / Paul Ingersole', 'https://www.linkedin.com/posts/ingersolepaul_uber-carshare-alternatives-australia-smarter-activity-7448528054957645824-81Sl', 1, 'linkedin')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 17/27: Peloton (peloton-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'peloton-australia-market-entry', 'How Peloton Struggled in the Australian Market', 'Peloton launched in Australia in July 2021, at the tail end of the pandemic fitness boom. Its financing partner Affirm exited Australia in February 2023.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Peloton launched in Australia in July 2021, at the tail end of the pandemic fitness boom.', 'Peloton remains nominally present in Australia but is significantly sub-scale.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "Consumer Tech / Fitness"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Peloton', 'https://img.logo.dev/onepeloton.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://onepeloton.com', 'United States', 'Australia',
+      '2021-01-01', 'Consumer Tech / Fitness', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://onepeloton.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/onepeloton.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'John Foley', 'Co-founder & former CEO', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Peloton launched in Australia in July 2021, at the tail end of the pandemic fitness boom. Its financing partner Affirm exited Australia in February 2023. Peloton faces ongoing challenges around its price point, market size, and recurring ACCC consumer law obligations that make the Australian market structurally difficult.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Peloton launched in Australia in July 2021, at the tail end of the pandemic fitness boom. Its financing partner Affirm exited Australia in February 2023. Peloton faces ongoing challenges around its price point, market size, and recurring ACCC consumer law obligations that make the Australian market structurally difficult.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Peloton entered Australia as a premium connected fitness brand — selling bikes and treadmills at A$2,000–$5,000+ paired with a monthly subscription. It partnered with Affirm for BNPL financing to lower the upfront cost barrier.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Peloton entered Australia as a premium connected fitness brand — selling bikes and treadmills at A$2,000–$5,000+ paired with a monthly subscription. It partnered with Affirm for BNPL financing to lower the upfront cost barrier.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Post-COVID demand collapse was global, and Australia was most exposed</strong> — Australia has one of the highest gym penetration rates in the world. As gyms reopened, Peloton''s value proposition (premium home gym) weakened faster than in markets like the US.</li><li><strong>BNPL partner collapse</strong> — When Affirm exited Australia in early 2023, Peloton lost its financing partner — a critical enabler of purchase conversion at its price point. Peloton moved to Zip, but the disruption was real.</li><li><strong>Consumer law obligations</strong> — Australia''s ACL gives consumers rights for goods not "fit for purpose" or not matching descriptions. Peloton''s decision to restrict use of the treadmill without a subscription triggered ACL implications — something Peloton''s US legal team was not set up to manage.</li><li><strong>Price point vs. market size</strong> — At A$2,000–$5,000 per unit, Peloton needed significant volume to justify Australian operations. The market of 26 million people — with existing gym culture — was never large enough.</li><li><strong>Apparel line paused</strong> — In February 2025, Peloton paused apparel sales in Australia — a signal of continued operational difficulties.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Post-COVID demand collapse was global, and Australia was most exposed</strong> — Australia has one of the highest gym penetration rates in the world. As gyms reopened, Peloton''s value proposition (premium home gym) weakened faster than in markets like the US.</li><li><strong>BNPL partner collapse</strong> — When Affirm exited Australia in early 2023, Peloton lost its financing partner — a critical enabler of purchase conversion at its price point. Peloton moved to Zip, but the disruption was real.</li><li><strong>Consumer law obligations</strong> — Australia''s ACL gives consumers rights for goods not "fit for purpose" or not matching descriptions. Peloton''s decision to restrict use of the treadmill without a subscription triggered ACL implications — something Peloton''s US legal team was not set up to manage.</li><li><strong>Price point vs. market size</strong> — At A$2,000–$5,000 per unit, Peloton needed significant volume to justify Australian operations. The market of 26 million people — with existing gym culture — was never large enough.</li><li><strong>Apparel line paused</strong> — In February 2025, Peloton paused apparel sales in Australia — a signal of continued operational difficulties.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Peloton remains nominally present in Australia but is significantly sub-scale. It has not achieved the market position it holds in the US or UK. Its Australian operations are characterised by minimal investment, a reduced product range, and ongoing uncertainty.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Peloton remains nominally present in Australia but is significantly sub-scale. It has not achieved the market position it holds in the US or UK. Its Australian operations are characterised by minimal investment, a reduced product range, and ongoing uncertainty.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Peloton''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Peloton''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Consumer law in Australia creates obligations that US companies underestimate</strong> — ACL rights are non-waiveable and apply even when a company restricts product functionality after purchase.</li><li><strong>Premium price points in moderate-income, gym-rich markets face structural headwinds</strong> — Australians have world-class publicly accessible fitness infrastructure; premium home gym is a harder sell.</li><li><strong>Financing partnerships must be validated as durable commitments</strong> — A BNPL partnership that exits is a customer conversion crisis.</li><li><strong>Hardware + subscription models carry complex ongoing consumer obligations</strong> — If you restrict a physical product''s functionality via software after sale, Australian consumer law may entitle consumers to full refunds.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Consumer law in Australia creates obligations that US companies underestimate</strong> — ACL rights are non-waiveable and apply even when a company restricts product functionality after purchase.</li><li><strong>Premium price points in moderate-income, gym-rich markets face structural headwinds</strong> — Australians have world-class publicly accessible fitness infrastructure; premium home gym is a harder sell.</li><li><strong>Financing partnerships must be validated as durable commitments</strong> — A BNPL partnership that exits is a customer conversion crisis.</li><li><strong>Hardware + subscription models carry complex ongoing consumer obligations</strong> — If you restrict a physical product''s functionality via software after sale, Australian consumer law may entitle consumers to full refunds.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Business Insider', 'https://www.businessinsider.com/peloton-owners-in-australia-will-have-loans-forgiven-from-affirm-2023-3', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Pelo Buddy', 'https://www.pelobuddy.com/apparel-pause-australia/', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Reddit (ACL discussion)', 'https://www.reddit.com/r/stocks/comments/o5vt01/big_change_for_peloton-will-no-longer-allow-use/', 3, 'other')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 18/27: Sezzle (sezzle-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'sezzle-australia-market-entry', 'How Sezzle Struggled in the Australian Market', 'US-based BNPL company Sezzle listed on the ASX in 2019 to expand into the Australian market but found itself in an existential crisis by 2022.',
+    '0563b826-2123-4627-b912-14f63e9fbfb6'::uuid, 'case_study', 'published', false,
+    2, ARRAY['US-based BNPL company Sezzle listed on the ASX in 2019 to expand into the Australian market but found itself in an existential crisis by 2022.', 'Sezzle scaled back to a minimal Australian presence following the Zip merger collapse, refocusing on its US operations and path to profitability.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "Fintech / BNPL"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Sezzle', 'https://img.logo.dev/sezzle.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://sezzle.com', 'United States', 'Australia',
+      '2019-01-01', 'Fintech / BNPL', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://sezzle.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/sezzle.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Charlie Youakim', 'Co-founder & CEO', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>US-based BNPL company Sezzle listed on the ASX in 2019 to expand into the Australian market but found itself in an existential crisis by 2022. A planned merger with Australian BNPL player Zip Co — which would have given it scale — collapsed in July 2022 due to macro conditions, leaving Sezzle in limbo in the Australian market.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>US-based BNPL company Sezzle listed on the ASX in 2019 to expand into the Australian market but found itself in an existential crisis by 2022. A planned merger with Australian BNPL player Zip Co — which would have given it scale — collapsed in July 2022 due to macro conditions, leaving Sezzle in limbo in the Australian market.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Sezzle chose an ASX listing as its route to Australian market entry and capital, positioning itself as a challenger in the crowded BNPL space alongside Afterpay, Zip, Klarna, Laybuy, and others.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Sezzle chose an ASX listing as its route to Australian market entry and capital, positioning itself as a challenger in the crowded BNPL space alongside Afterpay, Zip, Klarna, Laybuy, and others.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Listed into a saturated market</strong> — The Australian BNPL market was already among the most competitive in the world when Sezzle listed in 2019. It had no differentiated product or merchant relationship strategy.</li><li><strong>Zip merger failure</strong> — The planned acquisition by Zip would have given Sezzle''s US operations scale, but the deal was terminated in July 2022 after macro deterioration made the terms untenable. Sezzle''s share price fell 35% on the announcement and ultimately lost ~82% of the value ascribed at the merger announcement.</li><li><strong>Rising rates broke the model</strong> — Like all BNPL pure plays, Sezzle''s model was structurally sensitive to interest rates — funding interest-free credit at rising borrowing costs destroyed unit economics.</li><li><strong>No path to Australian profitability</strong> — Sezzle''s core market was always the US, where it had stronger merchant relationships. Australia was an opportunistic capital-raising vehicle rather than a core market.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Listed into a saturated market</strong> — The Australian BNPL market was already among the most competitive in the world when Sezzle listed in 2019. It had no differentiated product or merchant relationship strategy.</li><li><strong>Zip merger failure</strong> — The planned acquisition by Zip would have given Sezzle''s US operations scale, but the deal was terminated in July 2022 after macro deterioration made the terms untenable. Sezzle''s share price fell 35% on the announcement and ultimately lost ~82% of the value ascribed at the merger announcement.</li><li><strong>Rising rates broke the model</strong> — Like all BNPL pure plays, Sezzle''s model was structurally sensitive to interest rates — funding interest-free credit at rising borrowing costs destroyed unit economics.</li><li><strong>No path to Australian profitability</strong> — Sezzle''s core market was always the US, where it had stronger merchant relationships. Australia was an opportunistic capital-raising vehicle rather than a core market.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Sezzle scaled back to a minimal Australian presence following the Zip merger collapse, refocusing on its US operations and path to profitability. It was delisted from the ASX, eliminating its Australian capital base.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Sezzle scaled back to a minimal Australian presence following the Zip merger collapse, refocusing on its US operations and path to profitability. It was delisted from the ASX, eliminating its Australian capital base.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Sezzle''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Sezzle''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>ASX listing is not a market entry strategy</strong> — Access to Australian capital markets does not guarantee access to Australian customers.</li><li><strong>M&amp;A-dependent entry strategies are fragile</strong> — If your Australian expansion thesis depends on completing a merger, you need a standalone Plan B.</li><li><strong>Be honest about strategic intent in the market</strong> — Sezzle was raising capital in Australia, not building a dominant BNPL business there.</li><li><strong>Rising interest rates are an existential risk for credit-funded, interest-free businesses</strong> — Always model the impact of a 300–500 bps rate increase on unit economics before launch.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>ASX listing is not a market entry strategy</strong> — Access to Australian capital markets does not guarantee access to Australian customers.</li><li><strong>M&amp;A-dependent entry strategies are fragile</strong> — If your Australian expansion thesis depends on completing a merger, you need a standalone Plan B.</li><li><strong>Be honest about strategic intent in the market</strong> — Sezzle was raising capital in Australia, not building a dominant BNPL business there.</li><li><strong>Rising interest rates are an existential risk for credit-funded, interest-free businesses</strong> — Always model the impact of a 300–500 bps rate increase on unit economics before launch.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'The Adviser', 'https://www.theadviser.com.au/tech/43172-zip-sezzle-merger-abandoned', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Payments Dive', 'https://www.paymentsdive.com/news/zip-ditches-sezzle-bnpl-buyout/627060/', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Motley Fool Australia', 'https://www.fool.com.au/2022/07/12/sezzle-share-price-plunges-35-as-zip-merger-scrapped/', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 19/27: Volt Bank (volt-bank-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'volt-bank-australia-market-entry', 'How Volt Bank Collapsed in the Australian Market', 'Volt Bank was Australia''s first purely digital bank to receive a banking licence from APRA (2019), surfing the government''s post-Royal Commission push for neobank competition.',
+    '0563b826-2123-4627-b912-14f63e9fbfb6'::uuid, 'case_study', 'published', false,
+    2, ARRAY['Volt Bank was Australia''s first purely digital bank to receive a banking licence from APRA (2019), surfing the government''s post-Royal Commission push for neobank competition.', 'In June 2022, Volt surrendered its banking licence, returned approximately A$113 million in deposits, and sold its mortgage portfolio.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "Australia"}, {"icon": "Briefcase", "label": "Sector", "value": "Fintech / Neobank"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Volt Bank', 'https://img.logo.dev/voltbank.com.au?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://voltbank.com.au', 'Australia', 'Australia',
+      '2019-01-01', 'Fintech / Neobank', 2, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://voltbank.com.au'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/voltbank.com.au?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Steve Weston', 'Co-founder & CEO', true);
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Luke Bunbury', 'Co-founder', false);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Volt Bank was Australia''s first purely digital bank to receive a banking licence from APRA (2019), surfing the government''s post-Royal Commission push for neobank competition. Three years later, it surrendered its licence and returned deposits — becoming the first Australian neobank to fail.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Volt Bank was Australia''s first purely digital bank to receive a banking licence from APRA (2019), surfing the government''s post-Royal Commission push for neobank competition. Three years later, it surrendered its licence and returned deposits — becoming the first Australian neobank to fail.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Volt entered with the backing of APRA''s new restricted banking licence framework introduced in 2018 following the Royal Commission into banking misconduct. It launched a consumer savings product in 2019 with over 40,000 early-access users and planned to expand into loans and mortgages — the key revenue driver.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Volt entered with the backing of APRA''s new restricted banking licence framework introduced in 2018 following the Royal Commission into banking misconduct. It launched a consumer savings product in 2019 with over 40,000 early-access users and planned to expand into loans and mortgages — the key revenue driver.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Pandemic timing destroyed the expansion plan</strong> — COVID-19 hit in March 2020 — just as Volt was preparing to launch mortgages, its path to profitability. The Australian government imposed rate suppression policies and uncertainty that made the business case for neobank mortgage origination untenable.</li><li><strong>Funding could not be secured</strong> — Volt raised capital in multiple rounds but was unable to close the final funding needed to sustain operations while awaiting profitability.</li><li><strong>B2C banking economics are brutal</strong> — Volt offered a high-interest savings account (funded by the spread), but with near-zero official interest rates, the spread disappeared.</li><li><strong>Scale was insufficient</strong> — By April 2022, Volt had only A$113 million in deposits and A$80 million in home loans — a fraction of the scale needed for viability in Australian retail banking.</li><li><strong>Regulator-created expectations vs. market reality</strong> — APRA''s new restricted licence framework encouraged neobank formation, but the regulatory framework still required full prudential compliance — creating a capital intensity that was incompatible with startup funding.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Pandemic timing destroyed the expansion plan</strong> — COVID-19 hit in March 2020 — just as Volt was preparing to launch mortgages, its path to profitability. The Australian government imposed rate suppression policies and uncertainty that made the business case for neobank mortgage origination untenable.</li><li><strong>Funding could not be secured</strong> — Volt raised capital in multiple rounds but was unable to close the final funding needed to sustain operations while awaiting profitability.</li><li><strong>B2C banking economics are brutal</strong> — Volt offered a high-interest savings account (funded by the spread), but with near-zero official interest rates, the spread disappeared.</li><li><strong>Scale was insufficient</strong> — By April 2022, Volt had only A$113 million in deposits and A$80 million in home loans — a fraction of the scale needed for viability in Australian retail banking.</li><li><strong>Regulator-created expectations vs. market reality</strong> — APRA''s new restricted licence framework encouraged neobank formation, but the regulatory framework still required full prudential compliance — creating a capital intensity that was incompatible with startup funding.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>In June 2022, Volt surrendered its banking licence, returned approximately A$113 million in deposits, and sold its mortgage portfolio. It was the first of four Australian neobanks to exit the market, joining Xinja (returned licence 2020), 86 400 (acquired by NAB), and leaving only Judo Bank as a survivor.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>In June 2022, Volt surrendered its banking licence, returned approximately A$113 million in deposits, and sold its mortgage portfolio. It was the first of four Australian neobanks to exit the market, joining Xinja (returned licence 2020), 86 400 (acquired by NAB), and leaving only Judo Bank as a survivor.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Volt Bank''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Volt Bank''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Regulatory encouragement is not the same as a viable business model</strong> — APRA actively encouraged neobank formation — but the market dynamics (rates, scale requirements, incumbent dominance) were unchanged.</li><li><strong>Time-to-profitability must be stress-tested against catastrophic scenarios</strong> — Volt''s business case assumed conditions that changed within 12 months of launch.</li><li><strong>B2C banking requires substantial scale to absorb regulatory compliance costs</strong> — Australia''s banking regulatory environment is among the most demanding globally.</li><li><strong>Fintech founders should assess the "profitability cliff"</strong> — The point at which a fintech must transition from subsidised growth to sustainable revenue often arrives before funding can bridge the gap.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Regulatory encouragement is not the same as a viable business model</strong> — APRA actively encouraged neobank formation — but the market dynamics (rates, scale requirements, incumbent dominance) were unchanged.</li><li><strong>Time-to-profitability must be stress-tested against catastrophic scenarios</strong> — Volt''s business case assumed conditions that changed within 12 months of launch.</li><li><strong>B2C banking requires substantial scale to absorb regulatory compliance costs</strong> — Australia''s banking regulatory environment is among the most demanding globally.</li><li><strong>Fintech founders should assess the "profitability cliff"</strong> — The point at which a fintech must transition from subsidised growth to sustainable revenue often arrives before funding can bridge the gap.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Reuters', 'https://www.reuters.com/business/finance/australias-first-neobank-volt-shut-deposit-taking-business-return-licence-2022-06-29/', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Hello Zai / Fintech', 'https://www.hellozai.com/blog/volt-australia-what-are-your-options', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 20/27: Debenhams (debenhams-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'debenhams-australia-market-entry', 'How Debenhams Struggled in the Australian Market', 'British department store Debenhams — a 240+ year-old retail institution — entered Australia with bold ambitions for 10 stores.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    2, ARRAY['British department store Debenhams — a 240+ year-old retail institution — entered Australia with bold ambitions for 10 stores.', 'The single Melbourne store closed in the late 2010s.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United Kingdom"}, {"icon": "Briefcase", "label": "Sector", "value": "Department Store Retail"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Debenhams', 'https://img.logo.dev/debenhams.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://debenhams.com', 'United Kingdom', 'Australia',
+      '2017-01-01', 'Department Store Retail', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://debenhams.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/debenhams.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>British department store Debenhams — a 240+ year-old retail institution — entered Australia with bold ambitions for 10 stores. It opened exactly one, on Collins Street in Melbourne, and quietly shut it in the late 2010s without ever expanding beyond that single footprint.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>British department store Debenhams — a 240+ year-old retail institution — entered Australia with bold ambitions for 10 stores. It opened exactly one, on Collins Street in Melbourne, and quietly shut it in the late 2010s without ever expanding beyond that single footprint.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Debenhams planned a 10-store rollout across Australia, entering a market where Myer and David Jones — two entrenched, Australian-native department stores with strong brand loyalty, prime locations, and extensive supplier relationships — dominated the department store sector.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Debenhams planned a 10-store rollout across Australia, entering a market where Myer and David Jones — two entrenched, Australian-native department stores with strong brand loyalty, prime locations, and extensive supplier relationships — dominated the department store sector.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Department store market was already served by entrenched incumbents</strong> — Myer and David Jones had decades of brand equity, loyalty programs, and access to premium store sites. Debenhams offered nothing differentiated enough to displace them.</li><li><strong>One store was never a viable market entry</strong> — A single Collins Street store could not build the supply chain efficiency, brand awareness, or customer data that department store economics require.</li><li><strong>No clear differentiation</strong> — The Debenhams model — fashion, beauty, homeware — was indistinguishable from what Myer and David Jones already offered.</li><li><strong>UK brand not well-known in Australia</strong> — Unlike in the UK, where Debenhams had 240 years of heritage, Australian consumers had no existing loyalty or emotional connection to the brand.</li><li><strong>Timing</strong> — The late 2000s–early 2010s entry coincided with the beginning of the Australian department store sector''s decline, driven by online retail and international fast fashion.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Department store market was already served by entrenched incumbents</strong> — Myer and David Jones had decades of brand equity, loyalty programs, and access to premium store sites. Debenhams offered nothing differentiated enough to displace them.</li><li><strong>One store was never a viable market entry</strong> — A single Collins Street store could not build the supply chain efficiency, brand awareness, or customer data that department store economics require.</li><li><strong>No clear differentiation</strong> — The Debenhams model — fashion, beauty, homeware — was indistinguishable from what Myer and David Jones already offered.</li><li><strong>UK brand not well-known in Australia</strong> — Unlike in the UK, where Debenhams had 240 years of heritage, Australian consumers had no existing loyalty or emotional connection to the brand.</li><li><strong>Timing</strong> — The late 2000s–early 2010s entry coincided with the beginning of the Australian department store sector''s decline, driven by online retail and international fast fashion.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>The single Melbourne store closed in the late 2010s. Debenhams today has an online presence in Australia but no physical retail operation. It serves as an example of an underfunded, under-researched market entry into a structurally challenged sector.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>The single Melbourne store closed in the late 2010s. Debenhams today has an online presence in Australia but no physical retail operation. It serves as an example of an underfunded, under-researched market entry into a structurally challenged sector.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Debenhams''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Debenhams''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>A single-store pilot in a capital city is not a market test</strong> — Department store economics require multiple locations to validate supply chain efficiency and marketing return.</li><li><strong>Assess structural sector health before entering</strong> — The Australian department store sector was entering a cyclical and structural decline at the time Debenhams arrived.</li><li><strong>Brand heritage does not translate across geographies</strong> — UK brand equity means nothing to Australian consumers who have never experienced the brand.</li><li><strong>Differentiation is mandatory in mature retail sectors</strong> — "We also sell fashion, beauty, and homeware" is not a market entry thesis when Myer and David Jones already do.</li><li><strong>Underfunded pilots produce underfunded results</strong> — A commitment to 10 stores that becomes one is not a pilot — it is a half-decision that produces a half-outcome.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>A single-store pilot in a capital city is not a market test</strong> — Department store economics require multiple locations to validate supply chain efficiency and marketing return.</li><li><strong>Assess structural sector health before entering</strong> — The Australian department store sector was entering a cyclical and structural decline at the time Debenhams arrived.</li><li><strong>Brand heritage does not translate across geographies</strong> — UK brand equity means nothing to Australian consumers who have never experienced the brand.</li><li><strong>Differentiation is mandatory in mature retail sectors</strong> — "We also sell fashion, beauty, and homeware" is not a market entry thesis when Myer and David Jones already do.</li><li><strong>Underfunded pilots produce underfunded results</strong> — A commitment to 10 stores that becomes one is not a pilot — it is a half-decision that produces a half-outcome.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'YouTube documentary (global brand failures)', 'https://www.youtube.com/watch?v=VwRjyoezAYk', 1, 'other')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Inside Retail Asia', 'https://insideretail.asia/2023/02/22/why-so-many-global-brands-fail-in-australia/', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'BBC – Australian retail failures', 'https://www.bbc.co.uk/news/world-australia-47450073', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 21/27: Foodora (foodora-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'foodora-australia-market-entry', 'How Foodora Exited the Australian Market', 'Foodora was a Berlin-founded food delivery platform owned by Delivery Hero that operated in Australia from 2015 to 2018.',
+    'e836d932-ac9d-4333-a1bf-9c05faa12340'::uuid, 'case_study', 'published', false,
+    3, ARRAY['Foodora was a Berlin-founded food delivery platform owned by Delivery Hero that operated in Australia from 2015 to 2018.', 'In August 2018, Foodora announced an orderly Australian exit and entered voluntary administration.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "Germany"}, {"icon": "Briefcase", "label": "Sector", "value": "Food Delivery / Marketplace"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Foodora', 'https://img.logo.dev/foodora.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://foodora.com', 'Germany', 'Australia',
+      '2015-01-01', 'Food Delivery / Marketplace', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://foodora.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/foodora.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Foodora was a Berlin-founded food delivery platform owned by Delivery Hero that operated in Australia from 2015 to 2018. Its Australian story is the cleanest example in the MES library of a foreign platform brought to a stop by Australia''s worker-classification enforcement: the Fair Work Ombudsman commenced sham-contracting proceedings in June 2018, and Foodora announced its Australian exit and entered voluntary administration two months later.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Foodora was a Berlin-founded food delivery platform owned by Delivery Hero that operated in Australia from 2015 to 2018. Its Australian story is the cleanest example in the MES library of a foreign platform brought to a stop by Australia''s worker-classification enforcement: the Fair Work Ombudsman commenced sham-contracting proceedings in June 2018, and Foodora announced its Australian exit and entered voluntary administration two months later.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Foodora launched in Australia in 2015 as part of Delivery Hero''s global rollout, competing with Deliveroo (which arrived the same year) and the existing Menulog network. Like its peers, Foodora ran a courier-on-demand marketplace, contracting with bicycle riders and motorbike drivers as independent contractors rather than employees — a model imported wholesale from Europe.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Foodora launched in Australia in 2015 as part of Delivery Hero''s global rollout, competing with Deliveroo (which arrived the same year) and the existing Menulog network. Like its peers, Foodora ran a courier-on-demand marketplace, contracting with bicycle riders and motorbike drivers as independent contractors rather than employees — a model imported wholesale from Europe.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Fair Work Ombudsman litigation (June 2018):</strong> The FWO filed Federal Court proceedings alleging Foodora engaged in sham contracting in respect of three workers (two Melbourne bicycle riders and one Sydney motorbike driver). The agency alleged the workers had been misrepresented as independent contractors when they were in fact employees, with at least A$1,620.74 in underpayments over a four-week period and zero superannuation paid.</li><li><strong>Worker-classification was the load-bearing assumption of the entire model:</strong> Reclassifying riders as employees would have triggered the Fast Food Industry Award, payroll tax, superannuation, leave entitlements, and workers'' compensation obligations across the whole rider base — not just the three workers in the FWO action.</li><li><strong>Administrators concurred with the FWO''s view:</strong> When Foodora subsequently entered voluntary administration, its administrators reported to creditors that it was "more likely than not that the majority of Foodora''s delivery workers should have been engaged as casual employees rather than independent contractors" and that the Fast Food Industry Award applied to them — effectively confirming the regulator''s case from the inside.</li><li><strong>Capital allocation pressure from Delivery Hero:</strong> Foodora was already loss-making globally; the regulatory exposure made the Australian P&amp;L untenable in any reasonable scenario.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Fair Work Ombudsman litigation (June 2018):</strong> The FWO filed Federal Court proceedings alleging Foodora engaged in sham contracting in respect of three workers (two Melbourne bicycle riders and one Sydney motorbike driver). The agency alleged the workers had been misrepresented as independent contractors when they were in fact employees, with at least A$1,620.74 in underpayments over a four-week period and zero superannuation paid.</li><li><strong>Worker-classification was the load-bearing assumption of the entire model:</strong> Reclassifying riders as employees would have triggered the Fast Food Industry Award, payroll tax, superannuation, leave entitlements, and workers'' compensation obligations across the whole rider base — not just the three workers in the FWO action.</li><li><strong>Administrators concurred with the FWO''s view:</strong> When Foodora subsequently entered voluntary administration, its administrators reported to creditors that it was "more likely than not that the majority of Foodora''s delivery workers should have been engaged as casual employees rather than independent contractors" and that the Fast Food Industry Award applied to them — effectively confirming the regulator''s case from the inside.</li><li><strong>Capital allocation pressure from Delivery Hero:</strong> Foodora was already loss-making globally; the regulatory exposure made the Australian P&amp;L untenable in any reasonable scenario.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>In August 2018, Foodora announced an orderly Australian exit and entered voluntary administration. The administrators sold the assets, and more than 1,000 Foodora delivery workers received approximately 31% of the entitlements owed to them, including the three workers named in the FWO proceedings. The Fair Work Ombudsman discontinued the legal action in June 2019 because the administrators'' own assessment had effectively conceded the sham-contracting position; the agency described the outcome as having "achieved a positive enforcement result". Foodora''s exit, alongside the same year''s contractor-classification debate sparked by Deliveroo and Uber Eats, became a foundational case in Australia''s gig-economy regulatory trajectory.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>In August 2018, Foodora announced an orderly Australian exit and entered voluntary administration. The administrators sold the assets, and more than 1,000 Foodora delivery workers received approximately 31% of the entitlements owed to them, including the three workers named in the FWO proceedings. The Fair Work Ombudsman discontinued the legal action in June 2019 because the administrators'' own assessment had effectively conceded the sham-contracting position; the agency described the outcome as having "achieved a positive enforcement result". Foodora''s exit, alongside the same year''s contractor-classification debate sparked by Deliveroo and Uber Eats, became a foundational case in Australia''s gig-economy regulatory trajectory.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Foodora''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Foodora''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Worker classification in Australia is not a paperwork detail — it is a load-bearing structural assumption.</strong> If the FWO disagrees with how you classify riders, drivers, or contractors, it can re-cost the entire business overnight.</li><li><strong>The Fast Food Industry Award and superannuation guarantee are the two most expensive triggers for marketplace operators.</strong> Model both at full cost before launch, not as a contingency.</li><li><strong>Voluntary administration is not a discharge of regulatory exposure.</strong> Administrators independently assess the position; if they agree with the regulator, the case writes itself.</li><li><strong>A platform can be globally profitable and still have an unviable Australian unit when local enforcement asymmetry kicks in.</strong> Don''t assume the global P&amp;L will subsidise compliance retrofits.</li><li><strong>Exit timing matters.</strong> Foodora''s August 2018 exit gave workers a partial recovery via the administration estate; later exits in the sector (Deliveroo 2022) left riders worse off.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Worker classification in Australia is not a paperwork detail — it is a load-bearing structural assumption.</strong> If the FWO disagrees with how you classify riders, drivers, or contractors, it can re-cost the entire business overnight.</li><li><strong>The Fast Food Industry Award and superannuation guarantee are the two most expensive triggers for marketplace operators.</strong> Model both at full cost before launch, not as a contingency.</li><li><strong>Voluntary administration is not a discharge of regulatory exposure.</strong> Administrators independently assess the position; if they agree with the regulator, the case writes itself.</li><li><strong>A platform can be globally profitable and still have an unviable Australian unit when local enforcement asymmetry kicks in.</strong> Don''t assume the global P&amp;L will subsidise compliance retrofits.</li><li><strong>Exit timing matters.</strong> Foodora''s August 2018 exit gave workers a partial recovery via the administration estate; later exits in the sector (Deliveroo 2022) left riders worse off.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Fair Work Ombudsman (June 2018)', 'https://www.fairwork.gov.au/newsroom/media-releases/2018-media-releases/june-2018/20180612-foodora-litigation', 1, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Fair Work Ombudsman (June 2019, discontinuation)', 'https://www.fairwork.gov.au/newsroom/media-releases/2019-media-releases/june-2019/20190621-foodora-media-release', 2, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ABC News (Aug 2018, A$28M Delivery Hero loan)', 'https://www.abc.net.au/news/2018-08-29/foodora-unable-pay-australian-debt-owe-28m-loan-to-delivery-hero/10179184', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Worrells (administrator — rider entitlements analysis)', 'https://worrells.net.au/resources/news/foodora-riders-employee-entitlement-underpayment', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Business & Human Rights Resource Centre', 'https://www.business-humanrights.org/en/latest-news/australia-delivery-firm-foodora-faces-legal-action-for-underpayment-sham-contracting/', 5, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 22/27: Viagogo (viagogo-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'viagogo-australia-market-entry', 'How Viagogo Was Penalised by the ACCC in the Australian Market', 'Viagogo is a Switzerland-headquartered global ticket-resale marketplace that has operated in Australia for years through its `viagogo.com` site, marketed heavily via search-engine ads.',
+    'e836d932-ac9d-4333-a1bf-9c05faa12340'::uuid, 'case_study', 'published', false,
+    3, ARRAY['Viagogo is a Switzerland-headquartered global ticket-resale marketplace that has operated in Australia for years through its `viagogo.com` site, marketed heavily via search-engine ads.', 'In April 2019, the Federal Court found Viagogo had misled consumers.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "Switzerland"}, {"icon": "Briefcase", "label": "Sector", "value": "Marketplace / Tickets"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Viagogo', 'https://img.logo.dev/viagogo.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://viagogo.com', 'Switzerland', 'Australia',
+      '2010-01-01', 'Marketplace / Tickets', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://viagogo.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/viagogo.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Eric Baker', 'Founder & CEO', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Viagogo is a Switzerland-headquartered global ticket-resale marketplace that has operated in Australia for years through its `viagogo.com` site, marketed heavily via search-engine ads. The ACCC sued Viagogo in 2017 for misleading ticket pricing and false "official seller" claims. After an "industrial scale" finding by the Federal Court and an unsuccessful appeal, Viagogo was ordered in October 2020 to pay a A$7 million penalty — making it one of the cleanest examples of Australian Consumer Law (ACL) enforcement against an offshore digital business.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Viagogo is a Switzerland-headquartered global ticket-resale marketplace that has operated in Australia for years through its `viagogo.com` site, marketed heavily via search-engine ads. The ACCC sued Viagogo in 2017 for misleading ticket pricing and false "official seller" claims. After an "industrial scale" finding by the Federal Court and an unsuccessful appeal, Viagogo was ordered in October 2020 to pay a A$7 million penalty — making it one of the cleanest examples of Australian Consumer Law (ACL) enforcement against an offshore digital business.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Viagogo entered Australia as a fully online operation, with no Australian office — relying on search-engine bidding (heavily on event names like "Ashes cricket tickets" and "Book of Mormon tickets") to capture intent traffic, then routing buyers through a checkout that disclosed booking and handling fees only at the final step. The "lean digital entry" model was the same one Viagogo used in the UK, US and Europe.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Viagogo entered Australia as a fully online operation, with no Australian office — relying on search-engine bidding (heavily on event names like "Ashes cricket tickets" and "Book of Mormon tickets") to capture intent traffic, then routing buyers through a checkout that disclosed booking and handling fees only at the final step. The "lean digital entry" model was the same one Viagogo used in the UK, US and Europe.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>"Official seller" representations:</strong> Viagogo''s site implied it was an authorised reseller for events when it was a secondary marketplace. Australian consumers booking through Viagogo regularly discovered they had paid above-face-value prices for tickets they could have bought directly.</li><li><strong>Drip-pricing through hidden booking fees:</strong> During the 1 May 2017 to 26 June 2017 sample period the ACCC examined, Viagogo advertised headline prices that excluded a 27.6% booking fee disclosed only at checkout. Examples cited at trial included a Book of Mormon ticket advertised at A$135 but charged at A$177.45, and an Ashes cricket ticket advertised at A$330.15 sold for A$426.81.</li><li><strong>Scarcity messaging:</strong> Statements that "only X tickets left" combined with countdown timers were found by Justice Burley to make false or misleading representations of scarcity that Viagogo could not substantiate.</li><li><strong>"Industrial scale":</strong> The Federal Court explicitly described one category of representation as having been made "on an industrial scale" — language that drove the size of the eventual penalty.</li><li><strong>The "we operate from overseas" defence failed:</strong> Viagogo argued that its Swiss base limited its ACL exposure. The Federal Court and Full Federal Court both rejected this, confirming that operating from overseas does not defeat Australian Consumer Law jurisdiction over conduct directed at Australian consumers.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>"Official seller" representations:</strong> Viagogo''s site implied it was an authorised reseller for events when it was a secondary marketplace. Australian consumers booking through Viagogo regularly discovered they had paid above-face-value prices for tickets they could have bought directly.</li><li><strong>Drip-pricing through hidden booking fees:</strong> During the 1 May 2017 to 26 June 2017 sample period the ACCC examined, Viagogo advertised headline prices that excluded a 27.6% booking fee disclosed only at checkout. Examples cited at trial included a Book of Mormon ticket advertised at A$135 but charged at A$177.45, and an Ashes cricket ticket advertised at A$330.15 sold for A$426.81.</li><li><strong>Scarcity messaging:</strong> Statements that "only X tickets left" combined with countdown timers were found by Justice Burley to make false or misleading representations of scarcity that Viagogo could not substantiate.</li><li><strong>"Industrial scale":</strong> The Federal Court explicitly described one category of representation as having been made "on an industrial scale" — language that drove the size of the eventual penalty.</li><li><strong>The "we operate from overseas" defence failed:</strong> Viagogo argued that its Swiss base limited its ACL exposure. The Federal Court and Full Federal Court both rejected this, confirming that operating from overseas does not defeat Australian Consumer Law jurisdiction over conduct directed at Australian consumers.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>In April 2019, the Federal Court found Viagogo had misled consumers. In October 2020, the Court imposed a A$7 million penalty. Viagogo appealed; the Full Federal Court dismissed the appeal in 2021, upholding both the liability findings and the A$7M penalty. The Court additionally ordered Viagogo to display ACL-compliant pricing and to implement a consumer-compliance programme. Viagogo continues to operate in Australia, but has restructured its checkout to display total prices upfront — a behavioural change driven entirely by the enforcement outcome.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>In April 2019, the Federal Court found Viagogo had misled consumers. In October 2020, the Court imposed a A$7 million penalty. Viagogo appealed; the Full Federal Court dismissed the appeal in 2021, upholding both the liability findings and the A$7M penalty. The Court additionally ordered Viagogo to display ACL-compliant pricing and to implement a consumer-compliance programme. Viagogo continues to operate in Australia, but has restructured its checkout to display total prices upfront — a behavioural change driven entirely by the enforcement outcome.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Viagogo''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Viagogo''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Operating from overseas does not defeat ACL jurisdiction.</strong> If your site sells to Australians, you are an Australian Consumer Law duty-bearer. The Viagogo case is now the leading authority on this point.</li><li><strong>Drip pricing is enforceable misconduct in Australia.</strong> Booking fees, handling fees, and platform fees that are revealed late in checkout are routinely treated by the ACCC as misleading conduct under s18 ACL.</li><li><strong>Scarcity messaging must be substantiated.</strong> "Only 2 tickets left" claims that are not literally true are misleading; the ACCC actively monitors these.</li><li><strong>"Industrial scale" language is a sentencing multiplier.</strong> When a Federal Court judge writes that conduct was at "industrial scale", the penalty will be calibrated to deter the global operator, not just the local subsidiary.</li><li><strong>Compliance programmes are an ongoing remedy, not a one-off cost.</strong> Viagogo''s ACCC outcome included multi-year compliance and disclosure obligations on top of the cash penalty.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Operating from overseas does not defeat ACL jurisdiction.</strong> If your site sells to Australians, you are an Australian Consumer Law duty-bearer. The Viagogo case is now the leading authority on this point.</li><li><strong>Drip pricing is enforceable misconduct in Australia.</strong> Booking fees, handling fees, and platform fees that are revealed late in checkout are routinely treated by the ACCC as misleading conduct under s18 ACL.</li><li><strong>Scarcity messaging must be substantiated.</strong> "Only 2 tickets left" claims that are not literally true are misleading; the ACCC actively monitors these.</li><li><strong>"Industrial scale" language is a sentencing multiplier.</strong> When a Federal Court judge writes that conduct was at "industrial scale", the penalty will be calibrated to deter the global operator, not just the local subsidiary.</li><li><strong>Compliance programmes are an ongoing remedy, not a one-off cost.</strong> Viagogo''s ACCC outcome included multi-year compliance and disclosure obligations on top of the cash penalty.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ACCC penalty announcement (Oct 2020)', 'https://www.accc.gov.au/media-release/viagogo-to-pay-7-million-for-misleading-consumers', 1, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ACCC liability finding (April 2019)', 'https://www.accc.gov.au/media-release/court-finds-ticket-reseller-viagogo-misled-consumers', 2, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ACCC appeal dismissed', 'https://www.accc.gov.au/media-release/court-dismisses-viagogos-appeal-on-misleading-representations-and-penalty', 3, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Full Federal Court appeal judgment (2022 FCAFC 87)', 'https://www.fedcourt.gov.au/file-store/Judgments/Federal%20Court/Full%20Court/2022/2022FCAFC0087/2022FCAFC0087.docx', 4, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ABC News (A$7M penalty)', 'https://www.abc.net.au/news/2020-10-02/viagogo-fined-$7-million-for-misleading-consumers/12725434', 5, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Lexology – industrial scale finding', 'https://www.lexology.com/library/detail.aspx?g=c58fd59a-a1c4-4bf5-b03b-096440e4c90d', 6, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 23/27: Kaufland (Schwarz Group) (kaufland-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'kaufland-australia-market-entry', 'How Kaufland Cancelled Its Australian Launch', 'Germany''s Schwarz Group spent A$523 million scouting sites and building infrastructure for an Australian Kaufland chain — then cancelled the launch entirely in January 2020 before opening a single store.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    3, ARRAY['Kaufland is the supermarket arm of Germany''s Schwarz Group (which also owns Lidl).', 'On 22 January 2020, Schwarz Group announced "an orderly withdrawal from the Australian market".']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "Germany"}, {"icon": "Briefcase", "label": "Sector", "value": "Supermarket / Retail"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Kaufland (Schwarz Group)', 'https://img.logo.dev/kaufland.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://kaufland.com', 'Germany', 'Australia',
+      '2017-01-01', 'Supermarket / Retail', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://kaufland.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/kaufland.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Kaufland is the supermarket arm of Germany''s Schwarz Group (which also owns Lidl). After more than two years of Australian build-up — A$523 million in committed paid capital, a 100,000 sqm Melbourne distribution centre under construction, approvals for 20 stores across Victoria, Queensland, South Australia and NSW, and 200 Australian staff hired — Kaufland announced in January 2020 that it was abandoning the Australian market without opening a single store. It is the largest cancelled greenfield retail entry in Australian history.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Kaufland is the supermarket arm of Germany''s Schwarz Group (which also owns Lidl). After more than two years of Australian build-up — A$523 million in committed paid capital, a 100,000 sqm Melbourne distribution centre under construction, approvals for 20 stores across Victoria, Queensland, South Australia and NSW, and 200 Australian staff hired — Kaufland announced in January 2020 that it was abandoning the Australian market without opening a single store. It is the largest cancelled greenfield retail entry in Australian history.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Kaufland''s entry plan was the model "Lidl-style" big-box discount supermarket rollout that had worked in Germany, Poland, the Czech Republic and Romania: 20 large-format stores supported by a single high-volume distribution centre, anchored by a deep private-label range. The first store was scheduled to open in 2020, with an aggressive multi-year ramp to follow.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Kaufland''s entry plan was the model "Lidl-style" big-box discount supermarket rollout that had worked in Germany, Poland, the Czech Republic and Romania: 20 large-format stores supported by a single high-volume distribution centre, anchored by a deep private-label range. The first store was scheduled to open in 2020, with an aggressive multi-year ramp to follow.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Coles and Woolworths'' supplier discipline:</strong> Suppliers reported being discouraged from supporting a third major banner; Coles/Woolworths control approximately 65% of Australian grocery and have historically prevented entrants from securing range parity. This is the same pattern that killed Masters Home Improvement against Bunnings (Case 2 in the original library).</li><li><strong>Site assembly problems:</strong> Kaufland required sites of 6,000–10,000 sqm with very specific access requirements. Securing 20 such sites simultaneously triggered planning resistance from local councils, opposition campaigns, and bidding wars. Reports surfaced of ratepayer pushback, traffic-impact litigation, and slowed approvals.</li><li><strong>Talent and supply chain capacity constraints:</strong> The 2019 drought and 2019–20 bushfires materially compressed Australian grocery supply chains and made retail management talent scarcer at exactly the wrong time. Kaufland would have been hiring its first cohort of store managers into a market with collapsing fresh-produce reliability.</li><li><strong>Schwarz Group strategic refocus:</strong> Internal Schwarz reporting concluded that the capital required to reach Australian profitability was disproportionately large relative to investing the same money in growing Lidl in continental Europe. The decision was framed publicly as a "concentrated focus on European core markets".</li><li><strong>No public launch ever occurred:</strong> Unlike Masters or Esprit, there was no public store, no transactions, and no consumer brand to defend — making the decision to abandon dramatically cheaper than the alternative of a partial launch followed by retreat.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Coles and Woolworths'' supplier discipline:</strong> Suppliers reported being discouraged from supporting a third major banner; Coles/Woolworths control approximately 65% of Australian grocery and have historically prevented entrants from securing range parity. This is the same pattern that killed Masters Home Improvement against Bunnings (Case 2 in the original library).</li><li><strong>Site assembly problems:</strong> Kaufland required sites of 6,000–10,000 sqm with very specific access requirements. Securing 20 such sites simultaneously triggered planning resistance from local councils, opposition campaigns, and bidding wars. Reports surfaced of ratepayer pushback, traffic-impact litigation, and slowed approvals.</li><li><strong>Talent and supply chain capacity constraints:</strong> The 2019 drought and 2019–20 bushfires materially compressed Australian grocery supply chains and made retail management talent scarcer at exactly the wrong time. Kaufland would have been hiring its first cohort of store managers into a market with collapsing fresh-produce reliability.</li><li><strong>Schwarz Group strategic refocus:</strong> Internal Schwarz reporting concluded that the capital required to reach Australian profitability was disproportionately large relative to investing the same money in growing Lidl in continental Europe. The decision was framed publicly as a "concentrated focus on European core markets".</li><li><strong>No public launch ever occurred:</strong> Unlike Masters or Esprit, there was no public store, no transactions, and no consumer brand to defend — making the decision to abandon dramatically cheaper than the alternative of a partial launch followed by retreat.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>On 22 January 2020, Schwarz Group announced "an orderly withdrawal from the Australian market". Approximately 200 Australian staff were affected; the Melbourne distribution centre and 20 store sites went on the secondary market. The ACCC subsequently noted that Kaufland''s withdrawal had a measurable adverse impact on supermarket competition, citing it in submissions about the structural difficulty of new entry against the major chains. Schwarz Group reportedly absorbed approximately A$523 million in pre-launch costs.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>On 22 January 2020, Schwarz Group announced "an orderly withdrawal from the Australian market". Approximately 200 Australian staff were affected; the Melbourne distribution centre and 20 store sites went on the secondary market. The ACCC subsequently noted that Kaufland''s withdrawal had a measurable adverse impact on supermarket competition, citing it in submissions about the structural difficulty of new entry against the major chains. Schwarz Group reportedly absorbed approximately A$523 million in pre-launch costs.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Kaufland (Schwarz Group)''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Kaufland (Schwarz Group)''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Cancelled entries can be more instructive than collapsed ones.</strong> Kaufland is a forensic case study in pre-launch failure — every constraint that caused the decision was visible inside the Australian market before any consumer saw a Kaufland store.</li><li><strong>Supplier access is a structural pre-condition, not a procurement task.</strong> Australia''s grocery duopoly creates a supplier loyalty effect that no amount of capital can outbid in the short term.</li><li><strong>Site assembly is a multi-year project that must run in parallel with regulatory and community engagement.</strong> Twenty large-format sites simultaneously is operationally aggressive even for a well-funded entrant.</li><li><strong>A$523M in sunk cost is an expensive lesson, but cheaper than launching and retreating.</strong> A public launch with 20 stores would have multiplied the loss by 3–5x.</li><li><strong>The ACCC''s competition concerns about supermarket concentration are now part of the public record.</strong> Future entrants can use Kaufland''s exit and ACCC supermarket inquiry findings as a strategic risk-mapping tool.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Cancelled entries can be more instructive than collapsed ones.</strong> Kaufland is a forensic case study in pre-launch failure — every constraint that caused the decision was visible inside the Australian market before any consumer saw a Kaufland store.</li><li><strong>Supplier access is a structural pre-condition, not a procurement task.</strong> Australia''s grocery duopoly creates a supplier loyalty effect that no amount of capital can outbid in the short term.</li><li><strong>Site assembly is a multi-year project that must run in parallel with regulatory and community engagement.</strong> Twenty large-format sites simultaneously is operationally aggressive even for a well-funded entrant.</li><li><strong>A$523M in sunk cost is an expensive lesson, but cheaper than launching and retreating.</strong> A public launch with 20 stores would have multiplied the loss by 3–5x.</li><li><strong>The ACCC''s competition concerns about supermarket concentration are now part of the public record.</strong> Future entrants can use Kaufland''s exit and ACCC supermarket inquiry findings as a strategic risk-mapping tool.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'The New Daily (timeline + reasons)', 'https://www.thenewdaily.com.au/finance/consumer/2020/01/22/kaufland-australia-2', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'SmartCompany (full chronology + cost)', 'https://www.smartcompany.com.au/retail/kaufland-schwarz-group-australia/', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'BusinessNewsAustralia (surprise exit)', 'https://www.businessnewsaustralia.com/articles/surprise-exit-for-kaufland-from-australia.html', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Commercial Real Estate (portfolio sale)', 'https://www.commercialrealestate.com.au/news/kaufland-hastens-exit-with-portfolio-sale-2-934602/', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Shop! ANZ', 'https://www.shopassociation.org.au/news/kaufland-quits-australia', 5, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Inside Retail (where it went wrong)', 'https://insideretail.com.au/news/where-did-it-all-go-wrong-for-kaufland-202001', 6, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 24/27: Pizza Hut Australia (Yum! Restaurants) (pizza-hut-australia-franchise-class-action)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'pizza-hut-australia-franchise-class-action', 'How Pizza Hut Australia Faced a Franchisee Class Action', 'Pizza Hut Australia is operated under franchise from Yum! Restaurants Australia Pty Ltd — the local subsidiary of US-based Yum! Restaurants International — which became the defendant in a 190-franchisee class action over a value-pricing strategy that triggered 32 franchisee insolvencies.',
+    'e836d932-ac9d-4333-a1bf-9c05faa12340'::uuid, 'case_study', 'published', false,
+    3, ARRAY['Pizza Hut Australia is operated under franchise from Yum!', 'Justice Wigney dismissed the franchisee class action in February 2016.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "QSR / Food"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Pizza Hut Australia (Yum! Restaurants)', 'https://img.logo.dev/pizzahut.com.au?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://pizzahut.com.au', 'United States', 'Australia',
+      '2014-01-01', 'QSR / Food', NULL, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://pizzahut.com.au'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/pizzahut.com.au?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Pizza Hut Australia is operated under franchise from Yum! Restaurants Australia Pty Ltd, the local subsidiary of US-based Yum! Brands. In 2014 Yum responded to Domino''s Australian price aggression by mandating a A$4.95 price floor for one tier of pizzas and A$8.50 for another — prices that 190 Pizza Hut franchisees said were below their own cost of production. The franchisees brought a class action in 2014 alleging unconscionable conduct and breach of duties. The Federal Court dismissed the claim in 2016 and the Full Federal Court dismissed the franchisee appeal — but 32 franchisee businesses had already collapsed, and the case is now the leading Australian authority on whether a master franchisor can lawfully dictate pricing that destroys franchisee profitability.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Pizza Hut Australia is operated under franchise from Yum! Restaurants Australia Pty Ltd, the local subsidiary of US-based Yum! Brands. In 2014 Yum responded to Domino''s Australian price aggression by mandating a A$4.95 price floor for one tier of pizzas and A$8.50 for another — prices that 190 Pizza Hut franchisees said were below their own cost of production. The franchisees brought a class action in 2014 alleging unconscionable conduct and breach of duties. The Federal Court dismissed the claim in 2016 and the Full Federal Court dismissed the franchisee appeal — but 32 franchisee businesses had already collapsed, and the case is now the leading Australian authority on whether a master franchisor can lawfully dictate pricing that destroys franchisee profitability.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Pizza Hut entered Australia decades ago and operates almost entirely through Australian-based franchisees buying area licences from Yum! Restaurants Australia. The "Value Strategy" was a unilateral pricing policy imposed by the franchisor in 2014 — not a market entry move per se, but a policy decision that operated as a forced re-entry into the value tier of the Australian QSR market against Domino''s.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Pizza Hut entered Australia decades ago and operates almost entirely through Australian-based franchisees buying area licences from Yum! Restaurants Australia. The "Value Strategy" was a unilateral pricing policy imposed by the franchisor in 2014 — not a market entry move per se, but a policy decision that operated as a forced re-entry into the value tier of the Australian QSR market against Domino''s.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>"Value Strategy" mandated below-cost pricing:</strong> Yum! Restaurants Australia reduced pizza prices from A$9.95 to A$4.95 for one tier and from A$11.95 to A$8.50 for another, simultaneously cutting the range from four pizza tiers to two. Franchisees argued (and presented evidence) that A$4.95 was below their fully loaded cost of production, particularly in regional locations.</li><li><strong>Domino''s was the structural cause:</strong> Domino''s Australian arm had launched aggressive value pricing first, and Yum''s response was reactive. The franchisee economics that had sustained Pizza Hut at A$9.95 simply could not sustain A$4.95.</li><li><strong>Franchisor power to set price was absolute under the franchise agreement:</strong> The class action alleged Yum had implied duties of good faith and an obligation to set profitable prices. The Federal Court (Diab v Yum! Restaurants Australia) rejected both arguments — the franchise agreement gave Yum the express right to set prices, and the implied duty did not override that express term.</li><li><strong>32 franchisee insolvencies:</strong> During the period of the Value Strategy, 32 Pizza Hut franchisees lost their businesses. The class action funder was, in some cases, the liquidator of those franchise companies — a sign of how deep the franchisee distress went.</li><li><strong>The franchisor was profitable while the franchisees collapsed:</strong> Because Yum collected fees on gross store revenue regardless of franchisee profitability, the value strategy was rational for Yum and lethal for franchisees — the textbook misalignment that the class action sought (and failed) to redress.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>"Value Strategy" mandated below-cost pricing:</strong> Yum! Restaurants Australia reduced pizza prices from A$9.95 to A$4.95 for one tier and from A$11.95 to A$8.50 for another, simultaneously cutting the range from four pizza tiers to two. Franchisees argued (and presented evidence) that A$4.95 was below their fully loaded cost of production, particularly in regional locations.</li><li><strong>Domino''s was the structural cause:</strong> Domino''s Australian arm had launched aggressive value pricing first, and Yum''s response was reactive. The franchisee economics that had sustained Pizza Hut at A$9.95 simply could not sustain A$4.95.</li><li><strong>Franchisor power to set price was absolute under the franchise agreement:</strong> The class action alleged Yum had implied duties of good faith and an obligation to set profitable prices. The Federal Court (Diab v Yum! Restaurants Australia) rejected both arguments — the franchise agreement gave Yum the express right to set prices, and the implied duty did not override that express term.</li><li><strong>32 franchisee insolvencies:</strong> During the period of the Value Strategy, 32 Pizza Hut franchisees lost their businesses. The class action funder was, in some cases, the liquidator of those franchise companies — a sign of how deep the franchisee distress went.</li><li><strong>The franchisor was profitable while the franchisees collapsed:</strong> Because Yum collected fees on gross store revenue regardless of franchisee profitability, the value strategy was rational for Yum and lethal for franchisees — the textbook misalignment that the class action sought (and failed) to redress.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Justice Wigney dismissed the franchisee class action in February 2016. The franchisees appealed; the Full Federal Court dismissed the appeal in 2017. The case is now widely cited in Australian franchising literature as the leading authority that a franchisor can require franchisees to sell at unprofitable prices, provided the franchise agreement contains an express price-setting clause and the franchisor does not act dishonestly or in bad faith. The case directly informed the 2019 Australian Government Inquiry into Franchising and the resulting reforms to the Franchising Code.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Justice Wigney dismissed the franchisee class action in February 2016. The franchisees appealed; the Full Federal Court dismissed the appeal in 2017. The case is now widely cited in Australian franchising literature as the leading authority that a franchisor can require franchisees to sell at unprofitable prices, provided the franchise agreement contains an express price-setting clause and the franchisor does not act dishonestly or in bad faith. The case directly informed the 2019 Australian Government Inquiry into Franchising and the resulting reforms to the Franchising Code.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Pizza Hut Australia (Yum! Restaurants)''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Pizza Hut Australia (Yum! Restaurants)''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Master-franchise pricing power can override unit economics.</strong> If your Australian entry strategy depends on franchising, the franchise agreement''s pricing-control clause is the single most important paragraph — read it as if you were the franchisee.</li><li><strong>Domino''s-style value-tier pricing is contagious.</strong> A QSR entrant launching at premium prices in Australia must model the scenario where a competitor forces a A$4.95 floor and you have to follow.</li><li><strong>Implied duties of good faith do not protect franchisees from express terms.</strong> Australian courts will not rewrite a clear franchise agreement on equitable grounds; the protection has to be drafted into the contract.</li><li><strong>The 2019 Franchising Code reforms are a regulatory tailwind for franchisor scrutiny.</strong> Future cases of this type will be litigated against a more prescriptive disclosure regime, but the underlying contract law remains.</li><li><strong>Channel structure is a strategic decision with multi-decade consequences.</strong> A franchisee network built on thin margins is a fragile operating asset that can fracture during any pricing-led strategic response.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Master-franchise pricing power can override unit economics.</strong> If your Australian entry strategy depends on franchising, the franchise agreement''s pricing-control clause is the single most important paragraph — read it as if you were the franchisee.</li><li><strong>Domino''s-style value-tier pricing is contagious.</strong> A QSR entrant launching at premium prices in Australia must model the scenario where a competitor forces a A$4.95 floor and you have to follow.</li><li><strong>Implied duties of good faith do not protect franchisees from express terms.</strong> Australian courts will not rewrite a clear franchise agreement on equitable grounds; the protection has to be drafted into the contract.</li><li><strong>The 2019 Franchising Code reforms are a regulatory tailwind for franchisor scrutiny.</strong> Future cases of this type will be litigated against a more prescriptive disclosure regime, but the underlying contract law remains.</li><li><strong>Channel structure is a strategic decision with multi-decade consequences.</strong> A franchisee network built on thin margins is a fragile operating asset that can fracture during any pricing-led strategic response.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Full Federal Court appeal judgment (FCAFC 190, 2017)', 'https://static1.squarespace.com/static/538e6312e4b03cefc2a8a0c3/t/60581b61ebd7307ae712c03c/1616386915854/2017_FCAFC_190.pdf', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'LegalVision (franchisor pricing win)', 'https://legalvision.com.au/you-wanna-piece-of-me-pizza-hut-franchisors-pricing-win/', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'QSR Media (court delivers good news)', 'https://qsrmedia.com.au/legal/commentary/federal-court-delivers-pizza-hut-good-news', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Allens (Yum sale of Pizza Hut Australia assets, 2016)', 'https://www.allens.com.au/insights-news/news/2016/09/allens-advises-yum-on-pizza-hut-sale-in-australia/', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'SmartCompany (filing)', 'https://www.smartcompany.com.au/business-advice/it-s-a-financial-nightmare-pizza-hut-franchisees-launch-class-action-over-price-war-with-domino-s/', 5, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 25/27: Valve / Steam (valve-steam-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'valve-steam-australia-market-entry', 'How Valve / Steam Was Penalised by the ACCC in Australia', 'Valve Corporation is the US-based operator of the Steam digital game distribution platform. In a March 2016 judgment that became the leading Australian authority on consumer guarantees for digital goods, the Federal Court found Valve had breached the Australian Consumer Law by representing in its Steam subscriber agreements and refund policies that consumers had no right to a refund.',
+    'e836d932-ac9d-4333-a1bf-9c05faa12340'::uuid, 'case_study', 'published', false,
+    3, ARRAY['Valve Corporation is the US-based operator of the Steam digital game distribution platform.', 'Valve paid the A$3 million penalty in 2018.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "United States"}, {"icon": "Briefcase", "label": "Sector", "value": "Digital Distribution / Gaming"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Valve / Steam', 'https://img.logo.dev/valvesoftware.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://valvesoftware.com', 'United States', 'Australia',
+      '2003-01-01', 'Digital Distribution / Gaming', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://valvesoftware.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/valvesoftware.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Gabe Newell', 'Co-founder', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Valve Corporation is the US-based operator of the Steam digital game distribution platform. In a March 2016 judgment that became the leading Australian authority on consumer guarantees for digital goods, the Federal Court found Valve had breached the Australian Consumer Law by representing in its Steam subscriber agreements and refund policies that consumers had no right to a refund. The Court ordered Valve to pay A$3 million in penalties in December 2016. Valve appealed, lost in the Full Federal Court (December 2017), and was denied special leave to appeal by the High Court (April 2018).</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Valve Corporation is the US-based operator of the Steam digital game distribution platform. In a March 2016 judgment that became the leading Australian authority on consumer guarantees for digital goods, the Federal Court found Valve had breached the Australian Consumer Law by representing in its Steam subscriber agreements and refund policies that consumers had no right to a refund. The Court ordered Valve to pay A$3 million in penalties in December 2016. Valve appealed, lost in the Full Federal Court (December 2017), and was denied special leave to appeal by the High Court (April 2018).</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Valve operated Steam as a pure cross-border digital platform — no Australian office, no Australian subsidiary, no local servers — relying on its US terms of service to govern transactions with Australian users. This "lean entry" model was the same one used by Viagogo (Case 22) and a common pattern for software-as-a-service and digital-marketplace operators entering smaller markets opportunistically.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Valve operated Steam as a pure cross-border digital platform — no Australian office, no Australian subsidiary, no local servers — relying on its US terms of service to govern transactions with Australian users. This "lean entry" model was the same one used by Viagogo (Case 22) and a common pattern for software-as-a-service and digital-marketplace operators entering smaller markets opportunistically.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Refund clauses contradicted s54 of the ACL:</strong> The Steam subscriber agreement stated that Valve was not under any obligation to provide refunds for video games, and Steam''s published refund policy reinforced this. Section 54 of the Australian Consumer Law guarantees that goods (which the Court held includes digital goods) be of acceptable quality, and that breach of guarantee gives consumers an entitlement to refund — non-waiveable, regardless of what the contract says.</li><li><strong>"Goods" includes digital downloads:</strong> Justice Edelman explicitly held that video games delivered via Steam were "goods" within the meaning of s54, despite Valve''s argument that digital downloads were a service. This finding remains foundational to all subsequent ACL enforcement against digital platforms.</li><li><strong>"We are not subject to Australian law" was a culture problem, not just a legal position:</strong> Justice Edelman wrote that "Valve''s culture of compliance was, and is, very poor", noting that internal Valve evidence showed the company "formed a view that it was not subject to Australian law" — a finding that drove the size of the penalty.</li><li><strong>The conduct affected over 2 million Australian Steam users</strong> during the relevant period. The breadth of the affected user base contributed to the A$3 million penalty (then the largest ACL penalty against a digital platform).</li><li><strong>Three appeals failed:</strong> Valve lost the original 2016 case, the 2017 Full Federal Court appeal, and the 2018 High Court special leave application — across three Federal Court judges, three Full Federal Court judges, and the High Court bench.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Refund clauses contradicted s54 of the ACL:</strong> The Steam subscriber agreement stated that Valve was not under any obligation to provide refunds for video games, and Steam''s published refund policy reinforced this. Section 54 of the Australian Consumer Law guarantees that goods (which the Court held includes digital goods) be of acceptable quality, and that breach of guarantee gives consumers an entitlement to refund — non-waiveable, regardless of what the contract says.</li><li><strong>"Goods" includes digital downloads:</strong> Justice Edelman explicitly held that video games delivered via Steam were "goods" within the meaning of s54, despite Valve''s argument that digital downloads were a service. This finding remains foundational to all subsequent ACL enforcement against digital platforms.</li><li><strong>"We are not subject to Australian law" was a culture problem, not just a legal position:</strong> Justice Edelman wrote that "Valve''s culture of compliance was, and is, very poor", noting that internal Valve evidence showed the company "formed a view that it was not subject to Australian law" — a finding that drove the size of the penalty.</li><li><strong>The conduct affected over 2 million Australian Steam users</strong> during the relevant period. The breadth of the affected user base contributed to the A$3 million penalty (then the largest ACL penalty against a digital platform).</li><li><strong>Three appeals failed:</strong> Valve lost the original 2016 case, the 2017 Full Federal Court appeal, and the 2018 High Court special leave application — across three Federal Court judges, three Full Federal Court judges, and the High Court bench.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Valve paid the A$3 million penalty in 2018. The Court additionally ordered: a 3-year restraint on representing that Valve was not subject to ACL or could decline refunds, a 12-month obligation to publish ACL-rights notices on its website, and an obligation to implement a multi-year consumer-compliance programme for staff. Steam continues to operate in Australia today and now offers ACL-compliant refunds, but the Valve case is now the most-cited Australian authority for the proposition that foreign digital platforms cannot contract out of Australian Consumer Law.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Valve paid the A$3 million penalty in 2018. The Court additionally ordered: a 3-year restraint on representing that Valve was not subject to ACL or could decline refunds, a 12-month obligation to publish ACL-rights notices on its website, and an obligation to implement a multi-year consumer-compliance programme for staff. Steam continues to operate in Australia today and now offers ACL-compliant refunds, but the Valve case is now the most-cited Australian authority for the proposition that foreign digital platforms cannot contract out of Australian Consumer Law.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Valve / Steam''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Valve / Steam''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>The ACL applies to digital goods, not just physical goods.</strong> Software, games, courses, NFTs, and SaaS subscriptions are all "goods" or "services" within the meaning of the ACL.</li><li><strong>You cannot contract out of consumer guarantees.</strong> A clause in your terms saying "no refunds" is not just unenforceable in Australia — it is itself a misleading representation that triggers s18 ACL liability.</li><li><strong>Cross-border digital platforms are within ACL jurisdiction.</strong> Operating from the US (Valve) or Switzerland (Viagogo) does not exclude you from Australian consumer law.</li><li><strong>Compliance culture is admissible evidence.</strong> Justice Edelman''s finding that Valve''s compliance culture was "very poor" was based on internal Valve emails — meaning your engineering, support, and policy team''s internal communications can be discoverable in ACL litigation.</li><li><strong>Compliance programmes are part of the remedy.</strong> The Valve order required Valve to implement and document an ACL-compliance training programme for staff — a multi-year operational cost layered on top of the cash penalty.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>The ACL applies to digital goods, not just physical goods.</strong> Software, games, courses, NFTs, and SaaS subscriptions are all "goods" or "services" within the meaning of the ACL.</li><li><strong>You cannot contract out of consumer guarantees.</strong> A clause in your terms saying "no refunds" is not just unenforceable in Australia — it is itself a misleading representation that triggers s18 ACL liability.</li><li><strong>Cross-border digital platforms are within ACL jurisdiction.</strong> Operating from the US (Valve) or Switzerland (Viagogo) does not exclude you from Australian consumer law.</li><li><strong>Compliance culture is admissible evidence.</strong> Justice Edelman''s finding that Valve''s compliance culture was "very poor" was based on internal Valve emails — meaning your engineering, support, and policy team''s internal communications can be discoverable in ACL litigation.</li><li><strong>Compliance programmes are part of the remedy.</strong> The Valve order required Valve to implement and document an ACL-compliance training programme for staff — a multi-year operational cost layered on top of the cash penalty.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ACCC (High Court dismisses Valve special leave)', 'https://www.accc.gov.au/media-release/high-court-dismisses-valves-special-leave-to-appeal-application', 1, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ACCC (A$3M penalty)', 'https://www.accc.gov.au/media-release/valve-to-pay-3-million-penalty-for-misleading-gamers', 2, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ACCC Full Court ruling', 'https://www.accc.gov.au/media-release/full-federal-court-confirms-that-valve-misled-gamers', 3, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Jones Day (ACCC uses Valve as ACL precedent, 2025)', 'https://www.jonesday.com/en/insights/2025/04/accc-conducts-sweep-of-online-statements-for-compliance-with-australian-consumer-law', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Gadens (legal analysis)', 'https://www.gadens.com/legal-insights/court-orders-american-online-video-game-distributor-to-pay-3-million-for-breach-of-the-australian-consumer-law/', 5, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 26/27: Binance Australia Derivatives (binance-australia-derivatives-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'binance-australia-derivatives-market-entry', 'How Binance Australia Derivatives Lost Its AFSL', 'Binance Australia Derivatives — operated by Oztures Trading Pty Ltd as the Australian Financial Services licensee for the Binance global exchange''s derivatives products — had its AFSL cancelled by ASIC in April 2023 after a targeted review found systemic misclassification of retail clients as wholesale clients.',
+    'e836d932-ac9d-4333-a1bf-9c05faa12340'::uuid, 'case_study', 'published', false,
+    3, ARRAY['Binance Australia Derivatives — operated by Oztures Trading Pty Ltd as the Australian Financial Services licensee for the Binance global exchange''s derivatives products — had its AFSL cancelled by ASIC in April 2023 after a targeted review found systemic misclassification of retail clients as wholesale clients.', 'Binance Australia Derivatives paid approximately A$13.1 million in client compensation during 2023 under an ASIC-supervised remediation programme.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "Cayman Islands"}, {"icon": "Briefcase", "label": "Sector", "value": "Fintech / Crypto Derivatives"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'Binance Australia Derivatives', 'https://img.logo.dev/binance.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://binance.com', 'Cayman Islands', 'Australia',
+      '2022-01-01', 'Fintech / Crypto Derivatives', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://binance.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/binance.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Changpeng Zhao', 'Founder & former CEO', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Binance Australia Derivatives — operated by Oztures Trading Pty Ltd as the Australian Financial Services licensee for the Binance global exchange''s derivatives products — had its AFSL cancelled by ASIC in April 2023 after a targeted review found systemic misclassification of retail clients as wholesale clients. The regulator''s subsequent civil penalty proceedings concluded in March 2026 with a A$10 million Federal Court penalty, on top of approximately A$13.1 million in client compensation already paid in 2023. The case is the leading Australian authority on AFS-licensee onboarding obligations for offshore-controlled digital assets businesses.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Binance Australia Derivatives — operated by Oztures Trading Pty Ltd as the Australian Financial Services licensee for the Binance global exchange''s derivatives products — had its AFSL cancelled by ASIC in April 2023 after a targeted review found systemic misclassification of retail clients as wholesale clients. The regulator''s subsequent civil penalty proceedings concluded in March 2026 with a A$10 million Federal Court penalty, on top of approximately A$13.1 million in client compensation already paid in 2023. The case is the leading Australian authority on AFS-licensee onboarding obligations for offshore-controlled digital assets businesses.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>Binance entered Australia for derivatives via the Oztures Trading entity, which held an AFS licence permitting issuance of crypto-derivatives products to "wholesale clients" (defined under s761G of the Corporations Act as sophisticated investors meeting wealth, income, or professional tests). The entry was deliberately structured to avoid the more onerous retail-client AFS licensing regime — a common offshore digital-assets entry pattern.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>Binance entered Australia for derivatives via the Oztures Trading entity, which held an AFS licence permitting issuance of crypto-derivatives products to "wholesale clients" (defined under s761G of the Corporations Act as sophisticated investors meeting wealth, income, or professional tests). The entry was deliberately structured to avoid the more onerous retail-client AFS licensing regime — a common offshore digital-assets entry pattern.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>524 retail clients misclassified as wholesale (July 2022 – April 2023):</strong> ASIC''s review found that Binance Australia Derivatives had treated 524 retail clients — over 85% of its entire Australian client base — as wholesale clients, stripping them of the consumer protections (PDS disclosure, design and distribution obligations, dispute resolution access) that retail status confers.</li><li><strong>Onboarding system permitted unlimited quiz attempts:</strong> A Statement of Agreed Facts filed in the Federal Court conceded that Binance''s onboarding system allowed clients seeking sophisticated-investor status to take a multiple-choice quiz an unlimited number of times until they achieved a passing score — a process that the Court accepted was inconsistent with the substantive assessment required by the Corporations Act.</li><li><strong>Misclassification breakdown:</strong> Of the 524 misclassified clients, 460 were wrongly classified as meeting the Sophisticated Investor Test, 33 as meeting the Individual Wealth Test, 26 lacked sufficient evidence for the Professional Investor Test, and 5 were misclassified under the Related Body Corporate or Large Business tests.</li><li><strong>Client harm of A$12.55 million:</strong> Affected clients incurred A$8.66 million in trading losses and paid A$3.89 million in fees during the misclassification period — losses that would have been partially mitigated had retail-client design and distribution obligations been triggered.</li><li><strong>AFSL cancellation followed swiftly:</strong> ASIC issued a notice of hearing under s915C of the Corporations Act on 29 March 2023 and cancelled the AFSL on 6 April 2023, effectively terminating Binance''s Australian derivatives business within nine days of the formal notice.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>524 retail clients misclassified as wholesale (July 2022 – April 2023):</strong> ASIC''s review found that Binance Australia Derivatives had treated 524 retail clients — over 85% of its entire Australian client base — as wholesale clients, stripping them of the consumer protections (PDS disclosure, design and distribution obligations, dispute resolution access) that retail status confers.</li><li><strong>Onboarding system permitted unlimited quiz attempts:</strong> A Statement of Agreed Facts filed in the Federal Court conceded that Binance''s onboarding system allowed clients seeking sophisticated-investor status to take a multiple-choice quiz an unlimited number of times until they achieved a passing score — a process that the Court accepted was inconsistent with the substantive assessment required by the Corporations Act.</li><li><strong>Misclassification breakdown:</strong> Of the 524 misclassified clients, 460 were wrongly classified as meeting the Sophisticated Investor Test, 33 as meeting the Individual Wealth Test, 26 lacked sufficient evidence for the Professional Investor Test, and 5 were misclassified under the Related Body Corporate or Large Business tests.</li><li><strong>Client harm of A$12.55 million:</strong> Affected clients incurred A$8.66 million in trading losses and paid A$3.89 million in fees during the misclassification period — losses that would have been partially mitigated had retail-client design and distribution obligations been triggered.</li><li><strong>AFSL cancellation followed swiftly:</strong> ASIC issued a notice of hearing under s915C of the Corporations Act on 29 March 2023 and cancelled the AFSL on 6 April 2023, effectively terminating Binance''s Australian derivatives business within nine days of the formal notice.</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>Binance Australia Derivatives paid approximately A$13.1 million in client compensation during 2023 under an ASIC-supervised remediation programme. ASIC then commenced civil penalty proceedings in 2024; the Federal Court handed down a A$10 million penalty on 27 March 2026. Binance continues to operate spot-trading services for Australian users via its global exchange (which does not require an AFS licence), but cannot offer derivatives products to Australian retail clients. The case is now the leading Australian authority on AFS-licensee client-classification obligations.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>Binance Australia Derivatives paid approximately A$13.1 million in client compensation during 2023 under an ASIC-supervised remediation programme. ASIC then commenced civil penalty proceedings in 2024; the Federal Court handed down a A$10 million penalty on 27 March 2026. Binance continues to operate spot-trading services for Australian users via its global exchange (which does not require an AFS licence), but cannot offer derivatives products to Australian retail clients. The case is now the leading Australian authority on AFS-licensee client-classification obligations.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, Binance Australia Derivatives''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, Binance Australia Derivatives''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Wholesale-client classification is not an onboarding checkbox.</strong> ASIC requires substantive assessment, evidence retention, and ongoing monitoring — not a multiple-choice quiz that can be retaken until passed.</li><li><strong>AFS licence cancellation is fast and brand-defining.</strong> From notice of hearing to cancellation took 9 days; the brand impact lasts indefinitely.</li><li><strong>Client compensation is the floor, not the ceiling.</strong> Binance paid A$13.1M in remediation and then a A$10M penalty on top — the regulator''s view is that compensation is restoration, not deterrence.</li><li><strong>Statements of Agreed Facts in Federal Court bind your global narrative.</strong> Binance''s global compliance posture has had to be reconciled against the Australian factual concessions ever since.</li><li><strong>Crypto / digital-asset offshore entry to Australia must be pre-cleared with ASIC, not assumed.</strong> The structural assumption that "wholesale clients only" exempts you from the retail-client regime requires defensible classification practice from day one — and ASIC is now actively reviewing the onboarding flows of crypto operators in particular.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Wholesale-client classification is not an onboarding checkbox.</strong> ASIC requires substantive assessment, evidence retention, and ongoing monitoring — not a multiple-choice quiz that can be retaken until passed.</li><li><strong>AFS licence cancellation is fast and brand-defining.</strong> From notice of hearing to cancellation took 9 days; the brand impact lasts indefinitely.</li><li><strong>Client compensation is the floor, not the ceiling.</strong> Binance paid A$13.1M in remediation and then a A$10M penalty on top — the regulator''s view is that compensation is restoration, not deterrence.</li><li><strong>Statements of Agreed Facts in Federal Court bind your global narrative.</strong> Binance''s global compliance posture has had to be reconciled against the Australian factual concessions ever since.</li><li><strong>Crypto / digital-asset offshore entry to Australia must be pre-cleared with ASIC, not assumed.</strong> The structural assumption that "wholesale clients only" exempts you from the retail-client regime requires defensible classification practice from day one — and ASIC is now actively reviewing the onboarding flows of crypto operators in particular.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ASIC AFSL cancellation (April 2023, 23-092mr)', 'https://asic.gov.au/about-asic/news-centre/find-a-media-release/2023-releases/23-092mr-asic-cancels-binance-australia-derivatives-australian-financial-services-licence/', 1, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ASIC civil penalty proceedings (24-188mr, 2024)', 'https://asic.gov.au/about-asic/news-centre/find-a-media-release/2024-releases/24-188mr-asic-sues-binance-australia-derivatives-for-consumer-protection-failures/', 2, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ASIC A$10M penalty release (26-041mr, 2026)', 'https://asic.gov.au/about-asic/news-centre/find-a-media-release/2026-releases/26-041mr-binance-australia-derivatives-pays-10m-penalty-after-asic-action/', 3, 'government')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ACS Information Age', 'https://ia.acs.org.au/article/2026/binance-hit-with--10m-fine-over-investor-failures-.html', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'The Block (penalty coverage)', 'https://www.theblock.co/post/395437/binance-australia-derivatives-fined-6-9-million-over-compliance-and-onboarding-failures', 5, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
+
+-- Case 27/27: MilkRun (milkrun-australia-market-entry)
+DO $do_block$
+DECLARE
+  v_id uuid;
+  v_sec_entry uuid;
+  v_sec_success uuid;
+  v_sec_metrics uuid;
+  v_sec_lessons uuid;
+BEGIN
+  INSERT INTO content_items (
+    slug, title, subtitle, category_id, content_type, status, featured,
+    read_time, tldr, quick_facts, researched_by, style_version
+  ) VALUES (
+    'milkrun-australia-market-entry', 'How MilkRun Collapsed in the Australian Market', 'MilkRun was a Sydney-founded rapid-grocery delivery startup that promised 10-minute delivery and reached A$86 million in venture funding from investors including Tiger Global before collapsing in April 2023 — 19 months after launch.',
+    '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'case_study', 'published', false,
+    3, ARRAY['MilkRun was a Sydney-founded rapid-grocery delivery startup that promised 10-minute delivery and reached A$86 million in venture funding from investors including Tiger Global before collapsing in April 2023 — 19 months after launch.', 'MilkRun ceased trading on Friday 14 April 2023, with more than 400 staff made redundant.']::text[], '[{"icon": "MapPin", "label": "HQ", "value": "Australia"}, {"icon": "Briefcase", "label": "Sector", "value": "Rapid Grocery Delivery"}, {"icon": "Globe", "label": "Target Market", "value": "Australia"}]'::jsonb, 'Stephen Browne', 2
+  )
+  ON CONFLICT (slug) DO UPDATE SET
+    title = EXCLUDED.title,
+    subtitle = EXCLUDED.subtitle,
+    category_id = EXCLUDED.category_id,
+    status = EXCLUDED.status,
+    read_time = EXCLUDED.read_time,
+    tldr = EXCLUDED.tldr,
+    quick_facts = EXCLUDED.quick_facts,
+    researched_by = EXCLUDED.researched_by,
+    style_version = EXCLUDED.style_version
+  RETURNING id INTO v_id;
+
+  IF NOT EXISTS (SELECT 1 FROM content_company_profiles WHERE content_id = v_id) THEN
+    INSERT INTO content_company_profiles (
+      content_id, company_name, company_logo, website, origin_country, target_market,
+      entry_date, industry, founder_count, employee_count, is_profitable
+    ) VALUES (
+      v_id, 'MilkRun', 'https://img.logo.dev/milkrun.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png', 'https://milkrun.com', 'Australia', 'Australia',
+      '2021-01-01', 'Rapid Grocery Delivery', 1, NULL, NULL
+    );
+  ELSE
+    -- Backfill logo + website on existing rows that are still missing them.
+    UPDATE content_company_profiles
+      SET website = COALESCE(website, 'https://milkrun.com'),
+          company_logo = COALESCE(company_logo, 'https://img.logo.dev/milkrun.com?token=pk_L3JbJjCeT0-mUdhpPlS6SA&size=256&format=png')
+      WHERE content_id = v_id;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM content_founders WHERE content_id = v_id) THEN
+    INSERT INTO content_founders (content_id, name, title, is_primary)
+    VALUES (v_id, 'Dany Milham', 'Co-founder & CEO', true);
+  END IF;
+
+  -- Section: entry-strategy
+  SELECT id INTO v_sec_entry FROM content_sections
+   WHERE content_id = v_id AND slug = 'entry-strategy';
+  IF v_sec_entry IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Entry Strategy', 'entry-strategy', 1, true)
+    RETURNING id INTO v_sec_entry;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Entry Strategy', sort_order = 1, is_active = true
+      WHERE id = v_sec_entry;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>MilkRun was a Sydney-founded rapid-grocery delivery startup that promised 10-minute delivery and reached A$86 million in venture funding from investors including Tiger Global before collapsing in April 2023 — 19 months after launch. It is the most prominent Australian-native MES failure case in the rapid-delivery cohort, and a structural counterpart to international entries that struggled with Australian unit economics.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>MilkRun was a Sydney-founded rapid-grocery delivery startup that promised 10-minute delivery and reached A$86 million in venture funding from investors including Tiger Global before collapsing in April 2023 — 19 months after launch. It is the most prominent Australian-native MES failure case in the rapid-delivery cohort, and a structural counterpart to international entries that struggled with Australian unit economics.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_entry AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<p>MilkRun was founded by Dany Milham (former co-founder of Koala mattresses) and launched in Sydney in September 2021 with the aspiration of building a category-defining rapid-grocery delivery service. The model — small "dark stores" stocked with limited SKUs, salaried riders, 10-minute delivery, premium positioning — was lifted from European players like Gorillas and Getir. MilkRun raised A$11M in seed funding in June 2021, then A$75M in a Series A from Tiger Global in early 2022.</p>', updated_at = now()
+      WHERE section_id = v_sec_entry AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_entry, '<p>MilkRun was founded by Dany Milham (former co-founder of Koala mattresses) and launched in Sydney in September 2021 with the aspiration of building a category-defining rapid-grocery delivery service. The model — small "dark stores" stocked with limited SKUs, salaried riders, 10-minute delivery, premium positioning — was lifted from European players like Gorillas and Getir. MilkRun raised A$11M in seed funding in June 2021, then A$75M in a Series A from Tiger Global in early 2022.</p>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_entry AND sort_order > 2;
+
+  -- Section: success-factors
+  SELECT id INTO v_sec_success FROM content_sections
+   WHERE content_id = v_id AND slug = 'success-factors';
+  IF v_sec_success IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Success Factors', 'success-factors', 2, true)
+    RETURNING id INTO v_sec_success;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Success Factors', sort_order = 2, is_active = true
+      WHERE id = v_sec_success;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_success AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Unit economics never closed:</strong> MilkRun was reportedly losing approximately A$10 per delivery at its peak. The 10-minute delivery promise required dense dark-store networks and salaried riders, neither of which Australian population density supports outside inner-Sydney and inner-Melbourne.</li><li><strong>No structural moat against incumbents:</strong> The sector lacked any real barriers to entry for Coles and Woolworths, both of which already had nationwide store and warehouse networks that could be repurposed for fast delivery at marginal cost. MilkRun could not match the supermarket duopoly''s range, and the supermarkets could match MilkRun''s speed in any geography that mattered.</li><li><strong>Capital market conditions deteriorated through 2022–23:</strong> Tiger Global''s Series A in early 2022 was at the peak of the global rapid-delivery valuation cycle. By April 2023, the funding environment for unprofitable consumer-tech startups had collapsed. MilkRun could not raise the next round.</li><li><strong>Structural changes did not save the business:</strong> The company announced cost reductions and the relaxation of the 10-minute delivery rule in February 2023 but found that "while the business continued to perform well, the decision was made [to wind down] in the current environment".</li><li><strong>400 redundancies in two days'' notice:</strong> Cofounder Dany Milham emailed staff after the Easter break announcing a wind-down by Friday — a closure pattern that mirrors the abrupt-exit reputational damage seen in Ola (Case 5) and Foodora (Case 21).</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_success AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_success, '<ul><li><strong>Unit economics never closed:</strong> MilkRun was reportedly losing approximately A$10 per delivery at its peak. The 10-minute delivery promise required dense dark-store networks and salaried riders, neither of which Australian population density supports outside inner-Sydney and inner-Melbourne.</li><li><strong>No structural moat against incumbents:</strong> The sector lacked any real barriers to entry for Coles and Woolworths, both of which already had nationwide store and warehouse networks that could be repurposed for fast delivery at marginal cost. MilkRun could not match the supermarket duopoly''s range, and the supermarkets could match MilkRun''s speed in any geography that mattered.</li><li><strong>Capital market conditions deteriorated through 2022–23:</strong> Tiger Global''s Series A in early 2022 was at the peak of the global rapid-delivery valuation cycle. By April 2023, the funding environment for unprofitable consumer-tech startups had collapsed. MilkRun could not raise the next round.</li><li><strong>Structural changes did not save the business:</strong> The company announced cost reductions and the relaxation of the 10-minute delivery rule in February 2023 but found that "while the business continued to perform well, the decision was made [to wind down] in the current environment".</li><li><strong>400 redundancies in two days'' notice:</strong> Cofounder Dany Milham emailed staff after the Easter break announcing a wind-down by Friday — a closure pattern that mirrors the abrupt-exit reputational damage seen in Ola (Case 5) and Foodora (Case 21).</li></ul>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_success AND sort_order > 1;
+
+  -- Section: key-metrics
+  SELECT id INTO v_sec_metrics FROM content_sections
+   WHERE content_id = v_id AND slug = 'key-metrics';
+  IF v_sec_metrics IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Key Metrics & Performance', 'key-metrics', 3, true)
+    RETURNING id INTO v_sec_metrics;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Key Metrics & Performance', sort_order = 3, is_active = true
+      WHERE id = v_sec_metrics;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>MilkRun ceased trading on Friday 14 April 2023, with more than 400 staff made redundant. Three months later, Woolworths acquired the MilkRun brand and core operating entity for approximately A$10 million — a fraction of the A$86 million raised. Woolworths used the brand and rider network to bolster its existing Metro60 fast-delivery service. The MES significance is that Australia''s grocery duopoly absorbed the most well-funded rapid-delivery insurgent at salvage prices, in line with the Catch.com.au playbook (Case 14) where local incumbents bought the digital pioneer at the bottom of the cycle.</p>', updated_at = now()
+      WHERE section_id = v_sec_metrics AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_metrics, '<p>MilkRun ceased trading on Friday 14 April 2023, with more than 400 staff made redundant. Three months later, Woolworths acquired the MilkRun brand and core operating entity for approximately A$10 million — a fraction of the A$86 million raised. Woolworths used the brand and rider network to bolster its existing Metro60 fast-delivery service. The MES significance is that Australia''s grocery duopoly absorbed the most well-funded rapid-delivery insurgent at salvage prices, in line with the Catch.com.au playbook (Case 14) where local incumbents bought the digital pioneer at the bottom of the cycle.</p>', 1, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_metrics AND sort_order > 1;
+
+  -- Section: lessons-learned
+  SELECT id INTO v_sec_lessons FROM content_sections
+   WHERE content_id = v_id AND slug = 'lessons-learned';
+  IF v_sec_lessons IS NULL THEN
+    INSERT INTO content_sections (content_id, title, slug, sort_order, is_active)
+    VALUES (v_id, 'Lessons Learned', 'lessons-learned', 4, true)
+    RETURNING id INTO v_sec_lessons;
+  ELSE
+    UPDATE content_sections
+      SET title = 'Lessons Learned', sort_order = 4, is_active = true
+      WHERE id = v_sec_lessons;
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 1) THEN
+    UPDATE content_bodies SET body_text = '<p>For operators considering Australian entry, MilkRun''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 1;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<p>For operators considering Australian entry, MilkRun''s experience offers a sharp cautionary template. The lessons below distil what went wrong and what foreign and domestic operators can learn from the failure mode.</p>', 1, 'case_study');
+  END IF;
+  IF EXISTS (SELECT 1 FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order = 2) THEN
+    UPDATE content_bodies SET body_text = '<ul><li><strong>Rapid-delivery dark-store models do not work at Australian density.</strong> The combination of moderate population density, high suburban land prices, and low average order values means the unit economics are structurally unfavourable outside a few inner-city postcodes.</li><li><strong>A funding round at the peak of a global hype cycle is a strategic risk, not a reward.</strong> Tiger Global''s Series A in early 2022 effectively committed MilkRun to a pace of growth that was incompatible with the post-rate-hike capital environment.</li><li><strong>Coles and Woolworths can match any insurgent''s speed within months.</strong> Any Australian grocery insurgent must have a structural moat that the duopoly cannot replicate at marginal cost — MilkRun didn''t.</li><li><strong>Australian-native context cases sharpen MES lessons for foreign entrants.</strong> MilkRun''s collapse foreshadowed the structural reasons Deliveroo (Case 3) and Menulog (Case 4) ultimately exited.</li><li><strong>Acquisition by an incumbent at salvage prices is the most common exit for failed Australian challengers.</strong> Woolworths buying MilkRun for A$10M follows the same pattern as Wesfarmers buying Catch (Case 14) and Klarna buying Laybuy''s customer base (Case 7) — Australian incumbents systematically buy distressed insurgent assets cheaply rather than competing them off the field.</li></ul>', updated_at = now()
+      WHERE section_id = v_sec_lessons AND sort_order = 2;
+  ELSE
+    INSERT INTO content_bodies (content_id, section_id, body_text, sort_order, content_type)
+    VALUES (v_id, v_sec_lessons, '<ul><li><strong>Rapid-delivery dark-store models do not work at Australian density.</strong> The combination of moderate population density, high suburban land prices, and low average order values means the unit economics are structurally unfavourable outside a few inner-city postcodes.</li><li><strong>A funding round at the peak of a global hype cycle is a strategic risk, not a reward.</strong> Tiger Global''s Series A in early 2022 effectively committed MilkRun to a pace of growth that was incompatible with the post-rate-hike capital environment.</li><li><strong>Coles and Woolworths can match any insurgent''s speed within months.</strong> Any Australian grocery insurgent must have a structural moat that the duopoly cannot replicate at marginal cost — MilkRun didn''t.</li><li><strong>Australian-native context cases sharpen MES lessons for foreign entrants.</strong> MilkRun''s collapse foreshadowed the structural reasons Deliveroo (Case 3) and Menulog (Case 4) ultimately exited.</li><li><strong>Acquisition by an incumbent at salvage prices is the most common exit for failed Australian challengers.</strong> Woolworths buying MilkRun for A$10M follows the same pattern as Wesfarmers buying Catch (Case 14) and Klarna buying Laybuy''s customer base (Case 7) — Australian incumbents systematically buy distressed insurgent assets cheaply rather than competing them off the field.</li></ul>', 2, 'case_study');
+  END IF;
+  DELETE FROM content_bodies WHERE section_id = v_sec_lessons AND sort_order > 2;
+
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'AFR (Woolworths buys MilkRun brand for A$10M)', 'https://www.afr.com/companies/retail/woolworths-buys-milkrun-brand-for-about-10m-20230504-p5d5j2', 1, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'ACS Information Age (administration + 400 jobs lost)', 'https://www.acs.org.au/insightsandpublications/newsroom/newsroom-articles/2023/milkrun-voluntary-administration-400-jobs-lost.html', 2, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Startup Daily (Series A funding coverage)', 'https://www.startupdaily.net/topic/funding/milkrun-raises-75-million-series-a/', 3, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'UNSW academic analysis', 'https://www.unsw.edu.au/newsroom/news/2023/04/milkrun_s-demise-is-another-nail-in-the-10-minute-grocery-delive', 4, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+  INSERT INTO case_study_sources (case_study_id, label, url, citation_number, source_type)
+  VALUES (v_id, 'Marketing Mag (last delivery)', 'https://www.marketingmag.com.au/featured/milkrun-does-its-last-delivery/', 5, 'news')
+  ON CONFLICT (case_study_id, url) DO NOTHING;
+END
+$do_block$;
