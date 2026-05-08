@@ -42,8 +42,9 @@ In August 2018, Foodora announced an orderly Australian exit and entered volunta
 **Sources**
 - Fair Work Ombudsman (June 2018): https://www.fairwork.gov.au/newsroom/media-releases/2018-media-releases/june-2018/20180612-foodora-litigation
 - Fair Work Ombudsman (June 2019, discontinuation): https://www.fairwork.gov.au/newsroom/media-releases/2019-media-releases/june-2019/20190621-foodora-media-release
+- ABC News (Aug 2018, A$28M Delivery Hero loan): https://www.abc.net.au/news/2018-08-29/foodora-unable-pay-australian-debt-owe-28m-loan-to-delivery-hero/10179184
+- Worrells (administrator — rider entitlements analysis): https://worrells.net.au/resources/news/foodora-riders-employee-entitlement-underpayment
 - Business & Human Rights Resource Centre: https://www.business-humanrights.org/en/latest-news/australia-delivery-firm-foodora-faces-legal-action-for-underpayment-sham-contracting/
-- Broadsheet: https://www.broadsheet.com.au/national/city-file/article/fair-work-ombudsman-foodora
 
 ***
 
@@ -80,8 +81,9 @@ In April 2019, the Federal Court found Viagogo had misled consumers. In October 
 - ACCC penalty announcement (Oct 2020): https://www.accc.gov.au/media-release/viagogo-to-pay-7-million-for-misleading-consumers
 - ACCC liability finding (April 2019): https://www.accc.gov.au/media-release/court-finds-ticket-reseller-viagogo-misled-consumers
 - ACCC appeal dismissed: https://www.accc.gov.au/media-release/court-dismisses-viagogos-appeal-on-misleading-representations-and-penalty
+- Full Federal Court appeal judgment (2022 FCAFC 87): https://www.fedcourt.gov.au/file-store/Judgments/Federal%20Court/Full%20Court/2022/2022FCAFC0087/2022FCAFC0087.docx
+- ABC News (A$7M penalty): https://www.abc.net.au/news/2020-10-02/viagogo-fined-$7-million-for-misleading-consumers/12725434
 - Lexology – industrial scale finding: https://www.lexology.com/library/detail.aspx?g=c58fd59a-a1c4-4bf5-b03b-096440e4c90d
-- Lexology – appeal upheld: https://www.lexology.com/library/detail.aspx?g=6d3de0d7-f86d-4f85-b31d-3bf9afc2ab2c
 
 ***
 
@@ -118,8 +120,9 @@ On 22 January 2020, Schwarz Group announced "an orderly withdrawal from the Aust
 - The New Daily (timeline + reasons): https://www.thenewdaily.com.au/finance/consumer/2020/01/22/kaufland-australia-2
 - SmartCompany (full chronology + cost): https://www.smartcompany.com.au/retail/kaufland-schwarz-group-australia/
 - BusinessNewsAustralia (surprise exit): https://www.businessnewsaustralia.com/articles/surprise-exit-for-kaufland-from-australia.html
+- Commercial Real Estate (portfolio sale): https://www.commercialrealestate.com.au/news/kaufland-hastens-exit-with-portfolio-sale-2-934602/
 - Shop! ANZ: https://www.shopassociation.org.au/news/kaufland-quits-australia
-- ACCC competition impact: https://www.bunburymail.com.au/story/8775972/accc-says-kauflands-withdrawal-impacted-supermarket-competition/
+- Inside Retail (where it went wrong): https://insideretail.com.au/news/where-did-it-all-go-wrong-for-kaufland-202001
 
 ***
 
@@ -153,11 +156,11 @@ Justice Wigney dismissed the franchisee class action in February 2016. The franc
 - **Channel structure is a strategic decision with multi-decade consequences.** A franchisee network built on thin margins is a fragile operating asset that can fracture during any pricing-led strategic response.
 
 **Sources**
-- MST Lawyers (case analysis): https://www.mst.com.au/pizza-hut-franchisees-unsuccessful-in-class-action/
-- MST Lawyers (lessons): https://www.mst.com.au/good-faith-good-business-lessons-from-the-pizza-hut-litigation/
+- Full Federal Court appeal judgment (FCAFC 190, 2017): https://static1.squarespace.com/static/538e6312e4b03cefc2a8a0c3/t/60581b61ebd7307ae712c03c/1616386915854/2017_FCAFC_190.pdf
+- LegalVision (franchisor pricing win): https://legalvision.com.au/you-wanna-piece-of-me-pizza-hut-franchisors-pricing-win/
+- QSR Media (court delivers good news): https://qsrmedia.com.au/legal/commentary/federal-court-delivers-pizza-hut-good-news
+- Allens (Yum sale of Pizza Hut Australia assets, 2016): https://www.allens.com.au/insights-news/news/2016/09/allens-advises-yum-on-pizza-hut-sale-in-australia/
 - SmartCompany (filing): https://www.smartcompany.com.au/business-advice/it-s-a-financial-nightmare-pizza-hut-franchisees-launch-class-action-over-price-war-with-domino-s/
-- SmartCompany (court): https://www.smartcompany.com.au/business-advice/pizza-wars-heat-up-as-288-franchisees-take-head-office-to-court/
-- Lexology: https://www.lexology.com/library/detail.aspx?g=e4df5536-d98e-442e-acd2-1d34edc24d35
 
 ***
 
@@ -191,11 +194,11 @@ Valve paid the A$3 million penalty in 2018. The Court additionally ordered: a 3-
 - **Compliance programmes are part of the remedy.** The Valve order required Valve to implement and document an ACL-compliance training programme for staff — a multi-year operational cost layered on top of the cash penalty.
 
 **Sources**
-- ACCC penalty announcement: https://www.accc.gov.au/media-release/valve-to-pay-3-million-in-penalties-for-misrepresenting-gamers-consumer-guarantee-rights
+- ACCC (High Court dismisses Valve special leave): https://www.accc.gov.au/media-release/high-court-dismisses-valves-special-leave-to-appeal-application
+- ACCC (A$3M penalty): https://www.accc.gov.au/media-release/valve-to-pay-3-million-penalty-for-misleading-gamers
 - ACCC Full Court ruling: https://www.accc.gov.au/media-release/full-federal-court-confirms-that-valve-misled-gamers
+- Jones Day (ACCC uses Valve as ACL precedent, 2025): https://www.jonesday.com/en/insights/2025/04/accc-conducts-sweep-of-online-statements-for-compliance-with-australian-consumer-law
 - Gadens (legal analysis): https://www.gadens.com/legal-insights/court-orders-american-online-video-game-distributor-to-pay-3-million-for-breach-of-the-australian-consumer-law/
-- LegalVision: https://legalvision.com.au/pecuniary-penalties-for-breaching-consumer-guarantees/
-- Conventus Law: https://conventuslaw.com/report/australia-running-out-of-steam-valve-corporation/
 
 ***
 
@@ -229,11 +232,11 @@ Binance Australia Derivatives paid approximately A$13.1 million in client compen
 - **Crypto / digital-asset offshore entry to Australia must be pre-cleared with ASIC, not assumed.** The structural assumption that "wholesale clients only" exempts you from the retail-client regime requires defensible classification practice from day one — and ASIC is now actively reviewing the onboarding flows of crypto operators in particular.
 
 **Sources**
-- ASIC AFSL cancellation (April 2023): https://www.asic.gov.au/about-asic/news-centre/find-a-media-release/2023-releases/23-091mr-binance-australia-derivatives-afs-licence-cancelled/
-- ASIC civil penalty proceedings (2024): https://www.asic.gov.au/about-asic/news-centre/find-a-media-release/2024-releases/24-283mr-asic-sues-crypto-company-binance-australia-derivatives-for-consumer-protection-failures/
-- The Block (penalty coverage): https://www.theblock.co/post/395437/binance-australia-derivatives-fined-6-9-million-over-compliance-and-onboarding-failures
+- ASIC AFSL cancellation (April 2023, 23-092mr): https://asic.gov.au/about-asic/news-centre/find-a-media-release/2023-releases/23-092mr-asic-cancels-binance-australia-derivatives-australian-financial-services-licence/
+- ASIC civil penalty proceedings (24-188mr, 2024): https://asic.gov.au/about-asic/news-centre/find-a-media-release/2024-releases/24-188mr-asic-sues-binance-australia-derivatives-for-consumer-protection-failures/
+- ASIC A$10M penalty release (26-041mr, 2026): https://asic.gov.au/about-asic/news-centre/find-a-media-release/2026-releases/26-041mr-binance-australia-derivatives-pays-10m-penalty-after-asic-action/
 - ACS Information Age: https://ia.acs.org.au/article/2026/binance-hit-with--10m-fine-over-investor-failures-.html
-- Compliance Corylated: https://www.compliancecorylated.com/news/binance-australia-fined-6-9m-for-client-misclassification-failures/
+- The Block (penalty coverage): https://www.theblock.co/post/395437/binance-australia-derivatives-fined-6-9-million-over-compliance-and-onboarding-failures
 
 ***
 
@@ -267,11 +270,11 @@ MilkRun ceased trading on Friday 14 April 2023, with more than 400 staff made re
 - **Acquisition by an incumbent at salvage prices is the most common exit for failed Australian challengers.** Woolworths buying MilkRun for A$10M follows the same pattern as Wesfarmers buying Catch (Case 14) and Klarna buying Laybuy's customer base (Case 7) — Australian incumbents systematically buy distressed insurgent assets cheaply rather than competing them off the field.
 
 **Sources**
-- Startup Daily (collapse coverage): https://www.startupdaily.net/topic/business/holy-cow-grocery-delivery-startup-milkrun-is-dead-86-million-later-aged-19-months/
+- AFR (Woolworths buys MilkRun brand for A$10M): https://www.afr.com/companies/retail/woolworths-buys-milkrun-brand-for-about-10m-20230504-p5d5j2
+- ACS Information Age (administration + 400 jobs lost): https://www.acs.org.au/insightsandpublications/newsroom/newsroom-articles/2023/milkrun-voluntary-administration-400-jobs-lost.html
+- Startup Daily (Series A funding coverage): https://www.startupdaily.net/topic/funding/milkrun-raises-75-million-series-a/
 - UNSW academic analysis: https://www.unsw.edu.au/newsroom/news/2023/04/milkrun_s-demise-is-another-nail-in-the-10-minute-grocery-delive
-- ACS Information Age: https://ia.acs.org.au/article/2023/grocery-delivery-startup-milkrun-is-dead.html
 - Marketing Mag (last delivery): https://www.marketingmag.com.au/featured/milkrun-does-its-last-delivery/
-- Australian Association of Convenience Stores (Woolworths acquisition): https://aacs.org.au/woolworths-buys-failed-fast-delivery-start-up-milkrun/
 
 ***
 

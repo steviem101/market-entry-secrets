@@ -2025,14 +2025,20 @@
       },
       {
         "citation_number": 3,
-        "label": "Business & Human Rights Resource Centre",
-        "url": "https://www.business-humanrights.org/en/latest-news/australia-delivery-firm-foodora-faces-legal-action-for-underpayment-sham-contracting/",
+        "label": "ABC News (Aug 2018, A$28M Delivery Hero loan)",
+        "url": "https://www.abc.net.au/news/2018-08-29/foodora-unable-pay-australian-debt-owe-28m-loan-to-delivery-hero/10179184",
         "source_type": "news"
       },
       {
         "citation_number": 4,
-        "label": "Broadsheet",
-        "url": "https://www.broadsheet.com.au/national/city-file/article/fair-work-ombudsman-foodora",
+        "label": "Worrells (administrator — rider entitlements analysis)",
+        "url": "https://worrells.net.au/resources/news/foodora-riders-employee-entitlement-underpayment",
+        "source_type": "news"
+      },
+      {
+        "citation_number": 5,
+        "label": "Business & Human Rights Resource Centre",
+        "url": "https://www.business-humanrights.org/en/latest-news/australia-delivery-firm-foodora-faces-legal-action-for-underpayment-sham-contracting/",
         "source_type": "news"
       }
     ],
@@ -2133,14 +2139,20 @@
       },
       {
         "citation_number": 4,
-        "label": "Lexology – industrial scale finding",
-        "url": "https://www.lexology.com/library/detail.aspx?g=c58fd59a-a1c4-4bf5-b03b-096440e4c90d",
-        "source_type": "news"
+        "label": "Full Federal Court appeal judgment (2022 FCAFC 87)",
+        "url": "https://www.fedcourt.gov.au/file-store/Judgments/Federal%20Court/Full%20Court/2022/2022FCAFC0087/2022FCAFC0087.docx",
+        "source_type": "government"
       },
       {
         "citation_number": 5,
-        "label": "Lexology – appeal upheld",
-        "url": "https://www.lexology.com/library/detail.aspx?g=6d3de0d7-f86d-4f85-b31d-3bf9afc2ab2c",
+        "label": "ABC News (A$7M penalty)",
+        "url": "https://www.abc.net.au/news/2020-10-02/viagogo-fined-$7-million-for-misleading-consumers/12725434",
+        "source_type": "news"
+      },
+      {
+        "citation_number": 6,
+        "label": "Lexology – industrial scale finding",
+        "url": "https://www.lexology.com/library/detail.aspx?g=c58fd59a-a1c4-4bf5-b03b-096440e4c90d",
         "source_type": "news"
       }
     ],
@@ -2235,14 +2247,20 @@
       },
       {
         "citation_number": 4,
+        "label": "Commercial Real Estate (portfolio sale)",
+        "url": "https://www.commercialrealestate.com.au/news/kaufland-hastens-exit-with-portfolio-sale-2-934602/",
+        "source_type": "news"
+      },
+      {
+        "citation_number": 5,
         "label": "Shop! ANZ",
         "url": "https://www.shopassociation.org.au/news/kaufland-quits-australia",
         "source_type": "news"
       },
       {
-        "citation_number": 5,
-        "label": "ACCC competition impact",
-        "url": "https://www.bunburymail.com.au/story/8775972/accc-says-kauflands-withdrawal-impacted-supermarket-competition/",
+        "citation_number": 6,
+        "label": "Inside Retail (where it went wrong)",
+        "url": "https://insideretail.com.au/news/where-did-it-all-go-wrong-for-kaufland-202001",
         "source_type": "news"
       }
     ],
@@ -2319,32 +2337,32 @@
     "sources": [
       {
         "citation_number": 1,
-        "label": "MST Lawyers (case analysis)",
-        "url": "https://www.mst.com.au/pizza-hut-franchisees-unsuccessful-in-class-action/",
+        "label": "Full Federal Court appeal judgment (FCAFC 190, 2017)",
+        "url": "https://static1.squarespace.com/static/538e6312e4b03cefc2a8a0c3/t/60581b61ebd7307ae712c03c/1616386915854/2017_FCAFC_190.pdf",
         "source_type": "news"
       },
       {
         "citation_number": 2,
-        "label": "MST Lawyers (lessons)",
-        "url": "https://www.mst.com.au/good-faith-good-business-lessons-from-the-pizza-hut-litigation/",
+        "label": "LegalVision (franchisor pricing win)",
+        "url": "https://legalvision.com.au/you-wanna-piece-of-me-pizza-hut-franchisors-pricing-win/",
         "source_type": "news"
       },
       {
         "citation_number": 3,
-        "label": "SmartCompany (filing)",
-        "url": "https://www.smartcompany.com.au/business-advice/it-s-a-financial-nightmare-pizza-hut-franchisees-launch-class-action-over-price-war-with-domino-s/",
+        "label": "QSR Media (court delivers good news)",
+        "url": "https://qsrmedia.com.au/legal/commentary/federal-court-delivers-pizza-hut-good-news",
         "source_type": "news"
       },
       {
         "citation_number": 4,
-        "label": "SmartCompany (court)",
-        "url": "https://www.smartcompany.com.au/business-advice/pizza-wars-heat-up-as-288-franchisees-take-head-office-to-court/",
+        "label": "Allens (Yum sale of Pizza Hut Australia assets, 2016)",
+        "url": "https://www.allens.com.au/insights-news/news/2016/09/allens-advises-yum-on-pizza-hut-sale-in-australia/",
         "source_type": "news"
       },
       {
         "citation_number": 5,
-        "label": "Lexology",
-        "url": "https://www.lexology.com/library/detail.aspx?g=e4df5536-d98e-442e-acd2-1d34edc24d35",
+        "label": "SmartCompany (filing)",
+        "url": "https://www.smartcompany.com.au/business-advice/it-s-a-financial-nightmare-pizza-hut-franchisees-launch-class-action-over-price-war-with-domino-s/",
         "source_type": "news"
       }
     ],
@@ -2427,32 +2445,32 @@
     "sources": [
       {
         "citation_number": 1,
-        "label": "ACCC penalty announcement",
-        "url": "https://www.accc.gov.au/media-release/valve-to-pay-3-million-in-penalties-for-misrepresenting-gamers-consumer-guarantee-rights",
+        "label": "ACCC (High Court dismisses Valve special leave)",
+        "url": "https://www.accc.gov.au/media-release/high-court-dismisses-valves-special-leave-to-appeal-application",
         "source_type": "government"
       },
       {
         "citation_number": 2,
+        "label": "ACCC (A$3M penalty)",
+        "url": "https://www.accc.gov.au/media-release/valve-to-pay-3-million-penalty-for-misleading-gamers",
+        "source_type": "government"
+      },
+      {
+        "citation_number": 3,
         "label": "ACCC Full Court ruling",
         "url": "https://www.accc.gov.au/media-release/full-federal-court-confirms-that-valve-misled-gamers",
         "source_type": "government"
       },
       {
-        "citation_number": 3,
-        "label": "Gadens (legal analysis)",
-        "url": "https://www.gadens.com/legal-insights/court-orders-american-online-video-game-distributor-to-pay-3-million-for-breach-of-the-australian-consumer-law/",
-        "source_type": "news"
-      },
-      {
         "citation_number": 4,
-        "label": "LegalVision",
-        "url": "https://legalvision.com.au/pecuniary-penalties-for-breaching-consumer-guarantees/",
+        "label": "Jones Day (ACCC uses Valve as ACL precedent, 2025)",
+        "url": "https://www.jonesday.com/en/insights/2025/04/accc-conducts-sweep-of-online-statements-for-compliance-with-australian-consumer-law",
         "source_type": "news"
       },
       {
         "citation_number": 5,
-        "label": "Conventus Law",
-        "url": "https://conventuslaw.com/report/australia-running-out-of-steam-valve-corporation/",
+        "label": "Gadens (legal analysis)",
+        "url": "https://www.gadens.com/legal-insights/court-orders-american-online-video-game-distributor-to-pay-3-million-for-breach-of-the-australian-consumer-law/",
         "source_type": "news"
       }
     ],
@@ -2535,21 +2553,21 @@
     "sources": [
       {
         "citation_number": 1,
-        "label": "ASIC AFSL cancellation (April 2023)",
-        "url": "https://www.asic.gov.au/about-asic/news-centre/find-a-media-release/2023-releases/23-091mr-binance-australia-derivatives-afs-licence-cancelled/",
+        "label": "ASIC AFSL cancellation (April 2023, 23-092mr)",
+        "url": "https://asic.gov.au/about-asic/news-centre/find-a-media-release/2023-releases/23-092mr-asic-cancels-binance-australia-derivatives-australian-financial-services-licence/",
         "source_type": "government"
       },
       {
         "citation_number": 2,
-        "label": "ASIC civil penalty proceedings (2024)",
-        "url": "https://www.asic.gov.au/about-asic/news-centre/find-a-media-release/2024-releases/24-283mr-asic-sues-crypto-company-binance-australia-derivatives-for-consumer-protection-failures/",
+        "label": "ASIC civil penalty proceedings (24-188mr, 2024)",
+        "url": "https://asic.gov.au/about-asic/news-centre/find-a-media-release/2024-releases/24-188mr-asic-sues-binance-australia-derivatives-for-consumer-protection-failures/",
         "source_type": "government"
       },
       {
         "citation_number": 3,
-        "label": "The Block (penalty coverage)",
-        "url": "https://www.theblock.co/post/395437/binance-australia-derivatives-fined-6-9-million-over-compliance-and-onboarding-failures",
-        "source_type": "news"
+        "label": "ASIC A$10M penalty release (26-041mr, 2026)",
+        "url": "https://asic.gov.au/about-asic/news-centre/find-a-media-release/2026-releases/26-041mr-binance-australia-derivatives-pays-10m-penalty-after-asic-action/",
+        "source_type": "government"
       },
       {
         "citation_number": 4,
@@ -2559,8 +2577,8 @@
       },
       {
         "citation_number": 5,
-        "label": "Compliance Corylated",
-        "url": "https://www.compliancecorylated.com/news/binance-australia-fined-6-9m-for-client-misclassification-failures/",
+        "label": "The Block (penalty coverage)",
+        "url": "https://www.theblock.co/post/395437/binance-australia-derivatives-fined-6-9-million-over-compliance-and-onboarding-failures",
         "source_type": "news"
       }
     ],
@@ -2643,32 +2661,32 @@
     "sources": [
       {
         "citation_number": 1,
-        "label": "Startup Daily (collapse coverage)",
-        "url": "https://www.startupdaily.net/topic/business/holy-cow-grocery-delivery-startup-milkrun-is-dead-86-million-later-aged-19-months/",
+        "label": "AFR (Woolworths buys MilkRun brand for A$10M)",
+        "url": "https://www.afr.com/companies/retail/woolworths-buys-milkrun-brand-for-about-10m-20230504-p5d5j2",
         "source_type": "news"
       },
       {
         "citation_number": 2,
+        "label": "ACS Information Age (administration + 400 jobs lost)",
+        "url": "https://www.acs.org.au/insightsandpublications/newsroom/newsroom-articles/2023/milkrun-voluntary-administration-400-jobs-lost.html",
+        "source_type": "news"
+      },
+      {
+        "citation_number": 3,
+        "label": "Startup Daily (Series A funding coverage)",
+        "url": "https://www.startupdaily.net/topic/funding/milkrun-raises-75-million-series-a/",
+        "source_type": "news"
+      },
+      {
+        "citation_number": 4,
         "label": "UNSW academic analysis",
         "url": "https://www.unsw.edu.au/newsroom/news/2023/04/milkrun_s-demise-is-another-nail-in-the-10-minute-grocery-delive",
         "source_type": "news"
       },
       {
-        "citation_number": 3,
-        "label": "ACS Information Age",
-        "url": "https://ia.acs.org.au/article/2023/grocery-delivery-startup-milkrun-is-dead.html",
-        "source_type": "news"
-      },
-      {
-        "citation_number": 4,
+        "citation_number": 5,
         "label": "Marketing Mag (last delivery)",
         "url": "https://www.marketingmag.com.au/featured/milkrun-does-its-last-delivery/",
-        "source_type": "news"
-      },
-      {
-        "citation_number": 5,
-        "label": "Australian Association of Convenience Stores (Woolworths acquisition)",
-        "url": "https://aacs.org.au/woolworths-buys-failed-fast-delivery-start-up-milkrun/",
         "source_type": "news"
       }
     ],
