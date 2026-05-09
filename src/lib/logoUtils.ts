@@ -44,3 +44,13 @@ export function getLogoUrl(websiteUrl: string | null | undefined, size: number =
   if (!domain) return null;
   return getLogoDevUrl(domain, size);
 }
+
+/**
+ * Builds a synthetic https:// URL from a bare domain, suitable for passing to
+ * components like CompanyLogo that take a websiteUrl prop. Returns null when
+ * the input is empty so callers can pass the result straight through.
+ */
+export function domainToWebsite(domain: string | null | undefined): string | null {
+  if (!domain || !domain.trim()) return null;
+  return `https://${domain.trim()}`;
+}

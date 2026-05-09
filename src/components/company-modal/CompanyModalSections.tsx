@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Company } from "../CompanyCard";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { domainToWebsite } from "@/lib/logoUtils";
 
 interface CompanyModalSectionsProps {
   company: Company;
@@ -56,6 +57,7 @@ export const CompanyModalSections = ({
               <div key={tile.id} className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
                 <CompanyLogo
                   existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                  websiteUrl={domainToWebsite(tile.domain)}
                   companyName={tile.name}
                   size="md"
                   className="w-12 h-12 bg-white border rounded-lg"

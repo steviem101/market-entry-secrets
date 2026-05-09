@@ -6,11 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { domainToWebsite } from "@/lib/logoUtils";
 
 export interface ExperienceTile {
   id: string;
   name: string;
   logo: string;
+  domain?: string;
 }
 
 export interface Person {
@@ -131,6 +133,7 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
               <CompanyLogo
                 key={tile.id}
                 existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                websiteUrl={domainToWebsite(tile.domain)}
                 companyName={tile.name}
                 size="md"
                 className="flex-shrink-0 w-12 h-12 bg-white border rounded-lg"

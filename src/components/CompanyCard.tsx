@@ -15,6 +15,7 @@ export interface ExperienceTile {
   id: string;
   name: string;
   logo: string;
+  domain?: string;
 }
 
 export interface Company {

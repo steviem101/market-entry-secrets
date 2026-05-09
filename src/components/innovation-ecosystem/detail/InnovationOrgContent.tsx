@@ -8,6 +8,7 @@ import {
   getCompanyInitials
 } from "@/components/company-card/CompanyCardHelpers";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { domainToWebsite } from "@/lib/logoUtils";
 
 interface InnovationOrgContentProps {
   org: {
@@ -79,6 +80,7 @@ export const InnovationOrgContent = ({ org, relatedOrgs }: InnovationOrgContentP
                   <div key={tile.id || index} className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
                     <CompanyLogo
                       existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                      websiteUrl={domainToWebsite(tile.domain)}
                       companyName={tile.name}
                       size="md"
                       className="w-12 h-12 bg-white border rounded-lg flex-shrink-0"

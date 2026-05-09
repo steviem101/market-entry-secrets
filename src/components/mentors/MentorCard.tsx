@@ -7,6 +7,7 @@ import { BookmarkButton } from "@/components/BookmarkButton";
 import { useNavigate } from "react-router-dom";
 import type { Mentor } from "@/hooks/useMentors";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { domainToWebsite } from "@/lib/logoUtils";
 
 interface MentorCardProps {
   mentor: Mentor;
@@ -50,11 +51,12 @@ const MarketFlag = ({ market }: { market: string }) => {
   );
 };
 
-const ExperienceTileItem = ({ tile }: { tile: { id?: string; name: string; logo?: string } }) => {
+const ExperienceTileItem = ({ tile }: { tile: { id?: string; name: string; logo?: string; domain?: string } }) => {
   return (
     <div className="flex-shrink-0" title={tile.name}>
       <CompanyLogo
         existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+        websiteUrl={domainToWebsite(tile.domain)}
         companyName={tile.name}
         size="sm"
         className="w-10 h-10 rounded-lg border bg-white"
@@ -72,7 +74,7 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
 
   const experienceTiles = mentor.experience_tiles
     ? (Array.isArray(mentor.experience_tiles)
-        ? (mentor.experience_tiles as { id?: string; name: string; logo?: string }[])
+        ? (mentor.experience_tiles as { id?: string; name: string; logo?: string; domain?: string }[])
         : [])
     : [];
 

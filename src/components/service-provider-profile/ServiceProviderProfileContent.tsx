@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ServiceProviderReviews } from "./ServiceProviderReviews";
 import { ServiceProviderSidebar } from "./ServiceProviderSidebar";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { domainToWebsite } from "@/lib/logoUtils";
 
 interface Review {
   id: string;
@@ -105,6 +106,7 @@ export const ServiceProviderProfileContent = ({
                   >
                     <CompanyLogo
                       existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
+                      websiteUrl={domainToWebsite(tile.domain)}
                       companyName={tile.name}
                       size="md"
                       className="w-12 h-12"
