@@ -13,6 +13,7 @@ const CompanyCardHeader = ({ company }: CompanyCardHeaderProps) => {
   return (
     <div className="flex items-start gap-4 mb-4">
       <CompanyLogo
+        domain={company.domain}
         websiteUrl={company.website_url || company.website}
         existingLogoUrl={company.logo_url || company.logo}
         companyName={company.name}

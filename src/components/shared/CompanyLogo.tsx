@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getLogoUrl } from "@/lib/logoUtils";
+import { getLogoUrl, getLogoUrlFromDomain } from "@/lib/logoUtils";
 import { getCompanyInitials } from "@/components/company-card/CompanyCardHelpers";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,11 @@ type LogoSize = keyof typeof SIZE_MAP;
 
 interface CompanyLogoProps {
   websiteUrl?: string | null;
+  /**
+   * Canonical bare domain (e.g. "austrade.gov.au"). When provided, takes
+   * precedence over websiteUrl for the Logo.dev lookup.
+   */
+  domain?: string | null;
   existingLogoUrl?: string | null;
   companyName: string;
   size?: LogoSize;
@@ -31,6 +36,7 @@ interface CompanyLogoProps {
  */
 const CompanyLogo = ({
   websiteUrl,
+  domain,
   existingLogoUrl,
   companyName,
   size = "md",
@@ -42,8 +48,10 @@ const CompanyLogo = ({
   const [imgFailed, setImgFailed] = useState(false);
   const [useSecondary, setUseSecondary] = useState(false);
 
-  // Determine which image source to try
-  const logoDevUrl = getLogoUrl(websiteUrl, sizeConfig.px);
+  // Determine which image source to try. Prefer the canonical `domain` column,
+  // since `website_url` may be missing or stale on legacy records.
+  const logoDevUrl =
+    getLogoUrlFromDomain(domain, sizeConfig.px) || getLogoUrl(websiteUrl, sizeConfig.px);
   const primarySrc = existingLogoUrl || logoDevUrl;
   // If the existing logo fails, try Logo.dev as secondary (only if they're different)
   const secondarySrc = existingLogoUrl && logoDevUrl && existingLogoUrl !== logoDevUrl ? logoDevUrl : null;
@@ -52,7 +60,7 @@ const CompanyLogo = ({
   useEffect(() => {
     setImgFailed(false);
     setUseSecondary(false);
-  }, [existingLogoUrl, websiteUrl]);
+  }, [existingLogoUrl, websiteUrl, domain]);
 
   const currentSrc = useSecondary ? secondarySrc : primarySrc;
   const showImage = currentSrc && !imgFailed;
