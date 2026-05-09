@@ -27,6 +27,8 @@ CREATE INDEX IF NOT EXISTS idx_innovation_ecosystem_enrichment_status
   ON innovation_ecosystem_enrichment_staging(status);
 
 ALTER TABLE innovation_ecosystem_enrichment_staging ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins manage enrichment staging"
+  ON innovation_ecosystem_enrichment_staging;
 CREATE POLICY "Admins manage enrichment staging"
   ON innovation_ecosystem_enrichment_staging
   FOR ALL
@@ -50,6 +52,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_partner_domain_lookup_name_normalized
   ON partner_domain_lookup(name_normalized);
 
 ALTER TABLE partner_domain_lookup ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins manage partner domain lookup"
+  ON partner_domain_lookup;
 CREATE POLICY "Admins manage partner domain lookup"
   ON partner_domain_lookup
   FOR ALL
