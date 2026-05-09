@@ -195,11 +195,65 @@ The shift from "57 records at richness 1" + "14 at richness 0" + "17 at richness
 
 ## What was deliberately not done
 
-- **`basic_info` and `why_work_with_us` fields** for the 71 enriched records: my Phase 3.2 prompt didn't include these. They'd need a separate enrichment pass. Detail page falls back to `description` for `basic_info`; "Why Work With Us" section just doesn't render. Acceptable for a follow-up.
-- **`location_id` foreign-key linkage** to the `locations` taxonomy table: 67 records still missing. Now tractable since locations are city-specific (e.g. "Sydney, NSW"), so a follow-up SQL pass can backfill.
-- **Illumina Accelerator location**: agent identified it as US-based and set location to empty. Could either delete from this AU/NZ-focused directory or set location to "USA" explicitly.
-- **`Y Combinator` location**: kept as "USA & North America" because the apply rule preserved existing non-empty values. Agent had researched "San Francisco, CA" — minor data quality miss.
-- **6 records without a website** (Atomic Sky, Gold Coast Innovation Centre, Hoist Ai, iAccelerate Wollongong, Runway HQ, ygap First Gens): the research agents found websites for some of these (e.g. atomicsky.com.au, gchub.com.au, iaccelerate.com.au, runwayhq.co), but the apply SQL didn't touch the `website` field. A follow-up `UPDATE innovation_ecosystem SET website = enrichment->>'website' WHERE website IS NULL` from staging would close this gap and trigger the domain backfill for those 6 records.
+(All five gaps below were closed in the Phase 3.6 follow-up — see the next section.)
+
+---
+
+## Phase 3.6 — Gap fixes (2026-05-08, same day)
+
+Closed all five known gaps from the original "What was deliberately not done" list:
+
+### Gap 2: 6 missing websites
+Backfilled `website` from staging for Atomic Sky (`atomicsky.com.au`), Gold Coast Innovation Centre (`gchub.com.au`), Hoist Ai (`hoistai.com`), Runway HQ (`runwayhq.co`), ygap First Gens (`ygap.org`), iAccelerate Wollongong (`iaccelerate.com.au`). Re-ran the website→domain backfill: **all 124 records now have a domain**, all 124 will render org logos via logo.dev.
+
+### Gap 3: Y Combinator location
+Updated from `"USA & North America"` → `"San Francisco, USA"`.
+
+### Gap 5: Illumina Accelerator location
+Updated from empty → `"USA"`. Also fixed Xccelerate from `"USA & North America"` → `"Sydney, NSW"` (it's run by CommBank's x15ventures in Sydney, not US-based).
+
+### Gap 4: location_id FK
+Backfilled by extracting city from `"City, STATE"` and matching `locations.name`. Mapped "Sydney & Melbourne" records (muru-D, Startmate) to Sydney as primary HQ. **111/124 records (90%) now FK-linked**, up from 57. The 13 remaining: 3 country-only ("Australia"), 1 "Multiple Locations" (CSIRO Innovation Centre), 2 USA-based (Y Combinator, Illumina), 7 regional cities not in `locations` (Newcastle, Wollongong, Geelong, Orange, Warners Bay) — adding these as new `locations` entries is a separate scope (would create new SEO pages with empty keyword arrays).
+
+### Gap 1: basic_info + why_work_with_us
+Dispatched a single Claude synthesis agent (no web tools — pure derivation from name/services/sectors/location) for all 88 records missing one or both fields. Applied conditionally via SQL (only overwrote if the field was empty). **All 124 records now have basic_info AND why_work_with_us**.
+
+### Final field-level coverage after gap fixes
+
+| Field | Coverage |
+|---|---|
+| basic_info | 124/124 (100%) ✓ |
+| why_work_with_us | 124/124 (100%) ✓ |
+| domain | 124/124 (100%) ✓ |
+| founded | 116/124 (94%) |
+| employees | 112/124 (90%) |
+| contacts | 111/124 (90%) |
+| location_id FK | 111/124 (90%) |
+| experience_tiles | 102/124 (82%) |
+| sectors | 81/124 (65%) |
+| legacy `logo` column | 36/124 (29%) — visually moot, logo.dev derives from `domain` for all 124 |
+
+### Final tier distribution
+
+| Richness | Records | Notes |
+|---|---|---|
+| 7/7 | 34 | Same as Phase 3.5 (the legacy `logo` column gates this metric) |
+| 6/7 | **55** | up from 2 — most enriched records landed here once basic_info + why_work_with_us were filled |
+| 5/7 | 22 | |
+| 4/7 | 10 | |
+| 3/7 | 1 | |
+| 2/7 | 2 | |
+| 1/7 | **0** | (was 3 before gap fixes) |
+| 0/7 | 0 | |
+
+**Tier A+B (richness ≥ 6) = 89 records (72%)** — up from 36 at the start of the project.
+
+### Cost of Phase 3.6
+1 synthesis agent, ~35K tokens, ~$0.50.
+
+### Outstanding (intentionally out of scope)
+- Adding regional city entries to the `locations` table (Newcastle, Wollongong, Geelong, Orange, Warners Bay) — would unlock the last 7 location_id FKs but creates new SEO pages requiring keyword research.
+- Backfilling the legacy `logo` column for the 88 records without one — visually unnecessary since `domain → logo.dev` already renders.
 
 ---
 
