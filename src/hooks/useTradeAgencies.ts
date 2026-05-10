@@ -119,7 +119,9 @@ export const useAgencyContacts = (agencyId: string) => {
         .from('agency_contacts')
         .select('*')
         .eq('agency_id', agencyId)
-        .order('display_order');
+        .eq('is_archived', false)
+        .order('is_primary', { ascending: false })
+        .order('display_order', { ascending: true });
 
       if (error) {
         return [];
