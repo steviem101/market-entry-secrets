@@ -21,6 +21,15 @@ const Locations = () => {
         title="Australian Locations | Market Entry Secrets"
         description="Discover market entry opportunities across Australian cities and regions."
         canonicalPath="/locations"
+        jsonLd={{
+          type: "Dataset",
+          data: {
+            "@type": "CollectionPage",
+            name: "Australian Locations Directory",
+            description:
+              "Browse Australian cities and regions with market entry insights, key industries, and local providers.",
+          },
+        }}
       />
       <main className="pt-4">
         <div className="container mx-auto px-4 pt-4">

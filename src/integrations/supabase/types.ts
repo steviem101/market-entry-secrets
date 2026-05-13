@@ -23,9 +23,12 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          is_archived: boolean | null
           is_primary: boolean | null
           linkedin_url: string | null
+          mes_relevance_score: number | null
           phone: string | null
+          tier: string | null
           title: string | null
         }
         Insert: {
@@ -36,9 +39,12 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          is_archived?: boolean | null
           is_primary?: boolean | null
           linkedin_url?: string | null
+          mes_relevance_score?: number | null
           phone?: string | null
+          tier?: string | null
           title?: string | null
         }
         Update: {
@@ -49,9 +55,12 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          is_archived?: boolean | null
           is_primary?: boolean | null
           linkedin_url?: string | null
+          mes_relevance_score?: number | null
           phone?: string | null
+          tier?: string | null
           title?: string | null
         }
         Relationships: [
@@ -854,80 +863,6 @@ export type Database = {
         }
         Relationships: []
       }
-      country_trade_organizations: {
-        Row: {
-          basic_info: string | null
-          contact: string | null
-          contact_persons: Json | null
-          country_id: string | null
-          created_at: string
-          description: string
-          employees: string
-          experience_tiles: Json | null
-          founded: string
-          id: string
-          location: string
-          logo: string | null
-          name: string
-          organization_type: string
-          services: string[]
-          slug: string
-          updated_at: string
-          website: string | null
-          why_work_with_us: string | null
-        }
-        Insert: {
-          basic_info?: string | null
-          contact?: string | null
-          contact_persons?: Json | null
-          country_id?: string | null
-          created_at?: string
-          description: string
-          employees: string
-          experience_tiles?: Json | null
-          founded: string
-          id?: string
-          location: string
-          logo?: string | null
-          name: string
-          organization_type?: string
-          services?: string[]
-          slug: string
-          updated_at?: string
-          website?: string | null
-          why_work_with_us?: string | null
-        }
-        Update: {
-          basic_info?: string | null
-          contact?: string | null
-          contact_persons?: Json | null
-          country_id?: string | null
-          created_at?: string
-          description?: string
-          employees?: string
-          experience_tiles?: Json | null
-          founded?: string
-          id?: string
-          location?: string
-          logo?: string | null
-          name?: string
-          organization_type?: string
-          services?: string[]
-          slug?: string
-          updated_at?: string
-          website?: string | null
-          why_work_with_us?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "country_trade_organizations_country_id_fkey"
-            columns: ["country_id"]
-            isOneToOne: false
-            referencedRelation: "countries"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       directory_submissions: {
         Row: {
           contact_email: string
@@ -1122,6 +1057,7 @@ export type Database = {
           city: string | null
           created_at: string
           date: string | null
+          date_precision: string
           description: string
           event_logo_url: string | null
           exhibitors: number | null
@@ -1156,6 +1092,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           date?: string | null
+          date_precision?: string
           description: string
           event_logo_url?: string | null
           exhibitors?: number | null
@@ -1190,6 +1127,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           date?: string | null
+          date_precision?: string
           description?: string
           event_logo_url?: string | null
           exhibitors?: number | null
@@ -2018,6 +1956,44 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      innovation_ecosystem_enrichment_staging: {
+        Row: {
+          created_at: string
+          enrichment: Json
+          id: string
+          notes: string | null
+          reviewed_at: string | null
+          source_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          enrichment: Json
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          source_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          enrichment?: Json
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          source_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "innovation_ecosystem_enrichment_staging_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "innovation_ecosystem"
             referencedColumns: ["id"]
           },
         ]
@@ -2912,6 +2888,36 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_domain_lookup: {
+        Row: {
+          created_at: string
+          domain: string | null
+          id: string
+          name: string
+          name_normalized: string | null
+          notes: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          domain?: string | null
+          id?: string
+          name: string
+          name_normalized?: string | null
+          notes?: string | null
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string | null
+          id?: string
+          name?: string
+          name_normalized?: string | null
+          notes?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
       payment_webhook_logs: {
         Row: {
           created_at: string | null
@@ -3266,15 +3272,68 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_agencies_enrichment_staging: {
+        Row: {
+          applied_at: string | null
+          created_at: string | null
+          enrichment: Json
+          id: string
+          research_notes: string | null
+          reviewed_at: string | null
+          source_id: string | null
+          source_name: string
+          status: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          created_at?: string | null
+          enrichment: Json
+          id?: string
+          research_notes?: string | null
+          reviewed_at?: string | null
+          source_id?: string | null
+          source_name: string
+          status?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          created_at?: string | null
+          enrichment?: Json
+          id?: string
+          research_notes?: string | null
+          reviewed_at?: string | null
+          source_id?: string | null
+          source_name?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_agencies_enrichment_staging_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: true
+            referencedRelation: "agencies_report_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_agencies_enrichment_staging_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: true
+            referencedRelation: "trade_investment_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trade_investment_agencies: {
         Row: {
           basic_info: string | null
           category_slug: string | null
           contact: string | null
           contact_persons: Json | null
+          country_iso2: string | null
           created_at: string
           description: string
           description_full: string | null
+          domain: string | null
           email: string | null
           employees: string
           experience_tiles: Json | null
@@ -3304,6 +3363,7 @@ export type Database = {
           meta_description: string | null
           meta_title: string | null
           name: string
+          needs_re_research: boolean | null
           organisation_type: string | null
           phone: string | null
           sectors_supported: string[] | null
@@ -3324,9 +3384,11 @@ export type Database = {
           category_slug?: string | null
           contact?: string | null
           contact_persons?: Json | null
+          country_iso2?: string | null
           created_at?: string
           description: string
           description_full?: string | null
+          domain?: string | null
           email?: string | null
           employees: string
           experience_tiles?: Json | null
@@ -3356,6 +3418,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           name: string
+          needs_re_research?: boolean | null
           organisation_type?: string | null
           phone?: string | null
           sectors_supported?: string[] | null
@@ -3376,9 +3439,11 @@ export type Database = {
           category_slug?: string | null
           contact?: string | null
           contact_persons?: Json | null
+          country_iso2?: string | null
           created_at?: string
           description?: string
           description_full?: string | null
+          domain?: string | null
           email?: string | null
           employees?: string
           experience_tiles?: Json | null
@@ -3408,6 +3473,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           name?: string
+          needs_re_research?: boolean | null
           organisation_type?: string | null
           phone?: string | null
           sectors_supported?: string[] | null
@@ -3641,8 +3707,10 @@ export type Database = {
           category_slug: string | null
           contact: string | null
           contact_persons: Json | null
+          country_iso2: string | null
           description: string | null
           description_full: string | null
+          domain: string | null
           email: string | null
           employees: string | null
           experience_tiles: Json | null
@@ -3682,6 +3750,7 @@ export type Database = {
           tagline: string | null
           target_company_origin: string[] | null
           target_company_stage: string[] | null
+          team_contacts: Json | null
           view_count: number | null
           website: string | null
           website_url: string | null
@@ -3807,6 +3876,7 @@ export type Database = {
           tags: string[]
         }[]
       }
+      roll_forward_month_precision_events: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       validate_industry_sector_values: {

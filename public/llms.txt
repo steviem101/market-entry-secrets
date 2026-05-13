@@ -1,0 +1,31 @@
+# Market Entry Secrets
+
+> AI-powered market entry intelligence platform helping international companies enter the Australian and New Zealand markets. Connects companies with vetted service providers, mentors, events, leads, and AI-generated market entry reports.
+
+Market Entry Secrets is a B2B SaaS directory that pairs a vetted ecosystem of Australian/ANZ service providers, mentors, and trade agencies with on-demand AI market entry reports. Reports are generated from Firecrawl scrapes, Perplexity research, and Gemini synthesis, then enriched with live directory matches.
+
+## Pages
+
+- [Home](/): Overview of the platform and how it works.
+- [Report Creator](/report-creator): 3-step intake wizard that generates a custom AI market entry report.
+- [Pricing](/pricing): Subscription tiers (Free, Growth, Scale, Enterprise).
+- [Service Providers](/service-providers): Directory of vetted ANZ market entry service providers.
+- [Mentors](/mentors): Directory of expert mentors with Australian market experience.
+- [Events](/events): Upcoming Australian industry conferences and summits.
+- [Leads](/leads): B2B lead datasets for the Australian market.
+- [Content](/content): Market entry guides and articles.
+- [Case Studies](/case-studies): Real-world ANZ market entry case studies.
+- [Innovation Ecosystem](/innovation-ecosystem): Australian innovation hubs, accelerators, and incubators.
+- [Trade & Investment Agencies](/trade-investment-agencies): Government trade and investment bodies.
+- [Locations](/locations): Australian cities and regions for market entry.
+- [Countries](/countries): Source-country guides for companies entering ANZ.
+- [Sectors](/sectors): Industry-specific market entry insights.
+
+## Optional
+
+- [About](/about): Company background and mission.
+- [FAQ](/faq): Frequently asked questions.
+- [Contact](/contact): Get in touch.
+- [Partner with Us](/partner): Apply to list as a service provider or mentor.
+- [Privacy Policy](/privacy): Privacy policy.
+- [Terms of Service](/terms): Terms of service.
