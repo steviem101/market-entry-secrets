@@ -28,7 +28,7 @@ export const CountryContent = ({ country }: CountryContentProps) => {
       <TradeOrganizationsSection countrySlug={country.slug} />
       <ContentSection contentItems={contentItems} />
       <CommunityMembersSection communityMembers={communityMembers} />
-      <ServiceProvidersSection serviceProviders={serviceProviders} />
+      <ServiceProvidersSection serviceProviders={serviceProviders as any} />
       <EventsSection events={events} />
       <LeadsSection leads={leads} />
     </div>

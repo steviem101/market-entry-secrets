@@ -43,17 +43,18 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Market Entry Secrets | Enter the Australian Market with Confidence</title>
+        <title>Market Entry Secrets | Australian Market Entry Intelligence</title>
         <meta
           name="description"
-          content="AI-powered market entry intelligence for international companies entering Australia. Connect with 500+ vetted service providers, mentors, and get a custom market entry report in minutes."
+          content="AI market entry intelligence for companies entering Australia. 500+ vetted providers, mentors, and custom reports in minutes."
         />
-        <meta property="og:title" content="Market Entry Secrets | Enter the Australian Market with Confidence" />
+        <meta property="og:title" content="Market Entry Secrets | Australian Market Entry Intelligence" />
         <meta
           property="og:description"
-          content="AI-powered market entry intelligence for international companies entering Australia. Connect with 500+ vetted service providers, mentors, and get a custom market entry report in minutes."
+          content="AI market entry intelligence for companies entering Australia. 500+ vetted providers, mentors, and custom reports in minutes."
         />
         <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${siteUrl}/`} />
         <link rel="canonical" href={`${siteUrl}/`} />
         <script type="application/ld+json">
           {JSON.stringify(JSON_LD_ORGANIZATION)}

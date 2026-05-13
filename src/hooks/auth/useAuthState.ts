@@ -64,7 +64,7 @@ export const useAuthState = () => {
             // Fire welcome email on both SIGNED_UP and SIGNED_IN because
             // SIGNED_UP doesn't always fire (e.g. OAuth). The send-email
             // function deduplicates via idempotency_key = "welcome:{userId}".
-            if (_event === 'SIGNED_UP' || _event === 'SIGNED_IN') {
+            if ((_event as string) === 'SIGNED_UP' || _event === 'SIGNED_IN') {
               supabase.functions.invoke('send-email', {
                 body: {
                   email_type: 'welcome',

@@ -79,7 +79,18 @@ const ServiceProviders = () => {
           property="og:description"
           content="Connect with verified service providers for your market entry into Australia and New Zealand."
         />
+        <meta property="og:url" content={`${window.location.origin}/service-providers`} />
         <link rel="canonical" href={`${window.location.origin}/service-providers`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: "Service Providers Directory",
+            description:
+              "Directory of vetted service providers specializing in market entry to Australia and New Zealand.",
+            url: `${window.location.origin}/service-providers`,
+          })}
+        </script>
       </Helmet>
 
       <ServiceProvidersDataProvider
