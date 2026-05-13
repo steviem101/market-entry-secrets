@@ -16,6 +16,7 @@ interface AgencyHeroProps {
     employees: string;
     website: string | null;
     website_url?: string | null;
+    domain?: string | null;
     logo: string | null;
     services: string[];
     category_slug?: string;
@@ -57,6 +58,7 @@ export const AgencyHero = ({ agency, categoryName }: AgencyHeroProps) => {
         <div className="flex flex-col md:flex-row gap-8 items-start">
           {/* Logo / Initials */}
           <CompanyLogo
+            domain={agency.domain}
             websiteUrl={siteUrl}
             existingLogoUrl={agency.logo}
             companyName={agency.name}

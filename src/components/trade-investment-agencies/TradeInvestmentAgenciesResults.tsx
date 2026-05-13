@@ -66,6 +66,8 @@ const TradeInvestmentAgenciesResults = ({
               employees: agency.employees,
               services: agency.services,
               website: agency.website_url || agency.website,
+              website_url: agency.website_url,
+              domain: agency.domain,
               contact: agency.email || agency.contact,
               logo: agency.logo,
               basic_info: agency.basic_info,

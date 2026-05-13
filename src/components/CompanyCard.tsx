@@ -43,6 +43,7 @@ export interface Company {
   logo_url?: string;
   cover_image_url?: string;
   website_url?: string;
+  domain?: string;
   founded_year?: number;
   team_size_range?: string;
   is_verified?: boolean;

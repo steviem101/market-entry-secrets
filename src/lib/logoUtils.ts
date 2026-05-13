@@ -46,6 +46,36 @@ export function getLogoUrl(websiteUrl: string | null | undefined, size: number =
 }
 
 /**
+ * Builds a Logo.dev URL directly from a bare-domain string (e.g. "austrade.gov.au").
+ * Tolerates accidental schemes and "www." prefixes by passing through extractDomain.
+ */
+export function getLogoUrlFromDomain(domain: string | null | undefined, size: number = 64): string | null {
+  if (!domain || !domain.trim()) return null;
+  const normalized = extractDomain(domain) || domain.trim().replace(/^www\./i, "");
+  if (!normalized) return null;
+  return getLogoDevUrl(normalized, size);
+}
+
+/**
+ * Resolves the best Logo.dev URL for an organisation record. Prefers the
+ * canonical `domain` column (populated by the agencies cleanup) over derived
+ * domains from the legacy `website_url` / `website` fields.
+ */
+export function getOrgLogoUrl(
+  record: {
+    domain?: string | null;
+    website_url?: string | null;
+    website?: string | null;
+  },
+  size: number = 64,
+): string | null {
+  return (
+    getLogoUrlFromDomain(record.domain, size) ||
+    getLogoUrl(record.website_url ?? record.website, size)
+  );
+}
+
+/**
  * Builds a synthetic https:// URL from a bare domain, suitable for passing to
  * components like CompanyLogo that take a websiteUrl prop. Returns null when
  * the input is empty so callers can pass the result straight through.

@@ -375,6 +375,8 @@ export const AgencyContent = ({ agency, relatedAgencies, categoryName }: AgencyC
                   employees: related.employees,
                   services: related.services || [],
                   website: related.website_url || related.website,
+                  website_url: related.website_url,
+                  domain: related.domain,
                   contact: related.email || related.contact,
                   logo: related.logo,
                   basic_info: related.basic_info,
