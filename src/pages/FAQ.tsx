@@ -5,6 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { SEOHead } from "@/components/common/SEOHead";
 
+const FAQ_ITEMS: { q: string; a: string }[] = [
+  { q: "What is Market Entry Secrets?", a: "Market Entry Secrets is Australia's comprehensive platform for businesses looking to enter the Australian market. We connect international companies with local service providers, mentors, and resources to ensure successful market entry." },
+  { q: "Who is this platform for?", a: "Our platform serves international businesses planning to enter Australia, local service providers specializing in market entry, mentors with Australian business expertise, and anyone involved in the market entry ecosystem." },
+  { q: "Is the platform free to use?", a: "Browsing our directory and accessing basic resources is completely free. Service providers pay a listing fee to be featured in our directory, and some premium content may require a subscription." },
+  { q: "How do I get started with my Australian market entry?", a: "Start by browsing our service providers directory to find specialists in your industry. You can also use our AI assistant to get personalized recommendations, attend our events, or connect with mentors who have experience in your sector." },
+  { q: "How do I choose the right service providers?", a: "Review provider profiles, check their expertise areas, read client testimonials, and consider their location. You can contact multiple providers to compare services and pricing." },
+  { q: "How long does it typically take to enter the Australian market?", a: "Timeline varies by business type and complexity. Simple service businesses might take 3-6 months, while complex manufacturing or regulated industries can take 12-18 months." },
+  { q: "How do I list my services on the platform?", a: "Visit our Partner with Us page and fill out the service provider application. We review all applications to ensure quality and relevance. Once approved, your listing will be live and visible to potential clients." },
+  { q: "What does it cost to list my services?", a: "We offer different listing packages starting from $99/month for basic listings up to $299/month for premium featured listings with enhanced visibility and lead generation tools." },
+  { q: "How will I receive leads?", a: "Leads are delivered through our platform messaging system and email notifications. Premium members also get access to our leads dashboard with advanced filtering and tracking capabilities." },
+  { q: "How does the AI assistant work?", a: "Our AI assistant is trained on Australian market entry best practices and can provide personalized recommendations for service providers, answer regulatory questions, and guide you through the market entry process step by step." },
+  { q: "How can I get support?", a: "You can contact our support team through the contact page, use the AI assistant for immediate help, or email us directly at hello@marketentrysecrets.com.au. We typically respond within 24 hours." },
+  { q: "Is there a mobile app?", a: "Currently, our platform is web-based and fully responsive on mobile devices. A dedicated mobile app is planned. You can bookmark our site on your mobile device for quick access." },
+];
+
 const FAQ = () => {
   return (
     <>
@@ -12,6 +27,17 @@ const FAQ = () => {
         title="FAQ | Market Entry Secrets"
         description="Frequently asked questions about entering the Australian market and using Market Entry Secrets."
         canonicalPath="/faq"
+        jsonLd={{
+          type: "Organization",
+          data: {
+            "@type": "FAQPage",
+            mainEntity: FAQ_ITEMS.map((item) => ({
+              "@type": "Question",
+              name: item.q,
+              acceptedAnswer: { "@type": "Answer", text: item.a },
+            })),
+          },
+        }}
       />
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
