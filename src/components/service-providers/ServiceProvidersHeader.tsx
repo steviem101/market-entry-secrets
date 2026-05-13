@@ -74,6 +74,7 @@ export const ServiceProvidersHeader = ({
             <ServiceProvidersFilters 
               selectedLocations={selectedLocations}
               onLocationChange={onLocationChange}
+              uniqueLocationValues={[]}
               selectedType={selectedType}
               onTypeChange={onTypeChange}
               selectedSector={selectedSector}

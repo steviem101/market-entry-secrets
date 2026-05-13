@@ -52,7 +52,7 @@ const fetchEvents = async (query?: string): Promise<Event[]> => {
     throw error;
   }
 
-  return data || [];
+  return (data || []) as any;
 };
 
 export const useEvents = () => {

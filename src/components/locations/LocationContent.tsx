@@ -30,7 +30,7 @@ export const LocationContent = ({ location }: LocationContentProps) => {
 
   return (
     <div className="container mx-auto px-4 py-16 space-y-16">
-      <ServiceProvidersSection serviceProviders={serviceProviders} />
+      <ServiceProvidersSection serviceProviders={serviceProviders as any} />
       <InnovationEcosystemSection innovationEcosystem={innovationEcosystem} />
       <TradeAgenciesSection tradeAgencies={tradeAgencies} />
       <EventsSection events={events} />

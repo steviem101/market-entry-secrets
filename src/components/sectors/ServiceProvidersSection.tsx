@@ -52,8 +52,8 @@ const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionPr
             contact: provider.contact || undefined,
             logo: provider.logo || undefined,
             slug: provider.slug || undefined,
-            experienceTiles: Array.isArray(provider.experience_tiles) ? provider.experience_tiles : [],
-            contactPersons: Array.isArray(provider.contact_persons) ? provider.contact_persons : []
+            experienceTiles: (Array.isArray(provider.experience_tiles) ? provider.experience_tiles : []) as any,
+            contactPersons: (Array.isArray(provider.contact_persons) ? provider.contact_persons : []) as any
           }}
           onViewProfile={handleViewProfile}
           onContact={handleContact}

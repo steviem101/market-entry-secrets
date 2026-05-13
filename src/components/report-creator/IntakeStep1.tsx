@@ -26,7 +26,7 @@ export const IntakeStep1 = ({ form, onNext, persona, onPersonaChange }: IntakeSt
 
   const countryValue = watch('country_of_origin');
   const presetCountries = COUNTRY_OPTIONS.filter(c => c !== 'Other');
-  const isOther = countryValue !== '' && !presetCountries.includes(countryValue);
+  const isOther = countryValue !== '' && !(presetCountries as readonly string[]).includes(countryValue);
   const [customCountry, setCustomCountry] = useState(() => isOther ? countryValue : '');
   const selectDisplayValue = isOther ? 'Other' : countryValue;
 

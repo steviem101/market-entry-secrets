@@ -39,7 +39,7 @@ export const useCountryTradeOrganizations = (countrySlug: string) => {
       }
 
       // Then get trade organizations for that country
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('country_trade_organizations')
         .select('*')
         .eq('country_id', country.id)
@@ -49,7 +49,7 @@ export const useCountryTradeOrganizations = (countrySlug: string) => {
         throw error;
       }
 
-      return data as TradeOrganizationData[];
+      return data as unknown as TradeOrganizationData[];
     },
     enabled: !!countrySlug
   });
