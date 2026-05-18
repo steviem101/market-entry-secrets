@@ -863,6 +863,298 @@ export type Database = {
         }
         Relationships: []
       }
+      country_case_studies: {
+        Row: {
+          company_name: string
+          content_item_id: string | null
+          country_id: string
+          created_at: string | null
+          id: string
+          logo_color: string | null
+          outcome: string
+          sector: string
+          sort_order: number
+          updated_at: string | null
+          wordmark: string | null
+        }
+        Insert: {
+          company_name: string
+          content_item_id?: string | null
+          country_id: string
+          created_at?: string | null
+          id?: string
+          logo_color?: string | null
+          outcome: string
+          sector: string
+          sort_order: number
+          updated_at?: string | null
+          wordmark?: string | null
+        }
+        Update: {
+          company_name?: string
+          content_item_id?: string | null
+          country_id?: string
+          created_at?: string | null
+          id?: string
+          logo_color?: string | null
+          outcome?: string
+          sector?: string
+          sort_order?: number
+          updated_at?: string | null
+          wordmark?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_case_studies_content_item_id_fkey"
+            columns: ["content_item_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "country_case_studies_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      country_faqs: {
+        Row: {
+          answer: string
+          country_id: string
+          created_at: string | null
+          id: string
+          question: string
+          sort_order: number
+          updated_at: string | null
+        }
+        Insert: {
+          answer: string
+          country_id: string
+          created_at?: string | null
+          id?: string
+          question: string
+          sort_order: number
+          updated_at?: string | null
+        }
+        Update: {
+          answer?: string
+          country_id?: string
+          created_at?: string | null
+          id?: string
+          question?: string
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_faqs_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      country_funding_instruments: {
+        Row: {
+          body: string
+          country_id: string
+          created_at: string | null
+          id: string
+          side: string
+          sort_order: number
+          tag: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          body: string
+          country_id: string
+          created_at?: string | null
+          id?: string
+          side: string
+          sort_order: number
+          tag: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          country_id?: string
+          created_at?: string | null
+          id?: string
+          side?: string
+          sort_order?: number
+          tag?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_funding_instruments_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      country_page_content: {
+        Row: {
+          country_id: string
+          created_at: string | null
+          differentiators: Json
+          featured_city_slugs: string[] | null
+          hero_badge: string | null
+          hero_headline: string
+          hero_subhead: string
+          hero_trust_companies: string[] | null
+          hero_trust_extra: number | null
+          live_snapshot: Json | null
+          narrative_bullets: Json
+          pull_quote: string | null
+          pull_quote_attr: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          country_id: string
+          created_at?: string | null
+          differentiators?: Json
+          featured_city_slugs?: string[] | null
+          hero_badge?: string | null
+          hero_headline: string
+          hero_subhead: string
+          hero_trust_companies?: string[] | null
+          hero_trust_extra?: number | null
+          live_snapshot?: Json | null
+          narrative_bullets?: Json
+          pull_quote?: string | null
+          pull_quote_attr?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          country_id?: string
+          created_at?: string | null
+          differentiators?: Json
+          featured_city_slugs?: string[] | null
+          hero_badge?: string | null
+          hero_headline?: string
+          hero_subhead?: string
+          hero_trust_companies?: string[] | null
+          hero_trust_extra?: number | null
+          live_snapshot?: Json | null
+          narrative_bullets?: Json
+          pull_quote?: string | null
+          pull_quote_attr?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_page_content_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: true
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      country_playbook_stages: {
+        Row: {
+          country_id: string
+          created_at: string | null
+          id: string
+          stage_number: number
+          sub_steps: string[]
+          summary: string
+          time_range: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          country_id: string
+          created_at?: string | null
+          id?: string
+          stage_number: number
+          sub_steps?: string[]
+          summary: string
+          time_range: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          country_id?: string
+          created_at?: string | null
+          id?: string
+          stage_number?: number
+          sub_steps?: string[]
+          summary?: string
+          time_range?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_playbook_stages_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      country_trade_metrics: {
+        Row: {
+          country_id: string
+          created_at: string | null
+          delta: string | null
+          id: string
+          label: string
+          positive: boolean | null
+          sort_order: number
+          source: string
+          source_url: string | null
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          country_id: string
+          created_at?: string | null
+          delta?: string | null
+          id?: string
+          label: string
+          positive?: boolean | null
+          sort_order: number
+          source: string
+          source_url?: string | null
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          country_id?: string
+          created_at?: string | null
+          delta?: string | null
+          id?: string
+          label?: string
+          positive?: boolean | null
+          sort_order?: number
+          source?: string
+          source_url?: string | null
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_trade_metrics_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       directory_submissions: {
         Row: {
           contact_email: string
