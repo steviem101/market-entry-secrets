@@ -51,6 +51,7 @@ export interface CountryCaseStudy {
   logo_color: string | null;
   wordmark: string | null;
   content_item_id: string | null;
+  content_item_slug?: string | null;
 }
 
 export interface CountryPlaybookStage {

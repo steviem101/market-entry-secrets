@@ -101,14 +101,16 @@ export const CountryCaseStudies = ({ countryName, caseStudies }: CountryCaseStud
                   </span>
                 </div>
                 <p className="mt-3 text-[14px] leading-relaxed text-mes-ink-soft">{c.outcome}</p>
-                <div className="mt-5">
-                  <Button asChild variant="link" className="p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
-                    <a href={c.content_item_id ? `/case-studies/${c.id}` : "#case-studies"}>
-                      Read the {c.company_name} playbook
-                      <ArrowRight className="ml-1 h-4 w-4" />
-                    </a>
-                  </Button>
-                </div>
+                {c.content_item_slug && (
+                  <div className="mt-5">
+                    <Button asChild variant="link" className="p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
+                      <a href={`/case-studies/${c.content_item_slug}`}>
+                        Read the {c.company_name} playbook
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </article>
             ))}
           </div>

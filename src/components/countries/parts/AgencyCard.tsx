@@ -44,7 +44,7 @@ export const AgencyCard = ({ agency }: AgencyCardProps) => {
       )}
       <div className="mt-auto pt-4">
         <Button asChild variant="link" className="p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
-          <a href={agency.slug ? `/agencies/${agency.slug}` : "#"}>
+          <a href={agency.slug ? `/government-support/${agency.slug}` : "#"}>
             View {agency.name} profile
             <ArrowRight className="ml-1 h-4 w-4" />
           </a>

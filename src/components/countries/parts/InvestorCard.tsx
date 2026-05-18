@@ -8,6 +8,7 @@ interface InvestorCardProps {
     description?: string | null;
     location?: string | null;
     investor_type?: string | null;
+    slug?: string | null;
     sector_focus?: string[] | null;
     stage_focus?: string[] | null;
     check_size_min?: number | null;
@@ -54,7 +55,7 @@ export const InvestorCard = ({ investor }: InvestorCardProps) => {
       )}
       <div className="mt-auto pt-4">
         <Button asChild variant="link" className="p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
-          <a href="/leads">
+          <a href={investor.slug ? `/investors/${investor.slug}` : "/investors"}>
             See {investor.name} portfolio
             <ArrowRight className="ml-1 h-4 w-4" />
           </a>

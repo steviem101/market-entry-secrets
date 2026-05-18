@@ -8,12 +8,13 @@ export const useCountryCaseStudies = (countryId: string | undefined) => {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("country_case_studies")
-        .select("*")
+        .select("*, content_items(slug)")
         .eq("country_id", countryId)
         .order("sort_order", { ascending: true });
 
       if (error) throw error;
-      return (data as CountryCaseStudy[]) ?? [];
+      const rows = (data as Array<CountryCaseStudy & { content_items?: { slug: string } | null }>) ?? [];
+      return rows.map((r) => ({ ...r, content_item_slug: r.content_items?.slug ?? null }));
     },
     enabled: !!countryId,
     staleTime: 30 * 60 * 1000,

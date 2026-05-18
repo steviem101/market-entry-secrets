@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Download, Phone } from "lucide-react";
+import { ArrowRight, Phone } from "lucide-react";
 import { CountryFlag } from "./CountryFlag";
 import { Button } from "@/components/ui/button";
 import type { CountryPageContent } from "@/lib/countryPageContent";
@@ -78,13 +78,6 @@ export const CountryHero = ({
                 Book a strategy call
               </Link>
             </Button>
-            <a
-              href={`/api/playbook-pdf?country=${countrySlug}`}
-              className="inline-flex items-center gap-2 text-[14px] font-medium text-mes-teal-dark hover:text-mes-ink"
-            >
-              <Download className="h-4 w-4" />
-              Download the playbook (PDF)
-            </a>
           </div>
 
           {trust.length > 0 && (
