@@ -63,7 +63,7 @@ export const CountryEcosystemTabs = ({
 
           {panels.map((p) => (
             <TabsContent key={p.value} value={p.value} className="mt-8">
-              {p.value === "mentors" && (
+              {p.value === "mentors" && p.items.length === 0 && (
                 <div className="mb-6 border border-mes-warning/40 bg-mes-warning/10 rounded-lg p-4 text-[13.5px] text-mes-ink-soft">
                   <span className="font-semibold text-mes-ink">Coming soon.</span> The {countryName} mentor
                   network goes live in Q3 2026. Request an intro and we will route you to the closest fit today.
