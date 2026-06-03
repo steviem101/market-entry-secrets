@@ -7,7 +7,15 @@ type JsonLdType =
   | "Article"
   | "Place"
   | "Dataset"
-  | "Organization";
+  | "Organization"
+  | "BreadcrumbList"
+  | "FAQPage"
+  | "HowTo";
+
+export interface JsonLdBlock {
+  type: JsonLdType;
+  data: Record<string, unknown>;
+}
 
 interface SEOHeadProps {
   title: string;
@@ -15,13 +23,19 @@ interface SEOHeadProps {
   canonicalPath: string;
   ogImage?: string;
   ogType?: "website" | "article";
-  jsonLd?: {
-    type: JsonLdType;
-    data: Record<string, unknown>;
-  };
+  jsonLd?: JsonLdBlock | JsonLdBlock[];
 }
 
-const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app";
+const BASE_URL =
+  typeof window !== "undefined"
+    ? window.location.origin
+    : "https://market-entry-secrets.lovable.app";
+
+const buildLd = (block: JsonLdBlock) => ({
+  "@context": "https://schema.org",
+  "@type": block.type,
+  ...block.data,
+});
 
 export const SEOHead = ({
   title,
@@ -34,16 +48,11 @@ export const SEOHead = ({
   const canonicalUrl = `${BASE_URL}${canonicalPath}`;
   const truncatedDescription = description?.slice(0, 160) || "";
 
-  const buildJsonLd = () => {
-    if (!jsonLd) return null;
-    return {
-      "@context": "https://schema.org",
-      "@type": jsonLd.type,
-      ...jsonLd.data,
-    };
-  };
-
-  const structuredData = buildJsonLd();
+  const blocks: JsonLdBlock[] = jsonLd
+    ? Array.isArray(jsonLd)
+      ? jsonLd
+      : [jsonLd]
+    : [];
 
   return (
     <Helmet>
@@ -55,11 +64,11 @@ export const SEOHead = ({
       <meta property="og:type" content={ogType} />
       {ogImage && <meta property="og:image" content={ogImage} />}
       <link rel="canonical" href={canonicalUrl} />
-      {structuredData && (
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
+      {blocks.map((block, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(buildLd(block))}
         </script>
-      )}
+      ))}
     </Helmet>
   );
 };

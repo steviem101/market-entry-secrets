@@ -45,6 +45,19 @@
     --sidebar-accent-foreground: 220 15% 25%;
     --sidebar-border: 210 15% 90%;
     --sidebar-ring: 200 85% 55%;
+
+    /* MES brand tokens (used by country page redesign) */
+    --mes-teal: 192 53% 36%;
+    --mes-teal-dark: 192 54% 27%;
+    --mes-blue-light: 192 65% 83%;
+    --mes-ink: 240 28% 14%;
+    --mes-ink-soft: 240 12% 33%;
+    --mes-ink-muted: 240 10% 58%;
+    --mes-success: 159 79% 39%;
+    --mes-warning: 38 92% 50%;
+    --mes-border: 240 10% 90%;
+    --mes-bg: 240 10% 97%;
+    --mes-card: 0 0% 100%;
   }
 
   .dark {

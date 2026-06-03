@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ireland → Australia Market Entry Playbook · MES</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          'mes-teal': '#2B7A8C',
+          'mes-teal-dark': '#1F5C6B',
+          'mes-blue-light': '#B8E4F0',
+          'mes-ink': '#1A1A2E',
+          'mes-ink-soft': '#4A4A5E',
+          'mes-ink-muted': '#8A8A9E',
+          'mes-bg': '#FAFAFA',
+          'mes-card': '#FFFFFF',
+          'mes-border': '#E5E7EB',
+          'mes-success': '#10B981',
+          'mes-warning': '#F59E0B',
+        },
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+          mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        },
+      }
+    }
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { background: #FAFAFA; color: #1A1A2E; }
+  body { font-feature-settings: "ss01", "cv11"; }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+  .scroll-snap-x { scroll-snap-type: x mandatory; }
+  .scroll-snap-x > * { scroll-snap-align: start; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  .grain { background-image: radial-gradient(circle at 1px 1px, rgba(26,26,46,.06) 1px, transparent 0); background-size: 24px 24px; }
+  .stripes { background-image: repeating-linear-gradient(135deg, rgba(43,122,140,.08) 0 8px, transparent 8px 16px); }
+  @keyframes fadeup { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .fadeup { animation: fadeup .35s ease-out both; }
+</style>
+</head>
+<body class="font-sans antialiased text-mes-ink">
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+<script type="text/babel" src="src/core.jsx"></script>
+<script type="text/babel" src="src/sections-top.jsx"></script>
+<script type="text/babel" src="src/sections-mid.jsx"></script>
+<script type="text/babel" src="src/bottom.jsx"></script>
+</body>
+</html>

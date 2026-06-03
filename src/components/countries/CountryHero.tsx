@@ -1,69 +1,136 @@
-
-import { CountryData } from "@/hooks/useCountries";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Users, MapPin, Building } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Phone } from "lucide-react";
+import { CountryFlag } from "./CountryFlag";
+import { Button } from "@/components/ui/button";
+import type { CountryPageContent } from "@/lib/countryPageContent";
 
 interface CountryHeroProps {
-  country: CountryData;
+  countryName: string;
+  countryCode: string;
+  countrySlug: string;
+  content: CountryPageContent | null;
+  fallbackHeadline?: string | null;
+  fallbackSubhead?: string | null;
 }
 
-export const CountryHero = ({ country }: CountryHeroProps) => {
-  const economicData = country.economic_indicators;
+export const CountryHero = ({
+  countryName,
+  countryCode,
+  countrySlug,
+  content,
+  fallbackHeadline,
+  fallbackSubhead,
+}: CountryHeroProps) => {
+  const headline = content?.hero_headline || fallbackHeadline || `${countryName} to Australia`;
+  const subhead =
+    content?.hero_subhead ||
+    fallbackSubhead ||
+    `Resources for ${countryName} companies entering the Australian market.`;
+  const badge = content?.hero_badge;
+  const trust = content?.hero_trust_companies ?? [];
+  const trustExtra = content?.hero_trust_extra ?? 0;
+  const snapshot = content?.live_snapshot ?? [];
 
   return (
-    <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-16">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <h1 className="text-4xl md:text-5xl font-bold">{country.hero_title}</h1>
-            {country.trade_relationship_strength && (
-              <Badge variant={
-                country.trade_relationship_strength === 'Strong' ? 'default' :
-                country.trade_relationship_strength === 'Growing' ? 'secondary' : 'outline'
-              } className="text-sm">
-                {country.trade_relationship_strength} Trade Relations
-              </Badge>
-            )}
+    <section className="border-b border-mes-border bg-mes-card">
+      <div className="max-w-7xl mx-auto px-5 md:px-10 py-12 md:py-20 grid md:grid-cols-12 gap-10 items-start">
+        <div className="md:col-span-7">
+          <div className="flex items-center gap-3 mb-6">
+            <CountryFlag countryCode={countryCode} />
+            <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark">
+              {countryName}
+            </span>
           </div>
-          
-          <p className="text-xl text-muted-foreground mb-8">
-            {country.hero_description}
+
+          <h1
+            className="text-3xl md:text-5xl leading-[1.05] tracking-tight font-semibold text-mes-ink"
+            style={{ textWrap: "balance" } as React.CSSProperties}
+          >
+            {headline}
+          </h1>
+
+          <p className="mt-5 text-[16px] md:text-[18px] leading-relaxed text-mes-ink-soft max-w-2xl">
+            {subhead}
           </p>
 
-          {/* Economic Indicators Grid */}
-          {economicData && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white/50 backdrop-blur-sm rounded-lg p-6">
-              {economicData.gdp && (
-                <div className="text-center">
-                  <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                  <div className="text-2xl font-bold">{economicData.gdp}</div>
-                  <div className="text-sm text-muted-foreground">GDP</div>
-                </div>
-              )}
-              {economicData.population && (
-                <div className="text-center">
-                  <Users className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-                  <div className="text-2xl font-bold">{economicData.population}</div>
-                  <div className="text-sm text-muted-foreground">Population</div>
-                </div>
-              )}
-              {economicData.trade_volume_aud && (
-                <div className="text-center">
-                  <MapPin className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-                  <div className="text-2xl font-bold">{economicData.trade_volume_aud}</div>
-                  <div className="text-sm text-muted-foreground">Annual Trade</div>
-                </div>
-              )}
-              {economicData.major_exports && economicData.major_exports.length > 0 && (
-                <div className="text-center">
-                  <Building className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-                  <div className="text-2xl font-bold">{economicData.major_exports.length}</div>
-                  <div className="text-sm text-muted-foreground">Major Exports</div>
-                </div>
+          {badge && (
+            <div className="mt-6 inline-flex items-center gap-2 px-3 py-1 rounded-full border border-mes-border bg-mes-bg">
+              <span className="relative inline-flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-mes-success/60 animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-mes-success" />
+              </span>
+              <span className="text-[12px] font-medium tracking-wide uppercase text-mes-ink-soft">
+                {badge}
+              </span>
+            </div>
+          )}
+
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button asChild size="lg" className="bg-mes-teal hover:bg-mes-teal-dark text-white">
+              <Link to={`/report-creator?source=country-${countrySlug}`}>
+                Generate my {countryName} report
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="border-mes-border text-mes-ink hover:border-mes-ink">
+              <Link to={`/contact?topic=${countrySlug}-call`}>
+                <Phone className="mr-2 h-4 w-4" />
+                Book a strategy call
+              </Link>
+            </Button>
+          </div>
+
+          {trust.length > 0 && (
+            <div className="mt-10 flex items-center flex-wrap gap-x-6 gap-y-2 text-[12px] text-mes-ink-muted">
+              <span className="font-mono uppercase tracking-wider">Trusted by</span>
+              {trust.map((c) => (
+                <span key={c} className="font-medium text-mes-ink-soft">
+                  {c}
+                </span>
+              ))}
+              {trustExtra > 0 && (
+                <span className="text-mes-ink-muted">+ {trustExtra} more</span>
               )}
             </div>
           )}
         </div>
+
+        <aside className="md:col-span-5">
+          <div className="bg-mes-bg border border-mes-border rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark">
+                Live snapshot
+              </span>
+              <span className="text-[11px] text-mes-ink-muted">Updated daily</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {(snapshot.length > 0
+                ? snapshot
+                : [
+                    { label: "EUR / AUD", value: "1.68", caption: "ECB ref" },
+                    { label: "RBA cash rate", value: "4.10%", caption: "RBA" },
+                    { label: "DUB to SYD", value: "22h", caption: "Avg flight" },
+                    { label: "Director ID lead time", value: "4 to 6 wk", caption: "ASIC" },
+                  ]
+              ).map((entry) => (
+                <div
+                  key={entry.label}
+                  className="bg-mes-card border border-mes-border rounded-lg p-3"
+                >
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-mes-ink-muted">
+                    {entry.label}
+                  </div>
+                  <div className="text-xl font-semibold text-mes-ink tabular-nums mt-1">
+                    {entry.value}
+                  </div>
+                  {entry.caption && (
+                    <div className="text-[10.5px] text-mes-ink-muted mt-1">{entry.caption}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
     </section>
   );
