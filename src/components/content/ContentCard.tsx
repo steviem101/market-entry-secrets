@@ -50,11 +50,12 @@ export const ContentCard = memo(({ content, featured = false, attachmentCount = 
       <Card className="overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group h-full">
         {/* Thumbnail */}
         <div className={`relative w-full ${featured ? 'h-48' : 'h-40'} overflow-hidden`}>
-          {content.thumbnail_url ? (
+          {(content.hero_image_url || content.thumbnail_url) ? (
             <img
               loading="lazy"
-              src={content.thumbnail_url}
-              alt={content.title}
+              decoding="async"
+              src={content.hero_image_url || content.thumbnail_url}
+              alt={content.hero_image_alt || content.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
