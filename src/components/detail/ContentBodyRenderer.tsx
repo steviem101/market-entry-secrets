@@ -7,6 +7,17 @@ import type {
   LinkerEntry,
 } from "@/lib/case-study/types";
 
+// Force all links in user-rendered HTML to open in a new tab so embedded
+// previews (which block iframing, e.g. YouTube) don't show a dead screen.
+if (typeof window !== "undefined") {
+  DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+    if (node.tagName === "A") {
+      node.setAttribute("target", "_blank");
+      node.setAttribute("rel", "noopener noreferrer");
+    }
+  });
+}
+
 interface ContentBody {
   id: string;
   section_id?: string | null;
