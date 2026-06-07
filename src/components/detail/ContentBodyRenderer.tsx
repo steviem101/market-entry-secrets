@@ -1,6 +1,8 @@
 import DOMPurify from "dompurify";
+import parse, { Element as ParserElement } from "html-react-parser";
 import { applyEnhancements } from "@/lib/case-study/applyEnhancements";
 import { PullQuote } from "@/components/case-study/PullQuote";
+import { YouTubeEmbed, extractYouTubeId } from "@/components/detail/YouTubeEmbed";
 import type {
   CaseStudyQuote,
   CaseStudySource,
@@ -9,14 +11,55 @@ import type {
 
 // Force all links in user-rendered HTML to open in a new tab so embedded
 // previews (which block iframing, e.g. YouTube) don't show a dead screen.
+// Also detect bare YouTube links and convert them into embed placeholders
+// (rendered as <YouTubeEmbed/> by the parser pass below).
 if (typeof window !== "undefined") {
   DOMPurify.addHook("afterSanitizeAttributes", (node) => {
     if (node.tagName === "A") {
+      const href = node.getAttribute("href") || "";
+      const text = (node.textContent || "").trim();
+      const ytId = extractYouTubeId(href);
+      // Only auto-embed when the anchor is a bare URL (text === href), not an
+      // inline contextual link inside a sentence.
+      if (ytId && (text === href || text === "" || text === ytId)) {
+        node.setAttribute("data-youtube-id", ytId);
+        return;
+      }
       node.setAttribute("target", "_blank");
       node.setAttribute("rel", "noopener noreferrer");
     }
+    // Normalise existing YouTube iframes to the privacy-enhanced host.
+    if (node.tagName === "IFRAME") {
+      const src = node.getAttribute("src") || "";
+      const ytId = extractYouTubeId(src);
+      if (ytId) {
+        node.setAttribute("data-youtube-id", ytId);
+      }
+    }
   });
 }
+
+const SANITIZE_OPTS = {
+  ADD_TAGS: ["iframe"],
+  ADD_ATTR: [
+    "allow",
+    "allowfullscreen",
+    "frameborder",
+    "data-youtube-id",
+    "target",
+    "rel",
+  ],
+};
+
+const parserOptions = {
+  replace: (node: unknown) => {
+    if (node instanceof ParserElement) {
+      const id = node.attribs?.["data-youtube-id"];
+      if (id) return <YouTubeEmbed videoId={id} />;
+    }
+    return undefined;
+  },
+};
 
 interface ContentBody {
   id: string;
@@ -72,11 +115,7 @@ export const ContentBodyRenderer = ({
         googleFallback,
       });
     }
-    return (
-      <span
-        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(text) }}
-      />
-    );
+    return <>{parse(DOMPurify.sanitize(text, SANITIZE_OPTS), parserOptions)}</>;
   };
 
   // Group quotes by section_id for injection after each section's bodies.
