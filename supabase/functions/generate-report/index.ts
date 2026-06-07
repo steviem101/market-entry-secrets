@@ -4,6 +4,7 @@ import { log } from "../_shared/log.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
+import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -115,6 +116,23 @@ async function firecrawlSearch(
     return [];
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/**
+ * Resolve a likely homepage domain from a company name via web search (P1.5).
+ * Used when a competitor / end buyer was added by name without a website (the
+ * v2 CompanyPicker leaves website blank for the backend to resolve). Fail-soft.
+ */
+async function resolveDomainFromName(apiKey: string, name: string): Promise<string> {
+  if (!apiKey || !name.trim()) return "";
+  try {
+    const results = await firecrawlSearch(apiKey, `${name} official website`, 1, 8000);
+    const url = results[0]?.url || "";
+    if (!url) return "";
+    return new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
   }
 }
 
@@ -281,9 +299,13 @@ async function scrapeKnownCompetitors(
 
   const results = await Promise.allSettled(
     knownCompetitors.map(async (comp) => {
-      const markdown = await firecrawlScrape(firecrawlKey, comp.website, 10000);
+      // Resolve a domain from the name when none was provided (P1.5).
+      const website = (comp.website && comp.website.trim())
+        ? comp.website
+        : await resolveDomainFromName(firecrawlKey, comp.name);
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 10000) : null;
       if (!markdown || markdown.length < 50) {
-        return { name: comp.name, url: comp.website, description: "Website could not be analysed.", key_info: "" };
+        return { name: comp.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
 
       try {
@@ -291,8 +313,8 @@ async function scrapeKnownCompetitors(
           { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
           {
             role: "user",
-            content: `Analyze this website content for "${comp.name}" (${comp.website}), a competitor of "${companyName}".
-Return a JSON object: {"name": "${comp.name}", "url": "${comp.website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"}
+            content: `Analyze this website content for "${comp.name}" (${website}), a competitor of "${companyName}".
+Return a JSON object: {"name": "${comp.name}", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -301,7 +323,7 @@ ${markdown.slice(0, 2000)}`,
         const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
         return JSON.parse(cleaned) as CompetitorData;
       } catch {
-        return { name: comp.name, url: comp.website, description: "Could not extract competitor intelligence.", key_info: "" };
+        return { name: comp.name, url: website, description: "Could not extract competitor intelligence.", key_info: "" };
       }
     })
   );
@@ -410,9 +432,13 @@ async function scrapeEndBuyers(
 
   const results = await Promise.allSettled(
     cappedBuyers.map(async (buyer) => {
-      const markdown = await firecrawlScrape(firecrawlKey, buyer.website, 8000);
+      // Resolve a domain from the name when none was provided (P1.5).
+      const website = (buyer.website && buyer.website.trim())
+        ? buyer.website
+        : await resolveDomainFromName(firecrawlKey, buyer.name);
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 8000) : null;
       if (!markdown || markdown.length < 50) {
-        return { name: buyer.name, url: buyer.website, description: "Website could not be analysed.", key_info: "" };
+        return { name: buyer.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
 
       try {
@@ -420,8 +446,8 @@ async function scrapeEndBuyers(
           { role: "system", content: "You are a B2B procurement and buyer intelligence analyst. Return only valid JSON, no markdown fences." },
           {
             role: "user",
-            content: `Analyse this company "${buyer.name}" (${buyer.website}) as a POTENTIAL CUSTOMER for "${companyName}".
-Return a JSON object: {"name": "${buyer.name}", "url": "${buyer.website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them"}
+            content: `Analyse this company "${buyer.name}" (${website}) as a POTENTIAL CUSTOMER for "${companyName}".
+Return a JSON object: {"name": "${buyer.name}", "url": "${website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them"}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -430,7 +456,7 @@ ${markdown.slice(0, 2000)}`,
         const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
         return JSON.parse(cleaned) as EndBuyerIntelligence;
       } catch {
-        return { name: buyer.name, url: buyer.website, description: "Could not extract buyer intelligence.", key_info: "" };
+        return { name: buyer.name, url: website, description: "Could not extract buyer intelligence.", key_info: "" };
       }
     })
   );
@@ -810,46 +836,21 @@ const sanitizeFilterValue = (v: string): string =>
   v.replace(/[^a-zA-Z0-9 \-'&/]/g, "").trim().substring(0, 100);
 
 // ── Goal-to-service-tag mapping ───────────────────────────────────────
-// Form goals are long descriptions; provider service tags are short keywords.
-// Map goals → searchable service tags for better Supabase .cs.{} matching.
-const GOAL_SERVICE_TAGS: Record<string, string[]> = {
-  "Find vetted service providers (legal, tax, HR, finance)": ["Legal", "Tax", "HR", "Accounting", "Finance", "Immigration"],
-  "Connect with trade and investment agencies": ["Trade Advisory", "Government Relations", "Investment"],
-  "Access market entry case studies and success stories": ["Market Research", "Consulting"],
-  "Identify relevant industry associations and chambers of commerce": ["Industry Association", "Chamber of Commerce"],
-  "Discover upcoming market entry events and networking opportunities": ["Events", "Networking"],
-  "Find experienced mentors and advisors": ["Mentorship", "Advisory", "Consulting"],
-  "Access qualified lead lists for my target sector": ["Lead Generation", "Market Research", "Data"],
-  "Understand regulatory and compliance requirements": ["Legal", "Compliance", "Regulatory"],
-  // Startup goals
-  "Find investors and venture capital firms": ["Investment", "Venture Capital", "Funding"],
-  "Discover accelerators and incubator programs": ["Accelerator", "Incubator", "Startup"],
-  "Connect with mentors and startup advisors": ["Mentorship", "Advisory", "Startup"],
-  "Access growth-stage service providers (legal, finance, HR)": ["Legal", "Finance", "HR", "Accounting"],
-  "Find co-working spaces and innovation hubs": ["Co-working", "Innovation Hub"],
-  "Identify grant and government funding opportunities": ["Grants", "Government", "Funding"],
-  "Access lead lists and customer acquisition resources": ["Lead Generation", "Marketing", "Sales"],
-  "Connect with other founders and peer networks": ["Networking", "Community", "Founder"],
-};
-
-function expandGoalsToServiceTags(goals: string[]): string[] {
-  const tags = new Set<string>();
-  for (const goal of goals) {
-    const mapped = GOAL_SERVICE_TAGS[goal];
-    if (mapped) {
-      for (const tag of mapped) tags.add(tag);
-    }
-  }
-  return [...tags];
-}
+// Keyed by stable goal_id (with a legacy long-label fallback). Lives in a
+// shared, dependency-free module so it can be unit-tested under Node.
+// See goalServiceTags.ts and ENGINEERING_TODO P0.1.
 
 // ── Database matching ──────────────────────────────────────────────────
 async function searchMatches(supabase: any, intake: any) {
   const matches: Record<string, any[]> = {};
   const regions = intake.target_regions || [];
   const industry = (intake.industry_sector || []).join(", ");
-  // Expand goal descriptions into short service tags for better .cs.{} matching
-  const serviceTags = expandGoalsToServiceTags(intake.services_needed || []);
+  // Expand selected goals into short service tags for better .cs.{} matching.
+  // Prefer the stable goal_ids column; fall back to legacy services_needed labels.
+  const serviceTags = expandGoalsToServiceTags({
+    goal_ids: intake.goal_ids,
+    services_needed: intake.services_needed,
+  });
 
   const locationPatterns = regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
 

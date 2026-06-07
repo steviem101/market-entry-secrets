@@ -52,3 +52,8 @@ verify_jwt = true
 
 [functions.process-email-queue]
 verify_jwt = false
+
+[functions.scrape-company]
+# Step 1 website prefill runs BEFORE auth, so JWT is not required. The function
+# guards itself: SSRF check (isPrivateOrReservedUrl) + per-caller rate limiting.
+verify_jwt = false

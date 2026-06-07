@@ -1,7 +1,25 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { IntakeFormData } from '@/components/report-creator/intakeSchema';
+import { mapV2ToLegacyIntake, type IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
 
 export const reportApi = {
+  /**
+   * v2 intake submit. Projects the redesigned schema into the flat
+   * user_intake_forms shape (incl. the new goal_ids + structured columns) via
+   * the fixed mapV2ToLegacyIntake() shim, then inserts.
+   */
+  async submitIntakeFormV2(data: IntakeFormDataV2, userId: string) {
+    const payload = mapV2ToLegacyIntake(data, userId);
+    const { data: result, error } = await (supabase as any)
+      .from('user_intake_forms')
+      .insert(payload)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return result as { id: string; [key: string]: unknown };
+  },
+
   async submitIntakeForm(data: IntakeFormData, userId: string) {
     // Map selected_goals into services_needed for backward compat with edge function
     const goalsText = (data.selected_goals || []).join('; ');
