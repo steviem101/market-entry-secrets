@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Intake v2 — Field Mapping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#102A43; --body:#41566B; --muted:#7387A0; --line:#E6EDF3;
+    --canvas:#F5F8FB; --primary:#1AA3E0; --primary-700:#0F6FA0;
+    --soft:#E6F4FC; --tint:#F3FAFE;
+  }
+  *{box-sizing:border-box;font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
+  body{margin:0;background:#E9EEF3;color:var(--body);-webkit-font-smoothing:antialiased;}
+  .page{max-width:1140px;margin:0 auto;padding:40px 28px 80px;}
+  code,.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;}
+
+  header.doc{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:8px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .wm{font-size:11px;font-weight:800;line-height:.82;letter-spacing:.01em;color:var(--ink);}
+  h1{font-size:30px;font-weight:800;color:var(--ink);letter-spacing:-.01em;margin:18px 0 6px;}
+  .sub{font-size:15px;color:var(--muted);max-width:760px;line-height:1.55;}
+  .meta{font-size:11.5px;color:var(--muted);text-align:right;line-height:1.7;white-space:nowrap;}
+  .meta b{color:var(--body);font-weight:600;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 6px;}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+    padding:4px 10px;border-radius:999px;white-space:nowrap;}
+  .imp-crit{background:#FDEAEA;color:#B23B3B;}
+  .imp-vhigh{background:#FDF0E3;color:#B5701E;}
+  .imp-high{background:#E8F4FB;color:#0F6FA0;}
+  .imp-med{background:#EEF1F5;color:#5C6E84;}
+  .imp-low{background:#F1F3F6;color:#8696A8;}
+  .imp-new{background:#E7F6EE;color:#1F8A5B;}
+
+  h2.sec{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--primary-700);margin:38px 0 12px;display:flex;align-items:center;gap:10px;}
+  h2.sec .n{width:22px;height:22px;border-radius:7px;background:var(--soft);color:var(--primary-700);
+    display:inline-flex;align-items:center;justify-content:center;font-size:12px;}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    box-shadow:0 1px 2px rgba(16,42,67,.04),0 10px 26px rgba(16,42,67,.05);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--muted);padding:13px 14px;background:var(--canvas);border-bottom:1px solid var(--line);
+    position:sticky;top:0;}
+  tbody td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.45;}
+  tbody tr:last-child td{border-bottom:0;}
+  tbody tr:hover{background:#FAFCFE;}
+  .fname{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink);font-weight:500;}
+  .ctrl{font-size:12px;color:var(--body);}
+  .col{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--primary-700);}
+  .col.newc{color:#1F8A5B;}
+  .legacy{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+  .feeds{font-size:12px;color:var(--body);}
+  .feeds b{color:var(--ink);font-weight:600;}
+  .new-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.04em;color:#1F8A5B;
+    background:#E7F6EE;border-radius:4px;padding:1px 4px;margin-left:6px;vertical-align:middle;}
+  .imp{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;}
+
+  col.c-field{width:17%;} col.c-ctrl{width:13%;} col.c-col{width:16%;}
+  col.c-legacy{width:14%;} col.c-feeds{width:28%;} col.c-imp{width:12%;}
+
+  .callouts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px;}
+  .callout{border-radius:14px;padding:16px 18px;font-size:13px;line-height:1.55;}
+  .callout h3{margin:0 0 6px;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .callout.warn{background:#FDF4E7;border:1px solid #F4D9B0;color:#7A5418;}
+  .callout.warn h3{color:#9A5B12;}
+  .callout.info{background:var(--tint);border:1px solid #CDE8F7;color:#2C4A5E;}
+  .callout.info h3{color:var(--primary-700);}
+  .callout code{background:rgba(255,255,255,.7);padding:1px 5px;border-radius:4px;color:#7A4B12;}
+  .callout.info code{color:var(--primary-700);}
+  .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+
+  .foot{margin-top:34px;font-size:11.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--line);padding-top:16px;}
+  @media print{body{background:#fff;}.card{box-shadow:none;}.page{padding:0;}}
+  @media (max-width:880px){.callouts{grid-template-columns:1fr;}table{font-size:12px;}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc">
+    <div>
+      <div class="brand">
+        <svg width="30" height="30" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="20" stroke="#1C3A52" stroke-width="3.2"/>
+          <path d="M24 13l-4 13 13-4z" fill="#3BA9DD"/><path d="M24 35l4-13-13 4z" fill="#1C3A52"/>
+          <path d="M24 7v3M24 38v3M7 24h3M38 24h3" stroke="#1C3A52" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+        <div class="wm">MARKET<br/>ENTRY<br/>SECRETS</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div><b>Intake v2 — Field Mapping</b></div>
+      <div>Companion to the redesign prototype</div>
+      <div>Source: intakeSchema.v2.draft.ts · .sql · generate-report</div>
+    </div>
+  </header>
+
+  <h1>Every field → DB column → report section</h1>
+  <p class="sub">What each redesigned intake field captures, where it lands in <code>user_intake_forms</code>, how the
+  <code>mapV2ToLegacyIntake()</code> shim feeds the existing pipeline, and which report sections consume it.
+  <b>Impact</b> reflects how much report quality degrades when the field is empty.</p>
+
+  <div class="legend">
+    <span class="pill imp-crit">Critical</span>
+    <span class="pill imp-vhigh">Very high</span>
+    <span class="pill imp-high">High</span>
+    <span class="pill imp-med">Medium</span>
+    <span class="pill imp-low">Low</span>
+    <span class="pill imp-new">New column</span>
+  </div>
+
+  <!-- STEP 1 -->
+  <h2 class="sec"><span class="n">1</span> Step 1 — Company (website-first)</h2>
+  <div class="card">
+    <table>
+      <colgroup><col class="c-field"/><col class="c-ctrl"/><col class="c-col"/><col class="c-legacy"/><col class="c-feeds"/><col class="c-imp"/></colgroup>
+      <thead><tr><th>v2 field</th><th>Control</th><th>DB column</th><th>Legacy (shim)</th><th>Feeds report</th><th>Impact</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="fname">persona</span></td>
+          <td class="ctrl">Card pick / toggle</td>
+          <td><span class="col">raw_input.persona</span></td>
+          <td class="legacy">raw_input.persona</td>
+          <td class="feeds">Routes report <b>tone</b>, goal list & every Perplexity query (international vs startup fork)</td>
+          <td><span class="imp imp-crit">Critical</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">website_url</span></td>
+          <td class="ctrl">URL + scrape</td>
+          <td><span class="col">website_url</span></td>
+          <td class="legacy">website_url</td>
+          <td class="feeds">Firecrawl Map+Scrape → <b>enriched company profile</b> → <b>every section</b></td>
+          <td><span class="imp imp-crit">Critical</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">company_name</span></td>
+          <td class="ctrl">Text (prefilled)</td>
+          <td><span class="col">company_name</span></td>
+          <td class="legacy">company_name</td>
+          <td class="feeds">Named throughout; competitor & buyer analysis prompts</td>
+          <td><span class="imp imp-med">Medium</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">country_of_origin</span></td>
+          <td class="ctrl">Select</td>
+          <td><span class="col">country_of_origin</span></td>
+          <td class="legacy">country_of_origin</td>
+          <td class="feeds"><b>Bilateral trade</b> & regulatory queries; cost comparison; all sections</td>
+          <td><span class="imp imp-high">High</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">industry_sector</span> <span class="mono" style="color:var(--muted)">[≤3]</span></td>
+          <td class="ctrl">Chips (top-10 first)</td>
+          <td><span class="col">industry_sector[]</span></td>
+          <td class="legacy">industry_sector[]</td>
+          <td class="feeds"><b>All Perplexity queries + all DB matching</b> (providers, events, leads, investors)</td>
+          <td><span class="imp imp-crit">Critical</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">company_stage</span></td>
+          <td class="ctrl">Select</td>
+          <td><span class="col">company_stage</span></td>
+          <td class="legacy">company_stage</td>
+          <td class="feeds">Fallback company summary; budget conditional</td>
+          <td><span class="imp imp-med">Medium</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">employee_count</span></td>
+          <td class="ctrl">Select</td>
+          <td><span class="col">employee_count</span></td>
+          <td class="legacy">employee_count</td>
+          <td class="feeds">Fallback company summary</td>
+          <td><span class="imp imp-low">Low</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">revenue_stage</span></td>
+          <td class="ctrl">Select (startup)</td>
+          <td><span class="col newc">revenue_stage</span> <span class="new-tag">NEW</span></td>
+          <td class="legacy">raw_input.revenue_stage</td>
+          <td class="feeds"><b>Investor matching</b> (startup persona) — promoted from raw_input to a column</td>
+          <td><span class="imp imp-high">High*</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">target_regions</span></td>
+          <td class="ctrl">Chips</td>
+          <td><span class="col">target_regions[]</span></td>
+          <td class="legacy">target_regions[]</td>
+          <td class="feeds"><b>Location filter for all DB matching</b>; cost-of-business query</td>
+          <td><span class="imp imp-high">High</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">website_scrape_accepted</span></td>
+          <td class="ctrl">Auto (A/B flag)</td>
+          <td><span class="col newc">website_scrape_accepted</span> <span class="new-tag">NEW</span></td>
+          <td class="legacy">—</td>
+          <td class="feeds">Analytics only — measures prefill acceptance for the redesign A/B</td>
+          <td><span class="imp imp-low">Analytics</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- STEP 2 -->
+  <h2 class="sec"><span class="n">2</span> Step 2 — Goals, customers &amp; context</h2>
+  <div class="card">
+    <table>
+      <colgroup><col class="c-field"/><col class="c-ctrl"/><col class="c-col"/><col class="c-legacy"/><col class="c-feeds"/><col class="c-imp"/></colgroup>
+      <thead><tr><th>v2 field</th><th>Control</th><th>DB column</th><th>Legacy (shim)</th><th>Feeds report</th><th>Impact</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="fname">goal_ids</span> <span class="mono" style="color:var(--muted)">[≤8]</span></td>
+          <td class="ctrl">Goal cards</td>
+          <td><span class="col newc">goal_ids[]</span> <span class="new-tag">NEW</span></td>
+          <td class="legacy">services_needed[] (labels)</td>
+          <td class="feeds">Mapped via <span class="mono">GOAL_SERVICE_TAGS</span> → <b>provider / mentor / lead matching</b> <span style="color:#B23B3B">⚠ see flag</span></td>
+          <td><span class="imp imp-high">High</span></td>
+        </tr>
+        <tr style="opacity:.6">
+          <td><span class="fname">timeline</span> <span class="new-tag" style="background:#FDECEC;color:#B23B3B">REMOVED</span></td>
+          <td class="ctrl">—</td>
+          <td><span class="col">timeline</span></td>
+          <td class="legacy">timeline</td>
+          <td class="feeds"><b>No longer collected</b> — cut to reduce clicks. Column kept for legacy; pipeline tolerates empty.</td>
+          <td><span class="imp imp-low">Dropped</span></td>
+        </tr>
+        <tr style="opacity:.6">
+          <td><span class="fname">budget_level</span> <span class="new-tag" style="background:#FDECEC;color:#B23B3B">REMOVED</span></td>
+          <td class="ctrl">—</td>
+          <td><span class="col">budget_level</span></td>
+          <td class="legacy">budget_level</td>
+          <td class="feeds"><b>No longer collected</b> — cut to reduce clicks. Column kept for legacy; pipeline tolerates empty.</td>
+          <td><span class="imp imp-low">Dropped</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">target_customers.customer_type</span></td>
+          <td class="ctrl">Chips</td>
+          <td><span class="col newc">customer_type</span> <span class="new-tag">NEW</span></td>
+          <td class="legacy">→ target_customer_description</td>
+          <td class="feeds" rowspan="3">Synthesised into <span class="mono">target_customer_description</span> → <b>Exec summary, SWOT, Competitor, Service Providers, Action Plan, Lead List</b> + end-buyer procurement query</td>
+          <td><span class="imp imp-vhigh">Very high</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">target_customers.customer_size</span></td>
+          <td class="ctrl">Chips</td>
+          <td><span class="col newc">customer_size</span> <span class="new-tag">NEW</span></td>
+          <td class="legacy">→ target_customer_description</td>
+          <td><span class="imp imp-vhigh">Very high</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">target_customers.buying_motion</span></td>
+          <td class="ctrl">Chips</td>
+          <td><span class="col newc">buying_motion</span> <span class="new-tag">NEW</span></td>
+          <td class="legacy">→ target_customer_description</td>
+          <td><span class="imp imp-vhigh">Very high</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">target_customers.industries</span> <span class="mono" style="color:var(--muted)">[≤5]</span></td>
+          <td class="ctrl">Multi-select</td>
+          <td><span class="col">end_buyer_industries[]</span></td>
+          <td class="legacy">end_buyer_industries[]</td>
+          <td class="feeds">Procurement research (Perplexity); <b>Lead List</b> matching</td>
+          <td><span class="imp imp-med">Medium</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">target_customers.named_companies</span> <span class="mono" style="color:var(--muted)">[≤5]</span></td>
+          <td class="ctrl">Name + URL rows</td>
+          <td><span class="col">end_buyers[]</span></td>
+          <td class="legacy">end_buyers[]</td>
+          <td class="feeds">Firecrawl scrape + procurement analysis → <b>Lead List, Action Plan</b></td>
+          <td><span class="imp imp-high">High</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">target_customers.notes</span> <span class="mono" style="color:var(--muted)">[≤300]</span></td>
+          <td class="ctrl">One-line text</td>
+          <td><span class="col">raw_input… _description</span></td>
+          <td class="legacy">→ target_customer_description</td>
+          <td class="feeds">The free-text nuance fed verbatim into the synthesised customer description</td>
+          <td><span class="imp imp-vhigh">Very high</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">known_competitors</span> <span class="mono" style="color:var(--muted)">[≤3]</span></td>
+          <td class="ctrl">Name + URL rows</td>
+          <td><span class="col">known_competitors[]</span></td>
+          <td class="legacy">known_competitors[]</td>
+          <td class="feeds">Firecrawl scrape + AI competitive intel → <b>Competitor Landscape</b></td>
+          <td><span class="imp imp-high">High</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">challenges.tags</span> <span class="mono" style="color:var(--muted)">[≤8]</span></td>
+          <td class="ctrl">Chips</td>
+          <td><span class="col newc">challenge_tags[]</span> <span class="new-tag">NEW</span></td>
+          <td class="legacy">→ key_challenges</td>
+          <td class="feeds" rowspan="2">Synthesised into <span class="mono">key_challenges</span> → <b>SWOT</b> (weaknesses + threats), <b>Action Plan</b> risk mitigation</td>
+          <td><span class="imp imp-high">High</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">challenges.other</span> <span class="mono" style="color:var(--muted)">[≤200]</span></td>
+          <td class="ctrl">Text</td>
+          <td><span class="col newc">challenge_other</span> <span class="new-tag">NEW</span></td>
+          <td class="legacy">→ key_challenges</td>
+          <td><span class="imp imp-med">Medium</span></td>
+        </tr>
+        <tr>
+          <td><span class="fname">report_focus</span> <span class="mono" style="color:var(--muted)">[≤200]</span></td>
+          <td class="ctrl">Prompted question</td>
+          <td><span class="col newc">report_focus</span> <span class="new-tag">NEW</span></td>
+          <td class="legacy">additional_notes</td>
+          <td class="feeds">Injected as the <b>"high-priority user request"</b> into <b>all 9 sections</b></td>
+          <td><span class="imp imp-vhigh">Very high</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:12px;color:var(--muted);margin-top:12px;">* <b>High*</b> = high impact for the startup persona only. The shim still writes <span class="mono">raw_input</span> for any field the edge function reads from there, so promoting a column never removes the old read path.</p>
+
+  <!-- CALLOUTS -->
+  <div class="callouts">
+    <div class="callout warn">
+      <h3><span class="dot" style="background:#D9892B"></span> Shim label mismatch — fix before ship</h3>
+      The shim writes <b>short</b> goal labels into <code>services_needed</code>, but the live
+      <code>GOAL_SERVICE_TAGS</code> map is keyed by the <b>old long</b> labels — so the lookup misses and
+      provider / mentor / lead matching falls back to location-only. The SQL backfill has the inverse problem
+      (keyed on long labels, never fires on v2 rows). <b>Fix:</b> add a <code>legacy_label</code> to each
+      <code>GoalDef</code>, or re-key <code>GOAL_SERVICE_TAGS</code> by <code>goal_id</code> and ship that one-line edge change.
+    </div>
+    <div class="callout info">
+      <h3><span class="dot" style="background:#1AA3E0"></span> Streaming progress needs new instrumentation</h3>
+      The "Building your report" UI is honest about phases, but the pipeline only <code>console.log</code>s them —
+      the sole client-visible state is <code>status</code> (pending → processing → completed/failed). To wire real
+      streaming, add a <code>progress jsonb</code> column (or a generation-phase events table) the client can poll
+      or subscribe to. The new <code>intake_form_events</code> table covers <i>intake</i> funnel analytics, not
+      <i>generation</i> phases.
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>Notes.</b> "Legacy (shim)" shows how <code>mapV2ToLegacyIntake()</code> projects each v2 field into the flat
+    shape <code>generate-report</code> already consumes, so the redesign can ship without rewriting the pipeline
+    (subject to the goal-label fix above). New columns are additive — the draft migration keeps every legacy column
+    intact and backfills history. Report sections referenced: Executive Summary · Market Landscape · Competitor
+    Landscape · Service Providers · Mentor Recommendations · Investor Recommendations (startup) · Events &amp;
+    Resources · Lead List · SWOT · 90-day Action Plan.
+  </div>
+
+</div>
+</body>
+</html>
