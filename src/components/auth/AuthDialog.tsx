@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, Mail, Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { setAuthReturnPath } from '@/lib/authReturnPath';
 
 const MicrosoftIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -28,9 +29,15 @@ interface AuthDialogProps {
    * secondary, and a bottom sheet on mobile. Omit for the standard tabbed UI.
    */
   reassurance?: { title: string; subtitle: string };
+  /**
+   * Path to navigate to after OAuth / magic-link auth completes via
+   * /auth/callback. Defaults to '/'. Must be a same-origin path beginning with
+   * '/' (rejected otherwise — open-redirect safe).
+   */
+  returnTo?: string;
 }
 
-export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassurance }: AuthDialogProps) => {
+export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassurance, returnTo }: AuthDialogProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -84,6 +91,9 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Persist the desired post-auth destination so /auth/callback can navigate
+    // back to the calling page (e.g. /report-creator?v2=1) instead of '/'.
+    setAuthReturnPath(returnTo);
     const result = await signInWithMagicLink(magicLinkEmail);
     if (!result.error) {
       setMagicLinkSent(true);
@@ -91,6 +101,7 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
   };
 
   const handleSocialSignIn = async (provider: 'google' | 'azure') => {
+    setAuthReturnPath(returnTo);
     await signInWithProvider(provider);
   };
 

@@ -4,6 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { AuthDialog } from '@/components/auth/AuthDialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { GeneratingScreenV2 } from '@/components/report-creator/v2/GeneratingScreenV2';
 import { useAuth } from '@/hooks/useAuth';
 import { useReportGenerationV2 } from '@/hooks/useReportGenerationV2';
@@ -73,6 +77,7 @@ const ReportCreatorV2 = () => {
   const [screen, setScreen] = useState<Screen>('persona');
   const [persona, setPersona] = useState<ReportPersona>(urlPersona);
   const [showAuth, setShowAuth] = useState(false);
+  const [pendingPersona, setPendingPersona] = useState<ReportPersona | null>(null);
   const pendingGenerate = useRef(false);
 
   const form = useForm<IntakeFormDataV2>({
@@ -183,13 +188,34 @@ const ReportCreatorV2 = () => {
     }
   }
 
-  function switchPersona(p: ReportPersona) {
-    if (p === persona) return;
+  /** Are the current goal_ids different from the current persona's defaults?
+   *  i.e. has the user actively customised their goals? */
+  function hasCustomisedGoals(): boolean {
+    const current = form.getValues('goal_ids') ?? [];
+    const defaults = DEFAULT_GOALS[persona];
+    if (current.length !== defaults.length) return true;
+    const sortedA = [...current].sort();
+    const sortedB = [...defaults].sort();
+    return sortedA.some((g, i) => g !== sortedB[i]);
+  }
+
+  function applyPersonaSwitch(p: ReportPersona) {
     setPersona(p);
     form.setValue('persona', p);
     // Goals differ per persona — reset to that persona's defaults.
     form.setValue('goal_ids', DEFAULT_GOALS[p]);
     form.setValue('revenue_stage', undefined);
+  }
+
+  function switchPersona(p: ReportPersona) {
+    if (p === persona) return;
+    // Only confirm if the user has actively customised goals — accepting the
+    // persona defaults is a no-op switch from their perspective.
+    if (hasCustomisedGoals()) {
+      setPendingPersona(p);
+      return;
+    }
+    applyPersonaSwitch(p);
   }
 
   async function goNextFrom(current: Screen) {
@@ -271,6 +297,24 @@ const ReportCreatorV2 = () => {
         )}
       </div>
 
+      <AlertDialog open={pendingPersona !== null} onOpenChange={(o) => { if (!o) setPendingPersona(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch journeys?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The {pendingPersona === 'startup' ? 'Startup Growth' : 'International Entry'} path uses a different set of goals,
+              so your current selections will be reset to that path's defaults. Your other answers stay.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep current</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (pendingPersona) { applyPersonaSwitch(pendingPersona); setPendingPersona(null); } }}>
+              Switch
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <GeneratingScreenV2 isVisible={isGenerating} statusMessage={generationStatus} />
       <AuthDialog
         open={showAuth}
@@ -280,6 +324,9 @@ const ReportCreatorV2 = () => {
           title: 'Your answers are saved.',
           subtitle: 'Create a free account to see your report.',
         }}
+        // Bring the user back to the v2 wizard after SSO / magic-link, so they
+        // actually see the "your report" they were promised.
+        returnTo={typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/report-creator'}
       />
     </>
   );

@@ -19,7 +19,8 @@ import { prefillFromWebsite } from './prefillWebsite';
 import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
 
 type ScrapeState = 'idle' | 'loading' | 'detected' | 'error';
-type AiFields = Partial<Record<'company_name' | 'country_of_origin' | 'company_stage' | 'employee_count', boolean>>;
+type AiField = 'company_name' | 'country_of_origin' | 'industry_sector' | 'company_stage' | 'employee_count';
+type AiFields = Partial<Record<AiField, boolean>>;
 
 export function Step1Company({ persona, form, set, errors, onNext }: StepProps) {
   const copy = PERSONA_COPY[persona];
@@ -56,6 +57,7 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
       setAiFields({
         company_name: !form.company_name && !!result.company_name,
         country_of_origin: !!result.country_of_origin,
+        industry_sector: !!(result.industry_sector && result.industry_sector.length > 0),
         company_stage: !!result.company_stage,
         employee_count: !!result.employee_count,
       });
@@ -163,20 +165,35 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
               <RcIcon name="sparkles" size={11} /> AI
             </span>
           </div>
-          <div className="divide-y divide-rc-line/70 rounded-xl border border-rc-line bg-white">
-            {([
-              ['Company', form.company_name],
-              ['Country', form.country_of_origin],
-              ['Industry', (form.industry_sector ?? []).join(', ')],
-              ['Stage', form.company_stage],
-              ['Employees', form.employee_count],
-            ] as [string, string | undefined][]).map(([k, v]) => (
-              <div key={k} className="flex items-center gap-3 px-3.5 py-2.5">
-                <span className="w-[78px] shrink-0 text-[12px] text-rc-muted">{k}</span>
-                <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-rc-ink">{v || '—'}</span>
+          {/* Only show rows the scrape actually populated — don't pass off pre-existing
+              values as AI-detected. If nothing came back, show an honest note. */}
+          {(() => {
+            const rows: [string, AiField, string | undefined][] = [
+              ['Company', 'company_name', form.company_name],
+              ['Country', 'country_of_origin', form.country_of_origin],
+              ['Industry', 'industry_sector', (form.industry_sector ?? []).join(', ')],
+              ['Stage', 'company_stage', form.company_stage],
+              ['Employees', 'employee_count', form.employee_count],
+            ];
+            const visible = rows.filter(([, field]) => aiFields[field]);
+            if (visible.length === 0) {
+              return (
+                <p className="rounded-xl border border-rc-line bg-white px-3.5 py-2.5 text-[12.5px] text-rc-muted">
+                  We read the page but couldn't reliably extract company details — please fill them in below.
+                </p>
+              );
+            }
+            return (
+              <div className="divide-y divide-rc-line/70 rounded-xl border border-rc-line bg-white">
+                {visible.map(([k, , v]) => (
+                  <div key={k} className="flex items-center gap-3 px-3.5 py-2.5">
+                    <span className="w-[78px] shrink-0 text-[12px] text-rc-muted">{k}</span>
+                    <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-rc-ink">{v || '—'}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()}
           <div className="mt-3 flex items-center gap-2.5">
             <RcPrimaryButton
               icon={null} iconLeft="check"

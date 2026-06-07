@@ -80,10 +80,12 @@ function InlineScalar({
       ) : (
         <button
           type="button" onClick={() => setEditing(true)}
+          aria-label={`Edit ${label}`}
           className="group flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1 py-0.5 text-left hover:bg-rc-sky-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rc-primary"
         >
           <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-rc-ink">{value || <span className="text-rc-muted/60">Add {label.toLowerCase()}</span>}</span>
-          <RcIcon name="pencil" size={13} className="shrink-0 text-rc-muted opacity-0 transition-opacity group-hover:opacity-100" />
+          {/* Always-visible (subtle) affordance so keyboard / non-mouse users can see the row is editable. */}
+          <RcIcon name="pencil" size={13} className="shrink-0 text-rc-muted/60 transition-colors group-hover:text-rc-primary" />
         </button>
       )}
     </div>
