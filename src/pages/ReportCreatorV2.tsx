@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { AuthDialog } from '@/components/auth/AuthDialog';
-import { GeneratingOverlay } from '@/components/report-creator/GeneratingOverlay';
+import { GeneratingScreenV2 } from '@/components/report-creator/v2/GeneratingScreenV2';
 import { useAuth } from '@/hooks/useAuth';
 import { useReportGenerationV2 } from '@/hooks/useReportGenerationV2';
 import {
@@ -217,7 +217,7 @@ const ReportCreatorV2 = () => {
         )}
       </div>
 
-      <GeneratingOverlay isVisible={isGenerating} statusMessage={generationStatus} />
+      <GeneratingScreenV2 isVisible={isGenerating} statusMessage={generationStatus} />
       <AuthDialog
         open={showAuth}
         onOpenChange={setShowAuth}

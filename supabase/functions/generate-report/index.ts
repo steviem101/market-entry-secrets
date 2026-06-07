@@ -119,6 +119,23 @@ async function firecrawlSearch(
   }
 }
 
+/**
+ * Resolve a likely homepage domain from a company name via web search (P1.5).
+ * Used when a competitor / end buyer was added by name without a website (the
+ * v2 CompanyPicker leaves website blank for the backend to resolve). Fail-soft.
+ */
+async function resolveDomainFromName(apiKey: string, name: string): Promise<string> {
+  if (!apiKey || !name.trim()) return "";
+  try {
+    const results = await firecrawlSearch(apiKey, `${name} official website`, 1, 8000);
+    const url = results[0]?.url || "";
+    if (!url) return "";
+    return new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
 // ── Enhancement 3: Deep company scrape (map + multi-page) ─────────────
 
 const KEY_PAGE_PATTERNS = [
@@ -282,9 +299,13 @@ async function scrapeKnownCompetitors(
 
   const results = await Promise.allSettled(
     knownCompetitors.map(async (comp) => {
-      const markdown = await firecrawlScrape(firecrawlKey, comp.website, 10000);
+      // Resolve a domain from the name when none was provided (P1.5).
+      const website = (comp.website && comp.website.trim())
+        ? comp.website
+        : await resolveDomainFromName(firecrawlKey, comp.name);
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 10000) : null;
       if (!markdown || markdown.length < 50) {
-        return { name: comp.name, url: comp.website, description: "Website could not be analysed.", key_info: "" };
+        return { name: comp.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
 
       try {
@@ -292,8 +313,8 @@ async function scrapeKnownCompetitors(
           { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
           {
             role: "user",
-            content: `Analyze this website content for "${comp.name}" (${comp.website}), a competitor of "${companyName}".
-Return a JSON object: {"name": "${comp.name}", "url": "${comp.website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"}
+            content: `Analyze this website content for "${comp.name}" (${website}), a competitor of "${companyName}".
+Return a JSON object: {"name": "${comp.name}", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -302,7 +323,7 @@ ${markdown.slice(0, 2000)}`,
         const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
         return JSON.parse(cleaned) as CompetitorData;
       } catch {
-        return { name: comp.name, url: comp.website, description: "Could not extract competitor intelligence.", key_info: "" };
+        return { name: comp.name, url: website, description: "Could not extract competitor intelligence.", key_info: "" };
       }
     })
   );
@@ -411,9 +432,13 @@ async function scrapeEndBuyers(
 
   const results = await Promise.allSettled(
     cappedBuyers.map(async (buyer) => {
-      const markdown = await firecrawlScrape(firecrawlKey, buyer.website, 8000);
+      // Resolve a domain from the name when none was provided (P1.5).
+      const website = (buyer.website && buyer.website.trim())
+        ? buyer.website
+        : await resolveDomainFromName(firecrawlKey, buyer.name);
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 8000) : null;
       if (!markdown || markdown.length < 50) {
-        return { name: buyer.name, url: buyer.website, description: "Website could not be analysed.", key_info: "" };
+        return { name: buyer.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
 
       try {
@@ -421,8 +446,8 @@ async function scrapeEndBuyers(
           { role: "system", content: "You are a B2B procurement and buyer intelligence analyst. Return only valid JSON, no markdown fences." },
           {
             role: "user",
-            content: `Analyse this company "${buyer.name}" (${buyer.website}) as a POTENTIAL CUSTOMER for "${companyName}".
-Return a JSON object: {"name": "${buyer.name}", "url": "${buyer.website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them"}
+            content: `Analyse this company "${buyer.name}" (${website}) as a POTENTIAL CUSTOMER for "${companyName}".
+Return a JSON object: {"name": "${buyer.name}", "url": "${website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them"}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -431,7 +456,7 @@ ${markdown.slice(0, 2000)}`,
         const cleaned = aiResp.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
         return JSON.parse(cleaned) as EndBuyerIntelligence;
       } catch {
-        return { name: buyer.name, url: buyer.website, description: "Could not extract buyer intelligence.", key_info: "" };
+        return { name: buyer.name, url: website, description: "Could not extract buyer intelligence.", key_info: "" };
       }
     })
   );

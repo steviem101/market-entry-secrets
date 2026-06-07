@@ -8,10 +8,11 @@
  * Phase 2 sources suggestions from COMPANY_DIRECTORY_SEED. Phase 4 swaps this
  * for a type-ahead against the AU directory tables.
  */
-import { useState, type KeyboardEvent } from 'react';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { RcIcon } from './icons';
 import { RcTextInput } from './primitives';
-import { COMPANY_DIRECTORY_SEED } from './rcData';
+import { searchCompanyDirectory } from './companyDirectory';
+import type { DirectoryCompany } from './rcData';
 
 export interface CompanyRow { name: string; website: string }
 
@@ -34,13 +35,24 @@ export function CompanyPicker({
 }) {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<DirectoryCompany[]>([]);
   const query = q.trim();
   const lc = query.toLowerCase();
   const chosen = new Set(rows.map((r) => (r.name || '').toLowerCase()));
-  const matches = lc
-    ? COMPANY_DIRECTORY_SEED.filter((c) => c.name.toLowerCase().includes(lc) && !chosen.has(c.name.toLowerCase())).slice(0, 6)
-    : [];
-  const exact = COMPANY_DIRECTORY_SEED.some((c) => c.name.toLowerCase() === lc);
+
+  // Debounced type-ahead against the AU directory tables (+ seed).
+  useEffect(() => {
+    if (lc.length < 2) { setSuggestions([]); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const results = await searchCompanyDirectory(query);
+      if (!cancelled) setSuggestions(results);
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [query, lc.length]);
+
+  const matches = suggestions.filter((c) => !chosen.has(c.name.toLowerCase())).slice(0, 6);
+  const exact = suggestions.some((c) => c.name.toLowerCase() === lc);
   const atCap = rows.length >= max;
   const looksLikeUrl = URL_RE.test(query);
 
