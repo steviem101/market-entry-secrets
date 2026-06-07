@@ -9,7 +9,7 @@ export const useCountryInvestors = (
     queryKey: ["country-investors", countryName, keywords],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("investors")
+        .from("investors_public")
         .select("*")
         .order("is_featured", { ascending: false })
         .order("name");
@@ -23,7 +23,7 @@ export const useCountryInvestors = (
       if (!terms.length) return data || [];
 
       return (data || []).filter((inv: any) => {
-        const haystack = `${inv.name || ""} ${inv.description || ""} ${(inv.sector_focus || []).join(" ")} ${inv.location || ""} ${JSON.stringify(inv.details || {})}`.toLowerCase();
+        const haystack = `${inv.name || ""} ${inv.description || ""} ${(inv.sector_focus || []).join(" ")} ${inv.location || ""}`.toLowerCase();
         return terms.some((t) => haystack.includes(t));
       });
     },

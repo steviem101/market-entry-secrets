@@ -6,7 +6,7 @@ export const useInvestors = () => {
     queryKey: ['investors'],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
-        .from('investors')
+        .from('investors_public')
         .select('*')
         .order('name')
         .limit(500);
@@ -26,7 +26,7 @@ export const useInvestorById = (id: string) => {
     queryKey: ['investor', id],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
-        .from('investors')
+        .from('investors_public')
         .select('*')
         .eq('id', id)
         .single();
@@ -45,7 +45,7 @@ export const useInvestorBySlug = (slugOrId: string) => {
     queryFn: async () => {
       // Try slug lookup first
       const { data: slugData, error: slugError } = await (supabase as any)
-        .from('investors')
+        .from('investors_public')
         .select('*')
         .eq('slug', slugOrId)
         .maybeSingle();
@@ -58,7 +58,7 @@ export const useInvestorBySlug = (slugOrId: string) => {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
       if (isUUID) {
         const { data: idData, error: idError } = await (supabase as any)
-          .from('investors')
+          .from('investors_public')
           .select('*')
           .eq('id', slugOrId)
           .single();
@@ -80,7 +80,7 @@ export const useRelatedInvestors = (currentId: string, investorType: string, loc
     queryFn: async () => {
       const locationPrefix = location.split(',')[0].trim();
       const { data, error } = await (supabase as any)
-        .from('investors')
+        .from('investors_public')
         .select('*')
         .neq('id', currentId)
         .or(`investor_type.eq.${investorType},location.ilike.%${locationPrefix}%`)

@@ -44,6 +44,19 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // D2: persona is interpolated into PostgREST .or() filters below; allowlist before use
+    // to prevent filter injection (commas, braces, parens would alter the parse).
+    const PERSONA_ALLOWLIST = new Set([
+      "founder", "investor", "service_provider", "mentor",
+      "scaler", "explorer", "operator", "agency",
+    ]);
+    if (!PERSONA_ALLOWLIST.has(persona)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid persona" }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } }
+      );
+    }
+
     log(PREFIX, "Generating plan", { persona, company_name, sector, stage, userId: user.id });
 
     // Determine the persona column name for each table

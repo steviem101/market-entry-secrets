@@ -8,7 +8,7 @@ export const useCommunityMembers = () => {
     queryKey: ['community-members'],
     queryFn: async (): Promise<Person[]> => {
       const { data, error } = await supabase
-        .from('community_members')
+        .from('community_members_public')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false })

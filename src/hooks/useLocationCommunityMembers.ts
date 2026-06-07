@@ -17,7 +17,7 @@ export const useLocationCommunityMembers = (locationSlug: string, keywords: stri
       ]);
 
       const { data, error } = await supabase
-        .from('community_members')
+        .from('community_members_public')
         .select('*')
         .eq('is_active', true)
         .or(filters.join(','))

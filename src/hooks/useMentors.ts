@@ -126,7 +126,7 @@ export const useMentors = () => {
     queryKey: ["mentors"],
     queryFn: async (): Promise<Mentor[]> => {
       const { data, error } = await (supabase as any)
-        .from("community_members")
+        .from("community_members_public")
         .select("*")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
@@ -158,7 +158,7 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
       if (isUuid) {
         // Direct ID lookup — always works regardless of migration state
         const { data, error } = await (supabase as any)
-          .from("community_members")
+          .from("community_members_public")
           .select("*")
           .eq("id", mentorSlug)
           .maybeSingle();
@@ -171,7 +171,7 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
 
       // Try slug lookup (post-migration column)
       const { data, error } = await (supabase as any)
-        .from("community_members")
+        .from("community_members_public")
         .select("*")
         .eq("slug", mentorSlug)
         .maybeSingle();
@@ -181,7 +181,7 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
         if (error.message?.includes("column") || error.code === "42703") {
           const nameGuess = mentorSlug.replace(/-/g, " ");
           const { data: fallbackData, error: fallbackError } = await (supabase as any)
-            .from("community_members")
+            .from("community_members_public")
             .select("*")
             .ilike("name", nameGuess)
             .maybeSingle();
