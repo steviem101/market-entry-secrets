@@ -167,7 +167,7 @@ export const AgencyContent = ({ agency, relatedAgencies, categoryName }: AgencyC
                           className="text-primary hover:underline text-sm flex items-center gap-1"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          Learn More
+                          View program details
                         </a>
                       )}
                     </div>
