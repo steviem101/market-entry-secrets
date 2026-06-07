@@ -9,6 +9,7 @@ import { splitParagraph } from "./splitParagraphs";
 import type { CaseStudySource, LinkerEntry } from "./types";
 
 import { InlineCitation } from "@/components/case-study/InlineCitation";
+import { YouTubeEmbed } from "@/components/detail/YouTubeEmbed";
 
 interface ApplyEnhancementsOptions {
   corpus: LinkerEntry[];
@@ -143,6 +144,12 @@ export function applyEnhancements(
 
   const parserOptions: HTMLReactParserOptions = {
     replace: (node) => {
+      // YouTube embed placeholders set by the DOMPurify hook.
+      if (node instanceof Element) {
+        const ytId = node.attribs?.["data-youtube-id"];
+        if (ytId) return <YouTubeEmbed videoId={ytId} />;
+      }
+
       // Split long plain-text paragraphs into multiple <p>s.
       if (node instanceof Element && node.name === "p") {
         const fullText = getElementText(node);
