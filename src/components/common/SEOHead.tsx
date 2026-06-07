@@ -10,7 +10,9 @@ type JsonLdType =
   | "Organization"
   | "BreadcrumbList"
   | "FAQPage"
-  | "HowTo";
+  | "HowTo"
+  | "CollectionPage"
+  | "ItemList";
 
 export interface JsonLdBlock {
   type: JsonLdType;
