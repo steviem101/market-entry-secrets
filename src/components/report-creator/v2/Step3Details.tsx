@@ -18,6 +18,7 @@ import {
 } from './primitives';
 import { ReportPreview } from './ReportPreview';
 import { CompanyPicker } from './CompanyPicker';
+import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
 
 export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) {
   const copy = PERSONA_COPY[persona];
@@ -67,7 +68,10 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
   const sellAtCap = sellIndustries.length >= 5;
   const addCustomSell = () => {
     const v = sellQuery.trim();
-    if (v && !sellIndustries.includes(v) && sellIndustries.length < 5) setTC({ industries: [...sellIndustries, v] });
+    if (v && !sellIndustries.includes(v) && sellIndustries.length < 5) {
+      setTC({ industries: [...sellIndustries, v] });
+      trackIntakeEvent('field_completed', { step: 3, field_name: 'target_customers.industries', persona, metadata: { custom: true, value: v } });
+    }
     setSellQuery('');
   };
 
@@ -170,6 +174,7 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
             rows={named.map((c) => ({ name: c.name ?? '', website: c.website ?? '' }))} max={5}
             placeholder="Name or website — e.g. BHP or bhp.com…"
             onChange={(next) => setTC({ named_companies: next })}
+            onCustomAdded={(name) => trackIntakeEvent('field_completed', { step: 3, field_name: 'named_companies', persona, metadata: { custom_company: true, name } })}
           />
         </RcField>
 
@@ -195,6 +200,7 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
           rows={comps.map((c) => ({ name: c.name ?? '', website: c.website ?? '' }))} max={3}
           placeholder="Name or website — e.g. CompetitorCo or competitor.com…"
           onChange={(next) => set({ known_competitors: next })}
+          onCustomAdded={(name) => trackIntakeEvent('field_completed', { step: 3, field_name: 'known_competitors', persona, metadata: { custom_company: true, name } })}
         />
       </div>
 

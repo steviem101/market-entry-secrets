@@ -16,6 +16,7 @@ import {
   RcField, RcTextInput, RcSelect, RcChip, RcPrimaryButton,
 } from './primitives';
 import { prefillFromWebsite } from './prefillWebsite';
+import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
 
 type ScrapeState = 'idle' | 'loading' | 'detected' | 'error';
 type AiFields = Partial<Record<'company_name' | 'country_of_origin' | 'company_stage' | 'employee_count', boolean>>;
@@ -61,6 +62,7 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
       setRegionSuggested(!hadRegion);
       setExpanded(false);
       setScrape('detected');
+      trackIntakeEvent('website_prefill_shown', { step: 1, persona });
     } catch {
       setScrape('error');
     }
@@ -74,7 +76,10 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
   function addCustomIndustry(value: string) {
     const v = value.trim();
     if (!v) return;
-    if (!selected.includes(v) && selected.length < 3) set({ industry_sector: [...selected, v] });
+    if (!selected.includes(v) && selected.length < 3) {
+      set({ industry_sector: [...selected, v] });
+      trackIntakeEvent('field_completed', { step: 1, field_name: 'industry_sector', persona, metadata: { custom: true, value: v } });
+    }
     setIndQuery('');
   }
   function toggleRegion(r: string) {
@@ -119,22 +124,24 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
           </RcPrimaryButton>
         </div>
 
-        {scrape === 'loading' && (
-          <p className="mt-2.5 flex items-center gap-2 text-[12.5px] text-rc-primary">
-            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-rc-primary/30 border-t-rc-primary" />
-            Reading {form.website_url}… we only read public pages.
-          </p>
-        )}
-        {scrape === 'detected' && (
-          <p className="mt-2.5 flex items-center gap-2 text-[12.5px] text-emerald-600">
-            <RcIcon name="check" size={14} /> Read {form.website_url} — review what we found below.
-          </p>
-        )}
-        {scrape === 'error' && (
-          <p className="mt-2.5 flex items-center gap-2 text-[12.5px] text-amber-600">
-            <RcIcon name="lightbulb" size={14} /> Couldn't auto-read that site — just fill in the details below.
-          </p>
-        )}
+        <div aria-live="polite">
+          {scrape === 'loading' && (
+            <p className="mt-2.5 flex items-center gap-2 text-[12.5px] text-rc-primary">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-rc-primary/30 border-t-rc-primary" />
+              Reading {form.website_url}… we only read public pages.
+            </p>
+          )}
+          {scrape === 'detected' && (
+            <p className="mt-2.5 flex items-center gap-2 text-[12.5px] text-emerald-600">
+              <RcIcon name="check" size={14} /> Read {form.website_url} — review what we found below.
+            </p>
+          )}
+          {scrape === 'error' && (
+            <p className="mt-2.5 flex items-center gap-2 text-[12.5px] text-amber-600">
+              <RcIcon name="lightbulb" size={14} /> Couldn't auto-read that site — just fill in the details below.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Happy-path confirm card (one tap to accept the scrape) */}
@@ -162,9 +169,22 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
             ))}
           </div>
           <div className="mt-3 flex items-center gap-2.5">
-            <RcPrimaryButton icon={null} iconLeft="check" onClick={() => { /* confirmed; fields already set */ }}>Looks right</RcPrimaryButton>
+            <RcPrimaryButton
+              icon={null} iconLeft="check"
+              onClick={() => {
+                set({ website_scrape_accepted: true });
+                trackIntakeEvent('website_prefill_accepted', { step: 1, persona });
+              }}
+            >
+              Looks right
+            </RcPrimaryButton>
             <button
-              type="button" onClick={() => setExpanded(true)}
+              type="button"
+              onClick={() => {
+                setExpanded(true);
+                set({ website_scrape_accepted: false });
+                trackIntakeEvent('website_prefill_rejected', { step: 1, persona });
+              }}
               className="inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-xl border border-rc-line bg-white px-4 text-[14px] font-semibold text-rc-body hover:bg-rc-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rc-primary"
             >
               <RcIcon name="pencil" size={15} /> Edit details

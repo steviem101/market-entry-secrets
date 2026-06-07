@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { reportApi } from '@/lib/api/reportApi';
 import type { IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
+import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
 
 /**
  * v2 generation hook. Separate from the legacy useReportGeneration so the live
@@ -59,6 +60,11 @@ export const useReportGenerationV2 = () => {
 
       if (pollResult.status === 'completed') {
         clearDraft();
+        trackIntakeEvent('report_completed', {
+          persona: data.persona,
+          intake_form_id: intakeForm.id,
+          user_id: user.id,
+        });
         toast({ title: 'Report generated!', description: 'Your report is ready to view.' });
         navigate(`/report/${result.report_id}`);
       } else if (pollResult.status === 'failed') {

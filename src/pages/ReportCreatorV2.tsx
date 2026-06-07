@@ -18,12 +18,18 @@ import { Step1Company } from '@/components/report-creator/v2/Step1Company';
 import { Step2Goals } from '@/components/report-creator/v2/Step2Goals';
 import { Step3Details } from '@/components/report-creator/v2/Step3Details';
 import { ReviewScreen } from '@/components/report-creator/v2/ReviewScreen';
+import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
 
 type Screen = 'persona' | 'company' | 'goals' | 'details' | 'review';
 const UI_KEY = 'mes_intake_v2_ui';
 
 const STEP_INDEX: Record<Exclude<Screen, 'persona'>, number> = {
   company: 0, goals: 1, details: 2, review: 3,
+};
+
+// Funnel step numbers (align with intake_funnel_v2: reached_step1/2/3).
+const STEP_EVENT_NUM: Record<Exclude<Screen, 'persona'>, number> = {
+  company: 1, goals: 2, details: 3, review: 4,
 };
 
 function buildDefaults(persona: ReportPersona): IntakeValues {
@@ -114,9 +120,32 @@ const ReportCreatorV2 = () => {
     try { localStorage.setItem(UI_KEY, JSON.stringify({ screen, persona })); } catch { /* ignore */ }
   }, [screen, persona]);
 
+  // Funnel: step_entered on each step view.
+  useEffect(() => {
+    if (screen !== 'persona') {
+      trackIntakeEvent('step_entered', { step: STEP_EVENT_NUM[screen], persona, user_id: user?.id });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
+
+  // Funnel: auth modal shown.
+  useEffect(() => {
+    if (showAuth) trackIntakeEvent('auth_modal_shown', { persona, user_id: user?.id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showAuth]);
+
+  // Funnel: abandoned (best-effort on tab close / hide).
+  useEffect(() => {
+    const onHide = () => { if (screen !== 'persona') trackIntakeEvent('abandoned', { step: STEP_EVENT_NUM[screen], persona }); };
+    window.addEventListener('pagehide', onHide);
+    return () => window.removeEventListener('pagehide', onHide);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, persona]);
+
   // After auth completes, resume the pending generation (auth precedes pipeline).
   useEffect(() => {
     if (user && showAuth && pendingGenerate.current) {
+      trackIntakeEvent('auth_completed', { persona, user_id: user.id });
       setShowAuth(false);
       pendingGenerate.current = false;
       void runGenerate();
@@ -128,7 +157,30 @@ const ReportCreatorV2 = () => {
     setPersona(p);
     form.setValue('persona', p);
     form.setValue('goal_ids', DEFAULT_GOALS[p]);
+    trackIntakeEvent('persona_selected', { persona: p, user_id: user?.id });
     setScreen('company');
+  }
+
+  // Funnel: field completion/skip summary as a step advances.
+  function trackStepFields(step: Exclude<Screen, 'persona'>) {
+    const v = form.getValues();
+    const mark = (field: string, filled: boolean, metadata?: Record<string, unknown>) =>
+      trackIntakeEvent(filled ? 'field_completed' : 'field_skipped', { step: STEP_EVENT_NUM[step], field_name: field, persona, metadata, user_id: user?.id });
+    if (step === 'company') {
+      mark('industry_sector', (v.industry_sector ?? []).length > 0, { count: (v.industry_sector ?? []).length });
+      mark('target_regions', (v.target_regions ?? []).length > 0, { count: (v.target_regions ?? []).length });
+    } else if (step === 'goals') {
+      mark('goal_ids', (v.goal_ids ?? []).length > 0, { count: (v.goal_ids ?? []).length });
+    } else if (step === 'details') {
+      const tc = v.target_customers;
+      mark('customer_type', !!tc?.customer_type);
+      mark('target_customers.industries', (tc?.industries ?? []).length > 0, { count: (tc?.industries ?? []).length });
+      mark('named_companies', (tc?.named_companies ?? []).length > 0, { count: (tc?.named_companies ?? []).length });
+      mark('target_customers.notes', !!tc?.notes);
+      mark('known_competitors', (v.known_competitors ?? []).length > 0, { count: (v.known_competitors ?? []).length });
+      mark('challenge_tags', (v.challenges?.tags ?? []).length > 0, { count: (v.challenges?.tags ?? []).length });
+      mark('report_focus', !!v.report_focus);
+    }
   }
 
   function switchPersona(p: ReportPersona) {
@@ -146,11 +198,12 @@ const ReportCreatorV2 = () => {
         'persona', 'website_url', 'company_name', 'country_of_origin',
         'industry_sector', 'company_stage', 'target_regions',
       ]);
-      if (ok) setScreen('goals');
+      if (ok) { trackStepFields('company'); setScreen('goals'); }
     } else if (current === 'goals') {
-      if (await form.trigger(['goal_ids'])) setScreen('details');
+      if (await form.trigger(['goal_ids'])) { trackStepFields('goals'); setScreen('details'); }
     } else if (current === 'details') {
       if (await form.trigger(['target_customers', 'known_competitors', 'challenges', 'report_focus'])) {
+        trackStepFields('details');
         setScreen('review');
       }
     }
@@ -165,6 +218,7 @@ const ReportCreatorV2 = () => {
   }
 
   async function handleGenerate() {
+    trackIntakeEvent('generate_clicked', { persona, user_id: user?.id });
     const ok = await form.trigger();
     if (!ok) {
       // Jump back to the earliest step with an error.
