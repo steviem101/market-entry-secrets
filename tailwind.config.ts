@@ -72,10 +72,23 @@ export default {
 				'mes-warning':    'hsl(var(--mes-warning))',
 				'mes-border':     'hsl(var(--mes-border))',
 				'mes-bg':         'hsl(var(--mes-bg))',
-				'mes-card':       'hsl(var(--mes-card))'
+				'mes-card':       'hsl(var(--mes-card))',
+
+				/* Report Creator v2 redesign palette (docs/redesign/handoff/README.md §Design tokens) */
+				'rc-primary':     'hsl(var(--rc-primary))',
+				'rc-primary-700': 'hsl(var(--rc-primary-700))',
+				'rc-ink':         'hsl(var(--rc-ink))',
+				'rc-body':        'hsl(var(--rc-body))',
+				'rc-muted':       'hsl(var(--rc-muted))',
+				'rc-line':        'hsl(var(--rc-line))',
+				'rc-canvas':      'hsl(var(--rc-canvas))',
+				'rc-sky-soft':    'hsl(var(--rc-sky-soft))',
+				'rc-sky-tint':    'hsl(var(--rc-sky-tint))',
+				'rc-success':     'hsl(var(--rc-success))'
 			},
 			fontFamily: {
-				mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
+				mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+				rc:   ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

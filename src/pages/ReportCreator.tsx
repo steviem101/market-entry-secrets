@@ -12,8 +12,10 @@ import { AuthDialog } from '@/components/auth/AuthDialog';
 import { useReportGeneration } from '@/hooks/useReportGeneration';
 import { useAuth } from '@/hooks/useAuth';
 import { fullIntakeSchema, step1Schema, step2Schema, type IntakeFormData, type ReportPersona } from '@/components/report-creator/intakeSchema';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+import ReportCreatorV2 from './ReportCreatorV2';
 
-const ReportCreator = () => {
+const ReportCreatorLegacy = () => {
   const [searchParams] = useSearchParams();
   const urlPersona = searchParams.get('persona');
   const initialPersona: ReportPersona = (urlPersona === 'startup') ? 'startup' : 'international';
@@ -160,5 +162,8 @@ const ReportCreator = () => {
     </>
   );
 };
+
+const ReportCreator = () =>
+  isFeatureEnabled('report_creator_v2') ? <ReportCreatorV2 /> : <ReportCreatorLegacy />;
 
 export default ReportCreator;
