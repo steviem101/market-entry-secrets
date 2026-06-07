@@ -267,7 +267,7 @@ const Contact = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="outline" className="w-full">Learn More</Button>
+                  <Button variant="outline" className="w-full">View partner directory details</Button>
                 </CardContent>
               </Card>
             </div>
