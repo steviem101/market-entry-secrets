@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Eye, EyeOff, Mail } from 'lucide-react';
+import { Eye, EyeOff, Mail, Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const MicrosoftIcon = ({ className }: { className?: string }) => (
@@ -22,9 +22,15 @@ interface AuthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTab?: 'signin' | 'signup' | 'magiclink' | 'reset';
+  /**
+   * When set, renders the streamlined "answers saved" layout used by the report
+   * intake flow: a green reassurance banner, SSO-first, email magic-link
+   * secondary, and a bottom sheet on mobile. Omit for the standard tabbed UI.
+   */
+  reassurance?: { title: string; subtitle: string };
 }
 
-export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDialogProps) => {
+export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassurance }: AuthDialogProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -93,6 +99,73 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
       setActiveTab(value);
     }
   };
+
+  // Streamlined report-intake layout: reassurance banner + SSO-first + magic link.
+  if (reassurance) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="gap-4 sm:max-w-[400px] max-sm:bottom-0 max-sm:top-auto max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-full max-sm:rounded-b-none max-sm:rounded-t-2xl">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Create your free account</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+              <Check className="h-3.5 w-3.5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-emerald-900">{reassurance.title}</p>
+              <p className="text-[13px] leading-snug text-emerald-700">{reassurance.subtitle}</p>
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            <Button variant="outline" className="h-11 w-full" onClick={() => handleSocialSignIn('google')} disabled={loading}>
+              <Mail className="mr-2 h-4 w-4" /> Continue with Google
+            </Button>
+            <Button variant="outline" className="h-11 w-full" onClick={() => handleSocialSignIn('azure')} disabled={loading}>
+              <MicrosoftIcon className="mr-2 h-4 w-4" /> Continue with Microsoft
+            </Button>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><Separator className="w-full" /></div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">or email</span>
+            </div>
+          </div>
+
+          {magicLinkSent ? (
+            <div className="space-y-3 py-2 text-center">
+              <Mail className="mx-auto h-10 w-10 text-primary" />
+              <h3 className="font-medium">Check your email</h3>
+              <p className="text-sm text-muted-foreground">
+                We sent a sign-in link to <strong>{magicLinkEmail}</strong>. Click it to see your report.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => setMagicLinkSent(false)}>Try another email</Button>
+            </div>
+          ) : (
+            <form onSubmit={handleMagicLink} className="space-y-2.5">
+              <Input
+                id="reassure-magic-email"
+                type="email"
+                value={magicLinkEmail}
+                onChange={(e) => setMagicLinkEmail(e.target.value)}
+                placeholder="you@company.com"
+                aria-label="Email"
+                required
+              />
+              <Button type="submit" className="h-11 w-full" disabled={loading}>
+                {loading ? 'Sending…' : 'Email me a magic link'}
+              </Button>
+            </form>
+          )}
+
+          <p className="text-center text-xs text-muted-foreground">No password needed · takes 10 seconds</p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

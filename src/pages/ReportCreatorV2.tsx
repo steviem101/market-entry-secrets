@@ -206,7 +206,7 @@ const ReportCreatorV2 = () => {
               )}
               {screen === 'review' && (
                 <ReviewScreen
-                  persona={persona} form={values} isGenerating={isGenerating}
+                  persona={persona} form={values} set={set} isGenerating={isGenerating}
                   onBack={() => setScreen('details')}
                   onGenerate={handleGenerate}
                   goToStep={(s) => setScreen(s)}
@@ -218,7 +218,15 @@ const ReportCreatorV2 = () => {
       </div>
 
       <GeneratingOverlay isVisible={isGenerating} statusMessage={generationStatus} />
-      <AuthDialog open={showAuth} onOpenChange={setShowAuth} defaultTab="signup" />
+      <AuthDialog
+        open={showAuth}
+        onOpenChange={setShowAuth}
+        defaultTab="signup"
+        reassurance={{
+          title: 'Your answers are saved.',
+          subtitle: 'Create a free account to see your report.',
+        }}
+      />
     </>
   );
 };
