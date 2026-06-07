@@ -110,7 +110,16 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
             <RcTextInput
               id="rc-website" iconLeft="link" placeholder="yourcompany.com"
               value={form.website_url || ''}
-              onChange={(v) => set({ website_url: v })}
+              onChange={(v) => {
+                set({ website_url: v });
+                // If the URL changed after we already scraped, drop the stale
+                // confirm-card and let the user re-scrape (Fetch / blur).
+                if (scrape !== 'idle' && v !== (form.website_url || '')) {
+                  setScrape('idle');
+                  setExpanded(false);
+                  setAiFields({});
+                }
+              }}
               onBlur={() => { if (form.website_url && scrape === 'idle') runScrape(); }}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); runScrape(); } }}
             />

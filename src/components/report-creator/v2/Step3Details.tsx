@@ -5,7 +5,7 @@
  * report_focus). Customer type defaults to B2B; size/motion sit behind a
  * skippable expander. Selection semantics differ: single = radio, multi = check.
  */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   CUSTOMER_TYPE, CUSTOMER_SIZE, BUYING_MOTION, COMMON_CHALLENGES, FOCUS_PROMPTS,
 } from '../intakeSchema.v2';
@@ -32,11 +32,10 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
   const [sellQuery, setSellQuery] = useState('');
   const [showBuyerDetail, setShowBuyerDetail] = useState(!!(tc.customer_size || tc.buying_motion));
 
-  // Default the dominant segment so customer type is a confirm, not a cold pick.
-  useEffect(() => {
-    if (!tc.customer_type) setTC({ customer_type: 'B2B' });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // customer_type defaults to 'B2B' at form construction (buildDefaults), so a
+  // fresh session arrives with B2B already selected. We deliberately do NOT
+  // re-apply it on mount — that would silently undo a user's deselection if
+  // they navigate away and back. If they want B2B back, they can pick it.
 
   function setTC(patch: Partial<typeof tc>) {
     set({ target_customers: { ...tc, ...patch } });
@@ -208,7 +207,7 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
 
       {/* CHALLENGES */}
       <div className="space-y-2">
-        <RcSectionLabel icon="shield" tag="Optional" hint="Tap any that apply — sharpens your SWOT and action plan.">
+        <RcSectionLabel icon="shield" tag="Optional" hint="Tap any that apply — sharpens your SWOT and action plan. Up to 8.">
           Biggest challenges right now?
         </RcSectionLabel>
         <div role="group" aria-label="Biggest challenges" className="flex flex-wrap gap-2">
@@ -216,6 +215,11 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
             <RcChip key={c} size="sm" active={challengeTags.includes(c)} onClick={() => toggleChallenge(c)}>{c}</RcChip>
           ))}
         </div>
+        {challengeTags.length >= 8 && (
+          <p className="flex items-center gap-1.5 text-[12px] text-rc-muted">
+            <RcIcon name="check" size={13} /> Maximum of 8 selected — deselect one to change.
+          </p>
+        )}
       </div>
 
       {/* REPORT FOCUS */}

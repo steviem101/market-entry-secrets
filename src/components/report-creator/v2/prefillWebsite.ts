@@ -43,7 +43,8 @@ export async function prefillFromWebsite(url: string): Promise<WebsitePrefill | 
     ]);
 
     const { data, error } = result as { data: WebsitePrefill | null; error: unknown };
-    const prefill = !error && hasAnyField(data) ? data : null;
+    if (error) return null; // don't cache transport/HTTP failures — allow retry on next attempt
+    const prefill = hasAnyField(data) ? data : null;
     cache.set(key, prefill);
     return prefill;
   } catch {

@@ -45,10 +45,19 @@ function InlineScalar({
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <div className="min-w-0 flex-1">
             {type === 'select' && options ? (
-              <RcSelect value={draft} onChange={setDraft} options={options} placeholder={placeholder ?? `Select ${label.toLowerCase()}`} ariaLabel={label} />
+              // Selects auto-commit on change — picking from a dropdown is the
+              // confirmation. Cancel button reverts.
+              <RcSelect
+                value={draft}
+                onChange={(v) => { setDraft(v); onSave(v.trim()); setEditing(false); }}
+                options={options}
+                placeholder={placeholder ?? `Select ${label.toLowerCase()}`}
+                ariaLabel={label}
+              />
             ) : (
               <RcTextInput
                 value={draft} onChange={setDraft} ariaLabel={label} placeholder={placeholder}
+                onBlur={save}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } if (e.key === 'Escape') cancel(); }}
               />
             )}
@@ -56,7 +65,15 @@ function InlineScalar({
           <button type="button" onClick={save} aria-label="Save" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rc-primary text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rc-primary">
             <RcIcon name="check" size={16} />
           </button>
-          <button type="button" onClick={cancel} aria-label="Cancel" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-rc-line text-rc-muted hover:bg-rc-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rc-primary">
+          <button
+            type="button"
+            // Prevent the input's blur-save from firing before the cancel click
+            // when the user mousedowns on this button.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={cancel}
+            aria-label="Cancel"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-rc-line text-rc-muted hover:bg-rc-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rc-primary"
+          >
             <RcIcon name="x" size={16} />
           </button>
         </div>

@@ -212,7 +212,6 @@ export function RcRadioChipGroup({
   onChange: (v: string) => void; allowDeselect?: boolean; size?: 'sm' | 'md';
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const activeIndex = Math.max(0, options.indexOf(value));
 
   function focusIndex(i: number) {
     const n = options.length;

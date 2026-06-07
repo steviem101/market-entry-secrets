@@ -8,7 +8,7 @@
  * Phase 2 sources suggestions from COMPANY_DIRECTORY_SEED. Phase 4 swaps this
  * for a type-ahead against the AU directory tables.
  */
-import { useEffect, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { RcIcon } from './icons';
 import { RcTextInput } from './primitives';
 import { searchCompanyDirectory } from './companyDirectory';
@@ -36,6 +36,7 @@ export function CompanyPicker({
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<DirectoryCompany[]>([]);
+  const rootRef = useRef<HTMLDivElement>(null);
   const query = q.trim();
   const lc = query.toLowerCase();
   const chosen = new Set(rows.map((r) => (r.name || '').toLowerCase()));
@@ -50,6 +51,21 @@ export function CompanyPicker({
     }, 250);
     return () => { cancelled = true; clearTimeout(t); };
   }, [query, lc.length]);
+
+  // Click outside / Escape closes the dropdown.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: globalThis.KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
 
   const matches = suggestions.filter((c) => !chosen.has(c.name.toLowerCase())).slice(0, 6);
   const exact = suggestions.some((c) => c.name.toLowerCase() === lc);
@@ -80,7 +96,7 @@ export function CompanyPicker({
   }
 
   return (
-    <div className="space-y-2">
+    <div ref={rootRef} className="space-y-2">
       {rows.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {rows.map((c, i) => (
