@@ -131,6 +131,7 @@ const ContentDetail = () => {
         description={descriptionText}
         canonicalPath={`/content/${content.slug}`}
         ogType="article"
+        ogImage={companyProfile?.company_logo || primaryFounder?.image || undefined}
         jsonLd={{
           type: "Article",
           data: {
