@@ -325,13 +325,13 @@ export function mapV2ToLegacyIntake(
     budget_level: data.budget_level || '',
     primary_goals: goalsText,
     key_challenges: challengesText,
-    known_competitors: data.known_competitors.filter(
-      (c) => c.name.trim() || c.website.trim(),
-    ),
+    known_competitors: data.known_competitors
+      .filter((c) => (c.name ?? '').trim() || (c.website ?? '').trim())
+      .map((c) => ({ name: c.name ?? '', website: c.website ?? '' })),
     end_buyer_industries: tc.industries,
     end_buyers: tc.named_companies
-      .filter((b) => b.name.trim() || (b.website || '').trim())
-      .map((b) => ({ name: b.name, website: b.website || '' })),
+      .filter((b) => (b.name ?? '').trim() || (b.website ?? '').trim())
+      .map((b) => ({ name: b.name ?? '', website: b.website ?? '' })),
     // v2 structured columns — write NULL (not '') so CHECK constraints pass.
     goal_ids: data.goal_ids,
     customer_type: tc.customer_type ?? null,

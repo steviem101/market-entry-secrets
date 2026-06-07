@@ -1,89 +1,230 @@
+import { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Compass } from 'lucide-react';
+import { AuthDialog } from '@/components/auth/AuthDialog';
+import { GeneratingOverlay } from '@/components/report-creator/GeneratingOverlay';
+import { useAuth } from '@/hooks/useAuth';
+import { useReportGenerationV2 } from '@/hooks/useReportGenerationV2';
+import {
+  fullIntakeSchema, DEFAULT_GOALS,
+  type IntakeFormDataV2, type ReportPersona,
+} from '@/components/report-creator/intakeSchema.v2';
+import type { IntakeValues, SetPatch } from '@/components/report-creator/v2/types';
+import { PersonaScreen } from '@/components/report-creator/v2/PersonaScreen';
+import { StepShell } from '@/components/report-creator/v2/StepShell';
+import { Step1Company } from '@/components/report-creator/v2/Step1Company';
+import { Step2Goals } from '@/components/report-creator/v2/Step2Goals';
+import { Step3Details } from '@/components/report-creator/v2/Step3Details';
+import { ReviewScreen } from '@/components/report-creator/v2/ReviewScreen';
 
-/**
- * Report Creator v2 — Phase 0 stub.
- *
- * Toggled on via `?v2=1` (sticky in localStorage via src/lib/featureFlags.ts).
- * Subsequent phases will replace this with the persona pick + 4-step wizard
- * per docs/redesign/handoff/README.md.
- */
-const ReportCreatorV2 = () => (
-  <>
-    <Helmet>
-      <title>AI Market Entry Report (v2 preview) | Market Entry Secrets</title>
-      <meta name="description" content="Redesigned market-entry intake (v2 preview)." />
-    </Helmet>
+type Screen = 'persona' | 'company' | 'goals' | 'details' | 'review';
+const UI_KEY = 'mes_intake_v2_ui';
 
-    <main className="font-rc min-h-screen bg-rc-canvas px-4 pt-24 pb-16">
-      <div className="mx-auto max-w-[760px] text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rc-sky-soft text-rc-primary-700 shadow-rc-card">
-          <Compass className="h-7 w-7" aria-hidden />
-        </div>
+const STEP_INDEX: Record<Exclude<Screen, 'persona'>, number> = {
+  company: 0, goals: 1, details: 2, review: 3,
+};
 
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-rc-primary-700">
-          Choose your journey
-        </p>
-        <h1 className="mt-2 text-[30px] font-bold tracking-tight text-rc-ink sm:text-[34px]">
-          Report Creator v2 — Phase 0 scaffold
-        </h1>
-        <p className="mx-auto mt-3 max-w-[560px] text-[14.5px] leading-relaxed text-rc-body">
-          The v2 flag is on. Design tokens, Plus Jakarta Sans, the button gradient and
-          card / pop shadows are wired up. The persona pick and 4-step wizard land in
-          Phase 2.
-        </p>
+function buildDefaults(persona: ReportPersona): IntakeValues {
+  return {
+    persona,
+    website_url: '',
+    company_name: '',
+    country_of_origin: '',
+    industry_sector: [],
+    company_stage: undefined as unknown as IntakeValues['company_stage'],
+    employee_count: undefined,
+    revenue_stage: undefined,
+    // Pre-fill the most common AU entry point so the majority confirm rather
+    // than cold-pick (README §Step 1). Cleared on any manual region change.
+    target_regions: ['Sydney/NSW'],
+    website_scrape_accepted: false,
+    goal_ids: DEFAULT_GOALS[persona],
+    timeline: undefined,
+    budget_level: undefined,
+    target_customers: {
+      customer_type: 'B2B',
+      customer_size: undefined,
+      buying_motion: undefined,
+      industries: [],
+      named_companies: [],
+      notes: '',
+    },
+    known_competitors: [],
+    challenges: { tags: [], other: '' },
+    report_focus: '',
+  };
+}
 
-        <div className="mt-8 rounded-2xl border border-rc-line bg-white p-6 text-left shadow-rc-card">
-          <p className="text-[13.5px] font-semibold text-rc-ink">Token resolution check</p>
-          <p className="mt-1 text-[12.5px] text-rc-muted">
-            If these swatches render with their colour names visible on the right hue,
-            the Tailwind theme + CSS variables resolved correctly.
-          </p>
+const ReportCreatorV2 = () => {
+  const [searchParams] = useSearchParams();
+  const urlPersona: ReportPersona = searchParams.get('persona') === 'startup' ? 'startup' : 'international';
 
-          <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {[
-              { name: 'primary',     cls: 'bg-rc-primary',     fg: 'text-white' },
-              { name: 'primary-700', cls: 'bg-rc-primary-700', fg: 'text-white' },
-              { name: 'ink',         cls: 'bg-rc-ink',         fg: 'text-white' },
-              { name: 'body',        cls: 'bg-rc-body',        fg: 'text-white' },
-              { name: 'muted',       cls: 'bg-rc-muted',       fg: 'text-white' },
-              { name: 'line',        cls: 'bg-rc-line',        fg: 'text-rc-ink' },
-              { name: 'canvas',      cls: 'bg-rc-canvas',      fg: 'text-rc-ink' },
-              { name: 'sky-soft',    cls: 'bg-rc-sky-soft',    fg: 'text-rc-ink' },
-              { name: 'sky-tint',    cls: 'bg-rc-sky-tint',    fg: 'text-rc-ink' },
-              { name: 'success',     cls: 'bg-rc-success',     fg: 'text-white' },
-            ].map((t) => (
-              <li
-                key={t.name}
-                className={`flex h-9 items-center justify-center rounded-xl border border-rc-line text-[11.5px] font-medium ${t.cls} ${t.fg}`}
-              >
-                {t.name}
-              </li>
-            ))}
-          </ul>
+  const { user } = useAuth();
+  const { isGenerating, generationStatus, generate, loadDraft, saveDraft } = useReportGenerationV2();
 
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              className="bg-rc-btn-gradient inline-flex h-12 items-center gap-2 rounded-xl px-5 text-[14px] font-semibold text-white shadow-rc-card transition-shadow hover:shadow-rc-pop"
-            >
-              Gradient button (48px)
-            </button>
-            <span className="inline-flex h-8 items-center rounded-full bg-rc-sky-soft px-3 text-[12px] font-semibold text-rc-primary-700">
-              Active chip
-            </span>
-            <span className="inline-flex h-8 items-center rounded-full border border-rc-line px-3 text-[12px] font-medium text-rc-body">
-              Resting chip
-            </span>
+  const [screen, setScreen] = useState<Screen>('persona');
+  const [persona, setPersona] = useState<ReportPersona>(urlPersona);
+  const [showAuth, setShowAuth] = useState(false);
+  const pendingGenerate = useRef(false);
+
+  const form = useForm<IntakeFormDataV2>({
+    resolver: zodResolver(fullIntakeSchema),
+    defaultValues: buildDefaults(urlPersona),
+    mode: 'onTouched',
+  });
+
+  const values = form.watch();
+  const set: SetPatch = (patch) => {
+    (Object.entries(patch) as [keyof IntakeValues, IntakeValues[keyof IntakeValues]][])
+      .forEach(([k, v]) => form.setValue(k, v, { shouldDirty: true }));
+  };
+
+  // Restore a saved draft (values + UI position) on mount.
+  useEffect(() => {
+    const draft = loadDraft();
+    let savedScreen: Screen | null = null;
+    let savedPersona: ReportPersona | null = null;
+    try {
+      const ui = JSON.parse(localStorage.getItem(UI_KEY) || 'null');
+      if (ui?.screen) savedScreen = ui.screen;
+      if (ui?.persona) savedPersona = ui.persona;
+    } catch { /* ignore */ }
+
+    const p = (draft?.persona as ReportPersona) || savedPersona || urlPersona;
+    if (draft && Object.keys(draft).length > 0) {
+      form.reset({ ...buildDefaults(p), ...draft });
+      setPersona(p);
+      setScreen(savedScreen && savedScreen !== 'persona' ? savedScreen : 'company');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist the draft on any field change (idiomatic RHF subscription — avoids
+  // a localStorage write on every render).
+  useEffect(() => {
+    const sub = form.watch((vals) => saveDraft(vals as Partial<IntakeFormDataV2>));
+    return () => sub.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist UI position (step + persona) for resume-on-refresh.
+  useEffect(() => {
+    try { localStorage.setItem(UI_KEY, JSON.stringify({ screen, persona })); } catch { /* ignore */ }
+  }, [screen, persona]);
+
+  // After auth completes, resume the pending generation (auth precedes pipeline).
+  useEffect(() => {
+    if (user && showAuth && pendingGenerate.current) {
+      setShowAuth(false);
+      pendingGenerate.current = false;
+      void runGenerate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  function pickPersona(p: ReportPersona) {
+    setPersona(p);
+    form.setValue('persona', p);
+    form.setValue('goal_ids', DEFAULT_GOALS[p]);
+    setScreen('company');
+  }
+
+  function switchPersona(p: ReportPersona) {
+    if (p === persona) return;
+    setPersona(p);
+    form.setValue('persona', p);
+    // Goals differ per persona — reset to that persona's defaults.
+    form.setValue('goal_ids', DEFAULT_GOALS[p]);
+    form.setValue('revenue_stage', undefined);
+  }
+
+  async function goNextFrom(current: Screen) {
+    if (current === 'company') {
+      const ok = await form.trigger([
+        'persona', 'website_url', 'company_name', 'country_of_origin',
+        'industry_sector', 'company_stage', 'target_regions',
+      ]);
+      if (ok) setScreen('goals');
+    } else if (current === 'goals') {
+      if (await form.trigger(['goal_ids'])) setScreen('details');
+    } else if (current === 'details') {
+      if (await form.trigger(['target_customers', 'known_competitors', 'challenges', 'report_focus'])) {
+        setScreen('review');
+      }
+    }
+  }
+
+  async function runGenerate() {
+    const result = await generate(form.getValues());
+    if (result.needsAuth) {
+      pendingGenerate.current = true;
+      setShowAuth(true);
+    }
+  }
+
+  async function handleGenerate() {
+    const ok = await form.trigger();
+    if (!ok) {
+      // Jump back to the earliest step with an error.
+      const e = form.formState.errors;
+      const step1Keys = ['website_url', 'company_name', 'country_of_origin', 'industry_sector', 'company_stage', 'target_regions'];
+      if (step1Keys.some((k) => k in e)) setScreen('company');
+      else if ('goal_ids' in e) setScreen('goals');
+      else setScreen('details');
+      return;
+    }
+    await runGenerate();
+  }
+
+  const pageTitle = PERSONA_COPY_TITLE(persona);
+
+  return (
+    <>
+      <Helmet>
+        <title>{pageTitle} | Market Entry Secrets</title>
+        <meta name="description" content="Get your personalised AI-powered market entry report." />
+      </Helmet>
+
+      <div className="min-h-screen bg-rc-canvas font-rc">
+        {screen === 'persona' ? (
+          <div className="px-4 py-12 sm:px-6">
+            <PersonaScreen onPick={pickPersona} />
           </div>
-        </div>
-
-        <p className="mt-6 text-[12.5px] text-rc-muted">
-          Disable with <code className="font-mono">?v2=0</code> to return to the live flow.
-        </p>
+        ) : (
+          <div>
+            <StepShell persona={persona} stepIndex={STEP_INDEX[screen]} onSwitchPersona={switchPersona}>
+              {screen === 'company' && (
+                <Step1Company persona={persona} form={values} set={set} errors={form.formState.errors} onNext={() => goNextFrom('company')} />
+              )}
+              {screen === 'goals' && (
+                <Step2Goals persona={persona} form={values} set={set} errors={form.formState.errors} onNext={() => goNextFrom('goals')} onBack={() => setScreen('company')} />
+              )}
+              {screen === 'details' && (
+                <Step3Details persona={persona} form={values} set={set} errors={form.formState.errors} onNext={() => goNextFrom('details')} onBack={() => setScreen('goals')} />
+              )}
+              {screen === 'review' && (
+                <ReviewScreen
+                  persona={persona} form={values} isGenerating={isGenerating}
+                  onBack={() => setScreen('details')}
+                  onGenerate={handleGenerate}
+                  goToStep={(s) => setScreen(s)}
+                />
+              )}
+            </StepShell>
+          </div>
+        )}
       </div>
-    </main>
-  </>
-);
+
+      <GeneratingOverlay isVisible={isGenerating} statusMessage={generationStatus} />
+      <AuthDialog open={showAuth} onOpenChange={setShowAuth} defaultTab="signup" />
+    </>
+  );
+};
+
+function PERSONA_COPY_TITLE(persona: ReportPersona): string {
+  return persona === 'startup' ? 'AI Startup Growth Report' : 'AI Market Entry Report';
+}
 
 export default ReportCreatorV2;
