@@ -4,6 +4,7 @@ import { log } from "../_shared/log.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
+import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -810,46 +811,21 @@ const sanitizeFilterValue = (v: string): string =>
   v.replace(/[^a-zA-Z0-9 \-'&/]/g, "").trim().substring(0, 100);
 
 // ── Goal-to-service-tag mapping ───────────────────────────────────────
-// Form goals are long descriptions; provider service tags are short keywords.
-// Map goals → searchable service tags for better Supabase .cs.{} matching.
-const GOAL_SERVICE_TAGS: Record<string, string[]> = {
-  "Find vetted service providers (legal, tax, HR, finance)": ["Legal", "Tax", "HR", "Accounting", "Finance", "Immigration"],
-  "Connect with trade and investment agencies": ["Trade Advisory", "Government Relations", "Investment"],
-  "Access market entry case studies and success stories": ["Market Research", "Consulting"],
-  "Identify relevant industry associations and chambers of commerce": ["Industry Association", "Chamber of Commerce"],
-  "Discover upcoming market entry events and networking opportunities": ["Events", "Networking"],
-  "Find experienced mentors and advisors": ["Mentorship", "Advisory", "Consulting"],
-  "Access qualified lead lists for my target sector": ["Lead Generation", "Market Research", "Data"],
-  "Understand regulatory and compliance requirements": ["Legal", "Compliance", "Regulatory"],
-  // Startup goals
-  "Find investors and venture capital firms": ["Investment", "Venture Capital", "Funding"],
-  "Discover accelerators and incubator programs": ["Accelerator", "Incubator", "Startup"],
-  "Connect with mentors and startup advisors": ["Mentorship", "Advisory", "Startup"],
-  "Access growth-stage service providers (legal, finance, HR)": ["Legal", "Finance", "HR", "Accounting"],
-  "Find co-working spaces and innovation hubs": ["Co-working", "Innovation Hub"],
-  "Identify grant and government funding opportunities": ["Grants", "Government", "Funding"],
-  "Access lead lists and customer acquisition resources": ["Lead Generation", "Marketing", "Sales"],
-  "Connect with other founders and peer networks": ["Networking", "Community", "Founder"],
-};
-
-function expandGoalsToServiceTags(goals: string[]): string[] {
-  const tags = new Set<string>();
-  for (const goal of goals) {
-    const mapped = GOAL_SERVICE_TAGS[goal];
-    if (mapped) {
-      for (const tag of mapped) tags.add(tag);
-    }
-  }
-  return [...tags];
-}
+// Keyed by stable goal_id (with a legacy long-label fallback). Lives in a
+// shared, dependency-free module so it can be unit-tested under Node.
+// See goalServiceTags.ts and ENGINEERING_TODO P0.1.
 
 // ── Database matching ──────────────────────────────────────────────────
 async function searchMatches(supabase: any, intake: any) {
   const matches: Record<string, any[]> = {};
   const regions = intake.target_regions || [];
   const industry = (intake.industry_sector || []).join(", ");
-  // Expand goal descriptions into short service tags for better .cs.{} matching
-  const serviceTags = expandGoalsToServiceTags(intake.services_needed || []);
+  // Expand selected goals into short service tags for better .cs.{} matching.
+  // Prefer the stable goal_ids column; fall back to legacy services_needed labels.
+  const serviceTags = expandGoalsToServiceTags({
+    goal_ids: intake.goal_ids,
+    services_needed: intake.services_needed,
+  });
 
   const locationPatterns = regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
 
