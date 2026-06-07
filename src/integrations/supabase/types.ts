@@ -2290,6 +2290,53 @@ export type Database = {
           },
         ]
       }
+      intake_form_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          field_name: string | null
+          id: string
+          intake_form_id: string | null
+          metadata: Json | null
+          persona: string | null
+          session_id: string
+          step: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          field_name?: string | null
+          id?: string
+          intake_form_id?: string | null
+          metadata?: Json | null
+          persona?: string | null
+          session_id: string
+          step?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          field_name?: string | null
+          id?: string
+          intake_form_id?: string | null
+          metadata?: Json | null
+          persona?: string | null
+          session_id?: string
+          step?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intake_form_events_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investors: {
         Row: {
           application_url: string | null
@@ -3794,74 +3841,101 @@ export type Database = {
       user_intake_forms: {
         Row: {
           budget_level: string
+          buying_motion: string | null
+          challenge_other: string | null
+          challenge_tags: string[] | null
           company_name: string
           company_stage: string
           country_of_origin: string
           created_at: string
+          customer_size: string | null
+          customer_type: string | null
           employee_count: string
           end_buyer_industries: string[] | null
           end_buyers: Json | null
           enriched_input: Json | null
+          goal_ids: string[] | null
           id: string
           industry_sector: string[]
           key_challenges: string | null
           known_competitors: Json | null
           primary_goals: string | null
           raw_input: Json
+          report_focus: string | null
+          revenue_stage: string | null
           services_needed: string[]
           status: string
           target_regions: string[]
           timeline: string
           updated_at: string
           user_id: string | null
+          website_scrape_accepted: boolean | null
           website_url: string
         }
         Insert: {
           budget_level: string
+          buying_motion?: string | null
+          challenge_other?: string | null
+          challenge_tags?: string[] | null
           company_name: string
           company_stage: string
           country_of_origin: string
           created_at?: string
+          customer_size?: string | null
+          customer_type?: string | null
           employee_count: string
           end_buyer_industries?: string[] | null
           end_buyers?: Json | null
           enriched_input?: Json | null
+          goal_ids?: string[] | null
           id?: string
           industry_sector: string[]
           key_challenges?: string | null
           known_competitors?: Json | null
           primary_goals?: string | null
           raw_input?: Json
+          report_focus?: string | null
+          revenue_stage?: string | null
           services_needed?: string[]
           status?: string
           target_regions?: string[]
           timeline: string
           updated_at?: string
           user_id?: string | null
+          website_scrape_accepted?: boolean | null
           website_url: string
         }
         Update: {
           budget_level?: string
+          buying_motion?: string | null
+          challenge_other?: string | null
+          challenge_tags?: string[] | null
           company_name?: string
           company_stage?: string
           country_of_origin?: string
           created_at?: string
+          customer_size?: string | null
+          customer_type?: string | null
           employee_count?: string
           end_buyer_industries?: string[] | null
           end_buyers?: Json | null
           enriched_input?: Json | null
+          goal_ids?: string[] | null
           id?: string
           industry_sector?: string[]
           key_challenges?: string | null
           known_competitors?: Json | null
           primary_goals?: string | null
           raw_input?: Json
+          report_focus?: string | null
+          revenue_stage?: string | null
           services_needed?: string[]
           status?: string
           target_regions?: string[]
           timeline?: string
           updated_at?: string
           user_id?: string | null
+          website_scrape_accepted?: boolean | null
           website_url?: string
         }
         Relationships: []
@@ -4047,6 +4121,22 @@ export type Database = {
           website: string | null
           website_url: string | null
           why_work_with_us: string | null
+        }
+        Relationships: []
+      }
+      intake_funnel_v2: {
+        Row: {
+          authed: number | null
+          avg_seconds_to_report: number | null
+          clicked_generate: number | null
+          day: string | null
+          got_report: number | null
+          persona: string | null
+          prefill_accepted: number | null
+          sessions: number | null
+          step1: number | null
+          step2: number | null
+          step3: number | null
         }
         Relationships: []
       }
