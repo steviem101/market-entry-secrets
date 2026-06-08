@@ -138,6 +138,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          session_id: string | null
           title: string
           updated_at: string
           user_id: string | null
@@ -145,6 +146,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          session_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string | null
@@ -152,6 +154,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          session_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string | null
@@ -3165,6 +3168,13 @@ export type Database = {
             referencedRelation: "community_members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "mentor_contact_requests_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "community_members_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       MES: {
@@ -4124,6 +4134,86 @@ export type Database = {
         }
         Relationships: []
       }
+      community_members_public: {
+        Row: {
+          archetype: string | null
+          associated_countries: string[] | null
+          company: string | null
+          created_at: string | null
+          description: string | null
+          experience: string | null
+          experience_tiles: Json | null
+          id: string | null
+          image: string | null
+          is_active: boolean | null
+          is_anonymous: boolean | null
+          is_featured: boolean | null
+          location: string | null
+          location_id: string | null
+          name: string | null
+          origin_country: string | null
+          persona_fit: string[] | null
+          slug: string | null
+          specialties: string[] | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          archetype?: string | null
+          associated_countries?: string[] | null
+          company?: string | null
+          created_at?: string | null
+          description?: string | null
+          experience?: string | null
+          experience_tiles?: Json | null
+          id?: string | null
+          image?: string | null
+          is_active?: boolean | null
+          is_anonymous?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          location_id?: string | null
+          name?: string | null
+          origin_country?: string | null
+          persona_fit?: string[] | null
+          slug?: string | null
+          specialties?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          archetype?: string | null
+          associated_countries?: string[] | null
+          company?: string | null
+          created_at?: string | null
+          description?: string | null
+          experience?: string | null
+          experience_tiles?: Json | null
+          id?: string | null
+          image?: string | null
+          is_active?: boolean | null
+          is_anonymous?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          location_id?: string | null
+          name?: string | null
+          origin_country?: string | null
+          persona_fit?: string[] | null
+          slug?: string | null
+          specialties?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intake_funnel_v2: {
         Row: {
           authed: number | null
@@ -4140,9 +4230,114 @@ export type Database = {
         }
         Relationships: []
       }
+      investors_public: {
+        Row: {
+          application_url: string | null
+          basic_info: string | null
+          check_size_max: number | null
+          check_size_min: number | null
+          country: string | null
+          created_at: string | null
+          currently_investing: boolean | null
+          description: string | null
+          fund_size: string | null
+          id: string | null
+          investor_type: string | null
+          is_featured: boolean | null
+          leads_deals: boolean | null
+          location: string | null
+          logo: string | null
+          meta_description: string | null
+          meta_title: string | null
+          name: string | null
+          portfolio_companies: string[] | null
+          sector_focus: string[] | null
+          slug: string | null
+          stage_focus: string[] | null
+          updated_at: string | null
+          website: string | null
+          why_work_with_us: string | null
+          year_fund_closed: string | null
+        }
+        Insert: {
+          application_url?: string | null
+          basic_info?: string | null
+          check_size_max?: number | null
+          check_size_min?: number | null
+          country?: string | null
+          created_at?: string | null
+          currently_investing?: boolean | null
+          description?: string | null
+          fund_size?: string | null
+          id?: string | null
+          investor_type?: string | null
+          is_featured?: boolean | null
+          leads_deals?: boolean | null
+          location?: string | null
+          logo?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          portfolio_companies?: string[] | null
+          sector_focus?: string[] | null
+          slug?: string | null
+          stage_focus?: string[] | null
+          updated_at?: string | null
+          website?: string | null
+          why_work_with_us?: string | null
+          year_fund_closed?: string | null
+        }
+        Update: {
+          application_url?: string | null
+          basic_info?: string | null
+          check_size_max?: number | null
+          check_size_min?: number | null
+          country?: string | null
+          created_at?: string | null
+          currently_investing?: boolean | null
+          description?: string | null
+          fund_size?: string | null
+          id?: string | null
+          investor_type?: string | null
+          is_featured?: boolean | null
+          leads_deals?: boolean | null
+          location?: string | null
+          logo?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          portfolio_companies?: string[] | null
+          sector_focus?: string[] | null
+          slug?: string | null
+          stage_focus?: string[] | null
+          updated_at?: string | null
+          website?: string | null
+          why_work_with_us?: string | null
+          year_fund_closed?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      current_chat_session_id: { Args: never; Returns: string }
       generate_slug: { Args: { input_text: string }; Returns: string }
+      get_shared_report: {
+        Args: { p_share_token: string }
+        Returns: {
+          created_at: string
+          feedback_notes: string
+          feedback_score: number
+          id: string
+          intake_form_id: string
+          report_json: Json
+          sections_generated: string[]
+          share_token: string
+          status: string
+          tier_at_generation: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_tier_gated_report: { Args: { p_report_id: string }; Returns: Json }
       has_role: {
         Args: {

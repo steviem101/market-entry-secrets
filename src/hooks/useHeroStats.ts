@@ -22,16 +22,16 @@ const fetchHeroCounts = async (): Promise<HeroStatCount> => {
     acceleratorsResult,
   ] = await Promise.all([
     supabase.from("service_providers").select("*", { count: "exact", head: true }),
-    supabase.from("community_members").select("*", { count: "exact", head: true }).eq("is_active", true),
+    supabase.from("community_members_public").select("*", { count: "exact", head: true }).eq("is_active", true),
     supabase.from("events").select("*", { count: "exact", head: true }),
     (supabase as any).from("lead_databases").select("*", { count: "exact", head: true }).eq("status", "active"),
     supabase
       .from("content_items")
       .select("*", { count: "exact", head: true })
       .eq("content_type", "guide"),
-    supabase.from("investors").select("*", { count: "exact", head: true }),
+    supabase.from("investors_public").select("*", { count: "exact", head: true }),
     supabase
-      .from("investors")
+      .from("investors_public")
       .select("*", { count: "exact", head: true })
       .eq("investor_type", "accelerator"),
   ]);

@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getChatSessionId } from '@/integrations/supabase/client';
 
 export interface ChatMessage {
   id: string;
@@ -51,11 +51,13 @@ export const useAIChat = () => {
 
       const { data: { user } } = await supabase.auth.getUser();
       
-      const { data, error } = await supabase
+      // session_id is a new column not yet in the auto-generated types — cast to any.
+      const { data, error } = await (supabase as any)
         .from('ai_chat_conversations')
         .insert({
           title: title || 'New Conversation',
-          user_id: user?.id || null
+          user_id: user?.id || null,
+          session_id: user?.id ? null : getChatSessionId()
         })
         .select()
         .single();
@@ -170,11 +172,14 @@ export const useAIChat = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      const { data, error } = await supabase
+      // RLS does the heavy lifting: anon rows are scoped by x-session-id header
+      // (matched against the row's session_id), and signed-in rows by user_id = auth.uid().
+      let q = supabase
         .from('ai_chat_conversations')
         .select('*')
-        .eq('user_id', user?.id || null)
         .order('updated_at', { ascending: false });
+      q = user?.id ? q.eq('user_id', user.id) : q.is('user_id', null);
+      const { data, error } = await q;
 
       if (error) throw error;
 

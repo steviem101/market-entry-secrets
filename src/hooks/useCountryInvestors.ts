@@ -9,7 +9,7 @@ export const useCountryInvestors = (
     queryKey: ["country-investors", countryName, keywords],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("investors")
+        .from("investors_public")
         .select("*")
         .order("is_featured", { ascending: false })
         .order("name");
@@ -23,7 +23,12 @@ export const useCountryInvestors = (
       if (!terms.length) return data || [];
 
       return (data || []).filter((inv: any) => {
-        const haystack = `${inv.name || ""} ${inv.description || ""} ${(inv.sector_focus || []).join(" ")} ${inv.location || ""} ${JSON.stringify(inv.details || {})}`.toLowerCase();
+        // Note: `details` was previously concatenated into the haystack but is
+        // excluded from investors_public (Workstream A2 — keep PII server-side).
+        // Search now matches on name/description/sector_focus/location only;
+        // queries that previously hit `details.*` keywords will miss. Move
+        // search server-side via an RPC if this becomes a real UX issue.
+        const haystack = `${inv.name || ""} ${inv.description || ""} ${(inv.sector_focus || []).join(" ")} ${inv.location || ""}`.toLowerCase();
         return terms.some((t) => haystack.includes(t));
       });
     },

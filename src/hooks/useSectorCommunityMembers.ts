@@ -9,7 +9,7 @@ export const useSectorCommunityMembers = (sectorSlug: string, keywords: string[]
       if (!keywords?.length) return [];
 
       const { data, error } = await supabase
-        .from('community_members')
+        .from('community_members_public')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
