@@ -27,8 +27,11 @@ export const useCommunityMembers = () => {
         location: member.location,
         experience: member.experience,
         specialties: member.specialties || [],
-        website: member.website,
-        contact: member.contact,
+        // contact and website are excluded from community_members_public view
+        // (Workstream A3 — anon must not read PII). Detail pages can fetch them
+        // via an authenticated tier-gated path when needed.
+        website: null,
+        contact: null,
         image: member.image,
         company: member.company,
         isAnonymous: member.is_anonymous,
