@@ -2,10 +2,10 @@
 -- and drop the duplicate index on agency_contacts (idx_agency_contacts_agency is
 -- identical to idx_agency_contacts_agency_id).
 --
--- Some of these tables are created outside the repo migrations in production, so they
--- are absent on fresh databases (Supabase preview branches, db reset). Each index is
--- guarded by a to_regclass existence check so the migration is a safe no-op for any
--- table that doesn't exist yet. Idempotent.
+-- Some of these tables are created outside the repo migrations in production (absent on
+-- fresh databases / preview branches), and some repo-created tables have drifted column
+-- names vs production. Each index is therefore guarded on BOTH table and column
+-- existence, so the migration is a safe no-op wherever the target doesn't match. Idempotent.
 
 DO $$
 DECLARE
@@ -25,7 +25,10 @@ BEGIN
       ('idx_user_reports_user_id', 'user_reports', 'user_id')
     ) AS t(idx, tbl, col)
   LOOP
-    IF to_regclass('public.'||quote_ident(r.tbl)) IS NOT NULL THEN
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = r.tbl AND column_name = r.col
+    ) THEN
       EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON public.%I(%I)', r.idx, r.tbl, r.col);
     END IF;
   END LOOP;
