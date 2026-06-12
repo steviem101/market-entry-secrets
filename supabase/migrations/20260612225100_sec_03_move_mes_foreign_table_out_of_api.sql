@@ -5,12 +5,20 @@
 -- function, or frontend references it) and was already slated for archival.
 --
 -- Fix: revoke client grants and move it into a non-API `private` schema.
--- The service role retains access for any server-side use. Idempotent.
+-- The service role retains access for any server-side use.
+--
+-- The `MES` foreign table is created manually on production (not via migration),
+-- so it is absent on fresh databases (preview branches, db reset). All operations
+-- on it are guarded so this migration is a safe no-op when the table is missing.
 
 CREATE SCHEMA IF NOT EXISTS private;
 GRANT USAGE ON SCHEMA private TO service_role;
 
-REVOKE ALL ON public."MES" FROM anon;
-REVOKE ALL ON public."MES" FROM authenticated;
-
-ALTER TABLE IF EXISTS public."MES" SET SCHEMA private;
+DO $$
+BEGIN
+  IF to_regclass('public."MES"') IS NOT NULL THEN
+    REVOKE ALL ON public."MES" FROM anon;
+    REVOKE ALL ON public."MES" FROM authenticated;
+    ALTER TABLE public."MES" SET SCHEMA private;
+  END IF;
+END $$;
