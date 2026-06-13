@@ -104,6 +104,19 @@ const Content = () => {
         title="Articles & Guides | Market Entry Secrets"
         description="Expert articles, guides, and insights for companies entering the Australian market."
         canonicalPath="/content"
+        jsonLd={{
+          type: "CollectionPage",
+          data: {
+            name: "Market Entry Articles & Guides",
+            description:
+              "Expert articles, guides, and insights for companies entering the Australian market.",
+            hasPart: contentItems.slice(0, 25).map((item) => ({
+              "@type": "Article",
+              headline: item.title,
+              url: `https://market-entry-secrets.lovable.app/content/${item.slug}`,
+            })),
+          },
+        }}
       />
       <ContentHero
         totalContent={contentItems.length}

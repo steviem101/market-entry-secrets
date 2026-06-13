@@ -45,16 +45,26 @@
 | `/report/shared/:shareToken` | `SharedReportView` | Public shared report view |
 | `/my-reports` | `MyReports` | User's report dashboard |
 | `/service-providers` | `ServiceProviders` | Service provider directory |
-| `/community` | `Community` | Mentor directory |
+| `/service-providers/:providerSlug` | `ServiceProviderPage` | Single provider detail |
+| `/mentors` | `MentorsDirectory` | Mentor directory (real route) |
+| `/mentors/:categorySlug` / `/mentors/:categorySlug/:mentorSlug` | `MentorsDirectory` / `MentorProfile` | Mentor category + profile |
+| `/community` | → redirects to `/mentors` | Legacy alias |
 | `/events` | `Events` | Events directory |
 | `/events/:eventSlug` | `EventDetailPage` | Single event detail |
 | `/leads` | `Leads` | Lead data marketplace |
+| `/leads/:slug` | `LeadDatabaseDetailPage` | Single lead database detail |
+| `/investors` | `Investors` | Investor directory |
+| `/investors/:slug` | `InvestorPage` | Single investor detail |
 | `/content` | `Content` | Articles and guides listing |
 | `/content/:slug` | `ContentDetail` | Single article/guide |
 | `/case-studies` | `CaseStudies` | Case study listing |
 | `/case-studies/:slug` | `CaseStudyDetail` | Single case study |
 | `/innovation-ecosystem` | `InnovationEcosystem` | Innovation hubs directory |
-| `/trade-investment-agencies` | `TradeInvestmentAgencies` | Trade agency directory |
+| `/innovation-ecosystem/:slug` | `InnovationOrgPage` | Single innovation org detail |
+| `/government-support` | `TradeInvestmentAgencies` | Trade/government agency directory (real route) |
+| `/government-support/:slug` | `AgencyDetailPage` | Single agency detail |
+| `/trade-investment-agencies` | → redirects to `/government-support` | Legacy alias |
+| `/admin/submissions` | `AdminSubmissions` | Admin: directory/lead submissions |
 | `/locations` | `Locations` | Australian locations directory |
 | `/locations/:locationSlug` | `LocationPage` | Single location detail |
 | `/countries` | `Countries` | Source countries directory |
@@ -115,7 +125,7 @@
 |-------|------------|-----|
 | `profiles` | id (=auth.users.id), first_name, last_name, username, stripe_customer_id | Own profile + admin SELECT |
 | `user_roles` | user_id, role (`admin` \| `moderator` \| `user`) | — |
-| `user_subscriptions` | user_id (unique), tier (`free`\|`growth`\|`scale`\|`enterprise`) | — |
+| `user_subscriptions` | user_id (unique), tier enum (`free`\|`growth`\|`scale`\|`enterprise`; legacy `premium`/`concierge` still in enum) | Own SELECT only. **Writes are service-role-only** (SEC-01) — clients cannot change their own tier |
 | `bookmarks` | user_id, content_type, content_id, content_title | Own bookmarks |
 
 ### Report Tables (NOT in auto-generated types — use `(supabase as any)`)
@@ -142,8 +152,19 @@
 |-------|---------|
 | `payment_webhook_logs` | Stripe webhook event logs |
 | `user_usage` | Anonymous usage tracking for freemium gate |
-| `ai_chat_conversations` / `ai_chat_messages` | AI chat history |
+| `ai_chat_conversations` / `ai_chat_messages` | AI chat history (chat feature is placeholder) |
 | `testimonials` | Homepage testimonials |
+| `investors` | Investor/VC directory (447 rows; `investors_public` view hides PII from anon) |
+| `agency_contacts` | Trade-agency contact people (PII; not anon-readable) |
+| `lead_databases` / `lead_database_records` | Lead-list marketplace catalog + records |
+| `country_page_content` / `country_trade_metrics` / `country_case_studies` / `country_playbook_stages` / `country_funding_instruments` / `country_faqs` | Country-page content blocks |
+| `linkedin_industries` / `legacy_industry_mapping` | Intake industry taxonomy |
+| `ii_*` | Irish Insights content pipeline (separate workstream; pgvector embeddings) |
+
+> **This schema section is a curated subset, not exhaustive (~70 tables live).** Per the
+> schema-discovery rule, introspect `information_schema` before interacting with any table
+> rather than trusting this list to be complete. Public PII-safe views: `community_members_public`,
+> `investors_public`, `agencies_report_view`.
 
 ---
 
@@ -154,19 +175,30 @@ All edge functions are in `supabase/functions/`. Shared modules in `_shared/`:
 - `_shared/log.ts` — `log()` and `logError()` structured logging
 - `_shared/auth.ts` — `requireAdmin(req)` admin role check
 
+19 functions are deployed (verify in the dashboard / via `list_edge_functions`).
+Functions with `verify_jwt = false` authenticate in-code (JWT, signature, or `x-internal-secret`).
+
 | Function | Purpose | `verify_jwt` | External APIs |
 |----------|---------|-------------|---------------|
-| `generate-report` | Main report pipeline (5-phase parallel) | ✅ | Firecrawl, Perplexity, Lovable AI Gateway |
-| `create-checkout` | Creates Stripe checkout sessions | ✅ | Stripe |
-| `stripe-webhook` | Handles Stripe webhook events | ❌ (uses signature) | Stripe |
-| `enrich-content` | Enriches content with Firecrawl + AI | ✅ | Firecrawl, Lovable AI Gateway |
-| `enrich-innovation-ecosystem` | Enriches ecosystem entries | ✅ | Firecrawl |
-| `firecrawl-map` | Firecrawl Map API wrapper | ✅ | Firecrawl |
-| `firecrawl-scrape` | Firecrawl Scrape API wrapper | ✅ | Firecrawl |
-| `firecrawl-search` | Firecrawl Search API wrapper | ✅ | Firecrawl |
-| `sync-lemlist` | Syncs Lemlist CRM data | ✅ | Lemlist API |
-| `send-lead-followup` | Sends follow-up emails | ✅ | — |
-| `ai-chat` | AI chat endpoint | ✅ | — |
+| `generate-report` | Main report pipeline (5-phase parallel) | ❌ (in-code JWT + ownership) | Firecrawl, Perplexity, Lovable AI Gateway |
+| `create-checkout` | Creates Stripe one-time checkout sessions (`mode: payment`) | ✅ | Stripe |
+| `stripe-webhook` | Handles Stripe webhook events (only `checkout.session.completed`) | ❌ (signature) | Stripe |
+| `enrich-content` | Enriches content with Firecrawl + AI (admin) | ✅ | Firecrawl, Lovable AI Gateway |
+| `enrich-innovation-ecosystem` | Enriches ecosystem entries (admin) | ✅ | Firecrawl |
+| `enrich-investors` | Enriches investor profiles (admin) | ✅ | Firecrawl, Lovable AI Gateway |
+| `firecrawl-map` | Firecrawl Map API wrapper (admin) | ✅ | Firecrawl |
+| `firecrawl-scrape` | Firecrawl Scrape API wrapper (admin) | ✅ | Firecrawl |
+| `firecrawl-search` | Firecrawl Search API wrapper (admin) | ✅ | Firecrawl |
+| `scrape-company` | Company scrape for intake (SSRF-guarded, IP rate-limited) | ❌ (rate-limit) | Firecrawl, Lovable AI Gateway |
+| `classify-personas` | Classifies community-member personas (admin) | ✅ | Anthropic |
+| `generate-plan` | AI market-entry plan generation | ✅ | Anthropic, Perplexity |
+| `sync-lemlist` | Syncs Lemlist CRM data (admin) | ✅ | Lemlist API |
+| `send-email` | Transactional email sender | ❌ (`x-internal-secret` or JWT) | Resend |
+| `process-email-queue` | Cron-driven email-queue processor | ❌ (`x-internal-secret`) | internal `send-email` |
+| `send-lead-followup` | Sends follow-up emails | ✅ | Resend |
+| `ai-chat` | Chat endpoint — **placeholder, not implemented** (returns a stub) | ✅ | — |
+| `apify-webhook` | Apify ingest webhook (Irish Insights pipeline) | ❌ (webhook) | — |
+| `notion-research-trigger` | Notion research trigger | ❌ (webhook) | — |
 
 ---
 
@@ -264,10 +296,19 @@ The `generate-report` edge function runs a 5-phase pipeline:
 
 ### Stripe Flow
 1. `useCheckout` hook calls `create-checkout` edge function
-2. Edge function creates Stripe Checkout Session with `metadata: { tier, supabase_user_id }`
+2. Edge function creates a Stripe Checkout Session with `metadata: { tier, supabase_user_id }`
 3. On payment: Stripe sends webhook to `stripe-webhook` edge function
 4. Webhook upserts `user_subscriptions` and updates `user_reports.tier_at_generation`
 5. Frontend polls subscription after Stripe redirect (webhook may lag)
+
+> **Billing model: one-time payments, not recurring subscriptions.** `create-checkout`
+> uses `mode: "payment"`, so a tier (or lead-list purchase) is a one-time charge that grants
+> access indefinitely — there is **no** Stripe Subscription object, no renewals, and no
+> `customer.subscription.*` / `invoice.payment_failed` events. The webhook only handles
+> `checkout.session.completed`. A failed initial payment simply never grants the tier.
+> Refunds/chargebacks do **not** auto-revoke access (handled manually). `user_subscriptions`
+> stores only `(user_id, tier)` — no subscription id / status / period. `profiles.stripe_customer_id`
+> holds the Stripe customer mapping.
 
 ### Stripe Webhook Signature Verification
 ```typescript
@@ -316,13 +357,25 @@ Both `useToast` (shadcn) and `sonner` (`toast()`) are available. Use either.
 | `lemlist_companies` | Admin-only SELECT |
 | `lead_submissions` | Public INSERT, admin-only SELECT |
 | `profiles` | Own profile + admin SELECT |
-| `user_reports` | Owner SELECT + shared reports (where `share_token IS NOT NULL`) |
+| `user_reports` | Owner SELECT (+ admin); public sharing via the `get_shared_report(share_token)` SECURITY DEFINER RPC, **not** an RLS policy |
+
+### Client write-grant lockdown (SEC-01/02/03, applied Jun 2026)
+- `anon`/`authenticated` no longer hold the Supabase-default `INSERT/UPDATE/DELETE/TRUNCATE`
+  grants on most tables. **Writes are service-role-only** except: anon `INSERT` on the public
+  submission funnels (`directory_submissions`, `email_leads`, `lead_submissions`,
+  `mentor_contact_requests`, `intake_form_events`, `user_usage`), anon write on the session-scoped
+  `ai_chat_*` tables, and `authenticated` write on owner/admin tables backed by an RLS policy.
+- `user_subscriptions.tier` is service-role-write-only (closed a paywall self-upgrade bypass).
+- The Notion-backed `MES` foreign table was moved out of the API-exposed `public` schema into
+  the non-API `private` schema (foreign tables don't respect RLS).
+- When adding a table, the default grant is broad — scope client write grants deliberately.
 
 ### Edge Function Security
-- All functions have `verify_jwt = true` in `supabase/config.toml` (except `stripe-webhook` which uses Stripe signature)
+- Most functions have `verify_jwt = true`. Exceptions authenticate in-code: `stripe-webhook`
+  (Stripe signature), `generate-report` (JWT + ownership), `scrape-company` (SSRF guard + rate
+  limit), `send-email`/`process-email-queue` (`x-internal-secret`), `apify-webhook`/`notion-research-trigger` (webhook).
 - `create-checkout`: URL allowlist validation for redirect URLs (prevents open redirect)
 - `sync-lemlist`: Admin role check via `requireAdmin()`
-- `generate-report`: JWT validation + ownership check
 
 ### General
 - Never log PII (emails, tokens) to console
@@ -344,6 +397,9 @@ Both `useToast` (shadcn) and `sonner` (`toast()`) are available. Use either.
 | `FRONTEND_URL` | Frontend URL for Stripe redirect URLs |
 | `LEMLIST_API_KEY` | Lemlist CRM API key |
 | `ALLOWED_ORIGINS` | Allowed CORS origins |
+| `ANTHROPIC_API_KEY` | Anthropic Claude API (`classify-personas`, `generate-plan`) |
+| `RESEND_API_KEY` | Resend transactional email (`send-email`, `send-lead-followup`) |
+| `EMAIL_INTERNAL_SECRET` | Internal `x-internal-secret` for server-to-server calls to `send-email` |
 
 ---
 

@@ -5,7 +5,33 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://xhziwveaiuhzdoutpgrh.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhoeml3dmVhaXVoemRvdXRwZ3JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0NDkwNTQsImV4cCI6MjA2NTAyNTA1NH0.nuQeyhR_vwrdsFG7SQHdQtQQ_KpjFRxqyZTr-krpGaE";
 
+// Stable per-browser id used by RLS to scope anonymous chat conversations.
+// Sent as x-session-id on every PostgREST call so policies can match
+// current_chat_session_id() against the row's session_id column.
+const CHAT_SESSION_KEY = 'mes_chat_session_id';
+const getOrInitChatSessionId = (): string => {
+  if (typeof window === 'undefined') return '';
+  try {
+    let id = window.localStorage.getItem(CHAT_SESSION_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      window.localStorage.setItem(CHAT_SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    return '';
+  }
+};
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  global: {
+    headers: {
+      'x-session-id': getOrInitChatSessionId(),
+    },
+  },
+});
+
+export const getChatSessionId = getOrInitChatSessionId;

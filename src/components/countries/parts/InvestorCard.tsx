@@ -41,7 +41,7 @@ export const InvestorCard = ({ investor }: InvestorCardProps) => {
         )}
       </div>
       {investor.stage_focus && investor.stage_focus.length > 0 && (
-        <div className="mt-3 text-[12px] font-mono uppercase tracking-wider text-mes-ink-muted">
+        <div className="mt-3 text-[12px] uppercase tracking-wider text-mes-ink-muted">
           Stage &middot; {investor.stage_focus.slice(0, 3).join(", ")}
         </div>
       )}

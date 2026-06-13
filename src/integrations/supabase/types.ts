@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      _archived_market_entry_reports: {
+        Row: {
+          created_at: string
+          created_by_team_member: string | null
+          delivered_at: string | null
+          description: string | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          report_type: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by_team_member?: string | null
+          delivered_at?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          report_type?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by_team_member?: string | null
+          delivered_at?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          report_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       agency_contacts: {
         Row: {
           agency_id: string | null
@@ -138,6 +183,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          session_id: string | null
           title: string
           updated_at: string
           user_id: string | null
@@ -145,6 +191,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          session_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string | null
@@ -152,6 +199,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          session_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string | null
@@ -337,24 +385,6 @@ export type Database = {
           },
         ]
       }
-      Community: {
-        Row: {
-          created_at: string
-          "First Name": string | null
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          "First Name"?: string | null
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          "First Name"?: string | null
-          id?: number
-        }
-        Relationships: []
-      }
       community_members: {
         Row: {
           archetype: string | null
@@ -375,6 +405,8 @@ export type Database = {
           name: string
           origin_country: string | null
           persona_fit: string[] | null
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           slug: string
           specialties: string[]
           title: string
@@ -400,6 +432,8 @@ export type Database = {
           name: string
           origin_country?: string | null
           persona_fit?: string[] | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           slug: string
           specialties?: string[]
           title: string
@@ -425,6 +459,8 @@ export type Database = {
           name?: string
           origin_country?: string | null
           persona_fit?: string[] | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           slug?: string
           specialties?: string[]
           title?: string
@@ -680,6 +716,7 @@ export type Database = {
           read_time: number | null
           researched_by: string | null
           researched_by_avatar_url: string | null
+          sector_agnostic: boolean | null
           sector_tags: string[] | null
           slug: string
           status: string
@@ -708,6 +745,7 @@ export type Database = {
           read_time?: number | null
           researched_by?: string | null
           researched_by_avatar_url?: string | null
+          sector_agnostic?: boolean | null
           sector_tags?: string[] | null
           slug: string
           status?: string
@@ -736,6 +774,7 @@ export type Database = {
           read_time?: number | null
           researched_by?: string | null
           researched_by_avatar_url?: string | null
+          sector_agnostic?: boolean | null
           sector_tags?: string[] | null
           slug?: string
           status?: string
@@ -1366,6 +1405,8 @@ export type Database = {
           price: string | null
           registration_url: string | null
           sector: string | null
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           slug: string
           state_region: string | null
           tags: string[] | null
@@ -1401,6 +1442,8 @@ export type Database = {
           price?: string | null
           registration_url?: string | null
           sector?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           slug: string
           state_region?: string | null
           tags?: string[] | null
@@ -1436,6 +1479,8 @@ export type Database = {
           price?: string | null
           registration_url?: string | null
           sector?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           slug?: string
           state_region?: string | null
           tags?: string[] | null
@@ -2191,6 +2236,8 @@ export type Database = {
           location_id: string | null
           logo: string | null
           name: string
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           sectors: string[] | null
           services: string[]
           slug: string
@@ -2213,6 +2260,8 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name: string
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           sectors?: string[] | null
           services?: string[]
           slug: string
@@ -2235,6 +2284,8 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name?: string
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           sectors?: string[] | null
           services?: string[]
           slug?: string
@@ -2290,6 +2341,53 @@ export type Database = {
           },
         ]
       }
+      intake_form_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          field_name: string | null
+          id: string
+          intake_form_id: string | null
+          metadata: Json | null
+          persona: string | null
+          session_id: string
+          step: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          field_name?: string | null
+          id?: string
+          intake_form_id?: string | null
+          metadata?: Json | null
+          persona?: string | null
+          session_id: string
+          step?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          field_name?: string | null
+          id?: string
+          intake_form_id?: string | null
+          metadata?: Json | null
+          persona?: string | null
+          session_id?: string
+          step?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intake_form_events_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       investors: {
         Row: {
           application_url: string | null
@@ -2315,7 +2413,9 @@ export type Database = {
           meta_title: string | null
           name: string
           portfolio_companies: string[] | null
+          sector_agnostic: boolean | null
           sector_focus: string[] | null
+          sector_tags: string[] | null
           slug: string
           stage_focus: string[] | null
           updated_at: string | null
@@ -2347,7 +2447,9 @@ export type Database = {
           meta_title?: string | null
           name: string
           portfolio_companies?: string[] | null
+          sector_agnostic?: boolean | null
           sector_focus?: string[] | null
+          sector_tags?: string[] | null
           slug: string
           stage_focus?: string[] | null
           updated_at?: string | null
@@ -2379,7 +2481,9 @@ export type Database = {
           meta_title?: string | null
           name?: string
           portfolio_companies?: string[] | null
+          sector_agnostic?: boolean | null
           sector_focus?: string[] | null
+          sector_tags?: string[] | null
           slug?: string
           stage_focus?: string[] | null
           updated_at?: string | null
@@ -2610,6 +2714,8 @@ export type Database = {
           price: number | null
           provider_name: string | null
           record_count: number | null
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           tags: string[] | null
           type: string
           updated_at: string
@@ -2631,6 +2737,8 @@ export type Database = {
           price?: number | null
           provider_name?: string | null
           record_count?: number | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           tags?: string[] | null
           type: string
           updated_at?: string
@@ -2652,6 +2760,8 @@ export type Database = {
           price?: number | null
           provider_name?: string | null
           record_count?: number | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           tags?: string[] | null
           type?: string
           updated_at?: string
@@ -3025,51 +3135,6 @@ export type Database = {
           },
         ]
       }
-      market_entry_reports: {
-        Row: {
-          created_at: string
-          created_by_team_member: string | null
-          delivered_at: string | null
-          description: string | null
-          file_url: string | null
-          id: string
-          metadata: Json | null
-          report_type: string
-          status: string
-          title: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by_team_member?: string | null
-          delivered_at?: string | null
-          description?: string | null
-          file_url?: string | null
-          id?: string
-          metadata?: Json | null
-          report_type?: string
-          status?: string
-          title: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by_team_member?: string | null
-          delivered_at?: string | null
-          description?: string | null
-          file_url?: string | null
-          id?: string
-          metadata?: Json | null
-          report_type?: string
-          status?: string
-          title?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       mentor_contact_requests: {
         Row: {
           admin_notes: string | null
@@ -3118,34 +3183,14 @@ export type Database = {
             referencedRelation: "community_members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "mentor_contact_requests_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "community_members_public"
+            referencedColumns: ["id"]
+          },
         ]
-      }
-      MES: {
-        Row: {
-          archived: boolean | null
-          attrs: Json | null
-          created_time: string | null
-          id: string | null
-          last_edited_time: string | null
-          url: string | null
-        }
-        Insert: {
-          archived?: boolean | null
-          attrs?: Json | null
-          created_time?: string | null
-          id?: string | null
-          last_edited_time?: string | null
-          url?: string | null
-        }
-        Update: {
-          archived?: boolean | null
-          attrs?: Json | null
-          created_time?: string | null
-          id?: string | null
-          last_edited_time?: string | null
-          url?: string | null
-        }
-        Relationships: []
       }
       organisation_categories: {
         Row: {
@@ -3315,6 +3360,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sector_vocabulary: {
+        Row: {
+          created_at: string | null
+          is_agnostic: boolean
+          raw_value: string
+          sector_slugs: string[]
+        }
+        Insert: {
+          created_at?: string | null
+          is_agnostic?: boolean
+          raw_value: string
+          sector_slugs?: string[]
+        }
+        Update: {
+          created_at?: string | null
+          is_agnostic?: boolean
+          raw_value?: string
+          sector_slugs?: string[]
+        }
+        Relationships: []
+      }
       service_provider_categories: {
         Row: {
           created_at: string | null
@@ -3460,6 +3526,8 @@ export type Database = {
           location_id: string | null
           logo: string | null
           name: string
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           services: string[]
           slug: string
           updated_at: string
@@ -3480,6 +3548,8 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name: string
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           services?: string[]
           slug: string
           updated_at?: string
@@ -3500,6 +3570,8 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name?: string
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           services?: string[]
           slug?: string
           updated_at?: string
@@ -3658,6 +3730,8 @@ export type Database = {
           needs_re_research: boolean | null
           organisation_type: string | null
           phone: string | null
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           sectors_supported: string[] | null
           services: string[]
           slug: string
@@ -3713,6 +3787,8 @@ export type Database = {
           needs_re_research?: boolean | null
           organisation_type?: string | null
           phone?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           sectors_supported?: string[] | null
           services?: string[]
           slug: string
@@ -3768,6 +3844,8 @@ export type Database = {
           needs_re_research?: boolean | null
           organisation_type?: string | null
           phone?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           sectors_supported?: string[] | null
           services?: string[]
           slug?: string
@@ -3794,74 +3872,101 @@ export type Database = {
       user_intake_forms: {
         Row: {
           budget_level: string
+          buying_motion: string | null
+          challenge_other: string | null
+          challenge_tags: string[] | null
           company_name: string
           company_stage: string
           country_of_origin: string
           created_at: string
+          customer_size: string | null
+          customer_type: string | null
           employee_count: string
           end_buyer_industries: string[] | null
           end_buyers: Json | null
           enriched_input: Json | null
+          goal_ids: string[] | null
           id: string
           industry_sector: string[]
           key_challenges: string | null
           known_competitors: Json | null
           primary_goals: string | null
           raw_input: Json
+          report_focus: string | null
+          revenue_stage: string | null
           services_needed: string[]
           status: string
           target_regions: string[]
           timeline: string
           updated_at: string
           user_id: string | null
+          website_scrape_accepted: boolean | null
           website_url: string
         }
         Insert: {
           budget_level: string
+          buying_motion?: string | null
+          challenge_other?: string | null
+          challenge_tags?: string[] | null
           company_name: string
           company_stage: string
           country_of_origin: string
           created_at?: string
+          customer_size?: string | null
+          customer_type?: string | null
           employee_count: string
           end_buyer_industries?: string[] | null
           end_buyers?: Json | null
           enriched_input?: Json | null
+          goal_ids?: string[] | null
           id?: string
           industry_sector: string[]
           key_challenges?: string | null
           known_competitors?: Json | null
           primary_goals?: string | null
           raw_input?: Json
+          report_focus?: string | null
+          revenue_stage?: string | null
           services_needed?: string[]
           status?: string
           target_regions?: string[]
           timeline: string
           updated_at?: string
           user_id?: string | null
+          website_scrape_accepted?: boolean | null
           website_url: string
         }
         Update: {
           budget_level?: string
+          buying_motion?: string | null
+          challenge_other?: string | null
+          challenge_tags?: string[] | null
           company_name?: string
           company_stage?: string
           country_of_origin?: string
           created_at?: string
+          customer_size?: string | null
+          customer_type?: string | null
           employee_count?: string
           end_buyer_industries?: string[] | null
           end_buyers?: Json | null
           enriched_input?: Json | null
+          goal_ids?: string[] | null
           id?: string
           industry_sector?: string[]
           key_challenges?: string | null
           known_competitors?: Json | null
           primary_goals?: string | null
           raw_input?: Json
+          report_focus?: string | null
+          revenue_stage?: string | null
           services_needed?: string[]
           status?: string
           target_regions?: string[]
           timeline?: string
           updated_at?: string
           user_id?: string | null
+          website_scrape_accepted?: boolean | null
           website_url?: string
         }
         Relationships: []
@@ -4050,9 +4155,211 @@ export type Database = {
         }
         Relationships: []
       }
+      community_members_public: {
+        Row: {
+          archetype: string | null
+          associated_countries: string[] | null
+          company: string | null
+          created_at: string | null
+          description: string | null
+          experience: string | null
+          experience_tiles: Json | null
+          id: string | null
+          image: string | null
+          is_active: boolean | null
+          is_anonymous: boolean | null
+          is_featured: boolean | null
+          location: string | null
+          location_id: string | null
+          name: string | null
+          origin_country: string | null
+          persona_fit: string[] | null
+          slug: string | null
+          specialties: string[] | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          archetype?: string | null
+          associated_countries?: string[] | null
+          company?: string | null
+          created_at?: string | null
+          description?: string | null
+          experience?: string | null
+          experience_tiles?: Json | null
+          id?: string | null
+          image?: string | null
+          is_active?: boolean | null
+          is_anonymous?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          location_id?: string | null
+          name?: string | null
+          origin_country?: string | null
+          persona_fit?: string[] | null
+          slug?: string | null
+          specialties?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          archetype?: string | null
+          associated_countries?: string[] | null
+          company?: string | null
+          created_at?: string | null
+          description?: string | null
+          experience?: string | null
+          experience_tiles?: Json | null
+          id?: string | null
+          image?: string | null
+          is_active?: boolean | null
+          is_anonymous?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          location_id?: string | null
+          name?: string | null
+          origin_country?: string | null
+          persona_fit?: string[] | null
+          slug?: string | null
+          specialties?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intake_funnel_v2: {
+        Row: {
+          authed: number | null
+          avg_seconds_to_report: number | null
+          clicked_generate: number | null
+          day: string | null
+          got_report: number | null
+          persona: string | null
+          prefill_accepted: number | null
+          sessions: number | null
+          step1: number | null
+          step2: number | null
+          step3: number | null
+        }
+        Relationships: []
+      }
+      investors_public: {
+        Row: {
+          application_url: string | null
+          basic_info: string | null
+          check_size_max: number | null
+          check_size_min: number | null
+          country: string | null
+          created_at: string | null
+          currently_investing: boolean | null
+          description: string | null
+          fund_size: string | null
+          id: string | null
+          investor_type: string | null
+          is_featured: boolean | null
+          leads_deals: boolean | null
+          location: string | null
+          logo: string | null
+          meta_description: string | null
+          meta_title: string | null
+          name: string | null
+          portfolio_companies: string[] | null
+          sector_focus: string[] | null
+          slug: string | null
+          stage_focus: string[] | null
+          updated_at: string | null
+          website: string | null
+          why_work_with_us: string | null
+          year_fund_closed: string | null
+        }
+        Insert: {
+          application_url?: string | null
+          basic_info?: string | null
+          check_size_max?: number | null
+          check_size_min?: number | null
+          country?: string | null
+          created_at?: string | null
+          currently_investing?: boolean | null
+          description?: string | null
+          fund_size?: string | null
+          id?: string | null
+          investor_type?: string | null
+          is_featured?: boolean | null
+          leads_deals?: boolean | null
+          location?: string | null
+          logo?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          portfolio_companies?: string[] | null
+          sector_focus?: string[] | null
+          slug?: string | null
+          stage_focus?: string[] | null
+          updated_at?: string | null
+          website?: string | null
+          why_work_with_us?: string | null
+          year_fund_closed?: string | null
+        }
+        Update: {
+          application_url?: string | null
+          basic_info?: string | null
+          check_size_max?: number | null
+          check_size_min?: number | null
+          country?: string | null
+          created_at?: string | null
+          currently_investing?: boolean | null
+          description?: string | null
+          fund_size?: string | null
+          id?: string | null
+          investor_type?: string | null
+          is_featured?: boolean | null
+          leads_deals?: boolean | null
+          location?: string | null
+          logo?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string | null
+          portfolio_companies?: string[] | null
+          sector_focus?: string[] | null
+          slug?: string | null
+          stage_focus?: string[] | null
+          updated_at?: string | null
+          website?: string | null
+          why_work_with_us?: string | null
+          year_fund_closed?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      any_sector_agnostic: { Args: { raws: string[] }; Returns: boolean }
+      current_chat_session_id: { Args: never; Returns: string }
       generate_slug: { Args: { input_text: string }; Returns: string }
+      get_shared_report: {
+        Args: { p_share_token: string }
+        Returns: {
+          created_at: string
+          feedback_notes: string
+          feedback_score: number
+          id: string
+          intake_form_id: string
+          report_json: Json
+          sections_generated: string[]
+          share_token: string
+          status: string
+          tier_at_generation: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_tier_gated_report: { Args: { p_report_id: string }; Returns: Json }
       has_role: {
         Args: {
@@ -4065,6 +4372,8 @@ export type Database = {
         Args: { attachment_id: string }
         Returns: undefined
       }
+      map_sector_value: { Args: { raw: string }; Returns: string[] }
+      map_sector_values: { Args: { raws: string[] }; Returns: string[] }
       match_archive: {
         Args: {
           match_count?: number

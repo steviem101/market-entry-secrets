@@ -33,7 +33,7 @@ export const AgencyCard = ({ agency }: AgencyCardProps) => {
         <div className="min-w-0">
           <h3 className="text-[16px] font-semibold text-mes-ink leading-snug">{agency.name}</h3>
           {agency.role && (
-            <div className="text-[11px] font-mono uppercase tracking-wider text-mes-ink-muted mt-1">
+            <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted mt-1">
               {agency.role}
             </div>
           )}

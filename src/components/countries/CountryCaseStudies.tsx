@@ -33,7 +33,7 @@ export const CountryCaseStudies = ({ countryName, caseStudies }: CountryCaseStud
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
           <div className="max-w-2xl">
-            <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
               03 / Case studies
             </div>
             <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">

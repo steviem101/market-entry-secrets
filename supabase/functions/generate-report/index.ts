@@ -1038,15 +1038,27 @@ async function searchMatches(supabase: any, intake: any) {
     }
 
     const { data: lc } = await lcQuery;
+    // D1: do not embed raw PII (email, linkedin_url, full_name) in report JSON.
+    // Frontend (server-rendered, gated by tier) can resolve full contact details
+    // by re-querying lemlist_contacts via an authenticated, entitled path later.
+    // For now expose only obfuscated display fields + the record id for reference.
+    const obfuscateName = (full?: string | null): string => {
+      if (!full) return "Industry Contact";
+      const parts = full.trim().split(/\s+/).filter(Boolean);
+      if (parts.length === 0) return "Industry Contact";
+      const first = parts[0];
+      const lastInitial = parts.length > 1 ? `${parts[parts.length - 1][0]}.` : "";
+      return [first, lastInitial].filter(Boolean).join(" ");
+    };
     matches.lemlist_contacts = (lc || []).map((c: any) => ({
-      ...c,
-      name: c.full_name || c.email || "Unknown Contact",
-      link: c.linkedin_url || "#",
-      linkLabel: c.linkedin_url ? "LinkedIn" : "Contact",
+      id: c.id,
+      name: obfuscateName(c.full_name),
+      link: "#",
+      linkLabel: "Locked",
       subtitle: [c.job_title, c.company_name || c.lemlist_companies?.name].filter(Boolean).join(" at "),
       tags: [c.linkedin_job_industry || c.industry, c.contact_location || c.lemlist_companies?.location].filter(Boolean).slice(0, 2),
     }));
-    console.log(`Lemlist contacts matched: ${(lc || []).length}`);
+    console.log(`Lemlist contacts matched: ${(lc || []).length} (PII stripped before embed)`);
   } catch (e) { console.error("Lemlist contacts search error:", e); }
 
   return matches;

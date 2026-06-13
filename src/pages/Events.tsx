@@ -126,6 +126,19 @@ const Events = () => {
           content="Discover upcoming events, conferences, and networking opportunities for companies entering the Australian and New Zealand markets."
         />
         <link rel="canonical" href={`${typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app"}/events`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: "Australian Market Entry Events & Conferences",
+            itemListElement: upcomingEvents.slice(0, 25).map((ev: any, i: number) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              url: `https://market-entry-secrets.lovable.app/events/${ev.slug}`,
+              name: ev.title,
+            })),
+          })}
+        </script>
       </Helmet>
 
       <EventsHero
