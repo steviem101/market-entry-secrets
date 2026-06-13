@@ -16,7 +16,7 @@ const InstrumentList = ({ items }: { items: CountryFundingInstrument[] }) => (
   <ol className="space-y-4">
     {items.map((it, i) => (
       <li key={it.id} className="grid grid-cols-[auto_1fr] gap-4">
-        <div className="font-mono text-[12px] text-mes-ink-muted pt-1 tabular-nums">
+        <div className="text-[12px] text-mes-ink-muted pt-1 tabular-nums">
           {String(i + 1).padStart(2, "0")}
         </div>
         <div>
@@ -45,7 +45,7 @@ export const CountryFundingPathways = ({
     <section className="border-b border-mes-border bg-mes-card">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
         <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
             06 / Funding pathways
           </div>
           <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
@@ -61,7 +61,7 @@ export const CountryFundingPathways = ({
             <div className="flex items-center gap-3 mb-5">
               <CountryFlag countryCode={countryCode} />
               <div>
-                <div className="text-[11px] font-mono uppercase tracking-wider text-mes-ink-muted">
+                <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted">
                   Origin &middot; {countryName}
                 </div>
                 <h3 className="text-[18px] font-semibold text-mes-ink">Where the journey starts</h3>
@@ -79,7 +79,7 @@ export const CountryFundingPathways = ({
             <div className="flex items-center gap-3 mb-5">
               <CountryFlag countryCode="AU" className="w-7 h-5 rounded-sm overflow-hidden border border-white/20" />
               <div>
-                <div className="text-[11px] font-mono uppercase tracking-wider text-white/60">
+                <div className="text-[11px] uppercase tracking-wider text-white/60">
                   Destination &middot; Australia
                 </div>
                 <h3 className="text-[18px] font-semibold">Where the cash lands</h3>
@@ -88,7 +88,7 @@ export const CountryFundingPathways = ({
             <ol className="space-y-4">
               {destination.map((it, i) => (
                 <li key={it.id} className="grid grid-cols-[auto_1fr] gap-4">
-                  <div className="font-mono text-[12px] text-white/60 pt-1 tabular-nums">
+                  <div className="text-[12px] text-white/60 pt-1 tabular-nums">
                     {String(i + 1).padStart(2, "0")}
                   </div>
                   <div>
@@ -108,7 +108,7 @@ export const CountryFundingPathways = ({
 
         <div className="mt-8 bg-mes-ink text-white rounded-xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <div className="text-[11px] font-mono uppercase tracking-wider text-white/60">
+            <div className="text-[11px] uppercase tracking-wider text-white/60">
               Worked example
             </div>
             <p className="text-[15px] leading-relaxed mt-1 max-w-3xl">

@@ -35,7 +35,7 @@ const HERO = {
   badge: "Strong trade relationship",
   headline: "Ireland to Australia: the founder's market entry playbook",
   subhead:
-    "The complete playbook for Irish companies scaling to ANZ. Built from 11 founder case studies, 6 trade agencies, and 30+ vetted partners.",
+    "The complete playbook for Irish companies scaling to ANZ. Built from 11 founder case studies, 3 trade agencies, and 30+ vetted partners.",
   trust: ["Fenergo", "Wayflyer", "Tines", "LearnUpon"],
   trustExtra: 50,
 };
@@ -78,7 +78,7 @@ const DIFFERENTIATORS = [
   },
   {
     h: "Mandatory super and PAYG.",
-    b: "Employer obligations are heavier than the US, lighter than continental Europe. Budget 11.5% super on top of salary.",
+    b: "Employer obligations are heavier than the US, lighter than continental Europe. Budget 12% super on top of salary.",
   },
   {
     h: "Director residency rule.",

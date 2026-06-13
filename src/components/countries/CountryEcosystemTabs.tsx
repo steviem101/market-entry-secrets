@@ -32,7 +32,7 @@ export const CountryEcosystemTabs = ({
     <section id="ecosystem" className="border-b border-mes-border bg-mes-card">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
         <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
             04 / Ecosystem
           </div>
           <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
@@ -51,7 +51,7 @@ export const CountryEcosystemTabs = ({
                 value={p.value}
                 className="group relative bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-4 rounded-none flex items-center gap-2 text-mes-ink-soft data-[state=active]:text-mes-ink"
               >
-                <span className="font-mono text-[11px] uppercase tracking-wider text-mes-ink-muted group-data-[state=active]:text-mes-ink-soft">
+                <span className="text-[11px] uppercase tracking-wider text-mes-ink-muted group-data-[state=active]:text-mes-ink-soft">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span className="text-[14px] font-medium">{p.label}</span>

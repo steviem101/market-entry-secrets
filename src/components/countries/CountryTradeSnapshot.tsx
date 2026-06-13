@@ -13,7 +13,7 @@ export const CountryTradeSnapshot = ({ metrics, countryName }: CountryTradeSnaps
     <section className="bg-mes-ink text-white border-b border-mes-ink">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-20">
         <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-blue-light mb-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-blue-light mb-3">
             01 / Trade snapshot
           </div>
           <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold">
@@ -34,7 +34,7 @@ export const CountryTradeSnapshot = ({ metrics, countryName }: CountryTradeSnaps
                 key={m.id}
                 className="bg-white/[0.04] border border-white/10 rounded-xl p-4 flex flex-col"
               >
-                <div className="text-[11px] font-mono uppercase tracking-wider text-white/50 mb-2">
+                <div className="text-[11px] uppercase tracking-wider text-white/50 mb-2">
                   {idx}
                 </div>
                 <div className="text-[22px] md:text-[26px] font-semibold tabular-nums leading-tight">
@@ -47,7 +47,7 @@ export const CountryTradeSnapshot = ({ metrics, countryName }: CountryTradeSnaps
                     <span className="tabular-nums">{m.delta}</span>
                   </div>
                 )}
-                <div className="mt-3 text-[10.5px] font-mono uppercase tracking-wider text-white/40">
+                <div className="mt-3 text-[10.5px] uppercase tracking-wider text-white/40">
                   src &middot; {m.source}
                 </div>
               </div>

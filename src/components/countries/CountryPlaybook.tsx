@@ -20,7 +20,7 @@ export const CountryPlaybook = ({ countryName, countrySlug, stages }: CountryPla
     <section id="playbook" className="border-b border-mes-border bg-mes-bg">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
         <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
             05 / The playbook
           </div>
           <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
@@ -48,7 +48,7 @@ export const CountryPlaybook = ({ countryName, countrySlug, stages }: CountryPla
                       }`}
                     >
                       <span
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-mono tabular-nums ${
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[12px] tabular-nums ${
                           isActive
                             ? "bg-white/15 text-white"
                             : "bg-mes-bg text-mes-ink-soft"
@@ -89,11 +89,11 @@ export const CountryPlaybook = ({ countryName, countrySlug, stages }: CountryPla
                   >
                     <AccordionTrigger className="hover:no-underline py-5">
                       <div className="flex items-center gap-4 text-left">
-                        <span className="w-9 h-9 rounded-full bg-mes-bg border border-mes-border flex items-center justify-center text-[12.5px] font-mono tabular-nums text-mes-ink-soft">
+                        <span className="w-9 h-9 rounded-full bg-mes-bg border border-mes-border flex items-center justify-center text-[12.5px] tabular-nums text-mes-ink-soft">
                           {String(s.stage_number).padStart(2, "0")}
                         </span>
                         <div>
-                          <div className="text-[12px] font-mono uppercase tracking-wider text-mes-ink-muted">
+                          <div className="text-[12px] uppercase tracking-wider text-mes-ink-muted">
                             {s.time_range}
                           </div>
                           <div className="text-[18px] font-semibold text-mes-ink">{s.title}</div>
@@ -105,7 +105,7 @@ export const CountryPlaybook = ({ countryName, countrySlug, stages }: CountryPla
                       <ol className="relative border-l border-dashed border-mes-border pl-6 space-y-4">
                         {s.sub_steps.map((step, i) => (
                           <li key={i} className="relative">
-                            <span className="absolute -left-[33px] top-0 w-6 h-6 rounded-full bg-mes-card border border-mes-border flex items-center justify-center text-[10.5px] font-mono tabular-nums text-mes-ink-soft">
+                            <span className="absolute -left-[33px] top-0 w-6 h-6 rounded-full bg-mes-card border border-mes-border flex items-center justify-center text-[10.5px] tabular-nums text-mes-ink-soft">
                               {String(i + 1).padStart(2, "0")}
                             </span>
                             <p className="text-[14.5px] leading-relaxed text-mes-ink-soft">{step}</p>

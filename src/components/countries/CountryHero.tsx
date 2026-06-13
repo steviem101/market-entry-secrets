@@ -37,13 +37,13 @@ export const CountryHero = ({
         <div className="md:col-span-7">
           <div className="flex items-center gap-3 mb-6">
             <CountryFlag countryCode={countryCode} />
-            <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark">
+            <span className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark">
               {countryName}
             </span>
           </div>
 
           <h1
-            className="text-3xl md:text-5xl leading-[1.05] tracking-tight font-semibold text-mes-ink"
+            className="text-3xl md:text-5xl leading-[1.05] tracking-tight font-bold text-mes-ink"
             style={{ textWrap: "balance" } as React.CSSProperties}
           >
             {headline}
@@ -82,7 +82,7 @@ export const CountryHero = ({
 
           {trust.length > 0 && (
             <div className="mt-10 flex items-center flex-wrap gap-x-6 gap-y-2 text-[12px] text-mes-ink-muted">
-              <span className="font-mono uppercase tracking-wider">Trusted by</span>
+              <span className="uppercase tracking-wider">Trusted by</span>
               {trust.map((c) => (
                 <span key={c} className="font-medium text-mes-ink-soft">
                   {c}
@@ -98,10 +98,10 @@ export const CountryHero = ({
         <aside className="md:col-span-5">
           <div className="bg-mes-bg border border-mes-border rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark">
-                Live snapshot
+              <span className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark">
+                Quick snapshot
               </span>
-              <span className="text-[11px] text-mes-ink-muted">Updated daily</span>
+              <span className="text-[11px] text-mes-ink-muted">Indicative figures</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {(snapshot.length > 0
@@ -117,7 +117,7 @@ export const CountryHero = ({
                   key={entry.label}
                   className="bg-mes-card border border-mes-border rounded-lg p-3"
                 >
-                  <div className="text-[11px] font-mono uppercase tracking-wider text-mes-ink-muted">
+                  <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted">
                     {entry.label}
                   </div>
                   <div className="text-xl font-semibold text-mes-ink tabular-nums mt-1">

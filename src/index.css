@@ -46,17 +46,17 @@
     --sidebar-border: 210 15% 90%;
     --sidebar-ring: 200 85% 55%;
 
-    /* MES brand tokens (used by country page redesign) */
-    --mes-teal: 192 53% 36%;
-    --mes-teal-dark: 192 54% 27%;
-    --mes-blue-light: 192 65% 83%;
-    --mes-ink: 240 28% 14%;
-    --mes-ink-soft: 240 12% 33%;
-    --mes-ink-muted: 240 10% 58%;
+    /* MES brand tokens (country page) — aligned to the app palette: primary hue ~200, neutrals ~210/220 */
+    --mes-teal: 200 85% 55%;
+    --mes-teal-dark: 200 80% 45%;
+    --mes-blue-light: 200 75% 88%;
+    --mes-ink: 220 25% 12%;
+    --mes-ink-soft: 220 13% 30%;
+    --mes-ink-muted: 220 10% 45%;
     --mes-success: 159 79% 39%;
     --mes-warning: 38 92% 50%;
-    --mes-border: 240 10% 90%;
-    --mes-bg: 240 10% 97%;
+    --mes-border: 210 15% 92%;
+    --mes-bg: 210 15% 96%;
     --mes-card: 0 0% 100%;
 
     /* Report Creator v2 redesign tokens (docs/redesign/handoff/README.md §Design tokens).
