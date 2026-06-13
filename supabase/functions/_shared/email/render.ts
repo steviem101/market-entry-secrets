@@ -8,6 +8,14 @@
 // legacy Resend-template path for any type not yet registered here.
 
 import * as welcome from "./templates/welcome.ts";
+import * as paymentConfirmation from "./templates/paymentConfirmation.ts";
+import * as reportCompleted from "./templates/reportCompleted.ts";
+import * as nurtureEcosystem from "./templates/nurtureEcosystem.ts";
+import * as nurtureCaseStudies from "./templates/nurtureCaseStudies.ts";
+import * as nurtureAiReport from "./templates/nurtureAiReport.ts";
+import * as nurtureEvents from "./templates/nurtureEvents.ts";
+import * as nurtureUpgradeFree from "./templates/nurtureUpgradeFree.ts";
+import * as nurtureUpgradePaid from "./templates/nurtureUpgradePaid.ts";
 
 export interface RenderResult {
   subject: string;
@@ -16,12 +24,18 @@ export interface RenderResult {
 
 type Renderer = (data: Record<string, unknown>) => RenderResult;
 
-// Only migrated templates are registered. Add entries as each email is ported.
+// All send-email types are migrated to code templates. (lead follow-up lives in
+// the separate send-lead-followup function and is handled there.)
 const REGISTRY: Record<string, Renderer> = {
   welcome: welcome.render,
-  // nurture_ecosystem, nurture_case_studies, nurture_ai_report, nurture_events,
-  // nurture_upgrade_free, nurture_upgrade_paid, report_completed,
-  // payment_confirmation, lead_followup  -> added during fan-out.
+  payment_confirmation: paymentConfirmation.render,
+  report_completed: reportCompleted.render,
+  nurture_ecosystem: nurtureEcosystem.render,
+  nurture_case_studies: nurtureCaseStudies.render,
+  nurture_ai_report: nurtureAiReport.render,
+  nurture_events: nurtureEvents.render,
+  nurture_upgrade_free: nurtureUpgradeFree.render,
+  nurture_upgrade_paid: nurtureUpgradePaid.render,
 };
 
 /**

@@ -31,14 +31,14 @@ function route(emailType: string, data: Record<string, unknown>): "code" | "lega
 // ── 1. Routing regression: every known type keeps working ──────────────
 const routeCases: Array<[string, Record<string, unknown>, "code" | "legacy" | "reject"]> = [
   ["welcome", { first_name: "Sam" }, "code"],
-  ["nurture_ecosystem", { provider_count: "240" }, "legacy"],
-  ["nurture_case_studies", {}, "legacy"],
-  ["nurture_ai_report", {}, "legacy"],
-  ["nurture_events", {}, "legacy"],
-  ["nurture_upgrade", { current_tier: "free" }, "legacy"],
-  ["nurture_upgrade", { current_tier: "growth" }, "legacy"],
-  ["report_completed", { company_name: "X" }, "legacy"],
-  ["payment_confirmation", { tier: "Growth" }, "legacy"],
+  ["nurture_ecosystem", { provider_count: "240" }, "code"],
+  ["nurture_case_studies", {}, "code"],
+  ["nurture_ai_report", {}, "code"],
+  ["nurture_events", {}, "code"],
+  ["nurture_upgrade", { current_tier: "free" }, "code"],
+  ["nurture_upgrade", { current_tier: "growth" }, "code"],
+  ["report_completed", { company_name: "X" }, "code"],
+  ["payment_confirmation", { tier: "Growth" }, "code"],
   ["totally_unknown_type", {}, "reject"],
 ];
 for (const [type, data, expect] of routeCases) {
@@ -112,6 +112,43 @@ for (const tag of ["html", "head", "body", "table", "tr", "td", "h1", "p", "a", 
 }
 check("has DOCTYPE", named.html.startsWith("<!DOCTYPE html>"));
 check("html size sane (<102KB Gmail clip)", Buffer.byteLength(named.html, "utf8") < 102000);
+
+// ── 6. All migrated templates: brand + structure + unsubscribe policy ──
+// [email_type, sample data, isNurture (expects an unsubscribe link)]
+const MIGRATED: Array<[string, Record<string, unknown>, boolean]> = [
+  ["welcome", { first_name: "Sam" }, false],
+  ["payment_confirmation", { tier: "growth", amount: "490.00", currency: "AUD" }, false],
+  ["report_completed", { first_name: "Sam", company_name: "Nimbus Robotics", report_url: "https://marketentrysecrets.com/report/abc" }, false],
+  ["nurture_ecosystem", { first_name: "Sam", provider_count: "240" }, true],
+  ["nurture_case_studies", { first_name: "Sam", featured_case_study_company: "Atlassian" }, true],
+  ["nurture_ai_report", { first_name: "Sam", report_count: "1,200" }, true],
+  ["nurture_events", { first_name: "Sam", upcoming_event_title: "SouthStart 2026", upcoming_event_date: "Wednesday, 9 September 2026" }, true],
+  ["nurture_upgrade", { first_name: "Sam", current_tier: "free" }, true],
+  ["nurture_upgrade", { first_name: "Sam", current_tier: "growth" }, true],
+];
+for (const [type, data, isNurture] of MIGRATED) {
+  const r = renderEmail(type, data);
+  if (!r) { check(`${type} renders`, false, "renderEmail returned null"); continue; }
+  const label = `${type}(${(data as any).current_tier ?? ""})`;
+  check(`${label}: subject non-empty`, r.subject.length > 0);
+  check(`${label}: no em/en dash`, !/[–—]/.test(r.subject) && !/[–—]/.test(r.html));
+  check(`${label}: no teal/old-blue`, !/2B7A8C/i.test(r.html) && !/2563eb/i.test(r.html));
+  check(`${label}: azure present`, r.html.includes("#1AA3E0"));
+  check(`${label}: DOCTYPE + 600px`, r.html.startsWith("<!DOCTYPE html>") && r.html.includes("max-width:600px"));
+  check(`${label}: under Gmail clip`, Buffer.byteLength(r.html, "utf8") < 102000);
+  check(`${label}: unsubscribe policy (${isNurture ? "present" : "absent"})`, r.html.includes(">Unsubscribe</a>") === isNurture);
+  check(`${label}: greeting present`, /Hi (Sam|there),/.test(r.html));
+}
+// Variable interpolation spot-checks
+check("payment: tier capitalised in subject", renderEmail("payment_confirmation", { tier: "growth" })!.subject.includes("Growth"));
+check("payment: amount + currency shown", renderEmail("payment_confirmation", { tier: "growth", amount: "490.00", currency: "AUD" })!.html.includes("490.00 AUD"));
+check("report: company in subject", renderEmail("report_completed", { company_name: "Nimbus Robotics" })!.subject.includes("Nimbus Robotics"));
+check("report: links specific report_url", renderEmail("report_completed", { report_url: "https://marketentrysecrets.com/report/abc" })!.html.includes("/report/abc"));
+check("ecosystem: provider_count shown", renderEmail("nurture_ecosystem", { provider_count: "240" })!.html.includes("240"));
+check("events: title+date in subject", renderEmail("nurture_events", { upcoming_event_title: "SouthStart 2026", upcoming_event_date: "9 September" })!.subject.includes("SouthStart 2026"));
+check("upgrade_free: lists Growth + Scale", (() => { const h = renderEmail("nurture_upgrade", { current_tier: "free" })!.html; return h.includes("Growth") && h.includes("Scale"); })());
+// XSS through a nurture variable (company name) must be escaped
+check("nurture XSS escaped", !renderEmail("nurture_case_studies", { featured_case_study_company: "<script>x</script>" })!.html.includes("<script>x"));
 
 // ── Report ─────────────────────────────────────────────────────────────
 console.log(results.join("\n"));
