@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      _archived_market_entry_reports: {
+        Row: {
+          created_at: string
+          created_by_team_member: string | null
+          delivered_at: string | null
+          description: string | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          report_type: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by_team_member?: string | null
+          delivered_at?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          report_type?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by_team_member?: string | null
+          delivered_at?: string | null
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          report_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       agency_contacts: {
         Row: {
           agency_id: string | null
@@ -340,24 +385,6 @@ export type Database = {
           },
         ]
       }
-      Community: {
-        Row: {
-          created_at: string
-          "First Name": string | null
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          "First Name"?: string | null
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          "First Name"?: string | null
-          id?: number
-        }
-        Relationships: []
-      }
       community_members: {
         Row: {
           archetype: string | null
@@ -378,6 +405,8 @@ export type Database = {
           name: string
           origin_country: string | null
           persona_fit: string[] | null
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           slug: string
           specialties: string[]
           title: string
@@ -403,6 +432,8 @@ export type Database = {
           name: string
           origin_country?: string | null
           persona_fit?: string[] | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           slug: string
           specialties?: string[]
           title: string
@@ -428,6 +459,8 @@ export type Database = {
           name?: string
           origin_country?: string | null
           persona_fit?: string[] | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           slug?: string
           specialties?: string[]
           title?: string
@@ -683,6 +716,7 @@ export type Database = {
           read_time: number | null
           researched_by: string | null
           researched_by_avatar_url: string | null
+          sector_agnostic: boolean | null
           sector_tags: string[] | null
           slug: string
           status: string
@@ -711,6 +745,7 @@ export type Database = {
           read_time?: number | null
           researched_by?: string | null
           researched_by_avatar_url?: string | null
+          sector_agnostic?: boolean | null
           sector_tags?: string[] | null
           slug: string
           status?: string
@@ -739,6 +774,7 @@ export type Database = {
           read_time?: number | null
           researched_by?: string | null
           researched_by_avatar_url?: string | null
+          sector_agnostic?: boolean | null
           sector_tags?: string[] | null
           slug?: string
           status?: string
@@ -1369,6 +1405,8 @@ export type Database = {
           price: string | null
           registration_url: string | null
           sector: string | null
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           slug: string
           state_region: string | null
           tags: string[] | null
@@ -1404,6 +1442,8 @@ export type Database = {
           price?: string | null
           registration_url?: string | null
           sector?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           slug: string
           state_region?: string | null
           tags?: string[] | null
@@ -1439,6 +1479,8 @@ export type Database = {
           price?: string | null
           registration_url?: string | null
           sector?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           slug?: string
           state_region?: string | null
           tags?: string[] | null
@@ -2194,6 +2236,8 @@ export type Database = {
           location_id: string | null
           logo: string | null
           name: string
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           sectors: string[] | null
           services: string[]
           slug: string
@@ -2216,6 +2260,8 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name: string
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           sectors?: string[] | null
           services?: string[]
           slug: string
@@ -2238,6 +2284,8 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name?: string
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           sectors?: string[] | null
           services?: string[]
           slug?: string
@@ -2365,7 +2413,9 @@ export type Database = {
           meta_title: string | null
           name: string
           portfolio_companies: string[] | null
+          sector_agnostic: boolean | null
           sector_focus: string[] | null
+          sector_tags: string[] | null
           slug: string
           stage_focus: string[] | null
           updated_at: string | null
@@ -2397,7 +2447,9 @@ export type Database = {
           meta_title?: string | null
           name: string
           portfolio_companies?: string[] | null
+          sector_agnostic?: boolean | null
           sector_focus?: string[] | null
+          sector_tags?: string[] | null
           slug: string
           stage_focus?: string[] | null
           updated_at?: string | null
@@ -2429,7 +2481,9 @@ export type Database = {
           meta_title?: string | null
           name?: string
           portfolio_companies?: string[] | null
+          sector_agnostic?: boolean | null
           sector_focus?: string[] | null
+          sector_tags?: string[] | null
           slug?: string
           stage_focus?: string[] | null
           updated_at?: string | null
@@ -2660,6 +2714,8 @@ export type Database = {
           price: number | null
           provider_name: string | null
           record_count: number | null
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           tags: string[] | null
           type: string
           updated_at: string
@@ -2681,6 +2737,8 @@ export type Database = {
           price?: number | null
           provider_name?: string | null
           record_count?: number | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           tags?: string[] | null
           type: string
           updated_at?: string
@@ -2702,6 +2760,8 @@ export type Database = {
           price?: number | null
           provider_name?: string | null
           record_count?: number | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           tags?: string[] | null
           type?: string
           updated_at?: string
@@ -3075,51 +3135,6 @@ export type Database = {
           },
         ]
       }
-      market_entry_reports: {
-        Row: {
-          created_at: string
-          created_by_team_member: string | null
-          delivered_at: string | null
-          description: string | null
-          file_url: string | null
-          id: string
-          metadata: Json | null
-          report_type: string
-          status: string
-          title: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by_team_member?: string | null
-          delivered_at?: string | null
-          description?: string | null
-          file_url?: string | null
-          id?: string
-          metadata?: Json | null
-          report_type?: string
-          status?: string
-          title: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by_team_member?: string | null
-          delivered_at?: string | null
-          description?: string | null
-          file_url?: string | null
-          id?: string
-          metadata?: Json | null
-          report_type?: string
-          status?: string
-          title?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       mentor_contact_requests: {
         Row: {
           admin_notes: string | null
@@ -3176,33 +3191,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      MES: {
-        Row: {
-          archived: boolean | null
-          attrs: Json | null
-          created_time: string | null
-          id: string | null
-          last_edited_time: string | null
-          url: string | null
-        }
-        Insert: {
-          archived?: boolean | null
-          attrs?: Json | null
-          created_time?: string | null
-          id?: string | null
-          last_edited_time?: string | null
-          url?: string | null
-        }
-        Update: {
-          archived?: boolean | null
-          attrs?: Json | null
-          created_time?: string | null
-          id?: string | null
-          last_edited_time?: string | null
-          url?: string | null
-        }
-        Relationships: []
       }
       organisation_categories: {
         Row: {
@@ -3372,6 +3360,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sector_vocabulary: {
+        Row: {
+          created_at: string | null
+          is_agnostic: boolean
+          raw_value: string
+          sector_slugs: string[]
+        }
+        Insert: {
+          created_at?: string | null
+          is_agnostic?: boolean
+          raw_value: string
+          sector_slugs?: string[]
+        }
+        Update: {
+          created_at?: string | null
+          is_agnostic?: boolean
+          raw_value?: string
+          sector_slugs?: string[]
+        }
+        Relationships: []
+      }
       service_provider_categories: {
         Row: {
           created_at: string | null
@@ -3517,6 +3526,8 @@ export type Database = {
           location_id: string | null
           logo: string | null
           name: string
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           services: string[]
           slug: string
           updated_at: string
@@ -3537,6 +3548,8 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name: string
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           services?: string[]
           slug: string
           updated_at?: string
@@ -3557,6 +3570,8 @@ export type Database = {
           location_id?: string | null
           logo?: string | null
           name?: string
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           services?: string[]
           slug?: string
           updated_at?: string
@@ -3715,6 +3730,8 @@ export type Database = {
           needs_re_research: boolean | null
           organisation_type: string | null
           phone: string | null
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           sectors_supported: string[] | null
           services: string[]
           slug: string
@@ -3770,6 +3787,8 @@ export type Database = {
           needs_re_research?: boolean | null
           organisation_type?: string | null
           phone?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           sectors_supported?: string[] | null
           services?: string[]
           slug: string
@@ -3825,6 +3844,8 @@ export type Database = {
           needs_re_research?: boolean | null
           organisation_type?: string | null
           phone?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
           sectors_supported?: string[] | null
           services?: string[]
           slug?: string
@@ -4319,6 +4340,7 @@ export type Database = {
       }
     }
     Functions: {
+      any_sector_agnostic: { Args: { raws: string[] }; Returns: boolean }
       current_chat_session_id: { Args: never; Returns: string }
       generate_slug: { Args: { input_text: string }; Returns: string }
       get_shared_report: {
@@ -4350,6 +4372,8 @@ export type Database = {
         Args: { attachment_id: string }
         Returns: undefined
       }
+      map_sector_value: { Args: { raw: string }; Returns: string[] }
+      map_sector_values: { Args: { raws: string[] }; Returns: string[] }
       match_archive: {
         Args: {
           match_count?: number
