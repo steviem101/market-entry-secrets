@@ -63,18 +63,23 @@ BEGIN
 END $$;
 
 -- ── 3. Add canonical columns to investors + GIN index ──────────────────────
-ALTER TABLE public.investors
-  ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[],
-  ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
-
-CREATE INDEX IF NOT EXISTS idx_inv_sector_gin ON public.investors USING gin (sector_tags);
-
 -- ── 4. Backfill investors from sector_focus[] ──────────────────────────────
 -- Agnostic when: an explicit "Generalist"/"All Sectors" tag, OR no focus stated,
 -- OR a focus is stated but none of it maps to a sector (pure thesis investors
 -- like "Impact"/"Female Founders") — they stay eligible for every sector.
-UPDATE public.investors
-SET sector_tags     = public.map_sector_values(sector_focus),
-    sector_agnostic = public.any_sector_agnostic(sector_focus)
-                      OR COALESCE(array_length(sector_focus, 1), 0) = 0
-                      OR public.map_sector_values(sector_focus) = '{}';
+-- Guarded by to_regclass() so this is portable to fresh environments.
+DO $$ BEGIN
+  IF to_regclass('public.investors') IS NOT NULL THEN
+    ALTER TABLE public.investors
+      ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[],
+      ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
+
+    CREATE INDEX IF NOT EXISTS idx_inv_sector_gin ON public.investors USING gin (sector_tags);
+
+    UPDATE public.investors
+    SET sector_tags     = public.map_sector_values(sector_focus),
+        sector_agnostic = public.any_sector_agnostic(sector_focus)
+                          OR COALESCE(array_length(sector_focus, 1), 0) = 0
+                          OR public.map_sector_values(sector_focus) = '{}';
+  END IF;
+END $$;

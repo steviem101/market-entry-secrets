@@ -134,44 +134,74 @@ RETURNS boolean LANGUAGE sql STABLE AS $$
 $$;
 
 -- ── 3. Add canonical columns to every report-surfaced directory table ──────
-ALTER TABLE public.service_providers          ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
-ALTER TABLE public.community_members          ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
-ALTER TABLE public.events                     ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
-ALTER TABLE public.content_items              ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
-ALTER TABLE public.leads                      ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
-ALTER TABLE public.innovation_ecosystem       ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
-ALTER TABLE public.trade_investment_agencies  ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
-
-CREATE INDEX IF NOT EXISTS idx_sp_sector_gin   ON public.service_providers          USING gin (sector_tags);
-CREATE INDEX IF NOT EXISTS idx_cm_sector_gin   ON public.community_members          USING gin (sector_tags);
-CREATE INDEX IF NOT EXISTS idx_ev_sector_gin   ON public.events                     USING gin (sector_tags);
-CREATE INDEX IF NOT EXISTS idx_ci_sector_gin   ON public.content_items              USING gin (sector_tags);
-CREATE INDEX IF NOT EXISTS idx_ld_sector_gin   ON public.leads                      USING gin (sector_tags);
-CREATE INDEX IF NOT EXISTS idx_ie_sector_gin   ON public.innovation_ecosystem       USING gin (sector_tags);
-CREATE INDEX IF NOT EXISTS idx_ta_sector_gin   ON public.trade_investment_agencies  USING gin (sector_tags);
+-- Each block is guarded with to_regclass() so the migration is portable across
+-- environments where some directory tables may not yet exist (Supabase preview
+-- branches replay only tracked migrations; some prod tables were created via
+-- the dashboard and aren't reproduced from git). Prod already has every table
+-- so the guards are no-ops there.
+DO $$ BEGIN
+  IF to_regclass('public.service_providers') IS NOT NULL THEN
+    ALTER TABLE public.service_providers          ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
+    CREATE INDEX IF NOT EXISTS idx_sp_sector_gin   ON public.service_providers          USING gin (sector_tags);
+  END IF;
+  IF to_regclass('public.community_members') IS NOT NULL THEN
+    ALTER TABLE public.community_members          ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
+    CREATE INDEX IF NOT EXISTS idx_cm_sector_gin   ON public.community_members          USING gin (sector_tags);
+  END IF;
+  IF to_regclass('public.events') IS NOT NULL THEN
+    ALTER TABLE public.events                     ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
+    CREATE INDEX IF NOT EXISTS idx_ev_sector_gin   ON public.events                     USING gin (sector_tags);
+  END IF;
+  IF to_regclass('public.content_items') IS NOT NULL THEN
+    ALTER TABLE public.content_items              ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
+    CREATE INDEX IF NOT EXISTS idx_ci_sector_gin   ON public.content_items              USING gin (sector_tags);
+  END IF;
+  IF to_regclass('public.leads') IS NOT NULL THEN
+    ALTER TABLE public.leads                      ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
+    CREATE INDEX IF NOT EXISTS idx_ld_sector_gin   ON public.leads                      USING gin (sector_tags);
+  END IF;
+  IF to_regclass('public.innovation_ecosystem') IS NOT NULL THEN
+    ALTER TABLE public.innovation_ecosystem       ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
+    CREATE INDEX IF NOT EXISTS idx_ie_sector_gin   ON public.innovation_ecosystem       USING gin (sector_tags);
+  END IF;
+  IF to_regclass('public.trade_investment_agencies') IS NOT NULL THEN
+    ALTER TABLE public.trade_investment_agencies  ADD COLUMN IF NOT EXISTS sector_tags text[] DEFAULT '{}'::text[], ADD COLUMN IF NOT EXISTS sector_agnostic boolean DEFAULT false;
+    CREATE INDEX IF NOT EXISTS idx_ta_sector_gin   ON public.trade_investment_agencies  USING gin (sector_tags);
+  END IF;
+END $$;
 
 -- ── 4. Phase B backfill: tables with an existing sector/vertical column ────
--- innovation_ecosystem.sectors[] → sector_tags
-UPDATE public.innovation_ecosystem
-SET sector_tags = public.map_sector_values(sectors),
-    sector_agnostic = public.any_sector_agnostic(sectors)
-WHERE sectors IS NOT NULL;
+DO $$ BEGIN
+  -- innovation_ecosystem.sectors[] → sector_tags
+  IF to_regclass('public.innovation_ecosystem') IS NOT NULL THEN
+    UPDATE public.innovation_ecosystem
+    SET sector_tags = public.map_sector_values(sectors),
+        sector_agnostic = public.any_sector_agnostic(sectors)
+    WHERE sectors IS NOT NULL;
+  END IF;
 
--- trade_investment_agencies.sectors_supported[] → sector_tags
-UPDATE public.trade_investment_agencies
-SET sector_tags = public.map_sector_values(sectors_supported),
-    sector_agnostic = public.any_sector_agnostic(sectors_supported)
-WHERE sectors_supported IS NOT NULL;
+  -- trade_investment_agencies.sectors_supported[] → sector_tags
+  IF to_regclass('public.trade_investment_agencies') IS NOT NULL THEN
+    UPDATE public.trade_investment_agencies
+    SET sector_tags = public.map_sector_values(sectors_supported),
+        sector_agnostic = public.any_sector_agnostic(sectors_supported)
+    WHERE sectors_supported IS NOT NULL;
+  END IF;
 
--- events.sector (text) → sector_tags (exact map then fuzzy)
-UPDATE public.events
-SET sector_tags = public.map_sector_value(sector),
-    sector_agnostic = (sector ~* 'startup|scaleup|scale-up|small business|entrepreneur')
-WHERE sector IS NOT NULL AND length(sector) > 0;
+  -- events.sector (text) → sector_tags (exact map then fuzzy)
+  IF to_regclass('public.events') IS NOT NULL THEN
+    UPDATE public.events
+    SET sector_tags = public.map_sector_value(sector),
+        sector_agnostic = (sector ~* 'startup|scaleup|scale-up|small business|entrepreneur')
+    WHERE sector IS NOT NULL AND length(sector) > 0;
+  END IF;
 
--- leads.industry (text) → sector_tags
-UPDATE public.leads
-SET sector_tags = public.map_sector_value(industry)
-WHERE industry IS NOT NULL AND length(industry) > 0;
+  -- leads.industry (text) → sector_tags
+  IF to_regclass('public.leads') IS NOT NULL THEN
+    UPDATE public.leads
+    SET sector_tags = public.map_sector_value(industry)
+    WHERE industry IS NOT NULL AND length(industry) > 0;
+  END IF;
+END $$;
 
 -- service_providers, community_members, content_items are tagged by AI in Phase C.
