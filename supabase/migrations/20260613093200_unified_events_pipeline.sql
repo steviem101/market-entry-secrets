@@ -64,11 +64,14 @@ CREATE TABLE IF NOT EXISTS events_staging (
 ALTER TABLE events_staging ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON events_staging FROM anon, authenticated;
 
--- 4.5  Fuzzy dedup helper (pg_trgm is installed in the public schema).
+-- 4.5  Fuzzy dedup helper. Ensure pg_trgm exists (it pre-exists in public on the
+-- live project, but a fresh database needs it installed) and keep it on the
+-- function search_path so similarity() resolves whether it lives in public or extensions.
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA extensions;
 CREATE OR REPLACE FUNCTION find_duplicate_event(
   p_title text, p_event_date timestamptz, p_city text
 ) RETURNS uuid LANGUAGE sql STABLE
-SET search_path = public
+SET search_path = public, extensions
 AS $$
   SELECT id FROM events
   WHERE event_date::date = p_event_date::date
