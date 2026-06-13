@@ -99,9 +99,9 @@ export const CountryHero = ({
           <div className="bg-mes-bg border border-mes-border rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark">
-                Live snapshot
+                Quick snapshot
               </span>
-              <span className="text-[11px] text-mes-ink-muted">Updated daily</span>
+              <span className="text-[11px] text-mes-ink-muted">Indicative figures</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {(snapshot.length > 0
