@@ -49,3 +49,8 @@ mentor_identification/tightening_diagnostic.csv
 mentor_identification/archetype_classification.csv
 mentor_identification/__pycache__/
 scripts/__pycache__/
+
+# PII-bearing research CSVs — never commit contact data (HYG-02)
+australian_angel_investors_*.csv
+Accelerators.csv
+data/private/
