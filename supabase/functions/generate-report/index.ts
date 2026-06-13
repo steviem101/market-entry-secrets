@@ -5,6 +5,8 @@ import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
+import { industryGroupsToSectorSlugs, overlapCount } from "./sectorTaxonomy.ts";
+import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -844,7 +846,6 @@ const sanitizeFilterValue = (v: string): string =>
 async function searchMatches(supabase: any, intake: any) {
   const matches: Record<string, any[]> = {};
   const regions = intake.target_regions || [];
-  const industry = (intake.industry_sector || []).join(", ");
   // Expand selected goals into short service tags for better .cs.{} matching.
   // Prefer the stable goal_ids column; fall back to legacy services_needed labels.
   const serviceTags = expandGoalsToServiceTags({
@@ -854,21 +855,75 @@ async function searchMatches(supabase: any, intake: any) {
 
   const locationPatterns = regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
 
-  // Service providers
+  // ── Sector-relevance signals (Phase D) ──────────────────────────────────
+  // The form collects LinkedIn industry GROUPS; directory rows carry 20-sector
+  // slugs. Roll the user's own industry + their sells-to industries up to slugs.
+  const userSectors = industryGroupsToSectorSlugs(intake.industry_sector);
+  const sellsToSectors = industryGroupsToSectorSlugs(intake.end_buyer_industries); // v2 shim: target_customers.industries
+  const allSectors = [...new Set([...userSectors, ...sellsToSectors])];
+  const countryTerm = (intake.country_of_origin || "").trim().toLowerCase();
+  // ── Country corridor (Phase E) ──────────────────────────────────────────
+  // Structured origin match beats the old description-substring heuristic: an
+  // Irish founder is boosted toward Irish-origin mentors (origin_country) and
+  // toward agencies whose trade direction (target_company_origin) fits.
+  const userCountry = normalizeCountry(intake.country_of_origin);
+  const userIsIntl = isInternationalOrigin(intake.country_of_origin);
+  const CAND = 40; // candidate pool fetched before in-memory ranking
+
+  // OR filter that returns any candidate matching ANY signal. Single-element
+  // sector_tags.ov.{slug} conditions avoid commas that would break .or() parsing.
+  const buildOr = (opts: { service?: string; location?: boolean } = {}): string => {
+    const parts: string[] = [];
+    for (const slug of allSectors) parts.push(`sector_tags.ov.{${slug}}`);
+    parts.push("sector_agnostic.eq.true");
+    if (opts.service && serviceTags.length > 0) {
+      parts.push(...serviceTags.map((s: string) => `${opts.service}.cs.{${sanitizeFilterValue(s)}}`));
+    }
+    if (opts.location !== false && locationPatterns.length > 0) {
+      parts.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
+    }
+    return parts.join(",");
+  };
+
+  // Weighted relevance score for a fetched candidate.
+  const scoreRow = (row: any, opts: { service?: string; countryCol?: string; persona?: boolean } = {}): number => {
+    const tags: string[] = row.sector_tags || [];
+    let s = overlapCount(tags, userSectors) * 3      // own industry (strongest)
+          + overlapCount(tags, sellsToSectors) * 2;  // industries they sell into
+    if (opts.service) s += overlapCount(row[opts.service] || [], serviceTags) * 2; // service/skill fit
+    const loc = (row.location || "").toLowerCase();
+    if (locationPatterns.some((l: string) => loc.includes(l.toLowerCase()))) s += 1;
+    if (row.sector_agnostic) s += 0.5; // eligible-for-everyone, ranked below a specific hit
+    // Country corridor — structured origin match (strongest), then trade-direction
+    // persona, then a weak description-substring fallback.
+    if (userCountry && opts.countryCol && normalizeCountry(row[opts.countryCol]) === userCountry) {
+      s += 2; // same-origin (e.g. an Irish-origin mentor for an Irish founder)
+    }
+    if (opts.persona && Array.isArray(row.target_company_origin) && row.target_company_origin.length > 0) {
+      const wants = userIsIntl ? "international_entrant" : "australian_exporter";
+      if (row.target_company_origin.includes(wants)) s += 1.5; // trade-direction fit
+    }
+    if (countryTerm) {
+      const hay = [row.description, (row.specialties || []).join(" "), (row.services || []).join(" "), row.tagline]
+        .filter(Boolean).join(" ").toLowerCase();
+      if (hay.includes(countryTerm)) s += 1.5; // text fallback (bio/desc mentions the country)
+    }
+    return s;
+  };
+
+  const rank = (rows: any[], opts: { service?: string; countryCol?: string; persona?: boolean }, limit: number): any[] =>
+    (rows || [])
+      .map((r: any) => ({ r, s: scoreRow(r, opts) }))
+      .sort((a, b) => (b.s - a.s) || ((b.r.is_verified ? 1 : 0) - (a.r.is_verified ? 1 : 0)))
+      .slice(0, limit)
+      .map((x) => x.r);
+
+  // Service providers — service-type + location + sector (mostly horizontal/agnostic)
   try {
-    let spQuery = supabase.from("service_providers").select("id, name, slug, location, services, description, website, website_url, is_verified, tagline, logo_url, category_slug").limit(10);
-    const filters: string[] = [];
-    if (locationPatterns.length > 0) {
-      filters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
-    }
-    if (serviceTags.length > 0) {
-      filters.push(...serviceTags.map((s: string) => `services.cs.{${sanitizeFilterValue(s)}}`));
-    }
-    if (filters.length > 0) {
-      spQuery = spQuery.or(filters.join(","));
-    }
+    let spQuery = supabase.from("service_providers").select("id, name, slug, location, services, description, website, website_url, is_verified, tagline, logo_url, category_slug, sector_tags, sector_agnostic").limit(CAND);
+    spQuery = spQuery.or(buildOr({ service: "services" }));
     const { data: sp } = await spQuery;
-    matches.service_providers = (sp || []).map((p: any) => ({
+    matches.service_providers = rank(sp, { service: "services" }, 10).map((p: any) => ({
       ...p,
       link: p.slug ? `/service-providers/${p.slug}` : "/service-providers",
       linkLabel: "View Profile",
@@ -876,43 +931,25 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("SP search error:", e); }
 
-  // Community members
+  // Community members (mentors) — sector + skill + country corridor + location
   try {
-    let cmQuery = supabase.from("community_members").select("id, name, title, location, specialties, company, website").limit(5);
-    const cmFilters: string[] = [];
-    if (locationPatterns.length > 0) {
-      cmFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
-    }
-    if (serviceTags.length > 0) {
-      cmFilters.push(...serviceTags.map((s: string) => `specialties.cs.{${sanitizeFilterValue(s)}}`));
-    }
-    if (cmFilters.length > 0) {
-      cmQuery = cmQuery.or(cmFilters.join(","));
-    }
+    let cmQuery = supabase.from("community_members").select("id, name, title, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic").limit(CAND);
+    cmQuery = cmQuery.or(buildOr({ service: "specialties" }));
     const { data: cm } = await cmQuery;
-    matches.community_members = (cm || []).map((m: any) => ({
+    matches.community_members = rank(cm, { service: "specialties", countryCol: "origin_country" }, 5).map((m: any) => ({
       ...m, link: "/community", linkLabel: "View Profile",
       subtitle: [m.title, m.company].filter(Boolean).join(", "),
       tags: (m.specialties || []).slice(0, 3),
     }));
   } catch (e) { console.error("CM search error:", e); }
 
-  // Events
+  // Events — sector + location (+ agnostic)
   try {
-    let evQuery = supabase.from("events").select("id, title, slug, date, location, category, type, organizer, sector").limit(5);
-    const evFilters: string[] = [];
-    if (locationPatterns.length > 0) {
-      evFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
-    }
-    if (intake.industry_sector?.length > 0) {
-      evFilters.push(...intake.industry_sector.map((s: string) => `sector.ilike.%${sanitizeFilterValue(s)}%`));
-    }
-    if (evFilters.length > 0) {
-      evQuery = evQuery.or(evFilters.join(","));
-    }
+    let evQuery = supabase.from("events").select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic").limit(CAND);
+    evQuery = evQuery.or(buildOr());
     const { data: ev } = await evQuery;
 
-    let eventResults = ev || [];
+    let eventResults = rank(ev, {}, 5);
     if (eventResults.length === 0) {
       const { data: allEvents } = await supabase.from("events").select("id, title, slug, date, location, category, type, organizer, sector").order("date", { ascending: true }).limit(5);
       eventResults = allEvents || [];
@@ -924,90 +961,59 @@ async function searchMatches(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("Events search error:", e); }
 
-  // Content items
+  // Content items — sector (+ agnostic); no location dimension
   try {
-    let ciQuery = supabase.from("content_items").select("id, title, slug, content_type, sector_tags, meta_description").eq("status", "published").limit(5);
-    if (intake.industry_sector?.length > 0) {
-      ciQuery = ciQuery.overlaps("sector_tags", intake.industry_sector);
-    }
+    let ciQuery = supabase.from("content_items").select("id, title, slug, content_type, sector_tags, meta_description, sector_agnostic").eq("status", "published").limit(CAND);
+    ciQuery = ciQuery.or(buildOr({ location: false }));
     const { data: ci } = await ciQuery;
-    matches.content_items = (ci || []).map((c: any) => ({
+    matches.content_items = rank(ci, {}, 5).map((c: any) => ({
       ...c, name: c.title, link: `/content/${c.slug}`, linkLabel: "Read More",
       subtitle: c.content_type, tags: (c.sector_tags || []).slice(0, 2),
     }));
   } catch (e) { console.error("Content search error:", e); }
 
-  // Leads
+  // Leads — sector + location
   try {
-    let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type, price, record_count, provider_name").limit(5);
-    const ldFilters: string[] = [];
-    if (locationPatterns.length > 0) {
-      ldFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
-    }
-    if (intake.industry_sector?.length > 0) {
-      ldFilters.push(...intake.industry_sector.map((s: string) => `industry.ilike.%${sanitizeFilterValue(s)}%`));
-    }
-    if (ldFilters.length > 0) {
-      ldQuery = ldQuery.or(ldFilters.join(","));
-    }
+    let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type, price, record_count, provider_name, sector_tags, sector_agnostic").limit(CAND);
+    ldQuery = ldQuery.or(buildOr());
     const { data: ld } = await ldQuery;
-    matches.leads = (ld || []).map((l: any) => ({
+    matches.leads = rank(ld, {}, 5).map((l: any) => ({
       ...l, link: "/leads", linkLabel: "View Dataset",
       subtitle: `${l.location} · ${l.record_count || "?"} records`,
       tags: [l.category, l.type].filter(Boolean),
     }));
   } catch (e) { console.error("Leads search error:", e); }
 
-  // Innovation ecosystem
+  // Innovation ecosystem — sector + service + location (+ agnostic)
   try {
-    let ieQuery = supabase.from("innovation_ecosystem").select("id, slug, name, location, services, description, website").limit(5);
-    const ieFilters: string[] = [];
-    if (locationPatterns.length > 0) {
-      ieFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
-    }
-    if (ieFilters.length > 0) {
-      ieQuery = ieQuery.or(ieFilters.join(","));
-    }
+    let ieQuery = supabase.from("innovation_ecosystem").select("id, slug, name, location, services, description, website, sector_tags, sector_agnostic").limit(CAND);
+    ieQuery = ieQuery.or(buildOr({ service: "services" }));
     const { data: ie } = await ieQuery;
-    matches.innovation_ecosystem = (ie || []).map((o: any) => ({
+    matches.innovation_ecosystem = rank(ie, { service: "services" }, 5).map((o: any) => ({
       ...o, link: o.slug ? `/innovation-ecosystem/${o.slug}` : "/innovation-ecosystem", linkLabel: "View Hub",
       subtitle: o.location, tags: (o.services || []).slice(0, 3),
     }));
   } catch (e) { console.error("IE search error:", e); }
 
-  // Trade & investment agencies
+  // Trade & investment agencies — sector + country corridor + location (+ agnostic)
   try {
-    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website").limit(5);
-    const taFilters: string[] = [];
-    if (locationPatterns.length > 0) {
-      taFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
-    }
-    if (taFilters.length > 0) {
-      taQuery = taQuery.or(taFilters.join(","));
-    }
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, sector_tags, sector_agnostic").limit(CAND);
+    taQuery = taQuery.or(buildOr({ service: "services" }));
     const { data: ta } = await taQuery;
-    matches.trade_investment_agencies = (ta || []).map((a: any) => ({
+    matches.trade_investment_agencies = rank(ta, { service: "services", persona: true }, 5).map((a: any) => ({
       ...a, link: a.slug ? `/government-support/${a.slug}` : "/government-support", linkLabel: "View Organisation",
       subtitle: a.location, tags: (a.services || []).slice(0, 3),
     }));
   } catch (e) { console.error("TIA search error:", e); }
 
-  // Investors
+  // Investors — sector + location + country corridor (Phase E).
+  // 447-row table, so fetch a larger candidate pool before ranking. Stage/check
+  // size are surfaced for the reader but intentionally not used for weighting.
   try {
-    let invQuery = supabase.from("investors").select("id, slug, name, investor_type, location, sector_focus, stage_focus, check_size_min, check_size_max, website, description").limit(8);
-    const invFilters: string[] = [];
-    if (locationPatterns.length > 0) {
-      invFilters.push(...locationPatterns.map((l: string) => `location.ilike.%${l}%`));
-    }
-    if (intake.industry_sector?.length > 0) {
-      // D2: sanitize before interpolating into PostgREST .or() filter string
-      invFilters.push(...intake.industry_sector.map((s: string) => `sector_focus.cs.{${sanitizeFilterValue(s)}}`));
-    }
-    if (invFilters.length > 0) {
-      invQuery = invQuery.or(invFilters.join(","));
-    }
+    let invQuery = supabase.from("investors").select("id, slug, name, investor_type, location, country, sector_focus, stage_focus, check_size_min, check_size_max, website, description, sector_tags, sector_agnostic").limit(120);
+    invQuery = invQuery.or(buildOr());
     const { data: inv } = await invQuery;
-    matches.investors = (inv || []).map((i: any) => ({
+    matches.investors = rank(inv, { countryCol: "country" }, 8).map((i: any) => ({
       ...i, link: i.slug ? `/investors/${i.slug}` : "/investors", linkLabel: "View Investor",
       subtitle: `${i.investor_type} · ${i.location}`,
       tags: (i.stage_focus || []).slice(0, 3),
