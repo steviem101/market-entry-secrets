@@ -62,7 +62,7 @@ function composeLocation(venue: string | null, city: string | null): string | nu
   return parts.length ? parts.join(", ") : null;
 }
 
-async function normaliseOne(supabase: any, system: string, row: any): Promise<"upserted" | "failed"> {
+async function normaliseOne(supabase: any, system: string, row: any, errors: string[]): Promise<"upserted" | "failed"> {
   const raw = row.raw ?? {};
   try {
     // Compact the raw item to the fields the model needs (the date hides in `description`).
@@ -94,7 +94,9 @@ async function normaliseOne(supabase: any, system: string, row: any): Promise<"u
     });
 
     if (!aiRes.ok) {
-      logError(PREFIX, `Anthropic error ${aiRes.status} for staging ${row.id}`, await aiRes.text());
+      const errText = await aiRes.text();
+      logError(PREFIX, `Anthropic error ${aiRes.status} for staging ${row.id}`, errText);
+      errors.push(`anthropic_${aiRes.status}: ${errText.slice(0, 200)}`);
       return "failed"; // leave row unprocessed for the next run
     }
 
@@ -103,7 +105,9 @@ async function normaliseOne(supabase: any, system: string, row: any): Promise<"u
     try {
       m = extractJson(aiJson?.content?.[0]?.text ?? "");
     } catch (parseErr) {
-      logError(PREFIX, `JSON parse failure for staging ${row.id}`, aiJson?.content?.[0]?.text ?? aiJson);
+      const snippet = String(aiJson?.content?.[0]?.text ?? JSON.stringify(aiJson) ?? "").slice(0, 200);
+      logError(PREFIX, `JSON parse failure for staging ${row.id}`, snippet);
+      errors.push(`parse_fail: ${snippet}`);
       return "failed"; // do not crash the batch
     }
 
@@ -135,6 +139,7 @@ async function normaliseOne(supabase: any, system: string, row: any): Promise<"u
     const { data: upsertId, error: rpcError } = await supabase.rpc("upsert_normalized_event", { e });
     if (rpcError) {
       logError(PREFIX, `upsert_normalized_event failed for staging ${row.id}`, rpcError);
+      errors.push(`rpc: ${rpcError.message ?? rpcError}`);
       return "failed";
     }
 
@@ -146,6 +151,7 @@ async function normaliseOne(supabase: any, system: string, row: any): Promise<"u
     return "upserted";
   } catch (rowErr) {
     logError(PREFIX, `Unexpected error for staging ${row.id}`, rowErr);
+    errors.push(`exn: ${String(rowErr).slice(0, 200)}`);
     return "failed"; // leave unprocessed
   }
 }
@@ -194,18 +200,19 @@ Deno.serve(async (req: Request) => {
     }
 
     const system = buildSystemPrompt(currentDate);
+    const errors: string[] = [];
     let upserted = 0;
     let failed = 0;
 
     // Bounded concurrency so a full batch finishes well inside the function time limit.
     for (let i = 0; i < rows.length; i += CONCURRENCY) {
       const chunk = rows.slice(i, i + CONCURRENCY);
-      const settled = await Promise.all(chunk.map((r) => normaliseOne(supabase, system, r)));
+      const settled = await Promise.all(chunk.map((r) => normaliseOne(supabase, system, r, errors)));
       for (const s of settled) s === "upserted" ? upserted++ : failed++;
     }
 
     log(PREFIX, "Normalisation batch complete", { scanned: rows.length, upserted, failed });
-    return new Response(JSON.stringify({ scanned: rows.length, upserted, failed }), {
+    return new Response(JSON.stringify({ scanned: rows.length, upserted, failed, sample_errors: errors.slice(0, 5) }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (err) {
