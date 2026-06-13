@@ -9,6 +9,8 @@
 // email-friendly size and cache the result in memory. Every failure mode falls
 // back to the original bytes, so the logo always renders.
 
+export {}; // mark as an ES module (it uses only a dynamic import otherwise)
+
 const SOURCE_URL = "https://marketentrysecrets.com/favicon.png";
 const TARGET_WIDTH = 440; // displays at ~220px (2x for retina)
 
