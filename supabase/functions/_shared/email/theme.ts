@@ -57,8 +57,9 @@ export const theme = {
   brandName: "Market Entry Secrets",
   siteUrl: "https://marketentrysecrets.com",
   // Optimised logo served by the public `email-assets` edge function, which is
-  // deploy-independent of the frontend. Mirror committed at public/email/logo.png.
-  logoUrl: "https://xhziwveaiuhzdoutpgrh.supabase.co/functions/v1/email-assets/logo.png",
+  // deploy-independent of the frontend. The `?v=` is a cache-busting version
+  // token: bump it whenever the logo image changes. Mirror at public/email/logo.png.
+  logoUrl: "https://xhziwveaiuhzdoutpgrh.supabase.co/functions/v1/email-assets/logo.png?v=2",
   logoWidth: 220,
 } as const;
 
