@@ -11,6 +11,7 @@
 
 import { renderEmail } from "../supabase/functions/_shared/email/render.ts";
 import { resolveTemplateId } from "../supabase/functions/_shared/email/resend-templates.ts";
+import { theme } from "../supabase/functions/_shared/email/theme.ts";
 
 let failures = 0;
 const results: string[] = [];
@@ -69,7 +70,8 @@ check("welcome accepts legacy USER_NAME var", legacyVar.subject.includes("Lee"))
 for (const path of ["/report-creator", "/service-providers", "/events", "/case-studies"]) {
   check(`welcome links to ${path}`, named.html.includes(`marketentrysecrets.com${path}`));
 }
-check("welcome has logo URL", named.html.includes("https://marketentrysecrets.com/email/logo.png"));
+check("welcome has logo URL (theme.logoUrl)", named.html.includes(theme.logoUrl));
+check("logo URL is an absolute https URL", /^https:\/\//.test(theme.logoUrl));
 check("welcome has preheader", named.html.includes("Your shortcut to the Australian and ANZ market"));
 check("welcome has footer brand", named.html.includes("Helping global companies enter the Australian and ANZ market."));
 check("welcome has middle-dot microcopy", named.html.includes("No credit card required &middot; Ready in minutes"));

@@ -57,3 +57,8 @@ verify_jwt = false
 # Step 1 website prefill runs BEFORE auth, so JWT is not required. The function
 # guards itself: SSRF check (isPrivateOrReservedUrl) + per-caller rate limiting.
 verify_jwt = false
+
+[functions.email-assets]
+# Public, cacheable host for transactional-email images (brand logo). Serves a
+# static asset with no user input; must be publicly fetchable by mail clients.
+verify_jwt = false

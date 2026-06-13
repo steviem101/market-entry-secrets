@@ -56,8 +56,9 @@ export const theme = {
   },
   brandName: "Market Entry Secrets",
   siteUrl: "https://marketentrysecrets.com",
-  // Optimised horizontal logo to be hosted here (see preview/prereq notes).
-  logoUrl: "https://marketentrysecrets.com/email/logo.png",
+  // Optimised logo served by the public `email-assets` edge function, which is
+  // deploy-independent of the frontend. Mirror committed at public/email/logo.png.
+  logoUrl: "https://xhziwveaiuhzdoutpgrh.supabase.co/functions/v1/email-assets/logo.png",
   logoWidth: 220,
 } as const;
 
