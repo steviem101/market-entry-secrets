@@ -2,11 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
-import { sendViaResendTemplate } from "../_shared/email/resend.ts";
-import {
-  resolveTemplateId,
-  mapToResendVariables,
-} from "../_shared/email/resend-templates.ts";
+import { sendViaResend } from "../_shared/email/resend.ts";
+import { renderEmail } from "../_shared/email/render.ts";
 import type { EmailRequest } from "../_shared/email/types.ts";
 
 const EMAIL_INTERNAL_SECRET = Deno.env.get("EMAIL_INTERNAL_SECRET")!;
@@ -108,9 +105,9 @@ serve(async (req: Request) => {
     return jsonResponse({ error: "email_type and recipient_email required" }, 400);
   }
 
-  // Resolve Resend template ID
-  const templateId = resolveTemplateId(email_type, data || {});
-  if (!templateId) {
+  // Render the email from the in-repo shared template module.
+  const rendered = renderEmail(email_type, data || {});
+  if (!rendered) {
     return jsonResponse({ error: `Unknown email type: ${email_type}` }, 400);
   }
 
@@ -153,26 +150,19 @@ serve(async (req: Request) => {
       }
     }
 
-    // 3. Map variables for Resend template
-    const variables = mapToResendVariables(email_type, data || {});
+    // 3. Send the rendered HTML via Resend
+    const result = await sendViaResend(recipient_email, rendered.subject, rendered.html);
 
-    // 4. Send via Resend template
-    const result = await sendViaResendTemplate(
-      recipient_email,
-      templateId,
-      variables
-    );
-
-    // 5. Log the send
+    // 4. Log the send
     await supabase.from("email_log").insert({
       user_id: user_id || null,
       recipient_email,
       email_type,
-      subject: email_type, // Subject is defined in the Resend template
+      subject: rendered.subject,
       resend_id: result.id || null,
       status: result.error ? "failed" : "sent",
       error_message: result.error || null,
-      metadata: { ...data, template_id: templateId, variables },
+      metadata: { ...data, template: "code" },
       idempotency_key: idempotencyKey,
     });
 
@@ -181,9 +171,8 @@ serve(async (req: Request) => {
       return jsonResponse({ sent: false, error: result.error }, 502);
     }
 
-    log("send-email", "Email sent via template", {
+    log("send-email", "Email sent", {
       email_type,
-      template_id: templateId,
       resend_id: result.id,
       recipient_email,
     });
