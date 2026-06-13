@@ -74,8 +74,14 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <Badge variant="secondary">{event.category}</Badge>
-                <Badge variant="outline">{event.type}</Badge>
-                {event.sector && <Badge variant="outline">{event.sector}</Badge>}
+                {event.type && event.type.toLowerCase() !== event.category.toLowerCase() && (
+                  <Badge variant="outline">{event.type}</Badge>
+                )}
+                {event.sector &&
+                  event.sector.toLowerCase() !== event.category.toLowerCase() &&
+                  event.sector.toLowerCase() !== (event.type ?? "").toLowerCase() && (
+                    <Badge variant="outline">{event.sector}</Badge>
+                  )}
                 {isEventPast ? (
                   <Badge variant="secondary" className="bg-muted text-muted-foreground">
                     Past Event

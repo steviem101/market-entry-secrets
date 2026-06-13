@@ -130,9 +130,11 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
           <Badge variant="secondary" className="text-xs font-medium">
             {event.category}
           </Badge>
-          <Badge variant="outline" className="text-xs">
-            {event.type}
-          </Badge>
+          {event.type && event.type.toLowerCase() !== event.category.toLowerCase() && (
+            <Badge variant="outline" className="text-xs">
+              {event.type}
+            </Badge>
+          )}
         </div>
 
         <div className="space-y-2 mb-4">
