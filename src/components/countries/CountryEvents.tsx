@@ -39,7 +39,7 @@ export const CountryEvents = ({ countryName, events }: CountryEventsProps) => {
     <section className="border-b border-mes-border bg-mes-bg">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
         <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
             07 / Events
           </div>
           <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
@@ -60,12 +60,12 @@ export const CountryEvents = ({ countryName, events }: CountryEventsProps) => {
                 <span className="text-[36px] font-semibold tabular-nums leading-none text-mes-ink">
                   {formatDay(e.date)}
                 </span>
-                <span className="text-[11px] font-mono uppercase tracking-wider text-mes-ink-muted">
+                <span className="text-[11px] uppercase tracking-wider text-mes-ink-muted">
                   {formatMonthYear(e.date)}
                 </span>
               </div>
               {e.location && (
-                <div className="mt-3 text-[12px] font-mono uppercase tracking-wider text-mes-ink-muted">
+                <div className="mt-3 text-[12px] uppercase tracking-wider text-mes-ink-muted">
                   {e.location}
                 </div>
               )}

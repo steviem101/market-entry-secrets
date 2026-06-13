@@ -44,7 +44,7 @@ export const CountryLeadCapture = ({
     <section className="border-b border-mes-border bg-mes-bg">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
         <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
             10 / Get started
           </div>
           <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
@@ -54,7 +54,7 @@ export const CountryLeadCapture = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <article className="bg-mes-card border border-mes-border rounded-xl p-6 flex flex-col">
-            <div className="text-[11px] font-mono uppercase tracking-wider text-mes-ink-muted">
+            <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted">
               Tier 1 &middot; Free
             </div>
             <h3 className="mt-2 text-[20px] font-semibold text-mes-ink">The corridor digest</h3>
@@ -90,7 +90,7 @@ export const CountryLeadCapture = ({
             <span className="absolute -top-2 right-5 text-[10.5px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-mes-blue-light text-mes-teal-dark">
               Most popular
             </span>
-            <div className="text-[11px] font-mono uppercase tracking-wider text-white/60">
+            <div className="text-[11px] uppercase tracking-wider text-white/60">
               Tier 2 &middot; AI report
             </div>
             <h3 className="mt-2 text-[20px] font-semibold">Your AU entry plan</h3>
@@ -106,7 +106,7 @@ export const CountryLeadCapture = ({
           </article>
 
           <article className="bg-mes-card border border-mes-border rounded-xl p-6 flex flex-col">
-            <div className="text-[11px] font-mono uppercase tracking-wider text-mes-ink-muted">
+            <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted">
               Tier 3 &middot; Premium
             </div>
             <h3 className="mt-2 text-[20px] font-semibold text-mes-ink">Strategy call</h3>
@@ -124,7 +124,7 @@ export const CountryLeadCapture = ({
 
         {trustCompanies.length > 0 && (
           <div className="mt-12 border-t border-mes-border pt-8">
-            <div className="text-[11px] font-mono uppercase tracking-wider text-mes-ink-muted text-center">
+            <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted text-center">
               Trusted by {countryName} founders
             </div>
             <div className="mt-4 flex items-center justify-center flex-wrap gap-x-10 gap-y-3 text-mes-ink-soft">

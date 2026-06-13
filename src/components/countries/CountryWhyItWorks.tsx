@@ -21,7 +21,7 @@ export const CountryWhyItWorks = ({
     <section className="border-b border-mes-border bg-mes-card">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
         <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
             02 / Why it works
           </div>
           <h2
@@ -39,7 +39,7 @@ export const CountryWhyItWorks = ({
           <ol className="md:col-span-7 space-y-6">
             {bullets.map((b, i) => (
               <li key={i} className="grid grid-cols-[auto_1fr] gap-4">
-                <div className="font-mono text-[12px] text-mes-ink-muted pt-1 tabular-nums">
+                <div className="text-[12px] text-mes-ink-muted pt-1 tabular-nums">
                   {String(i + 1).padStart(2, "0")}
                 </div>
                 <div>
@@ -58,7 +58,7 @@ export const CountryWhyItWorks = ({
                     &ldquo;{pullQuote}&rdquo;
                   </blockquote>
                   {pullQuoteAttr && (
-                    <figcaption className="mt-4 text-[12px] font-mono uppercase tracking-wider text-white/60">
+                    <figcaption className="mt-4 text-[12px] uppercase tracking-wider text-white/60">
                       {pullQuoteAttr}
                     </figcaption>
                   )}
@@ -67,7 +67,7 @@ export const CountryWhyItWorks = ({
 
               {differentiators?.length > 0 && (
                 <div className="bg-mes-bg border border-mes-border rounded-xl p-6">
-                  <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-mes-teal-dark mb-4">
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-4">
                     What is different vs US / UK
                   </div>
                   <ul className="space-y-4">
