@@ -27,7 +27,13 @@ async function getLogoBytes(): Promise<Uint8Array> {
     const { Image } = await import("https://deno.land/x/imagescript@1.2.17/mod.ts");
     const img = await Image.decode(original);
     img.resize(TARGET_WIDTH, Image.RESIZE_AUTO);
-    cached = await img.encode(); // PNG
+    // Flatten onto opaque white: the source logo has a transparent background,
+    // which would hide the navy wordmark on dark-mode cards. Opaque white also
+    // compresses far better than transparent RGBA.
+    const flattened = new Image(img.width, img.height);
+    flattened.fill(0xffffffff);
+    flattened.composite(img, 0, 0);
+    cached = await flattened.encode(9); // PNG, max compression
   } catch (_err) {
     cached = original; // full-res fallback; still the correct logo
   }
