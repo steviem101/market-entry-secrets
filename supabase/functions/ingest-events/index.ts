@@ -29,10 +29,13 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const apifyToken = Deno.env.get("APIFY_API_TOKEN");
+    // Prefer the workstream-specific token; fall back to the existing project-wide
+    // APIFY_TOKEN (used by the Irish Insights apify-webhook) so no new secret is required
+    // when the Events Finder actor lives in the same Apify account.
+    const apifyToken = Deno.env.get("APIFY_API_TOKEN") ?? Deno.env.get("APIFY_TOKEN");
     if (!apifyToken) {
-      logError(PREFIX, "APIFY_API_TOKEN is not configured", null);
-      return new Response(JSON.stringify({ error: "APIFY_API_TOKEN not configured" }), {
+      logError(PREFIX, "No Apify token configured (set APIFY_API_TOKEN or APIFY_TOKEN)", null);
+      return new Response(JSON.stringify({ error: "apify_token_not_configured" }), {
         status: 500, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
