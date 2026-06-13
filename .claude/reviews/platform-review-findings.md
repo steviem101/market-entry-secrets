@@ -4,6 +4,33 @@
 > Reviewer: Claude Code session, branch `claude/mes-platform-review-qfrnx3`.
 > Method: live schema/RLS/grant introspection via Supabase MCP (SELECT/EXPLAIN only) + repo file reads + 3 parallel sub-agents (frontend, edge functions, hygiene).
 
+## Remediation log (Phase 3, 2026-06-12 → 2026-06-13)
+
+All fixes were applied to the live project, verified, and merged to `main`:
+
+| Finding | Status | PR | Notes |
+|---|---|---|---|
+| SEC-01 tier self-upgrade | **Fixed** | #201 | `user_subscriptions` writes service-role-only; escalation verified blocked |
+| SEC-03 `MES` foreign table | **Fixed** | #201 | Moved to non-API `private` schema; advisor warning cleared |
+| SEC-02 broad write grants | **Fixed** | #202 | Policy-derived revoke across all tables/views; 12 frontend write paths regression-verified |
+| DOC-01 stale CLAUDE.md | **Fixed** | #203 | Routes, 19 edge functions, billing model, security posture, env vars |
+| PERF-01 indexes + RLS initplan | **Fixed** | #204 | `auth_rls_initplan` 73→0, unindexed FKs 10→0, dup index dropped |
+| SCHEMA-03 dead tables | **Fixed (reduced)** | #205 | `Community` dropped; `market_entry_reports` ARCHIVED (held 2 real rows — audit's "0 rows" was a stale estimate); `leads` deferred (generate-report still queries it) |
+| DATA-01/02 logos & websites | **Fixed (rescoped)** | #206 | Logos render client-side from website/domain (`logoUtils.ts`) — audit premise wrong. Real gap was 6 website-less VCs; 5 researched+backfilled, Mintelier has no web presence. Angels correctly have no websites (individuals) |
+| SEC-07 bucket listing | **Fixed (partial)** | #207 | 4 public-bucket listing policies dropped; advisor cleared. Auth/PG items remain (dashboard-only) |
+| HYG-02/04 PII CSVs + root clutter | **Fixed (non-destructive phase)** | #208 | CSVs untracked + gitignored (data verified in DB); audits → docs/audits/. History scrub pending explicit approval |
+| SEC-04 funnel WITH CHECK | **Fixed** | #209 | Length caps + email shape on 6 funnels; anon INSERT verified still working, oversized rejected |
+| BILL-01 Stripe lifecycle | **Closed (won't fix, by decision)** | — | Billing is one-time payments (`mode: payment`), not subscriptions — no lifecycle events exist. Refunds handled manually by choice |
+| SEC-06 `has_role` anon EXECUTE | **Closed (won't fix)** | — | Revoking would break RLS policy evaluation for anon/authenticated; other SECURITY DEFINER fns are intended RPCs |
+
+**Still open — requires the owner:**
+- Dashboard-only: OTP expiry <1h, leaked-password protection, Postgres security patch upgrade (advisor still flags all three).
+- Approval-gated: HYG-02 git-history scrub of the PII CSVs (`filter-repo` + force-push).
+- Product decision: `leads` table retirement — generate-report's lead-list section queries the empty `leads` table; wiring it to `lead_databases` is a pipeline feature change.
+- Roadmap (per Phase 2 plan): FE-01 server-side freemium gate, FE-02 types/hooks refactor, FE-03/SCHEMA-02 indexable SEO layer, AI-02 homepage-chat build, SCHEMA-01 market dimension, `mes_knowledge_base` RAG, HYG-03 always-on agents.
+
+**New evidence found during remediation (feeds HYG-01):** the repo migration for `service_provider_contacts` creates a different schema than production (no `service_provider_id` column on fresh DBs), and several tables (`ai_chat_*`, `MES`, `ii_experiment_outputs`) exist only on production — migrations touching named objects must guard with `to_regclass`/`information_schema` checks (pattern now used in all new migrations).
+
 ## Area completion checklist
 
 - [x] Area 1: Database schema and data model
