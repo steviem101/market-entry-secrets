@@ -2,13 +2,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
-import { sendViaResendTemplate, sendViaResend } from "../_shared/email/resend.ts";
-import {
-  resolveTemplateId,
-  mapToResendVariables,
-} from "../_shared/email/resend-templates.ts";
+import { sendViaResend } from "../_shared/email/resend.ts";
 import { renderEmail } from "../_shared/email/render.ts";
-import type { EmailRequest, ResendResult } from "../_shared/email/types.ts";
+import type { EmailRequest } from "../_shared/email/types.ts";
 
 const EMAIL_INTERNAL_SECRET = Deno.env.get("EMAIL_INTERNAL_SECRET")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -109,11 +105,9 @@ serve(async (req: Request) => {
     return jsonResponse({ error: "email_type and recipient_email required" }, 400);
   }
 
-  // Prefer a code-based template (migrated to the shared module); fall back to
-  // the legacy Resend-dashboard template for any type not yet migrated.
+  // Render the email from the in-repo shared template module.
   const rendered = renderEmail(email_type, data || {});
-  const templateId = rendered ? null : resolveTemplateId(email_type, data || {});
-  if (!rendered && !templateId) {
+  if (!rendered) {
     return jsonResponse({ error: `Unknown email type: ${email_type}` }, 400);
   }
 
@@ -156,33 +150,19 @@ serve(async (req: Request) => {
       }
     }
 
-    // 3. Send: code template (raw HTML built in-repo) if migrated, otherwise
-    //    the legacy Resend-dashboard template.
-    let result: ResendResult;
-    let logSubject: string;
-    let logMetadata: Record<string, unknown>;
-
-    if (rendered) {
-      result = await sendViaResend(recipient_email, rendered.subject, rendered.html);
-      logSubject = rendered.subject;
-      logMetadata = { ...data, template: "code" };
-    } else {
-      const variables = mapToResendVariables(email_type, data || {});
-      result = await sendViaResendTemplate(recipient_email, templateId!, variables);
-      logSubject = email_type; // Subject is defined in the Resend template
-      logMetadata = { ...data, template_id: templateId, variables };
-    }
+    // 3. Send the rendered HTML via Resend
+    const result = await sendViaResend(recipient_email, rendered.subject, rendered.html);
 
     // 4. Log the send
     await supabase.from("email_log").insert({
       user_id: user_id || null,
       recipient_email,
       email_type,
-      subject: logSubject,
+      subject: rendered.subject,
       resend_id: result.id || null,
       status: result.error ? "failed" : "sent",
       error_message: result.error || null,
-      metadata: logMetadata,
+      metadata: { ...data, template: "code" },
       idempotency_key: idempotencyKey,
     });
 
@@ -193,7 +173,6 @@ serve(async (req: Request) => {
 
     log("send-email", "Email sent", {
       email_type,
-      via: rendered ? "code" : "resend_template",
       resend_id: result.id,
       recipient_email,
     });

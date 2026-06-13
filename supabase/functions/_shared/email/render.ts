@@ -1,11 +1,8 @@
 // supabase/functions/_shared/email/render.ts
 //
-// Registry that maps an internal email_type to a code-based template renderer.
-// Replaces the Resend-dashboard template lookup (resolveTemplateId +
-// mapToResendVariables) as templates are migrated into the repo.
-//
-// During migration, send-email tries renderEmail() first and falls back to the
-// legacy Resend-template path for any type not yet registered here.
+// Maps an internal email_type to a code-based template renderer that returns the
+// email's subject + HTML. This is the single source of truth for send-email's
+// content (the legacy Resend-dashboard templates have been retired).
 
 import * as welcome from "./templates/welcome.ts";
 import * as paymentConfirmation from "./templates/paymentConfirmation.ts";
@@ -24,8 +21,6 @@ export interface RenderResult {
 
 type Renderer = (data: Record<string, unknown>) => RenderResult;
 
-// All send-email types are migrated to code templates. (lead follow-up lives in
-// the separate send-lead-followup function and is handled there.)
 const REGISTRY: Record<string, Renderer> = {
   welcome: welcome.render,
   payment_confirmation: paymentConfirmation.render,
@@ -39,9 +34,8 @@ const REGISTRY: Record<string, Renderer> = {
 };
 
 /**
- * Resolve an email_type (handling the nurture_upgrade free/paid variant the
- * same way the legacy resolveTemplateId did) and render it.
- * Returns null if no code template is registered yet (caller should fall back).
+ * Resolve an email_type (handling the nurture_upgrade free/paid variant) and
+ * render it. Returns null for an unknown type.
  */
 export function renderEmail(
   emailType: string,
@@ -54,13 +48,4 @@ export function renderEmail(
   }
   const renderer = REGISTRY[key];
   return renderer ? renderer(data) : null;
-}
-
-/** Email types that have been migrated to code templates. */
-export function isMigrated(emailType: string): boolean {
-  const key =
-    emailType === "nurture_upgrade"
-      ? "nurture_upgrade_free"
-      : emailType;
-  return key in REGISTRY || emailType === "nurture_upgrade" && "nurture_upgrade_paid" in REGISTRY;
 }

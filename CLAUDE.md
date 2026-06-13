@@ -175,7 +175,7 @@ All edge functions are in `supabase/functions/`. Shared modules in `_shared/`:
 - `_shared/log.ts` — `log()` and `logError()` structured logging
 - `_shared/auth.ts` — `requireAdmin(req)` admin role check
 
-19 functions are deployed (verify in the dashboard / via `list_edge_functions`).
+20 functions are deployed (verify in the dashboard / via `list_edge_functions`).
 Functions with `verify_jwt = false` authenticate in-code (JWT, signature, or `x-internal-secret`).
 
 | Function | Purpose | `verify_jwt` | External APIs |
@@ -193,9 +193,10 @@ Functions with `verify_jwt = false` authenticate in-code (JWT, signature, or `x-
 | `classify-personas` | Classifies community-member personas (admin) | ✅ | Anthropic |
 | `generate-plan` | AI market-entry plan generation | ✅ | Anthropic, Perplexity |
 | `sync-lemlist` | Syncs Lemlist CRM data (admin) | ✅ | Lemlist API |
-| `send-email` | Transactional email sender | ❌ (`x-internal-secret` or JWT) | Resend |
+| `send-email` | Transactional email sender — renders blue-branded HTML in-code via the shared `_shared/email/` module (no Resend dashboard templates) | ❌ (`x-internal-secret` or JWT) | Resend |
 | `process-email-queue` | Cron-driven email-queue processor | ❌ (`x-internal-secret`) | internal `send-email` |
-| `send-lead-followup` | Sends follow-up emails | ✅ | Resend |
+| `send-lead-followup` | Sends bespoke-plan follow-up emails (shared `_shared/email/` module) | ✅ | Resend |
+| `email-assets` | Public host for transactional-email images (serves the downscaled brand logo) | ❌ (public static asset) | — |
 | `ai-chat` | Chat endpoint — **placeholder, not implemented** (returns a stub) | ✅ | — |
 | `apify-webhook` | Apify ingest webhook (Irish Insights pipeline) | ❌ (webhook) | — |
 | `notion-research-trigger` | Notion research trigger | ❌ (webhook) | — |
@@ -432,4 +433,5 @@ Both `useToast` (shadcn) and `sonner` (`toast()`) are available. Use either.
 | Intake form schema | `src/components/report-creator/intakeSchema.ts` |
 | Navigation items | `src/components/navigation/NavigationItems.tsx` |
 | Edge function shared modules | `supabase/functions/_shared/` |
+| Transactional email module (blue-branded, code-based) | `supabase/functions/_shared/email/` (`theme`, `layout`, `components`, `render`, `templates/`) |
 | Supabase config | `supabase/config.toml` |

@@ -10,7 +10,6 @@
 // HTML tag-balance. Exits non-zero on any failure.
 
 import { renderEmail } from "../supabase/functions/_shared/email/render.ts";
-import { resolveTemplateId } from "../supabase/functions/_shared/email/resend-templates.ts";
 import { theme } from "../supabase/functions/_shared/email/theme.ts";
 
 let failures = 0;
@@ -20,16 +19,13 @@ function check(name: string, cond: boolean, detail = "") {
   if (!cond) failures++;
 }
 
-// Mirror of send-email/index.ts routing decision.
-function route(emailType: string, data: Record<string, unknown>): "code" | "legacy" | "reject" {
-  const rendered = renderEmail(emailType, data);
-  const templateId = rendered ? null : resolveTemplateId(emailType, data || {});
-  if (!rendered && !templateId) return "reject";
-  return rendered ? "code" : "legacy";
+// Mirror of send-email/index.ts routing decision (code template, else reject).
+function route(emailType: string, data: Record<string, unknown>): "code" | "reject" {
+  return renderEmail(emailType, data) ? "code" : "reject";
 }
 
-// ── 1. Routing regression: every known type keeps working ──────────────
-const routeCases: Array<[string, Record<string, unknown>, "code" | "legacy" | "reject"]> = [
+// ── 1. Routing regression: every known type renders, unknown is rejected ──
+const routeCases: Array<[string, Record<string, unknown>, "code" | "reject"]> = [
   ["welcome", { first_name: "Sam" }, "code"],
   ["nurture_ecosystem", { provider_count: "240" }, "code"],
   ["nurture_case_studies", {}, "code"],
@@ -46,11 +42,11 @@ for (const [type, data, expect] of routeCases) {
   check(`route ${type} (${JSON.stringify(data)}) -> ${expect}`, got === expect, `got ${got}`);
 }
 
-// Legacy variant resolution still distinguishes free/paid template IDs.
+// nurture_upgrade resolves free vs paid to distinct rendered subjects/CTAs.
 check(
-  "nurture_upgrade free/paid resolve to different Resend template IDs",
-  resolveTemplateId("nurture_upgrade", { current_tier: "free" }) !==
-    resolveTemplateId("nurture_upgrade", { current_tier: "growth" })
+  "nurture_upgrade free vs paid render differently",
+  renderEmail("nurture_upgrade", { current_tier: "free" })!.subject !==
+    renderEmail("nurture_upgrade", { current_tier: "growth" })!.subject
 );
 
 // ── 2. Welcome render correctness ──────────────────────────────────────
