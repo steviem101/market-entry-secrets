@@ -29,6 +29,11 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
   const isApproximateDate = (event.date_precision ?? "exact") !== "exact";
   const timeLabel = event.time ?? (isApproximateDate ? "See website for time" : null);
   const organizerLabel = event.organizer ?? "Organizer TBC";
+  const isCommunity = event.source === "apify_events_finder";
+  const isOnline = event.event_format === "virtual";
+  const platformLabel = event.source_platform
+    ? event.source_platform.charAt(0).toUpperCase() + event.source_platform.slice(1)
+    : null;
 
   const handleViewDetails = (e: React.MouseEvent) => {
     if (useModal && onViewDetails) {
@@ -40,21 +45,38 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
 
   const cardContent = (
     <Card className={`h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${isEventPast ? "opacity-70" : ""}`}>
+      {event.image_url && (
+        <div className="relative w-full h-40 overflow-hidden bg-muted">
+          <img
+            src={event.image_url}
+            alt={event.title}
+            loading="lazy"
+            className="w-full h-full object-cover"
+          />
+          {isCommunity && platformLabel && (
+            <Badge className="absolute left-2 top-2 border border-border bg-background/85 text-foreground backdrop-blur-sm">
+              Community · {platformLabel}
+            </Badge>
+          )}
+        </div>
+      )}
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            {/* Event logo (replaces the date chip — date moves into the meta stack below) */}
-            <CompanyLogo
-              websiteUrl={event.organizer_website || event.website_url}
-              existingLogoUrl={event.event_logo_url}
-              companyName={organizerLabel || event.title}
-              size="lg"
-              className="w-14 h-14 md:w-16 md:h-16 rounded-lg border border-border flex-shrink-0"
-              fallbackClassName="bg-primary/10 text-primary rounded-lg"
-              imgClassName="object-contain p-1"
-            />
+            {/* Lead with the organizer logo only when there is no banner image */}
+            {!event.image_url && (
+              <CompanyLogo
+                websiteUrl={event.organizer_website || event.website_url}
+                existingLogoUrl={event.event_logo_url}
+                companyName={organizerLabel || event.title}
+                size="lg"
+                className="w-14 h-14 md:w-16 md:h-16 rounded-lg border border-border flex-shrink-0"
+                fallbackClassName="bg-primary/10 text-primary rounded-lg"
+                imgClassName="object-contain p-1"
+              />
+            )}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
                 {isEventPast ? (
                   <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
                     Past Event
@@ -68,6 +90,12 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
                     Date TBC
                   </Badge>
                 ) : null}
+                {isOnline && (
+                  <Badge variant="outline" className="text-xs">Online</Badge>
+                )}
+                {isCommunity && !event.image_url && platformLabel && (
+                  <Badge variant="outline" className="text-xs">Community · {platformLabel}</Badge>
+                )}
               </div>
               <CardTitle className="text-lg font-semibold line-clamp-2 leading-tight">
                 {event.title}

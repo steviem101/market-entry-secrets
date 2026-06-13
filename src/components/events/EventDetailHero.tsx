@@ -25,6 +25,11 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
   const isApproximateDate = (event.date_precision ?? "exact") !== "exact";
   const timeLabel = event.time ?? (isApproximateDate ? "See website for time" : null);
   const organizerLabel = event.organizer ?? "Organizer TBC";
+  const isCommunity = event.source === "apify_events_finder";
+  const isOnline = event.event_format === "virtual";
+  const platformLabel = event.source_platform
+    ? event.source_platform.charAt(0).toUpperCase() + event.source_platform.slice(1)
+    : null;
 
   return (
     <section className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 py-12 md:py-16">
@@ -40,19 +45,31 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
             <span className="text-foreground truncate">{event.title}</span>
           </nav>
 
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <CompanyLogo
-                websiteUrl={event.organizer_website || event.website_url}
-                existingLogoUrl={event.event_logo_url}
-                companyName={organizerLabel || event.title}
-                size="xl"
-                className="w-20 h-20 rounded-xl border border-border"
-                fallbackClassName="bg-primary/10 text-primary"
-                imgClassName="object-cover"
+          {event.image_url && (
+            <div className="w-full mb-6 overflow-hidden rounded-xl border border-border bg-muted">
+              <img
+                src={event.image_url}
+                alt={event.title}
+                className="w-full max-h-72 object-cover"
               />
             </div>
+          )}
+
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            {/* Lead with the organizer logo only when there is no banner image */}
+            {!event.image_url && (
+              <div className="flex-shrink-0">
+                <CompanyLogo
+                  websiteUrl={event.organizer_website || event.website_url}
+                  existingLogoUrl={event.event_logo_url}
+                  companyName={organizerLabel || event.title}
+                  size="xl"
+                  className="w-20 h-20 rounded-xl border border-border"
+                  fallbackClassName="bg-primary/10 text-primary"
+                  imgClassName="object-cover"
+                />
+              </div>
+            )}
 
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -70,6 +87,10 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
                 ) : isApproximateDate ? (
                   <Badge variant="outline">Date TBC</Badge>
                 ) : null}
+                {isOnline && <Badge variant="outline">Online</Badge>}
+                {isCommunity && platformLabel && (
+                  <Badge variant="outline">Community · {platformLabel}</Badge>
+                )}
               </div>
 
               <h1 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">

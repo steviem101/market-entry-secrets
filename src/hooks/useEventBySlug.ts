@@ -26,6 +26,9 @@ export interface EventDetail {
   is_featured: boolean;
   tags?: string[] | null;
   image_url?: string | null;
+  event_format?: string | null;
+  source?: string | null;
+  source_platform?: string | null;
   created_at: string;
   updated_at: string;
 }
