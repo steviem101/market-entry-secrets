@@ -2,8 +2,12 @@
 -- Source tables remain the system of record; this table is fully rebuildable from them.
 -- Reversible: supabase/rollback/20260614090000_kb_phase2_schema_revert.sql
 -- Idempotent: safe to replay (CLI db push) even though first applied via MCP.
--- vector/pg_trgm live in `public` on the source project but in `extensions` on a fresh
--- Supabase branch; search both so vector(1536) + the HNSW opclass resolve either way.
+-- A fresh Supabase branch has none of these extensions yet (the source project enabled them
+-- out of band, in `public`). Ensure they exist (no-op where already installed) and put both
+-- schemas on the search_path so vector(1536) + the HNSW opclass resolve wherever it landed.
+create extension if not exists vector with schema extensions;
+create extension if not exists pg_trgm with schema extensions;
+create extension if not exists pgcrypto with schema extensions;
 set search_path = public, extensions;
 
 create table if not exists public.mes_knowledge_base (
