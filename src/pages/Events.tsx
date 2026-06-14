@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Calendar, AlertCircle } from "lucide-react";
@@ -60,6 +60,24 @@ const Events = () => {
     if (currentPage > 1) p.set("page", String(currentPage));
     setSearchParams(p, { replace: true });
   }, [localSearchQuery, selectedCategory, selectedType, selectedCity, selectedSector, selectedTopic, selectedSource, activeTab, personaFilterValue, currentPage, setSearchParams]);
+
+  // Preserve scroll position across filter changes. Changing a filter swaps the
+  // card list for a different set (new React keys); the browser loses its scroll
+  // anchor and clamps the page upward (no scrollTo is involved). Capture the user's
+  // last scroll position and restore it in a layout effect, before paint, so the
+  // page stays put instead of jumping toward the filter bar.
+  const lastScrollY = useRef(0);
+  useEffect(() => {
+    const onScroll = () => { lastScrollY.current = window.scrollY; };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const filterSignature = `${selectedSource}|${activeTab}|${selectedCategory}|${selectedType}|${selectedCity}|${selectedSector}|${selectedTopic}|${personaFilterValue}|${localSearchQuery}`;
+  const didMountRef = useRef(false);
+  useLayoutEffect(() => {
+    if (!didMountRef.current) { didMountRef.current = true; return; }
+    window.scrollTo(0, lastScrollY.current);
+  }, [filterSignature]);
 
   const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
 
