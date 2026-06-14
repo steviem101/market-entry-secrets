@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 import { isEventPast } from '@/lib/eventDate';
@@ -72,6 +72,10 @@ export const useEvents = () => {
   } = useQuery({
     queryKey: ['events', debouncedSearchQuery],
     queryFn: () => fetchEvents(debouncedSearchQuery || undefined),
+    // Keep the current results on screen while a new search loads, so the page
+    // never blanks to the full-page skeleton (which collapsed height and yanked
+    // scroll to the top on every search).
+    placeholderData: keepPreviousData,
   });
 
   // Split events into upcoming and past. Approximate-date events (month / tbc) are
