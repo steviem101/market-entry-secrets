@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Calendar, MapPin, Users, Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,9 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
   const platformLabel = event.source_platform
     ? event.source_platform.charAt(0).toUpperCase() + event.source_platform.slice(1)
     : null;
+  // Eventbrite image URLs are signed and can expire; fall back to the logo on load error.
+  const [bannerFailed, setBannerFailed] = useState(false);
+  const showBanner = !!event.image_url && !bannerFailed;
 
   const handleViewDetails = (e: React.MouseEvent) => {
     if (useModal && onViewDetails) {
@@ -45,13 +48,14 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
 
   const cardContent = (
     <Card className={`h-full flex flex-col overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${isEventPast ? "opacity-70" : ""}`}>
-      {event.image_url && (
+      {showBanner && (
         <div className="relative w-full h-40 overflow-hidden bg-muted">
           <img
             src={event.image_url}
             alt={event.title}
             loading="lazy"
             className="w-full h-full object-cover"
+            onError={() => setBannerFailed(true)}
           />
           {isCommunity && platformLabel && (
             <Badge className="absolute left-2 top-2 border border-border bg-background/85 text-foreground backdrop-blur-sm">
@@ -64,7 +68,7 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             {/* Lead with the organizer logo only when there is no banner image */}
-            {!event.image_url && (
+            {!showBanner && (
               <CompanyLogo
                 websiteUrl={event.organizer_website || event.website_url}
                 existingLogoUrl={event.event_logo_url}

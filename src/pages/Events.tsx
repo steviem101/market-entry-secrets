@@ -83,9 +83,21 @@ const Events = () => {
     const matchesSource = selectedSource === "all" ||
       (selectedSource === "curated" && event.source !== COMMUNITY_SOURCE) ||
       (selectedSource === "community" && event.source === COMMUNITY_SOURCE);
-    const matchesPersona = personaFilterValue === 'all' ||
-      !event.target_personas?.length ||
-      event.target_personas.includes(personaFilterValue);
+    const matchesPersona = (() => {
+      if (personaFilterValue === 'all') return true;
+      const hasTarget = !!event.target_personas?.length;
+      const hasPersona = !!event.persona;
+      // Don't hide events we can't classify on either signal.
+      if (!hasTarget && !hasPersona) return true;
+      const targetMatch = hasTarget && event.target_personas!.includes(personaFilterValue);
+      // Community events carry the persona column (international_entrant | local_founder | both).
+      const personaMatch = hasPersona && (
+        event.persona === 'both' ||
+        (personaFilterValue === 'international_entrant' && event.persona === 'international_entrant') ||
+        (personaFilterValue === 'local_startup' && event.persona === 'local_founder')
+      );
+      return targetMatch || personaMatch;
+    })();
     return matchesCategory && matchesType && matchesCity && matchesSector && matchesTopic && matchesSource && matchesPersona;
   });
 

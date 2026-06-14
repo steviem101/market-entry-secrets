@@ -33,6 +33,7 @@ export interface Event {
   event_format?: string | null;
   source?: string | null;
   source_platform?: string | null;
+  persona?: string | null;
   target_personas?: string[] | null;
 }
 
