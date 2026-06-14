@@ -387,6 +387,10 @@ export type Database = {
       }
       community_members: {
         Row: {
+          anonymous_alias: string | null
+          anonymous_bio: string | null
+          anonymous_company_label: string | null
+          anonymous_headline: string | null
           archetype: string | null
           associated_countries: string[] | null
           company: string | null
@@ -402,6 +406,7 @@ export type Database = {
           is_featured: boolean | null
           location: string
           location_id: string | null
+          market_corridors: string[] | null
           name: string
           origin_country: string | null
           persona_fit: string[] | null
@@ -414,6 +419,10 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          anonymous_alias?: string | null
+          anonymous_bio?: string | null
+          anonymous_company_label?: string | null
+          anonymous_headline?: string | null
           archetype?: string | null
           associated_countries?: string[] | null
           company?: string | null
@@ -429,6 +438,7 @@ export type Database = {
           is_featured?: boolean | null
           location: string
           location_id?: string | null
+          market_corridors?: string[] | null
           name: string
           origin_country?: string | null
           persona_fit?: string[] | null
@@ -441,6 +451,10 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          anonymous_alias?: string | null
+          anonymous_bio?: string | null
+          anonymous_company_label?: string | null
+          anonymous_headline?: string | null
           archetype?: string | null
           associated_countries?: string[] | null
           company?: string | null
@@ -456,6 +470,7 @@ export type Database = {
           is_featured?: boolean | null
           location?: string
           location_id?: string | null
+          market_corridors?: string[] | null
           name?: string
           origin_country?: string | null
           persona_fit?: string[] | null
@@ -1386,29 +1401,44 @@ export type Database = {
           attendees_label: string | null
           category: string
           city: string | null
+          confidence: number | null
+          country: string | null
           created_at: string
+          data_quality_flags: string[] | null
           date: string | null
           date_precision: string
           description: string
+          event_date: string | null
+          event_format: string | null
           event_logo_url: string | null
           exhibitors: number | null
           exhibitors_label: string | null
           frequency: string | null
           id: string
           image_url: string | null
+          ingested_at: string | null
           is_featured: boolean
           location: string
           location_id: string | null
+          match_reasons: string[] | null
+          normalized_at: string | null
           organizer: string | null
           organizer_email: string | null
           organizer_website: string | null
+          persona: string | null
+          possible_duplicate_of: string | null
           price: string | null
           registration_url: string | null
+          relevance_score: number | null
           sector: string | null
           sector_agnostic: boolean | null
           sector_tags: string[] | null
           slug: string
+          source: string | null
+          source_platform: string | null
+          source_url: string | null
           state_region: string | null
+          status: string
           tags: string[] | null
           time: string | null
           title: string
@@ -1423,29 +1453,44 @@ export type Database = {
           attendees_label?: string | null
           category: string
           city?: string | null
+          confidence?: number | null
+          country?: string | null
           created_at?: string
+          data_quality_flags?: string[] | null
           date?: string | null
           date_precision?: string
           description: string
+          event_date?: string | null
+          event_format?: string | null
           event_logo_url?: string | null
           exhibitors?: number | null
           exhibitors_label?: string | null
           frequency?: string | null
           id?: string
           image_url?: string | null
+          ingested_at?: string | null
           is_featured?: boolean
           location: string
           location_id?: string | null
+          match_reasons?: string[] | null
+          normalized_at?: string | null
           organizer?: string | null
           organizer_email?: string | null
           organizer_website?: string | null
+          persona?: string | null
+          possible_duplicate_of?: string | null
           price?: string | null
           registration_url?: string | null
+          relevance_score?: number | null
           sector?: string | null
           sector_agnostic?: boolean | null
           sector_tags?: string[] | null
           slug: string
+          source?: string | null
+          source_platform?: string | null
+          source_url?: string | null
           state_region?: string | null
+          status?: string
           tags?: string[] | null
           time?: string | null
           title: string
@@ -1460,29 +1505,44 @@ export type Database = {
           attendees_label?: string | null
           category?: string
           city?: string | null
+          confidence?: number | null
+          country?: string | null
           created_at?: string
+          data_quality_flags?: string[] | null
           date?: string | null
           date_precision?: string
           description?: string
+          event_date?: string | null
+          event_format?: string | null
           event_logo_url?: string | null
           exhibitors?: number | null
           exhibitors_label?: string | null
           frequency?: string | null
           id?: string
           image_url?: string | null
+          ingested_at?: string | null
           is_featured?: boolean
           location?: string
           location_id?: string | null
+          match_reasons?: string[] | null
+          normalized_at?: string | null
           organizer?: string | null
           organizer_email?: string | null
           organizer_website?: string | null
+          persona?: string | null
+          possible_duplicate_of?: string | null
           price?: string | null
           registration_url?: string | null
+          relevance_score?: number | null
           sector?: string | null
           sector_agnostic?: boolean | null
           sector_tags?: string[] | null
           slug?: string
+          source?: string | null
+          source_platform?: string | null
+          source_url?: string | null
           state_region?: string | null
+          status?: string
           tags?: string[] | null
           time?: string | null
           title?: string
@@ -1498,6 +1558,54 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_possible_duplicate_of_fkey"
+            columns: ["possible_duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events_staging: {
+        Row: {
+          id: string
+          ingested_at: string
+          processed: boolean
+          processed_at: string | null
+          raw: Json
+          run_id: string | null
+          source_url: string | null
+          target_event_id: string | null
+        }
+        Insert: {
+          id?: string
+          ingested_at?: string
+          processed?: boolean
+          processed_at?: string | null
+          raw: Json
+          run_id?: string | null
+          source_url?: string | null
+          target_event_id?: string | null
+        }
+        Update: {
+          id?: string
+          ingested_at?: string
+          processed?: boolean
+          processed_at?: string | null
+          raw?: Json
+          run_id?: string | null
+          source_url?: string | null
+          target_event_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_staging_target_event_id_fkey"
+            columns: ["target_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -2493,6 +2601,36 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_embed_log: {
+        Row: {
+          batch_size: number | null
+          embedded_count: number
+          error: string | null
+          failed_count: number
+          finished: string | null
+          id: string
+          run_started: string
+        }
+        Insert: {
+          batch_size?: number | null
+          embedded_count?: number
+          error?: string | null
+          failed_count?: number
+          finished?: string | null
+          id?: string
+          run_started?: string
+        }
+        Update: {
+          batch_size?: number | null
+          embedded_count?: number
+          error?: string | null
+          failed_count?: number
+          finished?: string | null
+          id?: string
+          run_started?: string
+        }
+        Relationships: []
+      }
       lead_database_records: {
         Row: {
           buying_signals: string[] | null
@@ -3191,6 +3329,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mes_knowledge_base: {
+        Row: {
+          chunk_index: number
+          content: string
+          content_hash: string
+          embedded_hash: string | null
+          embedding: string | null
+          embedding_model: string | null
+          entity_type: string
+          id: string
+          metadata: Json
+          source_id: string
+          source_table: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          chunk_index?: number
+          content: string
+          content_hash: string
+          embedded_hash?: string | null
+          embedding?: string | null
+          embedding_model?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json
+          source_id: string
+          source_table: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          content_hash?: string
+          embedded_hash?: string | null
+          embedding?: string | null
+          embedding_model?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          source_id?: string
+          source_table?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       organisation_categories: {
         Row: {
@@ -4171,9 +4357,12 @@ export type Database = {
           is_featured: boolean | null
           location: string | null
           location_id: string | null
+          market_corridors: string[] | null
           name: string | null
           origin_country: string | null
           persona_fit: string[] | null
+          sector_agnostic: boolean | null
+          sector_tags: string[] | null
           slug: string | null
           specialties: string[] | null
           title: string | null
@@ -4182,47 +4371,53 @@ export type Database = {
         Insert: {
           archetype?: string | null
           associated_countries?: string[] | null
-          company?: string | null
+          company?: never
           created_at?: string | null
-          description?: string | null
-          experience?: string | null
-          experience_tiles?: Json | null
+          description?: never
+          experience?: never
+          experience_tiles?: never
           id?: string | null
-          image?: string | null
+          image?: never
           is_active?: boolean | null
           is_anonymous?: boolean | null
           is_featured?: boolean | null
-          location?: string | null
+          location?: never
           location_id?: string | null
-          name?: string | null
+          market_corridors?: string[] | null
+          name?: never
           origin_country?: string | null
           persona_fit?: string[] | null
-          slug?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
+          slug?: never
           specialties?: string[] | null
-          title?: string | null
+          title?: never
           updated_at?: string | null
         }
         Update: {
           archetype?: string | null
           associated_countries?: string[] | null
-          company?: string | null
+          company?: never
           created_at?: string | null
-          description?: string | null
-          experience?: string | null
-          experience_tiles?: Json | null
+          description?: never
+          experience?: never
+          experience_tiles?: never
           id?: string | null
-          image?: string | null
+          image?: never
           is_active?: boolean | null
           is_anonymous?: boolean | null
           is_featured?: boolean | null
-          location?: string | null
+          location?: never
           location_id?: string | null
-          name?: string | null
+          market_corridors?: string[] | null
+          name?: never
           origin_country?: string | null
           persona_fit?: string[] | null
-          slug?: string | null
+          sector_agnostic?: boolean | null
+          sector_tags?: string[] | null
+          slug?: never
           specialties?: string[] | null
-          title?: string | null
+          title?: never
           updated_at?: string | null
         }
         Relationships: [
@@ -4342,6 +4537,14 @@ export type Database = {
     Functions: {
       any_sector_agnostic: { Args: { raws: string[] }; Returns: boolean }
       current_chat_session_id: { Args: never; Returns: string }
+      event_local_time_label: {
+        Args: { p_city: string; p_ts: string }
+        Returns: string
+      }
+      find_duplicate_event: {
+        Args: { p_city: string; p_event_date: string; p_title: string }
+        Returns: string
+      }
       generate_slug: { Args: { input_text: string }; Returns: string }
       get_shared_report: {
         Args: { p_share_token: string }
@@ -4372,6 +4575,27 @@ export type Database = {
         Args: { attachment_id: string }
         Returns: undefined
       }
+      kb_check_secret: { Args: { p_candidate: string }; Returns: boolean }
+      kb_get_openai_key: { Args: never; Returns: string }
+      kb_set_embedding: {
+        Args: {
+          p_embedded_hash: string
+          p_embedding: string
+          p_id: string
+          p_model?: string
+        }
+        Returns: undefined
+      }
+      kb_stale_rows: {
+        Args: { p_limit?: number }
+        Returns: {
+          content: string
+          content_hash: string
+          id: string
+        }[]
+      }
+      kb_strip_pii: { Args: { p: string }; Returns: string }
+      kb_sync_all: { Args: { p_entity: string }; Returns: number }
       map_sector_value: { Args: { raw: string }; Returns: string[] }
       map_sector_values: { Args: { raws: string[] }; Returns: string[] }
       match_archive: {
@@ -4440,6 +4664,28 @@ export type Database = {
           tags: string[]
         }[]
       }
+      match_knowledge: {
+        Args: {
+          allowed_visibility?: string[]
+          filter?: Json
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+          query_text?: string
+        }
+        Returns: {
+          content: string
+          entity_type: string
+          id: string
+          metadata: Json
+          score: number
+          similarity: number
+          source_id: string
+          source_table: string
+          source_url: string
+          title: string
+        }[]
+      }
       recent_ii_content: {
         Args: {
           canonical_only?: boolean
@@ -4480,6 +4726,29 @@ export type Database = {
       roll_forward_month_precision_events: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      upsert_kb_agency: { Args: { p_source_id: string }; Returns: undefined }
+      upsert_kb_content_item: {
+        Args: { p_content_id: string }
+        Returns: undefined
+      }
+      upsert_kb_country: { Args: { p_source_id: string }; Returns: undefined }
+      upsert_kb_country_faq: {
+        Args: { p_source_id: string }
+        Returns: undefined
+      }
+      upsert_kb_ecosystem: { Args: { p_source_id: string }; Returns: undefined }
+      upsert_kb_event: { Args: { p_source_id: string }; Returns: undefined }
+      upsert_kb_investor: { Args: { p_source_id: string }; Returns: undefined }
+      upsert_kb_lead_database: {
+        Args: { p_source_id: string }
+        Returns: undefined
+      }
+      upsert_kb_mentor: { Args: { p_source_id: string }; Returns: undefined }
+      upsert_kb_service_provider: {
+        Args: { p_source_id: string }
+        Returns: undefined
+      }
+      upsert_normalized_event: { Args: { e: Json }; Returns: string }
       validate_industry_sector_values: {
         Args: { industries: string[] }
         Returns: boolean

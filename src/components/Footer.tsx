@@ -52,7 +52,7 @@ export const Footer = () => {
             </Link>
             
             <p className="text-muted-foreground mb-4 leading-relaxed">
-              Your comprehensive platform for dominating the Australian market. Connect with vetted service providers, access expert insights, and accelerate your business growth.
+              Your comprehensive platform for dominating the Australian market.
             </p>
             
             {/* Contact Info */}
