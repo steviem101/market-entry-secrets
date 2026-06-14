@@ -15,6 +15,7 @@ export interface Event {
   typical_month?: string | null;
   time?: string | null;
   location: string;
+  city?: string | null;
   type: string;
   category: string;
   attendees: number;
