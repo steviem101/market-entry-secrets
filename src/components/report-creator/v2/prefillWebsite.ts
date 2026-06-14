@@ -20,7 +20,11 @@ export interface WebsitePrefill {
 }
 
 const cache = new Map<string, WebsitePrefill | null>();
-const TIMEOUT_MS = 12000;
+// 25s window — the backend pipeline (Firecrawl map + scrape + AI extract) can
+// take 10–20s on heavier sites (B2B, anti-bot). 12s was too eager and gave up
+// before non-trivial sites finished, even though the function would have
+// returned valid data.
+const TIMEOUT_MS = 25000;
 
 function normaliseUrl(raw: string): string {
   const t = raw.trim().toLowerCase();
@@ -42,9 +46,24 @@ export async function prefillFromWebsite(url: string): Promise<WebsitePrefill | 
       new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), TIMEOUT_MS)),
     ]);
 
-    const { data, error } = result as { data: WebsitePrefill | null; error: unknown };
+    const { data, error } = result as { data: (WebsitePrefill & { _reason?: string }) | null; error: unknown };
     if (error) return null; // don't cache transport/HTTP failures — allow retry on next attempt
-    const prefill = hasAnyField(data) ? data : null;
+    // Backend tags empty responses with a `_reason` (missing-keys|no-content|ai-empty|exception)
+    // — surface it in the console so we can diagnose without re-deploying.
+    if (data?._reason) {
+      console.warn('[prefillWebsite] empty result', { url: key, reason: data._reason });
+    }
+    // Don't pass internal diagnostic fields through to the form.
+    const cleaned: WebsitePrefill | null = data
+      ? {
+          company_name: data.company_name,
+          industry_sector: data.industry_sector,
+          country_of_origin: data.country_of_origin,
+          company_stage: data.company_stage,
+          employee_count: data.employee_count,
+        }
+      : null;
+    const prefill = hasAnyField(cleaned) ? cleaned : null;
     cache.set(key, prefill);
     return prefill;
   } catch {
