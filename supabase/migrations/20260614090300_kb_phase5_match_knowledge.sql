@@ -4,6 +4,9 @@
 -- query_text is an addition to the prompt's signature: required to compute the ts_rank + trigram
 -- (keyword) half of the hybrid score so exact-name queries work, not just pure vector.
 -- Reversible: supabase/rollback/20260614090300_kb_phase5_search_revert.sql
+-- vector/pg_trgm are in `public` on the source project but `extensions` on a fresh branch;
+-- search both so the vector(1536) param type + <=> operator + similarity() resolve either way.
+set search_path = public, extensions;
 
 create or replace function public.match_knowledge(
   query_embedding    vector(1536),
@@ -28,7 +31,7 @@ returns table (
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   with params as (
     select case

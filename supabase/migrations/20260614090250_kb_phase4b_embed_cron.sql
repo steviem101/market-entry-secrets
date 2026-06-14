@@ -6,6 +6,10 @@
 -- Reversible: supabase/rollback/20260614090200_kb_phase4_embedding_pipeline_revert.sql
 do $$
 begin
+  if not exists (select 1 from pg_extension where extname = 'pg_cron') then
+    raise notice 'pg_cron not installed; skipping embed-knowledge cron schedule';
+    return;
+  end if;
   if exists (select 1 from cron.job where jobname = 'embed-knowledge') then
     perform cron.unschedule('embed-knowledge');
   end if;

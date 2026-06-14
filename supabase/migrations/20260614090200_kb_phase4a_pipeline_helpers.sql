@@ -44,7 +44,7 @@ $$;
 -- Write back one embedding. embedded_hash is the content_hash captured at fetch time.
 create or replace function public.kb_set_embedding(
   p_id uuid, p_embedding text, p_embedded_hash text, p_model text default 'text-embedding-3-small')
-returns void language sql security definer set search_path = public as $$
+returns void language sql security definer set search_path = public, extensions as $$
   update public.mes_knowledge_base
      set embedding       = p_embedding::vector,
          embedded_hash   = p_embedded_hash,

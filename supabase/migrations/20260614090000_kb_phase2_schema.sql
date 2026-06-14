@@ -2,6 +2,9 @@
 -- Source tables remain the system of record; this table is fully rebuildable from them.
 -- Reversible: supabase/rollback/20260614090000_kb_phase2_schema_revert.sql
 -- Idempotent: safe to replay (CLI db push) even though first applied via MCP.
+-- vector/pg_trgm live in `public` on the source project but in `extensions` on a fresh
+-- Supabase branch; search both so vector(1536) + the HNSW opclass resolve either way.
+set search_path = public, extensions;
 
 create table if not exists public.mes_knowledge_base (
   id              uuid primary key default gen_random_uuid(),
