@@ -152,20 +152,41 @@ Deno.serve(async (req: Request) => {
 
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY") || "";
     const lovableKey = Deno.env.get("LOVABLE_API_KEY") || "";
-    if (!firecrawlKey || !lovableKey) return json({}, 200);
+    if (!firecrawlKey || !lovableKey) {
+      console.warn("scrape-company: missing API keys", { hasFirecrawl: !!firecrawlKey, hasLovable: !!lovableKey });
+      return json({ _reason: "missing-keys" }, 200);
+    }
 
-    // Map for an About/Company page, then scrape the homepage (+ one key page).
-    const links = await firecrawlMap(firecrawlKey, url);
+    // Run map + homepage scrape in PARALLEL (was sequential, costing ~5s).
+    // Map finds an About/Company link; homepage always gets scraped.
+    const t0 = Date.now();
+    const [links, homepageMd] = await Promise.all([
+      firecrawlMap(firecrawlKey, url, 4000),
+      firecrawlScrape(firecrawlKey, url, 8000),
+    ]);
+    console.log(`scrape-company: map+homepage in ${Date.now() - t0}ms (links=${links.length}, homepage=${homepageMd?.length || 0}b)`);
+
+    // If we found a likely About page, scrape it too for richer extraction.
     const keyPage = links.find((l) => /about|company|who-we-are/i.test(l));
-    const pages = [url, keyPage].filter(Boolean) as string[];
-    const scraped = (await Promise.all(pages.map((p) => firecrawlScrape(firecrawlKey, p)))).filter(Boolean) as string[];
-    const content = scraped.join("\n\n").slice(0, 8000);
-    if (!content) return json({}, 200);
+    const keyMd = keyPage ? await firecrawlScrape(firecrawlKey, keyPage, 6000) : null;
+    if (keyMd) console.log(`scrape-company: keyPage ${keyPage} → ${keyMd.length}b`);
 
+    const content = [homepageMd, keyMd].filter(Boolean).join("\n\n").slice(0, 8000);
+    if (!content) {
+      console.warn("scrape-company: empty content after Firecrawl", { url, hadLinks: links.length > 0 });
+      return json({ _reason: "no-content" }, 200);
+    }
+
+    const tAi = Date.now();
     const profile = await extractProfile(lovableKey, url, content);
+    console.log(`scrape-company: AI extract in ${Date.now() - tAi}ms, fields=${Object.keys(profile).length}, total=${Date.now() - t0}ms`);
+
+    if (Object.keys(profile).length === 0) {
+      return json({ _reason: "ai-empty" }, 200);
+    }
     return json(profile, 200);
   } catch (e) {
     console.error("scrape-company error:", e instanceof Error ? e.message : "unknown");
-    return json({}, 200); // never hard-fail the client
+    return json({ _reason: "exception" }, 200); // never hard-fail the client
   }
 });
