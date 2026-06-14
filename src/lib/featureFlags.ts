@@ -6,8 +6,8 @@
  * per flag here; consumers read via `isFeatureEnabled('report_creator_v2')`.
  *
  * URL conventions:
- *   ?v2=1      → enable report_creator_v2 (sticky)
- *   ?v2=0      → disable + clear sticky value
+ *   ?v2=1      → enable report_creator_v2 (sticky) — now the default
+ *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
 export type FeatureFlag = 'report_creator_v2';
@@ -25,7 +25,7 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   report_creator_v2: {
     queryKey: 'v2',
     storageKey: 'mes_flag_report_creator_v2',
-    defaultValue: false,
+    defaultValue: true,
   },
 };
 
