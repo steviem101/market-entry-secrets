@@ -1,0 +1,26 @@
+-- =====================================================================
+-- Drop the validate_intake_industry trigger on user_intake_forms.
+--
+-- This trigger did a CASE-SENSITIVE EXACT match of every value in
+-- industry_sector[] against the 152 canonical LinkedIn industry_group rows.
+-- Any deviation ("Fintech" vs "FinTech", "Software" vs "Software Development",
+-- "Digital Payments" — no match at all) raised an exception, which surfaced
+-- in the frontend as "Generation failed — Unknown error" because
+-- PostgrestError isn't unwrapped to a JS Error in
+-- src/hooks/useReportGenerationV2.ts.
+--
+-- The trigger was architecturally wrong for the v2 product:
+--   • The v2 intake form intentionally supports custom industries
+--     (src/components/report-creator/v2/Step1Company.tsx → addCustomIndustry)
+--   • The scrape-company AI returns thematic values (Fintech, Digital
+--     Payments, Korean Fintech) that don't match the canonical taxonomy
+--   • The matcher (sectorTaxonomy.ts → industryGroupsToSectorSlugs)
+--     gracefully ignores unknown industry groups — no downstream code
+--     requires canonical values
+--   • The error path produces no useful diagnostic to the user
+--
+-- We keep validate_industry_sector_values() and trg_validate_intake_industry()
+-- as named utilities for future deliberate use, just not as a blocking guard.
+-- =====================================================================
+
+DROP TRIGGER IF EXISTS validate_intake_industry ON public.user_intake_forms;
