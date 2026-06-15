@@ -1435,7 +1435,9 @@ async function generateReportInBackground(
       },
     });
 
-    // Save immediately with unpolished content — report is now viewable
+    // Save immediately with unpolished content — report is now viewable.
+    // This protects against worker death between generation and polish: the
+    // report is durably stored even if the polish step crashes.
     const reportJson = buildReportJson(sections, false);
 
     const { error: reportErr } = await supabase
@@ -1452,7 +1454,52 @@ async function generateReportInBackground(
 
     await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intakeFormId);
 
-    // Send report completion email (non-blocking)
+    console.log(`Report ${reportId} saved (unpolished) in ${Date.now() - startTime}ms`);
+
+    // 7b. Polish pass — best-effort improvement, given a more generous timeout
+    // (45s, up from 30s) and a single retry. Email is sent AFTER polish so
+    // users don't open the link to an unpolished draft. If polish fails the
+    // unpolished report is still emailed — better than not emailing at all.
+    let polishApplied = false;
+    const POLISH_TIMEOUT_MS = 45000;
+    const runPolishOnce = () => Promise.race([
+      polishReport(lovableKey, sections, sectionOrder),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Polish timeout (${POLISH_TIMEOUT_MS / 1000}s)`)), POLISH_TIMEOUT_MS)
+      ),
+    ]);
+
+    try {
+      let polishedSections: Record<string, any>;
+      try {
+        polishedSections = await runPolishOnce();
+      } catch (firstErr) {
+        console.warn("Polish pass first attempt failed — retrying once:", firstErr instanceof Error ? firstErr.message : firstErr);
+        polishedSections = await runPolishOnce();
+      }
+
+      // Polish succeeded — update report with polished content
+      for (const [name, data] of Object.entries(polishedSections)) {
+        sections[name] = data;
+      }
+
+      const polishedReportJson = buildReportJson(sections, true);
+
+      await supabase
+        .from("user_reports")
+        .update({ report_json: polishedReportJson })
+        .eq("id", reportId);
+
+      polishApplied = true;
+      console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);
+    } catch (e) {
+      console.warn("Polish pass skipped after retry (report stays unpolished):", e instanceof Error ? e.message : e);
+    }
+
+    // 7c. Send report completion email — AFTER polish so the user's first
+    // view shows the polished prose. If polish failed, we still send the
+    // email (the unpolished report is genuinely usable; silence would be
+    // worse than a slightly rough draft).
     try {
       if (intake.user_id) {
         const { data: userData } = await supabase.auth.admin.getUserById(intake.user_id);
@@ -1482,33 +1529,7 @@ async function generateReportInBackground(
       console.warn("Failed to send report completion email (non-blocking):", emailErr);
     }
 
-    console.log(`Report ${reportId} saved (unpolished) in ${Date.now() - startTime}ms`);
-
-    // 7b. Polish pass — best-effort improvement with 30s timeout
-    try {
-      const polishedSections = await Promise.race([
-        polishReport(lovableKey, sections, sectionOrder),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Polish timeout (30s)")), 30000)
-        ),
-      ]);
-
-      // Polish succeeded — update report with polished content
-      for (const [name, data] of Object.entries(polishedSections)) {
-        sections[name] = data;
-      }
-
-      const polishedReportJson = buildReportJson(sections, true);
-
-      await supabase
-        .from("user_reports")
-        .update({ report_json: polishedReportJson })
-        .eq("id", reportId);
-
-      console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);
-    } catch (e) {
-      console.warn("Polish pass skipped (report already saved):", e instanceof Error ? e.message : e);
-    }
+    console.log(`Report ${reportId} fully done (polish_applied=${polishApplied}) in ${Date.now() - startTime}ms`);
   } catch (e) {
     console.error("Background report generation failed:", e);
 
