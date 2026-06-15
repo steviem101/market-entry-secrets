@@ -51,6 +51,35 @@ test("custom / unknown industries are ignored, not crashed", () => {
   assert.deepEqual(industryGroupsToSectorSlugs([]), []);
 });
 
+test("free-text aliases roll up to real sectors (covers actual customer intake values)", () => {
+  // V-Key — observed values from a real generated report
+  assert.deepEqual(
+    industryGroupsToSectorSlugs(["Cybersecurity", "Digital Identity", "FinTech"]).sort(),
+    ["financial-services", "professional-services", "technology-information-and-media"],
+  );
+  // Ailytics — observed values from a real generated report
+  assert.deepEqual(
+    industryGroupsToSectorSlugs(["Artificial Intelligence", "Video Analytics", "Workplace Health and Safety"]).sort(),
+    ["construction", "professional-services", "technology-information-and-media"],
+  );
+  // Mixed case + canonical-form support
+  assert.ok(industryGroupsToSectorSlugs(["fintech"]).includes("financial-services"));
+  assert.ok(industryGroupsToSectorSlugs(["SaaS"]).includes("technology-information-and-media"));
+  assert.ok(industryGroupsToSectorSlugs(["AI"]).includes("technology-information-and-media"));
+  assert.ok(industryGroupsToSectorSlugs(["Healthcare"]).includes("hospitals-and-health-care"));
+  assert.ok(industryGroupsToSectorSlugs(["EdTech"]).includes("education"));
+  assert.ok(industryGroupsToSectorSlugs(["Cleantech"]).includes("utilities"));
+});
+
+test("canonical taxonomy hits still win over aliases (no regression)", () => {
+  // "Software Development" is the canonical group — must map only to tech,
+  // never trip a substring keyword that adds extra slugs.
+  assert.deepEqual(
+    industryGroupsToSectorSlugs(["Software Development"]),
+    ["technology-information-and-media"],
+  );
+});
+
 test("overlapCount counts shared elements", () => {
   assert.equal(overlapCount(["a", "b", "c"], ["b", "c", "d"]), 2);
   assert.equal(overlapCount(["a"], ["x"]), 0);

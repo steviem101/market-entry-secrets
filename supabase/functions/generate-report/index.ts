@@ -964,26 +964,120 @@ async function searchMatches(supabase: any, intake: any) {
 
   // Community members (mentors) — sector + skill + country corridor + location
   try {
-    let cmQuery = supabase.from("community_members").select("id, name, title, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic").limit(CAND);
+    let cmQuery = supabase.from("community_members")
+      .select("id, name, title, slug, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic, is_anonymous, is_active")
+      .eq("is_active", true)
+      .eq("is_anonymous", false)
+      .limit(CAND);
     cmQuery = cmQuery.or(buildOr({ service: "specialties" }));
-    const { data: cm } = await cmQuery;
-    matches.community_members = rank(cm, { service: "specialties", countryCol: "origin_country" }, 5).map((m: any) => ({
-      ...m, link: "/community", linkLabel: "View Profile",
+    const { data: cm, error: cmErr } = await cmQuery;
+    if (cmErr) console.error("CM query error:", cmErr);
+
+    // Defensive seed-name strip in addition to the is_anonymous filter, in
+    // case any demo rows lack the flag. The directory historically contained
+    // near-duplicate seed profiles ("Sarah Chen" / "Dr. Sarah Chen") that
+    // ranked into nearly every report; the person-dedupe below collapses
+    // those even when both are technically not flagged anonymous.
+    const isSeedMentor = (m: any): boolean => {
+      const n = (m.name || "").toLowerCase();
+      if (n.startsWith("anonymous")) return true;
+      if (/(^|\s)test(\s|$)/.test(n)) return true;
+      if (n === "sample mentor" || n === "demo mentor") return true;
+      return false;
+    };
+    const cleaned = (cm || []).filter((m: any) => !isSeedMentor(m));
+
+    // Overfetch then person-dedupe: drop near-identical names (e.g. "Sarah Chen"
+    // and "Dr. Sarah Chen") before slicing to 5. Keep the higher-scored one.
+    const ranked = rank(cleaned, { service: "specialties", countryCol: "origin_country" }, 12);
+    const normalizeName = (name: string) =>
+      (name || "").toLowerCase()
+        .replace(/^(dr|prof|mr|mrs|ms|miss)\.?\s+/i, "")  // strip honorifics
+        .replace(/[^a-z\s]/g, "")
+        .trim()
+        .split(/\s+/)
+        .join(" ");
+    const seenPeople = new Set<string>();
+    const deduped: any[] = [];
+    for (const m of ranked) {
+      const key = normalizeName(m.name);
+      if (!key || seenPeople.has(key)) continue;
+      seenPeople.add(key);
+      deduped.push(m);
+      if (deduped.length >= 5) break;
+    }
+
+    matches.community_members = deduped.map((m: any) => ({
+      ...m,
+      // Build a real per-mentor profile URL from the slug rather than the
+      // legacy /community catch-all (which redirects). The mentor profile
+      // route is /mentors/:categorySlug/:mentorSlug — the category segment
+      // is informational (used for breadcrumb) and useMentorBySlug resolves
+      // by slug alone, so a sane default category works for every mentor.
+      link: m.slug ? `/mentors/experts/${m.slug}` : "/mentors",
+      linkLabel: "View Profile",
       subtitle: [m.title, m.company].filter(Boolean).join(", "),
       tags: (m.specialties || []).slice(0, 3),
     }));
   } catch (e) { console.error("CM search error:", e); }
 
-  // Events — sector + location (+ agnostic)
+  // Events — sector + location, with a HARD date>=now filter, hard region
+  // filter when target_regions are supplied, and title+date+venue dedupe so
+  // four "Startups Demos & Networking Melbourne" rows for the same night
+  // don't all surface.
   try {
-    let evQuery = supabase.from("events").select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic").limit(CAND);
+    const todayIso = new Date().toISOString().slice(0, 10);
+    let evQuery = supabase.from("events")
+      .select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic")
+      .gte("date", todayIso)
+      .limit(CAND);
     evQuery = evQuery.or(buildOr());
-    const { data: ev } = await evQuery;
+    const { data: ev, error: evErr } = await evQuery;
+    if (evErr) console.error("Events query error:", evErr);
 
-    let eventResults = rank(ev, {}, 5);
+    // If the user supplied target_regions, hard-filter to events whose
+    // location matches at least one region pattern. This stops Melbourne
+    // events surfacing for a Sydney/NSW-only company, which the old
+    // soft +1 score-bump did not prevent.
+    let regionFiltered = ev || [];
+    if (locationPatterns.length > 0) {
+      regionFiltered = regionFiltered.filter((row: any) => {
+        const loc = (row.location || "").toLowerCase();
+        return locationPatterns.some((l: string) => loc.includes(l.toLowerCase()));
+      });
+    }
+
+    let eventResults = rank(regionFiltered, {}, 12); // overfetch so dedupe still leaves ~5
+
+    // Title+date+venue dedupe. Many ingested rows are near-duplicates of the
+    // same event (4× "Startups & Investors Pitch Night Melbourne" on
+    // 2026-06-19 at "The National Hotel, Richmond, Melbourne"). Collapse
+    // to one card per (normalized title, date, normalized venue).
+    const normalize = (s: string) =>
+      (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/).slice(0, 6).join(" ");
+    const seen = new Set<string>();
+    eventResults = eventResults.filter((e: any) => {
+      const key = `${normalize(e.title)}|${e.date}|${normalize(e.location)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 5);
+
+    // Fallback when the strict filter returned nothing: take the soonest
+    // future events in the target region (still date-bounded — no more
+    // 2024 events appearing in 2026 reports).
     if (eventResults.length === 0) {
-      const { data: allEvents } = await supabase.from("events").select("id, title, slug, date, location, category, type, organizer, sector").order("date", { ascending: true }).limit(5);
-      eventResults = allEvents || [];
+      let fbQuery = supabase.from("events")
+        .select("id, title, slug, date, location, category, type, organizer, sector")
+        .gte("date", todayIso)
+        .order("date", { ascending: true })
+        .limit(5);
+      if (locationPatterns.length > 0) {
+        const orParts = locationPatterns.map((l: string) => `location.ilike.%${l}%`);
+        fbQuery = fbQuery.or(orParts.join(","));
+      }
+      const { data: fb } = await fbQuery;
+      eventResults = fb || [];
     }
 
     matches.events = eventResults.map((e: any) => ({
