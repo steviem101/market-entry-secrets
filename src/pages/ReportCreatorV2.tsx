@@ -12,7 +12,7 @@ import { GeneratingScreenV2 } from '@/components/report-creator/v2/GeneratingScr
 import { useAuth } from '@/hooks/useAuth';
 import { useReportGenerationV2 } from '@/hooks/useReportGenerationV2';
 import {
-  fullIntakeSchema, DEFAULT_GOALS,
+  fullIntakeSchema, DEFAULT_GOALS, smartDefaultGoals,
   type IntakeFormDataV2, type ReportPersona,
 } from '@/components/report-creator/intakeSchema.v2';
 import type { IntakeValues, SetPatch } from '@/components/report-creator/v2/types';
@@ -224,7 +224,19 @@ const ReportCreatorV2 = () => {
         'persona', 'website_url', 'company_name', 'country_of_origin',
         'industry_sector', 'company_stage', 'target_regions',
       ]);
-      if (ok) { trackStepFields('company'); setScreen('goals'); }
+      if (ok) {
+        trackStepFields('company');
+        // Refine the persona-default goals using the Step 1 data the user just
+        // entered (stage + industries + country) — but only if they haven't
+        // already touched the goal selection. Pure config tweak; if anything
+        // goes wrong it falls back to the persona base defaults.
+        if (!hasCustomisedGoals()) {
+          const v = form.getValues();
+          const smart = smartDefaultGoals(persona, v.company_stage, v.industry_sector, v.country_of_origin);
+          if (smart.length > 0) form.setValue('goal_ids', smart);
+        }
+        setScreen('goals');
+      }
     } else if (current === 'goals') {
       if (await form.trigger(['goal_ids'])) { trackStepFields('goals'); setScreen('details'); }
     } else if (current === 'details') {
