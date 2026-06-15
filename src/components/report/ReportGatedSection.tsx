@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useCheckout } from '@/hooks/useCheckout';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthDialog } from '@/components/auth/AuthDialog';
+import { tierDisplayPrice } from '@/lib/tierPricing';
 
 interface ReportGatedSectionProps {
   id: string;
@@ -16,11 +17,6 @@ const tierLabels: Record<string, string> = {
   growth: 'Growth',
   scale: 'Scale',
   enterprise: 'Enterprise',
-};
-
-const tierPrices: Record<string, string> = {
-  growth: '$99',
-  scale: '$999',
 };
 
 export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSectionProps) => {
@@ -84,8 +80,8 @@ export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSecti
                 <Lock className="w-4 h-4" />
                 {loading
                   ? 'Starting checkout...'
-                  : tierPrices[requiredTier]
-                    ? `Upgrade for ${tierPrices[requiredTier]}`
+                  : tierDisplayPrice(requiredTier)
+                    ? `Upgrade for ${tierDisplayPrice(requiredTier)}`
                     : 'Contact Us'}
               </Button>
             </div>

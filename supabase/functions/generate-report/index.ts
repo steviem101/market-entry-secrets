@@ -1090,9 +1090,12 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let ciQuery = supabase.from("content_items").select("id, title, slug, content_type, sector_tags, meta_description, sector_agnostic").eq("status", "published").limit(CAND);
     ciQuery = ciQuery.or(buildOr({ location: false }));
-    const { data: ci } = await ciQuery;
+    const { data: ci, error: ciErr } = await ciQuery;
+    if (ciErr) console.error("Content query error:", ciErr);
     matches.content_items = rank(ci, {}, 5).map((c: any) => ({
       ...c, name: c.title, link: `/content/${c.slug}`, linkLabel: "Read More",
+      // Pass the raw content_type but the frontend humaniser in
+      // ReportMatchCard maps case_study -> "Case Study", guide -> "Guide", etc.
       subtitle: c.content_type, tags: (c.sector_tags || []).slice(0, 2),
     }));
   } catch (e) { console.error("Content search error:", e); }
@@ -1101,7 +1104,8 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type, price, record_count, provider_name, sector_tags, sector_agnostic").limit(CAND);
     ldQuery = ldQuery.or(buildOr());
-    const { data: ld } = await ldQuery;
+    const { data: ld, error: ldErr } = await ldQuery;
+    if (ldErr) console.error("Leads query error:", ldErr);
     matches.leads = rank(ld, {}, 5).map((l: any) => ({
       ...l, link: "/leads", linkLabel: "View Dataset",
       subtitle: `${l.location} · ${l.record_count || "?"} records`,
@@ -1113,7 +1117,8 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let ieQuery = supabase.from("innovation_ecosystem").select("id, slug, name, location, services, description, website, sector_tags, sector_agnostic").limit(CAND);
     ieQuery = ieQuery.or(buildOr({ service: "services" }));
-    const { data: ie } = await ieQuery;
+    const { data: ie, error: ieErr } = await ieQuery;
+    if (ieErr) console.error("IE query error:", ieErr);
     matches.innovation_ecosystem = rank(ie, { service: "services" }, 5).map((o: any) => ({
       ...o, link: o.slug ? `/innovation-ecosystem/${o.slug}` : "/innovation-ecosystem", linkLabel: "View Hub",
       subtitle: o.location, tags: (o.services || []).slice(0, 3),
@@ -1124,7 +1129,8 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, sector_tags, sector_agnostic").limit(CAND);
     taQuery = taQuery.or(buildOr({ service: "services" }));
-    const { data: ta } = await taQuery;
+    const { data: ta, error: taErr } = await taQuery;
+    if (taErr) console.error("TIA query error:", taErr);
     matches.trade_investment_agencies = rank(ta, { service: "services", persona: true }, 5).map((a: any) => ({
       ...a, link: a.slug ? `/government-support/${a.slug}` : "/government-support", linkLabel: "View Organisation",
       subtitle: a.location, tags: (a.services || []).slice(0, 3),
@@ -1137,7 +1143,8 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let invQuery = supabase.from("investors").select("id, slug, name, investor_type, location, country, sector_focus, stage_focus, check_size_min, check_size_max, website, description, sector_tags, sector_agnostic").limit(120);
     invQuery = invQuery.or(buildOr());
-    const { data: inv } = await invQuery;
+    const { data: inv, error: invErr } = await invQuery;
+    if (invErr) console.error("Investors query error:", invErr);
     matches.investors = rank(inv, { countryCol: "country" }, 8).map((i: any) => ({
       ...i, link: i.slug ? `/investors/${i.slug}` : "/investors", linkLabel: "View Investor",
       subtitle: `${i.investor_type} · ${i.location}`,
@@ -1162,11 +1169,14 @@ async function searchMatches(supabase: any, intake: any) {
       lcQuery = lcQuery.or(lcFilters.join(","));
     }
 
-    const { data: lc } = await lcQuery;
+    const { data: lc, error: lcErr } = await lcQuery;
+    if (lcErr) console.error("Lemlist contacts query error:", lcErr);
     // D1: do not embed raw PII (email, linkedin_url, full_name) in report JSON.
-    // Frontend (server-rendered, gated by tier) can resolve full contact details
-    // by re-querying lemlist_contacts via an authenticated, entitled path later.
-    // For now expose only obfuscated display fields + the record id for reference.
+    // The previous version exposed `id: c.id` with a "Frontend can resolve
+    // full contact details via an authenticated, entitled path later" plan —
+    // but that entitled path is not yet implemented, so embedding the id
+    // leaked a PII handle to any tier that received report JSON. Strip the
+    // id entirely until the gated lookup endpoint exists.
     const obfuscateName = (full?: string | null): string => {
       if (!full) return "Industry Contact";
       const parts = full.trim().split(/\s+/).filter(Boolean);
@@ -1176,14 +1186,13 @@ async function searchMatches(supabase: any, intake: any) {
       return [first, lastInitial].filter(Boolean).join(" ");
     };
     matches.lemlist_contacts = (lc || []).map((c: any) => ({
-      id: c.id,
       name: obfuscateName(c.full_name),
       link: "#",
       linkLabel: "Locked",
       subtitle: [c.job_title, c.company_name || c.lemlist_companies?.name].filter(Boolean).join(" at "),
       tags: [c.linkedin_job_industry || c.industry, c.contact_location || c.lemlist_companies?.location].filter(Boolean).slice(0, 2),
     }));
-    console.log(`Lemlist contacts matched: ${(lc || []).length} (PII stripped before embed)`);
+    console.log(`Lemlist contacts matched: ${(lc || []).length} (PII + id stripped before embed)`);
   } catch (e) { console.error("Lemlist contacts search error:", e); }
 
   return matches;
