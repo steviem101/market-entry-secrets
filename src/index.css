@@ -440,14 +440,32 @@
     color: #333 !important;
   }
 
-  /* Page break before each report section */
+  /* Pagination: be conservative — prefer page-break-INSIDE: avoid only on
+     small atomic blocks (headings, cards, match grids). Long sections may
+     span multiple pages naturally rather than forcing a break before every
+     section (the old "page-break-before: always" rule was the dominant
+     cause of 20+ page PDFs and large blank gaps mid-page). The CSS
+     fragmentation engine still keeps each card together. */
   [data-report-section] {
-    page-break-inside: avoid;
-    break-inside: avoid;
+    /* Avoid orphans: a section heading shouldn't be the last line on a page */
+    break-inside: auto;
   }
 
-  [data-report-section] + [data-report-section] {
-    page-break-before: always;
+  [data-report-section] .border-l-\[3px\],
+  [data-report-section] .rounded-xl,
+  [data-report-section] .rounded-2xl {
+    /* Keep individual cards (match cards, gated section panels) together
+       so we don't get a card split across two pages. */
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  [data-report-section] h2,
+  [data-report-section] h3 {
+    /* Force a break BEFORE a top-level section heading rather than after
+       every section — keeps page flow content-driven. */
+    break-after: avoid;
+    page-break-after: avoid;
   }
 
   /* Remove shadows, borders simplify */
@@ -465,7 +483,9 @@
     border: 1px solid #ddd !important;
   }
 
-  /* Links show URL */
+  /* Links show URL. Only external (http/https) anchors print their href —
+     internal anchors are now absolutized at render time (ReportMatchCard
+     swaps to an absolute <a> with the published origin in print). */
   a[href^="http"]::after {
     content: " (" attr(href) ")";
     font-size: 9pt;
@@ -473,8 +493,7 @@
     word-break: break-all;
   }
 
-  /* Don't show URL for internal links, buttons, or citation badges */
-  a[href^="/"]::after,
+  /* Don't show URL for in-page anchors, buttons, or citation badges */
   a[href^="#"]::after,
   button a::after,
   a.no-print-url::after,
