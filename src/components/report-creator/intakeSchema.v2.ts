@@ -121,6 +121,98 @@ export const DEFAULT_GOALS: Record<ReportPersona, string[]> = {
   startup: ['investors', 'mentors_startup', 'grants'],
 };
 
+/**
+ * Refine the persona-default goals using Step 1 data (stage, industry, country).
+ * Called once at the Step 1 → Step 2 transition IF the user hasn't already
+ * customised their goals. Pure config — deterministic, no I/O. The output is
+ * a superset of `DEFAULT_GOALS[persona]` capped at 6 picks so the goal grid
+ * doesn't arrive overwhelmingly pre-ticked.
+ */
+export function smartDefaultGoals(
+  persona: ReportPersona,
+  stage?: string,
+  industries?: string[],
+  country?: string,
+): string[] {
+  const picks = new Set<string>(DEFAULT_GOALS[persona]);
+
+  // ── Stage refinements ──────────────────────────────────────────────
+  if (persona === 'startup') {
+    if (stage === 'Startup/Seed') {
+      picks.add('grants');          // R&D tax incentive, non-dilutive first
+      picks.add('accelerators');
+      picks.add('founders');
+    } else if (stage === 'Series A-B') {
+      picks.add('investors');
+      picks.add('mentors_startup');
+      picks.add('lead_lists_startup');
+    } else if (stage === 'Growth/Scale-up') {
+      picks.add('investors');
+      picks.add('lead_lists_startup');
+      picks.add('growth_providers');
+    } else if (stage === 'Enterprise/Corporate') {
+      picks.add('mentors_startup');
+      picks.add('growth_providers');
+    }
+  } else {
+    // International — every entrant needs compliance + market-entry providers
+    picks.add('compliance');
+    picks.add('find_providers');
+    if (stage === 'Enterprise/Corporate') {
+      picks.add('trade_agencies');
+      picks.add('associations');
+    } else {
+      picks.add('mentors_intl');
+      picks.add('trade_agencies');
+    }
+  }
+
+  // ── Industry layer (case-insensitive match over the picked groups) ─
+  const industryStr = (industries ?? []).join(' ').toLowerCase();
+  if (/financ|bank|insur|capital|fintech|credit|funds/.test(industryStr)) {
+    picks.add('compliance');
+    if (persona === 'international') picks.add('associations');
+  }
+  if (/health|medic|pharma|biotech|clinical|hospital/.test(industryStr)) {
+    picks.add('compliance');
+    if (persona === 'startup') picks.add('grants');
+  }
+  if (/software|tech|saas|\bai\b|cyber|cloud|data|platform|internet/.test(industryStr)) {
+    if (persona === 'startup') {
+      picks.add('accelerators');
+      picks.add('spaces');
+    }
+  }
+  if (/manufactur|industrial|engineer|machinery/.test(industryStr)) {
+    if (persona === 'international') {
+      picks.add('trade_agencies');
+      picks.add('associations');
+    }
+  }
+  if (/educat|edtech|training|learning|university/.test(industryStr)) {
+    if (persona === 'startup') picks.add('grants');
+    if (persona === 'international') picks.add('associations');
+  }
+  if (/energy|utilit|cleantech|solar|renewable|sustainab/.test(industryStr)) {
+    picks.add('grants');
+    if (persona === 'international') picks.add('trade_agencies');
+  }
+
+  // ── Country corridor (international only) ──────────────────────────
+  // Strong corridor partners with active Austrade/equivalent presence.
+  if (persona === 'international' && country &&
+      ['Singapore', 'Japan', 'South Korea', 'India', 'Ireland'].includes(country)) {
+    picks.add('trade_agencies');
+  }
+
+  // Filter to goals that exist for this persona (defensive), cap at 6 so the
+  // grid still shows un-ticked options the user can opt in to.
+  const validForPersona = new Set(
+    GOALS.filter((g) => g.personas.includes(persona)).map((g) => g.id),
+  );
+  return Array.from(picks).filter((id) => validForPersona.has(id)).slice(0, 6);
+}
+
 /** Goals available to a persona, in card display order. */
 export function goalsForPersona(persona: ReportPersona): GoalDef[] {
   return GOALS.filter((g) => g.personas.includes(persona));
