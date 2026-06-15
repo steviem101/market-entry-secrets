@@ -192,8 +192,10 @@ const ReportViewInner = () => {
                   );
                 }
 
-                // Case 2: Section is unlocked but has no content (report was generated at lower tier)
-                // → show "generate new report" prompt
+                // Case 2 (LEGACY): Section is unlocked but has no content. New
+                // reports never hit this — generate-report now stores gated
+                // content with visible:false so an upgrade unlocks inline.
+                // This branch remains for reports generated before that fix.
                 if (requiredTier && !hasContent) {
                   return (
                     <ReportRegenerateSection

@@ -757,20 +757,24 @@ async function polishReport(
   sections: Record<string, any>,
   sectionOrder: string[]
 ): Promise<Record<string, any>> {
-  const visibleSections = sectionOrder.filter(
-    (name) => sections[name]?.visible && sections[name]?.content?.trim()
+  // Polish every section that has content, even if it's currently gated
+  // (visible=false). Gated content is stored hidden under P0-3 so that an
+  // upgrade unlocks it inline — those sections deserve the same editorial
+  // pass as the visible ones, otherwise the upgrade reveals unpolished prose.
+  const sectionsWithContent = sectionOrder.filter(
+    (name) => sections[name]?.content?.trim()
   );
 
-  if (visibleSections.length === 0) {
-    console.log("Polish: no visible sections to polish");
+  if (sectionsWithContent.length === 0) {
+    console.log("Polish: no sections with content to polish");
     return sections;
   }
 
-  const concatenated = visibleSections
+  const concatenated = sectionsWithContent
     .map((name) => `${SECTION_DELIMITER_PREFIX}${name}${SECTION_DELIMITER_SUFFIX}\n${sections[name].content}`)
     .join("\n\n");
 
-  console.log(`Polish: sending ${visibleSections.length} sections (${concatenated.length} chars) to gemini-3-flash-preview...`);
+  console.log(`Polish: sending ${sectionsWithContent.length} sections (${concatenated.length} chars) to gemini-3-flash-preview...`);
   const polishStart = Date.now();
 
   const polished = await callAI(
@@ -811,7 +815,10 @@ Rules:
     const sectionName = parts[i].trim();
     const sectionContent = (parts[i + 1] || "").trim();
 
-    if (polishedSections[sectionName] && polishedSections[sectionName].visible && sectionContent.length > 50) {
+    // Polish any section the model returned with a non-trivial body —
+    // including currently-hidden ones (gated content stored for later
+    // upgrade-unlock under P0-3).
+    if (polishedSections[sectionName] && sectionContent.length > 50) {
       polishedSections[sectionName] = {
         ...polishedSections[sectionName],
         content: sectionContent,
@@ -825,7 +832,7 @@ Rules:
     return sections;
   }
 
-  console.log(`Polish: successfully polished ${parsedCount}/${visibleSections.length} sections`);
+  console.log(`Polish: successfully polished ${parsedCount}/${sectionsWithContent.length} sections`);
   return polishedSections;
 }
 
@@ -1287,19 +1294,48 @@ async function generateReportInBackground(
     const sections: Record<string, any> = {};
     const sectionsGenerated: string[] = [];
 
+    // ── Citation availability (P0-4) ─────────────────────────────────────
+    // When Perplexity returned no citations, instructing the model that it
+    // "MUST include [N] citation markers" produces hallucinated numbers
+    // that point at nothing (we observed sections shipping with [1], [3],
+    // [5]…[9] markers while perplexity_citations was []). Swap in a strict
+    // "do NOT include citation markers" instruction in that case.
+    const numCitations = marketResearch.citations.length;
+    const citationInstruction = numCitations > 0
+      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MAY include inline citation markers using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
+      : `IMPORTANT — Inline citations: Do NOT include any numbered citation markers (e.g. [1], [2], [3]) anywhere in your response. There is no source list to cite for this report.`;
+
+    // ── Research availability disclosure (P1-11) ─────────────────────────
+    // Tell the model exactly which research streams produced data, so it
+    // doesn't invent specific grant programs / FTA names / cost figures when
+    // the underlying Perplexity query failed and the variable fell back to
+    // "No X available". This is a soft guard — combined with the per-template
+    // "do not invent" rules it materially reduces fabrication.
+    const availabilityLines: string[] = [];
+    availabilityLines.push(`- Market landscape research: ${marketResearch.landscape ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Regulatory & compliance research: ${marketResearch.regulatory ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Recent news (last 6 months): ${marketResearch.news ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Bilateral trade / fundraising landscape research: ${marketResearch.bilateral_trade ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Cost of doing business research: ${marketResearch.cost_of_business ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Grants & incentives research: ${marketResearch.grants ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- End-buyer procurement research: ${endBuyerProcurementResearch ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Company-website scrape (enriched profile): ${companyProfile ? "available" : "UNAVAILABLE"}`);
+    const availabilityNote = `\n\nDATA AVAILABILITY for this report:\n${availabilityLines.join("\n")}\n\nFor any topic marked UNAVAILABLE: do NOT invent specific figures, program names, percentages, eligibility criteria, named clients, or named partners. Use general guidance (e.g. "review the relevant federal grant programs") rather than naming specifics you cannot verify from the provided data. NEVER invent client relationships, partnerships, or past customers that are not explicitly listed in the enriched company profile.`;
+
     if (templates && templates.length > 0) {
-      // Generate ALL sections in a single parallel batch (was batches of 3)
-      console.log(`Generating ${templates.length} sections in single parallel batch...`);
+      // Generate ALL sections in a single parallel batch (was batches of 3).
+      // (P0-3) Sections gated above the user's tier are STILL generated and
+      // stored with `visible: false`. The frontend reads `visible` to gate
+      // display, so an upgrade unlocks the content inline — the user never
+      // needs to regenerate. Previously gated sections were stored with
+      // empty content, which forced a full regeneration after every upgrade.
+      console.log(`Generating ${templates.length} sections in single parallel batch (P0-3: gated content stored hidden)...`);
       const sectionStartTime = Date.now();
 
       const results = await Promise.allSettled(
         templates.map(async (tmpl: any) => {
           const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
-          const visible = requiredTierIndex === -1 || userTierIndex >= requiredTierIndex;
-
-          if (!visible) {
-            return { name: tmpl.section_name, data: { content: "", visible: false } };
-          }
+          const willBeVisible = requiredTierIndex === -1 || userTierIndex >= requiredTierIndex;
 
           let prompt = tmpl.prompt_body;
 
@@ -1322,8 +1358,10 @@ async function generateReportInBackground(
               ? "\n\nPERSONA CONTEXT: This report is for an Australian startup seeking to grow and scale domestically. Focus on: fundraising landscape, investor matching, accelerator/incubator programs, government grants and R&D tax incentives, growth-stage hiring, market sizing/TAM data, founder networks, and scaling strategy within the existing Australian market. The company is already based in Australia — do NOT focus on market entry logistics like visas or entity setup."
               : "\n\nPERSONA CONTEXT: This report is for an international company entering the ANZ market from overseas. Focus on: regulatory compliance, entity setup, visa requirements, cultural and business practice differences, bilateral trade advantages, service provider matching for market entry support, trade agencies, and go-to-market strategy for a company with no existing Australian presence.";
 
+            const systemContent = `You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\n${citationInstruction}${personaContext}${availabilityNote}`;
+
             const content = await callAI(lovableKey, [
-              { role: "system", content: "You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\nIMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MUST include inline citation markers using the format [N] where N is the source number from the provided citations list. Place the citation immediately after the relevant claim. For example: \"The Australian AI market is projected to reach USD 8.48 billion by 2030 [3].\" If multiple sources support a claim, list them: [1][4]. Only cite sources from the provided numbered citations list — do not invent citation numbers." + personaContext },
+              { role: "system", content: systemContent },
               { role: "user", content: prompt },
             ]);
 
@@ -1331,7 +1369,7 @@ async function generateReportInBackground(
               name: tmpl.section_name,
               data: {
                 content,
-                visible: true,
+                visible: willBeVisible,
                 matches: getMatchesForSection(tmpl.section_name, matches),
               },
             };
@@ -1348,7 +1386,12 @@ async function generateReportInBackground(
       for (const result of results) {
         if (result.status === "fulfilled" && result.value) {
           sections[result.value.name] = result.value.data;
-          if (result.value.data.visible) sectionsGenerated.push(result.value.name);
+          // Track every section that produced content, regardless of gating.
+          // `sections_generated` now means "sections the user can unlock by
+          // upgrading" rather than "sections currently visible".
+          if (result.value.data.content && result.value.data.content.trim().length > 0) {
+            sectionsGenerated.push(result.value.name);
+          }
         }
       }
 
