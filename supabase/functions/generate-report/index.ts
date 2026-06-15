@@ -904,7 +904,9 @@ async function searchMatches(supabase: any, intake: any) {
       if (row.target_company_origin.includes(wants)) s += 1.5; // trade-direction fit
     }
     if (countryTerm) {
-      const hay = [row.description, (row.specialties || []).join(" "), (row.services || []).join(" "), row.tagline]
+      // `row.tagline` doesn't exist on most queried tables — keep description /
+      // specialties / services which are real on the tables that use them.
+      const hay = [row.description, (row.specialties || []).join(" "), (row.services || []).join(" ")]
         .filter(Boolean).join(" ").toLowerCase();
       if (hay.includes(countryTerm)) s += 1.5; // text fallback (bio/desc mentions the country)
     }
@@ -914,15 +916,26 @@ async function searchMatches(supabase: any, intake: any) {
   const rank = (rows: any[], opts: { service?: string; countryCol?: string; persona?: boolean }, limit: number): any[] =>
     (rows || [])
       .map((r: any) => ({ r, s: scoreRow(r, opts) }))
-      .sort((a, b) => (b.s - a.s) || ((b.r.is_verified ? 1 : 0) - (a.r.is_verified ? 1 : 0)))
+      // No `is_verified` column on the queried tables — score alone determines order.
+      // Tiebreak deterministically by id so two equally-scored rows don't shuffle
+      // between runs (was a source of "different reports, same matches" perception).
+      .sort((a, b) => (b.s - a.s) || String(a.r.id || "").localeCompare(String(b.r.id || "")))
       .slice(0, limit)
       .map((x) => x.r);
 
   // Service providers — service-type + location + sector (mostly horizontal/agnostic)
   try {
-    let spQuery = supabase.from("service_providers").select("id, name, slug, location, services, description, website, website_url, is_verified, tagline, logo_url, category_slug, sector_tags, sector_agnostic").limit(CAND);
+    // SELECT only columns that actually exist on service_providers — historically
+    // this list included `website_url, is_verified, tagline, logo_url, category_slug`,
+    // none of which exist on the table. PostgREST returned 400 → the catch below
+    // swallowed it → matches.service_providers was never set → every report
+    // surfaced "We did not find matching service providers."
+    let spQuery = supabase.from("service_providers")
+      .select("id, name, slug, location, services, description, website, sector_tags, sector_agnostic")
+      .limit(CAND);
     spQuery = spQuery.or(buildOr({ service: "services" }));
-    const { data: sp } = await spQuery;
+    const { data: sp, error: spErr } = await spQuery;
+    if (spErr) console.error("SP query error (matches will be empty):", spErr);
     matches.service_providers = rank(sp, { service: "services" }, 10).map((p: any) => ({
       ...p,
       link: p.slug ? `/service-providers/${p.slug}` : "/service-providers",
