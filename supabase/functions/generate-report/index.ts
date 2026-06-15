@@ -207,19 +207,30 @@ async function enrichCompanyDeep(
     }
 
     const enrichResp = await callAI(lovableKey, [
-      { role: "system", content: "You are an analyst. Return only valid JSON, no markdown fences." },
+      { role: "system", content: "You are an analyst extracting verifiable facts from a company's own website. Return only valid JSON, no markdown fences. Be conservative — when in doubt, omit." },
       {
         role: "user",
         content: `Based on this website content for ${companyName}, provide a JSON object with:
 {
-  "summary": "3-4 sentence company summary covering what they do, their market position, and key strengths",
+  "summary": "3-4 sentence company summary covering what they do, their market position, and key strengths. Stick to what the website itself claims.",
   "industry": "standardized industry classification",
   "maturity": "Seed|Growth|Enterprise",
-  "products": ["list of main products or services offered"],
-  "key_clients": ["notable clients or customer segments mentioned"],
-  "team_size_indicators": "any indicators of team size, leadership, or organizational scale",
-  "unique_selling_points": ["2-4 key differentiators or competitive advantages"]
+  "products": ["list of main products or services offered as advertised on the site"],
+  "key_clients": ["EXPLICITLY confirmed customers ONLY"],
+  "team_size_indicators": "any indicators of team size, leadership, or organizational scale that the site states directly",
+  "unique_selling_points": ["2-4 key differentiators or competitive advantages CLAIMED ON THE SITE"]
 }
+
+STRICT RULES for key_clients (most important):
+- Only include a name if the site EXPLICITLY identifies the entity as a paying customer, deployment site, or case-study client of ${companyName} (e.g. phrases like "our customer X", "Y uses ${companyName}", "case study: Z"). Direct logos under "Trusted by" / "Our customers" qualify.
+- Do NOT include partners, integrations, distributors, press mentions, awards juries, investors, parent companies, advisors, board members, or competitors. If the relationship is partner/integration/award/press, OMIT the name.
+- Do NOT infer clients from team members' past employers or from "X uses similar tools" comparisons.
+- When in doubt, leave key_clients as an empty array []. A clean omission is much better than a false attribution.
+
+STRICT RULES for products & unique_selling_points:
+- Use only language the website itself uses. Do NOT extrapolate features that aren't stated.
+
+If any field is genuinely unknown, return an empty string or empty array. Never make up content.
 
 Content from ${allContent.length} pages:
 ${combinedContent}`,
