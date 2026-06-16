@@ -1070,20 +1070,36 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
 // unified KB (match_knowledge) for the most relevant entities across types, then
 // hydrate full source rows so the render/enrich contract above is unchanged.
 
-/** Embed text with OpenAI text-embedding-3-small. Null if key missing / call fails. */
-async function embedText(text: string): Promise<number[] | null> {
-  const key = Deno.env.get("OPENAI_API_KEY");
-  if (!key || !text.trim()) return null;
+/** Embed text with OpenAI text-embedding-3-small. Resolves the key env-first with a
+ *  Vault fallback (mirrors knowledge-search / embed-knowledge). 10s timeout. Returns
+ *  null on any failure (missing key, timeout, API error) so the caller falls back to
+ *  the array-overlap path. */
+async function embedText(text: string, supabase: any): Promise<number[] | null> {
+  if (!text.trim()) return null;
+  let key = Deno.env.get("OPENAI_API_KEY") ?? "";
+  if (!key) {
+    // Vault fallback so this keeps working if the key is ever moved out of env.
+    try {
+      const { data: vk } = await supabase.rpc("kb_get_openai_key");
+      key = typeof vk === "string" ? vk : "";
+    } catch (e) { console.error("embedText kb_get_openai_key failed", e); }
+  }
+  if (!key) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
   try {
     const resp = await fetch("https://api.openai.com/v1/embeddings", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
       body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
+      signal: controller.signal,
     });
     if (!resp.ok) { console.error("embedText OpenAI error", resp.status); return null; }
     const j = await resp.json();
     return j.data?.[0]?.embedding ?? null;
   } catch (e) { console.error("embedText threw", e); return null; }
+  finally { clearTimeout(timer); }
 }
 
 /** Semantic matches for KB-covered entity types. Returns {} on any failure so the
@@ -1092,7 +1108,7 @@ async function embedText(text: string): Promise<number[] | null> {
 async function semanticMatches(supabase: any, intake: any): Promise<Record<string, any[]>> {
   const out: Record<string, any[]> = {};
   const queryText = buildMatchQueryText(intake);
-  const embedding = await embedText(queryText);
+  const embedding = await embedText(queryText, supabase);
   if (!embedding) return out;
 
   const { data, error } = await supabase.rpc("match_knowledge", {
