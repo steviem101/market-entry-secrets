@@ -7,6 +7,7 @@ import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs, overlapCount } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
+import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -860,8 +861,11 @@ const sanitizeFilterValue = (v: string): string =>
 // shared, dependency-free module so it can be unit-tested under Node.
 // See goalServiceTags.ts and ENGINEERING_TODO P0.1.
 
-// ── Database matching ──────────────────────────────────────────────────
-async function searchMatches(supabase: any, intake: any) {
+// ── Database matching (array-overlap path) ─────────────────────────────
+// The legacy, deterministic matcher: Postgres array-overlap on sector_tags /
+// services + location ilike, with the weighted scoreRow ranking. This is the
+// per-section backfill AND total fallback for the semantic path below.
+async function searchMatchesOverlap(supabase: any, intake: any) {
   const matches: Record<string, any[]> = {};
   const regions = intake.target_regions || [];
   // Expand selected goals into short service tags for better .cs.{} matching.
@@ -1196,6 +1200,113 @@ async function searchMatches(supabase: any, intake: any) {
   } catch (e) { console.error("Lemlist contacts search error:", e); }
 
   return matches;
+}
+
+// ── Semantic directory matching (mes_knowledge_base) ─────────────────────
+// Recall upgrade over the .cs.{} array-overlap path: embed the intake, ask the
+// unified KB (match_knowledge) for the most relevant entities across types, then
+// hydrate full source rows so the render/enrich contract above is unchanged.
+
+/** Embed text with OpenAI text-embedding-3-small. Null if key missing / call fails. */
+async function embedText(text: string): Promise<number[] | null> {
+  const key = Deno.env.get("OPENAI_API_KEY");
+  if (!key || !text.trim()) return null;
+  try {
+    const resp = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
+    });
+    if (!resp.ok) { console.error("embedText OpenAI error", resp.status); return null; }
+    const j = await resp.json();
+    return j.data?.[0]?.embedding ?? null;
+  } catch (e) { console.error("embedText threw", e); return null; }
+}
+
+/** Semantic matches for KB-covered entity types. Returns {} on any failure so the
+ *  caller falls back to the array-overlap path. The report build runs server-side,
+ *  so all visibilities are requested — per-section tier gating happens at render.
+ *
+ *  The hydrate step mirrors the array-overlap path's correctness guards (P1-7/P1-9)
+ *  so the semantic path — which is PREFERRED when it returns rows — can't
+ *  reintroduce the bugs fixed there: it drops inactive/anonymous/seed mentors and
+ *  dedupes them by person, and drops past-dated events. */
+async function semanticMatches(supabase: any, intake: any): Promise<Record<string, any[]>> {
+  const out: Record<string, any[]> = {};
+  const queryText = buildMatchQueryText(intake);
+  const embedding = await embedText(queryText);
+  if (!embedding) return out;
+
+  const { data, error } = await supabase.rpc("match_knowledge", {
+    query_embedding: `[${embedding.join(",")}]`,
+    query_text: queryText,
+    match_count: 120,
+    match_threshold: 0.15,
+    filter: {},
+    allowed_visibility: ["public", "member", "paid"],
+  });
+  if (error) { console.error("match_knowledge error", error.message); return out; }
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const ranked = groupRankedBySource(data || []);
+  await Promise.all(Object.entries(ranked).map(async ([tbl, items]) => {
+    const cfg = SEMANTIC_CFG[tbl];
+    // Overfetch (2× cap) so post-hydrate filtering still leaves a full slate.
+    const ids = (items as Array<{ id: string }>).slice(0, cfg.cap * 2).map((x) => x.id);
+    if (ids.length === 0) return;
+    try {
+      const { data: rows } = await supabase.from(cfg.table).select(cfg.select).in("id", ids);
+      const order = new Map(ids.map((id, i) => [id, i] as const));
+      let ordered = (rows || []).sort(
+        (a: any, b: any) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999),
+      );
+
+      if (tbl === "community_members") {
+        const seenNames = new Set<string>();
+        ordered = ordered.filter((m: any) => {
+          if (m.is_active === false || m.is_anonymous === true) return false;
+          const n = (m.name || "").toLowerCase();
+          if (n.startsWith("anonymous")) return false;
+          const key = n.replace(/^(dr|prof|mr|mrs|ms|miss)\.?\s+/i, "").replace(/[^a-z\s]/g, "").trim();
+          if (!key || seenNames.has(key)) return false;
+          seenNames.add(key);
+          return true;
+        });
+      } else if (tbl === "events") {
+        ordered = ordered.filter((e: any) => !e.date || e.date >= todayIso);
+      }
+
+      out[tbl] = ordered.slice(0, cfg.cap).map(cfg.decorate);
+    } catch (e) { console.error(`semantic hydrate ${tbl} failed`, e); }
+  }));
+  return out;
+}
+
+/** Directory matching: semantic-first (mes_knowledge_base) with the array-overlap
+ *  path as per-section backfill AND total fallback. `leads` + `lemlist_contacts`
+ *  are not in the KB, so they always come from the overlap path. If OPENAI_API_KEY
+ *  is unset or the KB call fails, semantic returns {} and the (now bug-fixed)
+ *  overlap path carries the whole report. */
+async function searchMatches(supabase: any, intake: any): Promise<Record<string, any[]>> {
+  const overlap = await searchMatchesOverlap(supabase, intake);
+  let semantic: Record<string, any[]> = {};
+  try {
+    semantic = await semanticMatches(supabase, intake);
+  } catch (e) {
+    console.error("semantic matches failed; using array-overlap only", e);
+  }
+
+  const merged: Record<string, any[]> = { ...overlap };
+  for (const [tbl, cfg] of Object.entries(SEMANTIC_CFG)) {
+    const sem = semantic[tbl] || [];
+    if (sem.length === 0) continue; // keep the overlap result for this type
+    const seen = new Set(sem.map((x: any) => x.id));
+    const backfill = (overlap[tbl] || []).filter((x: any) => !seen.has(x.id));
+    merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
+  }
+  const semKeys = Object.keys(semantic).filter((k) => (semantic[k] || []).length > 0);
+  console.log(`searchMatches: semantic-matched types = [${semKeys.join(", ")}]`);
+  return merged;
 }
 
 function getMatchesForSection(sectionName: string, matches: Record<string, any[]>): any[] {
