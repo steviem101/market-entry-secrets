@@ -60,37 +60,41 @@ for (const [sector, groups] of Object.entries(LINKEDIN_TAXONOMY)) {
  * Order matters only inasmuch as multiple keys can match a single industry;
  * the result is a set, so duplicates dedupe.
  */
+// Each alternative is wrapped in word boundaries so bare-substring matches
+// don't fire on "Window Manufacturing" (would have matched "wind"), "Texas
+// Holdings" (would have matched "gas"), or "Geoanalytics" (would have
+// matched "analytics"). Multi-word phrases use boundary on each end only.
 const SECTOR_KEYWORD_ALIASES: Array<[RegExp, string[]]> = [
-  [/\bfintech\b|financial technology|digital payments|insurtech|regtech|wealthtech/, ['financial-services', 'technology-information-and-media']],
-  [/\bcybersec|cyber security|infosec|information security|digital identity|identity & access|iam\b/, ['technology-information-and-media', 'professional-services']],
-  [/\bsaas\b|software development|software engineering|enterprise software|developer tools/, ['technology-information-and-media']],
-  [/\bai\b|artificial intelligence|machine learning|\bml\b|computer vision|video analytics|deep learning|llm\b|generative ai/, ['technology-information-and-media']],
-  [/\bdata\b|big data|analytics|data infrastructure|data platform|business intelligence/, ['technology-information-and-media', 'professional-services']],
-  [/\bcloud\b|cloud computing|devops|platform engineering/, ['technology-information-and-media']],
-  [/\bblockchain|crypto|web3|defi|nft\b/, ['financial-services', 'technology-information-and-media']],
-  [/\bbiotech|pharma|medtech|medical device|life sciences|clinical|therapeutics/, ['hospitals-and-health-care', 'manufacturing']],
+  [/\b(?:fintech|financial technology|digital payments|insurtech|regtech|wealthtech)\b/, ['financial-services', 'technology-information-and-media']],
+  [/\b(?:cybersec(?:urity)?|cyber security|infosec|information security|digital identity|identity & access|iam)\b/, ['technology-information-and-media', 'professional-services']],
+  [/\b(?:saas|software development|software engineering|enterprise software|developer tools)\b/, ['technology-information-and-media']],
+  [/\b(?:ai|artificial intelligence|machine learning|ml|computer vision|video analytics|deep learning|llm|generative ai)\b/, ['technology-information-and-media']],
+  [/\b(?:data|big data|analytics|data infrastructure|data platform|business intelligence)\b/, ['technology-information-and-media', 'professional-services']],
+  [/\b(?:cloud|cloud computing|devops|platform engineering)\b/, ['technology-information-and-media']],
+  [/\b(?:blockchain|crypto|web3|defi|nft)\b/, ['financial-services', 'technology-information-and-media']],
+  [/\b(?:biotech|pharma|medtech|medical device|life sciences|clinical|therapeutics)\b/, ['hospitals-and-health-care', 'manufacturing']],
   // Deliberately NOT matching bare \bhealth\b — that catches phrases like
   // "Workplace Health and Safety" which is a construction/professional-services
   // domain, not healthcare. Require explicit healthcare-domain words.
-  [/healthcare|digital health|telehealth|mental health|hospital|primary care/, ['hospitals-and-health-care']],
-  [/\bedtech|education technology|e-learning|online learning/, ['education', 'technology-information-and-media']],
-  [/\bproptech|real estate technology/, ['real-estate-and-equipment-rental-services', 'technology-information-and-media']],
-  [/\bagritech|agtech|agriculture technology|food tech|foodtech|agri-food/, ['farming-ranching-forestry', 'technology-information-and-media']],
-  [/\bcleantech|climatetech|climate tech|renewables?|sustainability|green tech/, ['utilities', 'technology-information-and-media']],
-  [/\benergy\b|solar|wind|hydrogen|battery storage/, ['utilities']],
-  [/\bmining|resources|critical minerals|exploration/, ['oil-gas-and-mining']],
-  [/\boil|gas|petroleum|lng\b/, ['oil-gas-and-mining']],
-  [/\bconstruction|infrastructure|civil|engineering services|whs\b|workplace health and safety|workplace safety/, ['construction', 'professional-services']],
-  [/\bmanufactur|industrial|machinery|automation|robotics/, ['manufacturing']],
-  [/\blogistics|supply chain|warehousing|shipping|freight|maritime/, ['transportation-logistics-supply-chain-and-storage']],
-  [/\bretail|ecommerce|e-commerce|d2c\b|dtc\b/, ['retail']],
-  [/\bhospitality|tourism|travel|food (?:&|and) beverage|f&b\b|restaurant/, ['accommodation-and-food-services']],
-  [/\bmedia|entertainment|gaming|streaming|publishing/, ['entertainment-providers', 'technology-information-and-media']],
-  [/\btelecom|telecommunications|5g\b|networking/, ['technology-information-and-media']],
-  [/\bautomotive|electric vehicle|\bev\b|mobility/, ['transportation-logistics-supply-chain-and-storage', 'manufacturing']],
-  [/\bconsult|advisory|professional services|accounting|tax|legal/, ['professional-services']],
-  [/\bgovernment|public sector|defence|defense|aerospace/, ['government-administration']],
-  [/\bnon[- ]?profit|ngo\b|charity/, ['consumer-services']],
+  [/\b(?:healthcare|digital health|telehealth|mental health|hospital|primary care)\b/, ['hospitals-and-health-care']],
+  [/\b(?:edtech|education technology|e-learning|online learning)\b/, ['education', 'technology-information-and-media']],
+  [/\b(?:proptech|real estate technology)\b/, ['real-estate-and-equipment-rental-services', 'technology-information-and-media']],
+  [/\b(?:agritech|agtech|agriculture technology|food tech|foodtech|agri-food)\b/, ['farming-ranching-forestry', 'technology-information-and-media']],
+  [/\b(?:cleantech|climatetech|climate tech|renewables?|sustainability|green tech)\b/, ['utilities', 'technology-information-and-media']],
+  [/\b(?:energy|solar|wind|hydrogen|battery storage)\b/, ['utilities']],
+  [/\b(?:mining|miner|miners|critical minerals|exploration)\b/, ['oil-gas-and-mining']],
+  [/\b(?:oil|gas|petroleum|lng)\b/, ['oil-gas-and-mining']],
+  [/\b(?:construction|infrastructure|civil|engineering services|whs|workplace health and safety|workplace safety)\b/, ['construction', 'professional-services']],
+  [/\b(?:manufactur\w*|industrial|machinery|automation|robotics)\b/, ['manufacturing']],
+  [/\b(?:logistics|supply chain|warehousing|shipping|freight|maritime)\b/, ['transportation-logistics-supply-chain-and-storage']],
+  [/\b(?:retail|ecommerce|e-commerce|d2c|dtc)\b/, ['retail']],
+  [/\b(?:hospitality|tourism|travel|food (?:&|and) beverage|f&b|restaurant)\b/, ['accommodation-and-food-services']],
+  [/\b(?:media|entertainment|gaming|streaming|publishing)\b/, ['entertainment-providers', 'technology-information-and-media']],
+  [/\b(?:telecom|telecommunications|5g|networking)\b/, ['technology-information-and-media']],
+  [/\b(?:automotive|electric vehicle|ev|mobility)\b/, ['transportation-logistics-supply-chain-and-storage', 'manufacturing']],
+  [/\b(?:consult\w*|advisory|advisor|advisors|professional services|accounting|tax|legal)\b/, ['professional-services']],
+  [/\b(?:government|public sector|defence|defense|aerospace)\b/, ['government-administration']],
+  [/\b(?:non[- ]?profit|ngo|charity)\b/, ['consumer-services']],
 ];
 
 /**

@@ -80,6 +80,30 @@ test("canonical taxonomy hits still win over aliases (no regression)", () => {
   );
 });
 
+test("alias word boundaries: no false positives on adjacent words", () => {
+  // Bare-substring matches against the alias keywords ("gas", "wind",
+  // "analytics", "ai", "ml") used to over-trigger sector tagging on
+  // unrelated industries. Each alias is now \b-bounded.
+  assert.deepEqual(industryGroupsToSectorSlugs(["Window Manufacturing"]), ["manufacturing"]);
+  // "Texas Holdings" — must NOT match "gas" as a substring of "Texas".
+  assert.deepEqual(industryGroupsToSectorSlugs(["Texas Holdings"]), []);
+  // "Passage" / "Massage" must not match "gas".
+  assert.deepEqual(industryGroupsToSectorSlugs(["Massage Therapy"]), []);
+  // Bare "AI" must match.
+  assert.ok(industryGroupsToSectorSlugs(["AI"]).includes("technology-information-and-media"));
+  // "Said" / "Maid" must NOT match "ai".
+  assert.deepEqual(industryGroupsToSectorSlugs(["Maid Services"]), []);
+});
+
+test("inflection support: manufacturer, consulting, miners", () => {
+  // Real customer values that should still map after the boundary tightening.
+  assert.deepEqual(industryGroupsToSectorSlugs(["Manufacturer"]), ["manufacturing"]);
+  assert.deepEqual(industryGroupsToSectorSlugs(["Manufacturers"]), ["manufacturing"]);
+  assert.ok(industryGroupsToSectorSlugs(["Strategy Consulting"]).includes("professional-services"));
+  assert.ok(industryGroupsToSectorSlugs(["Independent Consultants"]).includes("professional-services"));
+  assert.ok(industryGroupsToSectorSlugs(["Mineral Exploration"]).includes("oil-gas-and-mining"));
+});
+
 test("overlapCount counts shared elements", () => {
   assert.equal(overlapCount(["a", "b", "c"], ["b", "c", "d"]), 2);
   assert.equal(overlapCount(["a"], ["x"]), 0);
