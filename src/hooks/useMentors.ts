@@ -63,6 +63,9 @@ export interface Mentor {
   experience_tiles: any[] | null;
   origin_country: string | null;
   associated_countries: string[] | null;
+  market_corridors: string[] | null;
+  sector_tags: string[] | null;
+  sector_agnostic: boolean;
   is_anonymous: boolean;
 }
 
@@ -118,6 +121,9 @@ const mapMentor = (m: any): Mentor => ({
   experience_tiles: m.experience_tiles || null,
   origin_country: m.origin_country || null,
   associated_countries: m.associated_countries || null,
+  market_corridors: m.market_corridors || null,
+  sector_tags: m.sector_tags || null,
+  sector_agnostic: m.sector_agnostic ?? false,
   is_anonymous: m.is_anonymous ?? false,
 });
 

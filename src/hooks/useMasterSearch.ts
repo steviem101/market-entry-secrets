@@ -50,7 +50,9 @@ export const useMasterSearch = () => {
         ).catch(() => ({ data: null, error: true })),
 
         Promise.resolve(supabase
-          .from('community_members')
+          // Read the masked, PII-safe view — never the base table. anon loses direct
+          // base-table read in WS-A3, and the view masks anonymous members' identity.
+          .from('community_members_public')
           .select('id, name, description, title, company, location, experience, specialties, is_anonymous')
           .eq('is_active', true)
           .or(`name.ilike.${searchTerm},title.ilike.${searchTerm},description.ilike.${searchTerm},company.ilike.${searchTerm},location.ilike.${searchTerm},experience.ilike.${searchTerm}`)
