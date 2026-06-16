@@ -47,16 +47,22 @@ Use ### for subsection headings, **bold** for event/resource names, and bullet p
   updated_at = now()
 WHERE section_name = 'events_resources';
 
+-- Idempotent append: only add the anti-hallucination block if it isn't
+-- already present. Without this guard a re-run (e.g. `supabase db reset`
+-- after an out-of-band live apply) would append the block twice, growing
+-- the prompt and confusing the model.
 UPDATE public.report_templates SET
   prompt_body = prompt_body || E'\n\nADDITIONAL ANTI-HALLUCINATION RULES (applied across all analytical sections):\n- Do NOT name specific customers, clients, partners, or past investors of {{company_name}} unless they appear EXPLICITLY in the enriched_company_profile (in particular the key_clients array). If key_clients is empty, do NOT claim {{company_name}} has any named tier-1/named-account clients.\n- Do NOT invent named grant programs, FTA names, or regulatory frameworks not present in the provided market research variables.\n- Do NOT include any numbered citation markers like [1], [2], [3] unless market_research_citations is non-empty in your input.',
   version = COALESCE(version, 1) + 1,
   updated_at = now()
-WHERE section_name IN ('executive_summary', 'swot_analysis', 'action_plan');
+WHERE section_name IN ('executive_summary', 'swot_analysis', 'action_plan')
+  AND prompt_body NOT LIKE '%ADDITIONAL ANTI-HALLUCINATION RULES%';
 
 UPDATE public.report_templates SET
   prompt_body = prompt_body || E'\n\nCOMPETITOR-CATEGORY RULES:\n- A "competitor" must be a commercial vendor of an alternative product or service. Regulators (e.g. SafeWork NSW), government agencies, universities, research institutes, industry associations, law firms, and consultancies are NOT competitors — at most they are "ecosystem actors" and belong in a separate "Ecosystem Stakeholders" subsection.\n- Do NOT name a customer of the same category as a "competitor" (e.g. Alex Bank is a buyer of identity software, not a vendor competitor of an identity software firm).\n- Do NOT invent competitor names not present in the provided competitor_analysis_json or known_competitors_json.',
   version = COALESCE(version, 1) + 1,
   updated_at = now()
-WHERE section_name = 'competitor_landscape';
+WHERE section_name = 'competitor_landscape'
+  AND prompt_body NOT LIKE '%COMPETITOR-CATEGORY RULES%';
 
 COMMIT;
