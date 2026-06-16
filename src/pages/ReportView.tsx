@@ -18,6 +18,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Skeleton } from '@/components/ui/skeleton';
+import { splitEventsAndResources } from '@/lib/reportEventsSplit';
 import {
   SECTION_LABELS,
   SECTION_ORDER,
@@ -213,23 +214,9 @@ const ReportViewInner = () => {
                 const sectionMatches = section.matches || matches[sectionId] || [];
 
                 // For events_resources the matches array mixes events with
-                // content items (case studies, guides). They previously all
-                // rendered under one "UPCOMING EVENTS" header — so case studies
-                // appeared as upcoming events with a raw "case_study" subtitle.
-                // Split into two grids so each gets the right label.
+                // content items (case studies, guides). Split so case studies
+                // don't render under "Upcoming Events" with a raw subtitle.
                 const isEventsSection = sectionId === 'events_resources';
-                const splitEventsAndResources = (items: any[]) => {
-                  const events: any[] = [];
-                  const resources: any[] = [];
-                  for (const m of items) {
-                    const isResource =
-                      m?.linkLabel === 'Read More' ||
-                      (typeof m?.link === 'string' && m.link.startsWith('/content/'));
-                    if (isResource) resources.push(m);
-                    else events.push(m);
-                  }
-                  return { events, resources };
-                };
                 const eventsSplit = isEventsSection ? splitEventsAndResources(sectionMatches) : null;
 
                 const renderCardGrid = (items: any[]) => (

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Lock, Globe, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { publishedOrigin } from '@/lib/publishedOrigin';
 
 interface ReportMatchCardProps {
   name: string;
@@ -56,12 +57,11 @@ const isLinkedInUrl = (url: string): boolean =>
 // page is exported (window.print's a[href^="/"] resolves relative to the
 // report URL and the print stylesheet hides the URL annotation entirely,
 // so internal links would otherwise come out as dead text).
-const PUBLISHED_ORIGIN = 'https://market-entry-secrets.lovable.app';
 const absolutizeForPdf = (href?: string): string | undefined => {
   if (!href) return href;
   if (href === '#') return href;
   if (/^https?:/i.test(href)) return href;
-  if (href.startsWith('/')) return `${PUBLISHED_ORIGIN}${href}`;
+  if (href.startsWith('/')) return `${publishedOrigin()}${href}`;
   return href;
 };
 

@@ -1565,12 +1565,25 @@ async function generateReportInBackground(
     // unpolished report is still emailed — better than not emailing at all.
     let polishApplied = false;
     const POLISH_TIMEOUT_MS = 45000;
-    const runPolishOnce = () => Promise.race([
-      polishReport(lovableKey, sections, sectionOrder),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Polish timeout (${POLISH_TIMEOUT_MS / 1000}s)`)), POLISH_TIMEOUT_MS)
-      ),
-    ]);
+    const runPolishOnce = async (): Promise<Record<string, any>> => {
+      let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+      try {
+        return await Promise.race([
+          polishReport(lovableKey, sections, sectionOrder),
+          new Promise<never>((_, reject) => {
+            timeoutHandle = setTimeout(
+              () => reject(new Error(`Polish timeout (${POLISH_TIMEOUT_MS / 1000}s)`)),
+              POLISH_TIMEOUT_MS,
+            );
+          }),
+        ]);
+      } finally {
+        // Clear the timer whether polish resolved or rejected — otherwise
+        // a fast polish keeps an idle timer alive for the rest of the
+        // background task budget.
+        if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+      }
+    };
 
     try {
       let polishedSections: Record<string, any>;
