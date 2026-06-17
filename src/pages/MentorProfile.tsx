@@ -193,7 +193,7 @@ const MentorProfile = () => {
       <div className="container mx-auto px-4 pb-12">
         {/* Profile header */}
         <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
-          <div className="relative -mt-20 md:-mt-24">
+          <div className="relative -mt-12 md:-mt-14">
             <Avatar className="w-24 h-24 md:w-28 md:h-28 border-4 border-background shadow-lg">
               <AvatarImage src={mentor.avatar_url || mentor.image || undefined} alt={mentor.name} />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl md:text-3xl">
