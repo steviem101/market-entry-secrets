@@ -28,9 +28,8 @@ const FAQ = () => {
         description="Frequently asked questions about entering the Australian market and using Market Entry Secrets."
         canonicalPath="/faq"
         jsonLd={{
-          type: "Organization",
+          type: "FAQPage",
           data: {
-            "@type": "FAQPage",
             mainEntity: FAQ_ITEMS.map((item) => ({
               "@type": "Question",
               name: item.q,
