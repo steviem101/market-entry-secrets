@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Calendar, MapPin, Clock, Users, ArrowLeft, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,9 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
   const platformLabel = event.source_platform
     ? event.source_platform.charAt(0).toUpperCase() + event.source_platform.slice(1)
     : null;
+  // Eventbrite image URLs are signed and can expire; fall back to the logo on load error.
+  const [bannerFailed, setBannerFailed] = useState(false);
+  const showBanner = !!event.image_url && !bannerFailed;
 
   return (
     <section className="bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 py-12 md:py-16">
@@ -45,19 +49,20 @@ export const EventDetailHero = ({ event }: EventDetailHeroProps) => {
             <span className="text-foreground truncate">{event.title}</span>
           </nav>
 
-          {event.image_url && (
+          {showBanner && (
             <div className="w-full mb-6 overflow-hidden rounded-xl border border-border bg-muted">
               <img
                 src={event.image_url}
                 alt={event.title}
                 className="w-full max-h-72 object-cover"
+                onError={() => setBannerFailed(true)}
               />
             </div>
           )}
 
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Lead with the organizer logo only when there is no banner image */}
-            {!event.image_url && (
+            {!showBanner && (
               <div className="flex-shrink-0">
                 <CompanyLogo
                   websiteUrl={event.organizer_website || event.website_url}

@@ -54,7 +54,7 @@ test("groupRankedBySource dedupes by source_id, drops unknown tables, preserves 
     { source_table: "service_providers", source_id: "a", score: 0.5 }, // dup → dropped
     { source_table: "service_providers", source_id: "b", score: 0.8 },
     { source_table: "content_items", source_id: "c", score: 0.7 },
-    { source_table: "not_a_report_table", source_id: "z", score: 0.99 }, // dropped
+    { source_table: "not_a_report_table", source_id: "z", score: 0.99 }, // dropped (lead_databases / leads / lemlist_contacts not consumed by reports)
   ]);
   assert.deepEqual(grouped.service_providers.map((x) => x.id), ["a", "b"]);
   assert.equal(grouped.service_providers[0].score, 0.9);

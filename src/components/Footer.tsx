@@ -46,13 +46,13 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           
           {/* Brand Section */}
-          <div className="lg:col-span-1">
-            <Link to="/" className="block mb-4">
-              <MarketEntryLogo size="lg" className="h-16 w-auto" />
+          <div className="lg:col-span-1 flex flex-col">
+            <Link to="/" className="block mb-2">
+              <MarketEntryLogo size="lg" className="h-14 w-auto" />
             </Link>
             
             <p className="text-muted-foreground mb-4 leading-relaxed">
-              Your comprehensive platform for dominating the Australian market. Connect with vetted service providers, access expert insights, and accelerate your business growth.
+              Your comprehensive platform for dominating the Australian market.
             </p>
             
             {/* Contact Info */}
