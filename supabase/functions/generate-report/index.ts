@@ -489,7 +489,7 @@ async function callPerplexity(
   apiKey: string,
   query: string,
   options?: { recency?: string; domains?: string[]; model?: string }
-): Promise<{ content: string; citations: string[] }> {
+): Promise<{ content: string; citations: string[]; ok: boolean; status: number }> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
@@ -518,18 +518,21 @@ async function callPerplexity(
 
     if (!resp.ok) {
       const text = await resp.text();
-      console.error("Perplexity error:", resp.status, text);
-      return { content: "", citations: [] };
+      // Do NOT log the response body — it can echo the request/key context. Status only.
+      console.error("Perplexity error: status", resp.status, "len", text.length);
+      return { content: "", citations: [], ok: false, status: resp.status };
     }
 
     const data = await resp.json();
     return {
       content: data.choices?.[0]?.message?.content || "",
       citations: data.citations || [],
+      ok: true,
+      status: resp.status,
     };
   } catch (e) {
-    console.error("Perplexity call failed:", e);
-    return { content: "", citations: [] };
+    console.error("Perplexity call failed:", e instanceof Error ? e.message : "unknown");
+    return { content: "", citations: [], ok: false, status: 0 };
   }
 }
 
@@ -543,6 +546,12 @@ interface MarketResearch {
   grants: string;
   citations: string[];
   used: boolean;
+  // Plumbing visibility: how many of the parallel Perplexity queries actually
+  // succeeded (HTTP 200) and the status codes seen. Surfaced into report metadata
+  // so a silent total outage (e.g. expired/over-quota key -> every call 401/429)
+  // is diagnosable instead of looking like "ran". succeeded:0 with a non-empty
+  // statuses array = the API is rejecting us, not "no data".
+  health: { attempted: number; succeeded: number; statuses: number[] };
 }
 
 async function runMarketResearch(intake: any, persona: string): Promise<MarketResearch> {
@@ -551,6 +560,7 @@ async function runMarketResearch(intake: any, persona: string): Promise<MarketRe
     landscape: "", regulatory: "", news: "",
     bilateral_trade: "", cost_of_business: "", grants: "",
     citations: [], used: false,
+    health: { attempted: 0, succeeded: 0, statuses: [] },
   };
 
   if (!perplexityKey) {
@@ -609,6 +619,7 @@ For example:
     landscape: "", regulatory: "", news: "",
     bilateral_trade: "", cost_of_business: "", grants: "",
     citations: [], used: true,
+    health: { attempted: 0, succeeded: 0, statuses: [] },
   };
 
   if (landscape.status === "fulfilled") {
@@ -637,6 +648,23 @@ For example:
   }
 
   result.citations = [...new Set(result.citations)];
+
+  // Tally Perplexity plumbing health from the settled results. callPerplexity
+  // catches its own errors, so each settled promise is "fulfilled" carrying
+  // { ok, status }; succeeded counts HTTP 200s. A run with succeeded:0 and a
+  // non-empty statuses array means the API is rejecting every call (key/quota),
+  // not that there was nothing to find.
+  const ppxStreams = [landscape, regulatory, news, bilateralTrade, costOfBusiness, grants];
+  for (const s of ppxStreams) {
+    if (s.status === "fulfilled") {
+      result.health.statuses.push(s.value.status);
+      if (s.value.ok) result.health.succeeded++;
+    } else {
+      result.health.statuses.push(-1);
+    }
+  }
+  result.health.attempted = ppxStreams.length;
+  console.log(`Perplexity health: ${result.health.succeeded}/${result.health.attempted} OK; statuses [${result.health.statuses.join(",")}]`);
 
   console.log(`Perplexity research completed in ${Date.now() - startTime}ms — ${result.citations.length} citations`);
   return result;
@@ -1685,6 +1713,7 @@ ${citationInstruction}${personaContext}${availabilityNote}`;
         total_matches: Object.values(matches).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
         generation_time_ms: Date.now() - startTime,
         perplexity_used: marketResearch.used,
+        perplexity_health: marketResearch.health,
         perplexity_citations: marketResearch.citations,
         firecrawl_deep_scrape: !!companyProfile,
         firecrawl_providers_enriched: (matches.service_providers || []).filter((p: any) => p.enriched_description).length,
