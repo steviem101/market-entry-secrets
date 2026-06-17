@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { MentorContactModal } from "@/components/mentors/MentorContactModal";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { domainToWebsite } from "@/lib/logoUtils";
 import {
   useMentorBySlug,
   useMentorExperience,
@@ -78,7 +79,7 @@ const MentorProfile = () => {
   // Also check experience_tiles from JSONB as fallback
   const experienceTiles = mentor?.experience_tiles
     ? (Array.isArray(mentor.experience_tiles)
-        ? (mentor.experience_tiles as { id?: string; name: string; logo?: string }[])
+        ? (mentor.experience_tiles as { id?: string; name: string; logo?: string; domain?: string }[])
         : [])
     : [];
 
@@ -89,7 +90,9 @@ const MentorProfile = () => {
           id: t.id || String(i),
           company_name: t.name,
           company_logo_url: t.logo || null,
-          company_website: null,
+          // Derive a website from the tile's logo.dev domain so CompanyLogo renders
+          // the brand logo (monogram fallback when no domain).
+          company_website: domainToWebsite(t.domain),
           relationship_type: null,
           display_order: i,
         }));
