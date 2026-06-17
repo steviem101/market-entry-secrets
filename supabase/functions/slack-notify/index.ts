@@ -4,18 +4,17 @@
 // Modes:
 //   { "event_id": "<uuid>" } -> claim-then-post one realtime event to its routed channel.
 //   { "mode": "digest" }     -> roll up unsent info events; re-drive stuck realtime; sweep stale.
-// Special event_type `report.quality` -> compute report build-health telemetry from report_json,
-//   upsert public.report_quality (system of record), and post a "report card".
+// Special event_type `report.quality` -> handled by ./reportQuality.ts (telemetry + card).
 //
 // Deterministic formatting only. No AI / token cost. Self-contained (no _shared imports).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { handleReportQuality } from "./reportQuality.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SLACK_BOT_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("SLACK_NOTIFY_WEBHOOK_SECRET") ?? "";
-const REPORT_BASE_URL = "https://market-entry-secrets.lovable.app/report";
 
 const DIGEST_LIMIT = 200;
 const ID_CHUNK = 100;
@@ -25,17 +24,6 @@ const MAX_ATTEMPTS = 5;
 
 const SEVERITY_COLOR: Record<string, string> = {
   revenue: "#2eb67d", action: "#36c5f0", error: "#e01e5a", info: "#9aa0a6",
-};
-const BAND = (s: number) => (s >= 80 ? { e: "🟢", c: "#2eb67d" } : s >= 60 ? { e: "🟡", c: "#ECB22E" } : { e: "🔴", c: "#e01e5a" });
-
-// RAG source tables we expect a market-entry report to draw from (lemlist is internal, excluded).
-const RAG_SOURCES = [
-  "service_providers", "community_members", "events", "content_items",
-  "leads", "innovation_ecosystem", "trade_investment_agencies", "investors",
-];
-const RAG_LABELS: Record<string, string> = {
-  service_providers: "Providers", community_members: "Mentors", events: "Events", content_items: "Content",
-  leads: "Leads", innovation_ecosystem: "Innovation", trade_investment_agencies: "Agencies", investors: "Investors",
 };
 
 const CORS = {
@@ -48,8 +36,6 @@ function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 }
 function logErr(where: string, detail: unknown): void { console.error(`[slack-notify] ${where}:`, detail); }
-function clamp(n: number, lo: number, hi: number): number { return Math.max(lo, Math.min(hi, n)); }
-function wordCount(s: string): number { return s ? s.trim().split(/\s+/).filter(Boolean).length : 0; }
 
 interface ActivityEvent {
   id: string; event_type: string; actor_user_id: string | null; actor_email: string | null;
@@ -107,169 +93,6 @@ function buildEventBlocks(ev: ActivityEvent, routing: Routing): unknown[] {
   if (lines.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: lines.join("\n").slice(0, 2900) } });
   blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `severity: ${ev.severity} · ${new Date(ev.created_at).toUTCString()}` }] });
   return blocks;
-}
-
-// ---------------- report.quality ----------------
-
-// deno-lint-ignore no-explicit-any
-function computeReportTelemetry(report: any, intake: any) {
-  const rj = report.report_json ?? {};
-  const meta = rj.metadata ?? {};
-  const matchesObj = rj.matches ?? {};
-  const sectionsObj = rj.sections ?? {};
-  const status: string = report.status;
-
-  const matchCounts: Record<string, number> = {};
-  for (const [k, v] of Object.entries(matchesObj)) matchCounts[k] = Array.isArray(v) ? v.length : 0;
-  const tablesHit = RAG_SOURCES.filter((t) => (matchCounts[t] ?? 0) > 0).length;
-  const ragHitRate = tablesHit / RAG_SOURCES.length;
-  const totalMatches = typeof meta.total_matches === "number"
-    ? meta.total_matches : Object.values(matchCounts).reduce((a, b) => a + b, 0);
-
-  const sectionEntries = Object.entries(sectionsObj) as [string, { visible?: boolean; content?: string }][];
-  const sectionsVisible = sectionEntries.filter(([, v]) => v?.visible).length;
-  const visibleWithContent = sectionEntries.filter(([, v]) => v?.visible && (v?.content || "").trim().length > 0).length;
-  const failedSections = sectionEntries.filter(([, v]) => v?.visible && !((v?.content || "").trim().length > 0)).map(([k]) => k);
-  const words = sectionEntries.reduce((a, [, v]) => a + wordCount(v?.content || ""), 0);
-
-  const citations = Array.isArray(meta.perplexity_citations) ? meta.perplexity_citations.length : 0;
-  const keyMetrics = Array.isArray(meta.key_metrics) ? meta.key_metrics.length : 0;
-  const sources = {
-    company_scrape: !!meta.firecrawl_deep_scrape,
-    providers_enriched: meta.firecrawl_providers_enriched ?? 0,
-    competitors_found: meta.firecrawl_competitors_found ?? 0,
-    perplexity_used: !!meta.perplexity_used,
-    citations, key_metrics: keyMetrics,
-    discovered_events: meta.discovered_events_count ?? 0,
-    polish_applied: !!meta.polish_applied,
-    bilateral_trade: !!meta.bilateral_trade_available,
-    cost_of_business: !!meta.cost_of_business_available,
-    grants: !!meta.grants_available,
-    end_buyer_research: !!meta.end_buyer_research_available,
-  };
-
-  const researchSignals = [
-    citations > 0, keyMetrics > 0, sources.bilateral_trade, sources.cost_of_business,
-    sources.grants, sources.end_buyer_research, sources.competitors_found > 0, sources.discovered_events > 0,
-  ];
-  const researchDepth = researchSignals.filter(Boolean).length / researchSignals.length;
-  const groundedness = clamp(citations / Math.max(visibleWithContent, 1), 0, 1);
-
-  let plumbing = 0, coverage = 0, completeness = 0;
-  if (status !== "failed") {
-    plumbing = Math.round(
-      (sources.company_scrape ? 20 : 0) + (sources.perplexity_used ? 15 : 0) +
-      (sectionsVisible ? (visibleWithContent / sectionsVisible) * 40 : 0) +
-      (sources.polish_applied ? 10 : 0) + (failedSections.length === 0 ? 15 : 0),
-    );
-    coverage = Math.round(ragHitRate * 50 + researchDepth * 50);
-    completeness = Math.round(
-      (sectionsVisible ? (visibleWithContent / sectionsVisible) * 60 : 0) +
-      clamp(words / 1500, 0, 1) * 20 + (citations > 0 ? 20 : 0),
-    );
-  }
-  const buildHealth = Math.round(plumbing * 0.3 + coverage * 0.4 + completeness * 0.3);
-  const degraded = status === "completed" && (
-    !sources.company_scrape || tablesHit < 3 || failedSections.length > 0 || !sources.perplexity_used || researchDepth < 0.25
-  );
-
-  return {
-    report_id: report.id, intake_form_id: report.intake_form_id ?? null, user_id: report.user_id ?? null,
-    report_status: status, company: rj.company_name ?? intake?.company_name ?? null,
-    build_health: buildHealth, score_plumbing: plumbing, score_coverage: coverage, score_completeness: completeness,
-    degraded, rag_hit_rate: Number(ragHitRate.toFixed(2)), tables_hit: tablesHit, total_matches: totalMatches,
-    match_counts: matchCounts, sources, generation_time_ms: meta.generation_time_ms ?? null,
-    groundedness: Number(groundedness.toFixed(2)), words, sections_visible: sectionsVisible,
-    visible_with_content: visibleWithContent, failed_sections: failedSections,
-    user_feedback: report.feedback_score ?? null,
-  };
-}
-
-// deno-lint-ignore no-explicit-any
-function buildReportQualityCard(t: any, intake: any): { text: string; blocks: unknown[]; color: string } {
-  const band = BAND(t.build_health);
-  const company = t.company || "(unknown company)";
-  const secs = Math.round((t.generation_time_ms ?? 0) / 1000);
-
-  const inputLine = intake
-    ? [
-        intake.country_of_origin ? `from ${intake.country_of_origin}` : null,
-        Array.isArray(intake.industry_sector) && intake.industry_sector.length ? `industry: ${intake.industry_sector.join(", ")}` : null,
-        Array.isArray(intake.target_regions) && intake.target_regions.length ? `regions: ${intake.target_regions.join(", ")}` : null,
-        Array.isArray(intake.services_needed) && intake.services_needed.length ? `services: ${intake.services_needed.join(", ")}` : null,
-      ].filter(Boolean).join(" · ")
-    : "";
-
-  const s = t.sources;
-  const plumbingLines = [
-    `${s.company_scrape ? "✅" : "❌"} Firecrawl — company scrape ${s.company_scrape ? "ok" : "FAILED"} · ${s.providers_enriched} providers enriched · ${s.competitors_found} competitors`,
-    `${s.perplexity_used ? "✅" : "❌"} Perplexity — ${s.perplexity_used ? "ran" : "not used"} · ${s.citations} citations · ${s.key_metrics} key metrics`,
-    `${t.failed_sections.length === 0 ? "✅" : "⚠️"} Gemini — ${t.visible_with_content}/${t.sections_visible} sections${t.failed_sections.length ? ` (failed: ${t.failed_sections.join(", ")})` : ""} · polish ${s.polish_applied ? "applied" : "skipped"}`,
-  ].join("\n");
-
-  const cov = RAG_SOURCES.map((tbl) => {
-    const n = t.match_counts[tbl] ?? 0;
-    return `${n > 0 ? "✅" : "⬜"} ${RAG_LABELS[tbl]} ${n}`;
-  });
-  const covGrid = [cov.slice(0, 4).join("   "), cov.slice(4).join("   ")].join("\n");
-  const zeroTables = RAG_SOURCES.filter((tbl) => (t.match_counts[tbl] ?? 0) === 0).map((tbl) => RAG_LABELS[tbl]);
-
-  const researchWarn = (t.sources.citations === 0 && t.sources.key_metrics === 0)
-    ? "\n⚠️ Perplexity returned 0 citations & 0 key metrics — research enrichment underperforming."
-    : "";
-  const coverageWarn = zeroTables.length
-    ? `\n⚠️ 0 matches for: ${zeroTables.join(", ")}${inputLine ? " — possible taxonomy/matching gap for these inputs." : "."}`
-    : "";
-
-  const blocks: unknown[] = [
-    { type: "header", text: { type: "plain_text", text: `🔬 Report Quality — ${company}`.slice(0, 150) } },
-    { type: "section", text: { type: "mrkdwn", text:
-      `*${t.build_health}/100 ${band.e}*  ·  Plumbing ${t.score_plumbing} · Coverage ${t.score_coverage} · Completeness ${t.score_completeness}` +
-      `  ·  ${t.report_status}${secs ? ` · built in ${secs}s` : ""}${t.degraded ? "  ·  ⚠️ *DEGRADED*" : ""}` },
-    },
-  ];
-  if (inputLine) blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `*Inputs:* ${inputLine}` }] });
-  blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Plumbing (how it was built)*\n${plumbingLines}` } });
-  blocks.push({ type: "section", text: { type: "mrkdwn", text:
-    `*RAG coverage (what the inputs surfaced)*\n${covGrid}\n→ *${t.tables_hit}/${RAG_SOURCES.length}* data types hit · ${t.total_matches} matches${coverageWarn}${researchWarn}` } });
-  blocks.push({ type: "section", text: { type: "mrkdwn", text:
-    `*Surfaced in report*\n${t.visible_with_content} sections · ~${t.words.toLocaleString()} words · ${t.sources.citations} citations · ${t.sources.key_metrics} key metrics` +
-    `${t.user_feedback != null ? `\n*User rating:* ${t.user_feedback}` : ""}` } });
-  blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `<${REPORT_BASE_URL}/${t.report_id}|View report ↗>  ·  report ${String(t.report_id).slice(0, 8)}…` }] });
-
-  return { text: `Report Quality — ${company} — ${t.build_health}/100`, blocks, color: band.c };
-}
-
-// Fetches the report (+intake), computes telemetry, upserts report_quality, returns the card.
-// deno-lint-ignore no-explicit-any
-async function handleReportQuality(supabase: any, ev: ActivityEvent): Promise<{ text: string; blocks: unknown[]; color: string } | null> {
-  const reportId = ev.object_id;
-  if (!reportId) return null;
-  const { data: report, error } = await supabase
-    .from("user_reports").select("id,user_id,intake_form_id,status,report_json,feedback_score").eq("id", reportId).maybeSingle();
-  if (error) { logErr("report.quality load report", error.message); return null; }
-  if (!report) { logErr("report.quality", "report not found"); return null; }
-
-  let intake = null;
-  if (report.intake_form_id) {
-    const { data: i } = await supabase.from("user_intake_forms")
-      .select("company_name,country_of_origin,industry_sector,target_regions,services_needed,customer_type")
-      .eq("id", report.intake_form_id).maybeSingle();
-    intake = i;
-  }
-
-  const t = computeReportTelemetry(report, intake);
-  const { error: upErr } = await supabase.from("report_quality").upsert({
-    report_id: t.report_id, intake_form_id: t.intake_form_id, user_id: t.user_id, report_status: t.report_status,
-    build_health: t.build_health, score_plumbing: t.score_plumbing, score_coverage: t.score_coverage,
-    score_completeness: t.score_completeness, degraded: t.degraded, rag_hit_rate: t.rag_hit_rate,
-    tables_hit: t.tables_hit, total_matches: t.total_matches, match_counts: t.match_counts, sources: t.sources,
-    generation_time_ms: t.generation_time_ms, groundedness: t.groundedness, user_feedback: t.user_feedback,
-    metadata: { company: t.company, words: t.words, sections_visible: t.sections_visible, visible_with_content: t.visible_with_content, failed_sections: t.failed_sections },
-  }, { onConflict: "report_id" });
-  if (upErr) logErr("report.quality upsert", upErr.message);
-
-  return buildReportQualityCard(t, intake);
 }
 
 // deno-lint-ignore no-explicit-any
