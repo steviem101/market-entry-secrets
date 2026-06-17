@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Eye, Calendar, Clock } from 'lucide-react';
+import { splitEventsAndResources } from '@/lib/reportEventsSplit';
 import { format } from 'date-fns';
 import {
   SECTION_LABELS,
@@ -141,6 +142,28 @@ const SharedReportView = () => {
 
             const sectionMatches = section.matches || matches[sectionId] || [];
 
+            // events_resources mixes events with content (case studies/guides);
+            // split them so case studies don't render under the "Events" header.
+            const isEventsSection = sectionId === 'events_resources';
+            const eventsSplit = isEventsSection ? splitEventsAndResources(sectionMatches) : null;
+
+            const renderCardGrid = (items: any[]) => (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {items.map((match: any, idx: number) => (
+                  <ReportMatchCard
+                    key={match.id || idx}
+                    name={match.name}
+                    subtitle={match.subtitle || match.category || match.location}
+                    tags={match.tags || match.services?.slice(0, 3)}
+                    link={match.link}
+                    linkLabel={match.linkLabel}
+                    website={match.website}
+                    source={match.source}
+                  />
+                ))}
+              </div>
+            );
+
             return (
               <ReportSection
                 key={sectionId}
@@ -149,21 +172,23 @@ const SharedReportView = () => {
                 content={section.content || ''}
                 citations={perplexityCitations}
               >
-                {sectionMatches.length > 0 && (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {sectionMatches.map((match: any, idx: number) => (
-                      <ReportMatchCard
-                        key={match.id || idx}
-                        name={match.name}
-                        subtitle={match.subtitle || match.category || match.location}
-                        tags={match.tags || match.services?.slice(0, 3)}
-                        link={match.link}
-                        linkLabel={match.linkLabel}
-                        website={match.website}
-                        source={match.source}
-                      />
-                    ))}
-                  </div>
+                {isEventsSection && eventsSplit ? (
+                  <>
+                    {eventsSplit.events.length > 0 && renderCardGrid(eventsSplit.events)}
+                    {eventsSplit.resources.length > 0 && (
+                      <div className="pt-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                            Case Studies &amp; Resources
+                          </span>
+                          <div className="flex-1 border-t border-border" />
+                        </div>
+                        {renderCardGrid(eventsSplit.resources)}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  sectionMatches.length > 0 && renderCardGrid(sectionMatches)
                 )}
               </ReportSection>
             );

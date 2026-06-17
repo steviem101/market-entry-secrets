@@ -32,12 +32,13 @@ export function buildCorsHeaders(req: Request): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    // `x-supabase-api-version` was added to recent supabase-js POSTs; omitting
-    // it caused browsers to silently drop POSTs after a successful OPTIONS
-    // preflight (the production "Fetch details" failure). Include common
-    // proxy / observability headers too so future supabase-js bumps don't
-    // re-break us.
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, x-supabase-api-version, prefer, accept-profile, content-profile",
+    // EVERY header the supabase-js v2 client may attach to a POST must appear here,
+    // or the browser silently drops the POST after a successful OPTIONS preflight.
+    // Specifically: x-session-id is a CUSTOM header the project adds in
+    // src/integrations/supabase/client.ts (global.headers) for anonymous chat RLS;
+    // x-supabase-api-version is added by auth-js. Include common proxy /
+    // observability headers too so future supabase-js bumps don't re-break us.
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, x-supabase-api-version, x-session-id, prefer, accept-profile, content-profile",
     "Access-Control-Max-Age": "86400",
   };
 }

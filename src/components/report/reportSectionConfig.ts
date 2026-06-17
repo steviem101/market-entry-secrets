@@ -59,7 +59,9 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
     icon: CalendarDays,
     accentColor: 'border-t-orange-500',
     accentBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
-    matchLabel: 'Upcoming Events',
+    // Generic label — the section render also splits resources under their
+    // own "Case Studies & Resources" sub-header so "Events" stays accurate.
+    matchLabel: 'Events',
   },
   action_plan: {
     icon: ListChecks,

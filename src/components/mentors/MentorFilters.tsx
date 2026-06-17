@@ -13,9 +13,7 @@ export interface MentorFilterState {
   persona: PersonaFilterValue;
   category: string;
   sector: string;
-  market: string;
-  availability: string;
-  engagement: string;
+  corridor: string;
   location: string;
   sort: string;
 }
@@ -25,12 +23,32 @@ const DEFAULT_FILTERS: MentorFilterState = {
   persona: "all",
   category: "all",
   sector: "all",
-  market: "all",
-  availability: "all",
-  engagement: "all",
+  corridor: "all",
   location: "all",
   sort: "featured",
 };
+
+// Display labels for corridor origins. market_corridors entries are `${origin}-to-${destination}`.
+const ORIGIN_LABELS: Record<string, string> = {
+  uk: "🇬🇧 UK",
+  ireland: "🇮🇪 Ireland",
+  usa: "🇺🇸 USA",
+  canada: "🇨🇦 Canada",
+  france: "🇫🇷 France",
+  germany: "🇩🇪 Germany",
+  singapore: "🇸🇬 Singapore",
+  hong_kong: "🇭🇰 Hong Kong",
+  china: "🇨🇳 China",
+  korea: "🇰🇷 Korea",
+  south_africa: "🇿🇦 South Africa",
+  other_asia: "🌏 Other Asia",
+  other_eu: "🇪🇺 Other EU",
+};
+
+const prettify = (s: string) =>
+  s.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+const originLabel = (o: string) => ORIGIN_LABELS[o] || prettify(o);
 
 interface MentorFiltersProps {
   filters: MentorFilterState;
@@ -49,9 +67,7 @@ export const useMentorFilters = () => {
     persona: (searchParams.get("persona") as PersonaFilterValue) || "all",
     category: searchParams.get("category") || "all",
     sector: searchParams.get("sector") || "all",
-    market: searchParams.get("market") || "all",
-    availability: searchParams.get("availability") || "all",
-    engagement: searchParams.get("engagement") || "all",
+    corridor: searchParams.get("corridor") || "all",
     location: searchParams.get("location") || "all",
     sort: searchParams.get("sort") || "featured",
   }), [searchParams]);
@@ -62,9 +78,7 @@ export const useMentorFilters = () => {
     if (newFilters.persona !== "all") params.set("persona", newFilters.persona);
     if (newFilters.category !== "all") params.set("category", newFilters.category);
     if (newFilters.sector !== "all") params.set("sector", newFilters.sector);
-    if (newFilters.market !== "all") params.set("market", newFilters.market);
-    if (newFilters.availability !== "all") params.set("availability", newFilters.availability);
-    if (newFilters.engagement !== "all") params.set("engagement", newFilters.engagement);
+    if (newFilters.corridor !== "all") params.set("corridor", newFilters.corridor);
     if (newFilters.location !== "all") params.set("location", newFilters.location);
     if (newFilters.sort !== "featured") params.set("sort", newFilters.sort);
     setSearchParams(params, { replace: true });
@@ -75,7 +89,7 @@ export const useMentorFilters = () => {
 
 export const useFilteredMentors = (mentors: Mentor[], filters: MentorFilterState) => {
   return useMemo(() => {
-    let result = mentors.filter((m) => {
+    const result = mentors.filter((m) => {
       const searchLower = filters.search.toLowerCase();
       if (searchLower) {
         const matchesSearch =
@@ -87,32 +101,35 @@ export const useFilteredMentors = (mentors: Mentor[], filters: MentorFilterState
         if (!matchesSearch) return false;
       }
 
+      // Persona: a "both" mentor serves international entrants AND local startups,
+      // so it must match either persona filter.
       if (filters.persona !== "all") {
         const fits = m.persona_fit || [];
-        if (fits.length > 0 && !fits.includes(filters.persona)) return false;
+        if (fits.length > 0) {
+          const wanted =
+            filters.persona === "international_entrant"
+              ? ["international_entrant", "both"]
+              : filters.persona === "local_startup"
+              ? ["local_startup", "both"]
+              : [filters.persona];
+          if (!wanted.some((w) => fits.includes(w))) return false;
+        }
       }
 
       if (filters.category !== "all") {
         if (m.category_slug !== filters.category) return false;
       }
 
+      // Sector: match against sector_tags (the real backing column).
       if (filters.sector !== "all") {
-        const sectors = m.sectors || [];
-        if (!sectors.some((s) => s.toLowerCase() === filters.sector.toLowerCase())) return false;
+        const tags = m.sector_tags || [];
+        if (!tags.some((s) => s.toLowerCase() === filters.sector.toLowerCase())) return false;
       }
 
-      if (filters.market !== "all") {
-        const markets = m.markets_served || [];
-        if (!markets.includes(filters.market)) return false;
-      }
-
-      if (filters.availability === "available") {
-        if (m.availability !== "available") return false;
-      }
-
-      if (filters.engagement !== "all") {
-        const models = m.engagement_model || [];
-        if (!models.includes(filters.engagement)) return false;
+      // Corridor: "Experience entering from {origin}" — match any corridor with this origin.
+      if (filters.corridor !== "all") {
+        const corridors = m.market_corridors || [];
+        if (!corridors.some((c) => c.startsWith(`${filters.corridor}-to-`))) return false;
       }
 
       if (filters.location !== "all") {
@@ -148,9 +165,7 @@ export const getActiveFilterCount = (filters: MentorFilterState): number => {
   if (filters.persona !== "all") count++;
   if (filters.category !== "all") count++;
   if (filters.sector !== "all") count++;
-  if (filters.market !== "all") count++;
-  if (filters.availability !== "all") count++;
-  if (filters.engagement !== "all") count++;
+  if (filters.corridor !== "all") count++;
   if (filters.location !== "all") count++;
   return count;
 };
@@ -173,10 +188,20 @@ export const MentorFilters = ({
   );
 
   const allSectors = useMemo(
-    () =>
-      Array.from(new Set(mentors.flatMap((m) => m.sectors || []))).sort(),
+    () => Array.from(new Set(mentors.flatMap((m) => m.sector_tags || []))).sort(),
     [mentors]
   );
+
+  const allOrigins = useMemo(() => {
+    const origins = new Set<string>();
+    mentors.forEach((m) =>
+      (m.market_corridors || []).forEach((c) => {
+        const o = c.split("-to-")[0];
+        if (o) origins.add(o);
+      })
+    );
+    return Array.from(origins).sort();
+  }, [mentors]);
 
   const activeCount = getActiveFilterCount(filters);
 
@@ -283,26 +308,31 @@ export const MentorFilters = ({
               onChange={(v) => update("persona", v)}
             />
 
-            {/* Market pills */}
-            <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-sm font-medium text-muted-foreground mr-1">Market:</span>
-              {["all", "australia", "new_zealand", "global"].map((m) => (
+            {/* Corridor — "Experience entering from" (reads market_corridors) */}
+            {allOrigins.length > 0 && (
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-sm font-medium text-muted-foreground mr-1">
+                  Experience entering from:
+                </span>
                 <Button
-                  key={m}
-                  variant={filters.market === m ? "default" : "outline"}
+                  variant={filters.corridor === "all" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => update("market", m)}
+                  onClick={() => update("corridor", "all")}
                 >
-                  {m === "all"
-                    ? "All Markets"
-                    : m === "australia"
-                    ? "🇦🇺 Australia"
-                    : m === "new_zealand"
-                    ? "🇳🇿 New Zealand"
-                    : "🌏 Global"}
+                  All origins
                 </Button>
-              ))}
-            </div>
+                {allOrigins.map((o) => (
+                  <Button
+                    key={o}
+                    variant={filters.corridor === o ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => update("corridor", o)}
+                  >
+                    {originLabel(o)}
+                  </Button>
+                ))}
+              </div>
+            )}
 
             {/* Sector pills */}
             {allSectors.length > 0 && (
@@ -322,48 +352,11 @@ export const MentorFilters = ({
                     size="sm"
                     onClick={() => update("sector", s)}
                   >
-                    {s}
+                    {prettify(s)}
                   </Button>
                 ))}
               </div>
             )}
-
-            {/* Availability + Engagement */}
-            <div className="flex flex-wrap gap-4">
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-sm font-medium text-muted-foreground mr-1">Availability:</span>
-                <Button
-                  variant={filters.availability === "all" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => update("availability", "all")}
-                >
-                  Any
-                </Button>
-                <Button
-                  variant={filters.availability === "available" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => update("availability", "available")}
-                >
-                  Available now
-                </Button>
-              </div>
-
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-sm font-medium text-muted-foreground mr-1">Engagement:</span>
-                {["all", "paid", "pro_bono", "government_funded"].map((e) => (
-                  <Button
-                    key={e}
-                    variant={filters.engagement === e ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => update("engagement", e)}
-                  >
-                    {e === "all"
-                      ? "All"
-                      : e.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                  </Button>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
       )}

@@ -130,9 +130,14 @@ export const reportApi = {
     intervalMs = 3000
   ): Promise<{ status: string; error?: string }> {
     for (let i = 0; i < maxAttempts; i++) {
+      // Status-only select: do NOT pull report_json here. Post-P0-3 the
+      // report_json carries tier-gated content with `visible:false`, and
+      // pulling it every 3s of polling leaked premium content to the owner's
+      // network panel before any payment. fetchReport() goes through the
+      // get_tier_gated_report RPC which strips that content server-side.
       const { data, error } = await (supabase as any)
         .from('user_reports')
-        .select('status, report_json')
+        .select('status')
         .eq('id', reportId)
         .single();
 
@@ -146,7 +151,14 @@ export const reportApi = {
       }
 
       if (status === 'failed') {
-        const errorMsg = (data.report_json as any)?.error || 'Report generation failed';
+        // Fetch ONLY the error field via JSON path, not the whole report_json,
+        // so we surface the failure message without leaking anything else.
+        const { data: errData } = await (supabase as any)
+          .from('user_reports')
+          .select('error_message:report_json->>error')
+          .eq('id', reportId)
+          .single();
+        const errorMsg = errData?.error_message || 'Report generation failed';
         return { status: 'failed', error: errorMsg };
       }
 

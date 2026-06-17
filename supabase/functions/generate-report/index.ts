@@ -7,6 +7,7 @@ import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs, overlapCount } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
+import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -207,19 +208,30 @@ async function enrichCompanyDeep(
     }
 
     const enrichResp = await callAI(lovableKey, [
-      { role: "system", content: "You are an analyst. Return only valid JSON, no markdown fences." },
+      { role: "system", content: "You are an analyst extracting verifiable facts from a company's own website. Return only valid JSON, no markdown fences. Be conservative — when in doubt, omit." },
       {
         role: "user",
         content: `Based on this website content for ${companyName}, provide a JSON object with:
 {
-  "summary": "3-4 sentence company summary covering what they do, their market position, and key strengths",
+  "summary": "3-4 sentence company summary covering what they do, their market position, and key strengths. Stick to what the website itself claims.",
   "industry": "standardized industry classification",
   "maturity": "Seed|Growth|Enterprise",
-  "products": ["list of main products or services offered"],
-  "key_clients": ["notable clients or customer segments mentioned"],
-  "team_size_indicators": "any indicators of team size, leadership, or organizational scale",
-  "unique_selling_points": ["2-4 key differentiators or competitive advantages"]
+  "products": ["list of main products or services offered as advertised on the site"],
+  "key_clients": ["EXPLICITLY confirmed customers ONLY"],
+  "team_size_indicators": "any indicators of team size, leadership, or organizational scale that the site states directly",
+  "unique_selling_points": ["2-4 key differentiators or competitive advantages CLAIMED ON THE SITE"]
 }
+
+STRICT RULES for key_clients (most important):
+- Only include a name if the site EXPLICITLY identifies the entity as a paying customer, deployment site, or case-study client of ${companyName} (e.g. phrases like "our customer X", "Y uses ${companyName}", "case study: Z"). Direct logos under "Trusted by" / "Our customers" qualify.
+- Do NOT include partners, integrations, distributors, press mentions, awards juries, investors, parent companies, advisors, board members, or competitors. If the relationship is partner/integration/award/press, OMIT the name.
+- Do NOT infer clients from team members' past employers or from "X uses similar tools" comparisons.
+- When in doubt, leave key_clients as an empty array []. A clean omission is much better than a false attribution.
+
+STRICT RULES for products & unique_selling_points:
+- Use only language the website itself uses. Do NOT extrapolate features that aren't stated.
+
+If any field is genuinely unknown, return an empty string or empty array. Never make up content.
 
 Content from ${allContent.length} pages:
 ${combinedContent}`,
@@ -757,20 +769,24 @@ async function polishReport(
   sections: Record<string, any>,
   sectionOrder: string[]
 ): Promise<Record<string, any>> {
-  const visibleSections = sectionOrder.filter(
-    (name) => sections[name]?.visible && sections[name]?.content?.trim()
+  // Polish every section that has content, even if it's currently gated
+  // (visible=false). Gated content is stored hidden under P0-3 so that an
+  // upgrade unlocks it inline — those sections deserve the same editorial
+  // pass as the visible ones, otherwise the upgrade reveals unpolished prose.
+  const sectionsWithContent = sectionOrder.filter(
+    (name) => sections[name]?.content?.trim()
   );
 
-  if (visibleSections.length === 0) {
-    console.log("Polish: no visible sections to polish");
+  if (sectionsWithContent.length === 0) {
+    console.log("Polish: no sections with content to polish");
     return sections;
   }
 
-  const concatenated = visibleSections
+  const concatenated = sectionsWithContent
     .map((name) => `${SECTION_DELIMITER_PREFIX}${name}${SECTION_DELIMITER_SUFFIX}\n${sections[name].content}`)
     .join("\n\n");
 
-  console.log(`Polish: sending ${visibleSections.length} sections (${concatenated.length} chars) to gemini-3-flash-preview...`);
+  console.log(`Polish: sending ${sectionsWithContent.length} sections (${concatenated.length} chars) to gemini-3-flash-preview...`);
   const polishStart = Date.now();
 
   const polished = await callAI(
@@ -811,7 +827,10 @@ Rules:
     const sectionName = parts[i].trim();
     const sectionContent = (parts[i + 1] || "").trim();
 
-    if (polishedSections[sectionName] && polishedSections[sectionName].visible && sectionContent.length > 50) {
+    // Polish any section the model returned with a non-trivial body —
+    // including currently-hidden ones (gated content stored for later
+    // upgrade-unlock under P0-3).
+    if (polishedSections[sectionName] && sectionContent.length > 50) {
       polishedSections[sectionName] = {
         ...polishedSections[sectionName],
         content: sectionContent,
@@ -825,7 +844,7 @@ Rules:
     return sections;
   }
 
-  console.log(`Polish: successfully polished ${parsedCount}/${visibleSections.length} sections`);
+  console.log(`Polish: successfully polished ${parsedCount}/${sectionsWithContent.length} sections`);
   return polishedSections;
 }
 
@@ -842,8 +861,11 @@ const sanitizeFilterValue = (v: string): string =>
 // shared, dependency-free module so it can be unit-tested under Node.
 // See goalServiceTags.ts and ENGINEERING_TODO P0.1.
 
-// ── Database matching ──────────────────────────────────────────────────
-async function searchMatches(supabase: any, intake: any) {
+// ── Database matching (array-overlap path) ─────────────────────────────
+// The legacy, deterministic matcher: Postgres array-overlap on sector_tags /
+// services + location ilike, with the weighted scoreRow ranking. This is the
+// per-section backfill AND total fallback for the semantic path below.
+async function searchMatchesOverlap(supabase: any, intake: any) {
   const matches: Record<string, any[]> = {};
   const regions = intake.target_regions || [];
   // Expand selected goals into short service tags for better .cs.{} matching.
@@ -904,7 +926,9 @@ async function searchMatches(supabase: any, intake: any) {
       if (row.target_company_origin.includes(wants)) s += 1.5; // trade-direction fit
     }
     if (countryTerm) {
-      const hay = [row.description, (row.specialties || []).join(" "), (row.services || []).join(" "), row.tagline]
+      // `row.tagline` doesn't exist on most queried tables — keep description /
+      // specialties / services which are real on the tables that use them.
+      const hay = [row.description, (row.specialties || []).join(" "), (row.services || []).join(" ")]
         .filter(Boolean).join(" ").toLowerCase();
       if (hay.includes(countryTerm)) s += 1.5; // text fallback (bio/desc mentions the country)
     }
@@ -914,15 +938,26 @@ async function searchMatches(supabase: any, intake: any) {
   const rank = (rows: any[], opts: { service?: string; countryCol?: string; persona?: boolean }, limit: number): any[] =>
     (rows || [])
       .map((r: any) => ({ r, s: scoreRow(r, opts) }))
-      .sort((a, b) => (b.s - a.s) || ((b.r.is_verified ? 1 : 0) - (a.r.is_verified ? 1 : 0)))
+      // No `is_verified` column on the queried tables — score alone determines order.
+      // Tiebreak deterministically by id so two equally-scored rows don't shuffle
+      // between runs (was a source of "different reports, same matches" perception).
+      .sort((a, b) => (b.s - a.s) || String(a.r.id || "").localeCompare(String(b.r.id || "")))
       .slice(0, limit)
       .map((x) => x.r);
 
   // Service providers — service-type + location + sector (mostly horizontal/agnostic)
   try {
-    let spQuery = supabase.from("service_providers").select("id, name, slug, location, services, description, website, website_url, is_verified, tagline, logo_url, category_slug, sector_tags, sector_agnostic").limit(CAND);
+    // SELECT only columns that actually exist on service_providers — historically
+    // this list included `website_url, is_verified, tagline, logo_url, category_slug`,
+    // none of which exist on the table. PostgREST returned 400 → the catch below
+    // swallowed it → matches.service_providers was never set → every report
+    // surfaced "We did not find matching service providers."
+    let spQuery = supabase.from("service_providers")
+      .select("id, name, slug, location, services, description, website, sector_tags, sector_agnostic")
+      .limit(CAND);
     spQuery = spQuery.or(buildOr({ service: "services" }));
-    const { data: sp } = await spQuery;
+    const { data: sp, error: spErr } = await spQuery;
+    if (spErr) console.error("SP query error (matches will be empty):", spErr);
     matches.service_providers = rank(sp, { service: "services" }, 10).map((p: any) => ({
       ...p,
       link: p.slug ? `/service-providers/${p.slug}` : "/service-providers",
@@ -933,26 +968,120 @@ async function searchMatches(supabase: any, intake: any) {
 
   // Community members (mentors) — sector + skill + country corridor + location
   try {
-    let cmQuery = supabase.from("community_members").select("id, name, title, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic").limit(CAND);
+    let cmQuery = supabase.from("community_members")
+      .select("id, name, title, slug, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic, is_anonymous, is_active")
+      .eq("is_active", true)
+      .eq("is_anonymous", false)
+      .limit(CAND);
     cmQuery = cmQuery.or(buildOr({ service: "specialties" }));
-    const { data: cm } = await cmQuery;
-    matches.community_members = rank(cm, { service: "specialties", countryCol: "origin_country" }, 5).map((m: any) => ({
-      ...m, link: "/community", linkLabel: "View Profile",
+    const { data: cm, error: cmErr } = await cmQuery;
+    if (cmErr) console.error("CM query error:", cmErr);
+
+    // Defensive seed-name strip in addition to the is_anonymous filter, in
+    // case any demo rows lack the flag. The directory historically contained
+    // near-duplicate seed profiles ("Sarah Chen" / "Dr. Sarah Chen") that
+    // ranked into nearly every report; the person-dedupe below collapses
+    // those even when both are technically not flagged anonymous.
+    const isSeedMentor = (m: any): boolean => {
+      const n = (m.name || "").toLowerCase();
+      if (n.startsWith("anonymous")) return true;
+      if (/(^|\s)test(\s|$)/.test(n)) return true;
+      if (n === "sample mentor" || n === "demo mentor") return true;
+      return false;
+    };
+    const cleaned = (cm || []).filter((m: any) => !isSeedMentor(m));
+
+    // Overfetch then person-dedupe: drop near-identical names (e.g. "Sarah Chen"
+    // and "Dr. Sarah Chen") before slicing to 5. Keep the higher-scored one.
+    const ranked = rank(cleaned, { service: "specialties", countryCol: "origin_country" }, 12);
+    const normalizeName = (name: string) =>
+      (name || "").toLowerCase()
+        .replace(/^(dr|prof|mr|mrs|ms|miss)\.?\s+/i, "")  // strip honorifics
+        .replace(/[^a-z\s]/g, "")
+        .trim()
+        .split(/\s+/)
+        .join(" ");
+    const seenPeople = new Set<string>();
+    const deduped: any[] = [];
+    for (const m of ranked) {
+      const key = normalizeName(m.name);
+      if (!key || seenPeople.has(key)) continue;
+      seenPeople.add(key);
+      deduped.push(m);
+      if (deduped.length >= 5) break;
+    }
+
+    matches.community_members = deduped.map((m: any) => ({
+      ...m,
+      // Build a real per-mentor profile URL from the slug rather than the
+      // legacy /community catch-all (which redirects). The mentor profile
+      // route is /mentors/:categorySlug/:mentorSlug — the category segment
+      // is informational (used for breadcrumb) and useMentorBySlug resolves
+      // by slug alone, so a sane default category works for every mentor.
+      link: m.slug ? `/mentors/experts/${m.slug}` : "/mentors",
+      linkLabel: "View Profile",
       subtitle: [m.title, m.company].filter(Boolean).join(", "),
       tags: (m.specialties || []).slice(0, 3),
     }));
   } catch (e) { console.error("CM search error:", e); }
 
-  // Events — sector + location (+ agnostic)
+  // Events — sector + location, with a HARD date>=now filter, hard region
+  // filter when target_regions are supplied, and title+date+venue dedupe so
+  // four "Startups Demos & Networking Melbourne" rows for the same night
+  // don't all surface.
   try {
-    let evQuery = supabase.from("events").select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic").limit(CAND);
+    const todayIso = new Date().toISOString().slice(0, 10);
+    let evQuery = supabase.from("events")
+      .select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic")
+      .gte("date", todayIso)
+      .limit(CAND);
     evQuery = evQuery.or(buildOr());
-    const { data: ev } = await evQuery;
+    const { data: ev, error: evErr } = await evQuery;
+    if (evErr) console.error("Events query error:", evErr);
 
-    let eventResults = rank(ev, {}, 5);
+    // If the user supplied target_regions, hard-filter to events whose
+    // location matches at least one region pattern. This stops Melbourne
+    // events surfacing for a Sydney/NSW-only company, which the old
+    // soft +1 score-bump did not prevent.
+    let regionFiltered = ev || [];
+    if (locationPatterns.length > 0) {
+      regionFiltered = regionFiltered.filter((row: any) => {
+        const loc = (row.location || "").toLowerCase();
+        return locationPatterns.some((l: string) => loc.includes(l.toLowerCase()));
+      });
+    }
+
+    let eventResults = rank(regionFiltered, {}, 12); // overfetch so dedupe still leaves ~5
+
+    // Title+date+venue dedupe. Many ingested rows are near-duplicates of the
+    // same event (4× "Startups & Investors Pitch Night Melbourne" on
+    // 2026-06-19 at "The National Hotel, Richmond, Melbourne"). Collapse
+    // to one card per (normalized title, date, normalized venue).
+    const normalize = (s: string) =>
+      (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/).slice(0, 6).join(" ");
+    const seen = new Set<string>();
+    eventResults = eventResults.filter((e: any) => {
+      const key = `${normalize(e.title)}|${e.date}|${normalize(e.location)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 5);
+
+    // Fallback when the strict filter returned nothing: take the soonest
+    // future events in the target region (still date-bounded — no more
+    // 2024 events appearing in 2026 reports).
     if (eventResults.length === 0) {
-      const { data: allEvents } = await supabase.from("events").select("id, title, slug, date, location, category, type, organizer, sector").order("date", { ascending: true }).limit(5);
-      eventResults = allEvents || [];
+      let fbQuery = supabase.from("events")
+        .select("id, title, slug, date, location, category, type, organizer, sector")
+        .gte("date", todayIso)
+        .order("date", { ascending: true })
+        .limit(5);
+      if (locationPatterns.length > 0) {
+        const orParts = locationPatterns.map((l: string) => `location.ilike.%${l}%`);
+        fbQuery = fbQuery.or(orParts.join(","));
+      }
+      const { data: fb } = await fbQuery;
+      eventResults = fb || [];
     }
 
     matches.events = eventResults.map((e: any) => ({
@@ -965,9 +1094,12 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let ciQuery = supabase.from("content_items").select("id, title, slug, content_type, sector_tags, meta_description, sector_agnostic").eq("status", "published").limit(CAND);
     ciQuery = ciQuery.or(buildOr({ location: false }));
-    const { data: ci } = await ciQuery;
+    const { data: ci, error: ciErr } = await ciQuery;
+    if (ciErr) console.error("Content query error:", ciErr);
     matches.content_items = rank(ci, {}, 5).map((c: any) => ({
       ...c, name: c.title, link: `/content/${c.slug}`, linkLabel: "Read More",
+      // Pass the raw content_type but the frontend humaniser in
+      // ReportMatchCard maps case_study -> "Case Study", guide -> "Guide", etc.
       subtitle: c.content_type, tags: (c.sector_tags || []).slice(0, 2),
     }));
   } catch (e) { console.error("Content search error:", e); }
@@ -976,7 +1108,8 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type, price, record_count, provider_name, sector_tags, sector_agnostic").limit(CAND);
     ldQuery = ldQuery.or(buildOr());
-    const { data: ld } = await ldQuery;
+    const { data: ld, error: ldErr } = await ldQuery;
+    if (ldErr) console.error("Leads query error:", ldErr);
     matches.leads = rank(ld, {}, 5).map((l: any) => ({
       ...l, link: "/leads", linkLabel: "View Dataset",
       subtitle: `${l.location} · ${l.record_count || "?"} records`,
@@ -988,7 +1121,8 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let ieQuery = supabase.from("innovation_ecosystem").select("id, slug, name, location, services, description, website, sector_tags, sector_agnostic").limit(CAND);
     ieQuery = ieQuery.or(buildOr({ service: "services" }));
-    const { data: ie } = await ieQuery;
+    const { data: ie, error: ieErr } = await ieQuery;
+    if (ieErr) console.error("IE query error:", ieErr);
     matches.innovation_ecosystem = rank(ie, { service: "services" }, 5).map((o: any) => ({
       ...o, link: o.slug ? `/innovation-ecosystem/${o.slug}` : "/innovation-ecosystem", linkLabel: "View Hub",
       subtitle: o.location, tags: (o.services || []).slice(0, 3),
@@ -999,7 +1133,8 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, sector_tags, sector_agnostic").limit(CAND);
     taQuery = taQuery.or(buildOr({ service: "services" }));
-    const { data: ta } = await taQuery;
+    const { data: ta, error: taErr } = await taQuery;
+    if (taErr) console.error("TIA query error:", taErr);
     matches.trade_investment_agencies = rank(ta, { service: "services", persona: true }, 5).map((a: any) => ({
       ...a, link: a.slug ? `/government-support/${a.slug}` : "/government-support", linkLabel: "View Organisation",
       subtitle: a.location, tags: (a.services || []).slice(0, 3),
@@ -1012,7 +1147,8 @@ async function searchMatches(supabase: any, intake: any) {
   try {
     let invQuery = supabase.from("investors").select("id, slug, name, investor_type, location, country, sector_focus, stage_focus, check_size_min, check_size_max, website, description, sector_tags, sector_agnostic").limit(120);
     invQuery = invQuery.or(buildOr());
-    const { data: inv } = await invQuery;
+    const { data: inv, error: invErr } = await invQuery;
+    if (invErr) console.error("Investors query error:", invErr);
     matches.investors = rank(inv, { countryCol: "country" }, 8).map((i: any) => ({
       ...i, link: i.slug ? `/investors/${i.slug}` : "/investors", linkLabel: "View Investor",
       subtitle: `${i.investor_type} · ${i.location}`,
@@ -1037,11 +1173,14 @@ async function searchMatches(supabase: any, intake: any) {
       lcQuery = lcQuery.or(lcFilters.join(","));
     }
 
-    const { data: lc } = await lcQuery;
+    const { data: lc, error: lcErr } = await lcQuery;
+    if (lcErr) console.error("Lemlist contacts query error:", lcErr);
     // D1: do not embed raw PII (email, linkedin_url, full_name) in report JSON.
-    // Frontend (server-rendered, gated by tier) can resolve full contact details
-    // by re-querying lemlist_contacts via an authenticated, entitled path later.
-    // For now expose only obfuscated display fields + the record id for reference.
+    // The previous version exposed `id: c.id` with a "Frontend can resolve
+    // full contact details via an authenticated, entitled path later" plan —
+    // but that entitled path is not yet implemented, so embedding the id
+    // leaked a PII handle to any tier that received report JSON. Strip the
+    // id entirely until the gated lookup endpoint exists.
     const obfuscateName = (full?: string | null): string => {
       if (!full) return "Industry Contact";
       const parts = full.trim().split(/\s+/).filter(Boolean);
@@ -1051,17 +1190,139 @@ async function searchMatches(supabase: any, intake: any) {
       return [first, lastInitial].filter(Boolean).join(" ");
     };
     matches.lemlist_contacts = (lc || []).map((c: any) => ({
-      id: c.id,
       name: obfuscateName(c.full_name),
       link: "#",
       linkLabel: "Locked",
       subtitle: [c.job_title, c.company_name || c.lemlist_companies?.name].filter(Boolean).join(" at "),
       tags: [c.linkedin_job_industry || c.industry, c.contact_location || c.lemlist_companies?.location].filter(Boolean).slice(0, 2),
     }));
-    console.log(`Lemlist contacts matched: ${(lc || []).length} (PII stripped before embed)`);
+    console.log(`Lemlist contacts matched: ${(lc || []).length} (PII + id stripped before embed)`);
   } catch (e) { console.error("Lemlist contacts search error:", e); }
 
   return matches;
+}
+
+// ── Semantic directory matching (mes_knowledge_base) ─────────────────────
+// Recall upgrade over the .cs.{} array-overlap path: embed the intake, ask the
+// unified KB (match_knowledge) for the most relevant entities across types, then
+// hydrate full source rows so the render/enrich contract above is unchanged.
+
+/** Embed text with OpenAI text-embedding-3-small. Resolves the key env-first with a
+ *  Vault fallback (mirrors knowledge-search / embed-knowledge). 10s timeout. Returns
+ *  null on any failure (missing key, timeout, API error) so the caller falls back to
+ *  the array-overlap path. */
+async function embedText(text: string, supabase: any): Promise<number[] | null> {
+  if (!text.trim()) return null;
+  let key = Deno.env.get("OPENAI_API_KEY") ?? "";
+  if (!key) {
+    // Vault fallback so this keeps working if the key is ever moved out of env.
+    try {
+      const { data: vk } = await supabase.rpc("kb_get_openai_key");
+      key = typeof vk === "string" ? vk : "";
+    } catch (e) { console.error("embedText kb_get_openai_key failed", e); }
+  }
+  if (!key) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const resp = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
+      signal: controller.signal,
+    });
+    if (!resp.ok) { console.error("embedText OpenAI error", resp.status); return null; }
+    const j = await resp.json();
+    return j.data?.[0]?.embedding ?? null;
+  } catch (e) { console.error("embedText threw", e); return null; }
+  finally { clearTimeout(timer); }
+}
+
+/** Semantic matches for KB-covered entity types. Returns {} on any failure so the
+ *  caller falls back to the array-overlap path. The report build runs server-side,
+ *  so all visibilities are requested — per-section tier gating happens at render.
+ *
+ *  The hydrate step mirrors the array-overlap path's correctness guards (P1-7/P1-9)
+ *  so the semantic path — which is PREFERRED when it returns rows — can't
+ *  reintroduce the bugs fixed there: it drops inactive/anonymous/seed mentors and
+ *  dedupes them by person, and drops past-dated events. */
+async function semanticMatches(supabase: any, intake: any): Promise<Record<string, any[]>> {
+  const out: Record<string, any[]> = {};
+  const queryText = buildMatchQueryText(intake);
+  const embedding = await embedText(queryText, supabase);
+  if (!embedding) return out;
+
+  const { data, error } = await supabase.rpc("match_knowledge", {
+    query_embedding: `[${embedding.join(",")}]`,
+    query_text: queryText,
+    match_count: 120,
+    match_threshold: 0.15,
+    filter: {},
+    allowed_visibility: ["public", "member", "paid"],
+  });
+  if (error) { console.error("match_knowledge error", error.message); return out; }
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const ranked = groupRankedBySource(data || []);
+  await Promise.all(Object.entries(ranked).map(async ([tbl, items]) => {
+    const cfg = SEMANTIC_CFG[tbl];
+    // Overfetch (2× cap) so post-hydrate filtering still leaves a full slate.
+    const ids = (items as Array<{ id: string }>).slice(0, cfg.cap * 2).map((x) => x.id);
+    if (ids.length === 0) return;
+    try {
+      const { data: rows } = await supabase.from(cfg.table).select(cfg.select).in("id", ids);
+      const order = new Map(ids.map((id, i) => [id, i] as const));
+      let ordered = (rows || []).sort(
+        (a: any, b: any) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999),
+      );
+
+      if (tbl === "community_members") {
+        const seenNames = new Set<string>();
+        ordered = ordered.filter((m: any) => {
+          if (m.is_active === false || m.is_anonymous === true) return false;
+          const n = (m.name || "").toLowerCase();
+          if (n.startsWith("anonymous")) return false;
+          const key = n.replace(/^(dr|prof|mr|mrs|ms|miss)\.?\s+/i, "").replace(/[^a-z\s]/g, "").trim();
+          if (!key || seenNames.has(key)) return false;
+          seenNames.add(key);
+          return true;
+        });
+      } else if (tbl === "events") {
+        ordered = ordered.filter((e: any) => !e.date || e.date >= todayIso);
+      }
+
+      out[tbl] = ordered.slice(0, cfg.cap).map(cfg.decorate);
+    } catch (e) { console.error(`semantic hydrate ${tbl} failed`, e); }
+  }));
+  return out;
+}
+
+/** Directory matching: semantic-first (mes_knowledge_base) with the array-overlap
+ *  path as per-section backfill AND total fallback. `leads` + `lemlist_contacts`
+ *  are not in the KB, so they always come from the overlap path. If OPENAI_API_KEY
+ *  is unset or the KB call fails, semantic returns {} and the (now bug-fixed)
+ *  overlap path carries the whole report. */
+async function searchMatches(supabase: any, intake: any): Promise<Record<string, any[]>> {
+  const overlap = await searchMatchesOverlap(supabase, intake);
+  let semantic: Record<string, any[]> = {};
+  try {
+    semantic = await semanticMatches(supabase, intake);
+  } catch (e) {
+    console.error("semantic matches failed; using array-overlap only", e);
+  }
+
+  const merged: Record<string, any[]> = { ...overlap };
+  for (const [tbl, cfg] of Object.entries(SEMANTIC_CFG)) {
+    const sem = semantic[tbl] || [];
+    if (sem.length === 0) continue; // keep the overlap result for this type
+    const seen = new Set(sem.map((x: any) => x.id));
+    const backfill = (overlap[tbl] || []).filter((x: any) => !seen.has(x.id));
+    merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
+  }
+  const semKeys = Object.keys(semantic).filter((k) => (semantic[k] || []).length > 0);
+  console.log(`searchMatches: semantic-matched types = [${semKeys.join(", ")}]`);
+  return merged;
 }
 
 function getMatchesForSection(sectionName: string, matches: Record<string, any[]>): any[] {
@@ -1274,19 +1535,48 @@ async function generateReportInBackground(
     const sections: Record<string, any> = {};
     const sectionsGenerated: string[] = [];
 
+    // ── Citation availability (P0-4) ─────────────────────────────────────
+    // When Perplexity returned no citations, instructing the model that it
+    // "MUST include [N] citation markers" produces hallucinated numbers
+    // that point at nothing (we observed sections shipping with [1], [3],
+    // [5]…[9] markers while perplexity_citations was []). Swap in a strict
+    // "do NOT include citation markers" instruction in that case.
+    const numCitations = marketResearch.citations.length;
+    const citationInstruction = numCitations > 0
+      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MAY include inline citation markers using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
+      : `IMPORTANT — Inline citations: Do NOT include any numbered citation markers (e.g. [1], [2], [3]) anywhere in your response. There is no source list to cite for this report.`;
+
+    // ── Research availability disclosure (P1-11) ─────────────────────────
+    // Tell the model exactly which research streams produced data, so it
+    // doesn't invent specific grant programs / FTA names / cost figures when
+    // the underlying Perplexity query failed and the variable fell back to
+    // "No X available". This is a soft guard — combined with the per-template
+    // "do not invent" rules it materially reduces fabrication.
+    const availabilityLines: string[] = [];
+    availabilityLines.push(`- Market landscape research: ${marketResearch.landscape ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Regulatory & compliance research: ${marketResearch.regulatory ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Recent news (last 6 months): ${marketResearch.news ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Bilateral trade / fundraising landscape research: ${marketResearch.bilateral_trade ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Cost of doing business research: ${marketResearch.cost_of_business ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Grants & incentives research: ${marketResearch.grants ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- End-buyer procurement research: ${endBuyerProcurementResearch ? "available" : "UNAVAILABLE"}`);
+    availabilityLines.push(`- Company-website scrape (enriched profile): ${companyProfile ? "available" : "UNAVAILABLE"}`);
+    const availabilityNote = `\n\nDATA AVAILABILITY for this report:\n${availabilityLines.join("\n")}\n\nFor any topic marked UNAVAILABLE: do NOT invent specific figures, program names, percentages, eligibility criteria, named clients, or named partners. Use general guidance (e.g. "review the relevant federal grant programs") rather than naming specifics you cannot verify from the provided data. NEVER invent client relationships, partnerships, or past customers that are not explicitly listed in the enriched company profile.`;
+
     if (templates && templates.length > 0) {
-      // Generate ALL sections in a single parallel batch (was batches of 3)
-      console.log(`Generating ${templates.length} sections in single parallel batch...`);
+      // Generate ALL sections in a single parallel batch (was batches of 3).
+      // (P0-3) Sections gated above the user's tier are STILL generated and
+      // stored with `visible: false`. The frontend reads `visible` to gate
+      // display, so an upgrade unlocks the content inline — the user never
+      // needs to regenerate. Previously gated sections were stored with
+      // empty content, which forced a full regeneration after every upgrade.
+      console.log(`Generating ${templates.length} sections in single parallel batch (P0-3: gated content stored hidden)...`);
       const sectionStartTime = Date.now();
 
       const results = await Promise.allSettled(
         templates.map(async (tmpl: any) => {
           const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
-          const visible = requiredTierIndex === -1 || userTierIndex >= requiredTierIndex;
-
-          if (!visible) {
-            return { name: tmpl.section_name, data: { content: "", visible: false } };
-          }
+          const willBeVisible = requiredTierIndex === -1 || userTierIndex >= requiredTierIndex;
 
           let prompt = tmpl.prompt_body;
 
@@ -1309,8 +1599,10 @@ async function generateReportInBackground(
               ? "\n\nPERSONA CONTEXT: This report is for an Australian startup seeking to grow and scale domestically. Focus on: fundraising landscape, investor matching, accelerator/incubator programs, government grants and R&D tax incentives, growth-stage hiring, market sizing/TAM data, founder networks, and scaling strategy within the existing Australian market. The company is already based in Australia — do NOT focus on market entry logistics like visas or entity setup."
               : "\n\nPERSONA CONTEXT: This report is for an international company entering the ANZ market from overseas. Focus on: regulatory compliance, entity setup, visa requirements, cultural and business practice differences, bilateral trade advantages, service provider matching for market entry support, trade agencies, and go-to-market strategy for a company with no existing Australian presence.";
 
+            const systemContent = `You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\n${citationInstruction}${personaContext}${availabilityNote}`;
+
             const content = await callAI(lovableKey, [
-              { role: "system", content: "You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\nIMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MUST include inline citation markers using the format [N] where N is the source number from the provided citations list. Place the citation immediately after the relevant claim. For example: \"The Australian AI market is projected to reach USD 8.48 billion by 2030 [3].\" If multiple sources support a claim, list them: [1][4]. Only cite sources from the provided numbered citations list — do not invent citation numbers." + personaContext },
+              { role: "system", content: systemContent },
               { role: "user", content: prompt },
             ]);
 
@@ -1318,7 +1610,7 @@ async function generateReportInBackground(
               name: tmpl.section_name,
               data: {
                 content,
-                visible: true,
+                visible: willBeVisible,
                 matches: getMatchesForSection(tmpl.section_name, matches),
               },
             };
@@ -1335,7 +1627,12 @@ async function generateReportInBackground(
       for (const result of results) {
         if (result.status === "fulfilled" && result.value) {
           sections[result.value.name] = result.value.data;
-          if (result.value.data.visible) sectionsGenerated.push(result.value.name);
+          // Track every section that produced content, regardless of gating.
+          // `sections_generated` now means "sections the user can unlock by
+          // upgrading" rather than "sections currently visible".
+          if (result.value.data.content && result.value.data.content.trim().length > 0) {
+            sectionsGenerated.push(result.value.name);
+          }
         }
       }
 
@@ -1368,7 +1665,9 @@ async function generateReportInBackground(
       },
     });
 
-    // Save immediately with unpolished content — report is now viewable
+    // Save immediately with unpolished content — report is now viewable.
+    // This protects against worker death between generation and polish: the
+    // report is durably stored even if the polish step crashes.
     const reportJson = buildReportJson(sections, false);
 
     const { error: reportErr } = await supabase
@@ -1385,7 +1684,65 @@ async function generateReportInBackground(
 
     await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intakeFormId);
 
-    // Send report completion email (non-blocking)
+    console.log(`Report ${reportId} saved (unpolished) in ${Date.now() - startTime}ms`);
+
+    // 7b. Polish pass — best-effort improvement, given a more generous timeout
+    // (45s, up from 30s) and a single retry. Email is sent AFTER polish so
+    // users don't open the link to an unpolished draft. If polish fails the
+    // unpolished report is still emailed — better than not emailing at all.
+    let polishApplied = false;
+    const POLISH_TIMEOUT_MS = 45000;
+    const runPolishOnce = async (): Promise<Record<string, any>> => {
+      let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+      try {
+        return await Promise.race([
+          polishReport(lovableKey, sections, sectionOrder),
+          new Promise<never>((_, reject) => {
+            timeoutHandle = setTimeout(
+              () => reject(new Error(`Polish timeout (${POLISH_TIMEOUT_MS / 1000}s)`)),
+              POLISH_TIMEOUT_MS,
+            );
+          }),
+        ]);
+      } finally {
+        // Clear the timer whether polish resolved or rejected — otherwise
+        // a fast polish keeps an idle timer alive for the rest of the
+        // background task budget.
+        if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+      }
+    };
+
+    try {
+      let polishedSections: Record<string, any>;
+      try {
+        polishedSections = await runPolishOnce();
+      } catch (firstErr) {
+        console.warn("Polish pass first attempt failed — retrying once:", firstErr instanceof Error ? firstErr.message : firstErr);
+        polishedSections = await runPolishOnce();
+      }
+
+      // Polish succeeded — update report with polished content
+      for (const [name, data] of Object.entries(polishedSections)) {
+        sections[name] = data;
+      }
+
+      const polishedReportJson = buildReportJson(sections, true);
+
+      await supabase
+        .from("user_reports")
+        .update({ report_json: polishedReportJson })
+        .eq("id", reportId);
+
+      polishApplied = true;
+      console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);
+    } catch (e) {
+      console.warn("Polish pass skipped after retry (report stays unpolished):", e instanceof Error ? e.message : e);
+    }
+
+    // 7c. Send report completion email — AFTER polish so the user's first
+    // view shows the polished prose. If polish failed, we still send the
+    // email (the unpolished report is genuinely usable; silence would be
+    // worse than a slightly rough draft).
     try {
       if (intake.user_id) {
         const { data: userData } = await supabase.auth.admin.getUserById(intake.user_id);
@@ -1415,33 +1772,7 @@ async function generateReportInBackground(
       console.warn("Failed to send report completion email (non-blocking):", emailErr);
     }
 
-    console.log(`Report ${reportId} saved (unpolished) in ${Date.now() - startTime}ms`);
-
-    // 7b. Polish pass — best-effort improvement with 30s timeout
-    try {
-      const polishedSections = await Promise.race([
-        polishReport(lovableKey, sections, sectionOrder),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Polish timeout (30s)")), 30000)
-        ),
-      ]);
-
-      // Polish succeeded — update report with polished content
-      for (const [name, data] of Object.entries(polishedSections)) {
-        sections[name] = data;
-      }
-
-      const polishedReportJson = buildReportJson(sections, true);
-
-      await supabase
-        .from("user_reports")
-        .update({ report_json: polishedReportJson })
-        .eq("id", reportId);
-
-      console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);
-    } catch (e) {
-      console.warn("Polish pass skipped (report already saved):", e instanceof Error ? e.message : e);
-    }
+    console.log(`Report ${reportId} fully done (polish_applied=${polishApplied}) in ${Date.now() - startTime}ms`);
   } catch (e) {
     console.error("Background report generation failed:", e);
 

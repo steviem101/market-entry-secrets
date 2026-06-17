@@ -1,11 +1,17 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { InlineCitation } from './InlineCitation';
 
 interface CitationRendererProps {
   content: string;
   citations: string[];
 }
+
+// GFM (GitHub-Flavored Markdown) unlocks tables, strikethrough, autolinks,
+// and task lists for the AI's section output. Without it the `td` override
+// below was dead code and any AI-emitted table rendered as raw pipe-text.
+const REMARK_PLUGINS = [remarkGfm];
 
 /**
  * Renders markdown content with inline citation markers [N] converted
@@ -14,7 +20,7 @@ interface CitationRendererProps {
 export const CitationRenderer = ({ content, citations }: CitationRendererProps) => {
   if (!citations || citations.length === 0) {
     // No citations — render plain markdown, [N] will show as text
-    return <ReactMarkdown>{content}</ReactMarkdown>;
+    return <ReactMarkdown remarkPlugins={REMARK_PLUGINS}>{content}</ReactMarkdown>;
   }
 
   // Custom components override for react-markdown: we process text nodes
@@ -37,7 +43,7 @@ export const CitationRenderer = ({ content, citations }: CitationRendererProps) 
     ),
   };
 
-  return <ReactMarkdown components={components}>{content}</ReactMarkdown>;
+  return <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>{content}</ReactMarkdown>;
 };
 
 const CITATION_REGEX = /\[(\d+)\]/g;

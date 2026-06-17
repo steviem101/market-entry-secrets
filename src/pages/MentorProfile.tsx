@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { MentorContactModal } from "@/components/mentors/MentorContactModal";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { domainToWebsite } from "@/lib/logoUtils";
 import {
   useMentorBySlug,
   useMentorExperience,
@@ -78,7 +79,7 @@ const MentorProfile = () => {
   // Also check experience_tiles from JSONB as fallback
   const experienceTiles = mentor?.experience_tiles
     ? (Array.isArray(mentor.experience_tiles)
-        ? (mentor.experience_tiles as { id?: string; name: string; logo?: string }[])
+        ? (mentor.experience_tiles as { id?: string; name: string; logo?: string; domain?: string }[])
         : [])
     : [];
 
@@ -89,7 +90,9 @@ const MentorProfile = () => {
           id: t.id || String(i),
           company_name: t.name,
           company_logo_url: t.logo || null,
-          company_website: null,
+          // Derive a website from the tile's logo.dev domain so CompanyLogo renders
+          // the brand logo (monogram fallback when no domain).
+          company_website: domainToWebsite(t.domain),
           relationship_type: null,
           display_order: i,
         }));
@@ -171,6 +174,12 @@ const MentorProfile = () => {
         contentDescription={mentor.tagline || mentor.description}
       >
 
+      {/* Breadcrumb — sits above the cover strip so it never collides with the
+          avatar, which is pulled up with a negative margin to straddle the cover. */}
+      <div className="container mx-auto px-4">
+        <EntityBreadcrumb segments={breadcrumbSegments} className="py-4 px-0" />
+      </div>
+
       {/* Cover strip */}
       <div
         className="h-40 md:h-52 bg-gradient-to-r from-primary/80 to-primary/40"
@@ -182,11 +191,9 @@ const MentorProfile = () => {
       />
 
       <div className="container mx-auto px-4 pb-12">
-        <EntityBreadcrumb segments={breadcrumbSegments} className="mb-4 pt-4 px-0" />
-
         {/* Profile header */}
         <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
-          <div className="relative -mt-20 md:-mt-24">
+          <div className="relative -mt-12 md:-mt-14">
             <Avatar className="w-24 h-24 md:w-28 md:h-28 border-4 border-background shadow-lg">
               <AvatarImage src={mentor.avatar_url || mentor.image || undefined} alt={mentor.name} />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl md:text-3xl">

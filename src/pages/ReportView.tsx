@@ -18,6 +18,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Skeleton } from '@/components/ui/skeleton';
+import { splitEventsAndResources } from '@/lib/reportEventsSplit';
 import {
   SECTION_LABELS,
   SECTION_ORDER,
@@ -192,8 +193,10 @@ const ReportViewInner = () => {
                   );
                 }
 
-                // Case 2: Section is unlocked but has no content (report was generated at lower tier)
-                // → show "generate new report" prompt
+                // Case 2 (LEGACY): Section is unlocked but has no content. New
+                // reports never hit this — generate-report now stores gated
+                // content with visible:false so an upgrade unlocks inline.
+                // This branch remains for reports generated before that fix.
                 if (requiredTier && !hasContent) {
                   return (
                     <ReportRegenerateSection
@@ -210,6 +213,31 @@ const ReportViewInner = () => {
                 // Case 4: Section is unlocked with content → render normally
                 const sectionMatches = section.matches || matches[sectionId] || [];
 
+                // For events_resources the matches array mixes events with
+                // content items (case studies, guides). Split so case studies
+                // don't render under "Upcoming Events" with a raw subtitle.
+                const isEventsSection = sectionId === 'events_resources';
+                const eventsSplit = isEventsSection ? splitEventsAndResources(sectionMatches) : null;
+
+                const renderCardGrid = (items: any[]) => (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {items.map((match: any, idx: number) => (
+                      <ReportMatchCard
+                        key={match.id || idx}
+                        name={match.name}
+                        subtitle={match.subtitle || match.category || match.location}
+                        tags={match.tags || match.services?.slice(0, 3)}
+                        link={match.link}
+                        linkLabel={match.linkLabel}
+                        blurred={match.blurred}
+                        upgradeCta={match.upgrade_cta}
+                        website={match.website}
+                        source={match.source}
+                      />
+                    ))}
+                  </div>
+                );
+
                 return (
                   <ReportSection
                     key={sectionId}
@@ -218,23 +246,23 @@ const ReportViewInner = () => {
                     content={section.content || ''}
                     citations={perplexityCitations}
                   >
-                    {sectionMatches.length > 0 && (
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {sectionMatches.map((match: any, idx: number) => (
-                          <ReportMatchCard
-                            key={match.id || idx}
-                            name={match.name}
-                            subtitle={match.subtitle || match.category || match.location}
-                            tags={match.tags || match.services?.slice(0, 3)}
-                            link={match.link}
-                            linkLabel={match.linkLabel}
-                            blurred={match.blurred}
-                            upgradeCta={match.upgrade_cta}
-                            website={match.website}
-                            source={match.source}
-                          />
-                        ))}
-                      </div>
+                    {isEventsSection && eventsSplit ? (
+                      <>
+                        {eventsSplit.events.length > 0 && renderCardGrid(eventsSplit.events)}
+                        {eventsSplit.resources.length > 0 && (
+                          <div className="pt-4">
+                            <div className="flex items-center gap-3 mb-4">
+                              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                                Case Studies &amp; Resources
+                              </span>
+                              <div className="flex-1 border-t border-border" />
+                            </div>
+                            {renderCardGrid(eventsSplit.resources)}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      sectionMatches.length > 0 && renderCardGrid(sectionMatches)
                     )}
                   </ReportSection>
                 );

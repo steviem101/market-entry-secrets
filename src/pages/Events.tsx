@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Calendar, AlertCircle } from "lucide-react";
@@ -61,6 +61,51 @@ const Events = () => {
     setSearchParams(p, { replace: true });
   }, [localSearchQuery, selectedCategory, selectedType, selectedCity, selectedSector, selectedTopic, selectedSource, activeTab, personaFilterValue, currentPage, setSearchParams]);
 
+  // Keep the page still when a filter changes. Two things conspire to yank the
+  // page toward the filter bar: (1) Radix tabs/selects move focus to the control
+  // that was clicked and the browser scrolls it into view, and (2) swapping the
+  // card list reflows the document height and clamps scroll. Both fire AFTER the
+  // click, so a live scroll ref gets clobbered before we can read it.
+  //
+  // Instead, snapshot the scroll position at the instant the user starts
+  // interacting (pointerdown / keydown, capture phase, before focus moves), then
+  // pin scroll back to that snapshot for a few frames after the re-render so we
+  // beat the focus-induced scrollIntoView and the reflow clamp.
+  const restoreScrollY = useRef<number | null>(null);
+  useEffect(() => {
+    const snapshot = (e: Event) => {
+      // Ignore interactions inside an open popover/listbox (e.g. picking an option
+      // in the Location select). By then Radix has already scrolled the open
+      // control into view, so the live scrollY is the post-open-shift position, not
+      // the resting spot we want to return to. Keep the snapshot taken when the
+      // trigger was first pressed.
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.('[data-radix-popper-content-wrapper],[role="listbox"],[role="menu"],[role="dialog"]')) return;
+      restoreScrollY.current = window.scrollY;
+    };
+    document.addEventListener("pointerdown", snapshot, true);
+    document.addEventListener("keydown", snapshot, true);
+    return () => {
+      document.removeEventListener("pointerdown", snapshot, true);
+      document.removeEventListener("keydown", snapshot, true);
+    };
+  }, []);
+  const filterSignature = `${selectedSource}|${activeTab}|${selectedCategory}|${selectedType}|${selectedCity}|${selectedSector}|${selectedTopic}|${personaFilterValue}|${localSearchQuery}`;
+  const didMountRef = useRef(false);
+  useLayoutEffect(() => {
+    if (!didMountRef.current) { didMountRef.current = true; return; }
+    const target = restoreScrollY.current;
+    if (target == null) return;
+    let frame = 0;
+    let count = 0;
+    const pin = () => {
+      if (Math.abs(window.scrollY - target) > 1) window.scrollTo(0, target);
+      if (count++ < 4) frame = requestAnimationFrame(pin);
+    };
+    pin();
+    return () => cancelAnimationFrame(frame);
+  }, [filterSignature]);
+
   const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
 
   const categories = Array.from(new Set(events.map(event => event.category))).sort();
@@ -83,9 +128,21 @@ const Events = () => {
     const matchesSource = selectedSource === "all" ||
       (selectedSource === "curated" && event.source !== COMMUNITY_SOURCE) ||
       (selectedSource === "community" && event.source === COMMUNITY_SOURCE);
-    const matchesPersona = personaFilterValue === 'all' ||
-      !event.target_personas?.length ||
-      event.target_personas.includes(personaFilterValue);
+    const matchesPersona = (() => {
+      if (personaFilterValue === 'all') return true;
+      const hasTarget = !!event.target_personas?.length;
+      const hasPersona = !!event.persona;
+      // Don't hide events we can't classify on either signal.
+      if (!hasTarget && !hasPersona) return true;
+      const targetMatch = hasTarget && event.target_personas!.includes(personaFilterValue);
+      // Community events carry the persona column (international_entrant | local_founder | both).
+      const personaMatch = hasPersona && (
+        event.persona === 'both' ||
+        (personaFilterValue === 'international_entrant' && event.persona === 'international_entrant') ||
+        (personaFilterValue === 'local_startup' && event.persona === 'local_founder')
+      );
+      return targetMatch || personaMatch;
+    })();
     return matchesCategory && matchesType && matchesCity && matchesSector && matchesTopic && matchesSource && matchesPersona;
   });
 
