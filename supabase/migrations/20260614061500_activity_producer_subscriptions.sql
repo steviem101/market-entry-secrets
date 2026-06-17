@@ -93,7 +93,11 @@ exception when others then
 end;
 $$;
 
-drop trigger if exists trg_emit_subscription_activity on public.user_subscriptions;
-create trigger trg_emit_subscription_activity
-  after insert or update on public.user_subscriptions
-  for each row execute function public.emit_subscription_activity();
+do $guard$ begin
+  if to_regclass('public.user_subscriptions') is not null then
+    drop trigger if exists trg_emit_subscription_activity on public.user_subscriptions;
+    create trigger trg_emit_subscription_activity
+      after insert or update on public.user_subscriptions
+      for each row execute function public.emit_subscription_activity();
+  end if;
+end $guard$;

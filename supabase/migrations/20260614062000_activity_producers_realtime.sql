@@ -1,6 +1,9 @@
 -- Phase 3.5: realtime producers (+ the report digest events live in the consolidated
 -- user_reports / user_intake_forms functions). All SECURITY DEFINER + exception-safe so a
 -- notification insert can never roll back the producer's business write.
+--
+-- Triggers are wrapped in to_regclass() guards so the migration is safe to run against a
+-- from-scratch rebuild / Supabase preview branch where a base table may not yet exist.
 
 -- intro.requested
 create or replace function public.emit_mentor_contact_activity()
@@ -14,10 +17,14 @@ begin
   return NEW;
 exception when others then raise log 'emit_mentor_contact_activity failed: %', sqlerrm; return NEW;
 end $$;
-drop trigger if exists trg_emit_mentor_contact_activity on public.mentor_contact_requests;
-create trigger trg_emit_mentor_contact_activity
-  after insert on public.mentor_contact_requests
-  for each row execute function public.emit_mentor_contact_activity();
+do $guard$ begin
+  if to_regclass('public.mentor_contact_requests') is not null then
+    drop trigger if exists trg_emit_mentor_contact_activity on public.mentor_contact_requests;
+    create trigger trg_emit_mentor_contact_activity
+      after insert on public.mentor_contact_requests
+      for each row execute function public.emit_mentor_contact_activity();
+  end if;
+end $guard$;
 
 -- submission.received
 create or replace function public.emit_directory_submission_activity()
@@ -31,10 +38,14 @@ begin
   return NEW;
 exception when others then raise log 'emit_directory_submission_activity failed: %', sqlerrm; return NEW;
 end $$;
-drop trigger if exists trg_emit_directory_submission_activity on public.directory_submissions;
-create trigger trg_emit_directory_submission_activity
-  after insert on public.directory_submissions
-  for each row execute function public.emit_directory_submission_activity();
+do $guard$ begin
+  if to_regclass('public.directory_submissions') is not null then
+    drop trigger if exists trg_emit_directory_submission_activity on public.directory_submissions;
+    create trigger trg_emit_directory_submission_activity
+      after insert on public.directory_submissions
+      for each row execute function public.emit_directory_submission_activity();
+  end if;
+end $guard$;
 
 -- lead.submitted
 create or replace function public.emit_lead_submission_activity()
@@ -48,10 +59,14 @@ begin
   return NEW;
 exception when others then raise log 'emit_lead_submission_activity failed: %', sqlerrm; return NEW;
 end $$;
-drop trigger if exists trg_emit_lead_submission_activity on public.lead_submissions;
-create trigger trg_emit_lead_submission_activity
-  after insert on public.lead_submissions
-  for each row execute function public.emit_lead_submission_activity();
+do $guard$ begin
+  if to_regclass('public.lead_submissions') is not null then
+    drop trigger if exists trg_emit_lead_submission_activity on public.lead_submissions;
+    create trigger trg_emit_lead_submission_activity
+      after insert on public.lead_submissions
+      for each row execute function public.emit_lead_submission_activity();
+  end if;
+end $guard$;
 
 -- review.submitted
 create or replace function public.emit_review_activity()
@@ -65,10 +80,14 @@ begin
   return NEW;
 exception when others then raise log 'emit_review_activity failed: %', sqlerrm; return NEW;
 end $$;
-drop trigger if exists trg_emit_review_activity on public.service_provider_reviews;
-create trigger trg_emit_review_activity
-  after insert on public.service_provider_reviews
-  for each row execute function public.emit_review_activity();
+do $guard$ begin
+  if to_regclass('public.service_provider_reviews') is not null then
+    drop trigger if exists trg_emit_review_activity on public.service_provider_reviews;
+    create trigger trg_emit_review_activity
+      after insert on public.service_provider_reviews
+      for each row execute function public.emit_review_activity();
+  end if;
+end $guard$;
 
 -- user_reports: report.completed (info) / report.failed (error)
 create or replace function public.emit_user_report_activity()
@@ -94,10 +113,14 @@ begin
   return NEW;
 exception when others then raise log 'emit_user_report_activity failed: %', sqlerrm; return NEW;
 end $$;
-drop trigger if exists trg_emit_user_report_activity on public.user_reports;
-create trigger trg_emit_user_report_activity
-  after insert or update on public.user_reports
-  for each row execute function public.emit_user_report_activity();
+do $guard$ begin
+  if to_regclass('public.user_reports') is not null then
+    drop trigger if exists trg_emit_user_report_activity on public.user_reports;
+    create trigger trg_emit_user_report_activity
+      after insert or update on public.user_reports
+      for each row execute function public.emit_user_report_activity();
+  end if;
+end $guard$;
 
 -- user_intake_forms: report.requested (info, insert) / report.started (info) / report.failed (error)
 create or replace function public.emit_intake_form_activity()
@@ -124,10 +147,14 @@ begin
   return NEW;
 exception when others then raise log 'emit_intake_form_activity failed: %', sqlerrm; return NEW;
 end $$;
-drop trigger if exists trg_emit_intake_form_activity on public.user_intake_forms;
-create trigger trg_emit_intake_form_activity
-  after insert or update on public.user_intake_forms
-  for each row execute function public.emit_intake_form_activity();
+do $guard$ begin
+  if to_regclass('public.user_intake_forms') is not null then
+    drop trigger if exists trg_emit_intake_form_activity on public.user_intake_forms;
+    create trigger trg_emit_intake_form_activity
+      after insert or update on public.user_intake_forms
+      for each row execute function public.emit_intake_form_activity();
+  end if;
+end $guard$;
 
 -- email.failed (error)
 create or replace function public.emit_email_log_activity()
@@ -148,7 +175,11 @@ begin
   return NEW;
 exception when others then raise log 'emit_email_log_activity failed: %', sqlerrm; return NEW;
 end $$;
-drop trigger if exists trg_emit_email_log_activity on public.email_log;
-create trigger trg_emit_email_log_activity
-  after insert or update on public.email_log
-  for each row execute function public.emit_email_log_activity();
+do $guard$ begin
+  if to_regclass('public.email_log') is not null then
+    drop trigger if exists trg_emit_email_log_activity on public.email_log;
+    create trigger trg_emit_email_log_activity
+      after insert or update on public.email_log
+      for each row execute function public.emit_email_log_activity();
+  end if;
+end $guard$;

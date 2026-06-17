@@ -32,4 +32,8 @@ end;
 $$;
 
 -- Run 10 minutes before the digest so new gate-hits are included in it.
-select cron.schedule('detect-funnel-gate-hits', '50 * * * *', $job$ select public.detect_funnel_gate_hits(); $job$);
+do $cron$ begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    perform cron.schedule('detect-funnel-gate-hits', '50 * * * *', $job$ select public.detect_funnel_gate_hits(); $job$);
+  end if;
+end $cron$;

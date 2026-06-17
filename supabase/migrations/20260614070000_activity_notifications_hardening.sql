@@ -152,10 +152,14 @@ exception when others then raise log 'dispatch_activity_event failed for %: %', 
 end $$;
 
 -- #9: digest cron reads URL from vault too (cron.schedule by name = upsert).
-select cron.schedule('slack-activity-digest', '0 * * * *', $job$
-  select net.http_post(
-    url := (select decrypted_secret from vault.decrypted_secrets where name = 'slack_notify_url' limit 1),
-    headers := jsonb_build_object('Content-Type','application/json',
-      'x-webhook-secret',(select decrypted_secret from vault.decrypted_secrets where name = 'slack_notify_webhook_secret' limit 1)),
-    body := '{"mode":"digest"}'::jsonb);
-$job$);
+do $cron$ begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    perform cron.schedule('slack-activity-digest', '0 * * * *', $job$
+      select net.http_post(
+        url := (select decrypted_secret from vault.decrypted_secrets where name = 'slack_notify_url' limit 1),
+        headers := jsonb_build_object('Content-Type','application/json',
+          'x-webhook-secret',(select decrypted_secret from vault.decrypted_secrets where name = 'slack_notify_webhook_secret' limit 1)),
+        body := '{"mode":"digest"}'::jsonb);
+    $job$);
+  end if;
+end $cron$;
