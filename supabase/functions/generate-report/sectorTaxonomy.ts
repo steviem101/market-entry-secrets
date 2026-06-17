@@ -47,14 +47,77 @@ for (const [sector, groups] of Object.entries(LINKEDIN_TAXONOMY)) {
 }
 
 /**
- * Roll a list of LinkedIn industry GROUP names up to deduped 20-sector slugs.
- * Unknown values (custom free-text industries) are ignored.
+ * Thematic / free-text alias map (substring keyword → sector slugs).
+ *
+ * The intake form accepts custom industries ("Cybersecurity", "FinTech",
+ * "AI", "Video Analytics", "WHS"...) which the LinkedIn taxonomy does NOT
+ * contain — so the strict lookup above mapped them to nothing, every
+ * sector-overlap score collapsed to zero, and every report converged on
+ * the same agnostic-Sydney rows. Each key is a case-insensitive substring
+ * tested against the trimmed industry text; the value is the sector slugs
+ * to apply when it matches.
+ *
+ * Order matters only inasmuch as multiple keys can match a single industry;
+ * the result is a set, so duplicates dedupe.
+ */
+// Each alternative is wrapped in word boundaries so bare-substring matches
+// don't fire on "Window Manufacturing" (would have matched "wind"), "Texas
+// Holdings" (would have matched "gas"), or "Geoanalytics" (would have
+// matched "analytics"). Multi-word phrases use boundary on each end only.
+const SECTOR_KEYWORD_ALIASES: Array<[RegExp, string[]]> = [
+  [/\b(?:fintech|financial technology|digital payments|insurtech|regtech|wealthtech)\b/, ['financial-services', 'technology-information-and-media']],
+  [/\b(?:cybersec(?:urity)?|cyber security|infosec|information security|digital identity|identity & access|iam)\b/, ['technology-information-and-media', 'professional-services']],
+  [/\b(?:saas|software development|software engineering|enterprise software|developer tools)\b/, ['technology-information-and-media']],
+  [/\b(?:ai|artificial intelligence|machine learning|ml|computer vision|video analytics|deep learning|llm|generative ai)\b/, ['technology-information-and-media']],
+  [/\b(?:data|big data|analytics|data infrastructure|data platform|business intelligence)\b/, ['technology-information-and-media', 'professional-services']],
+  [/\b(?:cloud|cloud computing|devops|platform engineering)\b/, ['technology-information-and-media']],
+  [/\b(?:blockchain|crypto|web3|defi|nft)\b/, ['financial-services', 'technology-information-and-media']],
+  [/\b(?:biotech|pharma|medtech|medical device|life sciences|clinical|therapeutics)\b/, ['hospitals-and-health-care', 'manufacturing']],
+  // Deliberately NOT matching bare \bhealth\b — that catches phrases like
+  // "Workplace Health and Safety" which is a construction/professional-services
+  // domain, not healthcare. Require explicit healthcare-domain words.
+  [/\b(?:healthcare|digital health|telehealth|mental health|hospital|primary care)\b/, ['hospitals-and-health-care']],
+  [/\b(?:edtech|education technology|e-learning|online learning)\b/, ['education', 'technology-information-and-media']],
+  [/\b(?:proptech|real estate technology)\b/, ['real-estate-and-equipment-rental-services', 'technology-information-and-media']],
+  [/\b(?:agritech|agtech|agriculture technology|food tech|foodtech|agri-food)\b/, ['farming-ranching-forestry', 'technology-information-and-media']],
+  [/\b(?:cleantech|climatetech|climate tech|renewables?|sustainability|green tech)\b/, ['utilities', 'technology-information-and-media']],
+  [/\b(?:energy|solar|wind|hydrogen|battery storage)\b/, ['utilities']],
+  [/\b(?:mining|miner|miners|critical minerals|exploration)\b/, ['oil-gas-and-mining']],
+  [/\b(?:oil|gas|petroleum|lng)\b/, ['oil-gas-and-mining']],
+  [/\b(?:construction|infrastructure|civil|engineering services|whs|workplace health and safety|workplace safety)\b/, ['construction', 'professional-services']],
+  [/\b(?:manufactur\w*|industrial|machinery|automation|robotics)\b/, ['manufacturing']],
+  [/\b(?:logistics|supply chain|warehousing|shipping|freight|maritime)\b/, ['transportation-logistics-supply-chain-and-storage']],
+  [/\b(?:retail|ecommerce|e-commerce|d2c|dtc)\b/, ['retail']],
+  [/\b(?:hospitality|tourism|travel|food (?:&|and) beverage|f&b|restaurant)\b/, ['accommodation-and-food-services']],
+  [/\b(?:media|entertainment|gaming|streaming|publishing)\b/, ['entertainment-providers', 'technology-information-and-media']],
+  [/\b(?:telecom|telecommunications|5g|networking)\b/, ['technology-information-and-media']],
+  [/\b(?:automotive|electric vehicle|ev|mobility)\b/, ['transportation-logistics-supply-chain-and-storage', 'manufacturing']],
+  [/\b(?:consult\w*|advisory|advisor|advisors|professional services|accounting|tax|legal)\b/, ['professional-services']],
+  [/\b(?:government|public sector|defence|defense|aerospace)\b/, ['government-administration']],
+  [/\b(?:non[- ]?profit|ngo|charity)\b/, ['consumer-services']],
+];
+
+/**
+ * Roll a list of industry values up to deduped 20-sector slugs.
+ *
+ * Resolution order per value:
+ *   1. Exact LinkedIn group name (canonical taxonomy hit)
+ *   2. Keyword alias map (handles custom free-text industries like
+ *      "Cybersecurity", "FinTech", "Video Analytics", "Workplace Health
+ *      and Safety" — the values the v2 form actually receives)
+ *
+ * Unknown values that match neither path are ignored.
  */
 export function industryGroupsToSectorSlugs(groups: string[] | null | undefined): string[] {
   const out = new Set<string>();
-  for (const g of groups ?? []) {
-    const slug = GROUP_TO_SECTOR_SLUG[(g ?? '').toLowerCase().trim()];
-    if (slug) out.add(slug);
+  for (const raw of groups ?? []) {
+    const g = (raw ?? '').toLowerCase().trim();
+    if (!g) continue;
+    const direct = GROUP_TO_SECTOR_SLUG[g];
+    if (direct) { out.add(direct); continue; }
+    for (const [re, slugs] of SECTOR_KEYWORD_ALIASES) {
+      if (re.test(g)) for (const s of slugs) out.add(s);
+    }
   }
   return [...out];
 }

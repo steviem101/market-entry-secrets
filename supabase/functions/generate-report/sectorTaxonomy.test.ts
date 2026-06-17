@@ -51,6 +51,59 @@ test("custom / unknown industries are ignored, not crashed", () => {
   assert.deepEqual(industryGroupsToSectorSlugs([]), []);
 });
 
+test("free-text aliases roll up to real sectors (covers actual customer intake values)", () => {
+  // V-Key — observed values from a real generated report
+  assert.deepEqual(
+    industryGroupsToSectorSlugs(["Cybersecurity", "Digital Identity", "FinTech"]).sort(),
+    ["financial-services", "professional-services", "technology-information-and-media"],
+  );
+  // Ailytics — observed values from a real generated report
+  assert.deepEqual(
+    industryGroupsToSectorSlugs(["Artificial Intelligence", "Video Analytics", "Workplace Health and Safety"]).sort(),
+    ["construction", "professional-services", "technology-information-and-media"],
+  );
+  // Mixed case + canonical-form support
+  assert.ok(industryGroupsToSectorSlugs(["fintech"]).includes("financial-services"));
+  assert.ok(industryGroupsToSectorSlugs(["SaaS"]).includes("technology-information-and-media"));
+  assert.ok(industryGroupsToSectorSlugs(["AI"]).includes("technology-information-and-media"));
+  assert.ok(industryGroupsToSectorSlugs(["Healthcare"]).includes("hospitals-and-health-care"));
+  assert.ok(industryGroupsToSectorSlugs(["EdTech"]).includes("education"));
+  assert.ok(industryGroupsToSectorSlugs(["Cleantech"]).includes("utilities"));
+});
+
+test("canonical taxonomy hits still win over aliases (no regression)", () => {
+  // "Software Development" is the canonical group — must map only to tech,
+  // never trip a substring keyword that adds extra slugs.
+  assert.deepEqual(
+    industryGroupsToSectorSlugs(["Software Development"]),
+    ["technology-information-and-media"],
+  );
+});
+
+test("alias word boundaries: no false positives on adjacent words", () => {
+  // Bare-substring matches against the alias keywords ("gas", "wind",
+  // "analytics", "ai", "ml") used to over-trigger sector tagging on
+  // unrelated industries. Each alias is now \b-bounded.
+  assert.deepEqual(industryGroupsToSectorSlugs(["Window Manufacturing"]), ["manufacturing"]);
+  // "Texas Holdings" — must NOT match "gas" as a substring of "Texas".
+  assert.deepEqual(industryGroupsToSectorSlugs(["Texas Holdings"]), []);
+  // "Passage" / "Massage" must not match "gas".
+  assert.deepEqual(industryGroupsToSectorSlugs(["Massage Therapy"]), []);
+  // Bare "AI" must match.
+  assert.ok(industryGroupsToSectorSlugs(["AI"]).includes("technology-information-and-media"));
+  // "Said" / "Maid" must NOT match "ai".
+  assert.deepEqual(industryGroupsToSectorSlugs(["Maid Services"]), []);
+});
+
+test("inflection support: manufacturer, consulting, miners", () => {
+  // Real customer values that should still map after the boundary tightening.
+  assert.deepEqual(industryGroupsToSectorSlugs(["Manufacturer"]), ["manufacturing"]);
+  assert.deepEqual(industryGroupsToSectorSlugs(["Manufacturers"]), ["manufacturing"]);
+  assert.ok(industryGroupsToSectorSlugs(["Strategy Consulting"]).includes("professional-services"));
+  assert.ok(industryGroupsToSectorSlugs(["Independent Consultants"]).includes("professional-services"));
+  assert.ok(industryGroupsToSectorSlugs(["Mineral Exploration"]).includes("oil-gas-and-mining"));
+});
+
 test("overlapCount counts shared elements", () => {
   assert.equal(overlapCount(["a", "b", "c"], ["b", "c", "d"]), 2);
   assert.equal(overlapCount(["a"], ["x"]), 0);

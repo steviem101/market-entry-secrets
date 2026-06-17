@@ -1,8 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Lock, Globe } from 'lucide-react';
+import { ExternalLink, Lock, Globe, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { publishedOrigin } from '@/lib/publishedOrigin';
 
 interface ReportMatchCardProps {
   name: string;
@@ -15,6 +16,54 @@ interface ReportMatchCardProps {
   website?: string;
   source?: string; // "web" for externally discovered matches
 }
+
+// Map raw DB enum-style content_type values to display labels for cards.
+// Used as a defensive humaniser on the read path so card subtitles never
+// show literals like "case_study" / "guide_pdf" / "playbook". The pipeline
+// should ideally not pass the raw enum through, but this guards both paths.
+const HUMANIZED_SUBTITLES: Record<string, string> = {
+  case_study: 'Case Study',
+  case_studies: 'Case Studies',
+  guide: 'Guide',
+  guide_pdf: 'Guide (PDF)',
+  playbook: 'Playbook',
+  report: 'Report',
+  article: 'Article',
+  blog_post: 'Article',
+  news: 'News',
+};
+
+const humanizeSubtitle = (s?: string): string | undefined => {
+  if (!s) return s;
+  const lower = s.toLowerCase().trim();
+  if (HUMANIZED_SUBTITLES[lower]) return HUMANIZED_SUBTITLES[lower];
+  // Single-word underscore-separated enum → Title Case
+  if (/^[a-z][a-z0-9_]+$/.test(lower) && !lower.includes(' ')) {
+    return lower
+      .split('_')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+  return s;
+};
+
+// LinkedIn URLs are stored in the website column but the card hard-coded
+// "Website" — relabel + use the right icon when the URL is a LinkedIn
+// profile so users aren't misled.
+const isLinkedInUrl = (url: string): boolean =>
+  /(?:^|\/\/(?:www\.)?)linkedin\.com\//.test(url || '');
+
+// Print/PDF needs absolute internal links so they don't break when the
+// page is exported (window.print's a[href^="/"] resolves relative to the
+// report URL and the print stylesheet hides the URL annotation entirely,
+// so internal links would otherwise come out as dead text).
+const absolutizeForPdf = (href?: string): string | undefined => {
+  if (!href) return href;
+  if (href === '#') return href;
+  if (/^https?:/i.test(href)) return href;
+  if (href.startsWith('/')) return `${publishedOrigin()}${href}`;
+  return href;
+};
 
 export const ReportMatchCard = ({
   name,
@@ -47,6 +96,9 @@ export const ReportMatchCard = ({
   }
 
   const isWebSource = source === 'web';
+  const displaySubtitle = humanizeSubtitle(subtitle);
+  const websiteIsLinkedIn = website ? isLinkedInUrl(website) : false;
+  const websiteLabel = websiteIsLinkedIn ? 'LinkedIn' : 'Website';
 
   return (
     <Card className="border-border/50 border-l-[3px] border-l-primary/30 hover:border-l-primary/60 hover:shadow-sm transition-all">
@@ -62,7 +114,7 @@ export const ReportMatchCard = ({
               </Badge>
             )}
           </div>
-          {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+          {displaySubtitle && <p className="text-sm text-muted-foreground mt-0.5">{displaySubtitle}</p>}
         </div>
 
         {/* Tags */}
@@ -86,18 +138,35 @@ export const ReportMatchCard = ({
                   </Button>
                 </a>
               ) : (
-                <Link to={link}>
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                    {linkLabel}
-                    <ExternalLink className="w-3 h-3" />
-                  </Button>
-                </Link>
+                <>
+                  {/* In-browser navigation via Link; the print-only anchor
+                      below provides an absolute href so the link still
+                      resolves when the report is exported to PDF. */}
+                  <Link to={link} className="print:hidden">
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                      {linkLabel}
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
+                  </Link>
+                  <a
+                    href={absolutizeForPdf(link)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hidden print:inline-flex"
+                  >
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                      {linkLabel}
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
+                  </a>
+                </>
               )
             )}
             {website && !isWebSource && (
               <a href={website} target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground">
-                  Website
+                  {websiteIsLinkedIn ? <Linkedin className="w-3 h-3" /> : null}
+                  {websiteLabel}
                   <ExternalLink className="w-3 h-3" />
                 </Button>
               </a>

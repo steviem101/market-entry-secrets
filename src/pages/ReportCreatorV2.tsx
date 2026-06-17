@@ -79,6 +79,11 @@ const ReportCreatorV2 = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [pendingPersona, setPendingPersona] = useState<ReportPersona | null>(null);
   const pendingGenerate = useRef(false);
+  // Snapshot of the last system-applied goal selection (persona base or smart
+  // defaults). `hasCustomisedGoals` compares against this so back-edit-forward
+  // on Step 1 re-runs smart defaults with the updated context, while still
+  // protecting any goals the user has manually toggled on Step 2.
+  const lastAutoGoals = useRef<string[]>(DEFAULT_GOALS[urlPersona]);
 
   const form = useForm<IntakeFormDataV2>({
     resolver: zodResolver(fullIntakeSchema),
@@ -107,6 +112,11 @@ const ReportCreatorV2 = () => {
     if (draft && Object.keys(draft).length > 0) {
       form.reset({ ...buildDefaults(p), ...draft });
       setPersona(p);
+      // Reset the snapshot to the new persona's base. If the draft's goal_ids
+      // match (the common "fresh resume" case), smart defaults will re-apply
+      // on the first Step 1 → Step 2 transition. If they differ, the user is
+      // treated as having customised and we preserve their saved picks.
+      lastAutoGoals.current = DEFAULT_GOALS[p];
       setScreen(savedScreen && savedScreen !== 'persona' ? savedScreen : 'company');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,6 +172,7 @@ const ReportCreatorV2 = () => {
     setPersona(p);
     form.setValue('persona', p);
     form.setValue('goal_ids', DEFAULT_GOALS[p]);
+    lastAutoGoals.current = DEFAULT_GOALS[p];
     trackIntakeEvent('persona_selected', { persona: p, user_id: user?.id });
     setScreen('company');
   }
@@ -188,14 +199,14 @@ const ReportCreatorV2 = () => {
     }
   }
 
-  /** Are the current goal_ids different from the current persona's defaults?
-   *  i.e. has the user actively customised their goals? */
+  /** Has the user actively customised their goals beyond what the system last
+   *  applied (persona base on entry/switch, smart defaults on Step 1 → 2)? */
   function hasCustomisedGoals(): boolean {
     const current = form.getValues('goal_ids') ?? [];
-    const defaults = DEFAULT_GOALS[persona];
-    if (current.length !== defaults.length) return true;
+    const baseline = lastAutoGoals.current;
+    if (current.length !== baseline.length) return true;
     const sortedA = [...current].sort();
-    const sortedB = [...defaults].sort();
+    const sortedB = [...baseline].sort();
     return sortedA.some((g, i) => g !== sortedB[i]);
   }
 
@@ -204,6 +215,7 @@ const ReportCreatorV2 = () => {
     form.setValue('persona', p);
     // Goals differ per persona — reset to that persona's defaults.
     form.setValue('goal_ids', DEFAULT_GOALS[p]);
+    lastAutoGoals.current = DEFAULT_GOALS[p];
     form.setValue('revenue_stage', undefined);
   }
 
@@ -233,7 +245,10 @@ const ReportCreatorV2 = () => {
         if (!hasCustomisedGoals()) {
           const v = form.getValues();
           const smart = smartDefaultGoals(persona, v.company_stage, v.industry_sector, v.country_of_origin);
-          if (smart.length > 0) form.setValue('goal_ids', smart);
+          if (smart.length > 0) {
+            form.setValue('goal_ids', smart);
+            lastAutoGoals.current = smart;
+          }
         }
         setScreen('goals');
       }

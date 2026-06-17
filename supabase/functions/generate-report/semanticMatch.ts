@@ -33,7 +33,11 @@ export interface SemanticTypeConfig {
 export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
   service_providers: {
     table: "service_providers",
-    select: "id, name, slug, location, services, description, website, website_url, is_verified, tagline, logo_url, category_slug, sector_tags, sector_agnostic",
+    // NOTE: select only columns that exist on service_providers. The legacy list
+    // here included website_url, is_verified, tagline, logo_url, category_slug —
+    // none of which exist — so the hydrate 400'd and semantic SP matches always
+    // came back empty (same root cause as the overlap-path bug fixed in index.ts).
+    select: "id, name, slug, location, services, description, website, sector_tags, sector_agnostic",
     cap: 10,
     decorate: (p: any) => ({
       ...p,
@@ -45,11 +49,15 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
   },
   community_members: {
     table: "community_members",
-    select: "id, name, title, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic",
+    // slug + is_anonymous + is_active are selected so index.ts's semanticMatches()
+    // can build a real profile link and drop inactive/anonymous/seed mentors,
+    // mirroring the overlap path.
+    select: "id, name, title, slug, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic, is_anonymous, is_active",
     cap: 5,
     decorate: (m: any) => ({
       ...m,
-      link: "/community",
+      // Real per-mentor profile route rather than the legacy /community catch-all.
+      link: m.slug ? `/mentors/experts/${m.slug}` : "/mentors",
       linkLabel: "View Profile",
       subtitle: [m.title, m.company].filter(Boolean).join(", "),
       tags: (m.specialties || []).slice(0, 3),
