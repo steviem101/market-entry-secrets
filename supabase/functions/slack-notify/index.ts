@@ -1,88 +1,60 @@
 // slack-notify — posts public.activity_events to Slack.
 //
 // Auth: header `x-webhook-secret` must equal env SLACK_NOTIFY_WEBHOOK_SECRET (verify_jwt=false).
-// Two modes:
+// Modes:
 //   { "event_id": "<uuid>" } -> claim-then-post one realtime event to its routed channel.
-//   { "mode": "digest" }     -> roll up unsent info events into one message per channel,
-//                               re-drive stuck realtime events (>10min), and sweep stale backlog.
+//   { "mode": "digest" }     -> roll up unsent info events; re-drive stuck realtime; sweep stale.
+// Special event_type `report.quality` -> handled by ./reportQuality.ts (telemetry + card).
 //
-// Deterministic formatting only. No AI / token cost. Self-contained (no _shared imports) so it
-// deploys cleanly via the Supabase management API / CLI. Never deploy this via Lovable.
+// Deterministic formatting only. No AI / token cost. Self-contained (no _shared imports).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { handleReportQuality } from "./reportQuality.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SLACK_BOT_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("SLACK_NOTIFY_WEBHOOK_SECRET") ?? "";
 
-const DIGEST_LIMIT = 200;        // events pulled per digest run
-const ID_CHUNK = 100;            // max ids per PostgREST .in() update (URL-length safety)
+const DIGEST_LIMIT = 200;
+const ID_CHUNK = 100;
 const REDRIVE_AGE_MS = 10 * 60 * 1000;
 const STALE_AGE_MS = 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
 const SEVERITY_COLOR: Record<string, string> = {
-  revenue: "#2eb67d",
-  action: "#36c5f0",
-  error: "#e01e5a",
-  info: "#9aa0a6",
+  revenue: "#2eb67d", action: "#36c5f0", error: "#e01e5a", info: "#9aa0a6",
 };
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+  return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 }
-
-// Structured-ish logging; never logs PII (emails/tokens) — only event_type, ids, error codes.
-function logErr(where: string, detail: unknown): void {
-  console.error(`[slack-notify] ${where}:`, detail);
-}
+function logErr(where: string, detail: unknown): void { console.error(`[slack-notify] ${where}:`, detail); }
 
 interface ActivityEvent {
-  id: string;
-  event_type: string;
-  actor_user_id: string | null;
-  actor_email: string | null;
-  actor_name: string | null;
-  object_type: string | null;
-  object_id: string | null;
-  metadata: Record<string, unknown> | null;
-  severity: string;
-  notified_at: string | null;
-  dispatch_attempts: number | null;
-  created_at: string;
+  id: string; event_type: string; actor_user_id: string | null; actor_email: string | null;
+  actor_name: string | null; object_type: string | null; object_id: string | null;
+  metadata: Record<string, unknown> | null; severity: string;
+  notified_at: string | null; dispatch_attempts: number | null; created_at: string;
 }
-
 interface Routing {
-  event_type: string;
-  channel_id: string;
-  emoji: string;
-  severity: string;
-  realtime: boolean;
-  mention: boolean;
-  enabled: boolean;
+  event_type: string; channel_id: string; emoji: string; severity: string;
+  realtime: boolean; mention: boolean; enabled: boolean;
 }
 
 function titleFor(eventType: string): string {
   return eventType.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
-
 function actorLine(e: ActivityEvent): string | null {
-  const who = e.actor_name || e.actor_email ||
-    (e.actor_user_id ? `user ${e.actor_user_id.slice(0, 8)}` : null);
+  const who = e.actor_name || e.actor_email || (e.actor_user_id ? `user ${e.actor_user_id.slice(0, 8)}` : null);
   return who ? `*Who:* ${who}` : null;
 }
-
 function metaLines(e: ActivityEvent): string[] {
   const out: string[] = [];
   for (const [k, v] of Object.entries(e.metadata ?? {})) {
@@ -93,31 +65,19 @@ function metaLines(e: ActivityEvent): string[] {
   }
   return out;
 }
-
 function summaryLine(e: ActivityEvent, r: Routing): string {
   const who = e.actor_name || e.actor_email || "";
   return `${r.emoji} *${titleFor(e.event_type)}*${who ? ` — ${who}` : ""}`;
 }
 
 async function postToSlack(
-  channel: string,
-  text: string,
-  blocks: unknown[],
-  color: string,
-  mention: boolean,
+  channel: string, text: string, blocks: unknown[], color: string, mention: boolean,
 ): Promise<{ ok: boolean; ts?: string; error?: string }> {
   if (!SLACK_BOT_TOKEN) return { ok: false, error: "missing_bot_token" };
-  const body = {
-    channel,
-    text: mention ? `<!here> ${text}` : text,
-    attachments: [{ color, blocks }],
-  };
+  const body = { channel, text: mention ? `<!here> ${text}` : text, attachments: [{ color, blocks }] };
   const resp = await fetch("https://slack.com/api/chat.postMessage", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
-    },
+    headers: { "Content-Type": "application/json; charset=utf-8", Authorization: `Bearer ${SLACK_BOT_TOKEN}` },
     body: JSON.stringify(body),
   });
   const data = await resp.json();
@@ -127,19 +87,11 @@ async function postToSlack(
 
 function buildEventBlocks(ev: ActivityEvent, routing: Routing): unknown[] {
   const blocks: unknown[] = [
-    {
-      type: "header",
-      text: { type: "plain_text", text: `${routing.emoji} ${titleFor(ev.event_type)}`.slice(0, 150) },
-    },
+    { type: "header", text: { type: "plain_text", text: `${routing.emoji} ${titleFor(ev.event_type)}`.slice(0, 150) } },
   ];
   const lines = [actorLine(ev), ...metaLines(ev)].filter(Boolean) as string[];
-  if (lines.length) {
-    blocks.push({ type: "section", text: { type: "mrkdwn", text: lines.join("\n").slice(0, 2900) } });
-  }
-  blocks.push({
-    type: "context",
-    elements: [{ type: "mrkdwn", text: `severity: ${ev.severity} · ${new Date(ev.created_at).toUTCString()}` }],
-  });
+  if (lines.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: lines.join("\n").slice(0, 2900) } });
+  blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `severity: ${ev.severity} · ${new Date(ev.created_at).toUTCString()}` }] });
   return blocks;
 }
 
@@ -149,15 +101,13 @@ async function claimIds(supabase: any, ids: string[]): Promise<string[]> {
   const stamp = new Date().toISOString();
   for (let i = 0; i < ids.length; i += ID_CHUNK) {
     const chunk = ids.slice(i, i + ID_CHUNK);
-    const { data, error } = await supabase
-      .from("activity_events").update({ notified_at: stamp })
+    const { data, error } = await supabase.from("activity_events").update({ notified_at: stamp })
       .in("id", chunk).is("notified_at", null).select("id");
     if (error) { logErr("claim chunk", error.message); continue; }
     for (const row of (data ?? [])) claimed.push(row.id as string);
   }
   return claimed;
 }
-
 // deno-lint-ignore no-explicit-any
 async function updateChunked(supabase: any, ids: string[], patch: Record<string, unknown>): Promise<void> {
   for (let i = 0; i < ids.length; i += ID_CHUNK) {
@@ -165,7 +115,6 @@ async function updateChunked(supabase: any, ids: string[], patch: Record<string,
     if (error) logErr("update chunk", error.message);
   }
 }
-
 function buildDigestBlocks(evs: ActivityEvent[], routingMap: Map<string, Routing>): unknown[] {
   const counts = new Map<string, number>();
   for (const ev of evs) counts.set(ev.event_type, (counts.get(ev.event_type) ?? 0) + 1);
@@ -185,8 +134,7 @@ function buildDigestBlocks(evs: ActivityEvent[], routingMap: Map<string, Routing
 
 // deno-lint-ignore no-explicit-any
 async function dispatchOne(supabase: any, eventId: string): Promise<Response> {
-  const { data: e, error } = await supabase
-    .from("activity_events").select("*").eq("id", eventId).maybeSingle();
+  const { data: e, error } = await supabase.from("activity_events").select("*").eq("id", eventId).maybeSingle();
   if (error) { logErr("load event", error.message); return json({ ok: false, error: error.message }, 500); }
   if (!e) return json({ ok: false, error: "event_not_found" }, 404);
   const ev = e as ActivityEvent;
@@ -195,25 +143,27 @@ async function dispatchOne(supabase: any, eventId: string): Promise<Response> {
   const { data: r, error: rErr } = await supabase
     .from("activity_event_routing").select("*").eq("event_type", ev.event_type).maybeSingle();
   if (rErr) { logErr("load routing", rErr.message); return json({ ok: false, error: rErr.message }, 500); }
+
+  // report.quality always computes + persists telemetry (system of record), even if posting is disabled.
+  let prebuilt: { text: string; blocks: unknown[]; color: string } | null = null;
+  if (ev.event_type === "report.quality") prebuilt = await handleReportQuality(supabase, ev);
+
   if (!r || !(r as Routing).enabled) return json({ ok: true, skipped: "no_enabled_routing" });
   const routing = r as Routing;
 
-  // Atomically claim the event so concurrent callers (trigger + re-drive) can't double-post.
-  const { data: claimed, error: claimErr } = await supabase
-    .from("activity_events").update({ notified_at: new Date().toISOString() })
-    .eq("id", ev.id).is("notified_at", null).select("id");
+  const { data: claimed, error: claimErr } = await supabase.from("activity_events")
+    .update({ notified_at: new Date().toISOString() }).eq("id", ev.id).is("notified_at", null).select("id");
   if (claimErr) { logErr("claim", claimErr.message); return json({ ok: false, error: claimErr.message }, 500); }
   if (!claimed || claimed.length === 0) return json({ ok: true, skipped: "already_claimed" });
 
-  const res = await postToSlack(
-    routing.channel_id, titleFor(ev.event_type),
-    buildEventBlocks(ev, routing), SEVERITY_COLOR[ev.severity] ?? SEVERITY_COLOR.info, routing.mention,
-  );
+  const built = prebuilt ?? {
+    text: titleFor(ev.event_type), blocks: buildEventBlocks(ev, routing),
+    color: SEVERITY_COLOR[ev.severity] ?? SEVERITY_COLOR.info,
+  };
+  const res = await postToSlack(routing.channel_id, built.text, built.blocks, built.color, routing.mention);
 
   if (!res.ok) {
-    // Release the claim so the event is re-driven on a later digest run.
-    await supabase.from("activity_events")
-      .update({ notified_at: null, dispatch_attempts: (ev.dispatch_attempts ?? 0) + 1 }).eq("id", ev.id);
+    await supabase.from("activity_events").update({ notified_at: null, dispatch_attempts: (ev.dispatch_attempts ?? 0) + 1 }).eq("id", ev.id);
     logErr("post failed", { event_type: ev.event_type, error: res.error });
     return json({ ok: false, error: res.error }, 200);
   }
@@ -224,10 +174,8 @@ async function dispatchOne(supabase: any, eventId: string): Promise<Response> {
 
 // deno-lint-ignore no-explicit-any
 async function runDigest(supabase: any): Promise<Response> {
-  // Cap unbounded backlog (also prevents a post-restore blast): retire stale unsent events silently.
   const { error: staleErr } = await supabase.from("activity_events")
-    .update({ notified_at: new Date().toISOString() })
-    .is("notified_at", null)
+    .update({ notified_at: new Date().toISOString() }).is("notified_at", null)
     .lt("created_at", new Date(Date.now() - STALE_AGE_MS).toISOString());
   if (staleErr) logErr("stale sweep", staleErr.message);
 
@@ -243,8 +191,6 @@ async function runDigest(supabase: any): Promise<Response> {
   }
 
   let digestChannels = 0, digestEvents = 0, redriven = 0;
-
-  // DIGEST: only enabled non-realtime types (disabled/kill-switched types can't starve the window).
   if (digestTypes.length) {
     const { data: pending, error } = await supabase.from("activity_events").select("*")
       .is("notified_at", null).in("event_type", digestTypes).lt("dispatch_attempts", MAX_ATTEMPTS)
@@ -253,33 +199,27 @@ async function runDigest(supabase: any): Promise<Response> {
     const byChannel = new Map<string, ActivityEvent[]>();
     for (const ev of (pending ?? []) as ActivityEvent[]) {
       const r = routingMap.get(ev.event_type)!;
-      const arr = byChannel.get(r.channel_id) ?? [];
-      arr.push(ev);
-      byChannel.set(r.channel_id, arr);
+      const arr = byChannel.get(r.channel_id) ?? []; arr.push(ev); byChannel.set(r.channel_id, arr);
     }
     for (const [channel, evs] of byChannel) {
       const claimedIds = await claimIds(supabase, evs.map((e) => e.id));
       if (claimedIds.length === 0) continue;
       const claimedSet = new Set(claimedIds);
       const claimedEvs = evs.filter((e) => claimedSet.has(e.id));
-      const res = await postToSlack(channel, `Activity digest — ${claimedEvs.length} new`,
-        buildDigestBlocks(claimedEvs, routingMap), SEVERITY_COLOR.info, false);
+      const res = await postToSlack(channel, `Activity digest — ${claimedEvs.length} new`, buildDigestBlocks(claimedEvs, routingMap), SEVERITY_COLOR.info, false);
       if (res.ok) {
         await updateChunked(supabase, claimedIds, { slack_ts: res.ts });
         digestChannels++; digestEvents += claimedEvs.length;
       } else {
-        // release claim + bump attempts so it retries (and eventually caps out at MAX_ATTEMPTS)
         await updateChunked(supabase, claimedIds, { notified_at: null });
         for (const ev of claimedEvs) {
-          await supabase.from("activity_events")
-            .update({ dispatch_attempts: (ev.dispatch_attempts ?? 0) + 1 }).eq("id", ev.id);
+          await supabase.from("activity_events").update({ dispatch_attempts: (ev.dispatch_attempts ?? 0) + 1 }).eq("id", ev.id);
         }
         logErr("digest post failed", { channel, error: res.error });
       }
     }
   }
 
-  // RE-DRIVE stuck realtime events (silent-failure recovery), bounded to enabled realtime types.
   if (realtimeTypes.length) {
     const cutoff = new Date(Date.now() - REDRIVE_AGE_MS).toISOString();
     const { data: stuck, error } = await supabase.from("activity_events").select("id")
@@ -288,19 +228,16 @@ async function runDigest(supabase: any): Promise<Response> {
     if (error) logErr("redrive query", error.message);
     for (const ev of (stuck ?? [])) { await dispatchOne(supabase, ev.id as string); redriven++; }
   }
-
   return json({ ok: true, digest_channels: digestChannels, digest_events: digestEvents, redriven });
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-
   const provided = req.headers.get("x-webhook-secret") ?? "";
   if (!WEBHOOK_SECRET || provided !== WEBHOOK_SECRET) return json({ error: "unauthorized" }, 401);
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
-
   let payload: { event_id?: string; mode?: string } = {};
   try { payload = await req.json(); } catch { /* tolerate empty body */ }
 
