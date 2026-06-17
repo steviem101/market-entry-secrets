@@ -2,9 +2,9 @@
 //
 // Auth: header `x-webhook-secret` must equal env SLACK_NOTIFY_WEBHOOK_SECRET (verify_jwt=false).
 // Two modes:
-//   { "event_id": "<uuid>" } -> post one realtime event to its routed channel (idempotent).
+//   { "event_id": "<uuid>" } -> claim-then-post one realtime event to its routed channel.
 //   { "mode": "digest" }     -> roll up unsent info events into one message per channel,
-//                               and re-drive stuck realtime events (silent-failure recovery).
+//                               re-drive stuck realtime events (>10min), and sweep stale backlog.
 //
 // Deterministic formatting only. No AI / token cost. Self-contained (no _shared imports) so it
 // deploys cleanly via the Supabase management API / CLI. Never deploy this via Lovable.
@@ -15,6 +15,12 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SLACK_BOT_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("SLACK_NOTIFY_WEBHOOK_SECRET") ?? "";
+
+const DIGEST_LIMIT = 200;        // events pulled per digest run
+const ID_CHUNK = 100;            // max ids per PostgREST .in() update (URL-length safety)
+const REDRIVE_AGE_MS = 10 * 60 * 1000;
+const STALE_AGE_MS = 24 * 60 * 60 * 1000;
+const MAX_ATTEMPTS = 5;
 
 const SEVERITY_COLOR: Record<string, string> = {
   revenue: "#2eb67d",
@@ -35,6 +41,11 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { ...CORS, "Content-Type": "application/json" },
   });
+}
+
+// Structured-ish logging; never logs PII (emails/tokens) — only event_type, ids, error codes.
+function logErr(where: string, detail: unknown): void {
+  console.error(`[slack-notify] ${where}:`, detail);
 }
 
 interface ActivityEvent {
@@ -123,7 +134,7 @@ function buildEventBlocks(ev: ActivityEvent, routing: Routing): unknown[] {
   ];
   const lines = [actorLine(ev), ...metaLines(ev)].filter(Boolean) as string[];
   if (lines.length) {
-    blocks.push({ type: "section", text: { type: "mrkdwn", text: lines.join("\n") } });
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: lines.join("\n").slice(0, 2900) } });
   }
   blocks.push({
     type: "context",
@@ -133,101 +144,149 @@ function buildEventBlocks(ev: ActivityEvent, routing: Routing): unknown[] {
 }
 
 // deno-lint-ignore no-explicit-any
+async function claimIds(supabase: any, ids: string[]): Promise<string[]> {
+  const claimed: string[] = [];
+  const stamp = new Date().toISOString();
+  for (let i = 0; i < ids.length; i += ID_CHUNK) {
+    const chunk = ids.slice(i, i + ID_CHUNK);
+    const { data, error } = await supabase
+      .from("activity_events").update({ notified_at: stamp })
+      .in("id", chunk).is("notified_at", null).select("id");
+    if (error) { logErr("claim chunk", error.message); continue; }
+    for (const row of (data ?? [])) claimed.push(row.id as string);
+  }
+  return claimed;
+}
+
+// deno-lint-ignore no-explicit-any
+async function updateChunked(supabase: any, ids: string[], patch: Record<string, unknown>): Promise<void> {
+  for (let i = 0; i < ids.length; i += ID_CHUNK) {
+    const { error } = await supabase.from("activity_events").update(patch).in("id", ids.slice(i, i + ID_CHUNK));
+    if (error) logErr("update chunk", error.message);
+  }
+}
+
+function buildDigestBlocks(evs: ActivityEvent[], routingMap: Map<string, Routing>): unknown[] {
+  const counts = new Map<string, number>();
+  for (const ev of evs) counts.set(ev.event_type, (counts.get(ev.event_type) ?? 0) + 1);
+  const countLines = [...counts.entries()].map(([t, n]) => {
+    const r = routingMap.get(t);
+    return `${r?.emoji ?? ":bell:"} *${titleFor(t)}* × ${n}`;
+  }).join("\n").slice(0, 2900);
+  const itemLines = evs.slice(0, 20).map((ev) => `• ${summaryLine(ev, routingMap.get(ev.event_type)!)}`).join("\n").slice(0, 2900);
+  return [
+    { type: "header", text: { type: "plain_text", text: `🔔 Activity digest — ${evs.length} new`.slice(0, 150) } },
+    { type: "section", text: { type: "mrkdwn", text: countLines || "—" } },
+    { type: "divider" },
+    { type: "section", text: { type: "mrkdwn", text: itemLines || "—" } },
+    { type: "context", elements: [{ type: "mrkdwn", text: `as of ${new Date().toUTCString()}` }] },
+  ];
+}
+
+// deno-lint-ignore no-explicit-any
 async function dispatchOne(supabase: any, eventId: string): Promise<Response> {
   const { data: e, error } = await supabase
     .from("activity_events").select("*").eq("id", eventId).maybeSingle();
-  if (error) return json({ ok: false, error: error.message }, 500);
+  if (error) { logErr("load event", error.message); return json({ ok: false, error: error.message }, 500); }
   if (!e) return json({ ok: false, error: "event_not_found" }, 404);
   const ev = e as ActivityEvent;
   if (ev.notified_at) return json({ ok: true, skipped: "already_notified" });
 
-  const { data: r } = await supabase
+  const { data: r, error: rErr } = await supabase
     .from("activity_event_routing").select("*").eq("event_type", ev.event_type).maybeSingle();
+  if (rErr) { logErr("load routing", rErr.message); return json({ ok: false, error: rErr.message }, 500); }
   if (!r || !(r as Routing).enabled) return json({ ok: true, skipped: "no_enabled_routing" });
   const routing = r as Routing;
 
+  // Atomically claim the event so concurrent callers (trigger + re-drive) can't double-post.
+  const { data: claimed, error: claimErr } = await supabase
+    .from("activity_events").update({ notified_at: new Date().toISOString() })
+    .eq("id", ev.id).is("notified_at", null).select("id");
+  if (claimErr) { logErr("claim", claimErr.message); return json({ ok: false, error: claimErr.message }, 500); }
+  if (!claimed || claimed.length === 0) return json({ ok: true, skipped: "already_claimed" });
+
   const res = await postToSlack(
-    routing.channel_id,
-    titleFor(ev.event_type),
-    buildEventBlocks(ev, routing),
-    SEVERITY_COLOR[ev.severity] ?? SEVERITY_COLOR.info,
-    routing.mention,
+    routing.channel_id, titleFor(ev.event_type),
+    buildEventBlocks(ev, routing), SEVERITY_COLOR[ev.severity] ?? SEVERITY_COLOR.info, routing.mention,
   );
 
   if (!res.ok) {
+    // Release the claim so the event is re-driven on a later digest run.
     await supabase.from("activity_events")
-      .update({ dispatch_attempts: (ev.dispatch_attempts ?? 0) + 1 }).eq("id", ev.id);
+      .update({ notified_at: null, dispatch_attempts: (ev.dispatch_attempts ?? 0) + 1 }).eq("id", ev.id);
+    logErr("post failed", { event_type: ev.event_type, error: res.error });
     return json({ ok: false, error: res.error }, 200);
   }
-  await supabase.from("activity_events")
-    .update({ notified_at: new Date().toISOString(), slack_ts: res.ts }).eq("id", ev.id);
+  const { error: tsErr } = await supabase.from("activity_events").update({ slack_ts: res.ts }).eq("id", ev.id);
+  if (tsErr) logErr("slack_ts update", tsErr.message);
   return json({ ok: true, posted: true, ts: res.ts });
 }
 
 // deno-lint-ignore no-explicit-any
 async function runDigest(supabase: any): Promise<Response> {
-  const { data: routingRows } = await supabase.from("activity_event_routing").select("*");
+  // Cap unbounded backlog (also prevents a post-restore blast): retire stale unsent events silently.
+  const { error: staleErr } = await supabase.from("activity_events")
+    .update({ notified_at: new Date().toISOString() })
+    .is("notified_at", null)
+    .lt("created_at", new Date(Date.now() - STALE_AGE_MS).toISOString());
+  if (staleErr) logErr("stale sweep", staleErr.message);
+
+  const { data: routingRows, error: rErr } = await supabase.from("activity_event_routing").select("*");
+  if (rErr) { logErr("load routing", rErr.message); return json({ ok: false, error: rErr.message }, 500); }
   const routingMap = new Map<string, Routing>();
-  for (const r of (routingRows ?? []) as Routing[]) routingMap.set(r.event_type, r);
-
-  const { data: pending, error } = await supabase
-    .from("activity_events").select("*").is("notified_at", null)
-    .order("created_at", { ascending: true }).limit(500);
-  if (error) return json({ ok: false, error: error.message }, 500);
-  const events = (pending ?? []) as ActivityEvent[];
-
-  const nowMs = Date.now();
-  const digestByChannel = new Map<string, ActivityEvent[]>();
-  const redrive: ActivityEvent[] = [];
-
-  for (const ev of events) {
-    const r = routingMap.get(ev.event_type);
-    if (!r || !r.enabled) continue;
-    if (r.realtime) {
-      const ageMs = nowMs - new Date(ev.created_at).getTime();
-      if (ageMs > 10 * 60 * 1000 && (ev.dispatch_attempts ?? 0) < 5) redrive.push(ev);
-      continue;
-    }
-    const arr = digestByChannel.get(r.channel_id) ?? [];
-    arr.push(ev);
-    digestByChannel.set(r.channel_id, arr);
+  const digestTypes: string[] = [];
+  const realtimeTypes: string[] = [];
+  for (const r of (routingRows ?? []) as Routing[]) {
+    routingMap.set(r.event_type, r);
+    if (!r.enabled) continue;
+    (r.realtime ? realtimeTypes : digestTypes).push(r.event_type);
   }
 
   let digestChannels = 0, digestEvents = 0, redriven = 0;
 
-  for (const [channel, evs] of digestByChannel) {
-    const counts = new Map<string, number>();
-    for (const ev of evs) counts.set(ev.event_type, (counts.get(ev.event_type) ?? 0) + 1);
-    const countLines = [...counts.entries()].map(([t, n]) => {
-      const r = routingMap.get(t)!;
-      return `${r.emoji} *${titleFor(t)}* × ${n}`;
-    }).join("\n");
-    const itemLines = evs.slice(0, 20).map((ev) => `• ${summaryLine(ev, routingMap.get(ev.event_type)!)}`).join("\n");
-
-    const blocks: unknown[] = [
-      { type: "header", text: { type: "plain_text", text: `🔔 Activity digest — ${evs.length} new` } },
-      { type: "section", text: { type: "mrkdwn", text: countLines || "—" } },
-      { type: "divider" },
-      { type: "section", text: { type: "mrkdwn", text: itemLines || "—" } },
-      { type: "context", elements: [{ type: "mrkdwn", text: `as of ${new Date().toUTCString()}` }] },
-    ];
-    const res = await postToSlack(channel, `Activity digest — ${evs.length} new`, blocks, SEVERITY_COLOR.info, false);
-    if (res.ok) {
-      await supabase.from("activity_events")
-        .update({ notified_at: new Date().toISOString(), slack_ts: res.ts })
-        .in("id", evs.map((e) => e.id));
-      digestChannels++; digestEvents += evs.length;
-    } else {
-      for (const ev of evs) {
-        await supabase.from("activity_events")
-          .update({ dispatch_attempts: (ev.dispatch_attempts ?? 0) + 1 }).eq("id", ev.id);
+  // DIGEST: only enabled non-realtime types (disabled/kill-switched types can't starve the window).
+  if (digestTypes.length) {
+    const { data: pending, error } = await supabase.from("activity_events").select("*")
+      .is("notified_at", null).in("event_type", digestTypes).lt("dispatch_attempts", MAX_ATTEMPTS)
+      .order("created_at", { ascending: true }).limit(DIGEST_LIMIT);
+    if (error) logErr("digest query", error.message);
+    const byChannel = new Map<string, ActivityEvent[]>();
+    for (const ev of (pending ?? []) as ActivityEvent[]) {
+      const r = routingMap.get(ev.event_type)!;
+      const arr = byChannel.get(r.channel_id) ?? [];
+      arr.push(ev);
+      byChannel.set(r.channel_id, arr);
+    }
+    for (const [channel, evs] of byChannel) {
+      const claimedIds = await claimIds(supabase, evs.map((e) => e.id));
+      if (claimedIds.length === 0) continue;
+      const claimedSet = new Set(claimedIds);
+      const claimedEvs = evs.filter((e) => claimedSet.has(e.id));
+      const res = await postToSlack(channel, `Activity digest — ${claimedEvs.length} new`,
+        buildDigestBlocks(claimedEvs, routingMap), SEVERITY_COLOR.info, false);
+      if (res.ok) {
+        await updateChunked(supabase, claimedIds, { slack_ts: res.ts });
+        digestChannels++; digestEvents += claimedEvs.length;
+      } else {
+        // release claim + bump attempts so it retries (and eventually caps out at MAX_ATTEMPTS)
+        await updateChunked(supabase, claimedIds, { notified_at: null });
+        for (const ev of claimedEvs) {
+          await supabase.from("activity_events")
+            .update({ dispatch_attempts: (ev.dispatch_attempts ?? 0) + 1 }).eq("id", ev.id);
+        }
+        logErr("digest post failed", { channel, error: res.error });
       }
     }
   }
 
-  for (const ev of redrive) {
-    await dispatchOne(supabase, ev.id);
-    redriven++;
+  // RE-DRIVE stuck realtime events (silent-failure recovery), bounded to enabled realtime types.
+  if (realtimeTypes.length) {
+    const cutoff = new Date(Date.now() - REDRIVE_AGE_MS).toISOString();
+    const { data: stuck, error } = await supabase.from("activity_events").select("id")
+      .is("notified_at", null).in("event_type", realtimeTypes).lt("dispatch_attempts", MAX_ATTEMPTS)
+      .lt("created_at", cutoff).limit(100);
+    if (error) logErr("redrive query", error.message);
+    for (const ev of (stuck ?? [])) { await dispatchOne(supabase, ev.id as string); redriven++; }
   }
 
   return json({ ok: true, digest_channels: digestChannels, digest_events: digestEvents, redriven });
