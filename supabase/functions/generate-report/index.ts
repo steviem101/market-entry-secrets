@@ -856,6 +856,60 @@ Rules:
 const sanitizeFilterValue = (v: string): string =>
   v.replace(/[^a-zA-Z0-9 \-'&/]/g, "").trim().substring(0, 100);
 
+// ── Shared helpers for events region+dedupe ──────────────────────────────
+// Used by BOTH the array-overlap path and the semantic path, so the
+// preferred semantic path can't reintroduce the wrong-city + 4×
+// near-duplicate Melbourne pitch nights that this PR fixed in the overlap
+// path. Pure functions, no I/O.
+
+const deriveLocationPatterns = (intake: any): string[] =>
+  ((intake?.target_regions as string[] | undefined) || [])
+    .map((r: string) => sanitizeFilterValue((r || "").split("/")[0]))
+    .filter(Boolean);
+
+const normalizeEventKeyPart = (s: string): string =>
+  (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/).slice(0, 6).join(" ");
+
+/** Today's date as ISO YYYY-MM-DD in the report's target timezone
+ *  (Australia/Sydney). Using UTC midnight produced an up-to-14h staleness
+ *  window each day where an event whose Sydney-local date had already
+ *  passed would still satisfy `date >= todayIso`. */
+const todayIsoForReportTimezone = (): string => {
+  // en-CA short date is YYYY-MM-DD regardless of locale defaults.
+  try {
+    return new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" });
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+};
+
+/** Region hard-filter (when target_regions supplied) + title|date|venue dedupe.
+ *  Mirrors the overlap path so the semantic path can't surface wrong-city or
+ *  duplicate events. Returns at most `cap` rows. */
+const regionFilterAndDedupeEvents = <T extends { title?: string; date?: string; location?: string }>(
+  events: T[],
+  locationPatterns: string[],
+  cap: number,
+): T[] => {
+  let filtered = events || [];
+  if (locationPatterns.length > 0) {
+    filtered = filtered.filter((row) => {
+      const loc = (row.location || "").toLowerCase();
+      return locationPatterns.some((l) => loc.includes(l.toLowerCase()));
+    });
+  }
+  const seen = new Set<string>();
+  const deduped: T[] = [];
+  for (const e of filtered) {
+    const key = `${normalizeEventKeyPart(e.title || "")}|${e.date || ""}|${normalizeEventKeyPart(e.location || "")}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(e);
+    if (deduped.length >= cap) break;
+  }
+  return deduped;
+};
+
 // ── Goal-to-service-tag mapping ───────────────────────────────────────
 // Keyed by stable goal_id (with a legacy long-label fallback). Lives in a
 // shared, dependency-free module so it can be unit-tested under Node.
@@ -1030,7 +1084,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
   // four "Startups Demos & Networking Melbourne" rows for the same night
   // don't all surface.
   try {
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayIso = todayIsoForReportTimezone();
     let evQuery = supabase.from("events")
       .select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic")
       .gte("date", todayIso)
@@ -1039,33 +1093,11 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     const { data: ev, error: evErr } = await evQuery;
     if (evErr) console.error("Events query error:", evErr);
 
-    // If the user supplied target_regions, hard-filter to events whose
-    // location matches at least one region pattern. This stops Melbourne
-    // events surfacing for a Sydney/NSW-only company, which the old
-    // soft +1 score-bump did not prevent.
-    let regionFiltered = ev || [];
-    if (locationPatterns.length > 0) {
-      regionFiltered = regionFiltered.filter((row: any) => {
-        const loc = (row.location || "").toLowerCase();
-        return locationPatterns.some((l: string) => loc.includes(l.toLowerCase()));
-      });
-    }
-
-    let eventResults = rank(regionFiltered, {}, 12); // overfetch so dedupe still leaves ~5
-
-    // Title+date+venue dedupe. Many ingested rows are near-duplicates of the
-    // same event (4× "Startups & Investors Pitch Night Melbourne" on
-    // 2026-06-19 at "The National Hotel, Richmond, Melbourne"). Collapse
-    // to one card per (normalized title, date, normalized venue).
-    const normalize = (s: string) =>
-      (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/).slice(0, 6).join(" ");
-    const seen = new Set<string>();
-    eventResults = eventResults.filter((e: any) => {
-      const key = `${normalize(e.title)}|${e.date}|${normalize(e.location)}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0, 5);
+    // Rank first (overfetch so the shared region+dedupe helper still leaves ~5),
+    // then apply the same region hard-filter + title|date|venue dedupe as the
+    // semantic path so the two paths agree on event surfacing.
+    const ranked = rank(ev || [], {}, 12);
+    let eventResults = regionFilterAndDedupeEvents(ranked, locationPatterns, 5);
 
     // Fallback when the strict filter returned nothing: take the soonest
     // future events in the target region (still date-bounded — no more
@@ -1263,7 +1295,8 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
   });
   if (error) { console.error("match_knowledge error", error.message); return out; }
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = todayIsoForReportTimezone();
+  const locationPatterns = deriveLocationPatterns(intake);
   const ranked = groupRankedBySource(data || []);
   await Promise.all(Object.entries(ranked).map(async ([tbl, items]) => {
     const cfg = SEMANTIC_CFG[tbl];
@@ -1280,7 +1313,11 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
       if (tbl === "community_members") {
         const seenNames = new Set<string>();
         ordered = ordered.filter((m: any) => {
-          if (m.is_active === false || m.is_anonymous === true) return false;
+          // Truthy checks match the overlap path's .eq("is_active", true)
+          // .eq("is_anonymous", false) semantics — a null/undefined flag is
+          // treated as "not active" / "anonymous unknown" and excluded by both
+          // paths, so the two paths agree on which rows pass.
+          if (!m.is_active || m.is_anonymous) return false;
           const n = (m.name || "").toLowerCase();
           if (n.startsWith("anonymous")) return false;
           const key = n.replace(/^(dr|prof|mr|mrs|ms|miss)\.?\s+/i, "").replace(/[^a-z\s]/g, "").trim();
@@ -1289,7 +1326,12 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
           return true;
         });
       } else if (tbl === "events") {
-        ordered = ordered.filter((e: any) => !e.date || e.date >= todayIso);
+        // Apply the same date guard + region hard-filter + title|date|venue
+        // dedupe as the overlap path. Without this the preferred semantic
+        // path could resurface near-duplicate / wrong-city events that the
+        // overlap path now blocks.
+        const dateFiltered = ordered.filter((e: any) => !e.date || e.date >= todayIso);
+        ordered = regionFilterAndDedupeEvents(dateFiltered, locationPatterns, cfg.cap);
       }
 
       out[tbl] = ordered.slice(0, cfg.cap).map(cfg.decorate);
@@ -1589,9 +1631,12 @@ async function generateReportInBackground(
             }
           );
 
-          // Simple variable substitution
+          // Simple variable substitution. Use a function replacement so `$`
+          // sequences in scraped/research values ($&, $$, $`, $') aren't
+          // interpreted as String.replace replacement patterns and corrupt
+          // the prompt.
           for (const [key, value] of Object.entries(variables)) {
-            prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
+            prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), () => value);
           }
 
           try {
