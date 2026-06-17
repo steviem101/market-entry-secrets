@@ -1,0 +1,33 @@
+-- =====================================================================
+-- Backfill the `archetype` column add on community_members.
+--
+-- This column exists on prod (added directly via dashboard at some
+-- point, no migration trail) and is referenced by these existing
+-- repo migrations:
+--   - 20260607232810_sec_06_community_members_public_view.sql (safely
+--     conditional via information_schema lookup, so this one passes
+--     on a fresh DB even without the column)
+--   - 20260614091000_kb_phase6_fanout_structured_entities.sql
+--   - 20260616031100_mentor_public_view_masking.sql (HARD reference —
+--     a literal `SELECT … archetype …` that fails with SQLSTATE 42703
+--     on a fresh DB build, which is exactly what's failing the
+--     Supabase Preview check on PR #229)
+--   - 20260616031300_mentor_base_lockdown_and_contact_requests_rls.sql
+--
+-- Adding the column here, BEFORE the 20260616031100 view-creation
+-- migration runs, lets the Supabase Preview workflow replay the full
+-- migration trail without error. On prod the column already exists,
+-- so `ADD COLUMN IF NOT EXISTS` is a no-op.
+--
+-- Schema mirrors the live `community_members.archetype` definition:
+-- `archetype text` (nullable, no default).
+--
+-- File ordering note: the timestamp `20260616030500` deliberately
+-- sits between 20260616012000 (the strip-hidden-content RPC from
+-- this same PR) and 20260616031000 (mentor_anonymity_columns, the
+-- first of the 20260616031xxx mentor-remediation series that all
+-- depend on `archetype` existing).
+-- =====================================================================
+
+ALTER TABLE public.community_members
+  ADD COLUMN IF NOT EXISTS archetype text;
