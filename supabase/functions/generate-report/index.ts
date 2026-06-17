@@ -730,10 +730,18 @@ async function researchEndBuyerProcurement(intake: any): Promise<string> {
 }
 
 // ── AI helper ──────────────────────────────────────────────────────────
+// `opts` lets callers control sampling. Synthesis and polish pass a modest
+// temperature for consistent, instruction-following prose (lower = better at
+// honouring the length/hyperlink/format rules and less rambling). Extraction
+// callers may pass a low temperature for more deterministic JSON. We deliberately
+// do NOT set a restrictive max_tokens on synthesis/polish — a hard cap would
+// truncate mid-sentence (worse for presentation than an overlong section); section
+// length is controlled via prompt budgets instead.
 async function callAI(
   apiKey: string,
   messages: Array<{ role: string; content: string }>,
-  model = "google/gemini-3-flash-preview"
+  model = "google/gemini-3-flash-preview",
+  opts: { temperature?: number; max_tokens?: number } = {}
 ): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90000);
@@ -742,7 +750,12 @@ async function callAI(
     resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, messages }),
+      body: JSON.stringify({
+        model,
+        messages,
+        ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
+        ...(opts.max_tokens !== undefined ? { max_tokens: opts.max_tokens } : {}),
+      }),
       signal: controller.signal,
     });
   } finally {
@@ -798,9 +811,9 @@ async function polishReport(
 
 Rules:
 1. Use Australian English spelling throughout (e.g. "organisation", "labour", "recognise", "analyse", "licence" (noun), "program" for government programs is acceptable).
-2. Improve sentence structure and flow. Break up overly long sentences.
+2. Improve sentence structure and flow. Break up overly long sentences (aim for under ~25 words each). Break up any paragraph longer than roughly 120 words into two or more shorter paragraphs or a bullet list — no walls of text.
 3. Add smooth 1-2 sentence transitions between sections where the topic shifts.
-4. Remove redundant phrases or information that is repeated across sections.
+4. Remove duplication ACROSS sections: if the same fact, statistic, recommendation, or near-identical sentence appears in more than one section, keep it in the single most relevant section and cut it from the others. Within a section, remove repeated phrasing.
 5. Maintain a professional, advisory tone — like a senior consultant briefing a CEO.
 6. PRESERVE all factual data, statistics, numbers, company names, URLs, and citations EXACTLY as they appear. Do NOT invent or alter any data.
 7. PRESERVE all Markdown formatting: headings (###), **bold**, bullet points, numbered lists, links.
@@ -814,7 +827,8 @@ Rules:
         content: concatenated,
       },
     ],
-    "google/gemini-3-flash-preview"
+    "google/gemini-3-flash-preview",
+    { temperature: 0.3 }
   );
 
   console.log(`Polish: AI call completed in ${Date.now() - polishStart}ms`);
@@ -1327,7 +1341,17 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
 
 function getMatchesForSection(sectionName: string, matches: Record<string, any[]>): any[] {
   switch (sectionName) {
-    case "service_providers": return matches.service_providers || [];
+    // Service Providers is the free/always-visible "who can help you" section. Trade &
+    // investment agencies (government support) and innovation hubs/accelerators are the
+    // same class of entry support, so we surface them here too. Previously they were
+    // queried + stored in the raw matches blob but attached to NO section, so the
+    // utilization metric always counted them as "dropped". Attaching them here renders
+    // them as cards and flips them to "used".
+    case "service_providers": return [
+      ...(matches.service_providers || []),
+      ...(matches.trade_investment_agencies || []),
+      ...(matches.innovation_ecosystem || []),
+    ];
     case "mentor_recommendations": return matches.community_members || [];
     case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
     case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
@@ -1512,6 +1536,8 @@ async function generateReportInBackground(
       matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
       matched_investors_json: JSON.stringify(matches.investors || []),
+      matched_trade_investment_agencies_json: JSON.stringify(matches.trade_investment_agencies || []),
+      matched_innovation_ecosystem_json: JSON.stringify(matches.innovation_ecosystem || []),
       competitor_analysis_json: JSON.stringify(competitorResult.competitors),
       known_competitors_json: JSON.stringify(intake.known_competitors || []),
       end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",
@@ -1543,7 +1569,7 @@ async function generateReportInBackground(
     // "do NOT include citation markers" instruction in that case.
     const numCitations = marketResearch.citations.length;
     const citationInstruction = numCitations > 0
-      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MAY include inline citation markers using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
+      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you SHOULD include an inline citation marker using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
       : `IMPORTANT — Inline citations: Do NOT include any numbered citation markers (e.g. [1], [2], [3]) anywhere in your response. There is no source list to cite for this report.`;
 
     // ── Research availability disclosure (P1-11) ─────────────────────────
@@ -1599,12 +1625,20 @@ async function generateReportInBackground(
               ? "\n\nPERSONA CONTEXT: This report is for an Australian startup seeking to grow and scale domestically. Focus on: fundraising landscape, investor matching, accelerator/incubator programs, government grants and R&D tax incentives, growth-stage hiring, market sizing/TAM data, founder networks, and scaling strategy within the existing Australian market. The company is already based in Australia — do NOT focus on market entry logistics like visas or entity setup."
               : "\n\nPERSONA CONTEXT: This report is for an international company entering the ANZ market from overseas. Focus on: regulatory compliance, entity setup, visa requirements, cultural and business practice differences, bilateral trade advantages, service provider matching for market entry support, trade agencies, and go-to-market strategy for a company with no existing Australian presence.";
 
-            const systemContent = `You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\n${citationInstruction}${personaContext}${availabilityNote}`;
+            const systemContent = `You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.
+
+PRESENTATION & FORMATTING (applies to every section):
+- HYPERLINKS: When you name a specific matched entity (service provider, mentor, trade/government agency, accelerator or innovation hub, investor, or event) that has a "website" URL in the data provided to you, hyperlink its name to that URL using Markdown: [Entity Name](https://their-website.example). Likewise, when a grant program, regulator, or source in the provided research has a real URL, link to it. ONLY use real URLs copied from the provided data — never invent, guess, or shorten a URL, and never use placeholder domains.
+- LENGTH: Aim for roughly 250-550 words for this section; never exceed ~800 words. Be concise and high-signal.
+- READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
+- NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
+
+${citationInstruction}${personaContext}${availabilityNote}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
               { role: "user", content: prompt },
-            ]);
+            ], "google/gemini-3-flash-preview", { temperature: 0.4 });
 
             return {
               name: tmpl.section_name,
