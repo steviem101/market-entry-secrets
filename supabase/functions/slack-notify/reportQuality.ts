@@ -1,10 +1,11 @@
 // Report-quality telemetry + scoring. Imported by slack-notify/index.ts.
-// Deterministic only (no AI). The LLM "substance" layer is added separately and writes
-// score_substance/substance + insights onto the same report_quality row.
+// Deterministic layers (utilization, presentation) + an LLM "substance" judge via the Lovable
+// AI Gateway (Gemini). Substance is computed once per report and cached on the report_quality row.
 
 const REPORT_BASE_URL = "https://market-entry-secrets.lovable.app/report";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
+const AI_MODEL = "google/gemini-3-flash-preview";
 
-// RAG source tables a market-entry report should draw from (lemlist is internal, excluded).
 const RAG_SOURCES = [
   "service_providers", "community_members", "events", "content_items",
   "leads", "innovation_ecosystem", "trade_investment_agencies", "investors",
@@ -24,10 +25,6 @@ function entityName(e: any): string {
   return String(e?.name ?? e?.title ?? e?.company_name ?? e?.company ?? "").toLowerCase().trim();
 }
 
-// Utilization: of the entities RAG surfaced, how many were actually placed in the report?
-// used  = attached to a VISIBLE section's matches[] (by id/name) or named in visible prose
-// gated = only attached to a hidden (tier-gated) section
-// dropped = surfaced but neither used nor gated (wasted retrieval)
 // deno-lint-ignore no-explicit-any
 function computeUtilization(rj: any) {
   const matches = rj.matches ?? {};
@@ -74,7 +71,6 @@ function computeUtilization(rj: any) {
   return { per, surfacedTotal, usedTotal, rate, dropped, gated };
 }
 
-// Presentation: deterministic writing-mechanics score (duplication, length, segmentation, links, citations, tells).
 // deno-lint-ignore no-explicit-any
 function computePresentation(rj: any) {
   const sections = rj.sections ?? {};
@@ -86,7 +82,7 @@ function computePresentation(rj: any) {
 
   const links = [...fullProse.matchAll(/\[[^\]]+\]\((https?:\/\/[^)\s]+)\)/g)].map((m) => m[1]);
   const linkCount = links.length;
-  const placeholderLinks = links.filter((u) => /example\.com|localhost|\bTODO\b|^https?:\/\/#?$/i.test(u)).length;
+  const placeholderLinks = links.filter((u) => /example\.com|localhost|\bTODO\b/i.test(u)).length;
   const citationMarkers = (fullProse.match(/\[\d+\]/g) || []).length;
   const citationDensity = totalWords ? (citationMarkers + linkCount) / (totalWords / 1000) : 0;
 
@@ -98,7 +94,6 @@ function computePresentation(rj: any) {
     if (t.c.split(/\n\s*\n/).some((p) => wc(p) > 180)) wallSections.push(t.k);
   }
 
-  // duplication: 4-gram shingle overlap between section pairs
   const shingle = (s: string) => {
     const w = s.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
     const set = new Set<string>();
@@ -153,6 +148,62 @@ function computePresentation(rj: any) {
   };
 }
 
+// LLM judge (Gemini via Lovable AI Gateway): substance rubric + concrete fix suggestions.
+// deno-lint-ignore no-explicit-any
+async function judgeSubstance(report: any, intake: any, t: any): Promise<{ score: number; rubric: Record<string, number>; one_liner: string; insights: string[] } | null> {
+  if (!LOVABLE_API_KEY || t.report_status !== "completed") return null;
+  const sections = report.report_json?.sections ?? {};
+  let prose = "";
+  for (const [k, v] of Object.entries(sections) as [string, { visible?: boolean; content?: string }][]) {
+    if (v?.visible && (v.content || "").trim()) prose += `\n## ${k}\n${(v.content || "").slice(0, 3000)}`;
+  }
+  prose = prose.slice(0, 22000);
+  const inputs = intake
+    ? `Company: ${intake.company_name}; from ${intake.country_of_origin}; industry: ${(intake.industry_sector || []).join(", ")}; target regions: ${(intake.target_regions || []).join(", ")}`
+    : "(inputs unavailable)";
+  const dropped = (t.utilization?.dropped || []).map((c: string) => RAG_LABELS[c]).join(", ") || "none";
+  const presIssues = (t.presentation?.flags || []).join("; ") || "none";
+
+  const sys = "You are a strict QA reviewer for AI-generated market-entry reports. Judge ONLY the report text. The text below is a length-capped excerpt for review — do NOT penalize truncation, overall length, or mid-sentence cutoffs; judge only the quality of what is shown. Respond with ONLY a JSON object, no prose, no markdown fences.";
+  const user = `Company inputs: ${inputs}
+Data categories surfaced by retrieval but NOT used in the report: ${dropped}
+Detected presentation issues: ${presIssues}
+
+REPORT:
+${prose}
+
+Score 1-5 each (5=excellent): relevance (to this company's industry/region/goals), specificity (concrete names/numbers vs generic filler), actionability (clear, sequenced next steps), groundedness (claims supported, no hallucination), coherence (structure/flow). Then give an overall 0-100 "score", a "one_liner" verdict (<=20 words), and up to 3 "insights" — each a concrete fix to the PROMPTS / edge-function plumbing / taxonomy (not generic advice), <=22 words.
+Return ONLY: {"relevance":n,"specificity":n,"actionability":n,"groundedness":n,"coherence":n,"score":n,"one_liner":"...","insights":["...","..."]}`;
+
+  try {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 30000);
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      body: JSON.stringify({ model: AI_MODEL, temperature: 0.2, messages: [{ role: "system", content: sys }, { role: "user", content: user }] }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(to);
+    if (!resp.ok) { logErr("substance http", resp.status); return null; }
+    const data = await resp.json();
+    let content: string = data?.choices?.[0]?.message?.content ?? "";
+    content = content.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const j = JSON.parse(content);
+    const rubric = {
+      relevance: Number(j.relevance) || 0, specificity: Number(j.specificity) || 0,
+      actionability: Number(j.actionability) || 0, groundedness: Number(j.groundedness) || 0, coherence: Number(j.coherence) || 0,
+    };
+    const rubricAvg = (rubric.relevance + rubric.specificity + rubric.actionability + rubric.groundedness + rubric.coherence) / 25 * 100;
+    const score = typeof j.score === "number" ? clamp(Math.round(j.score), 0, 100) : Math.round(rubricAvg);
+    const insights = Array.isArray(j.insights) ? j.insights.slice(0, 3).map((x: unknown) => String(x)) : [];
+    return { score, rubric, one_liner: String(j.one_liner || ""), insights };
+  } catch (e) {
+    logErr("substance", String(e));
+    return null;
+  }
+}
+
 // deno-lint-ignore no-explicit-any
 export function computeReportTelemetry(report: any, intake: any) {
   const rj = report.report_json ?? {};
@@ -191,19 +242,17 @@ export function computeReportTelemetry(report: any, intake: any) {
   let plumbing = 0, coverage = 0, completeness = 0;
   if (status !== "failed") {
     plumbing = Math.round((sources.company_scrape ? 20 : 0) + (sources.perplexity_used ? 15 : 0) + (sectionsVisible ? (visibleWithContent / sectionsVisible) * 40 : 0) + (sources.polish_applied ? 10 : 0) + (failedSections.length === 0 ? 15 : 0));
-    // coverage blends RAG breadth, research depth, AND utilization (retrieving rows you never use shouldn't score full marks)
     coverage = Math.round(ragHitRate * 35 + researchDepth * 35 + (util.rate ?? 0) * 30);
     completeness = Math.round((sectionsVisible ? (visibleWithContent / sectionsVisible) * 60 : 0) + clamp(pres.totalWords / 1500, 0, 1) * 20 + (citations > 0 ? 20 : 0));
   }
   const buildHealth = Math.round(plumbing * 0.3 + coverage * 0.4 + completeness * 0.3);
-  const reportScore = status === "failed" ? 0 : pres.score; // substance folds in later
   const degraded = status === "completed" && (!sources.company_scrape || tablesHit < 3 || failedSections.length > 0 || !sources.perplexity_used || researchDepth < 0.25 || (util.rate != null && util.rate < 0.5));
 
   return {
     report_id: report.id, intake_form_id: report.intake_form_id ?? null, user_id: report.user_id ?? null,
     report_status: status, company: rj.company_name ?? intake?.company_name ?? null,
     build_health: buildHealth, score_plumbing: plumbing, score_coverage: coverage, score_completeness: completeness,
-    score_presentation: status === "failed" ? 0 : pres.score, report_score: reportScore,
+    score_presentation: status === "failed" ? 0 : pres.score,
     degraded, rag_hit_rate: Number(ragHitRate.toFixed(2)), tables_hit: tablesHit, total_matches: totalMatches,
     match_counts: matchCounts, sources, generation_time_ms: meta.generation_time_ms ?? null,
     groundedness: Number(clamp(citations / Math.max(visibleWithContent, 1), 0, 1).toFixed(2)),
@@ -214,7 +263,7 @@ export function computeReportTelemetry(report: any, intake: any) {
 }
 
 // deno-lint-ignore no-explicit-any
-function buildReportQualityCard(t: any, intake: any): { text: string; blocks: unknown[]; color: string } {
+function buildReportQualityCard(t: any, intake: any, sub: { score: number; rubric: Record<string, number>; one_liner: string; insights: string[] } | null, reportScore: number): { text: string; blocks: unknown[]; color: string } {
   const band = BAND(t.build_health);
   const company = t.company || "(unknown company)";
   const secs = Math.round((t.generation_time_ms ?? 0) / 1000);
@@ -242,20 +291,26 @@ function buildReportQualityCard(t: any, intake: any): { text: string; blocks: un
   const gatedTxt = u.gated.length ? `\n🔒 gated (hidden at tier): ${u.gated.map((c: string) => `${RAG_LABELS[c]} ${u.per[c].gated}`).join(", ")}` : "";
 
   const p = t.presentation;
-  const presBand = BAND(p.score);
   const presFlags = p.flags.length ? `\n⚠️ ${p.flags.join(" · ")}` : "\n✅ no presentation issues";
+  const subLine = sub
+    ? `\n*Substance ${sub.score} ${BAND(sub.score).e}*  ·  R${sub.rubric.relevance} S${sub.rubric.specificity} A${sub.rubric.actionability} G${sub.rubric.groundedness} C${sub.rubric.coherence}${sub.one_liner ? ` — _${sub.one_liner}_` : ""}`
+    : "";
 
   const blocks: unknown[] = [
     { type: "header", text: { type: "plain_text", text: `🔬 Report Quality — ${company}`.slice(0, 150) } },
     { type: "section", text: { type: "mrkdwn", text:
       `*Build ${t.build_health} ${band.e}*  ·  Plumbing ${t.score_plumbing} · Coverage ${t.score_coverage} · Completeness ${t.score_completeness}` +
-      `\n*Presentation ${p.score} ${presBand.e}*  ·  Utilization ${utilPct}%  ·  ${t.report_status}${secs ? ` · ${secs}s` : ""}${t.degraded ? "  ·  ⚠️ *DEGRADED*" : ""}` } },
+      `\n*Report ${reportScore} ${BAND(reportScore).e}*  ·  Presentation ${p.score} · Utilization ${utilPct}%${subLine ? ` ·${subLine.replace(/\n/, " ")}` : ""}` +
+      `\n${t.report_status}${secs ? ` · ${secs}s` : ""}${t.degraded ? "  ·  ⚠️ *DEGRADED*" : ""}` } },
   ];
   if (inputLine) blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `*Inputs:* ${inputLine}` }] });
   blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Plumbing (how it was built)*\n${plumbingLines}` } });
   blocks.push({ type: "section", text: { type: "mrkdwn", text: `*RAG coverage (surfaced)*\n${covGrid}\n→ *${t.tables_hit}/${RAG_SOURCES.length}* data types · ${t.total_matches} matches${researchWarn}` } });
   blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Used in report* — ${u.usedTotal}/${u.surfacedTotal} surfaced items included (*${utilPct}%*)${droppedTxt}${gatedTxt}` } });
   blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Presentation ${p.score}/100* — ${t.visible_with_content} sections · ~${p.totalWords.toLocaleString()} words · ${p.linkCount} links · ${p.citationMarkers} citations${presFlags}` } });
+  if (sub && sub.insights.length) {
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Suggested fixes (plumbing/prompts/taxonomy)*\n${sub.insights.map((i) => `• ${i}`).join("\n")}` } });
+  }
   blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `<${REPORT_BASE_URL}/${t.report_id}|View report ↗>  ·  report ${String(t.report_id).slice(0, 8)}…${t.user_feedback != null ? `  ·  user rating ${t.user_feedback}` : ""}` }] });
 
   return { text: `Report Quality — ${company} — Build ${t.build_health}/100`, blocks, color: band.c };
@@ -278,17 +333,29 @@ export async function handleReportQuality(supabase: any, ev: any): Promise<{ tex
   }
 
   const t = computeReportTelemetry(report, intake);
+
+  // Substance (LLM) — compute once per report; reuse if already judged (idempotent cost on re-drive).
+  let sub: { score: number; rubric: Record<string, number>; one_liner: string; insights: string[] } | null = null;
+  const { data: existing } = await supabase.from("report_quality").select("score_substance,substance,insights").eq("report_id", t.report_id).maybeSingle();
+  if (existing && existing.score_substance != null) {
+    sub = { score: existing.score_substance, rubric: existing.substance ?? {}, one_liner: (existing.substance?.one_liner) ?? "", insights: existing.insights ?? [] };
+  } else {
+    sub = await judgeSubstance(report, intake, t);
+  }
+  const reportScore = t.report_status === "failed" ? 0 : (sub ? Math.round(0.4 * t.score_presentation + 0.6 * sub.score) : t.score_presentation);
+
   const { error: upErr } = await supabase.from("report_quality").upsert({
     report_id: t.report_id, intake_form_id: t.intake_form_id, user_id: t.user_id, report_status: t.report_status,
     build_health: t.build_health, score_plumbing: t.score_plumbing, score_coverage: t.score_coverage,
-    score_completeness: t.score_completeness, score_presentation: t.score_presentation, report_score: t.report_score,
+    score_completeness: t.score_completeness, score_presentation: t.score_presentation,
+    score_substance: sub ? sub.score : null, substance: sub ? { ...sub.rubric, one_liner: sub.one_liner } : null,
+    insights: sub ? sub.insights : null, report_score: reportScore,
     degraded: t.degraded, rag_hit_rate: t.rag_hit_rate, tables_hit: t.tables_hit, total_matches: t.total_matches,
     match_counts: t.match_counts, sources: t.sources, generation_time_ms: t.generation_time_ms, groundedness: t.groundedness,
-    utilization_rate: t.utilization_rate, utilization: t.utilization, presentation: t.presentation,
-    user_feedback: t.user_feedback,
+    utilization_rate: t.utilization_rate, utilization: t.utilization, presentation: t.presentation, user_feedback: t.user_feedback,
     metadata: { company: t.company, words: t.words, sections_visible: t.sections_visible, visible_with_content: t.visible_with_content, failed_sections: t.failed_sections },
   }, { onConflict: "report_id" });
   if (upErr) logErr("upsert", upErr.message);
 
-  return buildReportQualityCard(t, intake);
+  return buildReportQualityCard(t, intake, sub, reportScore);
 }
