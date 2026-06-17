@@ -171,6 +171,12 @@ const MentorProfile = () => {
         contentDescription={mentor.tagline || mentor.description}
       >
 
+      {/* Breadcrumb — sits above the cover strip so it never collides with the
+          avatar, which is pulled up with a negative margin to straddle the cover. */}
+      <div className="container mx-auto px-4">
+        <EntityBreadcrumb segments={breadcrumbSegments} className="py-4 px-0" />
+      </div>
+
       {/* Cover strip */}
       <div
         className="h-40 md:h-52 bg-gradient-to-r from-primary/80 to-primary/40"
@@ -182,8 +188,6 @@ const MentorProfile = () => {
       />
 
       <div className="container mx-auto px-4 pb-12">
-        <EntityBreadcrumb segments={breadcrumbSegments} className="mb-4 pt-4 px-0" />
-
         {/* Profile header */}
         <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
           <div className="relative -mt-20 md:-mt-24">

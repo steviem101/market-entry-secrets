@@ -89,7 +89,7 @@ export const useMentorFilters = () => {
 
 export const useFilteredMentors = (mentors: Mentor[], filters: MentorFilterState) => {
   return useMemo(() => {
-    let result = mentors.filter((m) => {
+    const result = mentors.filter((m) => {
       const searchLower = filters.search.toLowerCase();
       if (searchLower) {
         const matchesSearch =
