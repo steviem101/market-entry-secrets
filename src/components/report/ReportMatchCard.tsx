@@ -61,6 +61,10 @@ const absolutizeForPdf = (href?: string): string | undefined => {
   if (!href) return href;
   if (href === '#') return href;
   if (/^https?:/i.test(href)) return href;
+  // Protocol-relative `//host/path` is NOT an internal path; prepending the
+  // origin would produce a broken `https://origin//host/path`. Treat as
+  // external and return unchanged.
+  if (href.startsWith('//')) return href;
   if (href.startsWith('/')) return `${publishedOrigin()}${href}`;
   return href;
 };
