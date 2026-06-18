@@ -4,7 +4,7 @@ import { log } from "../_shared/log.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
-import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
+import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
@@ -1645,6 +1645,9 @@ async function generateReportInBackground(
     const challengesText = (intake.key_challenges || "").trim();
     const companyContextNote = `\n\nCOMPANY CONTEXT (weave in where relevant to this section): ${contextBits}.${challengesText ? ` Stated challenges to address: ${challengesText}.` : ""}`;
 
+    // D2: emphasise (never hide) the sections the user's selected goals map to.
+    const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
+
     if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
@@ -1659,6 +1662,10 @@ async function generateReportInBackground(
         templates.map(async (tmpl: any) => {
           const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
           const willBeVisible = requiredTierIndex === -1 || userTierIndex >= requiredTierIndex;
+          // D2: the user explicitly selected a goal that this section addresses.
+          const emphasisNote = prioritisedSections.has(tmpl.section_name)
+            ? `\n\nPRIORITISED SECTION: the user explicitly selected a goal that this section addresses, so it is one of the outcomes they most want. Make it especially specific, concrete and actionable — lead with the highest-value, most directly useful recommendations (stay within the length budget above).`
+            : "";
 
           let prompt = tmpl.prompt_body;
 
@@ -1689,7 +1696,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
