@@ -8,7 +8,7 @@ import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, type MatchContext } from "./matchScoring.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -1016,26 +1016,12 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     };
     const cleaned = (cm || []).filter((m: any) => !isSeedMentor(m));
 
-    // Selection now folds three rules into the scorer's selectTopN:
-    //  - person-dedupe (collapse "Sarah Chen" / "Dr. Sarah Chen"),
-    //  - organisation diversity (max 2 from one org — fixes 3-of-5 from one agency),
-    //  - a guarantee of >=2 genuine industry specialists when they exist in the pool.
-    // sells-to is intentionally NOT scored for mentors (you want experts in YOUR
-    // field, not your buyers' field) — that's the default applySellsTo=false.
-    const normalizeName = (name: string) =>
-      (name || "").toLowerCase()
-        .replace(/^(dr|prof|mr|mrs|ms|miss)\.?\s+/i, "")  // strip honorifics
-        .replace(/[^a-z\s]/g, "")
-        .trim()
-        .split(/\s+/)
-        .join(" ");
-    const deduped = rank(cleaned, { service: "specialties", countryCol: "origin_country" }, 5, {
-      dedupeKeys: [
-        { keyOf: (m: any) => normalizeName(m.name), max: 1 },
-        { keyOf: (m: any) => (m.company || "").toLowerCase().trim(), max: 2 },
-      ],
-      minSpecialists: 2,
-    });
+    // Produce a candidate pool (top ~10). The final person-dedupe + organisation
+    // diversity + specialist guarantee are applied ONCE, in searchMatches, over the
+    // UNION of this pool and the semantic pool (see RERANK in searchMatches) — so
+    // semantic recall can't override the rebalance. sells-to is intentionally NOT
+    // scored for mentors (you want experts in YOUR field, not your buyers').
+    const deduped = rank(cleaned, { service: "specialties", countryCol: "origin_country" }, 10);
 
     matches.community_members = deduped.map((m: any) => ({
       ...m,
@@ -1225,7 +1211,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     console.log(`Lemlist contacts matched: ${(lc || []).length} (PII + id stripped before embed)`);
   } catch (e) { console.error("Lemlist contacts search error:", e); }
 
-  return matches;
+  return { matches, ctx };
 }
 
 // ── Semantic directory matching (mes_knowledge_base) ─────────────────────
@@ -1330,7 +1316,7 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
  *  is unset or the KB call fails, semantic returns {} and the (now bug-fixed)
  *  overlap path carries the whole report. */
 async function searchMatches(supabase: any, intake: any): Promise<Record<string, any[]>> {
-  const overlap = await searchMatchesOverlap(supabase, intake);
+  const { matches: overlap, ctx } = await searchMatchesOverlap(supabase, intake);
   let semantic: Record<string, any[]> = {};
   try {
     semantic = await semanticMatches(supabase, intake);
@@ -1338,16 +1324,49 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
     console.error("semantic matches failed; using array-overlap only", e);
   }
 
+  // Re-rank the UNION of overlap + semantic candidates through the rebalanced scorer,
+  // so semantic search boosts RECALL while the explainable rebalance (specialist bonus,
+  // org-diversity, sells-to gating) governs the final ORDER. Previously this was
+  // semantic-first, which silently overrode the deterministic ranking (the semantic
+  // query — full of "Trade Advisory/Investment" — is exactly what surfaced trade
+  // generalists). Per-type opts mirror the overlap call sites. Events keep their
+  // bespoke semantic-first merge (preserves the date/venue dedupe + soonest-event fallback).
+  const RERANK: Record<string, { opts: ScoreOpts; select: SelectOpts }> = {
+    service_providers: { opts: { service: "services" }, select: {} },
+    community_members: {
+      opts: { service: "specialties", countryCol: "origin_country" },
+      select: {
+        dedupeKeys: [
+          { keyOf: (m: any) => normalizePersonName(m.name), max: 1 },
+          { keyOf: (m: any) => (m.company || "").toLowerCase().trim(), max: 2 },
+        ],
+        minSpecialists: 2,
+      },
+    },
+    content_items: { opts: { applySellsTo: true }, select: {} },
+    innovation_ecosystem: { opts: { service: "services" }, select: {} },
+    trade_investment_agencies: { opts: { service: "services", persona: true }, select: {} },
+    investors: { opts: { countryCol: "country" }, select: {} },
+  };
+
   const merged: Record<string, any[]> = { ...overlap };
   for (const [tbl, cfg] of Object.entries(SEMANTIC_CFG)) {
     const sem = semantic[tbl] || [];
-    if (sem.length === 0) continue; // keep the overlap result for this type
-    const seen = new Set(sem.map((x: any) => x.id));
-    const backfill = (overlap[tbl] || []).filter((x: any) => !seen.has(x.id));
-    merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
+    const ov = overlap[tbl] || [];
+    const rc = RERANK[tbl];
+    if (rc) {
+      if (sem.length === 0 && ov.length === 0) continue;
+      merged[tbl] = mergeAndRerank(ov, sem, rc.opts, ctx, cfg.cap, rc.select);
+    } else {
+      // events: keep semantic-first + overlap backfill
+      if (sem.length === 0) continue;
+      const seen = new Set(sem.map((x: any) => x.id));
+      const backfill = ov.filter((x: any) => !seen.has(x.id));
+      merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
+    }
   }
   const semKeys = Object.keys(semantic).filter((k) => (semantic[k] || []).length > 0);
-  console.log(`searchMatches: semantic-matched types = [${semKeys.join(", ")}]`);
+  console.log(`searchMatches: semantic types=[${semKeys.join(", ")}], reranked union=[${Object.keys(RERANK).join(", ")}]`);
   return merged;
 }
 

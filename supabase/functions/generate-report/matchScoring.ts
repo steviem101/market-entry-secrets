@@ -213,3 +213,41 @@ export function selectTopN(scored: Scored[], limit: number, opts: SelectOpts = {
 export function withMatchMeta(s: Scored): Row {
   return { ...s.row, match_score: s.score, match_reasons: s.reasons };
 }
+
+/** Canonical person-name key for de-duping near-identical mentors ("Sarah Chen" / "Dr. Sarah Chen"). */
+export function normalizePersonName(name: string): string {
+  return (name || "")
+    .toLowerCase()
+    .replace(/^(dr|prof|mr|mrs|ms|miss)\.?\s+/i, "")
+    .replace(/[^a-z\s]/g, "")
+    .trim()
+    .split(/\s+/)
+    .join(" ");
+}
+
+/**
+ * Merge two candidate pools (e.g. array-overlap `primary` + semantic `secondary`),
+ * dedupe by id (primary wins), then rank the UNION through the rebalanced scorer +
+ * selection rules. This is the key to making the rebalance govern: semantic search
+ * contributes RECALL (extra candidates) while scoreRow/selectTopN decide the final
+ * ORDER — so a relevant specialist surfaced by either path beats a generalist
+ * surfaced by either path, instead of "whichever path ran first" winning.
+ */
+export function mergeAndRerank(
+  primary: Row[],
+  secondary: Row[],
+  opts: ScoreOpts,
+  ctx: MatchContext,
+  limit: number,
+  select: SelectOpts = {},
+): Row[] {
+  const byId = new Map<string, Row>();
+  const idless: Row[] = [];
+  for (const r of [...(primary || []), ...(secondary || [])]) {
+    const id = r && r.id != null ? String(r.id) : "";
+    if (!id) { idless.push(r); continue; }
+    if (!byId.has(id)) byId.set(id, r);
+  }
+  const union = [...byId.values(), ...idless];
+  return selectTopN(scoreAndSort(union, opts, ctx), limit, select).map(withMatchMeta);
+}

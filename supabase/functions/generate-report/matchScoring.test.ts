@@ -6,7 +6,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, type MatchContext, type Scored } from "./matchScoring.ts";
+import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, type MatchContext, type Scored } from "./matchScoring.ts";
 
 const CTX: MatchContext = {
   userSectors: ["technology-information-and-media", "construction", "professional-services"],
@@ -101,4 +101,43 @@ test("scoreAndSort orders best-first and is deterministic on ties", () => {
   const sorted = scoreAndSort([sarah, aiExpert, pureTrade], { service: "specialties", countryCol: "origin_country" }, CTX);
   assert.equal(sorted[0].row.id, "ai"); // specialist wins
   assert.ok(sorted[0].score >= sorted[1].score && sorted[1].score >= sorted[2].score);
+});
+
+test("mergeAndRerank: a specialist from the semantic pool beats a generalist from the overlap pool", () => {
+  // The core override fix: overlap (primary) surfaced the broad trade generalist;
+  // semantic (secondary) surfaced the genuine expert. The expert must still win.
+  const result = mergeAndRerank([sarah], [aiExpert], { service: "specialties", countryCol: "origin_country" }, CTX, 5);
+  assert.equal(result[0].id, "ai", "the specialist should rank first regardless of which path found it");
+  assert.ok(result[0].match_reasons.some((r: string) => r.includes("specialist")));
+});
+
+test("mergeAndRerank dedupes by id (primary wins) and unions the rest", () => {
+  const dupPrimary = { id: "ai", name: "Primary AI", sector_agnostic: false, sector_tags: ["technology-information-and-media"] };
+  const dupSecondary = { id: "ai", name: "Secondary AI", sector_agnostic: false, sector_tags: ["technology-information-and-media"] };
+  const result = mergeAndRerank([dupPrimary], [dupSecondary, pureTrade], {}, CTX, 5);
+  assert.equal(result.find((r: { id: string }) => r.id === "ai").name, "Primary AI");
+  assert.equal(result.length, 2); // deduped ai + pureTrade
+});
+
+test("mergeAndRerank applies org-diversity + specialist guarantee over the union", () => {
+  const mk = (id: string, company: string, tags: string[], agnostic: boolean) =>
+    ({ id, name: id, company, sector_tags: tags, sector_agnostic: agnostic, origin_country: null });
+  const primary = [
+    mk("g1", "Investment NSW", ["technology-information-and-media", "professional-services"], true),
+    mk("g2", "Investment NSW", ["technology-information-and-media", "professional-services"], true),
+    mk("g3", "Investment NSW", ["technology-information-and-media", "professional-services"], true),
+  ];
+  const secondary = [mk("e1", "DeepVision", ["technology-information-and-media"], false)]; // specialist
+  const result = mergeAndRerank(primary, secondary, { countryCol: "origin_country" }, CTX, 5, {
+    dedupeKeys: [{ keyOf: (m: { company?: string }) => (m.company || "").toLowerCase(), max: 2 }],
+    minSpecialists: 1,
+  });
+  assert.ok(result.filter((r: { company: string }) => r.company === "Investment NSW").length <= 2, "org cap respected");
+  assert.ok(result.some((r: { id: string }) => r.id === "e1"), "specialist guaranteed in the slate");
+});
+
+test("normalizePersonName collapses honorifics + punctuation", () => {
+  assert.equal(normalizePersonName("Dr. Sarah Chen"), "sarah chen");
+  assert.equal(normalizePersonName("Sarah Chen"), "sarah chen");
+  assert.equal(normalizePersonName("Prof Anne-Marie O'Brien"), "annemarie obrien");
 });
