@@ -1480,7 +1480,13 @@ async function generateReportInBackground(
       if (metricLines) {
         for (const line of metricLines) {
           const m = line.match(/- METRIC: (.+?) \| (.+?) \| (.+)/);
-          if (m) keyMetrics.push({ label: m[1].trim(), value: m[2].trim(), context: m[3].trim() });
+          // Strip markdown — the model sometimes wraps the label/value in **bold**,
+          // which renders as literal asterisks in the metric cards (the frontend shows
+          // these as plain text). Leave [N] citation markers intact.
+          if (m) {
+            const clean = (s: string) => s.replace(/[*`]/g, "").trim();
+            keyMetrics.push({ label: clean(m[1]), value: clean(m[2]), context: clean(m[3]) });
+          }
         }
         // Remove the KEY METRICS section from landscape text to keep it clean
         marketResearch.landscape = marketResearch.landscape.replace(/\n*(?:KEY METRICS|## KEY METRICS|### KEY METRICS)[\s\S]*$/i, "").trim();
