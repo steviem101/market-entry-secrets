@@ -1484,7 +1484,7 @@ async function generateReportInBackground(
           // which renders as literal asterisks in the metric cards (the frontend shows
           // these as plain text). Leave [N] citation markers intact.
           if (m) {
-            const clean = (s: string) => s.replace(/[*`]/g, "").trim();
+            const clean = (s: string) => s.replace(/\*/g, "").trim();
             keyMetrics.push({ label: clean(m[1]), value: clean(m[2]), context: clean(m[3]) });
           }
         }
