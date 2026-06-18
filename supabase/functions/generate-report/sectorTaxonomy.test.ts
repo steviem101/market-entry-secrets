@@ -71,6 +71,26 @@ test("free-text aliases roll up to real sectors (covers actual customer intake v
   assert.ok(industryGroupsToSectorSlugs(["Cleantech"]).includes("utilities"));
 });
 
+test("occupational/workplace health & safety variants map to construction + professional-services", () => {
+  for (const v of ["Occupational Health and Safety", "Occupational Safety", "OHS", "EHS", "Health and Safety", "Workplace Safety", "Safety Management"]) {
+    assert.deepEqual(
+      industryGroupsToSectorSlugs([v]).sort(),
+      ["construction", "professional-services"],
+      `failed for "${v}"`,
+    );
+  }
+  // The real Ailytics intake value: the form sent "Occupational Health and Safety",
+  // which previously mapped to NOTHING — silently dropping the user's core domain
+  // from matching (only AI + Video Analytics → tech survived).
+  assert.deepEqual(
+    industryGroupsToSectorSlugs(["Artificial Intelligence", "Video Analytics", "Occupational Health and Safety"]).sort(),
+    ["construction", "professional-services", "technology-information-and-media"],
+  );
+  // Guard: genuine healthcare terms must NOT be pulled into construction by the new aliases.
+  assert.deepEqual(industryGroupsToSectorSlugs(["Mental Health"]), ["hospitals-and-health-care"]);
+  assert.deepEqual(industryGroupsToSectorSlugs(["Telehealth"]).sort(), ["hospitals-and-health-care"]);
+});
+
 test("canonical taxonomy hits still win over aliases (no regression)", () => {
   // "Software Development" is the canonical group — must map only to tech,
   // never trip a substring keyword that adds extra slugs.
