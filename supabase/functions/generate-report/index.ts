@@ -577,15 +577,26 @@ async function runMarketResearch(intake: any, persona: string): Promise<MarketRe
   console.log(`Running Perplexity market research (persona: ${persona}, 6 parallel queries)...`);
   const startTime = Date.now();
 
-  // Landscape query is the same for both personas
-  const landscapeQuery = `${industrySectorText} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.
+  // Landscape query is the same for both personas. NICHE-TARGETED (Issue #1): without
+  // this steer, Perplexity returns the broad "IT Services / Software" umbrella market
+  // (observed: a restaurant-AI company got "IT Services Market USD 38.34B" headline
+  // metrics). Anchor it to the specific vertical using what they sell + to whom.
+  const endBuyerText = (intake.end_buyer_industries || []).join(", ");
+  const targetCustomerDesc = (intake.raw_input as any)?.target_customer_description || "";
+  const nicheContext = [
+    endBuyerText ? `sold to ${endBuyerText}` : "",
+    targetCustomerDesc && targetCustomerDesc !== "Not specified" ? targetCustomerDesc : "",
+  ].filter(Boolean).join("; ");
 
-IMPORTANT: At the end of your response, include a section titled "KEY METRICS" with 4-6 quantitative metrics in this exact format:
+  const landscapeQuery = `Size the Australian market for the SPECIFIC product category / vertical that "${industrySectorText}"${nicheContext ? ` (${nicheContext})` : ""} companies sell into — the narrow niche, NOT the broad "IT services" or "software" umbrella market. Region focus: ${targetRegionsText}. Cover market size, growth/CAGR, key players and growth opportunities for THIS niche. If precise niche figures aren't published, use the closest specific vertical and label it as such — never substitute the whole IT/software sector.
+
+IMPORTANT: At the end of your response, include a section titled "KEY METRICS" with 4-6 quantitative metrics that are SPECIFIC TO THIS NICHE/VERTICAL (not the broad IT or software market), in this exact format:
 - METRIC: [Label] | [Value] | [Context]
 For example:
 - METRIC: Market Size | $8.48B | 2024 estimate
 - METRIC: CAGR | 5.1% | 2024-2030 projected
-- METRIC: Active Players | 2,400+ | Registered companies`;
+- METRIC: Active Players | 2,400+ | Registered companies
+Label each metric with the specific niche it refers to (e.g. "Restaurant-management-software market"), never a generic "IT Services" label.`;
 
   // Persona-forked queries
   const regulatoryQuery = isStartup

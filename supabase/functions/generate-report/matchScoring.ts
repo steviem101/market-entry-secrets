@@ -69,8 +69,12 @@ function diminishing(matches: number, base: number, step: number): number {
   return base + step * (matches - 1);
 }
 
-const SPECIALIST_BONUS = 3;   // a focused industry expert should beat a broad generalist
-const AGNOSTIC_NUDGE = 0.25;  // small (was 0.5) — "eligible for everyone" ≠ "relevant"
+// A focused industry expert should beat a broad generalist — but not so strongly that a
+// COARSE-sector match (e.g. an insurtech specialist for a restaurant-tech company, since the
+// 20-sector taxonomy lumps both as "tech") buries a highly-relevant country-corridor hit.
+// Tuned 3 -> 2 after the Nory report ranked Insurtech Australia above Enterprise Ireland.
+const SPECIALIST_BONUS = 2;
+const AGNOSTIC_NUDGE = 0.25;  // small — "eligible for everyone" != "relevant"
 
 export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
   const tags: string[] = row.sector_tags || [];
