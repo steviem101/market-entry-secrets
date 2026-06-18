@@ -1537,6 +1537,11 @@ async function generateReportInBackground(
     // Extract additional_notes: stored separately from primary_goals (no longer concatenated)
     const additionalNotes = (rawInput as any).additional_notes || "";
     const revenueStage = (rawInput as any).revenue_stage || "";
+    // The user's stated priority — "what matters most" (Step 2 report_focus). Persisted to
+    // the report_focus column AND mirrored into raw_input, but previously read by NOTHING,
+    // so the single most intent-revealing answer had zero effect on the report. Surface it
+    // to every section prompt below (and expose {{report_focus}} for templates).
+    const reportFocus = (intake.report_focus || (rawInput as any).report_focus || (rawInput as any).additional_notes || "").toString().trim();
 
     const variables: Record<string, string> = {
       persona,
@@ -1550,6 +1555,7 @@ async function generateReportInBackground(
       budget_level: intake.budget_level || "Not specified",
       primary_goals: intake.primary_goals || "Not specified",
       additional_notes: additionalNotes,
+      report_focus: reportFocus || "Not specified",
       key_challenges: intake.key_challenges || "Not specified",
       target_customer_description: targetCustomerDescription || "Not specified",
       revenue_stage: revenueStage,
@@ -1617,6 +1623,13 @@ async function generateReportInBackground(
     availabilityLines.push(`- Company-website scrape (enriched profile): ${companyProfile ? "available" : "UNAVAILABLE"}`);
     const availabilityNote = `\n\nDATA AVAILABILITY for this report:\n${availabilityLines.join("\n")}\n\nFor any topic marked UNAVAILABLE: do NOT invent specific figures, program names, percentages, eligibility criteria, named clients, or named partners. Use general guidance (e.g. "review the relevant federal grant programs") rather than naming specifics you cannot verify from the provided data. NEVER invent client relationships, partnerships, or past customers that are not explicitly listed in the enriched company profile.`;
 
+    // ── User priority directive (report_focus) ───────────────────────────
+    // The user's "what matters most" answer — previously captured and never used.
+    // Make every section lead with it where relevant.
+    const focusNote = reportFocus
+      ? `\n\nUSER'S STATED PRIORITY (what they most want from this report): "${reportFocus}". Treat this as the single most important outcome for the reader. Where this section can advance that priority, lead with it and make those recommendations concrete and specific to ${intake.company_name}. Do not force it where genuinely irrelevant.`
+      : "";
+
     if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
@@ -1653,7 +1666,7 @@ async function generateReportInBackground(
               ? "\n\nPERSONA CONTEXT: This report is for an Australian startup seeking to grow and scale domestically. Focus on: fundraising landscape, investor matching, accelerator/incubator programs, government grants and R&D tax incentives, growth-stage hiring, market sizing/TAM data, founder networks, and scaling strategy within the existing Australian market. The company is already based in Australia — do NOT focus on market entry logistics like visas or entity setup."
               : "\n\nPERSONA CONTEXT: This report is for an international company entering the ANZ market from overseas. Focus on: regulatory compliance, entity setup, visa requirements, cultural and business practice differences, bilateral trade advantages, service provider matching for market entry support, trade agencies, and go-to-market strategy for a company with no existing Australian presence.";
 
-            const systemContent = `You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.
+            const systemContent = `You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.${focusNote}
 
 PRESENTATION & FORMATTING (applies to every section):
 - HYPERLINKS: When you name a specific matched entity (service provider, mentor, trade/government agency, accelerator or innovation hub, investor, or event) that includes a "website" value in the data provided to you, format its name as a Markdown link to that exact URL — wrap the name in square brackets followed by the real URL in parentheses. Do the same for any grant program, regulator, or source in the provided research that carries a real URL. Use ONLY real URLs copied verbatim from the provided data — never invent, guess, shorten, or use a placeholder/example domain. If no URL is provided for something, leave its name as plain text.
