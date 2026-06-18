@@ -5,9 +5,10 @@ import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
-import { industryGroupsToSectorSlugs, overlapCount } from "./sectorTaxonomy.ts";
+import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, type MatchContext } from "./matchScoring.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -949,43 +950,25 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     return parts.join(",");
   };
 
-  // Weighted relevance score for a fetched candidate.
-  const scoreRow = (row: any, opts: { service?: string; countryCol?: string; persona?: boolean } = {}): number => {
-    const tags: string[] = row.sector_tags || [];
-    let s = overlapCount(tags, userSectors) * 3      // own industry (strongest)
-          + overlapCount(tags, sellsToSectors) * 2;  // industries they sell into
-    if (opts.service) s += overlapCount(row[opts.service] || [], serviceTags) * 2; // service/skill fit
-    const loc = (row.location || "").toLowerCase();
-    if (locationPatterns.some((l: string) => loc.includes(l.toLowerCase()))) s += 1;
-    if (row.sector_agnostic) s += 0.5; // eligible-for-everyone, ranked below a specific hit
-    // Country corridor — structured origin match (strongest), then trade-direction
-    // persona, then a weak description-substring fallback.
-    if (userCountry && opts.countryCol && normalizeCountry(row[opts.countryCol]) === userCountry) {
-      s += 2; // same-origin (e.g. an Irish-origin mentor for an Irish founder)
-    }
-    if (opts.persona && Array.isArray(row.target_company_origin) && row.target_company_origin.length > 0) {
-      const wants = userIsIntl ? "international_entrant" : "australian_exporter";
-      if (row.target_company_origin.includes(wants)) s += 1.5; // trade-direction fit
-    }
-    if (countryTerm) {
-      // `row.tagline` doesn't exist on most queried tables — keep description /
-      // specialties / services which are real on the tables that use them.
-      const hay = [row.description, (row.specialties || []).join(" "), (row.services || []).join(" ")]
-        .filter(Boolean).join(" ").toLowerCase();
-      if (hay.includes(countryTerm)) s += 1.5; // text fallback (bio/desc mentions the country)
-    }
-    return s;
+  // Weighted relevance + explainability + the rebalance (specialist bonus, sells-to
+  // gating, breadth diminishing-returns, diversity, specialist guarantee) live in the
+  // pure, unit-tested matchScoring module. Build the shared context once.
+  const ctx: MatchContext = {
+    userSectors, sellsToSectors, serviceTags, locationPatterns,
+    userCountry, userIsIntl, countryTerm,
   };
 
-  const rank = (rows: any[], opts: { service?: string; countryCol?: string; persona?: boolean }, limit: number): any[] =>
-    (rows || [])
-      .map((r: any) => ({ r, s: scoreRow(r, opts) }))
-      // No `is_verified` column on the queried tables — score alone determines order.
-      // Tiebreak deterministically by id so two equally-scored rows don't shuffle
-      // between runs (was a source of "different reports, same matches" perception).
-      .sort((a, b) => (b.s - a.s) || String(a.r.id || "").localeCompare(String(b.r.id || "")))
-      .slice(0, limit)
-      .map((x) => x.r);
+  // rank(): score -> sort -> optional diversity + specialist guarantee -> attach
+  // match_score/match_reasons, which flow into report_json via the existing decorate
+  // spreads (each card now carries WHY it was matched). `applySellsTo` defaults OFF —
+  // only buyer-facing surfaces (leads/events/content) score on the buyers' industries.
+  const rank = (
+    rows: any[],
+    opts: { service?: string; countryCol?: string; persona?: boolean; applySellsTo?: boolean } = {},
+    limit: number,
+    select: { dedupeKeys?: Array<{ keyOf: (r: any) => string; max: number }>; minSpecialists?: number } = {},
+  ): any[] =>
+    selectTopN(scoreAndSort(rows, opts, ctx), limit, select).map(withMatchMeta);
 
   // Service providers — service-type + location + sector (mostly horizontal/agnostic)
   try {
@@ -1033,9 +1016,12 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     };
     const cleaned = (cm || []).filter((m: any) => !isSeedMentor(m));
 
-    // Overfetch then person-dedupe: drop near-identical names (e.g. "Sarah Chen"
-    // and "Dr. Sarah Chen") before slicing to 5. Keep the higher-scored one.
-    const ranked = rank(cleaned, { service: "specialties", countryCol: "origin_country" }, 12);
+    // Selection now folds three rules into the scorer's selectTopN:
+    //  - person-dedupe (collapse "Sarah Chen" / "Dr. Sarah Chen"),
+    //  - organisation diversity (max 2 from one org — fixes 3-of-5 from one agency),
+    //  - a guarantee of >=2 genuine industry specialists when they exist in the pool.
+    // sells-to is intentionally NOT scored for mentors (you want experts in YOUR
+    // field, not your buyers' field) — that's the default applySellsTo=false.
     const normalizeName = (name: string) =>
       (name || "").toLowerCase()
         .replace(/^(dr|prof|mr|mrs|ms|miss)\.?\s+/i, "")  // strip honorifics
@@ -1043,15 +1029,13 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
         .trim()
         .split(/\s+/)
         .join(" ");
-    const seenPeople = new Set<string>();
-    const deduped: any[] = [];
-    for (const m of ranked) {
-      const key = normalizeName(m.name);
-      if (!key || seenPeople.has(key)) continue;
-      seenPeople.add(key);
-      deduped.push(m);
-      if (deduped.length >= 5) break;
-    }
+    const deduped = rank(cleaned, { service: "specialties", countryCol: "origin_country" }, 5, {
+      dedupeKeys: [
+        { keyOf: (m: any) => normalizeName(m.name), max: 1 },
+        { keyOf: (m: any) => (m.company || "").toLowerCase().trim(), max: 2 },
+      ],
+      minSpecialists: 2,
+    });
 
     matches.community_members = deduped.map((m: any) => ({
       ...m,
@@ -1093,7 +1077,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
       });
     }
 
-    let eventResults = rank(regionFiltered, {}, 12); // overfetch so dedupe still leaves ~5
+    let eventResults = rank(regionFiltered, { applySellsTo: true }, 12); // overfetch so dedupe still leaves ~5
 
     // Title+date+venue dedupe. Many ingested rows are near-duplicates of the
     // same event (4× "Startups & Investors Pitch Night Melbourne" on
@@ -1138,7 +1122,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     ciQuery = ciQuery.or(buildOr({ location: false }));
     const { data: ci, error: ciErr } = await ciQuery;
     if (ciErr) console.error("Content query error:", ciErr);
-    matches.content_items = rank(ci, {}, 5).map((c: any) => ({
+    matches.content_items = rank(ci, { applySellsTo: true }, 5).map((c: any) => ({
       ...c, name: c.title, link: `/content/${c.slug}`, linkLabel: "Read More",
       // Pass the raw content_type but the frontend humaniser in
       // ReportMatchCard maps case_study -> "Case Study", guide -> "Guide", etc.
@@ -1152,7 +1136,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     ldQuery = ldQuery.or(buildOr());
     const { data: ld, error: ldErr } = await ldQuery;
     if (ldErr) console.error("Leads query error:", ldErr);
-    matches.leads = rank(ld, {}, 5).map((l: any) => ({
+    matches.leads = rank(ld, { applySellsTo: true }, 5).map((l: any) => ({
       ...l, link: "/leads", linkLabel: "View Dataset",
       subtitle: `${l.location} · ${l.record_count || "?"} records`,
       tags: [l.category, l.type].filter(Boolean),
