@@ -95,3 +95,42 @@ export function expandGoalsToServiceTags(source: GoalTagSource): string[] {
 
   return [...tags];
 }
+
+// ── Goal → report section mapping (D2: "keep all sections, emphasise picked") ──
+// Each selected goal flags the report section(s) it feeds so generate-report can tell
+// the model to make those sections especially specific/actionable. We deliberately do
+// NOT hide unselected sections (full-report value is preserved) — this only emphasises.
+// section_name values must match the report_templates.section_name set.
+export const GOAL_SECTION_MAP: Record<string, string[]> = {
+  // International
+  find_providers: ["service_providers"],
+  trade_agencies: ["service_providers"],               // agencies surface within the providers section
+  case_studies: ["events_resources"],
+  guides: ["events_resources"],
+  market_research: ["executive_summary", "competitor_landscape"],
+  associations: ["service_providers"],
+  events: ["events_resources"],
+  mentors_intl: ["mentor_recommendations"],
+  lead_lists_intl: ["lead_list"],
+  compliance: ["action_plan"],
+  // Startup
+  investors: ["investor_recommendations"],
+  accelerators: ["service_providers"],                 // innovation hubs surface within providers
+  mentors_startup: ["mentor_recommendations"],
+  growth_providers: ["service_providers"],
+  spaces: ["service_providers"],
+  grants: ["action_plan"],
+  lead_lists_startup: ["lead_list"],
+  founders: ["mentor_recommendations", "events_resources"],
+  guides_startup: ["events_resources"],
+};
+
+/** The set of report sections the user's selected goals map to (deduped). Empty for
+ *  legacy rows with no goal_ids — emphasis is purely additive, so that degrades cleanly. */
+export function goalsToPrioritisedSections(source: { goal_ids?: string[] | null }): string[] {
+  const out = new Set<string>();
+  for (const id of source.goal_ids ?? []) {
+    for (const sec of GOAL_SECTION_MAP[id] ?? []) out.add(sec);
+  }
+  return [...out];
+}

@@ -4,10 +4,11 @@ import { log } from "../_shared/log.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
-import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
-import { industryGroupsToSectorSlugs, overlapCount } from "./sectorTaxonomy.ts";
+import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServiceTags.ts";
+import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -489,7 +490,7 @@ async function callPerplexity(
   apiKey: string,
   query: string,
   options?: { recency?: string; domains?: string[]; model?: string }
-): Promise<{ content: string; citations: string[] }> {
+): Promise<{ content: string; citations: string[]; ok: boolean; status: number }> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
@@ -518,18 +519,21 @@ async function callPerplexity(
 
     if (!resp.ok) {
       const text = await resp.text();
-      console.error("Perplexity error:", resp.status, text);
-      return { content: "", citations: [] };
+      // Do NOT log the response body — it can echo the request/key context. Status only.
+      console.error("Perplexity error: status", resp.status, "len", text.length);
+      return { content: "", citations: [], ok: false, status: resp.status };
     }
 
     const data = await resp.json();
     return {
       content: data.choices?.[0]?.message?.content || "",
       citations: data.citations || [],
+      ok: true,
+      status: resp.status,
     };
   } catch (e) {
-    console.error("Perplexity call failed:", e);
-    return { content: "", citations: [] };
+    console.error("Perplexity call failed:", e instanceof Error ? e.message : "unknown");
+    return { content: "", citations: [], ok: false, status: 0 };
   }
 }
 
@@ -543,6 +547,12 @@ interface MarketResearch {
   grants: string;
   citations: string[];
   used: boolean;
+  // Plumbing visibility: how many of the parallel Perplexity queries actually
+  // succeeded (HTTP 200) and the status codes seen. Surfaced into report metadata
+  // so a silent total outage (e.g. expired/over-quota key -> every call 401/429)
+  // is diagnosable instead of looking like "ran". succeeded:0 with a non-empty
+  // statuses array = the API is rejecting us, not "no data".
+  health: { attempted: number; succeeded: number; statuses: number[] };
 }
 
 async function runMarketResearch(intake: any, persona: string): Promise<MarketResearch> {
@@ -551,6 +561,7 @@ async function runMarketResearch(intake: any, persona: string): Promise<MarketRe
     landscape: "", regulatory: "", news: "",
     bilateral_trade: "", cost_of_business: "", grants: "",
     citations: [], used: false,
+    health: { attempted: 0, succeeded: 0, statuses: [] },
   };
 
   if (!perplexityKey) {
@@ -566,15 +577,26 @@ async function runMarketResearch(intake: any, persona: string): Promise<MarketRe
   console.log(`Running Perplexity market research (persona: ${persona}, 6 parallel queries)...`);
   const startTime = Date.now();
 
-  // Landscape query is the same for both personas
-  const landscapeQuery = `${industrySectorText} market size, trends, key players, and growth opportunities in Australia ${targetRegionsText}. Include specific data points, statistics, and market valuations where available.
+  // Landscape query is the same for both personas. NICHE-TARGETED (Issue #1): without
+  // this steer, Perplexity returns the broad "IT Services / Software" umbrella market
+  // (observed: a restaurant-AI company got "IT Services Market USD 38.34B" headline
+  // metrics). Anchor it to the specific vertical using what they sell + to whom.
+  const endBuyerText = (intake.end_buyer_industries || []).join(", ");
+  const targetCustomerDesc = (intake.raw_input as any)?.target_customer_description || "";
+  const nicheContext = [
+    endBuyerText ? `sold to ${endBuyerText}` : "",
+    targetCustomerDesc && targetCustomerDesc !== "Not specified" ? targetCustomerDesc : "",
+  ].filter(Boolean).join("; ");
 
-IMPORTANT: At the end of your response, include a section titled "KEY METRICS" with 4-6 quantitative metrics in this exact format:
+  const landscapeQuery = `Size the Australian market for the SPECIFIC product category / vertical that "${industrySectorText}"${nicheContext ? ` (${nicheContext})` : ""} companies sell into — the narrow niche, NOT the broad "IT services" or "software" umbrella market. Region focus: ${targetRegionsText}. Cover market size, growth/CAGR, key players and growth opportunities for THIS niche. If precise niche figures aren't published, use the closest specific vertical and label it as such — never substitute the whole IT/software sector.
+
+IMPORTANT: At the end of your response, include a section titled "KEY METRICS" with 4-6 quantitative metrics that are SPECIFIC TO THIS NICHE/VERTICAL (not the broad IT or software market), in this exact format:
 - METRIC: [Label] | [Value] | [Context]
 For example:
 - METRIC: Market Size | $8.48B | 2024 estimate
 - METRIC: CAGR | 5.1% | 2024-2030 projected
-- METRIC: Active Players | 2,400+ | Registered companies`;
+- METRIC: Active Players | 2,400+ | Registered companies
+Label each metric with the specific niche it refers to (e.g. "Restaurant-management-software market"), never a generic "IT Services" label.`;
 
   // Persona-forked queries
   const regulatoryQuery = isStartup
@@ -609,6 +631,7 @@ For example:
     landscape: "", regulatory: "", news: "",
     bilateral_trade: "", cost_of_business: "", grants: "",
     citations: [], used: true,
+    health: { attempted: 0, succeeded: 0, statuses: [] },
   };
 
   if (landscape.status === "fulfilled") {
@@ -637,6 +660,23 @@ For example:
   }
 
   result.citations = [...new Set(result.citations)];
+
+  // Tally Perplexity plumbing health from the settled results. callPerplexity
+  // catches its own errors, so each settled promise is "fulfilled" carrying
+  // { ok, status }; succeeded counts HTTP 200s. A run with succeeded:0 and a
+  // non-empty statuses array means the API is rejecting every call (key/quota),
+  // not that there was nothing to find.
+  const ppxStreams = [landscape, regulatory, news, bilateralTrade, costOfBusiness, grants];
+  for (const s of ppxStreams) {
+    if (s.status === "fulfilled") {
+      result.health.statuses.push(s.value.status);
+      if (s.value.ok) result.health.succeeded++;
+    } else {
+      result.health.statuses.push(-1);
+    }
+  }
+  result.health.attempted = ppxStreams.length;
+  console.log(`Perplexity health: ${result.health.succeeded}/${result.health.attempted} OK; statuses [${result.health.statuses.join(",")}]`);
 
   console.log(`Perplexity research completed in ${Date.now() - startTime}ms — ${result.citations.length} citations`);
   return result;
@@ -730,10 +770,18 @@ async function researchEndBuyerProcurement(intake: any): Promise<string> {
 }
 
 // ── AI helper ──────────────────────────────────────────────────────────
+// `opts` lets callers control sampling. Synthesis and polish pass a modest
+// temperature for consistent, instruction-following prose (lower = better at
+// honouring the length/hyperlink/format rules and less rambling). Extraction
+// callers may pass a low temperature for more deterministic JSON. We deliberately
+// do NOT set a restrictive max_tokens on synthesis/polish — a hard cap would
+// truncate mid-sentence (worse for presentation than an overlong section); section
+// length is controlled via prompt budgets instead.
 async function callAI(
   apiKey: string,
   messages: Array<{ role: string; content: string }>,
-  model = "google/gemini-3-flash-preview"
+  model = "google/gemini-3-flash-preview",
+  opts: { temperature?: number; max_tokens?: number } = {}
 ): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90000);
@@ -742,7 +790,12 @@ async function callAI(
     resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, messages }),
+      body: JSON.stringify({
+        model,
+        messages,
+        ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
+        ...(opts.max_tokens !== undefined ? { max_tokens: opts.max_tokens } : {}),
+      }),
       signal: controller.signal,
     });
   } finally {
@@ -798,9 +851,9 @@ async function polishReport(
 
 Rules:
 1. Use Australian English spelling throughout (e.g. "organisation", "labour", "recognise", "analyse", "licence" (noun), "program" for government programs is acceptable).
-2. Improve sentence structure and flow. Break up overly long sentences.
+2. Improve sentence structure and flow. Break up overly long sentences (aim for under ~25 words each). Break up any paragraph longer than roughly 120 words into two or more shorter paragraphs or a bullet list — no walls of text.
 3. Add smooth 1-2 sentence transitions between sections where the topic shifts.
-4. Remove redundant phrases or information that is repeated across sections.
+4. Remove duplication ACROSS sections: if the same fact, statistic, recommendation, or near-identical sentence appears in more than one section, keep it in the single most relevant section and cut it from the others. Within a section, remove repeated phrasing.
 5. Maintain a professional, advisory tone — like a senior consultant briefing a CEO.
 6. PRESERVE all factual data, statistics, numbers, company names, URLs, and citations EXACTLY as they appear. Do NOT invent or alter any data.
 7. PRESERVE all Markdown formatting: headings (###), **bold**, bullet points, numbered lists, links.
@@ -814,7 +867,8 @@ Rules:
         content: concatenated,
       },
     ],
-    "google/gemini-3-flash-preview"
+    "google/gemini-3-flash-preview",
+    { temperature: 0.3 }
   );
 
   console.log(`Polish: AI call completed in ${Date.now() - polishStart}ms`);
@@ -961,43 +1015,25 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     return parts.join(",");
   };
 
-  // Weighted relevance score for a fetched candidate.
-  const scoreRow = (row: any, opts: { service?: string; countryCol?: string; persona?: boolean } = {}): number => {
-    const tags: string[] = row.sector_tags || [];
-    let s = overlapCount(tags, userSectors) * 3      // own industry (strongest)
-          + overlapCount(tags, sellsToSectors) * 2;  // industries they sell into
-    if (opts.service) s += overlapCount(row[opts.service] || [], serviceTags) * 2; // service/skill fit
-    const loc = (row.location || "").toLowerCase();
-    if (locationPatterns.some((l: string) => loc.includes(l.toLowerCase()))) s += 1;
-    if (row.sector_agnostic) s += 0.5; // eligible-for-everyone, ranked below a specific hit
-    // Country corridor — structured origin match (strongest), then trade-direction
-    // persona, then a weak description-substring fallback.
-    if (userCountry && opts.countryCol && normalizeCountry(row[opts.countryCol]) === userCountry) {
-      s += 2; // same-origin (e.g. an Irish-origin mentor for an Irish founder)
-    }
-    if (opts.persona && Array.isArray(row.target_company_origin) && row.target_company_origin.length > 0) {
-      const wants = userIsIntl ? "international_entrant" : "australian_exporter";
-      if (row.target_company_origin.includes(wants)) s += 1.5; // trade-direction fit
-    }
-    if (countryTerm) {
-      // `row.tagline` doesn't exist on most queried tables — keep description /
-      // specialties / services which are real on the tables that use them.
-      const hay = [row.description, (row.specialties || []).join(" "), (row.services || []).join(" ")]
-        .filter(Boolean).join(" ").toLowerCase();
-      if (hay.includes(countryTerm)) s += 1.5; // text fallback (bio/desc mentions the country)
-    }
-    return s;
+  // Weighted relevance + explainability + the rebalance (specialist bonus, sells-to
+  // gating, breadth diminishing-returns, diversity, specialist guarantee) live in the
+  // pure, unit-tested matchScoring module. Build the shared context once.
+  const ctx: MatchContext = {
+    userSectors, sellsToSectors, serviceTags, locationPatterns,
+    userCountry, userIsIntl, countryTerm,
   };
 
-  const rank = (rows: any[], opts: { service?: string; countryCol?: string; persona?: boolean }, limit: number): any[] =>
-    (rows || [])
-      .map((r: any) => ({ r, s: scoreRow(r, opts) }))
-      // No `is_verified` column on the queried tables — score alone determines order.
-      // Tiebreak deterministically by id so two equally-scored rows don't shuffle
-      // between runs (was a source of "different reports, same matches" perception).
-      .sort((a, b) => (b.s - a.s) || String(a.r.id || "").localeCompare(String(b.r.id || "")))
-      .slice(0, limit)
-      .map((x) => x.r);
+  // rank(): score -> sort -> optional diversity + specialist guarantee -> attach
+  // match_score/match_reasons, which flow into report_json via the existing decorate
+  // spreads (each card now carries WHY it was matched). `applySellsTo` defaults OFF —
+  // only buyer-facing surfaces (leads/events/content) score on the buyers' industries.
+  const rank = (
+    rows: any[],
+    opts: { service?: string; countryCol?: string; persona?: boolean; applySellsTo?: boolean } = {},
+    limit: number,
+    select: { dedupeKeys?: Array<{ keyOf: (r: any) => string; max: number }>; minSpecialists?: number } = {},
+  ): any[] =>
+    selectTopN(scoreAndSort(rows, opts, ctx), limit, select).map(withMatchMeta);
 
   // Service providers — service-type + location + sector (mostly horizontal/agnostic)
   try {
@@ -1045,25 +1081,12 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     };
     const cleaned = (cm || []).filter((m: any) => !isSeedMentor(m));
 
-    // Overfetch then person-dedupe: drop near-identical names (e.g. "Sarah Chen"
-    // and "Dr. Sarah Chen") before slicing to 5. Keep the higher-scored one.
-    const ranked = rank(cleaned, { service: "specialties", countryCol: "origin_country" }, 12);
-    const normalizeName = (name: string) =>
-      (name || "").toLowerCase()
-        .replace(/^(dr|prof|mr|mrs|ms|miss)\.?\s+/i, "")  // strip honorifics
-        .replace(/[^a-z\s]/g, "")
-        .trim()
-        .split(/\s+/)
-        .join(" ");
-    const seenPeople = new Set<string>();
-    const deduped: any[] = [];
-    for (const m of ranked) {
-      const key = normalizeName(m.name);
-      if (!key || seenPeople.has(key)) continue;
-      seenPeople.add(key);
-      deduped.push(m);
-      if (deduped.length >= 5) break;
-    }
+    // Produce a candidate pool (top ~10). The final person-dedupe + organisation
+    // diversity + specialist guarantee are applied ONCE, in searchMatches, over the
+    // UNION of this pool and the semantic pool (see RERANK in searchMatches) — so
+    // semantic recall can't override the rebalance. sells-to is intentionally NOT
+    // scored for mentors (you want experts in YOUR field, not your buyers').
+    const deduped = rank(cleaned, { service: "specialties", countryCol: "origin_country" }, 10);
 
     matches.community_members = deduped.map((m: any) => ({
       ...m,
@@ -1095,8 +1118,9 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
 
     // Rank first (overfetch so the shared region+dedupe helper still leaves ~5),
     // then apply the same region hard-filter + title|date|venue dedupe as the
-    // semantic path so the two paths agree on event surfacing.
-    const ranked = rank(ev || [], {}, 12);
+    // semantic path so the two paths agree on event surfacing. applySellsTo:true —
+    // events are a buyer-facing surface, so the buyer-industry signal counts here.
+    const ranked = rank(ev || [], { applySellsTo: true }, 12);
     let eventResults = regionFilterAndDedupeEvents(ranked, locationPatterns, 5);
 
     // Fallback when the strict filter returned nothing: take the soonest
@@ -1128,7 +1152,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     ciQuery = ciQuery.or(buildOr({ location: false }));
     const { data: ci, error: ciErr } = await ciQuery;
     if (ciErr) console.error("Content query error:", ciErr);
-    matches.content_items = rank(ci, {}, 5).map((c: any) => ({
+    matches.content_items = rank(ci, { applySellsTo: true }, 5).map((c: any) => ({
       ...c, name: c.title, link: `/content/${c.slug}`, linkLabel: "Read More",
       // Pass the raw content_type but the frontend humaniser in
       // ReportMatchCard maps case_study -> "Case Study", guide -> "Guide", etc.
@@ -1142,7 +1166,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     ldQuery = ldQuery.or(buildOr());
     const { data: ld, error: ldErr } = await ldQuery;
     if (ldErr) console.error("Leads query error:", ldErr);
-    matches.leads = rank(ld, {}, 5).map((l: any) => ({
+    matches.leads = rank(ld, { applySellsTo: true }, 5).map((l: any) => ({
       ...l, link: "/leads", linkLabel: "View Dataset",
       subtitle: `${l.location} · ${l.record_count || "?"} records`,
       tags: [l.category, l.type].filter(Boolean),
@@ -1231,7 +1255,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     console.log(`Lemlist contacts matched: ${(lc || []).length} (PII + id stripped before embed)`);
   } catch (e) { console.error("Lemlist contacts search error:", e); }
 
-  return matches;
+  return { matches, ctx };
 }
 
 // ── Semantic directory matching (mes_knowledge_base) ─────────────────────
@@ -1346,7 +1370,7 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
  *  is unset or the KB call fails, semantic returns {} and the (now bug-fixed)
  *  overlap path carries the whole report. */
 async function searchMatches(supabase: any, intake: any): Promise<Record<string, any[]>> {
-  const overlap = await searchMatchesOverlap(supabase, intake);
+  const { matches: overlap, ctx } = await searchMatchesOverlap(supabase, intake);
   let semantic: Record<string, any[]> = {};
   try {
     semantic = await semanticMatches(supabase, intake);
@@ -1354,22 +1378,65 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
     console.error("semantic matches failed; using array-overlap only", e);
   }
 
+  // Re-rank the UNION of overlap + semantic candidates through the rebalanced scorer,
+  // so semantic search boosts RECALL while the explainable rebalance (specialist bonus,
+  // org-diversity, sells-to gating) governs the final ORDER. Previously this was
+  // semantic-first, which silently overrode the deterministic ranking (the semantic
+  // query — full of "Trade Advisory/Investment" — is exactly what surfaced trade
+  // generalists). Per-type opts mirror the overlap call sites. Events keep their
+  // bespoke semantic-first merge (preserves the date/venue dedupe + soonest-event fallback).
+  const RERANK: Record<string, { opts: ScoreOpts; select: SelectOpts }> = {
+    service_providers: { opts: { service: "services" }, select: {} },
+    community_members: {
+      opts: { service: "specialties", countryCol: "origin_country" },
+      select: {
+        dedupeKeys: [
+          { keyOf: (m: any) => normalizePersonName(m.name), max: 1 },
+          { keyOf: (m: any) => (m.company || "").toLowerCase().trim(), max: 2 },
+        ],
+        minSpecialists: 2,
+      },
+    },
+    content_items: { opts: { applySellsTo: true }, select: {} },
+    innovation_ecosystem: { opts: { service: "services" }, select: {} },
+    trade_investment_agencies: { opts: { service: "services", persona: true }, select: {} },
+    investors: { opts: { countryCol: "country" }, select: {} },
+  };
+
   const merged: Record<string, any[]> = { ...overlap };
   for (const [tbl, cfg] of Object.entries(SEMANTIC_CFG)) {
     const sem = semantic[tbl] || [];
-    if (sem.length === 0) continue; // keep the overlap result for this type
-    const seen = new Set(sem.map((x: any) => x.id));
-    const backfill = (overlap[tbl] || []).filter((x: any) => !seen.has(x.id));
-    merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
+    const ov = overlap[tbl] || [];
+    const rc = RERANK[tbl];
+    if (rc) {
+      if (sem.length === 0 && ov.length === 0) continue;
+      merged[tbl] = mergeAndRerank(ov, sem, rc.opts, ctx, cfg.cap, rc.select);
+    } else {
+      // events: keep semantic-first + overlap backfill
+      if (sem.length === 0) continue;
+      const seen = new Set(sem.map((x: any) => x.id));
+      const backfill = ov.filter((x: any) => !seen.has(x.id));
+      merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
+    }
   }
   const semKeys = Object.keys(semantic).filter((k) => (semantic[k] || []).length > 0);
-  console.log(`searchMatches: semantic-matched types = [${semKeys.join(", ")}]`);
+  console.log(`searchMatches: semantic types=[${semKeys.join(", ")}], reranked union=[${Object.keys(RERANK).join(", ")}]`);
   return merged;
 }
 
 function getMatchesForSection(sectionName: string, matches: Record<string, any[]>): any[] {
   switch (sectionName) {
-    case "service_providers": return matches.service_providers || [];
+    // Service Providers is the free/always-visible "who can help you" section. Trade &
+    // investment agencies (government support) and innovation hubs/accelerators are the
+    // same class of entry support, so we surface them here too. Previously they were
+    // queried + stored in the raw matches blob but attached to NO section, so the
+    // utilization metric always counted them as "dropped". Attaching them here renders
+    // them as cards and flips them to "used".
+    case "service_providers": return [
+      ...(matches.service_providers || []),
+      ...(matches.trade_investment_agencies || []),
+      ...(matches.innovation_ecosystem || []),
+    ];
     case "mentor_recommendations": return matches.community_members || [];
     case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
     case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
@@ -1456,7 +1523,13 @@ async function generateReportInBackground(
       if (metricLines) {
         for (const line of metricLines) {
           const m = line.match(/- METRIC: (.+?) \| (.+?) \| (.+)/);
-          if (m) keyMetrics.push({ label: m[1].trim(), value: m[2].trim(), context: m[3].trim() });
+          // Strip markdown — the model sometimes wraps the label/value in **bold**,
+          // which renders as literal asterisks in the metric cards (the frontend shows
+          // these as plain text). Leave [N] citation markers intact.
+          if (m) {
+            const clean = (s: string) => s.replace(/\*/g, "").trim();
+            keyMetrics.push({ label: clean(m[1]), value: clean(m[2]), context: clean(m[3]) });
+          }
         }
         // Remove the KEY METRICS section from landscape text to keep it clean
         marketResearch.landscape = marketResearch.landscape.replace(/\n*(?:KEY METRICS|## KEY METRICS|### KEY METRICS)[\s\S]*$/i, "").trim();
@@ -1527,6 +1600,11 @@ async function generateReportInBackground(
     // Extract additional_notes: stored separately from primary_goals (no longer concatenated)
     const additionalNotes = (rawInput as any).additional_notes || "";
     const revenueStage = (rawInput as any).revenue_stage || "";
+    // The user's stated priority — "what matters most" (Step 2 report_focus). Persisted to
+    // the report_focus column AND mirrored into raw_input, but previously read by NOTHING,
+    // so the single most intent-revealing answer had zero effect on the report. Surface it
+    // to every section prompt below (and expose {{report_focus}} for templates).
+    const reportFocus = (intake.report_focus || (rawInput as any).report_focus || (rawInput as any).additional_notes || "").toString().trim();
 
     const variables: Record<string, string> = {
       persona,
@@ -1540,6 +1618,7 @@ async function generateReportInBackground(
       budget_level: intake.budget_level || "Not specified",
       primary_goals: intake.primary_goals || "Not specified",
       additional_notes: additionalNotes,
+      report_focus: reportFocus || "Not specified",
       key_challenges: intake.key_challenges || "Not specified",
       target_customer_description: targetCustomerDescription || "Not specified",
       revenue_stage: revenueStage,
@@ -1554,6 +1633,8 @@ async function generateReportInBackground(
       matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
       matched_investors_json: JSON.stringify(matches.investors || []),
+      matched_trade_investment_agencies_json: JSON.stringify(matches.trade_investment_agencies || []),
+      matched_innovation_ecosystem_json: JSON.stringify(matches.innovation_ecosystem || []),
       competitor_analysis_json: JSON.stringify(competitorResult.competitors),
       known_competitors_json: JSON.stringify(intake.known_competitors || []),
       end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",
@@ -1585,7 +1666,7 @@ async function generateReportInBackground(
     // "do NOT include citation markers" instruction in that case.
     const numCitations = marketResearch.citations.length;
     const citationInstruction = numCitations > 0
-      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you MAY include inline citation markers using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
+      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you SHOULD include an inline citation marker using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
       : `IMPORTANT — Inline citations: Do NOT include any numbered citation markers (e.g. [1], [2], [3]) anywhere in your response. There is no source list to cite for this report.`;
 
     // ── Research availability disclosure (P1-11) ─────────────────────────
@@ -1605,6 +1686,28 @@ async function generateReportInBackground(
     availabilityLines.push(`- Company-website scrape (enriched profile): ${companyProfile ? "available" : "UNAVAILABLE"}`);
     const availabilityNote = `\n\nDATA AVAILABILITY for this report:\n${availabilityLines.join("\n")}\n\nFor any topic marked UNAVAILABLE: do NOT invent specific figures, program names, percentages, eligibility criteria, named clients, or named partners. Use general guidance (e.g. "review the relevant federal grant programs") rather than naming specifics you cannot verify from the provided data. NEVER invent client relationships, partnerships, or past customers that are not explicitly listed in the enriched company profile.`;
 
+    // ── User priority directive (report_focus) ───────────────────────────
+    // The user's "what matters most" answer — previously captured and never used.
+    // Make every section lead with it where relevant.
+    const focusNote = reportFocus
+      ? `\n\nUSER'S STATED PRIORITY (what they most want from this report): "${reportFocus}". Treat this as the single most important outcome for the reader. Where this section can advance that priority, lead with it and make those recommendations concrete and specific to ${intake.company_name}. Do not force it where genuinely irrelevant.`
+      : "";
+
+    // ── Under-used inputs surfaced to EVERY section (challenges, revenue, headcount) ──
+    // Previously key_challenges reached only the executive summary, and revenue_stage /
+    // employee_count reached nothing. Give every section the full company picture.
+    const contextBits = [
+      `${intake.company_name} — ${intake.company_stage || "stage not specified"}`,
+      revenueStage ? `${revenueStage} revenue` : "",
+      intake.employee_count ? `${intake.employee_count} employees` : "",
+      `from ${intake.country_of_origin}`,
+    ].filter(Boolean).join(", ");
+    const challengesText = (intake.key_challenges || "").trim();
+    const companyContextNote = `\n\nCOMPANY CONTEXT (weave in where relevant to this section): ${contextBits}.${challengesText ? ` Stated challenges to address: ${challengesText}.` : ""}`;
+
+    // D2: emphasise (never hide) the sections the user's selected goals map to.
+    const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
+
     if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
@@ -1619,6 +1722,10 @@ async function generateReportInBackground(
         templates.map(async (tmpl: any) => {
           const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
           const willBeVisible = requiredTierIndex === -1 || userTierIndex >= requiredTierIndex;
+          // D2: the user explicitly selected a goal that this section addresses.
+          const emphasisNote = prioritisedSections.has(tmpl.section_name)
+            ? `\n\nPRIORITISED SECTION: the user explicitly selected a goal that this section addresses, so it is one of the outcomes they most want. Make it especially specific, concrete and actionable — lead with the highest-value, most directly useful recommendations (stay within the length budget above).`
+            : "";
 
           let prompt = tmpl.prompt_body;
 
@@ -1644,12 +1751,20 @@ async function generateReportInBackground(
               ? "\n\nPERSONA CONTEXT: This report is for an Australian startup seeking to grow and scale domestically. Focus on: fundraising landscape, investor matching, accelerator/incubator programs, government grants and R&D tax incentives, growth-stage hiring, market sizing/TAM data, founder networks, and scaling strategy within the existing Australian market. The company is already based in Australia — do NOT focus on market entry logistics like visas or entity setup."
               : "\n\nPERSONA CONTEXT: This report is for an international company entering the ANZ market from overseas. Focus on: regulatory compliance, entity setup, visa requirements, cultural and business practice differences, bilateral trade advantages, service provider matching for market entry support, trade agencies, and go-to-market strategy for a company with no existing Australian presence.";
 
-            const systemContent = `You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.\n\n${citationInstruction}${personaContext}${availabilityNote}`;
+            const systemContent = `You are Market Entry Secrets AI, an expert consultant helping companies succeed in the Australian market. Write professional, actionable content grounded in real data when available. Use Australian English spelling (organisation, labour, recognise, analyse). Use Markdown formatting: use ### for subsections, **bold** for emphasis, bullet points for lists, and numbered lists for steps.${focusNote}${companyContextNote}
+
+PRESENTATION & FORMATTING (applies to every section):
+- HYPERLINKS: When you name a specific matched entity (service provider, mentor, trade/government agency, accelerator or innovation hub, investor, or event) that includes a "website" value in the data provided to you, format its name as a Markdown link to that exact URL — wrap the name in square brackets followed by the real URL in parentheses. Do the same for any grant program, regulator, or source in the provided research that carries a real URL. Use ONLY real URLs copied verbatim from the provided data — never invent, guess, shorten, or use a placeholder/example domain. If no URL is provided for something, leave its name as plain text.
+- LENGTH: Aim for roughly 250-550 words for this section; never exceed ~800 words. Be concise and high-signal.
+- READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
+- NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
+
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
               { role: "user", content: prompt },
-            ]);
+            ], "google/gemini-3-flash-preview", { temperature: 0.4 });
 
             return {
               name: tmpl.section_name,
@@ -1696,6 +1811,7 @@ async function generateReportInBackground(
         total_matches: Object.values(matches).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
         generation_time_ms: Date.now() - startTime,
         perplexity_used: marketResearch.used,
+        perplexity_health: marketResearch.health,
         perplexity_citations: marketResearch.citations,
         firecrawl_deep_scrape: !!companyProfile,
         firecrawl_providers_enriched: (matches.service_providers || []).filter((p: any) => p.enriched_description).length,

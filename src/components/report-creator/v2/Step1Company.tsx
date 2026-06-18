@@ -45,12 +45,17 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
       const result = await prefillFromWebsite(url);
       if (!result) { setScrape('error'); return; }
       const hadRegion = regions.length > 0;
+      const mergedName = form.company_name || result.company_name || '';
+      const mergedCountry = result.country_of_origin ?? form.country_of_origin;
+      const mergedIndustry = result.industry_sector ?? form.industry_sector;
+      const mergedStage = (result.company_stage as typeof form.company_stage) ?? form.company_stage;
+      const mergedEmployees = (result.employee_count as typeof form.employee_count) ?? form.employee_count;
       set({
-        company_name: form.company_name || result.company_name || '',
-        country_of_origin: result.country_of_origin ?? form.country_of_origin,
-        industry_sector: result.industry_sector ?? form.industry_sector,
-        company_stage: (result.company_stage as typeof form.company_stage) ?? form.company_stage,
-        employee_count: (result.employee_count as typeof form.employee_count) ?? form.employee_count,
+        company_name: mergedName,
+        country_of_origin: mergedCountry,
+        industry_sector: mergedIndustry,
+        company_stage: mergedStage,
+        employee_count: mergedEmployees,
         target_regions: hadRegion ? regions : ['Sydney/NSW'],
         website_scrape_accepted: true,
       });
@@ -62,7 +67,13 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
         employee_count: !!result.employee_count,
       });
       setRegionSuggested(!hadRegion);
-      setExpanded(false);
+      // If a REQUIRED field (especially country — hard to scrape reliably) wasn't
+      // captured, expand to the full fields so the user can complete it. Collapsing to
+      // the "Here's what we found" card hides the empty required input, so its
+      // validation fires invisibly on Next and the button looks broken (observed:
+      // nory.ai detected company/industry/stage but not country -> dead Next button).
+      const missingRequired = !mergedName || !mergedCountry || !(mergedIndustry ?? []).length || !mergedStage;
+      setExpanded(missingRequired);
       setScrape('detected');
       trackIntakeEvent('website_prefill_shown', { step: 1, persona });
     } catch {

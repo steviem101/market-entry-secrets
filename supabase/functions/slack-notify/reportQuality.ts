@@ -228,6 +228,7 @@ export function computeReportTelemetry(report: any, intake: any) {
   const sources = {
     company_scrape: !!meta.firecrawl_deep_scrape, providers_enriched: meta.firecrawl_providers_enriched ?? 0,
     competitors_found: meta.firecrawl_competitors_found ?? 0, perplexity_used: !!meta.perplexity_used,
+    perplexity_health: meta.perplexity_health ?? null,
     citations, key_metrics: keyMetrics, discovered_events: meta.discovered_events_count ?? 0,
     polish_applied: !!meta.polish_applied, bilateral_trade: !!meta.bilateral_trade_available,
     cost_of_business: !!meta.cost_of_business_available, grants: !!meta.grants_available,
@@ -246,7 +247,11 @@ export function computeReportTelemetry(report: any, intake: any) {
     completeness = Math.round((sectionsVisible ? (visibleWithContent / sectionsVisible) * 60 : 0) + clamp(pres.totalWords / 1500, 0, 1) * 20 + (citations > 0 ? 20 : 0));
   }
   const buildHealth = Math.round(plumbing * 0.3 + coverage * 0.4 + completeness * 0.3);
-  const degraded = status === "completed" && (!sources.company_scrape || tablesHit < 3 || failedSections.length > 0 || !sources.perplexity_used || researchDepth < 0.25 || (util.rate != null && util.rate < 0.5));
+  // Perplexity totally failing (every call non-200) -> degraded, even though perplexity_used
+  // (key present) stays true. perplexity_health is absent on pre-instrumentation reports.
+  const ph = sources.perplexity_health;
+  const perplexityDead = !!ph && ph.attempted > 0 && ph.succeeded === 0;
+  const degraded = status === "completed" && (!sources.company_scrape || tablesHit < 3 || failedSections.length > 0 || !sources.perplexity_used || perplexityDead || researchDepth < 0.25 || (util.rate != null && util.rate < 0.5));
 
   return {
     report_id: report.id, intake_form_id: report.intake_form_id ?? null, user_id: report.user_id ?? null,
@@ -275,15 +280,26 @@ function buildReportQualityCard(t: any, intake: any, sub: { score: number; rubri
   ].filter(Boolean).join(" · ") : "";
 
   const s = t.sources;
+  // Perplexity health (added by generate-report instrumentation). Absent on older reports,
+  // in which case we fall back to the coarse perplexity_used flag.
+  const h = s.perplexity_health;
+  const ppxOk = h ? h.succeeded > 0 : s.perplexity_used;
+  const ppxDetail = h
+    ? `${h.succeeded}/${h.attempted} calls OK${h.succeeded === 0 && h.attempted > 0 ? ` · statuses [${(h.statuses || []).join(",")}]` : ""}`
+    : (s.perplexity_used ? "ran" : "not used");
   const plumbingLines = [
     `${s.company_scrape ? "✅" : "❌"} Firecrawl — scrape ${s.company_scrape ? "ok" : "FAILED"} · ${s.providers_enriched} providers · ${s.competitors_found} competitors`,
-    `${s.perplexity_used ? "✅" : "❌"} Perplexity — ${s.perplexity_used ? "ran" : "not used"} · ${s.citations} citations · ${s.key_metrics} key metrics`,
+    `${ppxOk ? "✅" : "❌"} Perplexity — ${ppxDetail} · ${s.citations} citations · ${s.key_metrics} key metrics`,
     `${t.failed_sections.length === 0 ? "✅" : "⚠️"} Gemini — ${t.visible_with_content}/${t.sections_visible} sections${t.failed_sections.length ? ` (failed: ${t.failed_sections.join(", ")})` : ""} · polish ${s.polish_applied ? "applied" : "skipped"}`,
   ].join("\n");
 
   const cov = RAG_SOURCES.map((tbl) => `${(t.match_counts[tbl] ?? 0) > 0 ? "✅" : "⬜"} ${RAG_LABELS[tbl]} ${t.match_counts[tbl] ?? 0}`);
   const covGrid = [cov.slice(0, 4).join("   "), cov.slice(4).join("   ")].join("\n");
-  const researchWarn = (s.citations === 0 && s.key_metrics === 0) ? "\n⚠️ Perplexity returned 0 citations & 0 key metrics — research enrichment underperforming." : "";
+  const researchWarn = (h && h.attempted > 0 && h.succeeded === 0)
+    ? `\n🚨 Perplexity FAILING — 0/${h.attempted} calls succeeded (statuses [${(h.statuses || []).join(",")}]). Reports are running with NO market research; check the PERPLEXITY_API_KEY / quota.`
+    : (s.citations === 0 && s.key_metrics === 0)
+      ? "\n⚠️ Perplexity returned 0 citations & 0 key metrics — research enrichment underperforming."
+      : "";
 
   const u = t.utilization;
   const utilPct = u.rate != null ? Math.round(u.rate * 100) : 0;

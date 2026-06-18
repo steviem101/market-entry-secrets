@@ -84,7 +84,7 @@ const SECTOR_KEYWORD_ALIASES: Array<[RegExp, string[]]> = [
   [/\b(?:energy|solar|wind|hydrogen|battery storage)\b/, ['utilities']],
   [/\b(?:mining|miner|miners|critical minerals|exploration)\b/, ['oil-gas-and-mining']],
   [/\b(?:oil|gas|petroleum|lng)\b/, ['oil-gas-and-mining']],
-  [/\b(?:construction|infrastructure|civil|engineering services|whs|workplace health and safety|workplace safety)\b/, ['construction', 'professional-services']],
+  [/\b(?:construction|infrastructure|civil|engineering services|whs|ehs|ohs|workplace health and safety|workplace safety|occupational health and safety|occupational safety|health and safety|safety management)\b/, ['construction', 'professional-services']],
   [/\b(?:manufactur\w*|industrial|machinery|automation|robotics)\b/, ['manufacturing']],
   [/\b(?:logistics|supply chain|warehousing|shipping|freight|maritime)\b/, ['transportation-logistics-supply-chain-and-storage']],
   [/\b(?:retail|ecommerce|e-commerce|d2c|dtc)\b/, ['retail']],

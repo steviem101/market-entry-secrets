@@ -62,3 +62,17 @@ verify_jwt = false
 # Public, cacheable host for transactional-email images (brand logo). Serves a
 # static asset with no user input; must be publicly fetchable by mail clients.
 verify_jwt = false
+
+[functions.slack-notify]
+# Invoked server-to-server by the dispatch_activity_event() DB trigger, which sends
+# only an `x-webhook-secret` header (no JWT). The function authenticates that secret
+# in-code against SLACK_NOTIFY_WEBHOOK_SECRET. With verify_jwt = true the API gateway
+# rejects the trigger's POST (UNAUTHORIZED_NO_AUTH_HEADER) before the function runs,
+# so report-quality cards silently never post — keep this false.
+verify_jwt = false
+
+[functions.report-quality-rollup]
+# Cron-invoked weekly rollup; authenticated in-code by x-webhook-secret ==
+# SLACK_NOTIFY_WEBHOOK_SECRET (same pattern as slack-notify). Must stay false or the
+# gateway rejects the cron POST before the function runs.
+verify_jwt = false

@@ -15,7 +15,27 @@ import {
   expandGoalsToServiceTags,
   GOAL_SERVICE_TAGS_BY_ID,
   GOAL_SERVICE_TAGS_BY_LABEL,
+  goalsToPrioritisedSections,
+  GOAL_SECTION_MAP,
 } from "./goalServiceTags.ts";
+
+test("goalsToPrioritisedSections maps selected goals to the report sections they feed", () => {
+  assert.deepEqual(
+    goalsToPrioritisedSections({ goal_ids: ["mentors_intl", "lead_lists_intl", "find_providers"] }).sort(),
+    ["lead_list", "mentor_recommendations", "service_providers"],
+  );
+  // two goals feeding the same section dedupe
+  assert.deepEqual(
+    goalsToPrioritisedSections({ goal_ids: ["find_providers", "trade_agencies", "associations"] }),
+    ["service_providers"],
+  );
+  // legacy / empty -> no emphasis (graceful)
+  assert.deepEqual(goalsToPrioritisedSections({ goal_ids: null }), []);
+  assert.deepEqual(goalsToPrioritisedSections({}), []);
+  // every mapped section must be a real report_templates section
+  const valid = new Set(["executive_summary", "swot_analysis", "competitor_landscape", "service_providers", "mentor_recommendations", "events_resources", "action_plan", "lead_list", "investor_recommendations"]);
+  for (const secs of Object.values(GOAL_SECTION_MAP)) for (const s of secs) assert.ok(valid.has(s), `unknown section: ${s}`);
+});
 
 test("v2 goal_ids expand to non-empty service tags", () => {
   // The default international selection from rc-data DEFAULT_GOALS.
