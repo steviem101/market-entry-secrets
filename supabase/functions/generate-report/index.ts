@@ -8,7 +8,8 @@ import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServ
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -1432,11 +1433,16 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
     // queried + stored in the raw matches blob but attached to NO section, so the
     // utilization metric always counted them as "dropped". Attaching them here renders
     // them as cards and flips them to "used".
-    case "service_providers": return [
+    // De-dupe by organisation name across the three pools: a body listed both as a
+    // service provider and a trade/government agency must not render as two cards (and
+    // must not be double-counted by the utilization metric). First occurrence wins, so
+    // the service_providers pool (the primary) keeps the entry. Per-pool caps upstream
+    // (10 / 5 / 5) already bound the total.
+    case "service_providers": return dedupeByKey([
       ...(matches.service_providers || []),
       ...(matches.trade_investment_agencies || []),
       ...(matches.innovation_ecosystem || []),
-    ];
+    ], (r: any) => (r?.name || r?.title || r?.company_name || "").toString().toLowerCase().trim());
     case "mentor_recommendations": return matches.community_members || [];
     case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
     case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
@@ -1604,7 +1610,11 @@ async function generateReportInBackground(
     // the report_focus column AND mirrored into raw_input, but previously read by NOTHING,
     // so the single most intent-revealing answer had zero effect on the report. Surface it
     // to every section prompt below (and expose {{report_focus}} for templates).
-    const reportFocus = (intake.report_focus || (rawInput as any).report_focus || (rawInput as any).additional_notes || "").toString().trim();
+    // ONLY the explicit "what matters most" field — do NOT fall back to additional_notes.
+    // reportFocus drives a "single most important outcome, lead with it" directive in every
+    // section (focusNote); seeding it from unrelated free-text notes (e.g. "email me a PDF")
+    // would distort the whole report. additional_notes is surfaced separately as its own var.
+    const reportFocus = (intake.report_focus || (rawInput as any).report_focus || "").toString().trim();
 
     const variables: Record<string, string> = {
       persona,
@@ -1727,24 +1737,9 @@ async function generateReportInBackground(
             ? `\n\nPRIORITISED SECTION: the user explicitly selected a goal that this section addresses, so it is one of the outcomes they most want. Make it especially specific, concrete and actionable — lead with the highest-value, most directly useful recommendations (stay within the length budget above).`
             : "";
 
-          let prompt = tmpl.prompt_body;
-
-          // Process conditional blocks: {{#var}}...{{/var}} — include block only if var is non-empty
-          prompt = prompt.replace(
-            /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g,
-            (_match: string, varName: string, block: string) => {
-              const val = variables[varName];
-              return val && val.trim() && val !== "Not specified" ? block : "";
-            }
-          );
-
-          // Simple variable substitution. Use a function replacement so `$`
-          // sequences in scraped/research values ($&, $$, $`, $') aren't
-          // interpreted as String.replace replacement patterns and corrupt
-          // the prompt.
-          for (const [key, value] of Object.entries(variables)) {
-            prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), () => value);
-          }
+          // Drop empty {{#var}}...{{/var}} blocks (incl. stringified-empty JSON "[]"/"{}"),
+          // then substitute {{key}} values. See promptTemplate.ts.
+          const prompt = renderTemplate(tmpl.prompt_body, variables);
 
           try {
             const personaContext = persona === "startup"

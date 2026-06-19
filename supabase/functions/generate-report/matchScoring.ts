@@ -183,6 +183,12 @@ export function selectTopN(scored: Scored[], limit: number, opts: SelectOpts = {
       if (k) counts[i].set(k, (counts[i].get(k) ?? 0) + 1);
     });
   };
+  const release = (s: Scored): void => {
+    dedupeKeys.forEach((dk, i) => {
+      const k = dk.keyOf(s.row);
+      if (k) counts[i].set(k, Math.max(0, (counts[i].get(k) ?? 0) - 1));
+    });
+  };
 
   const picked: Scored[] = [];
   for (const s of scored) {
@@ -190,6 +196,12 @@ export function selectTopN(scored: Scored[], limit: number, opts: SelectOpts = {
     if (fits(s)) { picked.push(s); take(s); }
   }
 
+  // Guarantee a minimum number of genuine specialists WITHOUT breaking the diversity
+  // caps. Evict the lowest-scored non-specialist whose removal lets the incoming
+  // specialist satisfy every cap — so a swap never creates a 3rd row from one org or a
+  // duplicate person (the guarantees these caps exist for). `counts` stays in sync via
+  // release()/take() so a swapped-in row is validated exactly like a greedily-picked one.
+  // If no eviction lets a specialist fit, keep fewer specialists rather than violate a cap.
   const minSpec = opts.minSpecialists ?? 0;
   if (minSpec > 0) {
     let specCount = picked.filter((p) => p.specialist).length;
@@ -198,18 +210,24 @@ export function selectTopN(scored: Scored[], limit: number, opts: SelectOpts = {
       const unpickedSpecs = scored.filter((s) => s.specialist && !pickedRows.has(s.row));
       for (const spec of unpickedSpecs) {
         if (specCount >= minSpec) break;
-        // replace the lowest-scored non-specialist currently picked
         for (let i = picked.length - 1; i >= 0; i--) {
-          if (!picked[i].specialist) {
+          if (picked[i].specialist) continue;
+          release(picked[i]);          // tentatively drop the lowest-scored generalist
+          if (fits(spec)) {
+            take(spec);
             picked[i] = spec;
             specCount++;
             break;
           }
+          take(picked[i]);             // didn't let spec fit — restore it and keep scanning
         }
       }
     }
   }
 
+  // A swap can leave a lower-scored specialist where a higher-scored generalist sat;
+  // restore best-first order (deterministic tiebreak by id, matching scoreAndSort).
+  picked.sort((a, b) => (b.score - a.score) || String(a.row.id || "").localeCompare(String(b.row.id || "")));
   return picked;
 }
 
@@ -227,6 +245,24 @@ export function normalizePersonName(name: string): string {
     .trim()
     .split(/\s+/)
     .join(" ");
+}
+
+/**
+ * Stable de-dupe by a derived key, first occurrence wins. Used when one report section
+ * concatenates several already-ranked pools that can name the SAME organisation (e.g. a
+ * body listed both as a service provider and a trade/government agency). Rows whose key
+ * is empty are kept as-is (never collapsed together).
+ */
+export function dedupeByKey<T>(rows: T[], keyOf: (r: T) => string): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const r of rows || []) {
+    const k = keyOf(r);
+    if (k && seen.has(k)) continue;
+    if (k) seen.add(k);
+    out.push(r);
+  }
+  return out;
 }
 
 /**

@@ -6,7 +6,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, type MatchContext, type Scored } from "./matchScoring.ts";
+import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, type MatchContext, type Scored } from "./matchScoring.ts";
 
 const CTX: MatchContext = {
   userSectors: ["technology-information-and-media", "construction", "professional-services"],
@@ -87,6 +87,53 @@ test("minSpecialists guarantee: an expert makes the slate even when out-scored",
   const picked = selectTopN(scored, 3, { minSpecialists: 1 });
   assert.equal(picked.length, 3);
   assert.ok(picked.some((p) => p.specialist), "the low-scored specialist should be guaranteed a slot");
+});
+
+// Regression: the minSpecialists swap must not violate the diversity caps it shares the
+// function with. Old code did `picked[i] = spec` blindly, re-creating a 3rd-from-one-org
+// or a duplicate person — the exact thing the caps prevent.
+test("minSpecialists swap never exceeds the org-diversity cap", () => {
+  const mk = (id: string, company: string, specialist: boolean): Scored =>
+    ({ row: { id, company, name: id }, score: specialist ? 1 : 10, reasons: [], agnostic: !specialist, specialist });
+  // Greedy fills the org cap with 2 Acme generalists + 1 Other; the only specialists are also Acme.
+  const scored = [mk("g1", "Acme", false), mk("g2", "Acme", false), mk("o1", "Other", false), mk("s1", "Acme", true), mk("s2", "Acme", true)];
+  const picked = selectTopN(scored, 3, { dedupeKeys: [{ keyOf: (r) => r.company, max: 2 }], minSpecialists: 2 });
+  assert.ok(picked.filter((p) => p.row.company === "Acme").length <= 2, "org cap must hold even under minSpecialists pressure");
+  assert.ok(picked.some((p) => p.row.company === "Other"), "the diverse 'Other' row must not be evicted to force same-org specialists");
+});
+
+test("minSpecialists swap never reintroduces a person the dedupe cap excluded", () => {
+  const mk = (id: string, name: string, specialist: boolean): Scored =>
+    ({ row: { id, name, company: id }, score: specialist ? 1 : 10, reasons: [], agnostic: !specialist, specialist });
+  // 'Dr. Sarah Chen' (specialist) is the same person as the already-picked generalist 'Sarah Chen'.
+  const scored = [mk("g-sarah", "Sarah Chen", false), mk("g-bob", "Bob Jones", false), mk("spec-sarah", "Dr. Sarah Chen", true)];
+  const picked = selectTopN(scored, 2, { dedupeKeys: [{ keyOf: (r) => normalizePersonName(r.name), max: 1 }], minSpecialists: 1 });
+  const names = picked.map((p) => normalizePersonName(p.row.name));
+  assert.equal(new Set(names).size, names.length, "no duplicate person (Sarah Chen / Dr. Sarah Chen) in the slate");
+});
+
+test("selectTopN returns rows in best-first order even after specialist swaps", () => {
+  const mk = (id: string, score: number, specialist: boolean): Scored =>
+    ({ row: { id, company: id }, score, reasons: [], agnostic: !specialist, specialist });
+  // Two swaps (s1@7 then s2@6) would otherwise leave [10, 6, 7]; the final sort fixes order.
+  const scored = [mk("g1", 10, false), mk("g2", 9, false), mk("g3", 8, false), mk("s1", 7, true), mk("s2", 6, true)];
+  const picked = selectTopN(scored, 3, { minSpecialists: 2 });
+  for (let i = 1; i < picked.length; i++) {
+    assert.ok(picked[i - 1].score >= picked[i].score, `score order broken at ${i}: ${picked[i - 1].score} < ${picked[i].score}`);
+  }
+  assert.equal(picked.filter((p) => p.specialist).length, 2, "both specialists present");
+});
+
+test("dedupeByKey keeps the first occurrence per key and preserves order; empty keys are never collapsed", () => {
+  const rows = [
+    { id: "a", name: "Enterprise Ireland" },   // provider pool
+    { id: "b", name: "DeepVision" },
+    { id: "c", name: "enterprise ireland" },   // same org from the agency pool (different case)
+    { id: "d", name: "" },                       // empty key — kept
+    { id: "e", name: "" },                       // empty key — kept (not merged with d)
+  ];
+  const out = dedupeByKey(rows, (r) => r.name.toLowerCase().trim());
+  assert.deepEqual(out.map((r) => r.id), ["a", "b", "d", "e"]);
 });
 
 test("withMatchMeta surfaces the score + reasons for explainability", () => {
