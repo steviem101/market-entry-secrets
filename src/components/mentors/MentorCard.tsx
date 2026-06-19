@@ -118,7 +118,7 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-2 min-w-0">
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold text-foreground mb-0.5 truncate">
                 {displayName}
