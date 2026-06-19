@@ -23,10 +23,10 @@ const CompanyCardHeader = ({ company }: CompanyCardHeaderProps) => {
         imgClassName="object-contain p-2"
       />
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-2 min-w-0">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xl font-semibold text-foreground truncate">
+            <div className="flex items-center gap-2 mb-1 min-w-0">
+              <h3 className="text-xl font-semibold text-foreground truncate min-w-0">
                 {company.name}
               </h3>
               {company.is_verified && (
@@ -44,9 +44,9 @@ const CompanyCardHeader = ({ company }: CompanyCardHeaderProps) => {
                 {company.tagline}
               </p>
             )}
-            <div className="flex items-center text-muted-foreground text-sm mb-2">
-              <MapPin className="w-4 h-4 mr-1" />
-              {company.location}
+            <div className="flex items-center text-muted-foreground text-sm mb-2 min-w-0">
+              <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+              <span className="truncate">{company.location}</span>
             </div>
           </div>
           <BookmarkButton
