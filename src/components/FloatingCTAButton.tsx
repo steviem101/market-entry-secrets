@@ -8,6 +8,7 @@ import { PERSONA_CONTENT } from "@/config/personaContent";
 export const FloatingCTAButton = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [isNearFooter, setIsNearFooter] = useState(false);
+  const [isHeroInView, setIsHeroInView] = useState(true);
   const navigate = useNavigate();
   const persona = useSectionPersona();
   const content = PERSONA_CONTENT[persona].floatingCTA;
@@ -28,7 +29,25 @@ export const FloatingCTAButton = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  if (!isVisible || isNearFooter) return null;
+  // Suppress the floating pill while the hero is on screen: the hero already
+  // shows the same CTA, and on mobile the pill otherwise overlaps the inline
+  // buttons and the "No credit card required" microcopy. If there is no hero
+  // on the page (other routes), the observer never fires and the pill shows.
+  useEffect(() => {
+    const hero = document.getElementById('hero');
+    if (!hero) {
+      setIsHeroInView(false);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsHeroInView(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
+  if (!isVisible || isNearFooter || isHeroInView) return null;
 
   return (
     <Button

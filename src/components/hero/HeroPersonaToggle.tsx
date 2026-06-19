@@ -21,7 +21,7 @@ export const HeroPersonaToggle = ({
       <p className="text-xs uppercase tracking-widest text-muted-foreground text-center mb-3">
         Choose your journey
       </p>
-      <div className="grid grid-cols-2 gap-3" role="tablist" aria-label="Choose your journey">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="tablist" aria-label="Choose your journey">
         {toggleOptions.map((option) => {
           const Icon = option.icon;
           const isActive = activePersona === option.key;
