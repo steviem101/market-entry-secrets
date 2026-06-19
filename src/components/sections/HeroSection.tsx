@@ -54,6 +54,7 @@ export const HeroSection = () => {
 
   return (
     <section
+      id="hero"
       ref={sectionRef}
       className="relative overflow-hidden min-h-screen flex items-center"
     >
