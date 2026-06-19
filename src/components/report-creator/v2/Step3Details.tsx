@@ -234,7 +234,7 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
             aria-label="Report focus"
             onChange={(e) => set({ report_focus: e.target.value })}
             placeholder={`e.g. “${prompts[0]}”`}
-            className="h-11 w-full rounded-xl border border-rc-line bg-white pl-3.5 pr-[92px] text-[14.5px] text-rc-ink placeholder:italic placeholder:text-rc-muted/60 outline-none focus:border-rc-primary focus:ring-2 focus:ring-rc-sky-soft"
+            className="h-11 w-full rounded-xl border border-rc-line bg-white pl-3.5 pr-[104px] text-[14.5px] text-rc-ink placeholder:italic placeholder:text-rc-muted/60 outline-none focus:border-rc-primary focus:ring-2 focus:ring-rc-sky-soft"
           />
           {!form.report_focus && (
             <button
