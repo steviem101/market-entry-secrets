@@ -1161,18 +1161,33 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("Content search error:", e); }
 
-  // Leads — sector + location
+  // Lead databases — the real 65-row purchasable-dataset catalog that replaces the
+  // thin 7-row legacy `leads` table. Written under matches.lead_databases (remapped
+  // onto the `leads` template variable after the merge in searchMatches). NOTE: this
+  // table has a DIFFERENT schema — title/sector/list_type/price_aud/tags and NO
+  // sector_tags/sector_agnostic — so the shared buildOr() (which references both
+  // absent columns) can't be reused. Filter on real columns only: status + optional
+  // location ilike. The KB semantic path (100% embedded) is primary; this is overlap
+  // backfill, and the table is tiny, so fetch the full active set and let rank() order
+  // it. No location hard-filter: the table's location is country-level ("Australia"),
+  // so a city-level target ("Sydney") would exclude everything; instead rank() gives a
+  // +1 location bonus so region-matched datasets float up without dropping the rest
+  // (scoring is otherwise location-only, since the sector_tags the scorer keys on are
+  // absent here). This keeps the leads section populated even if semantic returns <5.
   try {
-    let ldQuery = supabase.from("leads").select("id, name, industry, location, category, type, price, record_count, provider_name, sector_tags, sector_agnostic").limit(CAND);
-    ldQuery = ldQuery.or(buildOr());
+    const ldQuery = supabase.from("lead_databases")
+      .select("id, slug, title, description, short_description, list_type, record_count, sector, location, price_aud, provider_name, tags, status")
+      .eq("status", "active")
+      .limit(100);
     const { data: ld, error: ldErr } = await ldQuery;
-    if (ldErr) console.error("Leads query error:", ldErr);
-    matches.leads = rank(ld, { applySellsTo: true }, 5).map((l: any) => ({
-      ...l, link: "/leads", linkLabel: "View Dataset",
-      subtitle: `${l.location} · ${l.record_count || "?"} records`,
-      tags: [l.category, l.type].filter(Boolean),
+    if (ldErr) console.error("Lead databases query error:", ldErr);
+    matches.lead_databases = rank(ld, { applySellsTo: true }, 5).map((l: any) => ({
+      ...l, name: l.title, price: l.price_aud,
+      link: l.slug ? `/leads/${l.slug}` : "/leads", linkLabel: "View Dataset",
+      subtitle: `${l.location ?? ""} · ${l.record_count ?? "?"} records`,
+      tags: (l.tags || []).slice(0, 3),
     }));
-  } catch (e) { console.error("Leads search error:", e); }
+  } catch (e) { console.error("Lead databases search error:", e); }
 
   // Innovation ecosystem — sector + service + location (+ agnostic)
   try {
@@ -1420,6 +1435,9 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
     }
   }
+  // lead_databases is the real catalog; expose it under the report's existing
+  // `leads` variable so report_templates needs no change.
+  if (merged.lead_databases) { merged.leads = merged.lead_databases; delete merged.lead_databases; }
   const semKeys = Object.keys(semantic).filter((k) => (semantic[k] || []).length > 0);
   console.log(`searchMatches: semantic types=[${semKeys.join(", ")}], reranked union=[${Object.keys(RERANK).join(", ")}]`);
   return merged;
