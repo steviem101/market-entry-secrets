@@ -89,7 +89,7 @@ const CompanyCard = ({ company, onViewProfile, onContact, detailUrl }: CompanyCa
 
   return (
     <div
-      className={`bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col ${detailUrl ? 'cursor-pointer' : ''}`}
+      className={`bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full min-w-0 flex flex-col ${detailUrl ? 'cursor-pointer' : ''}`}
       onClick={handleCardClick}
     >
       <CompanyCardHeader company={company} />

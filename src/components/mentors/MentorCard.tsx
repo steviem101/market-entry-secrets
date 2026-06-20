@@ -79,7 +79,7 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
     : [];
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative">
+    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative min-w-0">
       {/* Featured ribbon */}
       {mentor.is_featured && (
         <div className="absolute top-3 left-3">

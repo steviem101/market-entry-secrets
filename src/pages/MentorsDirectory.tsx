@@ -144,7 +144,7 @@ const MentorsDirectory = () => {
         ) : (
           <>
             <ListingPageGate contentType="community_members">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {paginatedMentors.map((mentor) => (
                   <MentorCard
                     key={mentor.id}

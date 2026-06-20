@@ -196,7 +196,7 @@ export const ProvidersSection = ({
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
                 {filteredCompanies.slice(0, 9).map((company, index) => (
                   <div 
                     key={company.id}
