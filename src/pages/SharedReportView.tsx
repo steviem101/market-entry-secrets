@@ -81,17 +81,19 @@ const SharedReportView = () => {
 
       {/* Shared report banner */}
       <div className="sticky top-0 z-30 bg-muted/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="gap-1.5">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Badge variant="secondary" className="gap-1.5 flex-shrink-0">
               <Eye className="w-3.5 h-3.5" />
-              Shared Report
+              <span className="hidden sm:inline">Shared Report</span>
             </Badge>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">{companyName}</h1>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="w-3 h-3" />
-                {format(new Date(report.created_at), 'MMM d, yyyy')}
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">{companyName}</h1>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <Calendar className="w-3 h-3 flex-shrink-0" />
+                  {format(new Date(report.created_at), 'MMM d, yyyy')}
+                </span>
                 {readingTime > 0 && (
                   <span className="inline-flex items-center gap-1">
                     <Clock className="w-3 h-3" />
@@ -101,9 +103,11 @@ const SharedReportView = () => {
               </div>
             </div>
           </div>
-          <Link to="/report-creator">
+          <Link to="/report-creator" className="flex-shrink-0">
             <Button size="sm" className="gap-1.5">
-              Create Your Own <ArrowRight className="w-4 h-4" />
+              <span className="hidden sm:inline">Create Your Own</span>
+              <span className="sm:hidden">Create</span>
+              <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
         </div>
