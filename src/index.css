@@ -342,16 +342,17 @@
   /* Inline citation superscript badge */
   .inline-citation {
     @apply no-underline cursor-pointer;
-    font-size: 0.65em;
+    font-size: 0.7em;
     font-weight: 600;
     vertical-align: super;
     line-height: 1;
-    padding: 0.05em 0.35em;
-    margin: 0 0.05em;
-    border-radius: 0.25em;
+    padding: 0.2em 0.45em;
+    margin: 0 0.1em;
+    border-radius: 0.3em;
     background: hsl(var(--primary) / 0.1);
     color: hsl(var(--primary));
     transition: background 150ms ease, color 150ms ease;
+    touch-action: manipulation;
   }
 
   .inline-citation:hover {

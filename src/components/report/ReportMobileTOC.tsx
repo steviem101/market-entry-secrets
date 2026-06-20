@@ -49,7 +49,7 @@ export const ReportMobileTOC = ({ sections }: ReportMobileTOCProps) => {
           <Button
             variant="outline"
             size="sm"
-            className="fixed bottom-6 left-6 z-40 rounded-full shadow-lg bg-background/90 backdrop-blur-sm gap-1.5"
+            className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-6 z-40 rounded-full shadow-lg bg-background/90 backdrop-blur-sm gap-1.5"
           >
             <List className="w-4 h-4" />
             Contents

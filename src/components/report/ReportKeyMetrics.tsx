@@ -25,7 +25,7 @@ export const ReportKeyMetrics = ({ metrics }: ReportKeyMetricsProps) => {
             key={idx}
             className="rounded-xl border border-border bg-card p-4 text-center space-y-1 hover:shadow-sm transition-shadow"
           >
-            <p className="text-2xl font-bold text-primary">{metric.value}</p>
+            <p className="text-xl sm:text-2xl font-bold text-primary leading-tight break-words">{metric.value}</p>
             <p className="text-sm font-medium text-foreground">{metric.label}</p>
             <p className="text-xs text-muted-foreground">{metric.context}</p>
           </div>
