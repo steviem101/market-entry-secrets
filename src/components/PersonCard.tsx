@@ -54,7 +54,7 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 min-w-0">
       <div className="flex items-start gap-4 mb-4">
         <Avatar className="w-16 h-16 flex-shrink-0">
           {person.isAnonymous ? (
@@ -75,7 +75,7 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
           )}
         </Avatar>
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-2 min-w-0">
             <div className="flex-1 min-w-0">
               <h3 className="text-xl font-semibold text-foreground mb-1 truncate">
                 {displayName}
@@ -85,9 +85,9 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
                   {person.title}
                 </p>
               )}
-              <div className="flex items-center text-muted-foreground text-sm">
-                <MapPin className="w-4 h-4 mr-1" />
-                {person.location}
+              <div className="flex items-center text-muted-foreground text-sm min-w-0">
+                <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                <span className="truncate">{person.location}</span>
               </div>
             </div>
             <BookmarkButton
