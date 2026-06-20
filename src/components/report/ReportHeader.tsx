@@ -50,19 +50,21 @@ export const ReportHeader = ({
   return (
     <>
       <div className="print:hidden sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/my-reports">
-              <Button variant="ghost" size="sm" className="gap-1.5">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <Link to="/my-reports" className="flex-shrink-0">
+              <Button variant="ghost" size="sm" className="gap-1.5 px-2 sm:px-3">
                 <ArrowLeft className="w-4 h-4" />
-                My Reports
+                <span className="hidden sm:inline">My Reports</span>
               </Button>
             </Link>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">{companyName}</h1>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="w-3 h-3" />
-                {format(new Date(generatedAt), 'MMM d, yyyy')}
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">{companyName}</h1>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <Calendar className="w-3 h-3 flex-shrink-0" />
+                  {format(new Date(generatedAt), 'MMM d, yyyy')}
+                </span>
                 <Badge variant="outline" className={`text-xs ${tierColors[tier] || ''}`}>
                   {tierLabels[tier] || tier}
                 </Badge>
@@ -81,7 +83,7 @@ export const ReportHeader = ({
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button variant="outline" size="sm" className="gap-1.5" onClick={handlePrint}>
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">PDF</span>
