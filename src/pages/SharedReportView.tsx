@@ -86,6 +86,7 @@ const SharedReportView = () => {
             <Badge variant="secondary" className="gap-1.5 flex-shrink-0">
               <Eye className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Shared Report</span>
+              <span className="sr-only sm:hidden">Shared Report</span>
             </Badge>
             <div className="min-w-0">
               <h1 className="text-base sm:text-lg font-bold text-foreground truncate">{companyName}</h1>

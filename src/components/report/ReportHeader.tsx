@@ -53,7 +53,7 @@ export const ReportHeader = ({
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Link to="/my-reports" className="flex-shrink-0">
-              <Button variant="ghost" size="sm" className="gap-1.5 px-2 sm:px-3">
+              <Button variant="ghost" size="sm" className="gap-1.5 px-2 sm:px-3" aria-label="My Reports">
                 <ArrowLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">My Reports</span>
               </Button>
