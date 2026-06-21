@@ -27,8 +27,10 @@ export interface SemanticTypeConfig {
 
 /**
  * Entity types that are BOTH covered by the KB AND consumed by report sections.
- * `leads` + `lemlist_contacts` are intentionally absent (not in the KB) and stay
- * on the array-overlap path in index.ts.
+ * The report's leads surface is backed by `lead_databases` (the rich purchasable
+ * catalog), NOT the thin legacy `leads` table — index.ts remaps it onto the `leads`
+ * template variable. `lemlist_contacts` is intentionally absent (not in the KB) and
+ * stays on the array-overlap path in index.ts.
  */
 export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
   service_providers: {
@@ -123,6 +125,28 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
       linkLabel: "View Investor",
       subtitle: `${i.investor_type} · ${i.location}`,
       tags: (i.stage_focus || []).slice(0, 3),
+    }),
+  },
+  // The purchasable-dataset catalog (65 rows, 100% embedded in the KB). It replaces
+  // the thin 7-row `leads` table as the report's "Sales Leads & Market Intelligence"
+  // source. NOTE: lead_databases has a DIFFERENT schema from the legacy `leads` table —
+  // title (not name), sector (not industry), list_type (not category/type), price_aud
+  // (not price), tags (not sector_tags), and NO sector_agnostic column — so the select
+  // and decoration below intentionally diverge from the other entity types. index.ts
+  // remaps this slot onto the existing `leads` template variable so report_templates
+  // need no change.
+  lead_databases: {
+    table: "lead_databases",
+    select: "id, slug, title, description, short_description, list_type, record_count, sector, location, price_aud, provider_name, tags, status",
+    cap: 5,
+    decorate: (l: any) => ({
+      ...l,
+      name: l.title,
+      price: l.price_aud,
+      link: l.slug ? `/leads/${l.slug}` : "/leads",
+      linkLabel: "View Dataset",
+      subtitle: `${l.location ?? ""} · ${l.record_count ?? "?"} records`,
+      tags: (l.tags || []).slice(0, 3),
     }),
   },
 };
