@@ -1634,6 +1634,39 @@ async function generateReportInBackground(
     // would distort the whole report. additional_notes is surfaced separately as its own var.
     const reportFocus = (intake.report_focus || (rawInput as any).report_focus || "").toString().trim();
 
+    // Country-corridor content for the setup_compliance section. country_faqs are keyed by
+    // country_id and only cover a handful of source countries (IE/SG/UK/US/CA), so this is a
+    // STRUCTURED fetch — match the user's country_of_origin to a countries row via the same
+    // normalizeCountry() key the corridor signal uses, then pull ALL its FAQs (short Q&As) +
+    // profile. Grounding beats semantic here: country-keyed legal/tax facts must not bleed
+    // another country's rules into the report. Empty (uncovered country) → "" / "[]", which
+    // the template's conditional blocks drop, falling back to a generic orientation.
+    let countryProfile: any = null;
+    let countryFaqs: any[] = [];
+    try {
+      const originKey = normalizeCountry(intake.country_of_origin);
+      if (originKey) {
+        const { data: countryRows } = await supabase
+          .from("countries")
+          .select("id, name, slug, description, trade_relationship_strength, economic_indicators, key_industries");
+        const match = (countryRows || []).find(
+          (c: any) => normalizeCountry(c.name) === originKey || c.slug === originKey,
+        );
+        if (match) {
+          countryProfile = match;
+          const { data: faqs } = await supabase
+            .from("country_faqs")
+            .select("question, answer, sort_order")
+            .eq("country_id", match.id)
+            .order("sort_order");
+          countryFaqs = faqs || [];
+          console.log(`Country corridor: matched ${match.name} with ${countryFaqs.length} FAQs`);
+        } else {
+          console.log(`Country corridor: no countries row for origin "${intake.country_of_origin}" (${originKey})`);
+        }
+      }
+    } catch (e) { console.error("Country corridor fetch error:", e); }
+
     const variables: Record<string, string> = {
       persona,
       company_name: intake.company_name,
@@ -1658,6 +1691,8 @@ async function generateReportInBackground(
       matched_events_json: JSON.stringify(matches.events || []),
       matched_content_json: JSON.stringify(matches.content_items || []),
       matched_leads_json: JSON.stringify(matches.leads || []),
+      country_profile_json: countryProfile ? JSON.stringify(countryProfile) : "",
+      matched_country_faqs_json: JSON.stringify(countryFaqs),
       matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
       matched_investors_json: JSON.stringify(matches.investors || []),
