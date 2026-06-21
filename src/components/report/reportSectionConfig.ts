@@ -8,6 +8,7 @@ import {
   ListChecks,
   Database,
   Landmark,
+  ClipboardCheck,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -69,6 +70,13 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
     accentBg: 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-400',
     matchLabel: 'Action Items',
   },
+  setup_compliance: {
+    icon: ClipboardCheck,
+    accentColor: 'border-t-teal-500',
+    accentBg: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
+    // No match cards — country FAQ/profile content is woven into the prose.
+    matchLabel: 'Setup Resources',
+  },
   lead_list: {
     icon: Database,
     accentColor: 'border-t-sky-500',
@@ -86,12 +94,14 @@ export const SECTION_LABELS: Record<string, string> = {
   investor_recommendations: 'Investor Recommendations',
   events_resources: 'Events & Resources',
   action_plan: 'Action Plan & Timeline',
+  setup_compliance: 'Setup & Compliance Guide',
   lead_list: 'Lead List',
 };
 
 export const SECTION_ORDER = [
   'executive_summary', 'swot_analysis', 'competitor_landscape', 'service_providers',
-  'mentor_recommendations', 'investor_recommendations', 'events_resources', 'action_plan', 'lead_list',
+  'mentor_recommendations', 'investor_recommendations', 'events_resources', 'action_plan',
+  'setup_compliance', 'lead_list',
 ];
 
 // Minimum subscription tier required for each gated section
