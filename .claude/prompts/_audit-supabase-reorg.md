@@ -209,3 +209,14 @@ The `mes-context` function lives in **Content Creator** (unreachable), so its re
 - ❌ `mes-context` baseline NOT captured (CC unreachable) — required before Hard Stop 2.
 
 ### → HARD STOP 1. Awaiting approval of this plan and resolution of §10 before any DDL/writes/deploys/project creation.
+
+---
+
+## 12. Decisions taken at Hard Stop 1 (2026-06-21)
+
+1. **Content Creator scope → "Grant access + override `CLAUDE.md`."** Phase 4 (LinkedIn sync) stays in plan. CC (`rcgaviwbsudouvfwzydq`) is still unreachable from this session, so its inventory (§4), name-collision check (§7), and the `mes-context` canary baseline (§8) are **deferred to a future session once access is consolidated**. No CC reads/writes happened here.
+2. **Next step → "Prep Phase 2, hold for org."** Phase 2 extraction artifacts drafted (no execution) in `phase2-ii-extraction/`:
+   - `00-runbook.md` — full execution runbook (pg_dump move, extensions, edge-fn migration, consumer repoint, Hard Stop 2 verification, snapshot-based rollback, advisors).
+   - `10-mes-drop.sql` — the post-Hard-Stop-2 MES teardown (9 tables + 10 functions), staged outside `supabase/migrations/` so it can't auto-apply.
+   - Down-migration strategy: a byte-exact `pg_dump --schema-only -t 'public.ii_*'` snapshot captured immediately before the drop (more faithful than hand DDL; satisfies hard rule #5).
+3. **Still blocking actual Phase 2 execution:** human creates Irish Insights org → `get_cost`/`confirm_cost` + approval → then a fresh session (B) runs the runbook. CC access also needs consolidating before Phase 4 and before the canary discipline can run.
