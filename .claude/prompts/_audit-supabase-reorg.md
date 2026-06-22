@@ -251,3 +251,12 @@ The `mes-context` function lives in **Content Creator** (unreachable), so its re
 - Migrations recorded in-repo: `kb_sync_state`, `kb_bulk_upsert_linkedin_posts`, `kb_sync_incremental_cron` (+ reverts); function at `supabase/functions/kb-sync/`.
 
 **Remaining: Phase 5** — wire `generate-report` to use `source_table='linkedin_post'` rows as synthesis-only signal (widen `allowed_visibility` to include `internal` for that retrieval), with the provenance guardrail in the system prompt (abstract/combine; never reproduce verbatim; never attribute quotes to named individuals).
+
+## 15. Phase 5 — code complete, deploy pending — 2026-06-22
+
+Edited `supabase/functions/generate-report/index.ts` (3 isolated, additive changes):
+1. New `fetchLinkedInSignal(supabase, intake)` — a SEPARATE `match_knowledge` call with `filter={source_project:'content_creator'}` + `allowed_visibility=['internal']`, so ONLY LinkedIn rows return. Kept apart from `semanticMatches()` (public/member/paid) so internal rows never enter directory hydration. Returns up to 8 abstracted, truncated, unattributed snippets.
+2. Computed once per report (best-effort; failure leaves reports unchanged) into `synthesisSignalNote`.
+3. Appended `${synthesisSignalNote}` to every section's system prompt, behind a strict **provenance guardrail**: abstract/combine only; never reproduce verbatim/near-verbatim; never quote; never attribute to a named person/company/post; never cite. The polish pass needs no change (it never sees raw posts).
+
+**Deploy blocked in this sandbox:** no Supabase CLI / Deno / access token, and `generate-report` is a 7-file / 109KB function — too large to safely hand-upload inline via the MCP `deploy_edge_function` (corrupt-deploy risk on a production function). **Deploy via the normal pipeline** (Lovable / CI) or `supabase functions deploy generate-report --project-ref xhziwveaiuhzdoutpgrh` from a machine with the access token. **Verify after deploy:** generate a sample report; confirm it draws on the signal and reproduces nothing verbatim / attributes no quotes.

@@ -1380,6 +1380,38 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
   return out;
 }
 
+/** Phase 5: practitioner SIGNAL from the LinkedIn corpus synced out of Content
+ *  Creator (source_table='linkedin_post', visibility='internal'). Returned as
+ *  abstracted, unattributed snippets for SYNTHESIS ONLY — never quoted, cited, or
+ *  attributed. Kept entirely separate from semanticMatches() (which uses
+ *  allowed_visibility public/member/paid) so these internal rows never enter
+ *  directory hydration; here we deliberately request only ['internal'] + the
+ *  content_creator metadata filter, so ONLY LinkedIn rows can come back. */
+async function fetchLinkedInSignal(supabase: any, intake: any): Promise<string> {
+  try {
+    const queryText = buildMatchQueryText(intake);
+    const embedding = await embedText(queryText, supabase);
+    if (!embedding) return "";
+    const { data, error } = await supabase.rpc("match_knowledge", {
+      query_embedding: `[${embedding.join(",")}]`,
+      query_text: queryText,
+      match_count: 10,
+      match_threshold: 0.15,
+      filter: { source_project: "content_creator" },
+      allowed_visibility: ["internal"],
+    });
+    if (error) { console.error("linkedin signal match_knowledge error", error.message); return ""; }
+    return (data || [])
+      .filter((r: any) => r.source_table === "linkedin_post" && r.content)
+      .slice(0, 8)
+      .map((r: any) => `- ${String(r.content).replace(/\s+/g, " ").trim().slice(0, 300)}`)
+      .join("\n");
+  } catch (e) {
+    console.error("fetchLinkedInSignal failed", e);
+    return "";
+  }
+}
+
 /** Directory matching: semantic-first (mes_knowledge_base) with the array-overlap
  *  path as per-section backfill AND total fallback. `leads` + `lemlist_contacts`
  *  are not in the KB, so they always come from the overlap path. If OPENAI_API_KEY
@@ -1771,6 +1803,19 @@ async function generateReportInBackground(
     // D2: emphasise (never hide) the sections the user's selected goals map to.
     const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
 
+    // Phase 5: practitioner signal from the synced LinkedIn corpus (synthesis-only).
+    // Computed once and injected into every section's system prompt under a strict
+    // provenance guardrail. Best-effort: failure leaves reports exactly as before.
+    let synthesisSignalNote = "";
+    try {
+      const linkedInSignal = await fetchLinkedInSignal(supabase, intake);
+      if (linkedInSignal) {
+        synthesisSignalNote = `\n\nPRACTITIONER SIGNAL (BACKGROUND ONLY — STRICT RULES): Below are anonymised excerpts from recent public posts by Australian market-entry practitioners and founders, provided purely as situational awareness. Use them ONLY to inform themes, framing, and what currently matters in-market. You MUST: (a) abstract and combine ideas in your own words; (b) NEVER reproduce any excerpt verbatim or near-verbatim; (c) NEVER quote them or wrap their wording in quotation marks; (d) NEVER attribute any statement to a named person, company, or post; (e) NEVER cite or list them as a source. Treat them as uncited background, not evidence.\n${linkedInSignal}`;
+      }
+    } catch (e) {
+      console.error("linkedin synthesis signal failed", e);
+    }
+
     if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
@@ -1807,7 +1852,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
