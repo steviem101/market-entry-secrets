@@ -401,6 +401,9 @@ Both `useToast` (shadcn) and `sonner` (`toast()`) are available. Use either.
 | `ANTHROPIC_API_KEY` | Anthropic Claude API (`classify-personas`, `generate-plan`) |
 | `RESEND_API_KEY` | Resend transactional email (`send-email`, `send-lead-followup`) |
 | `EMAIL_INTERNAL_SECRET` | Internal `x-internal-secret` for server-to-server calls to `send-email` |
+| `CONTENT_CREATOR_URL` | Content Creator (`rcgaviwbsudouvfwzydq`) API URL — read source for the `kb-sync` LinkedIn sync |
+| `CONTENT_CREATOR_ANON_KEY` | Content Creator anon key — reads the `kb_sync_source` view cross-project (never a service-role key) |
+| `KB_SYNC_SECRET` | Internal `x-internal-secret` guarding the `kb-sync` function (also in Vault as `kb_sync_secret` for the cron) |
 
 ---
 

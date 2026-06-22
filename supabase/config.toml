@@ -76,3 +76,9 @@ verify_jwt = false
 # SLACK_NOTIFY_WEBHOOK_SECRET (same pattern as slack-notify). Must stay false or the
 # gateway rejects the cron POST before the function runs.
 verify_jwt = false
+
+[functions.kb-sync]
+# Cron-invoked (kb-sync-incremental) + one-off backfill; authenticated in-code by
+# x-internal-secret == KB_SYNC_SECRET (same pattern as process-email-queue). Must
+# stay false or the gateway rejects the cron POST (no JWT) before the function runs.
+verify_jwt = false
