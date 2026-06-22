@@ -4,16 +4,15 @@
 // MES owns what enters its product layer, so this function lives on MES and
 // READS Content Creator via its anon key + the restricted `kb_sync_source`
 // view (quality_score >= 70). Embeddings are COPIED (not regenerated):
-// upsert_kb_linkedin_post sets embedded_hash = content_hash so the
+// upsert_kb_linkedin_posts sets embedded_hash = content_hash so the
 // embed-knowledge cron never re-embeds these rows (zero embedding cost).
 //
 // Auth: verify_jwt = false; guarded by the x-internal-secret header
 // (== KB_SYNC_SECRET), same pattern as process-email-queue. Invoked by
 // pg_cron via pg_net for the incremental sync, or once with {"mode":"backfill"}.
 //
-// Body: { mode?: "backfill" | "incremental", batch_size?: number, max_batches?: number }
-//   - backfill   : offset-paginates the whole view (robust to clustered synced_at)
-//   - incremental: pulls rows with synced_at > stored watermark
+// Upserts are SET-BASED: each batch is one upsert_kb_linkedin_posts(jsonb) RPC
+// (not one RPC per row) so the backfill stays well under the 150s compute limit.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -24,7 +23,7 @@ const CC_ANON_KEY = Deno.env.get("CONTENT_CREATOR_ANON_KEY") ?? "";
 const KB_SYNC_SECRET = Deno.env.get("KB_SYNC_SECRET") ?? "";
 
 const SOURCE = "content_creator_linkedin";
-const DEFAULT_BATCH = 200;
+const DEFAULT_BATCH = 100;
 
 function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -36,7 +35,6 @@ function json(status: number, body: unknown): Response {
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json(405, { error: "method not allowed" });
 
-  // Constant-ish guard. verify_jwt=false, so this header is the only gate.
   const provided = req.headers.get("x-internal-secret") ?? "";
   if (!KB_SYNC_SECRET || provided !== KB_SYNC_SECRET) {
     return json(401, { error: "unauthorized" });
@@ -48,13 +46,12 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { /* defaults */ }
   const mode = body.mode === "backfill" ? "backfill" : "incremental";
-  const batchSize = Math.min(Math.max(Number(body.batch_size) || DEFAULT_BATCH, 1), 500);
+  const batchSize = Math.min(Math.max(Number(body.batch_size) || DEFAULT_BATCH, 1), 250);
   const maxBatches = Math.min(Math.max(Number(body.max_batches) || 100, 1), 1000);
 
   const mes = createClient(MES_URL, MES_SERVICE_KEY, { auth: { persistSession: false } });
   const cc = createClient(CC_URL, CC_ANON_KEY, { auth: { persistSession: false } });
 
-  // Resolve the incremental watermark.
   let watermark = "1970-01-01T00:00:00Z";
   if (mode === "incremental") {
     const { data: state } = await mes
@@ -85,24 +82,26 @@ Deno.serve(async (req) => {
     if (!rows || rows.length === 0) break;
     pulled += rows.length;
 
-    for (const r of rows as Array<Record<string, unknown>>) {
-      const meta = {
+    const payload = (rows as Array<Record<string, unknown>>).map((r) => ({
+      source_ref: r.source_ref,
+      content: r.content,
+      title: r.title ?? null,
+      embedding: r.embedding ?? null, // PostgREST returns vector as "[...]"; cast to vector server-side
+      embedding_model: "text-embedding-3-small",
+      metadata: {
         engagement_score: r.engagement_score ?? null,
         quality_score: r.quality_score ?? null,
         content_types: r.content_types ?? null,
         post_url: r.post_url ?? null,
         post_date: r.post_date ?? null,
-      };
-      const { error: upErr } = await mes.rpc("upsert_kb_linkedin_post", {
-        p_source_ref: r.source_ref,
-        p_content: r.content,
-        p_embedding: r.embedding, // PostgREST returns vector as "[...]"; cast to vector server-side
-        p_title: r.title ?? null,
-        p_metadata: meta,
-        p_embedding_model: "text-embedding-3-small",
-      });
-      if (upErr) { failed++; console.error("upsert failed", r.source_ref, upErr.message); }
-      else { upserted++; }
+      },
+    }));
+
+    const { error: upErr } = await mes.rpc("upsert_kb_linkedin_posts", { p_rows: payload });
+    if (upErr) { failed += rows.length; console.error("bulk upsert failed", upErr.message); }
+    else { upserted += rows.length; }
+
+    for (const r of rows as Array<Record<string, unknown>>) {
       const s = r.synced_at as string | null;
       if (s && s > maxSynced) maxSynced = s;
     }

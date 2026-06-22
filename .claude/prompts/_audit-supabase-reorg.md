@@ -239,3 +239,15 @@ The `mes-context` function lives in **Content Creator** (unreachable), so its re
 - `get_advisors` security/performance: only pre-existing INFO/WARN lints (e.g. `rls_enabled_no_policy` on service-role-locked tables, `auth_rls_initplan`) — **nothing new** from Phase 3. `match_knowledge`/`generate-report` retrieval path unchanged (no column dropped/renamed).
 
 **Phase 4 view finalized (staged):** `phase4-kb-sync/01-content-creator-view.sql` corrected to the verified schema + `quality_score >= 70` gate (0–100 scale). Next: build `kb-sync` edge function + backfill (1,672 posts) + incremental cron, then Phase 5 wiring.
+
+## 14. Phase 4 COMPLETE — 2026-06-22
+
+- **`kb_sync_source` view** created in Content Creator (`rcgaviwbsudouvfwzydq`), granted to anon, `quality_score >= 70` → 1,672 posts (all embedded).
+- **`kb-sync` edge function** deployed to MES (`verify_jwt=false`, `x-internal-secret` guard). Set-based bulk upsert (`upsert_kb_linkedin_posts(jsonb)`) — the per-row version hit the 150s compute limit.
+- **3 MES secrets** set by the user: `CONTENT_CREATOR_URL`, `CONTENT_CREATOR_ANON_KEY`, `KB_SYNC_SECRET` (also mirrored into Vault as `kb_sync_secret` for the cron).
+- **Backfill:** pulled 1,672 / upserted 1,672 / failed 0. All `source_project='content_creator'`, `visibility='internal'`. **0 rows visible to public/anon** (freemium gate intact).
+- **PII-scrub interaction (expected):** the `kb_scrub_pii` BEFORE trigger recomputes `content_hash` from scrubbed content, so ~12% of posts (those with PII) land "stale" and the embed-knowledge cron re-embeds them over the scrubbed text — correct & self-healing (stale drained 206→6→0). PII-free posts keep their copied embedding (zero cost).
+- **Incremental cron** `kb-sync-incremental` scheduled every 3 days (`17 3 */3 * *`), reading the guard secret from Vault.
+- Migrations recorded in-repo: `kb_sync_state`, `kb_bulk_upsert_linkedin_posts`, `kb_sync_incremental_cron` (+ reverts); function at `supabase/functions/kb-sync/`.
+
+**Remaining: Phase 5** — wire `generate-report` to use `source_table='linkedin_post'` rows as synthesis-only signal (widen `allowed_visibility` to include `internal` for that retrieval), with the provenance guardrail in the system prompt (abstract/combine; never reproduce verbatim; never attribute quotes to named individuals).
