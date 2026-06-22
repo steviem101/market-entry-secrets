@@ -220,3 +220,22 @@ The `mes-context` function lives in **Content Creator** (unreachable), so its re
    - `10-mes-drop.sql` — the post-Hard-Stop-2 MES teardown (9 tables + 10 functions), staged outside `supabase/migrations/` so it can't auto-apply.
    - Down-migration strategy: a byte-exact `pg_dump --schema-only -t 'public.ii_*'` snapshot captured immediately before the drop (more faithful than hand DDL; satisfies hard rule #5).
 3. **Still blocking actual Phase 2 execution:** human creates Irish Insights org → `get_cost`/`confirm_cost` + approval → then a fresh session (B) runs the runbook. CC access also needs consolidating before Phase 4 and before the canary discipline can run.
+
+---
+
+## 13. Progress log — 2026-06-22
+
+**Access resolved.** Content Creator (`rcgaviwbsudouvfwzydq`, renamed "MES Content Creator") was **transferred into the Market Entry Secrets org** (`gplxtklumpehzfpmbcji`), and MES Platform renamed "MES - Australia" (ref unchanged `xhziwveaiuhzdoutpgrh`). The connector now reaches **both** in one session. Irish Insights stays in its own org (separate-billing/spin-off intent preserved); its Phase 2 access will be a one-time per-session re-auth.
+
+**Phase 1 §4 gap closed — Content Creator inventory:**
+- `linkedin_posts`: **3,814 rows, 100% embedded**, `embedding vector(1536)` (`text-embedding-3-small`). Columns confirmed: `id uuid`, `post_text` (NOT NULL), `post_url`, `post_date`, `engagement_score numeric`, `quality_score numeric` (**0–100 scale**, avg 64), `content_types text[]`, `updated_at` (watermark). Quality histogram: ≥60→2,357, ≥70→1,672, ≥80→1,000.
+- RPCs: `match_linkedin_posts(...)`, `match_linkedin_posts_v2(query_embedding, match_count, filter_content_types[], min_engagement, min_quality)`. Edge fns present incl. `mes-context`, `rag-search`, `generate-content`, `ingest-posts`, `apify-webhook`, `classify-content` (all stay put). `kb_sync_source` view name is FREE.
+
+**`mes-context` canary baseline (hard rule #8):** reads MES product tables ONLY via `MES_ANON_KEY` — `events`, `service_providers`, `innovation_ecosystem`, `trade_investment_agencies`, `content_items`/`content_company_profiles`/`content_bodies`, `user_reports`, `community_members`, `testimonials`, `countries`, `industry_sectors`. **Touches neither `ii_*` nor `mes_knowledge_base`** → both the Phase 2 `ii_*` drop and Phase 3 KB change are structurally invisible to it; canary stays green.
+
+**Phase 3 APPLIED to `xhziwveaiuhzdoutpgrh`** (migrations `kb_extend_cross_project_linkedin_source` + `kb_linkedin_upsert_lock_anon_authenticated`):
+- `source_project` column added; all 2,883 existing rows backfilled to `mes_platform` (0 cross-project). `kb_external_source_id()` + `upsert_kb_linkedin_post()` created.
+- **Security fix:** Supabase default privileges had granted EXECUTE on the new SECURITY DEFINER `upsert_kb_linkedin_post` to `anon`+`authenticated` explicitly (a `revoke from public` doesn't remove those). Locked down → now `postgres, service_role` only.
+- `get_advisors` security/performance: only pre-existing INFO/WARN lints (e.g. `rls_enabled_no_policy` on service-role-locked tables, `auth_rls_initplan`) — **nothing new** from Phase 3. `match_knowledge`/`generate-report` retrieval path unchanged (no column dropped/renamed).
+
+**Phase 4 view finalized (staged):** `phase4-kb-sync/01-content-creator-view.sql` corrected to the verified schema + `quality_score >= 70` gate (0–100 scale). Next: build `kb-sync` edge function + backfill (1,672 posts) + incremental cron, then Phase 5 wiring.
