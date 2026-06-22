@@ -8,6 +8,11 @@
 ---
 
 ## 0. Pre-flight gates (all must be ✅ before step 1)
+
+> **Provisioned 2026-06-22:** Irish Insights project ref **`kvobhxuurxfjgvhxmoeg`** (org "Irish Insights", URL `https://kvobhxuurxfjgvhxmoeg.supabase.co`). Cost gate approved. Currently **FREE / NANO — no backups, auto-pauses after ~7 days idle.**
+> **Run location:** the schema/data move MUST run from a machine with **PG17 `pg_dump`** (or `supabase db dump`) and DB reach — i.e. the user's Mac, NOT the CC sandbox (its `pg_dump` is v16 < PG17 server, and it has no IPv6 for direct connections). The CC session handles only the MES-side drop (step 8) via MCP.
+> ⚠️ **Before the destructive drop (step 8):** upgrade the Irish Insights org to **Pro** (backups + no auto-pause) OR take a manual backup AND keep the MES `ii_*` copy until verified. Free tier is not a safe sole system-of-record.
+
 - [ ] Irish Insights **organization** exists (human, dashboard).
 - [ ] This account can reach the new org via MCP (`list_organizations` shows it).
 - [ ] `mes-context` canary baseline captured (needs Content Creator access — still outstanding per audit §8). **The MES drop in step 7 must not run until this baseline exists**, even though `mes-context` reads MES product tables, not `ii_*`.
@@ -104,6 +109,7 @@ select relname, relrowsecurity from pg_class where relname like 'ii_%' and relki
 
 ## 6. Migrate edge functions + repoint consumers (new project)
 - Deploy `apify-webhook` + `notion-research-trigger` to `II_REF` (`supabase functions deploy --project-ref $II_REF`, `verify_jwt=false`). Re-set their secrets (list in §1).
+  > ⚠️ **Source not in this repo.** Both functions are deployed from the Irish Insights / `ii-ingest` codebase, not `market-entry-secrets`. Deploy from there, or use the source captured in the Phase 1 audit session (`apify-webhook`: `index.ts` + `normalisers/linkedin.ts` + `filters/prefilter.ts` + `types.ts`; `notion-research-trigger`: `index.ts`).
 - **Repoint external consumers to the new function URLs/keys:**
   - Apify actor task `3RnAZzC9CsXXPZrbM` webhook URL → `https://$II_REF.functions.supabase.co/apify-webhook`.
   - Notion DB automation HTTP webhook → new `notion-research-trigger` URL.
