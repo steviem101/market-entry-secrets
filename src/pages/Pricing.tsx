@@ -34,7 +34,7 @@ const Pricing = () => {
       <>
         <SEOHead
           title="Pricing | Market Entry Secrets"
-          description="Choose the right plan for your Australian market entry journey."
+          description="Choose the right plan for your ANZ journey, whether you are entering the market or scaling within it."
           canonicalPath="/pricing"
         />
         <main>

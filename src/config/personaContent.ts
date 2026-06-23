@@ -23,7 +23,7 @@ import {
   BarChart3,
 } from "lucide-react";
 
-export type SectionPersona = "international" | "startup";
+export type SectionPersona = "international" | "startup" | "default";
 
 // ---------------------------------------------------------------------------
 // Before / After
@@ -807,10 +807,292 @@ const startupContent: PersonaSectionContent = {
 };
 
 // ===========================================================================
+// Default — dual-framed copy shown before a persona is selected
+// ===========================================================================
+
+const defaultContent: PersonaSectionContent = {
+  beforeAfter: {
+    sectionTitle: "Before vs. After Market Entry Secrets",
+    sectionSubtitle:
+      "See the difference between navigating the ANZ market blind and having the right intelligence at your fingertips, whether you are entering or scaling",
+    beforeHeading: "Before Market Entry Secrets",
+    beforeSubheading: "The hard way to grow in ANZ",
+    beforeItems: [
+      {
+        icon: Search,
+        title: "Manual Research",
+        description:
+          "Months of Google searches and outdated reports that barely scratch the surface",
+        color: "text-red-400",
+      },
+      {
+        icon: Phone,
+        title: "Cold Outreach",
+        description:
+          "Spray and pray to unvetted service providers, advisors and partners",
+        color: "text-orange-400",
+      },
+      {
+        icon: DollarSign,
+        title: "Expensive Consultants",
+        description:
+          "$000's for generic market analysis reports that tell you what you already know",
+        color: "text-red-400",
+      },
+      {
+        icon: Puzzle,
+        title: "Fragmented Ecosystem",
+        description:
+          "Weeks piecing together which providers, programs, and advisors actually matter",
+        color: "text-orange-400",
+      },
+      {
+        icon: FileText,
+        title: "Costly Missteps",
+        description:
+          "Expensive mistakes from blind spots in regulation, market, and local knowledge",
+        color: "text-red-400",
+      },
+      {
+        icon: TrendingUp,
+        title: "Guesswork Strategy",
+        description:
+          "No proven playbook, making it up as you go with no local benchmarks",
+        color: "text-orange-400",
+      },
+    ],
+    afterHeading: "With Market Entry Secrets",
+    afterSubheading: "Your streamlined path to ANZ success",
+    afterItems: [
+      {
+        icon: Building2,
+        title: "120+ Vetted Service Providers",
+        description:
+          "Pre-screened legal, accounting, and growth partners across ANZ",
+        link: "/service-providers",
+      },
+      {
+        icon: Users,
+        title: "200+ Expert Mentors",
+        description:
+          "Advisors and operators who have entered ANZ and scaled within it",
+        link: "/mentors",
+      },
+      {
+        icon: Database,
+        title: "100+ Premium Lead Lists",
+        description:
+          "Pre-qualified contact databases segmented by industry and location",
+        link: "/leads",
+      },
+      {
+        icon: Map,
+        title: "TAM Maps & Market Intelligence",
+        description:
+          "Real-time market sizing and opportunity analysis for your sector",
+        link: "/leads",
+      },
+      {
+        icon: Calendar,
+        title: "50+ Monthly Events",
+        description:
+          "Networking and learning opportunities with ANZ decision-makers",
+        link: "/events",
+      },
+      {
+        icon: CheckCircle,
+        title: "1,200+ Success Stories",
+        description:
+          "Proven case studies from companies that have grown in the ANZ market",
+        link: "/case-studies",
+      },
+      {
+        icon: FileText,
+        title: "Custom AI Report in Minutes",
+        description:
+          "A tailored plan with SWOT, competitor analysis, and provider matches, not months of consultant time",
+        link: "/report-creator",
+      },
+    ],
+  },
+
+  search: {
+    badge: "AI-Powered Market Intelligence",
+    headingLine1: "Search 2,000+ Verified Data Points",
+    headingLine2: "Curated by AI + Human Experts",
+    subtitle:
+      "Search vetted providers, industry experts, events, and market insights, all verified and continuously updated to help you win in the ANZ market.",
+  },
+
+  value: {
+    sectionTitle: "Intelligence, Not Just a Directory",
+    sectionSubtitle:
+      "Stop juggling multiple platforms and outdated spreadsheets. Get AI-matched providers, real-time market data, and a custom plan, what takes consultants months, delivered in minutes.",
+    items: [
+      {
+        icon: Building2,
+        title: "Vetted Service Providers",
+        description:
+          "Pre-screened legal, accounting, and business setup providers across ANZ",
+        badge: "120+ Providers",
+        color: "text-blue-600",
+        href: "/service-providers",
+      },
+      {
+        icon: Users,
+        title: "Mentors and Operators",
+        description:
+          "Advisors who have entered ANZ from abroad and founders who have scaled within it, matched to your situation",
+        badge: "200+ Mentors",
+        color: "text-green-600",
+        href: "/mentors",
+      },
+      {
+        icon: Target,
+        title: "ANZ Buyer & Prospect Databases",
+        description:
+          "Pre-qualified contact databases of Australian customers and channel partners in your target sector",
+        badge: "1,200+ Contacts",
+        color: "text-purple-600",
+        href: "/leads",
+      },
+      {
+        icon: Calendar,
+        title: "Events & Networking",
+        description:
+          "Trade shows, meetups, pitch nights, and bilateral business events across ANZ",
+        badge: "50+ Monthly",
+        color: "text-orange-600",
+        href: "/events",
+      },
+      {
+        icon: FileText,
+        title: "Playbooks & Case Studies",
+        description:
+          "Step-by-step guides, case studies, and checklists from companies that have grown in ANZ",
+        badge: "100+ Guides",
+        color: "text-indigo-600",
+        href: "/content",
+      },
+      {
+        icon: Globe,
+        title: "Trade, Government & Funding Support",
+        description:
+          "Connect with Austrade, trade agencies, accelerators, and programs that support companies in ANZ",
+        badge: "25+ Programs",
+        color: "text-teal-600",
+        href: "/innovation-ecosystem",
+      },
+    ],
+  },
+
+  testimonials: {
+    heading: "Companies That ",
+    headingAccent: "Chose Success",
+    subtitle:
+      "See how companies entering ANZ and founders scaling within it grew with our resources",
+    socialProof: "Trusted by teams across ANZ and 12+ countries",
+    fallbackTestimonials: [
+      internationalContent.testimonials.fallbackTestimonials[0],
+      startupContent.testimonials.fallbackTestimonials[0],
+      startupContent.testimonials.fallbackTestimonials[1],
+    ],
+  },
+
+  pricing: {
+    heading: "Choose ",
+    headingAccent: "Your",
+    subtitle:
+      "From free exploration to enterprise-grade support, find the plan that fits where you are in the ANZ market",
+    tiers: [
+      {
+        id: 'free',
+        price: '$0',
+        description: 'Explore the ANZ ecosystem and see what is possible.',
+        features: [
+          'Browse 500+ service providers, mentors, and trade agencies',
+          'Explore innovation hubs, events, and location guides',
+          'Read sample case studies and market content',
+          'AI-powered report and planner (summary + action plan)',
+          'Browse trade agencies and innovation directories',
+          'Contact us for questions',
+        ],
+        cta: 'Start Exploring Free',
+        isPopular: false,
+      },
+      {
+        id: 'growth',
+        price: '$99',
+        description: 'For teams building their ANZ playbook.',
+        features: [
+          'Everything in Free, plus:',
+          'Full AI report: SWOT, competitor landscape, and mentor matches',
+          'Unlimited case studies and guides',
+          'Browse and download lead sample packs',
+          'AI-matched mentor and advisor recommendations',
+          'Priority email support',
+        ],
+        cta: 'Unlock Full Access',
+        isPopular: true,
+      },
+      {
+        id: 'scale',
+        price: '$999',
+        description: 'Full-stack market intelligence for companies growing in ANZ.',
+        features: [
+          'Everything in Growth, plus:',
+          'Full AI report with curated lead list and investor recommendations',
+          'Access the complete leads and TAM maps marketplace',
+          'AI-powered tools with deep competitor and end-buyer research',
+          'Personalised onboarding via our support team',
+          'Quarterly market intelligence updates',
+        ],
+        cta: 'Accelerate Your Growth',
+        isPopular: false,
+      },
+      {
+        id: 'enterprise',
+        price: 'Custom Pricing',
+        description: 'Your fully tailored program, built around your needs.',
+        features: [
+          'Everything in Scale, plus:',
+          'Custom AI reports with bespoke research parameters',
+          'Dedicated account manager',
+          'Multiple team seats with shared dashboards',
+          'Priority partner and provider introductions',
+          'Custom data exports and integrations',
+        ],
+        cta: 'Talk to Our Team',
+        isPopular: false,
+      },
+    ],
+  },
+
+  cta: {
+    headingAccent: "Ready to Win",
+    headingPlain: "in the ANZ Market?",
+    subtitle:
+      "Generate a tailored plan in minutes, backed by 500+ vetted providers and real market intelligence, whether you are entering or scaling.",
+    primaryCTA: {
+      label: "Create My Free Report",
+      href: "/report-creator",
+    },
+    secondaryCTA: { label: "Explore Providers", href: "/service-providers" },
+  },
+
+  floatingCTA: {
+    label: "Start My Report",
+    shortLabel: "Report",
+    href: "/report-creator",
+  },
+};
+
+// ===========================================================================
 // Accessor
 // ===========================================================================
 
 export const PERSONA_CONTENT: Record<SectionPersona, PersonaSectionContent> = {
+  default: defaultContent,
   international: internationalContent,
   startup: startupContent,
 };

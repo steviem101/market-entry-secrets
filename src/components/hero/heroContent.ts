@@ -1,4 +1,4 @@
-export type HeroPersona = 'international' | 'startup';
+export type HeroPersona = 'international' | 'startup' | 'default';
 
 export interface PersonaContent {
   headline: { line1: string; line2: string };
@@ -15,6 +15,23 @@ export interface PersonaContent {
 }
 
 export const HERO_PERSONAS: Record<HeroPersona, PersonaContent> = {
+  default: {
+    headline: {
+      line1: "Win in the Australian and New Zealand market",
+      line2: "whether you enter or scale.",
+    },
+    subheadline:
+      "Answer a few questions about your company, sector, and goals. MES combines 500+ vetted providers, real case studies, and AI-powered intelligence to build your plan, whether you are entering ANZ or scaling within it.",
+    primaryCTA: { label: "Create my free report", href: "/report-creator" },
+    secondaryCTA: { label: "Explore providers", href: "/service-providers" },
+    toggleDescription: "Entering or scaling in ANZ",
+    mockupScenario: {
+      companyName: "TechStart Solutions",
+      country: "United States",
+      industry: "SaaS / Cloud",
+      targetRegion: "Sydney, NSW",
+    },
+  },
   international: {
     headline: {
       line1: "Enter the Australian market",
@@ -69,6 +86,13 @@ export interface HeroStatConfig {
 }
 
 export const HERO_PERSONA_STATS: Record<HeroPersona, HeroStatConfig[]> = {
+  default: [
+    { key: "serviceProviders", label: "Service Providers", suffix: "+", fallback: 100, href: "/service-providers" },
+    { key: "mentors", label: "Mentors", suffix: "+", fallback: 30, href: "/mentors" },
+    { key: "leads", label: "Lead Databases", suffix: "+", fallback: 20, href: "/leads" },
+    { key: "events", label: "Events", suffix: "+", fallback: 50, href: "/events" },
+    { key: "investors", label: "Investors", suffix: "+", fallback: 50, href: "/investors" },
+  ],
   startup: [
     { key: "investors", label: "Investors", suffix: "+", fallback: 50, href: "/investors" },
     { key: "leads", label: "Lead Databases", suffix: "+", fallback: 20, href: "/leads" },

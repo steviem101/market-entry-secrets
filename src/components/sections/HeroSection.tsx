@@ -13,7 +13,7 @@ import type { HeroPersona } from "@/components/hero/heroContent";
 import type { Persona } from "@/contexts/PersonaContext";
 
 const contextToHero = (p: Persona): HeroPersona =>
-  p === "local_startup" ? "startup" : "international";
+  p === "local_startup" ? "startup" : p === "international_entrant" ? "international" : "default";
 
 const heroToContext = (h: HeroPersona): Persona =>
   h === "startup" ? "local_startup" : "international_entrant";
