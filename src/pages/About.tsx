@@ -8,17 +8,17 @@ const About = () => {
     {
       icon: Shield,
       title: "Trusted Expertise",
-      description: "We carefully curate and verify every service provider to ensure you get access to proven market entry specialists."
+      description: "We carefully curate and verify every service provider to ensure you get access to proven specialists for the ANZ market."
     },
     {
       icon: Target,
       title: "Targeted Solutions",
-      description: "Our platform connects you with specialists who understand your specific industry and market entry challenges."
+      description: "Our platform connects you with specialists who understand your specific industry and growth challenges in ANZ."
     },
     {
       icon: Lightbulb,
       title: "Insider Knowledge",
-      description: "Access the hidden strategies and insider tips that successful companies use to enter the Australian market."
+      description: "Access the hidden strategies and insider tips that successful companies use to win in the ANZ market, whether entering or scaling."
     }
   ];
 
@@ -32,7 +32,7 @@ const About = () => {
     <>
       <SEOHead
         title="About | Market Entry Secrets"
-        description="Learn about Market Entry Secrets - helping international companies enter the Australian and ANZ markets with AI-powered intelligence."
+        description="Learn about Market Entry Secrets, the intelligence and execution platform for companies entering ANZ and local founders scaling within it."
         canonicalPath="/about"
       />
       {/* Hero Section */}
@@ -45,12 +45,12 @@ const About = () => {
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
               Unlock the Secrets to
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block mt-2">
-                Australian Market Success
+                Winning in Australia and New Zealand
               </span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-3xl mx-auto">
-              We're Australia's premier directory connecting businesses with the insider knowledge, 
-              vetted experts, and proven strategies needed to successfully enter and thrive in the Australian market.
+              We are the intelligence and execution platform connecting businesses with the insider knowledge,
+              vetted experts, and proven strategies they need to succeed in the ANZ market, whether they are entering it or scaling within it.
             </p>
           </div>
         </div>
@@ -87,9 +87,10 @@ const About = () => {
                   Our Mission
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                  To democratize access to the insider knowledge and expert connections that make 
-                  Australian market entry successful. We believe every business deserves to know 
-                  the secrets that industry leaders use to thrive in Australia.
+                  To democratize access to the insider knowledge and expert connections that make
+                  success in the ANZ market repeatable, whether you are landing here or growing the
+                  business you already run here. We believe every business deserves to know
+                  the secrets that industry leaders use to thrive in Australia and New Zealand.
                 </p>
                 <p className="text-lg text-muted-foreground leading-relaxed">
                   By curating the best service providers, mentors, and resources, we're creating 
@@ -168,8 +169,8 @@ const About = () => {
               Ready to Uncover Your Market Entry Secrets?
             </h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of businesses who have successfully entered the Australian market 
-              using our insider knowledge and expert network.
+              Join thousands of businesses that have grown in the ANZ market using our insider
+              knowledge and expert network, whether they entered or scaled within it.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 

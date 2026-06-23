@@ -8,7 +8,10 @@ interface HeroJourneyFlowProps {
 export const HeroJourneyFlow = ({ activePersona }: HeroJourneyFlowProps) => {
   const filterId = useId();
   const glowId = `glow-${filterId}`;
+  const isDefault = activePersona === "default";
   const isInternational = activePersona === "international";
+  const leftActive = isInternational || isDefault;
+  const rightActive = !isInternational || isDefault;
 
   // Paths curve from the center area downward toward left/right edges
   // Using a wider viewBox that better represents the full container width
@@ -41,7 +44,7 @@ export const HeroJourneyFlow = ({ activePersona }: HeroJourneyFlowProps) => {
           strokeDasharray="4 6"
           strokeLinecap="round"
           className={`transition-opacity duration-300 ${
-            isInternational ? "opacity-40" : "opacity-10"
+            leftActive ? "opacity-40" : "opacity-10"
           }`}
         />
 
@@ -53,7 +56,7 @@ export const HeroJourneyFlow = ({ activePersona }: HeroJourneyFlowProps) => {
           strokeDasharray="4 6"
           strokeLinecap="round"
           className={`transition-opacity duration-300 ${
-            !isInternational ? "opacity-40" : "opacity-10"
+            rightActive ? "opacity-40" : "opacity-10"
           }`}
         />
 

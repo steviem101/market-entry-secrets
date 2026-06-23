@@ -9,7 +9,7 @@ export const HeroSocialProof = () => {
         ))}
       </div>
       <span className="text-sm text-muted-foreground">
-        Trusted by 500+ companies from 12+ countries
+        Trusted by 500+ companies across ANZ and 12+ countries
       </span>
     </div>
   );

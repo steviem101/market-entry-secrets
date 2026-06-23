@@ -6,10 +6,10 @@ import { Link } from "react-router-dom";
 import { SEOHead } from "@/components/common/SEOHead";
 
 const FAQ_ITEMS: { q: string; a: string }[] = [
-  { q: "What is Market Entry Secrets?", a: "Market Entry Secrets is Australia's comprehensive platform for businesses looking to enter the Australian market. We connect international companies with local service providers, mentors, and resources to ensure successful market entry." },
-  { q: "Who is this platform for?", a: "Our platform serves international businesses planning to enter Australia, local service providers specializing in market entry, mentors with Australian business expertise, and anyone involved in the market entry ecosystem." },
+  { q: "What is Market Entry Secrets?", a: "Market Entry Secrets is the intelligence and execution platform for the Australian and New Zealand market. We connect companies with vetted providers, mentors, leads, events, and AI plans, whether they are entering ANZ or scaling within it." },
+  { q: "Who is this platform for?", a: "Our platform serves international companies entering ANZ, Australian and New Zealand founders scaling within their home market, plus the providers and mentors who support them." },
   { q: "Is the platform free to use?", a: "Browsing our directory and accessing basic resources is completely free. Service providers pay a listing fee to be featured in our directory, and some premium content may require a subscription." },
-  { q: "How do I get started with my Australian market entry?", a: "Start by browsing our service providers directory to find specialists in your industry. You can also use our AI assistant to get personalized recommendations, attend our events, or connect with mentors who have experience in your sector." },
+  { q: "How do I get started?", a: "Start by browsing our service providers directory to find specialists in your industry. You can also use our AI assistant to get personalized recommendations, attend our events, or connect with mentors who have experience in your sector, whether you are entering ANZ or scaling within it." },
   { q: "How do I choose the right service providers?", a: "Review provider profiles, check their expertise areas, read client testimonials, and consider their location. You can contact multiple providers to compare services and pricing." },
   { q: "How long does it typically take to enter the Australian market?", a: "Timeline varies by business type and complexity. Simple service businesses might take 3-6 months, while complex manufacturing or regulated industries can take 12-18 months." },
   { q: "How do I list my services on the platform?", a: "Visit our Partner with Us page and fill out the service provider application. We review all applications to ensure quality and relevance. Once approved, your listing will be live and visible to potential clients." },
@@ -25,7 +25,7 @@ const FAQ = () => {
     <>
       <SEOHead
         title="FAQ | Market Entry Secrets"
-        description="Frequently asked questions about entering the Australian market and using Market Entry Secrets."
+        description="Answers about using Market Entry Secrets to enter the ANZ market or to scale your Australian or New Zealand business."
         canonicalPath="/faq"
         jsonLd={{
           type: "FAQPage",
@@ -54,14 +54,14 @@ const FAQ = () => {
                   <AccordionItem value="what-is">
                     <AccordionTrigger>What is Market Entry Secrets?</AccordionTrigger>
                     <AccordionContent>
-                      Market Entry Secrets is Australia's comprehensive platform for businesses looking to enter the Australian market. We connect international companies with local service providers, mentors, and resources to ensure successful market entry.
+                      Market Entry Secrets is the intelligence and execution platform for the Australian and New Zealand market. We connect companies with vetted providers, mentors, leads, events, and AI plans, whether they are entering ANZ or scaling within it.
                     </AccordionContent>
                   </AccordionItem>
                   
                   <AccordionItem value="who-for">
                     <AccordionTrigger>Who is this platform for?</AccordionTrigger>
                     <AccordionContent>
-                      Our platform serves international businesses planning to enter Australia, local service providers specializing in market entry, mentors with Australian business expertise, and anyone involved in the market entry ecosystem.
+                      Our platform serves international companies entering ANZ, Australian and New Zealand founders scaling within their home market, plus the providers and mentors who support them.
                     </AccordionContent>
                   </AccordionItem>
                   
@@ -78,15 +78,15 @@ const FAQ = () => {
             {/* For Businesses */}
             <Card>
               <CardHeader>
-                <CardTitle>For Businesses Entering Australia</CardTitle>
+                <CardTitle>For Companies Growing in ANZ</CardTitle>
                 <CardDescription>Questions about using our services</CardDescription>
               </CardHeader>
               <CardContent>
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="getting-started">
-                    <AccordionTrigger>How do I get started with my Australian market entry?</AccordionTrigger>
+                    <AccordionTrigger>How do I get started?</AccordionTrigger>
                     <AccordionContent>
-                      Start by browsing our service providers directory to find specialists in your industry. You can also use our AI assistant to get personalized recommendations, attend our events, or connect with mentors who have experience in your sector.
+                      Start by browsing our service providers directory to find specialists in your industry. You can also use our AI assistant to get personalized recommendations, attend our events, or connect with mentors who have experience in your sector, whether you are entering ANZ or scaling within it.
                     </AccordionContent>
                   </AccordionItem>
                   

@@ -20,7 +20,7 @@ const Index = () => {
     name: "Market Entry Secrets",
     url: siteUrl,
     description:
-      "AI-powered market entry intelligence platform helping international companies enter the Australian and New Zealand markets.",
+      "AI-powered intelligence and execution platform for the Australian and New Zealand market, serving international companies entering ANZ and local founders scaling within it.",
     areaServed: ["Australia", "New Zealand"],
     serviceType: "Market Entry Intelligence",
   };
@@ -43,15 +43,15 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Market Entry Secrets | Australian Market Entry Intelligence</title>
+        <title>Market Entry Secrets | Intelligence for the ANZ Market</title>
         <meta
           name="description"
-          content="AI market entry intelligence for companies entering Australia. 500+ vetted providers, mentors, and custom reports in minutes."
+          content="AI-powered intelligence for the ANZ market. 500+ vetted providers, mentors, leads, and custom plans in minutes, whether you are entering Australia or scaling within it."
         />
-        <meta property="og:title" content="Market Entry Secrets | Australian Market Entry Intelligence" />
+        <meta property="og:title" content="Market Entry Secrets | Intelligence for the ANZ Market" />
         <meta
           property="og:description"
-          content="AI market entry intelligence for companies entering Australia. 500+ vetted providers, mentors, and custom reports in minutes."
+          content="AI-powered intelligence for the ANZ market. 500+ vetted providers, mentors, leads, and custom plans in minutes, whether you are entering Australia or scaling within it."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${siteUrl}/`} />

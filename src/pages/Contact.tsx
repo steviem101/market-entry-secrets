@@ -82,7 +82,7 @@ const Contact = () => {
     <>
       <SEOHead
         title="Contact Us | Market Entry Secrets"
-        description="Get in touch with Market Entry Secrets for help entering the Australian market."
+        description="Get in touch with Market Entry Secrets for help entering the ANZ market or scaling your Australian or New Zealand business."
         canonicalPath="/contact"
       />
       <div className="container mx-auto px-4 py-12">
@@ -90,7 +90,7 @@ const Contact = () => {
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-foreground mb-4">Contact Our Team</h1>
             <p className="text-xl text-muted-foreground">
-              Ready to accelerate your Australian market entry? Let's discuss your enterprise needs.
+              Ready to accelerate in the ANZ market? Tell us where you are, entering or scaling, and what you need.
             </p>
           </div>
           
@@ -100,7 +100,7 @@ const Contact = () => {
               <CardHeader>
                 <CardTitle>Get in Touch</CardTitle>
                 <CardDescription>
-                  Tell us about your market entry goals and we'll create a custom solution for you.
+                  Tell us about your goals in the ANZ market and we'll create a custom solution for you.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -189,7 +189,7 @@ const Contact = () => {
                       name="message"
                       value={formData.message}
                       onChange={handleChange}
-                      placeholder="Tell us about your market entry goals, timeline, and any specific challenges you're facing..." 
+                      placeholder="Tell us about your goals, timeline, and any specific challenges you're facing, whether you are entering ANZ or scaling within it..."
                       rows={4} 
                       required 
                     />
@@ -263,7 +263,7 @@ const Contact = () => {
                 <CardHeader>
                   <CardTitle>List Your Services</CardTitle>
                   <CardDescription>
-                    Are you a market entry consultant? Join our directory to connect with potential clients.
+                    Are you a provider or advisor who helps companies grow in ANZ? Join our directory to connect with potential clients.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

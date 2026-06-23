@@ -14,7 +14,7 @@ const PartnerWithUs = () => {
     <>
       <SEOHead
         title="Partner With Us | Market Entry Secrets"
-        description="Partner with Market Entry Secrets to help international companies enter the Australian market."
+        description="Partner with Market Entry Secrets to help companies enter the ANZ market and local founders scale within it."
         canonicalPath="/partner"
       />
       <div className="container mx-auto px-4 py-12">

@@ -62,7 +62,7 @@ const ReportPreview = ({ persona }: { persona: HeroPersona }) => {
       <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
         <span>
-          Report generated &mdash; {persona === "international" ? "12" : "8"}{" "}
+          Report generated &mdash; {persona !== "startup" ? "12" : "8"}{" "}
           sections
         </span>
       </div>
@@ -73,7 +73,7 @@ const ReportPreview = ({ persona }: { persona: HeroPersona }) => {
 // --- Mockup view: Provider Matches ---
 const ProviderMatches = ({ persona }: { persona: HeroPersona }) => {
   const providers =
-    persona === "international"
+    persona !== "startup"
       ? [
           {
             name: "Austrade Connect",
