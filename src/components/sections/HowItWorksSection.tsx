@@ -12,6 +12,32 @@ interface Step {
 }
 
 const STEPS: Record<SectionPersona, Step[]> = {
+  default: [
+    {
+      icon: ClipboardList,
+      iconColor: "from-violet-500/20 to-violet-400/10 text-violet-500",
+      title: "Tell us about your company",
+      description:
+        "Answer a few questions about your industry, market, and goals. Takes under 5 minutes — no credit card required.",
+      link: "/report-creator",
+    },
+    {
+      icon: Cpu,
+      iconColor: "from-primary/20 to-accent/10 text-primary",
+      title: "AI builds your plan",
+      description:
+        "Our engine scrapes live data, analyses competitors, maps the market, and matches you with vetted providers — in minutes, not months.",
+      link: "/report-creator",
+    },
+    {
+      icon: Users,
+      iconColor: "from-emerald-500/20 to-emerald-400/10 text-emerald-500",
+      title: "Get matched with the right people",
+      description:
+        "Receive a custom report with SWOT analysis, provider and mentor matches, and a step-by-step action plan.",
+      link: "/service-providers",
+    },
+  ],
   international: [
     {
       icon: ClipboardList,
@@ -85,7 +111,9 @@ export const HowItWorksSection = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto transition-all duration-300">
               {persona === "international"
                 ? "From first question to market-ready plan in under 10 minutes"
-                : "From first question to growth-ready plan in under 10 minutes"}
+                : persona === "startup"
+                  ? "From first question to growth-ready plan in under 10 minutes"
+                  : "From first question to a ready-to-act plan in under 10 minutes"}
             </p>
           </div>
 
