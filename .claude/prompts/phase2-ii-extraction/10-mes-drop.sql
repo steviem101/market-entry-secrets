@@ -44,19 +44,23 @@ drop table if exists public.ii_prefilter_log        cascade;
 drop table if exists public.ii_intro_archive        cascade;
 drop table if exists public.ii_content              cascade;  -- parent last
 
--- 2) Functions (names are unique in public → no arg-type signature needed).
---    RPCs:
+-- 2) Functions (11 total; names are unique in public → no arg-type signature needed).
+--    RPCs (6):
 drop function if exists public.match_content;
 drop function if exists public.match_archive;
 drop function if exists public.match_emails;
 drop function if exists public.recent_ii_content;
 drop function if exists public.recent_ii_emails;
 drop function if exists public.upsert_ii_linkedin_posts;
---    Trigger functions (triggers themselves dropped with their tables above):
+--    Trigger functions (5) — triggers themselves dropped with their tables above:
 drop function if exists public.update_ii_content_updated_at;
 drop function if exists public.ii_curations_set_updated_at;
 drop function if exists public.update_ii_published_archive_updated_at;
 drop function if exists public.ii_reddit_signals_set_updated_at;
+--    Orphaned legacy trigger fn (no trigger references it; from when ii_content
+--    was ii_emails). Live introspection 2026-06-23 found it; the original runbook
+--    §1 list of 10 missed it. Dropped here so no ii_-named function is left behind.
+drop function if exists public.update_ii_emails_updated_at;
 
 commit;
 

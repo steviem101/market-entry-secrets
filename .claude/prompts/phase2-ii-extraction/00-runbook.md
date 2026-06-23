@@ -152,3 +152,48 @@ select relname, relrowsecurity from pg_class where relname like 'ii_%' and relki
 
 ## 10. Halt conditions (stop + report, do not improvise)
 Cross-account access failure · any `ii_*`↔non-`ii_*` FK discovered at dump time (none expected) · name collision blocking restore · any MES RLS change exposing data to anon · `mes-context` canary failure.
+
+---
+
+## 11. Execution log — Session B (2026-06-23)
+
+**Project/ref corrected (this session's prompt overrides §0/step 2 of this runbook):**
+the target is ref **`schyrnxekxcoaragofgv`** ("Irish Insights", region **eu-west-1**,
+MICRO), created **inside the existing MES org** `gplxtklumpehzfpmbcji` — NOT a separate
+org, NOT `kvobhxuurxfjgvhxmoeg` (that's a parked/empty Free project; do not touch).
+Confirmed `ACTIVE_HEALTHY`, PG 17.6.1, via `list_projects`. Cost gate already satisfied
+(project pre-created by a human).
+
+**Step 3 DONE** (via MCP `apply_migration` on `schyrnxekxcoaragofgv`, migration
+`ii_extraction_enable_extensions`): `vector` 0.8.0 + `pg_trgm` 1.6, both in **public**
+to mirror MES exactly (MES has both in `public`; `pgcrypto`/`uuid-ossp` in `extensions`,
+already present). UUID PK defaults use core `gen_random_uuid()` (no extension dep in PG17).
+No `ii_*` collisions on the target.
+
+**Live inventory re-captured (MES, 2026-06-23) — drift + corrections vs §1:**
+- Row counts grew (pipeline is live): `ii_content` 6,202 (1,338 emb) · `ii_prefilter_log`
+  12,508 · `ii_curated_log` 5,123 · `ii_curations` 282 · `ii_published_archive` 810 (810) ·
+  `ii_reddit_signals` 550 (38) · `ii_experiment_outputs` 30 · `ii_intro_archive` 10 ·
+  `ii_personal_linkedin_posts` 0. → **The Hard-Stop-2 "row counts match exactly" gate must
+  compare against a MES snapshot captured AT DUMP TIME under a write-freeze**, not §1 and not
+  a later drifting count. See `30-mac-commands.md` STEP 4b (count capture + freeze rationale).
+- **FUNCTION COUNT IS 11, NOT 10.** Live found an 11th, `update_ii_emails_updated_at` — an
+  orphaned plpgsql trigger fn (no trigger references it; legacy from when `ii_content` was
+  `ii_emails`). `10-mes-drop.sql` updated to drop it; the down-migration capture must use the
+  full 11-name set; carried to the target for a faithful copy.
+- FK graph re-confirmed CLEAN (4 FKs, all `ii_*`→`ii_*`; 3 CASCADE, 1 SET NULL). RLS: all 9
+  enabled, 1 policy (`ii_content` "Read relevant content"). 4 BEFORE UPDATE triggers. Object
+  sweep: no `ii_*` views/matviews/enum types; only extra relation is the identity sequence
+  `ii_personal_linkedin_posts_id_seq` (owned by the table, travels inside CREATE TABLE).
+
+**Restore ordering correction (the runbook step 4 "append all fns to ii_schema.sql" would
+fail):** `pg_dump -t` emits CREATE TRIGGER but not the standalone trigger functions, and the
+6 RPCs are `LANGUAGE sql` (validated at CREATE, reference tables). Correct order is
+**extensions → trigger fns → schema dump → RPC fns → data dump**. Captured byte-exact as:
+- `20-ii-trigger-functions.sql` (5 trigger fns, pre-schema)
+- `21-ii-rpc-functions.sql` (6 RPCs, post-schema)
+These double as the function portion of the step-8 down-migration.
+
+**Still needed from the operator:** edge-function source for `apify-webhook` +
+`notion-research-trigger` (not in this repo) and their secret values, OR have CC deploy via
+MCP given the source. External-consumer repoint is operator-side (see step 6).
