@@ -1,82 +1,80 @@
-## Goal
-The Report Creator v2 (`/report-creator`) was designed in isolation and ships its own font, palette, canvas, and shadow system. The rest of the app uses a single shared design system. This plan re-skins the wizard to use that system without changing UX, copy, or behaviour.
+# Countries area — split into separate PRs
 
-## What's actually misaligned (audit)
+Three independent PRs, shipped in order. Each is self-contained and verifiable on its own.
 
-| Concern | Report Creator v2 | Rest of app |
-|---|---|---|
-| Font | `font-rc` = Plus Jakarta Sans (applied on the root wrapper) | System sans (Tailwind default), no `font-rc` |
-| Primary blue | `--rc-primary` `198 79% 49%` (#1AA3E0) | `--primary` / `--mes-teal` `200 85% 55%` |
-| Heading ink | `--rc-ink` `209 61% 16%` (#102A43, very navy) | `--foreground` / `--mes-ink` `220 15-25% 12-15%` (near‑black) |
-| Body copy | `--rc-body`, `--rc-muted` (cool grey-blue) | `--muted-foreground`, `text-foreground` |
-| Page canvas | `bg-rc-canvas` (#F5F8FB) | `bg-background` (white) or `bg-mes-bg` |
-| Borders/dividers | `border-rc-line` | `border-border` |
-| Shadow | bespoke `shadow-rc-pop` | shadcn default shadows |
-| Type scale | Pixel values: `text-[12px]`, `text-[13.5px]`, `text-[19px]`, `text-[26px]`, `text-[34px]`, custom tracking | Tailwind scale: `text-sm`, `text-base`, `text-2xl`, `text-4xl` |
-| Layout chrome | Renders bare — no `<Layout>` / `<Navigation>` / `<Footer>` | All other pages use `<Layout>` |
-| Eyebrows | `CHOOSE YOUR JOURNEY` in `rc-primary` | App pages don't use coloured eyebrows above H1s |
+---
 
-Net effect: it reads like a sibling micro-site (different blue, different headline font weight/face, different background) rather than a page of the same app.
+## PR 1 — Phase A: Data bugs (hot fix)
 
-## Approach
-Re-skin via tokens — keep all wizard structure, components, props, validation, and pipeline calls exactly as they are. Only swap the styling primitives.
+Live bugs on UK / USA / Singapore country pages right now.
 
-### 1. Token remap (one pass across `src/components/report-creator/v2/*`)
-Search-and-replace at the className level:
-- `bg-rc-canvas` → `bg-background` (or `bg-mes-bg` for the subtle grey wrapper)
-- `text-rc-ink` → `text-foreground`
-- `text-rc-body` → `text-foreground/80` (or `text-muted-foreground` where it's truly secondary)
-- `text-rc-muted` → `text-muted-foreground`
-- `border-rc-line` → `border-border`
-- `bg-rc-sky-soft` → `bg-primary/10`
-- `bg-rc-sky-tint` → `bg-primary/5`
-- `text-rc-primary` → `text-primary`
-- `text-rc-primary-700` → `text-primary` (drop the second shade — app system uses one primary)
-- `bg-rc-primary` / hover variants → `bg-primary` / `hover:bg-primary/90`
-- `ring-rc-sky-soft` → `ring-primary/20`
-- `text-rc-success` → `text-mes-success`
-- `shadow-rc-pop` → `shadow-md` (or remove on hover-only states)
+### A1. Real flags for GB, US, SG
+- Add inline SVG flags for `GB`, `US`, `SG` in `src/components/countries/CountryFlag.tsx`.
+- Replace the silent "fall through to Irish stripes" branch with a neutral globe icon (lucide `Globe`) for unknown codes.
+- Change `COUNTRY_CODES` fallback in `src/pages/CountryPage.tsx` from `"IE"` to `null`, and let `CountryFlag` handle the unknown case.
 
-### 2. Drop the bespoke font
-- Remove `font-rc` from `ReportCreatorV2.tsx` and `GeneratingScreenV2.tsx` so the wizard inherits the app's body font.
-- Keep the Plus Jakarta Sans `<link>` in `index.html` (used by `font-mono`/other tokens), but no component opts in by default. (If you'd rather keep Plus Jakarta Sans app-wide, see the open question below.)
+### A2. Drop Ireland-only `live_snapshot` fallback
+- `src/components/countries/CountryHero.tsx` lines 107–114: render the snapshot aside only when `pageContent?.live_snapshot?.length > 0`.
+- When hidden, let the hero text column span the full grid width (`md:col-span-12`) instead of leaving an empty 5/12 gap.
 
-### 3. Re-scale typography to the app's scale
-Replace pixel sizes with Tailwind tokens used on `Index`, `About`, etc.:
-- H1 (`text-[26px] sm:text-[34px] font-bold tracking-tight`) → `text-3xl sm:text-4xl font-bold tracking-tight`
-- H3 card titles (`text-[19px] font-bold`) → `text-lg font-semibold`
-- Body lead (`text-[15px] sm:text-[16px] leading-relaxed`) → `text-base sm:text-lg text-muted-foreground`
-- Small captions (`text-[12.5px]`, `text-[13px]`) → `text-xs` / `text-sm`
-- Remove the all-caps `text-[12px] tracking-[0.14em]` eyebrow ("CHOOSE YOUR JOURNEY", etc.) — the app doesn't use coloured eyebrows above page H1s. Replace with a plain `text-sm text-muted-foreground` lead-in or delete.
+### A3. Template SEO title/description per country
+- `src/pages/CountryPage.tsx` lines 83–91: derive title/description from `country.name`, `country.key_industries`, and `pageContent?.hero_subhead`.
+- Keep Ireland's bespoke wording as a per-slug override map (data-driven), not an `if (slug === "ireland")` branch.
 
-### 4. Wrap the page in `<Layout>`
-Update `src/pages/ReportCreatorV2.tsx` to render `<Layout>…</Layout>` so the wizard sits inside the same Navigation + Footer the rest of the site uses, on the same `bg-background`. This is the single biggest visual unification — it removes the "different site" feeling.
+### A4. Use `publishedOrigin()` for JSON-LD baseUrl
+- `src/pages/CountryPage.tsx:78`: swap `window.location.origin` for `publishedOrigin()` from `src/lib/publishedOrigin.ts`. Scoped to JSON-LD only.
+- **Not touching** `SEOHead.tsx` — that's app-wide and belongs in its own PR.
 
-### 5. Keep the `--rc-*` tokens defined but unused
-Don't delete the `--rc-*` CSS variables or the `font-rc` font family from `index.css` / `tailwind.config.ts` in this pass — they're referenced by `mockPreviewData`, the handoff docs, and the generating screen, and removing them risks build breaks unrelated to branding. They simply stop being applied. A follow-up cleanup PR can prune them once we've confirmed nothing else depends on them.
+**Verify:** Playwright screenshots of `/countries/uk`, `/countries/usa`, `/countries/singapore`. Each shows the correct flag, no Ireland fallback stats, correct `<title>` / `<meta description>`.
 
-### 6. Files touched
-- `src/pages/ReportCreatorV2.tsx` — add `<Layout>`, drop `font-rc`, swap canvas class
-- `src/components/report-creator/v2/PersonaScreen.tsx`
-- `src/components/report-creator/v2/StepShell.tsx`
-- `src/components/report-creator/v2/Step1Company.tsx`
-- `src/components/report-creator/v2/Step2Goals.tsx`
-- `src/components/report-creator/v2/Step3Details.tsx`
-- `src/components/report-creator/v2/ReviewScreen.tsx`
-- `src/components/report-creator/v2/CompanyPicker.tsx`
-- `src/components/report-creator/v2/ReportPreview.tsx`
-- `src/components/report-creator/v2/primitives.tsx`
-- `src/components/report-creator/v2/GeneratingScreenV2.tsx`
+**Files:** `CountryFlag.tsx`, `CountryHero.tsx`, `CountryPage.tsx`.
 
-### 7. Verification
-- Visual walk-through with Playwright: persona screen → step 1 → step 2 → step 3 → review, capture screenshots, compare against `/` and `/pricing` for palette/typography consistency.
-- Confirm wizard still validates and submits (no logic touched).
-- Confirm AU-English copy unchanged, all accessibility roles intact (radiogroups, checkboxes, hit targets).
+---
 
-## Out of scope
-- The generation pipeline, intake schema, mapping shim, and analytics events.
-- Copy edits.
-- The `/report/:id` rendered report view (separate design surface).
+## PR 2 — Phase B: Listing rebuild
 
-## Open question
-Want me to (a) make the wizard match the rest of the app's current system font (proposed default), or (b) adopt Plus Jakarta Sans app-wide as the new body font and align the rest of the app to the wizard? Default in this plan is (a) — smallest blast radius.
+Polish the `/countries` index so it stops feeling disconnected from the detail pages.
+
+### B1. Rebuild `CountryCard`
+- Add flag (top-left) using the now-real `CountryFlag` from PR 1.
+- Replace hardcoded `text-green-500` / `text-blue-500` / `text-orange-500` (lines 41/47/53) with semantic tokens.
+- Replace the inline icon stat rows with a compact stat strip that visually echoes `CountryTradeSnapshot` tiles on the detail page.
+- Add an explicit "View country playbook →" affordance.
+
+### B2. Stop showing featured countries twice
+- `AllCountriesSection.tsx`: when `searchQuery` is empty, exclude featured countries from the render set.
+- Rename the second section heading to "More countries" so the hierarchy reads cleanly.
+
+### B3. Country flavour on `CountriesHero`
+- Add a small strip of 4–6 featured-country flags near the headline.
+
+### B4. Visible Featured treatment
+- Add a "Featured" pill or accent border on featured cards.
+
+**Verify:** Side-by-side screenshots of `/countries`, `/sectors`, `/locations` for visual continuity. First-load check confirms no country card appears twice.
+
+**Files:** `CountryCard.tsx`, `AllCountriesSection.tsx`, `CountriesHero.tsx`, `FeaturedCountriesSection.tsx`.
+
+**Depends on:** PR 1 (uses the new `CountryFlag` SVGs).
+
+---
+
+## PR 3 — Phase C: Latent dark-mode note
+
+One-line comment in `src/index.css` next to the `--mes-*` block flagging that they have no `.dark` overrides — if dark mode is ever switched on (currently unreachable), country pages render light-on-light. No behavioural change.
+
+**Files:** `src/index.css`.
+
+---
+
+## Explicitly NOT doing
+
+- No `index.css` token aliasing (already aligned in commit f02da58; aliasing would regress hover/eyebrow contrast and the RC button gradient).
+- No rename of `mes-teal*` → `mes-primary*`.
+- No `SEOHead.tsx` rewrite (app-wide; separate scope).
+- No `LocationCard` cleanup.
+- No data/schema/edge function changes.
+
+---
+
+Approving this plan switches me to build mode and I'll start with **PR 1 (Phase A)**. PR 2 and PR 3 follow as separate approvals.
