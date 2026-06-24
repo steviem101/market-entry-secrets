@@ -59,6 +59,87 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_event_routing: {
+        Row: {
+          channel_id: string
+          emoji: string
+          enabled: boolean
+          event_type: string
+          mention: boolean
+          realtime: boolean
+          severity: string
+        }
+        Insert: {
+          channel_id: string
+          emoji?: string
+          enabled?: boolean
+          event_type: string
+          mention?: boolean
+          realtime?: boolean
+          severity: string
+        }
+        Update: {
+          channel_id?: string
+          emoji?: string
+          enabled?: boolean
+          event_type?: string
+          mention?: boolean
+          realtime?: boolean
+          severity?: string
+        }
+        Relationships: []
+      }
+      activity_events: {
+        Row: {
+          actor_email: string | null
+          actor_name: string | null
+          actor_user_id: string | null
+          created_at: string
+          dedup_key: string | null
+          dispatch_attempts: number
+          event_type: string
+          id: string
+          metadata: Json
+          notified_at: string | null
+          object_id: string | null
+          object_type: string | null
+          severity: string
+          slack_ts: string | null
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_name?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          dedup_key?: string | null
+          dispatch_attempts?: number
+          event_type: string
+          id?: string
+          metadata?: Json
+          notified_at?: string | null
+          object_id?: string | null
+          object_type?: string | null
+          severity?: string
+          slack_ts?: string | null
+        }
+        Update: {
+          actor_email?: string | null
+          actor_name?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          dedup_key?: string | null
+          dispatch_attempts?: number
+          event_type?: string
+          id?: string
+          metadata?: Json
+          notified_at?: string | null
+          object_id?: string | null
+          object_type?: string | null
+          severity?: string
+          slack_ts?: string | null
+        }
+        Relationships: []
+      }
       agency_contacts: {
         Row: {
           agency_id: string | null
@@ -1981,6 +2062,138 @@ export type Database = {
         }
         Relationships: []
       }
+      ii_personal_linkedin_posts: {
+        Row: {
+          author_account: string | null
+          author_id: string | null
+          author_name: string | null
+          author_public_id: string | null
+          author_type: string | null
+          body: string | null
+          content_hash: string | null
+          content_topic: string | null
+          created_at: string
+          embedding: string | null
+          embedding_model: string | null
+          entity_id: string | null
+          id: number
+          ii_confidence: number | null
+          ingest_run_id: string | null
+          is_ii_content: boolean | null
+          is_repost: boolean | null
+          last_scraped_at: string | null
+          last_seen_run: string | null
+          links: string[] | null
+          media: Json | null
+          mentioned_companies: string[] | null
+          mentions: Json | null
+          num_comments: number | null
+          num_likes: number | null
+          num_shares: number | null
+          post_id: string | null
+          post_images: string[] | null
+          post_type: string | null
+          post_url: string | null
+          posted_at: string | null
+          posted_at_raw: string | null
+          query_target_url: string | null
+          raw: Json | null
+          reactions: Json | null
+          relevance_source: string | null
+          reposted_by: string | null
+          reposted_by_url: string | null
+          share_url: string | null
+          share_urn: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_account?: string | null
+          author_id?: string | null
+          author_name?: string | null
+          author_public_id?: string | null
+          author_type?: string | null
+          body?: string | null
+          content_hash?: string | null
+          content_topic?: string | null
+          created_at?: string
+          embedding?: string | null
+          embedding_model?: string | null
+          entity_id?: string | null
+          id?: number
+          ii_confidence?: number | null
+          ingest_run_id?: string | null
+          is_ii_content?: boolean | null
+          is_repost?: boolean | null
+          last_scraped_at?: string | null
+          last_seen_run?: string | null
+          links?: string[] | null
+          media?: Json | null
+          mentioned_companies?: string[] | null
+          mentions?: Json | null
+          num_comments?: number | null
+          num_likes?: number | null
+          num_shares?: number | null
+          post_id?: string | null
+          post_images?: string[] | null
+          post_type?: string | null
+          post_url?: string | null
+          posted_at?: string | null
+          posted_at_raw?: string | null
+          query_target_url?: string | null
+          raw?: Json | null
+          reactions?: Json | null
+          relevance_source?: string | null
+          reposted_by?: string | null
+          reposted_by_url?: string | null
+          share_url?: string | null
+          share_urn?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_account?: string | null
+          author_id?: string | null
+          author_name?: string | null
+          author_public_id?: string | null
+          author_type?: string | null
+          body?: string | null
+          content_hash?: string | null
+          content_topic?: string | null
+          created_at?: string
+          embedding?: string | null
+          embedding_model?: string | null
+          entity_id?: string | null
+          id?: number
+          ii_confidence?: number | null
+          ingest_run_id?: string | null
+          is_ii_content?: boolean | null
+          is_repost?: boolean | null
+          last_scraped_at?: string | null
+          last_seen_run?: string | null
+          links?: string[] | null
+          media?: Json | null
+          mentioned_companies?: string[] | null
+          mentions?: Json | null
+          num_comments?: number | null
+          num_likes?: number | null
+          num_shares?: number | null
+          post_id?: string | null
+          post_images?: string[] | null
+          post_type?: string | null
+          post_url?: string | null
+          posted_at?: string | null
+          posted_at_raw?: string | null
+          query_target_url?: string | null
+          raw?: Json | null
+          reactions?: Json | null
+          relevance_source?: string | null
+          reposted_by?: string | null
+          reposted_by_url?: string | null
+          share_url?: string | null
+          share_urn?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ii_prefilter_log: {
         Row: {
           body_preview: string | null
@@ -2328,6 +2541,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ingest_state: {
+        Row: {
+          last_run_at: string | null
+          last_run_id: string | null
+          source: string
+          updated_at: string | null
+        }
+        Insert: {
+          last_run_at?: string | null
+          last_run_id?: string | null
+          source: string
+          updated_at?: string | null
+        }
+        Update: {
+          last_run_at?: string | null
+          last_run_id?: string | null
+          source?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       innovation_ecosystem: {
         Row: {
           basic_info: string | null
@@ -2598,6 +2832,27 @@ export type Database = {
           website?: string | null
           why_work_with_us?: string | null
           year_fund_closed?: string | null
+        }
+        Relationships: []
+      }
+      kb_sync_state: {
+        Row: {
+          last_rows_synced: number
+          last_run_at: string | null
+          last_synced_at: string
+          source: string
+        }
+        Insert: {
+          last_rows_synced?: number
+          last_run_at?: string | null
+          last_synced_at?: string
+          source: string
+        }
+        Update: {
+          last_rows_synced?: number
+          last_run_at?: string | null
+          last_synced_at?: string
+          source?: string
         }
         Relationships: []
       }
@@ -3342,6 +3597,7 @@ export type Database = {
           id: string
           metadata: Json
           source_id: string
+          source_project: string
           source_table: string
           title: string | null
           updated_at: string
@@ -3357,6 +3613,7 @@ export type Database = {
           id?: string
           metadata?: Json
           source_id: string
+          source_project?: string
           source_table: string
           title?: string | null
           updated_at?: string
@@ -3372,6 +3629,7 @@ export type Database = {
           id?: string
           metadata?: Json
           source_id?: string
+          source_project?: string
           source_table?: string
           title?: string | null
           updated_at?: string
@@ -3507,6 +3765,105 @@ export type Database = {
           updated_at?: string
           username?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      report_quality: {
+        Row: {
+          build_health: number | null
+          cost: Json | null
+          created_at: string
+          degraded: boolean
+          generation_time_ms: number | null
+          groundedness: number | null
+          id: string
+          insights: Json | null
+          intake_form_id: string | null
+          match_counts: Json
+          metadata: Json
+          presentation: Json | null
+          prompt_version: string | null
+          rag_hit_rate: number | null
+          report_id: string
+          report_score: number | null
+          report_status: string | null
+          score_completeness: number | null
+          score_coverage: number | null
+          score_plumbing: number | null
+          score_presentation: number | null
+          score_substance: number | null
+          sources: Json
+          substance: Json | null
+          tables_hit: number | null
+          total_matches: number | null
+          user_feedback: number | null
+          user_id: string | null
+          utilization: Json | null
+          utilization_rate: number | null
+        }
+        Insert: {
+          build_health?: number | null
+          cost?: Json | null
+          created_at?: string
+          degraded?: boolean
+          generation_time_ms?: number | null
+          groundedness?: number | null
+          id?: string
+          insights?: Json | null
+          intake_form_id?: string | null
+          match_counts?: Json
+          metadata?: Json
+          presentation?: Json | null
+          prompt_version?: string | null
+          rag_hit_rate?: number | null
+          report_id: string
+          report_score?: number | null
+          report_status?: string | null
+          score_completeness?: number | null
+          score_coverage?: number | null
+          score_plumbing?: number | null
+          score_presentation?: number | null
+          score_substance?: number | null
+          sources?: Json
+          substance?: Json | null
+          tables_hit?: number | null
+          total_matches?: number | null
+          user_feedback?: number | null
+          user_id?: string | null
+          utilization?: Json | null
+          utilization_rate?: number | null
+        }
+        Update: {
+          build_health?: number | null
+          cost?: Json | null
+          created_at?: string
+          degraded?: boolean
+          generation_time_ms?: number | null
+          groundedness?: number | null
+          id?: string
+          insights?: Json | null
+          intake_form_id?: string | null
+          match_counts?: Json
+          metadata?: Json
+          presentation?: Json | null
+          prompt_version?: string | null
+          rag_hit_rate?: number | null
+          report_id?: string
+          report_score?: number | null
+          report_status?: string | null
+          score_completeness?: number | null
+          score_coverage?: number | null
+          score_plumbing?: number | null
+          score_presentation?: number | null
+          score_substance?: number | null
+          sources?: Json
+          substance?: Json | null
+          tables_hit?: number | null
+          total_matches?: number | null
+          user_feedback?: number | null
+          user_id?: string | null
+          utilization?: Json | null
+          utilization_rate?: number | null
         }
         Relationships: []
       }
@@ -4537,6 +4894,7 @@ export type Database = {
     Functions: {
       any_sector_agnostic: { Args: { raws: string[] }; Returns: boolean }
       current_chat_session_id: { Args: never; Returns: string }
+      detect_funnel_gate_hits: { Args: never; Returns: number }
       event_local_time_label: {
         Args: { p_city: string; p_ts: string }
         Returns: string
@@ -4576,6 +4934,10 @@ export type Database = {
         Returns: undefined
       }
       kb_check_secret: { Args: { p_candidate: string }; Returns: boolean }
+      kb_external_source_id: {
+        Args: { p_source_project: string; p_source_ref: string }
+        Returns: string
+      }
       kb_get_openai_key: { Args: never; Returns: string }
       kb_set_embedding: {
         Args: {
@@ -4596,6 +4958,20 @@ export type Database = {
       }
       kb_strip_pii: { Args: { p: string }; Returns: string }
       kb_sync_all: { Args: { p_entity: string }; Returns: number }
+      log_activity: {
+        Args: {
+          p_actor_email: string
+          p_actor_name: string
+          p_actor_user_id: string
+          p_dedup_key: string
+          p_event_type: string
+          p_metadata: Json
+          p_object_id: string
+          p_object_type: string
+          p_severity: string
+        }
+        Returns: undefined
+      }
       map_sector_value: { Args: { raw: string }; Returns: string[] }
       map_sector_values: { Args: { raws: string[] }; Returns: string[] }
       match_archive: {
@@ -4726,6 +5102,17 @@ export type Database = {
       roll_forward_month_precision_events: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      tier_rank: {
+        Args: { t: Database["public"]["Enums"]["subscription_tier"] }
+        Returns: number
+      }
+      upsert_ii_linkedin_posts: {
+        Args: { rows: Json }
+        Returns: {
+          inserted: boolean
+          post_id: string
+        }[]
+      }
       upsert_kb_agency: { Args: { p_source_id: string }; Returns: undefined }
       upsert_kb_content_item: {
         Args: { p_content_id: string }
@@ -4743,6 +5130,18 @@ export type Database = {
         Args: { p_source_id: string }
         Returns: undefined
       }
+      upsert_kb_linkedin_post: {
+        Args: {
+          p_content: string
+          p_embedding?: string
+          p_embedding_model?: string
+          p_metadata?: Json
+          p_source_ref: string
+          p_title?: string
+        }
+        Returns: string
+      }
+      upsert_kb_linkedin_posts: { Args: { p_rows: Json }; Returns: number }
       upsert_kb_mentor: { Args: { p_source_id: string }; Returns: undefined }
       upsert_kb_service_provider: {
         Args: { p_source_id: string }
