@@ -7,10 +7,12 @@
 --
 -- This SECURITY DEFINER function computes every homepage counter server-side in
 -- one round-trip, with the correct public filters baked in:
---   * events   -> only `approved`  (excludes needs_review / rejected)
---   * guides   -> only `published`
---   * mentors  -> only `is_active`
---   * leads    -> only `active`
+--   * events       -> only `approved`  (excludes needs_review / rejected)
+--   * guides       -> only `published`
+--   * mentors      -> only `is_active`
+--   * leads        -> only `active`
+--   * accelerators -> innovation_ecosystem rows tagged `Accelerator` or
+--                     `Pre-accelerator` in services (NOT investors)
 -- It is STABLE and read-only. Granted to anon + authenticated so the public
 -- homepage can call it without exposing the underlying PII-bearing base tables.
 
@@ -25,7 +27,8 @@ as $$
     'serviceProviders', (select count(*) from service_providers),
     'mentors',          (select count(*) from community_members where is_active = true),
     'investors',        (select count(*) from investors),
-    'accelerators',     (select count(*) from investors where investor_type = 'accelerator'),
+    'accelerators',     (select count(*) from innovation_ecosystem
+                          where services && array['Accelerator','Pre-accelerator']),
     'leadDatabases',    (select count(*) from lead_databases where status = 'active'),
     'events',           (select count(*) from events where status = 'approved'),
     'guides',           (select count(*) from content_items
