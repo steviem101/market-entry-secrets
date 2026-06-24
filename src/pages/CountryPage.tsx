@@ -29,14 +29,24 @@ import { CountryCities } from "@/components/countries/CountryCities";
 import { CountryFAQ } from "@/components/countries/CountryFAQ";
 import { CountryLeadCapture } from "@/components/countries/CountryLeadCapture";
 import { buildCountryJsonLd } from "@/components/countries/CountryStructuredData";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 
-const COUNTRY_CODES: Record<string, string> = {
+const COUNTRY_CODES: Record<string, string | null> = {
   ireland: "IE",
   uk: "GB",
   "united-kingdom": "GB",
   usa: "US",
   "united-states": "US",
   singapore: "SG",
+};
+
+// Per-slug SEO overrides — keep bespoke copy data-driven rather than branching in JSX.
+const SEO_OVERRIDES: Record<string, { title: string; description: (c: { name: string; key_industries?: string[] }) => string }> = {
+  ireland: {
+    title: "Ireland to Australia Market Entry: The Founder's Playbook (2026) | Market Entry Secrets",
+    description: (c) =>
+      `Ireland to Australia market entry. The founder's playbook covering grants, agencies, ${(c.key_industries || []).slice(0, 2).join(" and ")} partners, and case studies.`,
+  },
 };
 
 const CountryPage = () => {
@@ -74,21 +84,22 @@ const CountryPage = () => {
     );
   }
 
-  const countryCode = COUNTRY_CODES[slug] || "IE";
-  const baseUrl =
-    typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app";
+  const countryCode = COUNTRY_CODES[slug] ?? null;
+  const baseUrl = publishedOrigin();
   const canonicalPath = `/countries/${country.slug}`;
   const canonicalUrl = `${baseUrl}${canonicalPath}`;
 
+  const seoOverride = SEO_OVERRIDES[slug];
+  const topIndustries = (country.key_industries || []).slice(0, 2).join(" and ");
   const title =
-    slug === "ireland"
-      ? "Ireland to Australia Market Entry: The Founder's Playbook (2026) | Market Entry Secrets"
-      : `${country.name} to Australia Market Entry | Market Entry Secrets`;
-
+    seoOverride?.title ??
+    `${country.name} to Australia Market Entry${topIndustries ? `: ${topIndustries}` : ""} | Market Entry Secrets`;
   const description =
-    slug === "ireland"
-      ? `Ireland to Australia market entry. The founder's playbook covering grants, agencies, ${(country.key_industries || []).slice(0, 2).join(" and ")} partners, and case studies.`
-      : `Resources for ${country.name} companies entering the Australian market.`;
+    seoOverride?.description(country) ??
+    (pageContent?.hero_subhead ||
+      `Market entry resources for ${country.name} companies expanding to Australia${
+        topIndustries ? ` — agencies, partners, and case studies across ${topIndustries}.` : "."
+      }`);
 
   const jsonLd = buildCountryJsonLd({
     countryName: country.name,
@@ -119,7 +130,7 @@ const CountryPage = () => {
       >
         <CountryStickyBar
           countryName={country.name}
-          countryCode={countryCode}
+          countryCode={countryCode ?? ""}
           primaryCtaHref={`/report-creator?source=country-${country.slug}`}
         />
 
@@ -133,7 +144,7 @@ const CountryPage = () => {
 
           <CountryHero
             countryName={country.name}
-            countryCode={countryCode}
+            countryCode={countryCode ?? ""}
             countrySlug={country.slug}
             content={pageContent}
             fallbackHeadline={country.hero_title}
@@ -169,7 +180,7 @@ const CountryPage = () => {
           <CountryFundingPathways
             countryName={country.name}
             countrySlug={country.slug}
-            countryCode={countryCode}
+            countryCode={countryCode ?? ""}
             origin={funding.origin}
             destination={funding.destination}
           />
