@@ -51,7 +51,7 @@ export function GeneratingScreenV2({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-rc-ink/40 px-4 backdrop-blur-sm font-rc"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-rc-ink/40 px-4 backdrop-blur-sm"
       role="dialog" aria-modal="true" aria-label="Building your report"
     >
       <div className="w-full max-w-[420px] rounded-2xl border border-rc-line bg-white p-6 shadow-rc-pop sm:p-7">

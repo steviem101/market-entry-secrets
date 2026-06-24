@@ -23,6 +23,7 @@ import { Step2Goals } from '@/components/report-creator/v2/Step2Goals';
 import { Step3Details } from '@/components/report-creator/v2/Step3Details';
 import { ReviewScreen } from '@/components/report-creator/v2/ReviewScreen';
 import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
+import Layout from '@/components/Layout';
 
 type Screen = 'persona' | 'company' | 'goals' | 'details' | 'review';
 const UI_KEY = 'mes_intake_v2_ui';
@@ -294,7 +295,7 @@ const ReportCreatorV2 = () => {
         <meta name="description" content="Get your personalised AI-powered market entry report." />
       </Helmet>
 
-      <div className="min-h-screen bg-rc-canvas font-rc">
+      <Layout>
         {screen === 'persona' ? (
           <div className="px-4 py-12 sm:px-6">
             <PersonaScreen onPick={pickPersona} />
@@ -322,7 +323,7 @@ const ReportCreatorV2 = () => {
             </StepShell>
           </div>
         )}
-      </div>
+      </Layout>
 
       <AlertDialog open={pendingPersona !== null} onOpenChange={(o) => { if (!o) setPendingPersona(null); }}>
         <AlertDialogContent>
