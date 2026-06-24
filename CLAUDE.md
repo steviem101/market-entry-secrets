@@ -245,7 +245,7 @@ The `generate-report` edge function runs a 5-phase pipeline:
 1. **Deep Company Scrape** — Firecrawl Map (discover URLs) + Scrape (homepage + 2 key pages) → AI extracts structured company profile
 2. **Perplexity Market Research** — 6 parallel queries: landscape (sonar-pro), regulatory, news, bilateral trade, cost of business, grants
 3. **Key Metrics Extraction** — Perplexity structured output for 4-6 quantitative market metrics
-4. **Database Directory Matching** — Queries 7 Supabase tables using Postgres array overlap (`.cs.{}`) and location `ilike` filtering
+4. **Directory Matching** — Semantic-first: embed the intake and query `mes_knowledge_base` via the `match_knowledge` RPC across ~9 entity tables, then rerank with an explainable weighted scorer (sector / service fit / location / specialist / country-corridor) and diversity-capped greedy selection. Falls back to deterministic Postgres array overlap (`.cs.{}`) + location `ilike` when semantic matching is unavailable. Guards: future-dated events only, no inactive/seed mentors, region filter + title|date|venue de-dupe
 5. **Competitor Search** — Known competitors scraped via Firecrawl + web search for additional competitors
 6. **End Buyer Research** — Scrapes user-provided end buyers + Perplexity procurement research
 7. **External Event Discovery** — Firecrawl Search for relevant industry events
@@ -273,9 +273,16 @@ The `generate-report` edge function runs a 5-phase pipeline:
 | `competitor_landscape` | growth |
 | `service_providers` | free |
 | `mentor_recommendations` | growth |
+| `investor_recommendations` | growth |
 | `events_resources` | free |
 | `action_plan` | free |
+| `setup_compliance` | free |
 | `lead_list` | scale |
+
+> Order/tiers are the source-of-truth `SECTION_ORDER` + `TIER_REQUIREMENTS` in
+> `reportSectionConfig.ts`. Any section **not** listed in `TIER_REQUIREMENTS` is `free`.
+> `setup_compliance` ("Setup & Compliance Guide") is synthesised from `country_faqs`;
+> `investor_recommendations` matches the `investors` directory (esp. for the startup persona).
 
 ### Frontend Tier Gating
 `ReportView.tsx` uses `useSubscription` hook + `TIER_REQUIREMENTS` from `reportSectionConfig.ts`. The `userTierMeetsRequirement()` function checks `TIER_HIERARCHY = ['free', 'growth', 'scale', 'enterprise']`. Tier upgrades immediately unlock sections without re-generation (content is already in the JSON, just marked `visible: false`).
@@ -287,8 +294,8 @@ The `generate-report` edge function runs a 5-phase pipeline:
 ### Tiers
 | Tier | Access |
 |------|--------|
-| `free` | Executive summary, service providers, events, action plan |
-| `growth` | + SWOT, competitor landscape, mentor recommendations |
+| `free` | Executive summary, service providers, events & resources, action plan, setup & compliance guide |
+| `growth` | + SWOT, competitor landscape, mentor recommendations, investor recommendations |
 | `scale` | + Lead list |
 | `enterprise` | Full access |
 
