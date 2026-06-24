@@ -30,11 +30,12 @@ export const CountryHero = ({
   const trust = content?.hero_trust_companies ?? [];
   const trustExtra = content?.hero_trust_extra ?? 0;
   const snapshot = content?.live_snapshot ?? [];
+  const hasSnapshot = snapshot.length > 0;
 
   return (
     <section className="border-b border-mes-border bg-mes-card">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-12 md:py-20 grid md:grid-cols-12 gap-10 items-start">
-        <div className="md:col-span-7">
+        <div className={hasSnapshot ? "md:col-span-7" : "md:col-span-12"}>
           <div className="flex items-center gap-3 mb-6">
             <CountryFlag countryCode={countryCode} />
             <span className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark">
@@ -95,6 +96,7 @@ export const CountryHero = ({
           )}
         </div>
 
+        {hasSnapshot && (
         <aside className="md:col-span-5">
           <div className="bg-mes-bg border border-mes-border rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
@@ -104,15 +106,7 @@ export const CountryHero = ({
               <span className="text-[11px] text-mes-ink-muted">Indicative figures</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {(snapshot.length > 0
-                ? snapshot
-                : [
-                    { label: "EUR / AUD", value: "1.68", caption: "ECB ref" },
-                    { label: "RBA cash rate", value: "4.10%", caption: "RBA" },
-                    { label: "DUB to SYD", value: "22h", caption: "Avg flight" },
-                    { label: "Director ID lead time", value: "4 to 6 wk", caption: "ASIC" },
-                  ]
-              ).map((entry) => (
+              {snapshot.map((entry) => (
                 <div
                   key={entry.label}
                   className="bg-mes-card border border-mes-border rounded-lg p-3"
@@ -131,6 +125,7 @@ export const CountryHero = ({
             </div>
           </div>
         </aside>
+        )}
       </div>
     </section>
   );
