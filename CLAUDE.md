@@ -239,30 +239,60 @@ const { data: { user } } = await supabase.auth.getUser(token);
 
 ## 7. Report Generation Pipeline
 
-The `generate-report` edge function runs a 5-phase pipeline:
+The `generate-report` edge function runs a multi-phase pipeline. It authenticates in-code (JWT +
+report ownership) and is **rate-limited to 5 reports / 60 min per user** (`checkRateLimit` against
+the `edge_function_rate_limits` table → 429). Logic is split across helper modules alongside
+`index.ts`: `semanticMatch.ts`, `matchScoring.ts`, `goalServiceTags.ts`, `countryNormalize.ts`,
+`sectorTaxonomy.ts`, `promptTemplate.ts` (each with a `.test.ts`).
 
 ### Phase 1: Parallel Data Gathering (all run simultaneously)
-1. **Deep Company Scrape** — Firecrawl Map (discover URLs) + Scrape (homepage + 2 key pages) → AI extracts structured company profile
-2. **Perplexity Market Research** — 6 parallel queries: landscape (sonar-pro), regulatory, news, bilateral trade, cost of business, grants
-3. **Key Metrics Extraction** — Perplexity structured output for 4-6 quantitative market metrics
+1. **Deep Company Scrape** (`enrichCompanyDeep`) — Firecrawl Map (discover URLs) + Scrape
+   (homepage + up to 2 key pages) → AI extracts a **conservative, website-only** structured
+   profile (summary, industry, maturity, products, *explicit* key_clients, USPs). Scrapes are
+   timeout-bounded (~10–15s) and fail-soft.
+2. **Perplexity Market Research** — 6 parallel, persona-forked queries: landscape (`sonar-pro`),
+   regulatory, news (recency ~6 months), bilateral trade / funding, cost of business, grants
+   (default model `sonar`, 60s timeout). A health summary `{ attempted, succeeded, statuses[] }`
+   is captured so a silent total outage (expired/over-quota key → all 401/429) is surfaced as
+   such, not as "no data".
+3. **Key Metrics Extraction** — parse the `METRIC: label | value | context` lines emitted by the
+   landscape query into 4–6 structured `key_metrics`.
 4. **Directory Matching** — Semantic-first: embed the intake and query `mes_knowledge_base` via the `match_knowledge` RPC across ~9 entity tables, then rerank with an explainable weighted scorer (sector / service fit / location / specialist / country-corridor) and diversity-capped greedy selection. Falls back to deterministic Postgres array overlap (`.cs.{}`) + location `ilike` when semantic matching is unavailable. Guards: future-dated events only, no inactive/seed mentors, region filter + title|date|venue de-dupe
-5. **Competitor Search** — Known competitors scraped via Firecrawl + web search for additional competitors
-6. **End Buyer Research** — Scrapes user-provided end buyers + Perplexity procurement research
-7. **External Event Discovery** — Firecrawl Search for relevant industry events
+5. **Competitor Search** — Known competitors scraped via Firecrawl + Firecrawl Search for more; missing domains resolved by name
+6. **End Buyer Research** — Scrapes up to 3 user-provided end buyers + a Perplexity procurement query
+7. **External Event Discovery** — only when the DB returned <3 events, Firecrawl Search for industry events, merged with internal matches
 
 ### Phase 2: Service Provider Enrichment
-- Matched service providers are enriched with Firecrawl website scrapes
+- Matched service providers are enriched with Firecrawl website scrapes (best-effort; failures don't block the report)
 
 ### Phase 3: AI Section Generation
-- Report templates fetched from `report_templates` table
-- Sections generated in batches of 3 using Lovable AI Gateway (Gemini `google/gemini-3-flash-preview`)
-- Sections gated by tier get `visible: false` in stored JSON
+- Section templates fetched from `report_templates`; each rendered with the gathered variables via
+  `renderTemplate()` (drops empty `{{#var}}…{{/var}}` blocks, then substitutes `{{key}}`)
+- **All sections generated in a single parallel batch** (`Promise.allSettled` over the templates)
+  using Lovable AI Gateway → Gemini `google/gemini-3-flash-preview`, **temperature 0.4**, 90s
+  timeout per call, no restrictive `max_tokens` (length controlled by the prompt budget, ~250–550
+  words/section)
+- The per-section system prompt is assembled from: core role + Australian-English + Markdown rules,
+  persona context (startup vs international), a **citation instruction** (gated on whether
+  Perplexity returned citations), a **data-availability disclosure**, the user's `report_focus` +
+  company-context note, a **practitioner-signal (LinkedIn) background-only** guardrail, and a
+  **PRIORITISED SECTION** emphasis note when the user's goals map to that section
+  (`goalServiceTags.ts` → `GOAL_SECTION_MAP`)
+- Tier-gated sections are still generated but stored `visible: false` (so an upgrade unlocks them without regeneration)
 
 ### Phase 4: Polish Pass
-- All visible sections sent through a single AI call for cross-referencing, deduplication, and consistency
+- `polishReport()` sends all sections-with-content (gated included, wrapped in `===SECTION:…===`
+  delimiters) through one Gemini call for Australian English, cross-section de-duplication, and
+  consistency, preserving factual data / citations / Markdown. **Best-effort** — on failure the
+  already-stored unpolished report stands
 
 ### Phase 5: Storage
-- Report JSON saved to `user_reports` with status `'completed'` or `'failed'`
+- The report is **assembled and stored to `user_reports` BEFORE the polish pass** (status
+  `'completed'`/`'failed'`) so it survives worker death; the polish pass then updates it in place
+- Stored alongside the section JSON is a rich `metadata` block: `tables_searched`, `total_matches`,
+  `generation_time_ms`, `perplexity_used` / `perplexity_health` / `perplexity_citations`,
+  `firecrawl_deep_scrape` / `firecrawl_providers_enriched` / `firecrawl_competitors_found`,
+  `polish_applied`, `key_metrics`, `discovered_events_count`, and per-stream `*_available` flags
 
 ### Report Sections (in order)
 
