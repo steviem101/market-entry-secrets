@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 interface CountryStickyBarProps {
   countryName: string;
-  countryCode: string;
+  countryCode: string | null;
   primaryCtaHref: string;
 }
 

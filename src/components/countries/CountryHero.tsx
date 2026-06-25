@@ -6,7 +6,7 @@ import type { CountryPageContent } from "@/lib/countryPageContent";
 
 interface CountryHeroProps {
   countryName: string;
-  countryCode: string;
+  countryCode: string | null;
   countrySlug: string;
   content: CountryPageContent | null;
   fallbackHeadline?: string | null;
@@ -95,42 +95,36 @@ export const CountryHero = ({
           )}
         </div>
 
-        <aside className="md:col-span-5">
-          <div className="bg-mes-bg border border-mes-border rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark">
-                Quick snapshot
-              </span>
-              <span className="text-[11px] text-mes-ink-muted">Indicative figures</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {(snapshot.length > 0
-                ? snapshot
-                : [
-                    { label: "EUR / AUD", value: "1.68", caption: "ECB ref" },
-                    { label: "RBA cash rate", value: "4.10%", caption: "RBA" },
-                    { label: "DUB to SYD", value: "22h", caption: "Avg flight" },
-                    { label: "Director ID lead time", value: "4 to 6 wk", caption: "ASIC" },
-                  ]
-              ).map((entry) => (
-                <div
-                  key={entry.label}
-                  className="bg-mes-card border border-mes-border rounded-lg p-3"
-                >
-                  <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted">
-                    {entry.label}
+        {snapshot.length > 0 && (
+          <aside className="md:col-span-5">
+            <div className="bg-mes-bg border border-mes-border rounded-xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark">
+                  Quick snapshot
+                </span>
+                <span className="text-[11px] text-mes-ink-muted">Indicative figures</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {snapshot.map((entry) => (
+                  <div
+                    key={entry.label}
+                    className="bg-mes-card border border-mes-border rounded-lg p-3"
+                  >
+                    <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted">
+                      {entry.label}
+                    </div>
+                    <div className="text-xl font-semibold text-mes-ink tabular-nums mt-1">
+                      {entry.value}
+                    </div>
+                    {entry.caption && (
+                      <div className="text-[10.5px] text-mes-ink-muted mt-1">{entry.caption}</div>
+                    )}
                   </div>
-                  <div className="text-xl font-semibold text-mes-ink tabular-nums mt-1">
-                    {entry.value}
-                  </div>
-                  {entry.caption && (
-                    <div className="text-[10.5px] text-mes-ink-muted mt-1">{entry.caption}</div>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </aside>
+          </aside>
+        )}
       </div>
     </section>
   );

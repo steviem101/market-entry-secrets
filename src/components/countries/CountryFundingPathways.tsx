@@ -7,7 +7,7 @@ import type { CountryFundingInstrument } from "@/lib/countryPageContent";
 interface CountryFundingPathwaysProps {
   countryName: string;
   countrySlug: string;
-  countryCode: string;
+  countryCode: string | null;
   origin: CountryFundingInstrument[];
   destination: CountryFundingInstrument[];
 }

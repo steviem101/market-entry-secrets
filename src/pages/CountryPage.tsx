@@ -29,15 +29,8 @@ import { CountryCities } from "@/components/countries/CountryCities";
 import { CountryFAQ } from "@/components/countries/CountryFAQ";
 import { CountryLeadCapture } from "@/components/countries/CountryLeadCapture";
 import { buildCountryJsonLd } from "@/components/countries/CountryStructuredData";
-
-const COUNTRY_CODES: Record<string, string> = {
-  ireland: "IE",
-  uk: "GB",
-  "united-kingdom": "GB",
-  usa: "US",
-  "united-states": "US",
-  singapore: "SG",
-};
+import { getCountryCode } from "@/lib/countryCodes";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 
 const CountryPage = () => {
   const { countrySlug } = useParams<{ countrySlug: string }>();
@@ -74,21 +67,16 @@ const CountryPage = () => {
     );
   }
 
-  const countryCode = COUNTRY_CODES[slug] || "IE";
-  const baseUrl =
-    typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app";
+  const countryCode = getCountryCode(slug);
+  const baseUrl = publishedOrigin();
   const canonicalPath = `/countries/${country.slug}`;
   const canonicalUrl = `${baseUrl}${canonicalPath}`;
 
-  const title =
-    slug === "ireland"
-      ? "Ireland to Australia Market Entry: The Founder's Playbook (2026) | Market Entry Secrets"
-      : `${country.name} to Australia Market Entry | Market Entry Secrets`;
-
+  const industries = (country.key_industries || []).slice(0, 2).join(" and ");
+  const title = `${country.name} to Australia Market Entry: The Founder's Playbook (2026) | Market Entry Secrets`;
   const description =
-    slug === "ireland"
-      ? `Ireland to Australia market entry. The founder's playbook covering grants, agencies, ${(country.key_industries || []).slice(0, 2).join(" and ")} partners, and case studies.`
-      : `Resources for ${country.name} companies entering the Australian market.`;
+    pageContent?.hero_subhead ||
+    `${country.name} to Australia market entry — grants, agencies${industries ? `, ${industries} partners` : ""}, and case studies for founders.`;
 
   const jsonLd = buildCountryJsonLd({
     countryName: country.name,
