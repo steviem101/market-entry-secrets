@@ -46,7 +46,7 @@ const CountryCard = ({ country, featured = false }: CountryCardProps) => {
             <div className="flex items-center gap-2.5 min-w-0">
               <CountryFlag
                 countryCode={countryCode}
-                className="w-7 h-5 shrink-0 rounded-sm overflow-hidden border border-border"
+                className="w-7 h-5 shrink-0 rounded-sm overflow-hidden border border-border inline-flex items-center justify-center bg-muted text-muted-foreground"
               />
               <CardTitle className="text-xl truncate">{country.name}</CardTitle>
             </div>

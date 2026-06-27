@@ -1,6 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useEcosystemStatsQuery } from "./useEcosystemStats";
 
+/**
+ * Legacy shape consumed by the per-persona hero stat cards (HeroStatsRow).
+ * Kept intentionally identical so the Lovable-owned component does not change.
+ * Now single-sourced from the `get_ecosystem_stats()` RPC via
+ * `useEcosystemStatsQuery` (one request shared with `useEcosystemStats`).
+ */
 interface HeroStatCount {
   serviceProviders: number;
   communityMembers: number;
@@ -11,47 +16,20 @@ interface HeroStatCount {
   accelerators: number;
 }
 
-const fetchHeroCounts = async (): Promise<HeroStatCount> => {
-  const [
-    spResult,
-    cmResult,
-    evResult,
-    leadsResult,
-    guidesResult,
-    investorsResult,
-    acceleratorsResult,
-  ] = await Promise.all([
-    supabase.from("service_providers").select("*", { count: "exact", head: true }),
-    supabase.from("community_members_public").select("*", { count: "exact", head: true }).eq("is_active", true),
-    supabase.from("events").select("*", { count: "exact", head: true }),
-    (supabase as any).from("lead_databases").select("*", { count: "exact", head: true }).eq("status", "active"),
-    supabase
-      .from("content_items")
-      .select("*", { count: "exact", head: true })
-      .eq("content_type", "guide"),
-    supabase.from("investors_public").select("*", { count: "exact", head: true }),
-    supabase
-      .from("investors_public")
-      .select("*", { count: "exact", head: true })
-      .eq("investor_type", "accelerator"),
-  ]);
-
-  return {
-    serviceProviders: spResult.count ?? 0,
-    communityMembers: cmResult.count ?? 0,
-    events: evResult.count ?? 0,
-    leads: leadsResult.count ?? 0,
-    guides: guidesResult.count ?? 0,
-    investors: investorsResult.count ?? 0,
-    accelerators: acceleratorsResult.count ?? 0,
-  };
-};
-
 export const useHeroStats = () => {
-  return useQuery({
-    queryKey: ["hero-stats"],
-    queryFn: fetchHeroCounts,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000,
-  });
+  const { data, isLoading, isError } = useEcosystemStatsQuery();
+
+  const mapped: HeroStatCount | undefined = data
+    ? {
+        serviceProviders: data.serviceProviders,
+        communityMembers: data.mentors,
+        events: data.events,
+        leads: data.leadDatabases,
+        guides: data.guides,
+        investors: data.investors,
+        accelerators: data.accelerators,
+      }
+    : undefined;
+
+  return { data: mapped, isLoading, isError };
 };

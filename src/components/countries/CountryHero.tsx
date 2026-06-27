@@ -6,7 +6,7 @@ import type { CountryPageContent } from "@/lib/countryPageContent";
 
 interface CountryHeroProps {
   countryName: string;
-  countryCode: string | null;
+  countryCode: string;
   countrySlug: string;
   content: CountryPageContent | null;
   fallbackHeadline?: string | null;
@@ -30,11 +30,12 @@ export const CountryHero = ({
   const trust = content?.hero_trust_companies ?? [];
   const trustExtra = content?.hero_trust_extra ?? 0;
   const snapshot = content?.live_snapshot ?? [];
+  const hasSnapshot = snapshot.length > 0;
 
   return (
     <section className="border-b border-mes-border bg-mes-card">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-12 md:py-20 grid md:grid-cols-12 gap-10 items-start">
-        <div className="md:col-span-7">
+        <div className={hasSnapshot ? "md:col-span-7" : "md:col-span-12"}>
           <div className="flex items-center gap-3 mb-6">
             <CountryFlag countryCode={countryCode} />
             <span className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark">
@@ -95,35 +96,35 @@ export const CountryHero = ({
           )}
         </div>
 
-        {snapshot.length > 0 && (
-          <aside className="md:col-span-5">
-            <div className="bg-mes-bg border border-mes-border rounded-xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark">
-                  Quick snapshot
-                </span>
-                <span className="text-[11px] text-mes-ink-muted">Indicative figures</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {snapshot.map((entry) => (
-                  <div
-                    key={entry.label}
-                    className="bg-mes-card border border-mes-border rounded-lg p-3"
-                  >
-                    <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted">
-                      {entry.label}
-                    </div>
-                    <div className="text-xl font-semibold text-mes-ink tabular-nums mt-1">
-                      {entry.value}
-                    </div>
-                    {entry.caption && (
-                      <div className="text-[10.5px] text-mes-ink-muted mt-1">{entry.caption}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
+        {hasSnapshot && (
+        <aside className="md:col-span-5">
+          <div className="bg-mes-bg border border-mes-border rounded-xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark">
+                Quick snapshot
+              </span>
+              <span className="text-[11px] text-mes-ink-muted">Indicative figures</span>
             </div>
-          </aside>
+            <div className="grid grid-cols-2 gap-3">
+              {snapshot.map((entry) => (
+                <div
+                  key={entry.label}
+                  className="bg-mes-card border border-mes-border rounded-lg p-3"
+                >
+                  <div className="text-[11px] uppercase tracking-wider text-mes-ink-muted">
+                    {entry.label}
+                  </div>
+                  <div className="text-xl font-semibold text-mes-ink tabular-nums mt-1">
+                    {entry.value}
+                  </div>
+                  {entry.caption && (
+                    <div className="text-[10.5px] text-mes-ink-muted mt-1">{entry.caption}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
         )}
       </div>
     </section>

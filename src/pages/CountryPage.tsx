@@ -29,8 +29,17 @@ import { CountryCities } from "@/components/countries/CountryCities";
 import { CountryFAQ } from "@/components/countries/CountryFAQ";
 import { CountryLeadCapture } from "@/components/countries/CountryLeadCapture";
 import { buildCountryJsonLd } from "@/components/countries/CountryStructuredData";
-import { getCountryCode } from "@/lib/countryCodes";
 import { publishedOrigin } from "@/lib/publishedOrigin";
+import { getCountryCode } from "@/lib/countryCodes";
+
+// Per-slug SEO overrides — keep bespoke copy data-driven rather than branching in JSX.
+const SEO_OVERRIDES: Record<string, { title: string; description: (c: { name: string; key_industries?: string[] }) => string }> = {
+  ireland: {
+    title: "Ireland to Australia Market Entry: The Founder's Playbook (2026) | Market Entry Secrets",
+    description: (c) =>
+      `Ireland to Australia market entry. The founder's playbook covering grants, agencies, ${(c.key_industries || []).slice(0, 2).join(" and ")} partners, and case studies.`,
+  },
+};
 
 const CountryPage = () => {
   const { countrySlug } = useParams<{ countrySlug: string }>();
@@ -72,11 +81,17 @@ const CountryPage = () => {
   const canonicalPath = `/countries/${country.slug}`;
   const canonicalUrl = `${baseUrl}${canonicalPath}`;
 
-  const industries = (country.key_industries || []).slice(0, 2).join(" and ");
-  const title = `${country.name} to Australia Market Entry: The Founder's Playbook (2026) | Market Entry Secrets`;
+  const seoOverride = SEO_OVERRIDES[slug];
+  const topIndustries = (country.key_industries || []).slice(0, 2).join(" and ");
+  const title =
+    seoOverride?.title ??
+    `${country.name} to Australia Market Entry${topIndustries ? `: ${topIndustries}` : ""} | Market Entry Secrets`;
   const description =
-    pageContent?.hero_subhead ||
-    `${country.name} to Australia market entry — grants, agencies${industries ? `, ${industries} partners` : ""}, and case studies for founders.`;
+    seoOverride?.description(country) ??
+    (pageContent?.hero_subhead ||
+      `Market entry resources for ${country.name} companies expanding to Australia${
+        topIndustries ? ` — agencies, partners, and case studies across ${topIndustries}.` : "."
+      }`);
 
   const jsonLd = buildCountryJsonLd({
     countryName: country.name,
@@ -107,7 +122,7 @@ const CountryPage = () => {
       >
         <CountryStickyBar
           countryName={country.name}
-          countryCode={countryCode}
+          countryCode={countryCode ?? ""}
           primaryCtaHref={`/report-creator?source=country-${country.slug}`}
         />
 
@@ -121,7 +136,7 @@ const CountryPage = () => {
 
           <CountryHero
             countryName={country.name}
-            countryCode={countryCode}
+            countryCode={countryCode ?? ""}
             countrySlug={country.slug}
             content={pageContent}
             fallbackHeadline={country.hero_title}
@@ -157,7 +172,7 @@ const CountryPage = () => {
           <CountryFundingPathways
             countryName={country.name}
             countrySlug={country.slug}
-            countryCode={countryCode}
+            countryCode={countryCode ?? ""}
             origin={funding.origin}
             destination={funding.destination}
           />
