@@ -28,6 +28,11 @@ interface FirecrawlStats {
   map: { attempted: number; ok: number };
   search: { attempted: number; ok: number };
   statuses: number[];
+  // Scrape-cache accounting (P1). cache_hits avoid an API call (so they do NOT
+  // count toward ops); cache_misses are the scrapes that fell through to a live
+  // fetch. hits / (hits + misses) is the per-report cache hit rate / savings.
+  cache_hits: number;
+  cache_misses: number;
 }
 
 function createFirecrawlStats(): FirecrawlStats {
@@ -37,6 +42,72 @@ function createFirecrawlStats(): FirecrawlStats {
     map: { attempted: 0, ok: 0 },
     search: { attempted: 0, ok: 0 },
     statuses: [],
+    cache_hits: 0,
+    cache_misses: 0,
+  };
+}
+
+// ── Scrape cache (P1) ──────────────────────────────────────────────────
+// Cross-report memoisation of firecrawlScrape() results, backed by the
+// firecrawl_scrape_cache table (service-role only). Created once per report and
+// threaded through firecrawlScrape exactly like FirecrawlStats. Entirely inert
+// unless FIRECRAWL_CACHE_ENABLED is set — when absent, the handle is undefined
+// and scraping behaves exactly as before. Read-time TTL: 14d for usable content,
+// 1d for negatives (so a transiently-down site retries soon).
+const SCRAPE_CACHE_TTL_OK_MS = 14 * 24 * 60 * 60 * 1000;
+const SCRAPE_CACHE_TTL_NEG_MS = 24 * 60 * 60 * 1000;
+
+interface ScrapeCacheEntry { content: string | null; ok: boolean; status: number }
+interface ScrapeCache {
+  get(key: string): Promise<{ content: string | null } | null>;
+  set(key: string, entry: ScrapeCacheEntry): Promise<void>;
+}
+
+/** Normalise a URL to a stable cache key: lowercase, strip scheme/www/trailing
+ *  slash, KEEP the path (homepage vs /about are distinct scrape targets). */
+function normaliseScrapeKey(u: string): string {
+  return u.trim().toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/+$/, "");
+}
+
+/** Build a scrape cache backed by Supabase, or null if disabled. Best-effort:
+ *  any DB error degrades to a live scrape (returns null from get / swallows set). */
+function buildScrapeCache(supabase: ReturnType<typeof createClient>): ScrapeCache | undefined {
+  if (!Deno.env.get("FIRECRAWL_CACHE_ENABLED")) return undefined;
+  return {
+    async get(key) {
+      try {
+        const { data } = await supabase
+          .from("firecrawl_scrape_cache")
+          .select("content, ok, fetched_at")
+          .eq("url_key", key)
+          .maybeSingle();
+        if (!data) return null;
+        const ageMs = Date.now() - new Date(data.fetched_at).getTime();
+        const ttl = data.ok ? SCRAPE_CACHE_TTL_OK_MS : SCRAPE_CACHE_TTL_NEG_MS;
+        if (ageMs > ttl) return null;
+        return { content: data.content ?? null };
+      } catch (e) {
+        console.error("scrape cache get failed (live scrape):", e instanceof Error ? e.message : "unknown");
+        return null;
+      }
+    },
+    async set(key, entry) {
+      try {
+        await supabase.from("firecrawl_scrape_cache").upsert({
+          url_key: key,
+          content: entry.content,
+          ok: entry.ok,
+          status: entry.status,
+          byte_len: entry.content ? entry.content.length : 0,
+          fetched_at: new Date().toISOString(),
+        }, { onConflict: "url_key" });
+      } catch (e) {
+        console.error("scrape cache set failed (continuing):", e instanceof Error ? e.message : "unknown");
+      }
+    },
   };
 }
 
@@ -61,6 +132,7 @@ async function firecrawlScrape(
   url: string,
   timeoutMs = 10000,
   stats?: FirecrawlStats,
+  cache?: ScrapeCache,
 ): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -73,6 +145,18 @@ async function firecrawlScrape(
 
     if (isPrivateOrReservedUrl(formattedUrl)) return null;
 
+    // Cache read (P1) — checked AFTER the SSRF guard so a private URL is never
+    // served or stored. A hit (positive or negative, within TTL) avoids the API
+    // call entirely, so it does NOT go through recordFirecrawl/ops.
+    const cacheKey = cache ? normaliseScrapeKey(formattedUrl) : "";
+    if (cache) {
+      const hit = await cache.get(cacheKey);
+      if (hit) {
+        if (stats) stats.cache_hits++;
+        return hit.content;
+      }
+    }
+
     const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -81,11 +165,19 @@ async function firecrawlScrape(
     });
 
     recordFirecrawl(stats, "scrape", resp.status, resp.ok);
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+      if (cache) { if (stats) stats.cache_misses++; await cache.set(cacheKey, { content: null, ok: false, status: resp.status }); }
+      return null;
+    }
 
     const data = await resp.json();
     const md = data.data?.markdown || data.markdown || null;
-    return md ? sanitizeScrapedContent(md) : null;
+    const content = md ? sanitizeScrapedContent(md) : null;
+    if (cache) {
+      if (stats) stats.cache_misses++;
+      await cache.set(cacheKey, { content, ok: !!content, status: resp.status });
+    }
+    return content;
   } catch {
     recordFirecrawl(stats, "scrape", 0, false);
     return null;
@@ -244,6 +336,7 @@ async function enrichCompanyDeep(
   companyName: string,
   fallbackSummary: string,
   stats?: FirecrawlStats,
+  cache?: ScrapeCache,
 ): Promise<{ profile: EnrichedCompanyProfile; enrichedSummary: string; diagnostics: CompanyScrapeDiagnostics }> {
   const defaultProfile: EnrichedCompanyProfile = {
     summary: fallbackSummary,
@@ -267,7 +360,7 @@ async function enrichCompanyDeep(
   try {
     const [allUrls, homepageMarkdown] = await Promise.all([
       firecrawlMap(firecrawlKey, websiteUrl, 5000, stats),
-      firecrawlScrape(firecrawlKey, websiteUrl, 10000, stats),
+      firecrawlScrape(firecrawlKey, websiteUrl, 10000, stats, cache),
     ]);
 
     diagnostics.map_urls = allUrls.length;
@@ -278,7 +371,7 @@ async function enrichCompanyDeep(
     console.log(`Scraping ${keyPages.length} key pages:`, keyPages);
 
     const additionalScrapes = await Promise.allSettled(
-      keyPages.map((url) => firecrawlScrape(firecrawlKey, url, 10000, stats))
+      keyPages.map((url) => firecrawlScrape(firecrawlKey, url, 10000, stats, cache))
     );
 
     const allContent: string[] = [];
@@ -355,6 +448,7 @@ async function enrichMatchedProviders(
   firecrawlKey: string,
   providers: any[],
   stats?: FirecrawlStats,
+  cache?: ScrapeCache,
 ): Promise<any[]> {
   if (!firecrawlKey || providers.length === 0) return providers;
 
@@ -366,7 +460,7 @@ async function enrichMatchedProviders(
     if (!providerUrl) return provider;
 
     try {
-      const markdown = await firecrawlScrape(firecrawlKey, providerUrl, 10000, stats);
+      const markdown = await firecrawlScrape(firecrawlKey, providerUrl, 10000, stats, cache);
       if (markdown && markdown.length > 50) {
         return {
           ...provider,
@@ -405,6 +499,7 @@ async function scrapeKnownCompetitors(
   knownCompetitors: Array<{ name: string; website: string }>,
   companyName: string,
   stats?: FirecrawlStats,
+  cache?: ScrapeCache,
 ): Promise<CompetitorData[]> {
   if (!firecrawlKey || knownCompetitors.length === 0) return [];
 
@@ -428,7 +523,7 @@ async function scrapeKnownCompetitors(
       const website = (comp.website && comp.website.trim())
         ? comp.website
         : await resolveDomainFromName(firecrawlKey, comp.name, stats);
-      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 10000, stats) : null;
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 10000, stats, cache) : null;
       if (!markdown || markdown.length < 50) {
         return { name: comp.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
@@ -466,6 +561,7 @@ async function searchCompetitors(
   lovableKey: string,
   intake: any,
   stats?: FirecrawlStats,
+  cache?: ScrapeCache,
 ): Promise<{ competitors: CompetitorData[]; raw_results: any[] }> {
   const empty = { competitors: [], raw_results: [] };
   if (!firecrawlKey) return empty;
@@ -480,7 +576,7 @@ async function searchCompetitors(
 
     // Run known competitor scraping AND web search in parallel
     const [knownResults, results] = await Promise.all([
-      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name, stats),
+      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name, stats, cache),
       firecrawlSearch(firecrawlKey, query, 5, 15000, stats),
     ]);
 
@@ -548,6 +644,7 @@ async function scrapeEndBuyers(
   endBuyers: Array<{ name: string; website: string }>,
   companyName: string,
   stats?: FirecrawlStats,
+  cache?: ScrapeCache,
 ): Promise<EndBuyerIntelligence[]> {
   if (!firecrawlKey || endBuyers.length === 0) return [];
 
@@ -563,7 +660,7 @@ async function scrapeEndBuyers(
       const website = (buyer.website && buyer.website.trim())
         ? buyer.website
         : await resolveDomainFromName(firecrawlKey, buyer.name, stats);
-      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 8000, stats) : null;
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 8000, stats, cache) : null;
       if (!markdown || markdown.length < 50) {
         return { name: buyer.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
@@ -1658,6 +1755,10 @@ async function generateReportInBackground(
     // One stats collector per report, threaded through every Firecrawl wrapper
     // so the metadata can report plumbing health + total op count (P1/P2).
     const firecrawlStats = createFirecrawlStats();
+    // Cross-report scrape cache (P1) — undefined unless FIRECRAWL_CACHE_ENABLED is
+    // set, in which case repeated scrapes (esp. matched providers) hit the cache
+    // instead of re-burning Firecrawl credits every report.
+    const firecrawlCache = buildScrapeCache(supabase);
 
     // Wrap DB matching + provider enrichment into a single parallel task
     const matchesAndEnrichTask = async () => {
@@ -1667,6 +1768,7 @@ async function generateReportInBackground(
         firecrawlKey,
         rawMatches.service_providers || [],
         firecrawlStats,
+        firecrawlCache,
       );
       return rawMatches;
     };
@@ -1680,15 +1782,15 @@ async function generateReportInBackground(
       endBuyerProcurementResearch,
     ] = await Promise.all([
       firecrawlKey && intake.website_url
-        ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary, firecrawlStats)
+        ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary, firecrawlStats, firecrawlCache)
         : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary, diagnostics: null }),
       runMarketResearch(intake, persona),
       matchesAndEnrichTask(),
       firecrawlKey
-        ? searchCompetitors(firecrawlKey, lovableKey, intake, firecrawlStats)
+        ? searchCompetitors(firecrawlKey, lovableKey, intake, firecrawlStats, firecrawlCache)
         : Promise.resolve({ competitors: [], raw_results: [] }),
       firecrawlKey && (intake.end_buyers || []).length > 0
-        ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name, firecrawlStats)
+        ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name, firecrawlStats, firecrawlCache)
         : Promise.resolve([]),
       researchEndBuyerProcurement(intake),
     ]);
@@ -1749,7 +1851,7 @@ async function generateReportInBackground(
     }
 
     // All Firecrawl work for this report is done — log plumbing health + op count.
-    console.log(`Firecrawl health: ${firecrawlStats.succeeded}/${firecrawlStats.ops} OK (scrape ${firecrawlStats.scrape.ok}/${firecrawlStats.scrape.attempted}, map ${firecrawlStats.map.ok}/${firecrawlStats.map.attempted}, search ${firecrawlStats.search.ok}/${firecrawlStats.search.attempted}); statuses [${firecrawlStats.statuses.join(",")}]`);
+    console.log(`Firecrawl health: ${firecrawlStats.succeeded}/${firecrawlStats.ops} OK (scrape ${firecrawlStats.scrape.ok}/${firecrawlStats.scrape.attempted}, map ${firecrawlStats.map.ok}/${firecrawlStats.map.attempted}, search ${firecrawlStats.search.ok}/${firecrawlStats.search.attempted}); cache ${firecrawlStats.cache_hits} hit / ${firecrawlStats.cache_misses} miss; statuses [${firecrawlStats.statuses.join(",")}]`);
 
     // 3. Get user subscription tier
     let userTier = "free";
