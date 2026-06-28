@@ -1,0 +1,245 @@
+// report-quality-loop — scheduled, PROPOSE-ONLY report-quality review loop.
+//
+// Each run: pulls a capped batch of recent reports + their report_quality telemetry +
+// intake inputs (read-only, service role), scores each on three axes against its tier
+// (relevance / conciseness / input-actioning fidelity) via an Anthropic judge, writes
+// ranked categorised proposals to report_quality_proposals, logs the run to
+// automation_runs, and posts a digest to #report-quality.
+//
+// It NEVER edits prod prompts, matching logic, RLS, or directory data. Disabled by
+// default: self-gates on the activity_event_routing 'report.quality.loop' enabled flag.
+// Auth: x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET (verify_jwt=false), same as
+// report-quality-rollup.
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  buildCompactInput, buildScoringMessages, parseScoring, toProposalRows,
+  rankAndCap, summariseThemes, RUBRIC_VERSION, type ProposalRow,
+} from "./rubric.ts";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SLACK_BOT_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") ?? "";
+const WEBHOOK_SECRET = Deno.env.get("SLACK_NOTIFY_WEBHOOK_SECRET") ?? "";
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+const ANTHROPIC_MODEL = Deno.env.get("RQ_LOOP_MODEL") ?? "claude-sonnet-4-6";
+const REPORT_BASE_URL = "https://market-entry-secrets.lovable.app/report";
+const LOOP_NAME = "report-quality-loop";
+const ROUTING_EVENT = "report.quality.loop";
+const DAY = 86400000;
+
+// Hard caps (override via POST body). Keep cost bounded.
+const DEFAULT_BATCH = 20;
+const MAX_BATCH = 50;
+const DEFAULT_TOKEN_BUDGET = 200000; // total Anthropic tokens (in+out) per run
+const DEFAULT_LOOKBACK_DAYS = 14;
+const PROPOSAL_CAP = 40; // max proposals written per run
+// Rough Anthropic USD pricing per 1M tokens (sonnet-class default; informational only).
+const PRICE_IN = 3.0;
+const PRICE_OUT = 15.0;
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+function json(b: unknown, s = 200): Response {
+  return new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
+}
+function band(s: number): string { return s >= 80 ? "🟢" : s >= 60 ? "🟡" : "🔴"; }
+function avg(a: number[]): number { return a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0; }
+function log(msg: string, data?: unknown): void {
+  console.log(`[${new Date().toISOString()}] [${LOOP_NAME}] ${msg}`, data !== undefined ? JSON.stringify(data) : "");
+}
+
+// deno-lint-ignore no-explicit-any
+async function postToSlack(channel: string, text: string, blocks: unknown[]): Promise<{ ok: boolean; error?: string }> {
+  if (!SLACK_BOT_TOKEN) return { ok: false, error: "missing_bot_token" };
+  const resp = await fetch("https://slack.com/api/chat.postMessage", {
+    method: "POST",
+    headers: { "Content-Type": "application/json; charset=utf-8", Authorization: `Bearer ${SLACK_BOT_TOKEN}` },
+    body: JSON.stringify({ channel, text, attachments: [{ color: "#6b46c1", blocks }] }),
+  });
+  const d = await resp.json();
+  return d.ok ? { ok: true } : { ok: false, error: d.error ?? "slack_error" };
+}
+
+interface JudgeResult { text: string; inTokens: number; outTokens: number }
+
+async function judge(system: string, user: string): Promise<JudgeResult | null> {
+  if (!ANTHROPIC_API_KEY) return null;
+  try {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 45000);
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 1500,
+        temperature: 0.2,
+        system,
+        messages: [{ role: "user", content: user }],
+      }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(to);
+    if (!resp.ok) { log("anthropic http error", resp.status); return null; }
+    const data = await resp.json();
+    // deno-lint-ignore no-explicit-any
+    const text = (data?.content ?? []).filter((b: any) => b?.type === "text").map((b: any) => b.text).join("\n");
+    return { text, inTokens: data?.usage?.input_tokens ?? 0, outTokens: data?.usage?.output_tokens ?? 0 };
+  } catch (e) {
+    log("anthropic exception", String(e));
+    return null;
+  }
+}
+
+Deno.serve(async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (!WEBHOOK_SECRET || (req.headers.get("x-webhook-secret") ?? "") !== WEBHOOK_SECRET) {
+    return json({ error: "unauthorized" }, 401);
+  }
+
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { /* defaults */ }
+  const batchSize = Math.min(Math.max(Number(body.batch_size) || DEFAULT_BATCH, 1), MAX_BATCH);
+  const tokenBudget = Math.max(Number(body.token_budget) || DEFAULT_TOKEN_BUDGET, 10000);
+  const lookbackDays = Math.max(Number(body.lookback_days) || DEFAULT_LOOKBACK_DAYS, 1);
+  const dryRun = body.dry_run === true;
+
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+
+  // --- feature flag: disabled by default via routing.enabled -------------------------
+  const { data: rt } = await supabase.from("activity_event_routing")
+    .select("channel_id,enabled").eq("event_type", ROUTING_EVENT).maybeSingle();
+  if (!rt || !rt.enabled || !rt.channel_id) {
+    log("loop disabled (routing flag off) — skipping");
+    return json({ ok: true, skipped: "loop_disabled" });
+  }
+  const channel = rt.channel_id as string;
+
+  // --- open an automation_runs row ---------------------------------------------------
+  const startedAt = new Date().toISOString();
+  let runId: string | null = null;
+  if (!dryRun) {
+    const { data: run, error: runErr } = await supabase.from("automation_runs")
+      .insert({ loop: LOOP_NAME, started_at: startedAt, status: "running",
+        metadata: { batch_size: batchSize, token_budget: tokenBudget, lookback_days: lookbackDays, model: ANTHROPIC_MODEL, rubric_version: RUBRIC_VERSION } })
+      .select("id").single();
+    if (runErr) { log("failed to open run", runErr.message); return json({ ok: false, error: runErr.message }, 500); }
+    runId = run.id;
+  }
+
+  const finish = async (status: string, fields: Record<string, unknown>, error?: string) => {
+    if (runId) {
+      await supabase.from("automation_runs").update({
+        finished_at: new Date().toISOString(), status, error: error ?? null, ...fields,
+      }).eq("id", runId);
+    }
+  };
+
+  try {
+    if (!ANTHROPIC_API_KEY) { await finish("error", { reviewed: 0, proposed: 0 }, "missing_anthropic_key"); return json({ ok: false, error: "missing_anthropic_key" }, 500); }
+
+    // --- pull a batch: recent quality rows, lowest-scoring first, not yet proposed-on -
+    const since = new Date(Date.now() - lookbackDays * DAY).toISOString();
+    // deno-lint-ignore no-explicit-any
+    const { data: qrows, error: qErr } = await supabase.from("report_quality")
+      .select("*").eq("report_status", "completed").gte("created_at", since)
+      .order("report_score", { ascending: true, nullsFirst: true }).limit(batchSize * 3);
+    if (qErr) { await finish("error", { reviewed: 0, proposed: 0 }, qErr.message); return json({ ok: false, error: qErr.message }, 500); }
+
+    // skip reports that already have proposals (avoid re-proposing every run)
+    const ids = (qrows ?? []).map((r) => r.report_id);
+    const seen = new Set<string>();
+    if (ids.length) {
+      const { data: existing } = await supabase.from("report_quality_proposals")
+        .select("report_id").in("report_id", ids);
+      for (const e of existing ?? []) seen.add(e.report_id);
+    }
+    const batch = (qrows ?? []).filter((r) => !seen.has(r.report_id)).slice(0, batchSize);
+
+    if (batch.length === 0) {
+      await finish("success", { reviewed: 0, proposed: 0, tokens_used: 0, cost: { input_tokens: 0, output_tokens: 0, usd: 0 } });
+      await postToSlack(channel, "Report-quality loop — nothing to review", [
+        { type: "header", text: { type: "plain_text", text: "🔁 Report Quality loop" } },
+        { type: "section", text: { type: "mrkdwn", text: `_No new completed reports to review in the last ${lookbackDays}d._` } },
+      ]);
+      return json({ ok: true, reviewed: 0, proposed: 0 });
+    }
+
+    let reviewed = 0, inTok = 0, outTok = 0;
+    const allRows: ProposalRow[] = [];
+    const axisRel: number[] = [], axisCon: number[] = [], axisFid: number[] = [];
+
+    for (const rq of batch) {
+      if (inTok + outTok >= tokenBudget) { log("token budget reached — stopping batch", { reviewed }); break; }
+
+      const { data: report } = await supabase.from("user_reports")
+        .select("id, report_json, tier_at_generation, intake_form_id").eq("id", rq.report_id).maybeSingle();
+      if (!report) continue;
+      const { data: intake } = report.intake_form_id
+        ? await supabase.from("user_intake_forms").select("*").eq("id", report.intake_form_id).maybeSingle()
+        : { data: null };
+
+      const compact = buildCompactInput(rq, report, intake);
+      const { system, user } = buildScoringMessages(compact);
+      const res = await judge(system, user);
+      reviewed += 1;
+      if (!res) continue;
+      inTok += res.inTokens; outTok += res.outTokens;
+
+      const parsed = parseScoring(res.text);
+      axisRel.push(parsed.axes.relevance); axisCon.push(parsed.axes.conciseness); axisFid.push(parsed.axes.fidelity);
+      allRows.push(...toProposalRows(compact, parsed));
+    }
+
+    const ranked = rankAndCap(allRows, PROPOSAL_CAP);
+    const tokensUsed = inTok + outTok;
+    const cost = { input_tokens: inTok, output_tokens: outTok, usd: Number(((inTok * PRICE_IN + outTok * PRICE_OUT) / 1_000_000).toFixed(4)) };
+
+    if (!dryRun && runId && ranked.length) {
+      const insertRows = ranked.map((r) => ({ ...r, run_id: runId, status: "new" }));
+      const { error: insErr } = await supabase.from("report_quality_proposals").insert(insertRows);
+      if (insErr) log("proposal insert error", insErr.message);
+    }
+
+    await finish("success", {
+      reviewed, proposed: ranked.length, tokens_used: tokensUsed, cost,
+      metadata: {
+        batch_size: batchSize, token_budget: tokenBudget, lookback_days: lookbackDays,
+        model: ANTHROPIC_MODEL, rubric_version: RUBRIC_VERSION,
+        avg_axes: { relevance: avg(axisRel), conciseness: avg(axisCon), fidelity: avg(axisFid) },
+      },
+    });
+
+    // --- Slack digest ------------------------------------------------------------------
+    const themes = summariseThemes(ranked);
+    const topProposals = ranked.slice(0, 5).map((r) =>
+      `• ${band(Math.round(r.confidence * 100))} *${r.category}* — ${r.title}  _(impact ${r.impact_estimate}, conf ${r.confidence}, risk ${r.risk})_ <${REPORT_BASE_URL}/${r.report_id}|↗>`,
+    );
+    const blocks: unknown[] = [
+      { type: "header", text: { type: "plain_text", text: "🔁 Report Quality loop — proposals" } },
+      { type: "section", text: { type: "mrkdwn", text:
+        `*${reviewed} reviewed* · *${ranked.length} proposals* · ${tokensUsed.toLocaleString()} tokens ($${cost.usd})\n` +
+        `Avg axes — Relevance ${avg(axisRel)} · Conciseness ${avg(axisCon)} · Fidelity ${avg(axisFid)}` } },
+      { type: "section", text: { type: "mrkdwn", text: `*Top recurring themes*\n${themes.length ? themes.map((t) => `${t.category} ×${t.count} — _${t.example}_`).join("\n") : "_none_"}` } },
+      { type: "divider" },
+      { type: "section", text: { type: "mrkdwn", text: `*Top proposals*\n${topProposals.join("\n") || "_none_"}` } },
+      { type: "context", elements: [{ type: "mrkdwn", text: `propose-only · review in report_quality_proposals · rubric ${RUBRIC_VERSION} · ${new Date().toUTCString()}` }] },
+    ];
+    if (!dryRun) await postToSlack(channel, `Report-quality loop — ${ranked.length} proposals from ${reviewed} reports`, blocks);
+
+    return json({ ok: true, reviewed, proposed: ranked.length, tokens_used: tokensUsed, cost, dry_run: dryRun, proposals: dryRun ? ranked : undefined });
+  } catch (e) {
+    log("run failed", String(e));
+    await finish("error", { reviewed: 0, proposed: 0 }, String(e));
+    return json({ ok: false, error: String(e) }, 500);
+  }
+});

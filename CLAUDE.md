@@ -151,6 +151,9 @@
 | Table | Purpose |
 |-------|---------|
 | `payment_webhook_logs` | Stripe webhook event logs |
+| `report_quality` | Per-report build-health / RAG-coverage telemetry (system of record for `#report-quality`). Admin-read; service-role write |
+| `automation_runs` | Run log for scheduled MES loops (loop, started/finished, reviewed, proposed, tokens, cost, status). Admin-read; service-role write |
+| `report_quality_proposals` | Propose-only review queue from `report-quality-loop` (category, evidence, recommended_change, impact, risk, axis_scores, status). Admin read + update; service-role insert; no user PII |
 | `user_usage` | Anonymous usage tracking for freemium gate |
 | `ai_chat_conversations` / `ai_chat_messages` | AI chat history (chat feature is placeholder) |
 | `testimonials` | Homepage testimonials |
@@ -200,6 +203,8 @@ Functions with `verify_jwt = false` authenticate in-code (JWT, signature, or `x-
 | `ai-chat` | Chat endpoint — **placeholder, not implemented** (returns a stub) | ✅ | — |
 | `apify-webhook` | Apify ingest webhook (Irish Insights pipeline) | ❌ (webhook) | — |
 | `notion-research-trigger` | Notion research trigger | ❌ (webhook) | — |
+| `report-quality-rollup` | Weekly cross-report rollup card to Slack `#report-quality` (cron) | ❌ (`x-webhook-secret`) | Slack |
+| `report-quality-loop` | Scheduled **propose-only** report-quality review loop — scores reports on relevance/conciseness/fidelity, writes ranked proposals to `report_quality_proposals`, logs to `automation_runs`, posts a digest. Disabled by default. | ❌ (`x-webhook-secret`) | Anthropic, Slack |
 
 ---
 
@@ -398,7 +403,10 @@ Both `useToast` (shadcn) and `sonner` (`toast()`) are available. Use either.
 | `FRONTEND_URL` | Frontend URL for Stripe redirect URLs |
 | `LEMLIST_API_KEY` | Lemlist CRM API key |
 | `ALLOWED_ORIGINS` | Allowed CORS origins |
-| `ANTHROPIC_API_KEY` | Anthropic Claude API (`classify-personas`, `generate-plan`) |
+| `ANTHROPIC_API_KEY` | Anthropic Claude API (`classify-personas`, `generate-plan`, `report-quality-loop`) |
+| `RQ_LOOP_MODEL` | Optional override for the `report-quality-loop` Claude model (default `claude-sonnet-4-6`) |
+| `SLACK_BOT_TOKEN` | Slack `chat.postMessage` token for `#report-quality` (rollup + loop) |
+| `SLACK_NOTIFY_WEBHOOK_SECRET` | `x-webhook-secret` guarding `slack-notify` / `report-quality-rollup` / `report-quality-loop` |
 | `RESEND_API_KEY` | Resend transactional email (`send-email`, `send-lead-followup`) |
 | `EMAIL_INTERNAL_SECRET` | Internal `x-internal-secret` for server-to-server calls to `send-email` |
 | `CONTENT_CREATOR_URL` | Content Creator (`rcgaviwbsudouvfwzydq`) API URL — read source for the `kb-sync` LinkedIn sync |

@@ -77,6 +77,13 @@ verify_jwt = false
 # gateway rejects the cron POST before the function runs.
 verify_jwt = false
 
+[functions.report-quality-loop]
+# Cron-invoked, propose-only report-quality review loop; authenticated in-code by
+# x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET (same pattern as report-quality-rollup).
+# Must stay false or the gateway rejects the cron POST (no JWT) before the function runs.
+# Disabled by default — self-gates on activity_event_routing 'report.quality.loop'.
+verify_jwt = false
+
 [functions.kb-sync]
 # Cron-invoked (kb-sync-incremental) + one-off backfill; authenticated in-code by
 # x-internal-secret == KB_SYNC_SECRET (same pattern as process-email-queue). Must
