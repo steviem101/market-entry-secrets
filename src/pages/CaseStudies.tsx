@@ -380,6 +380,11 @@ const CaseStudies = () => {
                   </span>
                 )}
               </div>
+
+              <div className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                Read more
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              </div>
             </CardContent>
           </Card>
         </Link>

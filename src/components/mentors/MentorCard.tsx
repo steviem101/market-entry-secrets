@@ -1,17 +1,18 @@
 import { memo } from "react";
-import { MapPin, Handshake, CheckCircle, Star, Globe, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MapPin, CheckCircle, Star, Globe, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { useNavigate } from "react-router-dom";
 import type { Mentor } from "@/hooks/useMentors";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import { domainToWebsite } from "@/lib/logoUtils";
+import { DirectoryCard } from "@/components/directory/DirectoryCard";
+import { CardCTA } from "@/components/directory/CardCTA";
 
 interface MentorCardProps {
   mentor: Mentor;
-  onContact: (mentor: Mentor) => void;
+  /** @deprecated warm intro now routes through the shared IntroRequestProvider. */
+  onContact?: (mentor: Mentor) => void;
 }
 
 const getInitials = (name: string) =>
@@ -67,8 +68,7 @@ const ExperienceTileItem = ({ tile }: { tile: { id?: string; name: string; logo?
   );
 };
 
-const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
-  const navigate = useNavigate();
+const MentorCard = memo(({ mentor }: MentorCardProps) => {
   const displayName = mentor.is_anonymous ? mentor.title : mentor.name;
   const profileUrl = `/mentors/${mentor.category_slug || "experts"}/${mentor.slug || mentor.id}`;
 
@@ -79,7 +79,7 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
     : [];
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative min-w-0">
+    <DirectoryCard className="relative min-w-0">
       {/* Featured ribbon */}
       {mentor.is_featured && (
         <div className="absolute top-3 left-3">
@@ -228,25 +228,12 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(profileUrl)}
-          className="flex-1"
-        >
-          View Profile
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => onContact(mentor)}
-          className="flex-1"
-        >
-          <Handshake className="w-4 h-4 mr-1" />
-          Get Warm Intro
-        </Button>
-      </div>
-    </div>
+      <CardCTA
+        entity="mentor"
+        target={{ entity: "mentor", id: mentor.id, name: displayName }}
+        secondaryHref={profileUrl}
+      />
+    </DirectoryCard>
   );
 });
 

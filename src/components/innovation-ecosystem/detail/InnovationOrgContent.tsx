@@ -194,6 +194,7 @@ export const InnovationOrgContent = ({ org, relatedOrgs }: InnovationOrgContentP
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {relatedOrgs.map((relatedOrg) => (
               <CompanyCard
+                entity="innovation_hub"
                 key={relatedOrg.id}
                 company={{
                   id: relatedOrg.id,

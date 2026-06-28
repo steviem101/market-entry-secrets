@@ -1,12 +1,13 @@
 
 import { memo } from "react";
-import { User, MapPin, Calendar, Globe, Handshake, Briefcase } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { User, MapPin, Calendar, Globe, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import { domainToWebsite } from "@/lib/logoUtils";
+import { DirectoryCard } from "@/components/directory/DirectoryCard";
+import { CardCTA } from "@/components/directory/CardCTA";
 
 export interface ExperienceTile {
   id: string;
@@ -35,10 +36,11 @@ export interface Person {
 interface PersonCardProps {
   person: Person;
   onViewProfile: (person: Person) => void;
-  onContact: (person: Person) => void;
+  /** @deprecated warm intro now routes through the shared IntroRequestProvider. */
+  onContact?: (person: Person) => void;
 }
 
-const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) => {
+const PersonCard = memo(({ person, onViewProfile }: PersonCardProps) => {
   const displayName = person.isAnonymous ? person.title : person.name;
   const shouldBlurImage = person.isAnonymous;
 
@@ -54,7 +56,7 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 min-w-0">
+    <DirectoryCard className="min-w-0">
       <div className="flex items-start gap-4 mb-4">
         <Avatar className="w-16 h-16 flex-shrink-0">
           {person.isAnonymous ? (
@@ -150,25 +152,12 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
         </div>
       )}
 
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onViewProfile(person)}
-          className="flex-1"
-        >
-          View Profile
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => onContact(person)}
-          className="flex-1"
-        >
-          <Handshake className="w-4 h-4 mr-1" />
-          Get Warm Intro
-        </Button>
-      </div>
-    </div>
+      <CardCTA
+        entity="mentor"
+        target={{ entity: "mentor", id: person.id, name: displayName }}
+        onSecondary={() => onViewProfile(person)}
+      />
+    </DirectoryCard>
   );
 });
 

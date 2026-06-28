@@ -22,8 +22,6 @@ const PAGE_SIZE = 12;
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
   { value: 'most_records', label: 'Most Records' },
-  { value: 'price_low_high', label: 'Price: Low to High' },
-  { value: 'price_high_low', label: 'Price: High to Low' },
 ];
 
 const sortLeads = (leads: LeadDatabase[], sortBy: string): LeadDatabase[] => {
@@ -33,10 +31,6 @@ const sortLeads = (leads: LeadDatabase[], sortBy: string): LeadDatabase[] => {
       return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     case 'most_records':
       return sorted.sort((a, b) => (b.record_count || 0) - (a.record_count || 0));
-    case 'price_low_high':
-      return sorted.sort((a, b) => (a.price_aud || 0) - (b.price_aud || 0));
-    case 'price_high_low':
-      return sorted.sort((a, b) => (b.price_aud || 0) - (a.price_aud || 0));
     default:
       return sorted;
   }

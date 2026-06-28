@@ -88,7 +88,7 @@ export const MentorContactModal = ({ mentor, isOpen, onClose }: MentorContactMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Get a Warm Intro to {mentor.name}</DialogTitle>
+          <DialogTitle>Get a warm intro to {mentor.name}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -147,7 +147,7 @@ export const MentorContactModal = ({ mentor, isOpen, onClose }: MentorContactMod
           </div>
           <Button type="submit" disabled={submitting} className="w-full">
             <Send className="w-4 h-4 mr-2" />
-            {submitting ? "Sending..." : "Send Request"}
+            {submitting ? "Sending..." : "Send request"}
           </Button>
         </form>
       </DialogContent>

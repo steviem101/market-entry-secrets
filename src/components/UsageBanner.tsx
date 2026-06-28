@@ -33,7 +33,7 @@ export const UsageBanner = () => {
               size="sm"
               className="ml-4"
             >
-              Sign Up Free
+              Sign up free
             </Button>
           </AlertDescription>
         </Alert>
@@ -57,7 +57,7 @@ export const UsageBanner = () => {
             variant="outline"
             className="ml-4"
           >
-            Sign Up Free
+            Sign up free
           </Button>
         </AlertDescription>
       </Alert>

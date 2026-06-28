@@ -1,5 +1,5 @@
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DirectoryCard } from "@/components/directory/DirectoryCard";
+import { CardCTA } from "@/components/directory/CardCTA";
 
 interface MentorCardProps {
   mentor: {
@@ -17,7 +17,7 @@ interface MentorCardProps {
 
 export const MentorCard = ({ mentor }: MentorCardProps) => {
   return (
-    <article className="bg-mes-card border border-mes-border rounded-xl p-5 flex flex-col">
+    <DirectoryCard compact>
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-full bg-mes-ink/10 text-mes-ink flex items-center justify-center font-semibold">
           {mentor.name
@@ -53,13 +53,12 @@ export const MentorCard = ({ mentor }: MentorCardProps) => {
         </ul>
       )}
       <div className="mt-auto pt-4">
-        <Button asChild variant="link" className="p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
-          <a href="/mentor-connections">
-            Request intro to {mentor.name.split(" ")[0]}
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </a>
-        </Button>
+        <CardCTA
+          entity="mentor"
+          target={{ entity: "mentor", id: mentor.id, name: mentor.name }}
+          hideSecondary
+        />
       </div>
-    </article>
+    </DirectoryCard>
   );
 };

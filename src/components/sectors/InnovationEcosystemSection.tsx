@@ -20,6 +20,7 @@ const InnovationEcosystemSection = ({ innovationEcosystem }: InnovationEcosystem
       >
         {innovationEcosystem.slice(0, 6).map((entity) => (
           <CompanyCard
+            entity="innovation_hub"
             key={entity.id}
             company={{
               id: entity.id,

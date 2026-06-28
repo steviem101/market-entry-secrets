@@ -3,6 +3,8 @@ import { Json } from "@/integrations/supabase/types";
 import CompanyCardHeader from "./company-card/CompanyCardHeader";
 import CompanyCardContent from "./company-card/CompanyCardContent";
 import CompanyCardFooter from "./company-card/CompanyCardFooter";
+import { DirectoryCard } from "./directory/DirectoryCard";
+import type { DirectoryEntity } from "./directory/cardCtaConfig";
 
 export interface ContactPerson {
   id: string;
@@ -76,9 +78,11 @@ interface CompanyCardProps {
   onViewProfile?: (company: Company) => void;
   onContact?: (company: Company) => void;
   detailUrl?: string;
+  /** Drives CTA wording + warm-intro routing. Defaults to service_provider. */
+  entity?: DirectoryEntity;
 }
 
-const CompanyCard = ({ company, onViewProfile, onContact, detailUrl }: CompanyCardProps) => {
+const CompanyCard = ({ company, onViewProfile, onContact, detailUrl, entity = "service_provider" }: CompanyCardProps) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
@@ -88,8 +92,8 @@ const CompanyCard = ({ company, onViewProfile, onContact, detailUrl }: CompanyCa
   };
 
   return (
-    <div
-      className={`bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full min-w-0 flex flex-col ${detailUrl ? 'cursor-pointer' : ''}`}
+    <DirectoryCard
+      className={`min-w-0 ${detailUrl ? "cursor-pointer" : ""}`}
       onClick={handleCardClick}
     >
       <CompanyCardHeader company={company} />
@@ -100,9 +104,10 @@ const CompanyCard = ({ company, onViewProfile, onContact, detailUrl }: CompanyCa
           onViewProfile={onViewProfile || (() => {})}
           onContact={onContact || (() => {})}
           detailUrl={detailUrl}
+          entity={entity}
         />
       </div>
-    </div>
+    </DirectoryCard>
   );
 };
 

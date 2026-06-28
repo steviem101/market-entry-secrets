@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Lock, Globe, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { publishedOrigin } from '@/lib/publishedOrigin';
+import { tierDisplayName } from '@/components/directory/cardCtaConfig';
 
 interface ReportMatchCardProps {
   name: string;
@@ -13,6 +14,7 @@ interface ReportMatchCardProps {
   linkLabel?: string;
   blurred?: boolean;
   upgradeCta?: string;
+  requiredTier?: string;
   website?: string;
   source?: string; // "web" for externally discovered matches
 }
@@ -74,12 +76,14 @@ export const ReportMatchCard = ({
   subtitle,
   tags,
   link,
-  linkLabel = 'View Profile',
+  linkLabel = 'View profile',
   blurred,
   upgradeCta,
+  requiredTier,
   website,
   source,
 }: ReportMatchCardProps) => {
+  const gatedLabel = upgradeCta || `Unlock with ${tierDisplayName(requiredTier || 'growth')}`;
   if (blurred) {
     return (
       <Card className="relative overflow-hidden border-border/50">
@@ -91,7 +95,7 @@ export const ReportMatchCard = ({
           <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
             <div className="text-center">
               <Lock className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">{upgradeCta || 'Upgrade to unlock'}</p>
+              <p className="text-xs text-muted-foreground">{gatedLabel}</p>
             </div>
           </div>
         </CardContent>

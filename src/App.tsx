@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { LeadGenPopupProvider } from "@/components/LeadGenPopupProvider";
+import { IntroRequestProvider } from "@/components/directory/IntroRequestProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PersonaProvider } from "@/contexts/PersonaContext";
@@ -85,6 +86,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <ScrollToTop />
+              <IntroRequestProvider>
               <ErrorBoundary>
               <Layout>
               <Suspense fallback={<PageLoader />}>
@@ -141,6 +143,7 @@ const App = () => (
               </Suspense>
               </Layout>
               </ErrorBoundary>
+              </IntroRequestProvider>
             </BrowserRouter>
           </LeadGenPopupProvider>
           </PersonaProvider>

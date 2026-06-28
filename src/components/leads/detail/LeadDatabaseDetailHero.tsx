@@ -1,15 +1,17 @@
-import { Database, MapPin, Users, Calendar, ArrowLeft, Eye, DollarSign, ArrowRight } from "lucide-react";
+import { MapPin, Users, Calendar, ArrowLeft, Eye, Handshake } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Link } from "react-router-dom";
 import { getSectorGradient, getSectorMeta } from "@/constants/sectorTaxonomy";
+import { useIntroRequest } from "@/components/directory/IntroRequestProvider";
 import type { LeadDatabase } from "@/types/leadDatabase";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface LeadDatabaseDetailHeroProps {
   db: LeadDatabase;
-  onCheckout: () => void;
+  /** @deprecated leads are enquiry-led; checkout removed from the surface. */
+  onCheckout?: () => void;
   onPreview: () => void;
   checkoutLoading?: boolean;
 }
@@ -27,15 +29,10 @@ const getTypeBadgeClass = (listType: string | null) => {
   }
 };
 
-export const LeadDatabaseDetailHero = ({ db, onCheckout, onPreview, checkoutLoading }: LeadDatabaseDetailHeroProps) => {
+export const LeadDatabaseDetailHero = ({ db, onPreview }: LeadDatabaseDetailHeroProps) => {
   const gradient = getSectorGradient(db.sector);
   const sectorMeta = getSectorMeta(db.sector);
-
-  const ctaLabel = db.is_free
-    ? 'Get Free Access'
-    : db.price_aud
-      ? `Get Instant Access — $${db.price_aud.toLocaleString()} AUD`
-      : 'Get Instant Access';
+  const { enquireLead } = useIntroRequest();
 
   return (
     <section className="relative overflow-hidden">
@@ -101,18 +98,6 @@ export const LeadDatabaseDetailHero = ({ db, onCheckout, onPreview, checkoutLoad
                       <span>{db.record_count.toLocaleString()} verified records</span>
                     </div>
                   )}
-                  {db.price_aud && !db.is_free && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <DollarSign className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <span>${db.price_aud.toLocaleString()} AUD</span>
-                    </div>
-                  )}
-                  {db.is_free && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <DollarSign className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <span className="font-semibold text-green-600">Free</span>
-                    </div>
-                  )}
                   {db.last_updated && (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Calendar className="w-5 h-5 text-purple-600 flex-shrink-0" />
@@ -128,9 +113,19 @@ export const LeadDatabaseDetailHero = ({ db, onCheckout, onPreview, checkoutLoad
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  <Button onClick={onCheckout} disabled={checkoutLoading}>
-                    {checkoutLoading ? 'Loading...' : ctaLabel}
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button
+                    onClick={() =>
+                      enquireLead({
+                        entity: "lead_list",
+                        id: db.id,
+                        name: db.title,
+                        recordCount: db.record_count,
+                        sector: db.sector,
+                      })
+                    }
+                  >
+                    <Handshake className="w-4 h-4 mr-2" />
+                    Find out more
                   </Button>
                   {db.preview_available && (
                     <Button variant="outline" onClick={onPreview}>
@@ -147,7 +142,6 @@ export const LeadDatabaseDetailHero = ({ db, onCheckout, onPreview, checkoutLoad
                       list_type: db.list_type,
                       sector: db.sector,
                       location: db.location,
-                      price_aud: db.price_aud,
                       record_count: db.record_count,
                     }}
                     variant="outline"
