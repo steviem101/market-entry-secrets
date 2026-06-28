@@ -162,13 +162,30 @@ interface EnrichedCompanyProfile {
   unique_selling_points: string[];
 }
 
+// Plumbing visibility for the deep company scrape. The metadata flag was
+// previously `firecrawl_deep_scrape: !!companyProfile`, but companyProfile is
+// the (truthy) fallback object even when the scrape returned nothing — so a
+// site that yielded 50 chars and fell back still read as a successful scrape.
+// These diagnostics make the metadata reflect what actually happened: whether
+// the scrape produced usable content (scrape_ok), how many URLs map found, how
+// many key pages were scraped, the content size, and whether we fell back.
+interface CompanyScrapeDiagnostics {
+  attempted: boolean;
+  scrape_ok: boolean;
+  homepage_ok: boolean;
+  map_urls: number;
+  key_pages_scraped: number;
+  content_chars: number;
+  used_fallback: boolean;
+}
+
 async function enrichCompanyDeep(
   firecrawlKey: string,
   lovableKey: string,
   websiteUrl: string,
   companyName: string,
   fallbackSummary: string
-): Promise<{ profile: EnrichedCompanyProfile; enrichedSummary: string }> {
+): Promise<{ profile: EnrichedCompanyProfile; enrichedSummary: string; diagnostics: CompanyScrapeDiagnostics }> {
   const defaultProfile: EnrichedCompanyProfile = {
     summary: fallbackSummary,
     industry: "",
@@ -178,6 +195,15 @@ async function enrichCompanyDeep(
     team_size_indicators: "",
     unique_selling_points: [],
   };
+  const diagnostics: CompanyScrapeDiagnostics = {
+    attempted: true,
+    scrape_ok: false,
+    homepage_ok: false,
+    map_urls: 0,
+    key_pages_scraped: 0,
+    content_chars: 0,
+    used_fallback: true,
+  };
 
   try {
     const [allUrls, homepageMarkdown] = await Promise.all([
@@ -185,6 +211,8 @@ async function enrichCompanyDeep(
       firecrawlScrape(firecrawlKey, websiteUrl),
     ]);
 
+    diagnostics.map_urls = allUrls.length;
+    diagnostics.homepage_ok = !!homepageMarkdown;
     console.log(`Map found ${allUrls.length} URLs on ${websiteUrl}`);
 
     const keyPages = allUrls.filter(isKeyPage).slice(0, 2);
@@ -199,15 +227,20 @@ async function enrichCompanyDeep(
     for (const result of additionalScrapes) {
       if (result.status === "fulfilled" && result.value) {
         allContent.push(result.value);
+        diagnostics.key_pages_scraped++;
       }
     }
 
     const combinedContent = allContent.join("\n\n---\n\n").slice(0, 2000);
+    diagnostics.content_chars = combinedContent.length;
 
     if (combinedContent.length < 100) {
       console.log("Insufficient website content for deep analysis");
-      return { profile: defaultProfile, enrichedSummary: fallbackSummary };
+      return { profile: defaultProfile, enrichedSummary: fallbackSummary, diagnostics };
     }
+    // Usable content was extracted; the profile below is real, not a fallback.
+    diagnostics.scrape_ok = true;
+    diagnostics.used_fallback = false;
 
     const enrichResp = await callAI(lovableKey, [
       { role: "system", content: "You are an analyst extracting verifiable facts from a company's own website. Return only valid JSON, no markdown fences. Be conservative — when in doubt, omit." },
@@ -246,10 +279,14 @@ ${combinedContent}`,
     return {
       profile,
       enrichedSummary: profile.summary || fallbackSummary,
+      diagnostics,
     };
   } catch (e) {
     console.error("Deep company enrichment failed (continuing):", e);
-    return { profile: defaultProfile, enrichedSummary: fallbackSummary };
+    // Scrape may have succeeded but AI extraction/parse failed — we still return
+    // the fallback profile, so flag it as a fallback regardless of scrape_ok.
+    diagnostics.used_fallback = true;
+    return { profile: defaultProfile, enrichedSummary: fallbackSummary, diagnostics };
   }
 }
 
@@ -310,11 +347,22 @@ async function scrapeKnownCompetitors(
 ): Promise<CompetitorData[]> {
   if (!firecrawlKey || knownCompetitors.length === 0) return [];
 
-  console.log(`Scraping ${knownCompetitors.length} user-provided competitors...`);
+  // Cap at 5 to bound Firecrawl cost: each known competitor triggers 1 scrape
+  // (+1 search to resolve a domain when no website was given). Without this the
+  // loop is unbounded — a user pasting 30 competitors would fire ~60 Firecrawl
+  // ops on a single report. Mirrors the end-buyer cap (3). Log what we drop so
+  // the truncation isn't silent.
+  const MAX_KNOWN_COMPETITORS = 5;
+  const cappedCompetitors = knownCompetitors.slice(0, MAX_KNOWN_COMPETITORS);
+  if (knownCompetitors.length > MAX_KNOWN_COMPETITORS) {
+    console.log(`Capping known competitors: scraping ${MAX_KNOWN_COMPETITORS} of ${knownCompetitors.length} provided`);
+  }
+
+  console.log(`Scraping ${cappedCompetitors.length} user-provided competitors...`);
   const startTime = Date.now();
 
   const results = await Promise.allSettled(
-    knownCompetitors.map(async (comp) => {
+    cappedCompetitors.map(async (comp) => {
       // Resolve a domain from the name when none was provided (P1.5).
       const website = (comp.website && comp.website.trim())
         ? comp.website
@@ -703,7 +751,11 @@ async function discoverExternalEvents(
 
   const industrySectorText = (intake.industry_sector || []).join(", ");
   const targetRegionsText = (intake.target_regions || []).join(", ") || "Australia";
-  const query = `${industrySectorText} conference trade show expo Australia ${targetRegionsText} 2025 2026`;
+  // Derive the search years from the report's timezone (Australia/Sydney) rather
+  // than hardcoding "2025 2026", which silently rots — by 2027 it would steer the
+  // search at stale years. Current + next year keeps upcoming events in scope.
+  const currentYear = Number(todayIsoForReportTimezone().slice(0, 4));
+  const query = `${industrySectorText} conference trade show expo Australia ${targetRegionsText} ${currentYear} ${currentYear + 1}`;
 
   console.log(`Discovering external events: "${query}"`);
   const startTime = Date.now();
@@ -1560,7 +1612,7 @@ async function generateReportInBackground(
     ] = await Promise.all([
       firecrawlKey && intake.website_url
         ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary)
-        : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary }),
+        : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary, diagnostics: null }),
       runMarketResearch(intake, persona),
       matchesAndEnrichTask(),
       firecrawlKey
@@ -1595,6 +1647,7 @@ async function generateReportInBackground(
 
     const enrichedSummary = companyEnrichResult.enrichedSummary;
     const companyProfile = companyEnrichResult.profile;
+    const companyScrapeDiag = companyEnrichResult.diagnostics;
 
     if (companyProfile) {
       await supabase.from("user_intake_forms")
@@ -1906,7 +1959,13 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         perplexity_used: marketResearch.used,
         perplexity_health: marketResearch.health,
         perplexity_citations: marketResearch.citations,
-        firecrawl_deep_scrape: !!companyProfile,
+        // Accurate now: true only when the scrape produced usable content, not
+        // merely when Firecrawl was attempted (the fallback profile is truthy).
+        // Distinguishes a real scrape from a key/quota failure or a no-content site.
+        firecrawl_deep_scrape: companyScrapeDiag?.scrape_ok ?? false,
+        // Granular breakdown for diagnosing scrape quality (map URLs, key pages,
+        // content size, fallback). null when Firecrawl wasn't attempted.
+        firecrawl_deep_scrape_detail: companyScrapeDiag,
         firecrawl_providers_enriched: (matches.service_providers || []).filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
         polish_applied: polishApplied,
