@@ -26,7 +26,7 @@ TABLES="ii_content ii_curations ii_curated_log ii_experiment_outputs ii_reddit_s
 
 chunk_for() {
   case "$1" in
-    ii_content|ii_published_archive|ii_reddit_signals) echo 250 ;;  # big rows
+    ii_content|ii_published_archive|ii_reddit_signals) echo 150 ;;  # big rows
     *) echo 2000 ;;                                                 # light rows
   esac
 }
@@ -49,12 +49,17 @@ for t in $TABLES; do
   while true; do
     f="$PARTS/${t}__${seq}.tsv"
     if [ -z "$last" ]; then where="true"; else where="id > '$last'::uuid"; fi
-    if ! psql "$MES_KA" -v ON_ERROR_STOP=1 -q \
-         -c "\copy (select * from public.$t where $where order by id limit $cs) to '$f'"; then
-      rm -f "$f"
-      echo "  $t: connection dropped at chunk $seq — re-run the same command to resume."
-      exit 1
-    fi
+    # retry the SAME chunk in-place on a pooler drop (fast 2s recovery), only
+    # bail out to the outer resume loop if it keeps failing.
+    attempt=0
+    until psql "$MES_KA" -v ON_ERROR_STOP=1 -q \
+          -c "\copy (select * from public.$t where $where order by id limit $cs) to '$f'"; do
+      rm -f "$f"; attempt=$(( attempt + 1 ))
+      if [ "$attempt" -ge 8 ]; then
+        echo "  $t: still dropping at chunk $seq after $attempt tries — re-run to resume."; exit 1
+      fi
+      printf '    (pooler drop at chunk %s — retry %s)\n' "$seq" "$attempt"; sleep 2
+    done
     rows=$(wc -l < "$f" | tr -d ' ')
     if [ "$rows" -eq 0 ]; then rm -f "$f"; : > "$done_marker"; echo "  $t: done"; break; fi
     last=$(tail -1 "$f" | cut -f1)
