@@ -170,7 +170,7 @@ const ContentDetail = () => {
           </Link>
 
           <div className="flex items-center gap-2">
-            {isAdmin && sections.length > 0 && (
+            {isAdmin() && sections.length > 0 && (
               <ContentEnrichmentButton
                 contentId={content.id}
                 contentTitle={content.title}
@@ -185,7 +185,7 @@ const ContentDetail = () => {
         </div>
 
         {/* Admin attachment manager — renders below action bar when expanded */}
-        {isAdmin && (
+        {isAdmin() && (
           <GuideAttachmentManager contentItemId={content.id} />
         )}
 
