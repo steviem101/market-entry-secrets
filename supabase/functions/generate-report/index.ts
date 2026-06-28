@@ -13,11 +13,54 @@ import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
+// Per-report Firecrawl plumbing health + op accounting (Stage 1 audit P1/P2).
+// Mirrors the perplexity_health pattern: a total outage (expired/over-quota key
+// → every call 401/429) is otherwise indistinguishable from "no data found".
+// `ops` doubles as the per-report Firecrawl call count for cost visibility.
+// A fresh object is created per report and threaded explicitly through the
+// wrappers — NO module-level mutable state, so concurrent background tasks in
+// the same isolate can't corrupt each other's counts. SSRF-blocked URLs make no
+// API call and are deliberately NOT counted as ops.
+interface FirecrawlStats {
+  ops: number;
+  succeeded: number;
+  scrape: { attempted: number; ok: number };
+  map: { attempted: number; ok: number };
+  search: { attempted: number; ok: number };
+  statuses: number[];
+}
+
+function createFirecrawlStats(): FirecrawlStats {
+  return {
+    ops: 0, succeeded: 0,
+    scrape: { attempted: 0, ok: 0 },
+    map: { attempted: 0, ok: 0 },
+    search: { attempted: 0, ok: 0 },
+    statuses: [],
+  };
+}
+
+/** Record one Firecrawl API call outcome. status 0 = network error/timeout.
+ *  `ok` is HTTP-200-level success (content emptiness is tracked separately). */
+function recordFirecrawl(
+  stats: FirecrawlStats | undefined,
+  kind: "scrape" | "map" | "search",
+  status: number,
+  ok: boolean,
+): void {
+  if (!stats) return;
+  stats.ops++;
+  stats[kind].attempted++;
+  stats.statuses.push(status);
+  if (ok) { stats.succeeded++; stats[kind].ok++; }
+}
+
 /** Scrape a single URL with a timeout. Returns markdown or null. */
 async function firecrawlScrape(
   apiKey: string,
   url: string,
-  timeoutMs = 10000
+  timeoutMs = 10000,
+  stats?: FirecrawlStats,
 ): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -37,12 +80,14 @@ async function firecrawlScrape(
       signal: controller.signal,
     });
 
+    recordFirecrawl(stats, "scrape", resp.status, resp.ok);
     if (!resp.ok) return null;
 
     const data = await resp.json();
     const md = data.data?.markdown || data.markdown || null;
     return md ? sanitizeScrapedContent(md) : null;
   } catch {
+    recordFirecrawl(stats, "scrape", 0, false);
     return null;
   } finally {
     clearTimeout(timer);
@@ -53,7 +98,8 @@ async function firecrawlScrape(
 async function firecrawlMap(
   apiKey: string,
   url: string,
-  timeoutMs = 5000
+  timeoutMs = 5000,
+  stats?: FirecrawlStats,
 ): Promise<string[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -73,11 +119,13 @@ async function firecrawlMap(
       signal: controller.signal,
     });
 
+    recordFirecrawl(stats, "map", resp.status, resp.ok);
     if (!resp.ok) return [];
 
     const data = await resp.json();
     return data.links || [];
   } catch {
+    recordFirecrawl(stats, "map", 0, false);
     return [];
   } finally {
     clearTimeout(timer);
@@ -89,7 +137,8 @@ async function firecrawlSearch(
   apiKey: string,
   query: string,
   limit = 5,
-  timeoutMs = 15000
+  timeoutMs = 15000,
+  stats?: FirecrawlStats,
 ): Promise<Array<{ url: string; title: string; description: string; markdown: string }>> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -108,6 +157,7 @@ async function firecrawlSearch(
       signal: controller.signal,
     });
 
+    recordFirecrawl(stats, "search", resp.status, resp.ok);
     if (!resp.ok) return [];
 
     const data = await resp.json();
@@ -118,6 +168,7 @@ async function firecrawlSearch(
       markdown: sanitizeScrapedContent((r.markdown || ""), 1500),
     }));
   } catch {
+    recordFirecrawl(stats, "search", 0, false);
     return [];
   } finally {
     clearTimeout(timer);
@@ -129,10 +180,10 @@ async function firecrawlSearch(
  * Used when a competitor / end buyer was added by name without a website (the
  * v2 CompanyPicker leaves website blank for the backend to resolve). Fail-soft.
  */
-async function resolveDomainFromName(apiKey: string, name: string): Promise<string> {
+async function resolveDomainFromName(apiKey: string, name: string, stats?: FirecrawlStats): Promise<string> {
   if (!apiKey || !name.trim()) return "";
   try {
-    const results = await firecrawlSearch(apiKey, `${name} official website`, 1, 8000);
+    const results = await firecrawlSearch(apiKey, `${name} official website`, 1, 8000, stats);
     const url = results[0]?.url || "";
     if (!url) return "";
     return new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
@@ -184,7 +235,8 @@ async function enrichCompanyDeep(
   lovableKey: string,
   websiteUrl: string,
   companyName: string,
-  fallbackSummary: string
+  fallbackSummary: string,
+  stats?: FirecrawlStats,
 ): Promise<{ profile: EnrichedCompanyProfile; enrichedSummary: string; diagnostics: CompanyScrapeDiagnostics }> {
   const defaultProfile: EnrichedCompanyProfile = {
     summary: fallbackSummary,
@@ -207,8 +259,8 @@ async function enrichCompanyDeep(
 
   try {
     const [allUrls, homepageMarkdown] = await Promise.all([
-      firecrawlMap(firecrawlKey, websiteUrl),
-      firecrawlScrape(firecrawlKey, websiteUrl),
+      firecrawlMap(firecrawlKey, websiteUrl, 5000, stats),
+      firecrawlScrape(firecrawlKey, websiteUrl, 10000, stats),
     ]);
 
     diagnostics.map_urls = allUrls.length;
@@ -219,7 +271,7 @@ async function enrichCompanyDeep(
     console.log(`Scraping ${keyPages.length} key pages:`, keyPages);
 
     const additionalScrapes = await Promise.allSettled(
-      keyPages.map((url) => firecrawlScrape(firecrawlKey, url))
+      keyPages.map((url) => firecrawlScrape(firecrawlKey, url, 10000, stats))
     );
 
     const allContent: string[] = [];
@@ -294,7 +346,8 @@ ${combinedContent}`,
 
 async function enrichMatchedProviders(
   firecrawlKey: string,
-  providers: any[]
+  providers: any[],
+  stats?: FirecrawlStats,
 ): Promise<any[]> {
   if (!firecrawlKey || providers.length === 0) return providers;
 
@@ -306,7 +359,7 @@ async function enrichMatchedProviders(
     if (!providerUrl) return provider;
 
     try {
-      const markdown = await firecrawlScrape(firecrawlKey, providerUrl, 10000);
+      const markdown = await firecrawlScrape(firecrawlKey, providerUrl, 10000, stats);
       if (markdown && markdown.length > 50) {
         return {
           ...provider,
@@ -343,7 +396,8 @@ async function scrapeKnownCompetitors(
   firecrawlKey: string,
   lovableKey: string,
   knownCompetitors: Array<{ name: string; website: string }>,
-  companyName: string
+  companyName: string,
+  stats?: FirecrawlStats,
 ): Promise<CompetitorData[]> {
   if (!firecrawlKey || knownCompetitors.length === 0) return [];
 
@@ -366,8 +420,8 @@ async function scrapeKnownCompetitors(
       // Resolve a domain from the name when none was provided (P1.5).
       const website = (comp.website && comp.website.trim())
         ? comp.website
-        : await resolveDomainFromName(firecrawlKey, comp.name);
-      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 10000) : null;
+        : await resolveDomainFromName(firecrawlKey, comp.name, stats);
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 10000, stats) : null;
       if (!markdown || markdown.length < 50) {
         return { name: comp.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
@@ -403,7 +457,8 @@ ${markdown.slice(0, 2000)}`,
 async function searchCompetitors(
   firecrawlKey: string,
   lovableKey: string,
-  intake: any
+  intake: any,
+  stats?: FirecrawlStats,
 ): Promise<{ competitors: CompetitorData[]; raw_results: any[] }> {
   const empty = { competitors: [], raw_results: [] };
   if (!firecrawlKey) return empty;
@@ -418,8 +473,8 @@ async function searchCompetitors(
 
     // Run known competitor scraping AND web search in parallel
     const [knownResults, results] = await Promise.all([
-      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name),
-      firecrawlSearch(firecrawlKey, query, 5),
+      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name, stats),
+      firecrawlSearch(firecrawlKey, query, 5, 15000, stats),
     ]);
 
     const userDomain = new URL(
@@ -484,7 +539,8 @@ async function scrapeEndBuyers(
   firecrawlKey: string,
   lovableKey: string,
   endBuyers: Array<{ name: string; website: string }>,
-  companyName: string
+  companyName: string,
+  stats?: FirecrawlStats,
 ): Promise<EndBuyerIntelligence[]> {
   if (!firecrawlKey || endBuyers.length === 0) return [];
 
@@ -499,8 +555,8 @@ async function scrapeEndBuyers(
       // Resolve a domain from the name when none was provided (P1.5).
       const website = (buyer.website && buyer.website.trim())
         ? buyer.website
-        : await resolveDomainFromName(firecrawlKey, buyer.name);
-      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 8000) : null;
+        : await resolveDomainFromName(firecrawlKey, buyer.name, stats);
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 8000, stats) : null;
       if (!markdown || markdown.length < 50) {
         return { name: buyer.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
@@ -745,7 +801,8 @@ interface DiscoveredEvent {
 async function discoverExternalEvents(
   firecrawlKey: string,
   lovableKey: string,
-  intake: any
+  intake: any,
+  stats?: FirecrawlStats,
 ): Promise<DiscoveredEvent[]> {
   if (!firecrawlKey) return [];
 
@@ -761,7 +818,7 @@ async function discoverExternalEvents(
   const startTime = Date.now();
 
   try {
-    const results = await firecrawlSearch(firecrawlKey, query, 5);
+    const results = await firecrawlSearch(firecrawlKey, query, 5, 15000, stats);
     if (results.length === 0) return [];
 
     const aiResp = await callAI(lovableKey, [
@@ -1591,13 +1648,18 @@ async function generateReportInBackground(
 
     console.log("Starting optimised parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + providers enrichment + competitors + end buyers...");
 
+    // One stats collector per report, threaded through every Firecrawl wrapper
+    // so the metadata can report plumbing health + total op count (P1/P2).
+    const firecrawlStats = createFirecrawlStats();
+
     // Wrap DB matching + provider enrichment into a single parallel task
     const matchesAndEnrichTask = async () => {
       const rawMatches = await searchMatches(supabase, intake);
       // Enrich providers in parallel (was previously sequential after the main block)
       rawMatches.service_providers = await enrichMatchedProviders(
         firecrawlKey,
-        rawMatches.service_providers || []
+        rawMatches.service_providers || [],
+        firecrawlStats,
       );
       return rawMatches;
     };
@@ -1611,15 +1673,15 @@ async function generateReportInBackground(
       endBuyerProcurementResearch,
     ] = await Promise.all([
       firecrawlKey && intake.website_url
-        ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary)
+        ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary, firecrawlStats)
         : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary, diagnostics: null }),
       runMarketResearch(intake, persona),
       matchesAndEnrichTask(),
       firecrawlKey
-        ? searchCompetitors(firecrawlKey, lovableKey, intake)
+        ? searchCompetitors(firecrawlKey, lovableKey, intake, firecrawlStats)
         : Promise.resolve({ competitors: [], raw_results: [] }),
       firecrawlKey && (intake.end_buyers || []).length > 0
-        ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name)
+        ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name, firecrawlStats)
         : Promise.resolve([]),
       researchEndBuyerProcurement(intake),
     ]);
@@ -1660,7 +1722,7 @@ async function generateReportInBackground(
     const internalEventCount = (matches.events || []).length;
     if (firecrawlKey && internalEventCount < 3) {
       console.log(`Only ${internalEventCount} internal events found — discovering external events...`);
-      discoveredEvents = await discoverExternalEvents(firecrawlKey, lovableKey, intake);
+      discoveredEvents = await discoverExternalEvents(firecrawlKey, lovableKey, intake, firecrawlStats);
     } else {
       console.log(`${internalEventCount} internal events found — skipping external event discovery`);
     }
@@ -1678,6 +1740,9 @@ async function generateReportInBackground(
       }));
       matches.events = [...(matches.events || []), ...discoveredEventMatches];
     }
+
+    // All Firecrawl work for this report is done — log plumbing health + op count.
+    console.log(`Firecrawl health: ${firecrawlStats.succeeded}/${firecrawlStats.ops} OK (scrape ${firecrawlStats.scrape.ok}/${firecrawlStats.scrape.attempted}, map ${firecrawlStats.map.ok}/${firecrawlStats.map.attempted}, search ${firecrawlStats.search.ok}/${firecrawlStats.search.attempted}); statuses [${firecrawlStats.statuses.join(",")}]`);
 
     // 3. Get user subscription tier
     let userTier = "free";
@@ -1968,6 +2033,12 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // Granular breakdown for diagnosing scrape quality (map URLs, key pages,
         // content size, fallback). null when Firecrawl wasn't attempted.
         firecrawl_deep_scrape_detail: companyScrapeDiag,
+        // Plumbing health + per-report op/credit accounting across ALL Firecrawl
+        // calls (company scrape, provider enrichment, competitors, end buyers,
+        // events). Mirrors perplexity_health: succeeded:0 with a non-empty
+        // statuses array = the API is rejecting us (key/quota), not "no data".
+        // `ops` is the total Firecrawl call count for cost visibility.
+        firecrawl_health: firecrawlStats,
         firecrawl_providers_enriched: (matches.service_providers || []).filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
         polish_applied: polishApplied,
