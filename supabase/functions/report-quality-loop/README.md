@@ -60,15 +60,24 @@ rollup). It POSTs to the function with the `x-webhook-secret` header (same patte
 
 ```jsonc
 {
-  "batch_size": 20,        // reports per run (max 50)
+  "batch_size": 20,        // max reports to consider per run (hard max 50)
   "token_budget": 200000,  // total Anthropic tokens (in+out) per run; stops the batch when hit
   "lookback_days": 14,     // how far back to consider report_quality rows
+  "max_run_ms": 95000,     // wall-clock deadline; stops the batch early and still writes/posts
   "dry_run": false         // true → score + return proposals WITHOUT writing or posting
 }
 ```
 
 `PROPOSAL_CAP` (40) bounds proposals written per run. Cost is logged to
 `automation_runs.cost` (`{ input_tokens, output_tokens, usd }`).
+
+**Wall-clock deadline.** Edge functions are killed at the gateway timeout (~150s). The
+loop processes reports sequentially and stops at `max_run_ms` (default 95s), then writes
++ logs + posts whatever it gathered. Any reports not yet reviewed are picked up on the
+next run (already-proposed reports are skipped), so a backlog drains across runs rather
+than blowing the timeout. A partial run is flagged in `automation_runs.metadata.deadline_hit`
+and noted in the Slack digest. To sweep a large backlog at once, invoke repeatedly (each
+call clears ~6–8 more) rather than raising `batch_size`.
 
 ## Manual / dry run
 

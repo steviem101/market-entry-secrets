@@ -34,6 +34,12 @@ const MAX_BATCH = 50;
 const DEFAULT_TOKEN_BUDGET = 200000; // total Anthropic tokens (in+out) per run
 const DEFAULT_LOOKBACK_DAYS = 14;
 const PROPOSAL_CAP = 40; // max proposals written per run
+// Wall-clock deadline: stop the batch early and still write/log/post what we have, so the
+// edge function never blows the gateway timeout (which kills it before the batch insert).
+// Leftover reports are picked up next run (proposed-on reports are skipped). Default 95s
+// keeps worst-case (deadline + one in-flight judge call) under the ~150s edge limit.
+const DEFAULT_MAX_RUN_MS = 95000;
+const JUDGE_TIMEOUT_MS = 30000;
 // Rough Anthropic USD pricing per 1M tokens (sonnet-class default; informational only).
 const PRICE_IN = 3.0;
 const PRICE_OUT = 15.0;
@@ -70,7 +76,7 @@ async function judge(system: string, user: string): Promise<JudgeResult | null> 
   if (!ANTHROPIC_API_KEY) return null;
   try {
     const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 45000);
+    const to = setTimeout(() => ctrl.abort(), JUDGE_TIMEOUT_MS);
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -111,6 +117,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const batchSize = Math.min(Math.max(Number(body.batch_size) || DEFAULT_BATCH, 1), MAX_BATCH);
   const tokenBudget = Math.max(Number(body.token_budget) || DEFAULT_TOKEN_BUDGET, 10000);
   const lookbackDays = Math.max(Number(body.lookback_days) || DEFAULT_LOOKBACK_DAYS, 1);
+  const maxRunMs = Math.max(Number(body.max_run_ms) || DEFAULT_MAX_RUN_MS, 10000);
   const dryRun = body.dry_run === true;
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
@@ -175,11 +182,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     let reviewed = 0, inTok = 0, outTok = 0;
+    let deadlineHit = false;
+    const runStart = Date.now();
     const allRows: ProposalRow[] = [];
     const axisRel: number[] = [], axisCon: number[] = [], axisFid: number[] = [];
 
     for (const rq of batch) {
       if (inTok + outTok >= tokenBudget) { log("token budget reached — stopping batch", { reviewed }); break; }
+      if (Date.now() - runStart >= maxRunMs) { deadlineHit = true; log("wall-clock deadline reached — stopping batch", { reviewed }); break; }
 
       const { data: report } = await supabase.from("user_reports")
         .select("id, report_json, tier_at_generation, intake_form_id").eq("id", rq.report_id).maybeSingle();
@@ -214,6 +224,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       reviewed, proposed: ranked.length, tokens_used: tokensUsed, cost,
       metadata: {
         batch_size: batchSize, token_budget: tokenBudget, lookback_days: lookbackDays,
+        max_run_ms: maxRunMs, deadline_hit: deadlineHit, eligible: batch.length,
         model: ANTHROPIC_MODEL, rubric_version: RUBRIC_VERSION,
         avg_axes: { relevance: avg(axisRel), conciseness: avg(axisCon), fidelity: avg(axisFid) },
       },
@@ -232,11 +243,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
       { type: "section", text: { type: "mrkdwn", text: `*Top recurring themes*\n${themes.length ? themes.map((t) => `${t.category} ×${t.count} — _${t.example}_`).join("\n") : "_none_"}` } },
       { type: "divider" },
       { type: "section", text: { type: "mrkdwn", text: `*Top proposals*\n${topProposals.join("\n") || "_none_"}` } },
-      { type: "context", elements: [{ type: "mrkdwn", text: `propose-only · review in report_quality_proposals · rubric ${RUBRIC_VERSION} · ${new Date().toUTCString()}` }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: `propose-only · review in report_quality_proposals · rubric ${RUBRIC_VERSION}${deadlineHit ? ` · partial run (${reviewed}/${batch.length}; rest next run)` : ""} · ${new Date().toUTCString()}` }] },
     ];
     if (!dryRun) await postToSlack(channel, `Report-quality loop — ${ranked.length} proposals from ${reviewed} reports`, blocks);
 
-    return json({ ok: true, reviewed, proposed: ranked.length, tokens_used: tokensUsed, cost, dry_run: dryRun, proposals: dryRun ? ranked : undefined });
+    return json({ ok: true, reviewed, proposed: ranked.length, eligible: batch.length, deadline_hit: deadlineHit, tokens_used: tokensUsed, cost, dry_run: dryRun, proposals: dryRun ? ranked : undefined });
   } catch (e) {
     log("run failed", String(e));
     await finish("error", { reviewed: 0, proposed: 0 }, String(e));
