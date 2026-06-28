@@ -1787,8 +1787,10 @@ async function generateReportInBackground(
       known_competitors_json: JSON.stringify(intake.known_competitors || []),
       end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",
       end_buyers_json: JSON.stringify(intake.end_buyers || []),
+      // Scraped per-buyer intelligence — now consumed by the action_plan template
+      // (migration 20260628120000). Previously this was also duplicated into
+      // end_buyers_analysis_json, which no template read; that dead duplicate is removed.
       end_buyers_scraped_json: JSON.stringify(endBuyerScrapeResult || []),
-      end_buyers_analysis_json: JSON.stringify(endBuyerScrapeResult || []),
       end_buyer_research: endBuyerProcurementResearch || "No end buyer procurement data available.",
       market_research_landscape: marketResearch.landscape || "No market research data available.",
       market_research_regulatory: marketResearch.regulatory || "No regulatory research data available.",
