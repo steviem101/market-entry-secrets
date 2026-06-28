@@ -105,6 +105,44 @@ async function judge(system: string, user: string): Promise<JudgeResult | null> 
   }
 }
 
+// Post-only mode: push the current open review queue (status='new') to Slack via the
+// loop's own bot. No scoring, no writes, no automation_runs row — just a digest the team
+// can react to in-thread. Triggered by POST { "post_queue": true }.
+// deno-lint-ignore no-explicit-any
+async function postQueue(supabase: any, channel: string, limit: number): Promise<Response> {
+  const { data: rows } = await supabase.from("report_quality_proposals")
+    .select("id, report_id, category, title, recommended_change, impact_estimate, confidence, risk, evidence")
+    .eq("status", "new").order("rank_score", { ascending: false }).limit(limit);
+  // deno-lint-ignore no-explicit-any
+  const props = (rows ?? []) as any[];
+  if (!props.length) {
+    await postToSlack(channel, "Report-quality queue — empty", [
+      { type: "header", text: { type: "plain_text", text: "🔁 Report Quality — review queue" } },
+      { type: "section", text: { type: "mrkdwn", text: "_No open proposals (status = new)._" } },
+    ]);
+    return json({ ok: true, posted: 0 });
+  }
+  const lines = props.map((p, i) => {
+    const ref = String(p.id).slice(0, 8);
+    const company = p.evidence?.company ?? "(unknown)";
+    return `${i + 1}. \`[${ref}]\` *${company}* · ${p.category} — ${p.title} _(${p.impact_estimate}, conf ${p.confidence}, risk ${p.risk})_\n    ↳ ${String(p.recommended_change ?? "").slice(0, 180)}  <${REPORT_BASE_URL}/${p.report_id}|report ↗>`;
+  });
+  const blocks: unknown[] = [
+    { type: "header", text: { type: "plain_text", text: `🔁 Report Quality — ${props.length} proposals for review` } },
+    { type: "section", text: { type: "mrkdwn", text: "*Reply in-thread with the* `[ref]` *codes* — e.g. _approve 3f27c7ed, 808f0171 / reject cd6a333d_. Propose-only: nothing ships until a proposal is accepted." } },
+    { type: "divider" },
+  ];
+  let buf = "";
+  for (const ln of lines) {
+    if (buf && (buf + "\n" + ln).length > 2800) { blocks.push({ type: "section", text: { type: "mrkdwn", text: buf } }); buf = ln; }
+    else buf = buf ? buf + "\n" + ln : ln;
+  }
+  if (buf) blocks.push({ type: "section", text: { type: "mrkdwn", text: buf } });
+  blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `review in report_quality_proposals · ${new Date().toUTCString()}` }] });
+  const res = await postToSlack(channel, `Report-quality review queue — ${props.length} proposals`, blocks.slice(0, 50));
+  return json({ ok: res.ok, posted: props.length, error: res.error });
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
@@ -130,6 +168,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ ok: true, skipped: "loop_disabled" });
   }
   const channel = rt.channel_id as string;
+
+  // --- post-only mode: push the open review queue to Slack (no scoring) ---------------
+  if (body.post_queue === true) return await postQueue(supabase, channel, Math.min(Math.max(Number(body.limit) || 40, 1), 100));
 
   // --- open an automation_runs row ---------------------------------------------------
   const startedAt = new Date().toISOString();

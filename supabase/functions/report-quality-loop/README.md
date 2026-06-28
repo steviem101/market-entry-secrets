@@ -90,6 +90,14 @@ curl -sS -X POST "$SUPABASE_FUNCTIONS_URL/report-quality-loop" \
 
 (The loop must be enabled via the routing flag above for even a dry run to proceed.)
 
+## Post the review queue to Slack (no scoring)
+
+`POST {"post_queue": true}` reads the open proposals (`status='new'`, ranked) and posts
+the full list to `#report-quality` via the loop's own bot — no scoring, no writes, no
+`automation_runs` row. Each line carries a `[ref]` (first 8 chars of the proposal id) so
+reviewers can reply in-thread (e.g. "approve 3f27c7ed / reject cd6a333d"). Optional
+`limit` (default 40, max 100).
+
 ## Reviewing proposals
 
 `report_quality_proposals` is admin-read + admin-update. A reviewer accepts/rejects by
