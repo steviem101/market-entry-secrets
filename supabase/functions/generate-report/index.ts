@@ -4,6 +4,7 @@ import { log } from "../_shared/log.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
+import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shared/scrapeCache.ts";
 import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
@@ -44,70 +45,6 @@ function createFirecrawlStats(): FirecrawlStats {
     statuses: [],
     cache_hits: 0,
     cache_misses: 0,
-  };
-}
-
-// ── Scrape cache (P1) ──────────────────────────────────────────────────
-// Cross-report memoisation of firecrawlScrape() results, backed by the
-// firecrawl_scrape_cache table (service-role only). Created once per report and
-// threaded through firecrawlScrape exactly like FirecrawlStats. Entirely inert
-// unless FIRECRAWL_CACHE_ENABLED is set — when absent, the handle is undefined
-// and scraping behaves exactly as before. Read-time TTL: 14d for usable content,
-// 1d for negatives (so a transiently-down site retries soon).
-const SCRAPE_CACHE_TTL_OK_MS = 14 * 24 * 60 * 60 * 1000;
-const SCRAPE_CACHE_TTL_NEG_MS = 24 * 60 * 60 * 1000;
-
-interface ScrapeCacheEntry { content: string | null; ok: boolean; status: number }
-interface ScrapeCache {
-  get(key: string): Promise<{ content: string | null } | null>;
-  set(key: string, entry: ScrapeCacheEntry): Promise<void>;
-}
-
-/** Normalise a URL to a stable cache key: lowercase, strip scheme/www/trailing
- *  slash, KEEP the path (homepage vs /about are distinct scrape targets). */
-function normaliseScrapeKey(u: string): string {
-  return u.trim().toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/+$/, "");
-}
-
-/** Build a scrape cache backed by Supabase, or null if disabled. Best-effort:
- *  any DB error degrades to a live scrape (returns null from get / swallows set). */
-function buildScrapeCache(supabase: ReturnType<typeof createClient>): ScrapeCache | undefined {
-  if (!Deno.env.get("FIRECRAWL_CACHE_ENABLED")) return undefined;
-  return {
-    async get(key) {
-      try {
-        const { data } = await supabase
-          .from("firecrawl_scrape_cache")
-          .select("content, ok, fetched_at")
-          .eq("url_key", key)
-          .maybeSingle();
-        if (!data) return null;
-        const ageMs = Date.now() - new Date(data.fetched_at).getTime();
-        const ttl = data.ok ? SCRAPE_CACHE_TTL_OK_MS : SCRAPE_CACHE_TTL_NEG_MS;
-        if (ageMs > ttl) return null;
-        return { content: data.content ?? null };
-      } catch (e) {
-        console.error("scrape cache get failed (live scrape):", e instanceof Error ? e.message : "unknown");
-        return null;
-      }
-    },
-    async set(key, entry) {
-      try {
-        await supabase.from("firecrawl_scrape_cache").upsert({
-          url_key: key,
-          content: entry.content,
-          ok: entry.ok,
-          status: entry.status,
-          byte_len: entry.content ? entry.content.length : 0,
-          fetched_at: new Date().toISOString(),
-        }, { onConflict: "url_key" });
-      } catch (e) {
-        console.error("scrape cache set failed (continuing):", e instanceof Error ? e.message : "unknown");
-      }
-    },
   };
 }
 
@@ -2177,6 +2114,23 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
 
     if (reportErr) throw reportErr;
 
+    // Best-effort: mirror key metadata into queryable columns (migration
+    // 20260628150000). Deliberately a SEPARATE update from the critical save
+    // above so a missing column (deploy lag) or write error can never fail report
+    // generation — the report is already durably stored at this point.
+    try {
+      await supabase.from("user_reports").update({
+        generation_time_ms: Date.now() - startTime,
+        total_matches: Object.values(matches).reduce((sum: number, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
+        firecrawl_ops: firecrawlStats.ops,
+        firecrawl_scrape_ok: companyScrapeDiag?.scrape_ok ?? false,
+        perplexity_ok: marketResearch.health.succeeded > 0,
+        polish_applied: false,
+      }).eq("id", reportId);
+    } catch (e) {
+      console.warn("user_reports metadata columns update skipped:", e instanceof Error ? e.message : e);
+    }
+
     await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intakeFormId);
 
     console.log(`Report ${reportId} saved (unpolished) in ${Date.now() - startTime}ms`);
@@ -2227,6 +2181,14 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         .from("user_reports")
         .update({ report_json: polishedReportJson })
         .eq("id", reportId);
+
+      // Best-effort: keep the queryable polish_applied column in sync (separate
+      // from the report_json write above so a missing column never loses polish).
+      try {
+        await supabase.from("user_reports").update({ polish_applied: true }).eq("id", reportId);
+      } catch (e) {
+        console.warn("user_reports polish_applied column update skipped:", e instanceof Error ? e.message : e);
+      }
 
       polishApplied = true;
       console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);
