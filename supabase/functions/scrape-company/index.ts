@@ -3,6 +3,7 @@ import { buildCorsHeaders } from "../_shared/http.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
+import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shared/scrapeCache.ts";
 
 /**
  * scrape-company — Step 1 website prefill (P1.2).
@@ -59,20 +60,33 @@ async function firecrawlMap(apiKey: string, url: string, timeoutMs = 5000): Prom
   }
 }
 
-async function firecrawlScrape(apiKey: string, url: string, timeoutMs = 10000): Promise<string | null> {
+async function firecrawlScrape(apiKey: string, url: string, timeoutMs = 10000, cache?: ScrapeCache): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
+    // Shared cross-function scrape cache (P1): the same homepage/about URL is
+    // later re-scraped by generate-report's enrichCompanyDeep, so warming it here
+    // saves that report a Firecrawl call. A hit avoids the API entirely.
+    const cacheKey = cache ? normaliseScrapeKey(url) : "";
+    if (cache) {
+      const hit = await cache.get(cacheKey);
+      if (hit) return hit.content;
+    }
     const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
       signal: controller.signal,
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+      if (cache) await cache.set(cacheKey, { content: null, ok: false, status: resp.status });
+      return null;
+    }
     const data = await resp.json();
     const md = data.data?.markdown || data.markdown || null;
-    return md ? sanitizeScrapedContent(md, 6000) : null;
+    const content = md ? sanitizeScrapedContent(md, 6000) : null;
+    if (cache) await cache.set(cacheKey, { content, ok: !!content, status: resp.status });
+    return content;
   } catch {
     return null;
   } finally {
@@ -157,18 +171,22 @@ Deno.serve(async (req: Request) => {
       return json({ _reason: "missing-keys" }, 200);
     }
 
+    // Shared scrape cache (P1) — undefined unless FIRECRAWL_CACHE_ENABLED is set.
+    // Warms (and reuses) the same firecrawl_scrape_cache that generate-report reads.
+    const scrapeCache = buildScrapeCache(createClient(supabaseUrl, serviceKey));
+
     // Run map + homepage scrape in PARALLEL (was sequential, costing ~5s).
     // Map finds an About/Company link; homepage always gets scraped.
     const t0 = Date.now();
     const [links, homepageMd] = await Promise.all([
       firecrawlMap(firecrawlKey, url, 4000),
-      firecrawlScrape(firecrawlKey, url, 8000),
+      firecrawlScrape(firecrawlKey, url, 8000, scrapeCache),
     ]);
     console.log(`scrape-company: map+homepage in ${Date.now() - t0}ms (links=${links.length}, homepage=${homepageMd?.length || 0}b)`);
 
     // If we found a likely About page, scrape it too for richer extraction.
     const keyPage = links.find((l) => /about|company|who-we-are/i.test(l));
-    const keyMd = keyPage ? await firecrawlScrape(firecrawlKey, keyPage, 6000) : null;
+    const keyMd = keyPage ? await firecrawlScrape(firecrawlKey, keyPage, 6000, scrapeCache) : null;
     if (keyMd) console.log(`scrape-company: keyPage ${keyPage} → ${keyMd.length}b`);
 
     const content = [homepageMd, keyMd].filter(Boolean).join("\n\n").slice(0, 8000);
