@@ -8,7 +8,7 @@ import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServ
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
@@ -1122,7 +1122,12 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     // semantic path so the two paths agree on event surfacing. applySellsTo:true —
     // events are a buyer-facing surface, so the buyer-industry signal counts here.
     const ranked = rank(ev || [], { applySellsTo: true }, 12);
-    let eventResults = regionFilterAndDedupeEvents(ranked, locationPatterns, 5);
+    // Relevance gate (report-quality loop ref d6a6ce3d): prefer events with a genuine
+    // industry / sells-to sector match over sector-agnostic ones (e.g. a fitness or
+    // accounting expo surfacing for a cyber company), but never empty the section —
+    // keep at least 6 candidates so the region filter + dedupe below still have a pool.
+    const gatedEvents = preferRelevant(ranked, hasSectorRelevance, 6);
+    let eventResults = regionFilterAndDedupeEvents(gatedEvents, locationPatterns, 5);
 
     // Fallback when the strict filter returned nothing: take the soonest
     // future events in the target region (still date-bounded — no more
@@ -1181,7 +1186,21 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
       .limit(100);
     const { data: ld, error: ldErr } = await ldQuery;
     if (ldErr) console.error("Lead databases query error:", ldErr);
-    matches.lead_databases = rank(ld, { applySellsTo: true }, 5).map((l: any) => ({
+    // Relevance gate (report-quality loop ref b29b88c1): lead_databases carry a `sector`
+    // string + `tags[]` (NOT sector_tags), so the sector scorer is blind to them and
+    // ranking is essentially location-only. Prefer datasets whose sector/tags/text match
+    // the buyer's end-buyer industries (or the company's own industry), with the same
+    // never-empty fallback. No industries supplied → tokens empty → every lead passes.
+    const leadIndustryTokens = industryTokens([
+      ...(intake.end_buyer_industries || []),
+      ...(intake.industry_sector || []),
+    ]);
+    const leadIsRelevant = (l: any): boolean =>
+      leadIndustryTokens.length === 0 ||
+      textMatchesAnyToken([l.sector, l.tags, l.title, l.short_description], leadIndustryTokens);
+    const rankedLeads = rank(ld, { applySellsTo: true }, 12);
+    const gatedLeads = preferRelevant(rankedLeads, leadIsRelevant, 5).slice(0, 5);
+    matches.lead_databases = gatedLeads.map((l: any) => ({
       ...l, name: l.title, price: l.price_aud,
       link: l.slug ? `/leads/${l.slug}` : "/leads", linkLabel: "View Dataset",
       subtitle: `${l.location ?? ""} · ${l.record_count ?? "?"} records`,

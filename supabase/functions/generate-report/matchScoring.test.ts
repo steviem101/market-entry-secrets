@@ -6,7 +6,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, type MatchContext, type Scored } from "./matchScoring.ts";
+import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type Scored } from "./matchScoring.ts";
 
 const CTX: MatchContext = {
   userSectors: ["technology-information-and-media", "construction", "professional-services"],
@@ -187,4 +187,56 @@ test("normalizePersonName collapses honorifics + punctuation", () => {
   assert.equal(normalizePersonName("Dr. Sarah Chen"), "sarah chen");
   assert.equal(normalizePersonName("Sarah Chen"), "sarah chen");
   assert.equal(normalizePersonName("Prof Anne-Marie O'Brien"), "annemarie obrien");
+});
+
+// ── Relevance gate (report-quality loop refs d6a6ce3d events / b29b88c1 leads) ──
+
+test("hasSectorRelevance reads the explainable match_reasons", () => {
+  assert.equal(hasSectorRelevance({ match_reasons: ["industry match ×1 (+3)", "location (+1)"] }), true);
+  assert.equal(hasSectorRelevance({ match_reasons: ["sells-to sector ×2 (+3)"] }), true);
+  // agnostic / location-only matches are NOT genuine sector relevance
+  assert.equal(hasSectorRelevance({ match_reasons: ["eligible for all sectors (+0.25)", "location (+1)"] }), false);
+  assert.equal(hasSectorRelevance({ match_reasons: [] }), false);
+  assert.equal(hasSectorRelevance({}), false);
+});
+
+test("preferRelevant drops weak rows when enough relevant exist", () => {
+  const rows = [
+    { id: "a", rel: true }, { id: "b", rel: true }, { id: "c", rel: true },
+    { id: "d", rel: false }, { id: "e", rel: false },
+  ];
+  const out = preferRelevant(rows, (r) => r.rel, 3);
+  assert.deepEqual(out.map((r) => r.id), ["a", "b", "c"], "weak fitness/accounting-style rows dropped");
+});
+
+test("preferRelevant backfills to minKeep when too few are relevant (never empties)", () => {
+  const rows = [
+    { id: "a", rel: true }, { id: "b", rel: false }, { id: "c", rel: false }, { id: "d", rel: false },
+  ];
+  const out = preferRelevant(rows, (r) => r.rel, 3);
+  assert.deepEqual(out.map((r) => r.id), ["a", "b", "c"], "1 relevant + 2 backfilled, order preserved");
+});
+
+test("preferRelevant with zero relevant keeps the original ranked head (fallback)", () => {
+  const rows = [{ id: "a", rel: false }, { id: "b", rel: false }];
+  assert.deepEqual(preferRelevant(rows, (r) => r.rel, 5).map((r) => r.id), ["a", "b"]);
+  assert.deepEqual(preferRelevant([], (r: any) => r.rel, 5), []);
+});
+
+test("industryTokens + textMatchesAnyToken match a lead by its sector/tags text", () => {
+  const tokens = industryTokens(["Software Development", "Cybersecurity"]);
+  // full-label and salient-word tokens present; noise words excluded
+  assert.ok(tokens.includes("cybersecurity"));
+  assert.ok(tokens.includes("software"));
+  assert.ok(tokens.includes("development"));
+
+  const cyberLead = { sector: "Cybersecurity", tags: ["enterprise", "infosec"], title: "Top AU security buyers", short_description: "" };
+  const fitnessLead = { sector: "Health & Fitness", tags: ["gyms"], title: "Gym operators", short_description: "" };
+  assert.equal(textMatchesAnyToken([cyberLead.sector, cyberLead.tags, cyberLead.title, cyberLead.short_description], tokens), true);
+  assert.equal(textMatchesAnyToken([fitnessLead.sector, fitnessLead.tags, fitnessLead.title, fitnessLead.short_description], tokens), false);
+});
+
+test("textMatchesAnyToken ignores sub-3-char tokens and empty haystacks", () => {
+  assert.equal(textMatchesAnyToken([null, [], ""], ["software"]), false);
+  assert.equal(textMatchesAnyToken(["AI consulting"], ["ai"]), false, "2-char token must not match");
 });
