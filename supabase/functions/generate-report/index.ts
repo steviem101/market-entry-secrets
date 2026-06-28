@@ -1899,7 +1899,7 @@ async function generateReportInBackground(
       end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",
       end_buyers_json: JSON.stringify(intake.end_buyers || []),
       // Scraped per-buyer intelligence — now consumed by the action_plan template
-      // (migration 20260628120000). Previously this was also duplicated into
+      // (migration 20260628210000). Previously this was also duplicated into
       // end_buyers_analysis_json, which no template read; that dead duplicate is removed.
       end_buyers_scraped_json: JSON.stringify(endBuyerScrapeResult || []),
       end_buyer_research: endBuyerProcurementResearch || "No end buyer procurement data available.",
@@ -2115,7 +2115,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     if (reportErr) throw reportErr;
 
     // Best-effort: mirror key metadata into queryable columns (migration
-    // 20260628150000). Deliberately a SEPARATE update from the critical save
+    // 20260628210003). Deliberately a SEPARATE update from the critical save
     // above so a missing column (deploy lag) or write error can never fail report
     // generation — the report is already durably stored at this point.
     try {
