@@ -30,15 +30,7 @@ import { CountryFAQ } from "@/components/countries/CountryFAQ";
 import { CountryLeadCapture } from "@/components/countries/CountryLeadCapture";
 import { buildCountryJsonLd } from "@/components/countries/CountryStructuredData";
 import { publishedOrigin } from "@/lib/publishedOrigin";
-
-const COUNTRY_CODES: Record<string, string | null> = {
-  ireland: "IE",
-  uk: "GB",
-  "united-kingdom": "GB",
-  usa: "US",
-  "united-states": "US",
-  singapore: "SG",
-};
+import { getCountryCode } from "@/lib/countryCodes";
 
 // Per-slug SEO overrides — keep bespoke copy data-driven rather than branching in JSX.
 const SEO_OVERRIDES: Record<string, { title: string; description: (c: { name: string; key_industries?: string[] }) => string }> = {
@@ -84,7 +76,7 @@ const CountryPage = () => {
     );
   }
 
-  const countryCode = COUNTRY_CODES[slug] ?? null;
+  const countryCode = getCountryCode(slug);
   const baseUrl = publishedOrigin();
   const canonicalPath = `/countries/${country.slug}`;
   const canonicalUrl = `${baseUrl}${canonicalPath}`;

@@ -11,12 +11,14 @@ const AllCountriesSection = ({ searchQuery }: AllCountriesSectionProps) => {
   const { data: countries = [], isLoading } = useCountries();
 
   const filteredCountries = useMemo(() => {
-    if (!searchQuery) return countries;
-    
+    // No search: the featured row above already surfaces featured countries,
+    // so exclude them here to avoid rendering them twice on first load.
+    if (!searchQuery) return countries.filter((country) => !country.featured);
+
     return countries.filter(country =>
       country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       country.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      country.key_industries.some(industry => 
+      country.key_industries.some(industry =>
         industry.toLowerCase().includes(searchQuery.toLowerCase())
       )
     );

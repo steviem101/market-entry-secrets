@@ -36,7 +36,7 @@ const FeaturedCountriesSection = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {featuredCountries.map((country) => (
-            <CountryCard key={country.id} country={country} />
+            <CountryCard key={country.id} country={country} featured />
           ))}
         </div>
       </div>

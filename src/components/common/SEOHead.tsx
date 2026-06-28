@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 
 type JsonLdType =
   | "LocalBusiness"
@@ -28,11 +29,6 @@ interface SEOHeadProps {
   jsonLd?: JsonLdBlock | JsonLdBlock[];
 }
 
-const BASE_URL =
-  typeof window !== "undefined"
-    ? window.location.origin
-    : "https://market-entry-secrets.lovable.app";
-
 const buildLd = (block: JsonLdBlock) => ({
   "@context": "https://schema.org",
   "@type": block.type,
@@ -47,7 +43,7 @@ export const SEOHead = ({
   ogType = "website",
   jsonLd,
 }: SEOHeadProps) => {
-  const canonicalUrl = `${BASE_URL}${canonicalPath}`;
+  const canonicalUrl = `${publishedOrigin()}${canonicalPath}`;
   const truncatedDescription = description?.slice(0, 160) || "";
 
   const blocks: JsonLdBlock[] = jsonLd
