@@ -231,6 +231,7 @@ const ReportViewInner = () => {
                         linkLabel={match.linkLabel}
                         blurred={match.blurred}
                         upgradeCta={match.upgrade_cta}
+                        requiredTier={requiredTier || undefined}
                         website={match.website}
                         source={match.source}
                       />

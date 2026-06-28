@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { LeadCard } from "@/components/LeadCard";
 import { getSectorMeta, DEFAULT_FEATURES_BY_TYPE } from "@/constants/sectorTaxonomy";
+import { useIntroRequest } from "@/components/directory/IntroRequestProvider";
 import type { LeadDatabase } from "@/types/leadDatabase";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 
@@ -67,17 +68,14 @@ export const LeadDatabaseDetailContent = ({
 }: LeadDatabaseDetailContentProps) => {
   const sectorMeta = getSectorMeta(db.sector);
   const benefitCopy = generateBenefitCopy(db);
+  const { enquireLead } = useIntroRequest();
+  const openEnquiry = () =>
+    enquireLead({ entity: "lead_list", id: db.id, name: db.title, recordCount: db.record_count, sector: db.sector });
 
   // Use sample_fields from DB, or fall back to defaults by list_type
   const features = (db.sample_fields && db.sample_fields.length > 0)
     ? db.sample_fields
     : DEFAULT_FEATURES_BY_TYPE[db.list_type || 'Lead Database'] || DEFAULT_FEATURES_BY_TYPE['Lead Database'];
-
-  const ctaLabel = db.is_free
-    ? 'Get Free Access'
-    : db.price_aud
-      ? `Get Instant Access — $${db.price_aud.toLocaleString()}`
-      : 'Get Instant Access';
 
   return (
     <div className="container mx-auto px-4 py-10">
@@ -222,19 +220,6 @@ export const LeadDatabaseDetailContent = ({
                       </dd>
                     </div>
                   )}
-                  {(db.price_aud || db.is_free) && (
-                    <div>
-                      <dt className="text-muted-foreground">Price</dt>
-                      <dd className="font-medium flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        {db.is_free ? (
-                          <span className="text-green-600">Free</span>
-                        ) : (
-                          <span>${db.price_aud?.toLocaleString()} AUD</span>
-                        )}
-                      </dd>
-                    </div>
-                  )}
                   {db.last_updated && (
                     <div>
                       <dt className="text-muted-foreground">Last Updated</dt>
@@ -273,15 +258,16 @@ export const LeadDatabaseDetailContent = ({
               </Card>
             )}
 
-            {/* CTA Card */}
+            {/* CTA Card — enquiry-led */}
             <Card className="bg-purple-500/5 border-purple-500/20">
               <CardContent className="pt-6">
                 <h3 className="font-semibold mb-2">Close deals faster</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Get instant access to {db.record_count?.toLocaleString() || 'all'} verified contacts and start outreach today.
+                  Tap into {db.record_count?.toLocaleString() || 'hundreds of'} verified contacts. Tell us about your
+                  target market and we'll help you put this list to work.
                 </p>
-                <Button className="w-full" onClick={onCheckout} disabled={checkoutLoading}>
-                  {checkoutLoading ? 'Loading...' : ctaLabel}
+                <Button className="w-full" onClick={openEnquiry}>
+                  Find out more
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </CardContent>

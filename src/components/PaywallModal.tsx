@@ -41,7 +41,7 @@ export const PaywallModal = ({ contentType, contentTitle, contentDescription }: 
             <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-xl">Sign Up to Continue</CardTitle>
+            <CardTitle className="text-xl">Sign up to continue</CardTitle>
             <CardDescription>
               You've reached your limit of 3 free views. Sign up to get unlimited access to all {info.description}.
             </CardDescription>
@@ -88,7 +88,7 @@ export const PaywallModal = ({ contentType, contentTitle, contentDescription }: 
               className="w-full"
               size="lg"
             >
-              Sign Up for Free
+              Sign up for free
             </Button>
             <p className="text-xs text-center text-muted-foreground">
               Already have an account? Sign in to continue

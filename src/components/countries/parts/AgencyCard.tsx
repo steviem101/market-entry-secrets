@@ -1,5 +1,5 @@
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DirectoryCard } from "@/components/directory/DirectoryCard";
+import { CardCTA } from "@/components/directory/CardCTA";
 
 interface AgencyCardProps {
   agency: {
@@ -25,7 +25,7 @@ const initials = (name: string) =>
 
 export const AgencyCard = ({ agency }: AgencyCardProps) => {
   return (
-    <article className="bg-mes-card border border-mes-border rounded-xl p-5 flex flex-col">
+    <DirectoryCard compact>
       <div className="flex items-start gap-3">
         <div className="w-11 h-11 rounded-lg bg-mes-blue-light/40 border border-mes-blue-light text-mes-teal-dark flex items-center justify-center font-semibold tracking-wider text-[13px]">
           {initials(agency.name)}
@@ -43,13 +43,12 @@ export const AgencyCard = ({ agency }: AgencyCardProps) => {
         <p className="mt-4 text-[14px] leading-relaxed text-mes-ink-soft">{agency.description}</p>
       )}
       <div className="mt-auto pt-4">
-        <Button asChild variant="link" className="p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
-          <a href={agency.slug ? `/government-support/${agency.slug}` : "#"}>
-            View {agency.name} profile
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </a>
-        </Button>
+        <CardCTA
+          entity="agency"
+          target={{ entity: "agency", id: agency.id, name: agency.name }}
+          secondaryHref={agency.slug ? `/government-support/${agency.slug}` : undefined}
+        />
       </div>
-    </article>
+    </DirectoryCard>
   );
 };

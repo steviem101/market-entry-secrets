@@ -145,3 +145,23 @@ Existing per-entity cards become thin adapters mapping data → `DirectoryCard` 
 | 5 | Keep any price signal on leads (`from $…`) or remove all? | **Remove all** per the ask; keep `record_count` as the value signal. |
 
 **Awaiting sign-off on §2 wording table, §3–4 flows, §5 gated vocabulary, and the §7 answers before writing Phase 2 code.**
+
+---
+
+## 8. Phase 2 — implemented (signed off: approve as proposed, full shared DirectoryCard)
+
+Shipped on `claude/directory-card-cta-audit-ghwngz`.
+
+**Shared layer** (`src/components/directory/`): `cardCtaConfig.ts` (copy map), `DirectoryCard.tsx` (2xl radius + soft shadow + hover-lift shell), `CardCTA.tsx` (primary/secondary/gated from config), `WarmIntroModal.tsx` (generalised from `MentorContactModal`), `IntroRequestProvider.tsx` (app-level modal host + `useIntroRequest()`), mounted in `App.tsx` inside `BrowserRouter`.
+
+**Cards migrated onto the shell + CardCTA:** `CompanyCard` (service_provider | agency | innovation_hub via new `entity` prop), `MentorCard`, `PersonCard`, `InvestorCard`, and all four country cards (`countries/parts/{Service,Mentor,Investor,Agency}Card` — `mes-*` shells replaced, ad-hoc verbs removed). `LeadCard` uses CardCTA with the lead-enquiry primary.
+
+**Change 1 — Get warm intro:** primary on provider/mentor/investor/agency/hub cards + their detail heroes/modals (`ServiceProviderProfileHero`, `CompanyModalFooter`, `PersonModal`; `MentorProfile`/`MentorContactModal` retained). All route through the shared modal; the old `mailto:`/`/mentor-connections`/no-op paths are gone, so every intro is persisted + notified. Mentors → `mentor_contact_requests`; providers/investors/agencies/hubs → `directory_submissions` (`submission_type` ∈ {service_provider, investor, trade_agency, innovation_organization}; `investor` added to the CHECK; `content_type: 'intro_request'` distinguishes intros).
+
+**Change 2 — leads:** every `price_aud` surface removed (card CTA, detail hero, detail sidebar, preview modal, `Price: …` sort options). Primary is now **Find out more** → enquiry modal writing to `lead_submissions` (NOT NULL `email/phone/sector/target_market` populated; lead ref + requester in `notes`). `record_count` kept as the value signal. No checkout on the card surface.
+
+**Staff notification:** producer triggers on the three funnel tables emit `intro.requested` / `submission.received` / `lead.submitted` into `public.activity_events` → existing `slack-notify` pipeline (#mes-ops). Routing rows were already seeded; they stay `enabled=false` until ops cutover (verified end-to-end via a rolled-back transaction). Migrations: `20260628120000_intro_enquiry_activity_producers.sql`, `20260628120500_directory_submissions_allow_investor_type.sql`.
+
+**Gated wording:** tier family unified to **Unlock with {Tier}** (`ReportMatchCard`, `ReportGatedSection`); freemium family normalised to sentence case (`Sign up to continue` / `Sign up for free` / `Sign up free`). No RLS / visibility_tier / 3-view-gate behaviour changed.
+
+**Deviations from the proposal:** (a) leads enquiry needed `phone/sector/target_market` because `lead_submissions` enforces them NOT NULL — an optional phone field was added to the enquiry modal and sensible defaults supplied; (b) `investor` was added to the `directory_submissions.submission_type` CHECK (additive). `types.ts` untouched (`(supabase as any)` casts used).

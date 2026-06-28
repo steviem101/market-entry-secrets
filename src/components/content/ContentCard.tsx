@@ -3,7 +3,7 @@ import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Eye, BookOpen, TrendingUp, Users, FileText, Play, Star, Download } from "lucide-react";
+import { Calendar, Clock, Eye, BookOpen, TrendingUp, Users, FileText, Play, Star, Download, ArrowRight } from "lucide-react";
 
 const iconMap: Record<string, any> = {
   TrendingUp,
@@ -123,6 +123,11 @@ export const ContentCard = memo(({ content, featured = false, attachmentCount = 
                 {content.view_count}
               </div>
             )}
+          </div>
+
+          <div className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary">
+            Read more
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
           </div>
         </CardContent>
       </Card>

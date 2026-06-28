@@ -23,6 +23,7 @@ const TradeAgenciesSection = ({ tradeAgencies }: TradeAgenciesSectionProps) => {
       >
         {tradeAgencies.slice(0, 6).map((agency) => (
           <CompanyCard
+            entity="agency"
             key={agency.id}
             company={{
               id: agency.id,

@@ -61,6 +61,7 @@ const InnovationEcosystemResults = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOrganizations.map((org) => (
             <CompanyCard
+            entity="innovation_hub"
             key={org.id}
             company={{
               id: org.id,

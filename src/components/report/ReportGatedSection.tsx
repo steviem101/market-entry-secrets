@@ -67,7 +67,7 @@ export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSecti
                 <Lock className="w-7 h-7 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Upgrade to {tierLabels[requiredTier] || requiredTier}
+                Unlock with {tierLabels[requiredTier] || requiredTier}
               </h3>
               <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
                 Unlock the {title} section and get deeper insights for your market entry strategy.

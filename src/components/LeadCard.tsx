@@ -5,11 +5,13 @@ import { Card } from "@/components/ui/card";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Link } from "react-router-dom";
 import { getSectorGradient, getSectorMeta } from "@/constants/sectorTaxonomy";
+import { CardCTA } from "@/components/directory/CardCTA";
 import type { LeadDatabase } from "@/types/leadDatabase";
 
 interface LeadCardProps {
   lead: LeadDatabase;
   onPreview?: (lead: LeadDatabase) => void;
+  /** @deprecated leads are now enquiry-led; checkout removed from the card surface. */
   onCheckout?: (lead: LeadDatabase) => void;
 }
 
@@ -56,12 +58,6 @@ export const LeadCard = ({ lead, onPreview, onCheckout }: LeadCardProps) => {
 
   const gradient = getSectorGradient(lead.sector);
   const sectorMeta = getSectorMeta(lead.sector);
-
-  const ctaLabel = lead.is_free
-    ? 'Get Free Access'
-    : lead.price_aud
-      ? `Buy Now — $${lead.price_aud.toLocaleString()}`
-      : 'Get Instant Access';
 
   return (
     <Link to={`/leads/${lead.slug}`} className="block h-full group">
@@ -110,7 +106,6 @@ export const LeadCard = ({ lead, onPreview, onCheckout }: LeadCardProps) => {
                 list_type: lead.list_type,
                 sector: lead.sector,
                 location: lead.location,
-                price_aud: lead.price_aud,
                 record_count: lead.record_count,
               }}
               size="sm"
@@ -156,36 +151,35 @@ export const LeadCard = ({ lead, onPreview, onCheckout }: LeadCardProps) => {
           </div>
         </div>
 
-        {/* Card Footer CTAs */}
+        {/* Card Footer CTAs — enquiry-led, no price/checkout on the card surface */}
         <div className="px-5 pb-5 pt-0">
-          <div className="flex gap-2 w-full">
-            {lead.preview_available && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onPreview?.(lead);
-                }}
-              >
-                <Eye className="w-4 h-4 mr-1" />
-                Preview
-              </Button>
-            )}
-            <Button
-              size="sm"
-              className="flex-1"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onCheckout?.(lead);
-              }}
-            >
-              {ctaLabel}
-            </Button>
-          </div>
+          <CardCTA
+            entity="lead_list"
+            target={{
+              entity: "lead_list",
+              id: lead.id,
+              name: lead.title,
+              recordCount: lead.record_count,
+              sector: lead.sector,
+            }}
+            hideSecondary
+            extra={
+              lead.preview_available ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onPreview?.(lead);
+                  }}
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  Preview
+                </Button>
+              ) : undefined
+            }
+          />
         </div>
       </Card>
     </Link>

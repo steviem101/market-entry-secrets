@@ -254,7 +254,7 @@ const MentorProfile = () => {
                 />
                 <Button onClick={() => setShowContact(true)}>
                   <Handshake className="w-4 h-4 mr-2" />
-                  Get Warm Intro
+                  Get warm intro
                 </Button>
               </div>
             </div>
@@ -500,7 +500,7 @@ const MentorProfile = () => {
                 </p>
                 <Button className="w-full" onClick={() => setShowContact(true)}>
                   <Handshake className="w-4 h-4 mr-2" />
-                  Request Warm Intro
+                  Get warm intro
                 </Button>
               </CardContent>
             </Card>

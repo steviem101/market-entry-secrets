@@ -1,17 +1,18 @@
-import { Link } from "react-router-dom";
-import { Calendar, Users, Globe, Handshake, Star } from "lucide-react";
+import { Calendar, Users, Globe, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Company } from "@/components/CompanyCard";
+import { CardCTA } from "@/components/directory/CardCTA";
+import type { DirectoryEntity } from "@/components/directory/cardCtaConfig";
 
 interface CompanyCardFooterProps {
   company: Company;
   onViewProfile: (company: Company) => void;
   onContact: (company: Company) => void;
   detailUrl?: string;
+  entity?: DirectoryEntity;
 }
 
-const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: CompanyCardFooterProps) => {
+const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl, entity = "service_provider" }: CompanyCardFooterProps) => {
   const foundedDisplay = company.founded_year ? String(company.founded_year) : company.founded;
   const teamDisplay = company.team_size_range || company.employees;
   const websiteUrl = company.website_url || company.website;
@@ -67,60 +68,12 @@ const CompanyCardFooter = ({ company, onViewProfile, onContact, detailUrl }: Com
       </div>
       )}
 
-      <div className="flex gap-2">
-        {detailUrl ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            asChild
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Link to={detailUrl}>
-              View Profile
-            </Link>
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onViewProfile(company);
-            }}
-            className="flex-1"
-          >
-            View Profile
-          </Button>
-        )}
-        {(company.contact_email || company.contact) ? (
-          <Button
-            size="sm"
-            className="flex-1"
-            asChild
-            onClick={(e) => e.stopPropagation()}
-          >
-            <a href={`mailto:${company.contact_email || company.contact}`}>
-              <Handshake className="w-4 h-4 mr-1" />
-              Get Warm Intro
-            </a>
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onContact(company);
-            }}
-            className="flex-1"
-          >
-            <Handshake className="w-4 h-4 mr-1" />
-            Get Warm Intro
-          </Button>
-        )}
-      </div>
+      <CardCTA
+        entity={entity}
+        target={{ entity, id: company.id, name: company.name }}
+        secondaryHref={detailUrl}
+        onSecondary={detailUrl ? undefined : () => onViewProfile(company)}
+      />
     </>
   );
 };

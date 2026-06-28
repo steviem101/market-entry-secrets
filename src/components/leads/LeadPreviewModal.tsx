@@ -9,13 +9,15 @@ import {
 } from "@/components/ui/dialog";
 import { getMockPreviewData, type MockPreviewRow } from "@/constants/mockPreviewData";
 import { useLeadDatabaseRecords } from "@/hooks/useLeadDatabases";
+import { useIntroRequest } from "@/components/directory/IntroRequestProvider";
 import type { LeadDatabase, LeadDatabaseRecord } from "@/types/leadDatabase";
 
 interface LeadPreviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lead: LeadDatabase;
-  onCheckout: () => void;
+  /** @deprecated leads are enquiry-led; checkout removed from the surface. */
+  onCheckout?: () => void;
 }
 
 /**
@@ -57,11 +59,11 @@ export const LeadPreviewModal = ({
   open,
   onOpenChange,
   lead,
-  onCheckout,
 }: LeadPreviewModalProps) => {
   const { data: previewRecords = [] } = useLeadDatabaseRecords(
     open ? lead.id : ''
   );
+  const { enquireLead } = useIntroRequest();
 
   const hasRealData = previewRecords.length > 0;
   const rows: MockPreviewRow[] = hasRealData
@@ -70,12 +72,6 @@ export const LeadPreviewModal = ({
 
   // TODO: Replace mock data with real preview records from lead_database_records table
   // Once all lead databases have preview records populated, the mock fallback can be removed.
-
-  const ctaLabel = lead.is_free
-    ? 'Get Free Access'
-    : lead.price_aud
-      ? `Get Instant Access — $${lead.price_aud.toLocaleString()} AUD`
-      : 'Get Instant Access';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -134,7 +130,7 @@ export const LeadPreviewModal = ({
           </div>
           <div>
             <p className="font-semibold text-foreground">
-              Sign in or purchase to unlock full access to{' '}
+              Enquire to access the full list of{' '}
               {lead.record_count?.toLocaleString() || 'all'} records
             </p>
             <p className="text-sm text-muted-foreground mt-1">
@@ -151,8 +147,20 @@ export const LeadPreviewModal = ({
             <span>•</span>
             <span>CSV + API access</span>
           </div>
-          <Button size="lg" onClick={onCheckout} className="mt-2">
-            {ctaLabel}
+          <Button
+            size="lg"
+            className="mt-2"
+            onClick={() =>
+              enquireLead({
+                entity: "lead_list",
+                id: lead.id,
+                name: lead.title,
+                recordCount: lead.record_count,
+                sector: lead.sector,
+              })
+            }
+          >
+            Find out more
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>

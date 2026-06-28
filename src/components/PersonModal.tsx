@@ -7,15 +7,18 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Person } from "./PersonCard";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { useIntroRequest } from "@/components/directory/IntroRequestProvider";
 
 interface PersonModalProps {
   person: Person | null;
   isOpen: boolean;
   onClose: () => void;
-  onContact: (person: Person) => void;
+  /** @deprecated warm intro now routes through the shared IntroRequestProvider. */
+  onContact?: (person: Person) => void;
 }
 
-const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) => {
+const PersonModal = ({ person, isOpen, onClose }: PersonModalProps) => {
+  const { requestIntro } = useIntroRequest();
   if (!person) return null;
 
   const displayName = person.isAnonymous ? person.title : person.name;
@@ -146,9 +149,12 @@ const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) =
                 </a>
               </Button>
             )}
-            <Button onClick={() => onContact(person)} className="flex-1">
+            <Button
+              onClick={() => requestIntro({ entity: "mentor", id: person.id, name: displayName })}
+              className="flex-1"
+            >
               <Handshake className="w-4 h-4 mr-2" />
-              Get Warm Intro
+              Get warm intro
             </Button>
           </div>
         </div>
