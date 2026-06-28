@@ -186,7 +186,14 @@ async function resolveDomainFromName(apiKey: string, name: string, stats?: Firec
     const results = await firecrawlSearch(apiKey, `${name} official website`, 1, 8000, stats);
     const url = results[0]?.url || "";
     if (!url) return "";
-    return new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
+    const host = new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
+    // Defence-in-depth (P3): the URL came from an attacker-influenceable search
+    // result, so never return a private/reserved host. firecrawlScrape also
+    // guards before fetching, but dropping it here avoids a doomed scrape and
+    // keeps a bogus internal host (e.g. 169.254.169.254) out of the report's
+    // competitor/buyer url field.
+    if (!host || isPrivateOrReservedUrl(`https://${host}`)) return "";
+    return host;
   } catch {
     return "";
   }
