@@ -1882,6 +1882,15 @@ async function generateReportInBackground(
       }
     } catch (e) { console.error("Country corridor fetch error:", e); }
 
+    // Phase C (RQ refs 3f27c7ed / 340c7245): the providers section already renders trade/
+    // government agencies + innovation hubs as cards (getMatchesForSection union), but the
+    // PROSE variable only saw matches.service_providers, so those entries read as "surfaced
+    // but unused". Feed the same deduped union into the providers prompt so they're actually
+    // written about. Built once and reused for the summary.
+    const providerUnion = getMatchesForSection("service_providers", matches);
+    const hasAgencyOrInnovation =
+      (matches.trade_investment_agencies || []).length > 0 || (matches.innovation_ecosystem || []).length > 0;
+
     const variables: Record<string, string> = {
       persona,
       company_name: intake.company_name,
@@ -1901,14 +1910,15 @@ async function generateReportInBackground(
       employee_count: intake.employee_count || "Not specified",
       enriched_summary: enrichedSummary,
       enriched_company_profile: companyProfile ? JSON.stringify(companyProfile) : "No enriched data available.",
-      matched_providers_json: JSON.stringify(matches.service_providers || []),
+      matched_providers_json: JSON.stringify(providerUnion),
       matched_mentors_json: JSON.stringify(matches.community_members || []),
       matched_events_json: JSON.stringify(matches.events || []),
       matched_content_json: JSON.stringify(matches.content_items || []),
       matched_leads_json: JSON.stringify(matches.leads || []),
       country_profile_json: countryProfile ? JSON.stringify(countryProfile) : "",
       matched_country_faqs_json: JSON.stringify(countryFaqs),
-      matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
+      key_metrics_json: JSON.stringify(keyMetrics),
+      matched_providers_summary: providerUnion.map((p: any) => p.name).join(", ") || "None found",
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
       matched_investors_json: JSON.stringify(matches.investors || []),
       matched_trade_investment_agencies_json: JSON.stringify(matches.trade_investment_agencies || []),
@@ -1985,6 +1995,28 @@ async function generateReportInBackground(
     const challengesText = (intake.key_challenges || "").trim();
     const companyContextNote = `\n\nCOMPANY CONTEXT (weave in where relevant to this section): ${contextBits}.${challengesText ? ` Stated challenges to address: ${challengesText}.` : ""}`;
 
+    // Phase C (RQ ref fb82483e): one canonical set of market metrics for the whole report,
+    // so sections can't cite contradicting market-size / value figures. Pulled from the single
+    // landscape extraction (keyMetrics) and injected into every section's system prompt.
+    const metricsNote = keyMetrics.length
+      ? `\n\nCANONICAL MARKET FIGURES (single source of truth for the whole report): ${keyMetrics.map((m) => `${m.label}: ${m.value}${m.context ? ` (${m.context})` : ""}`).join("; ")}. When you reference market size, value, growth rate, or similar metrics, use ONLY these exact figures — do NOT invent different numbers or let sections contradict one another. If a needed figure is not listed here, give qualitative guidance rather than a fabricated number.`
+      : "";
+
+    // Phase C (RQ ref 7a000874): when the user's stated priority is an explicit home-vs-
+    // Australia comparison, instruct sections (esp. SWOT + action plan) to contrast the two
+    // markets using the provided research rather than describing Australia in isolation.
+    const wantsComparison = /\b(compare|comparison|versus|vs\.?|benchmark|home market|against)\b/i.test(reportFocus);
+    const comparisonNote = wantsComparison
+      ? `\n\nHOME-MARKET COMPARISON: The user explicitly wants a comparison between their home market (${intake.country_of_origin}) and Australia. Where relevant — especially in the SWOT analysis and action plan — explicitly contrast home-market vs Australian conditions (regulatory, cost of doing business, procurement / go-to-market, and competitive intensity), grounded in the provided market research and bilateral-trade data. Do not invent home-market figures you cannot support.`
+      : "";
+
+    // Phase C (RQ refs 3f27c7ed / 340c7245): the providers list may include trade/government
+    // agencies and innovation hubs/accelerators alongside private firms — make sure they're
+    // covered in prose, not just listed as cards. Applied only to the providers section.
+    const supportMixNote = hasAgencyOrInnovation
+      ? `\n\nSUPPORT MIX: The matched providers for this report include government/trade agencies and/or innovation hubs & accelerators as well as private service providers. Group them by type (e.g. "Government & trade support", "Innovation & accelerators", "Private providers") and explain each one's specific role for ${intake.company_name} — do not omit the agencies or hubs.`
+      : "";
+
     // D2: emphasise (never hide) the sections the user's selected goals map to.
     const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
 
@@ -2037,7 +2069,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
