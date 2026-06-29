@@ -5,6 +5,7 @@ import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shared/scrapeCache.ts";
+import { selectKeyPages } from "./keyPageSelect.ts";
 import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
@@ -229,15 +230,8 @@ async function resolveDomainFromName(apiKey: string, name: string, stats?: Firec
 }
 
 // ── Enhancement 3: Deep company scrape (map + multi-page) ─────────────
-
-const KEY_PAGE_PATTERNS = [
-  /about/i, /product/i, /service/i, /solution/i,
-  /team/i, /case.?stud/i, /client/i, /partner/i,
-];
-
-function isKeyPage(url: string): boolean {
-  return KEY_PAGE_PATTERNS.some((p) => p.test(url));
-}
+// Key-page selection lives in keyPageSelect.ts (pure + unit-tested): it ranks
+// mapped URLs so customer/case-study/pricing pages win over generic ones.
 
 interface EnrichedCompanyProfile {
   summary: string;
@@ -295,16 +289,28 @@ async function enrichCompanyDeep(
   };
 
   try {
-    const [allUrls, homepageMarkdown] = await Promise.all([
+    const [allUrls, homepageFirstTry] = await Promise.all([
       firecrawlMap(firecrawlKey, websiteUrl, 5000, stats),
       firecrawlScrape(firecrawlKey, websiteUrl, 10000, stats, cache),
     ]);
+
+    // Retry the homepage once on failure — it grounds the entire profile, and
+    // telemetry showed ~13% of Firecrawl ops time out (status 0). A timeout is
+    // NOT cached, so this is a genuine second attempt (with a longer budget); a
+    // 200-with-no-content IS cached, so the retry is just a cache hit (no extra
+    // API call). Only the homepage retries — key pages stay best-effort.
+    let homepageMarkdown = homepageFirstTry;
+    if (!homepageMarkdown) {
+      homepageMarkdown = await firecrawlScrape(firecrawlKey, websiteUrl, 15000, stats, cache);
+    }
 
     diagnostics.map_urls = allUrls.length;
     diagnostics.homepage_ok = !!homepageMarkdown;
     console.log(`Map found ${allUrls.length} URLs on ${websiteUrl}`);
 
-    const keyPages = allUrls.filter(isKeyPage).slice(0, 2);
+    // Prioritised selection (keyPageSelect.ts): customer/case-study/pricing pages
+    // first, then products/about. Up to 3 (was a flat "first 2 that matched").
+    const keyPages = selectKeyPages(allUrls, 3);
     console.log(`Scraping ${keyPages.length} key pages:`, keyPages);
 
     const additionalScrapes = await Promise.allSettled(
@@ -320,7 +326,10 @@ async function enrichCompanyDeep(
       }
     }
 
-    const combinedContent = allContent.join("\n\n---\n\n").slice(0, 2000);
+    // Budget raised 2000 → 4000: feed the extractor more of the (now better-
+    // chosen) pages so named clients / positioning aren't truncated away. Each
+    // page is still individually capped upstream by sanitizeScrapedContent.
+    const combinedContent = allContent.join("\n\n---\n\n").slice(0, 4000);
     diagnostics.content_chars = combinedContent.length;
 
     if (combinedContent.length < 100) {
