@@ -245,3 +245,47 @@ Either way the drop is the LAST action, after consumers point at Irish Insights.
 `notion-research-trigger` (not in this repo) + their secrets (or have CC deploy via MCP given
 source), and the external-consumer repoint (step 6). Cutover strategy (A vs B) is an operator
 decision.
+
+---
+
+### Session C (2026-06-29) cont. — interim delta top-up (operator chose "top-up now, repoint later")
+
+MES is still **actively writing** (a classify/curate batch was observed mid-measurement:
+`ii_content` recent-window jumped 177→314 and `ii_curated_log` grew 5213→5427→… within
+minutes). So a "now" top-up is by definition a moving target; the authoritative zero-gap
+sync still happens at the freeze. Done as an interim convergence step anyway, per operator.
+
+**Mechanism — server-side `dblink` (NOT through CC's context).** The delta included
+`ii_content` rows with full `body_html` + `vector(1536)` embeddings (~2 MB, 57 kB max row);
+round-tripping that through MCP result→reconstructed-INSERT would burn huge tokens and risk
+escaping/truncation bugs. Instead: enabled `dblink` on II (`extensions` schema), pulled MES
+rows DB→DB via the **Session pooler** (`aws-0-ap-southeast-2.pooler.supabase.com:5432`,
+user `postgres.xhziwveaiuhzdoutpgrh`), `insert … on conflict` directly. All heavy types move
+natively. `session_replication_role=replica` during inserts to neutralise the ii_*→ii_* FK
+graph (incl. `ii_content.story_cluster_id` self-ref) regardless of order. Extension dropped
+again afterwards (only `vector` + `pg_trgm` remain).
+
+**Windows / conflict policy:** prefilter ≥06-25 DO NOTHING; content ≥06-20 DO UPDATE (catches
+backfilled embeddings too); curations ≥06-20 DO UPDATE; curated_log ≥06-20 then ≥06-28 DO
+NOTHING (append-only).
+
+**Verification (server-side dblink anti-join, "MES rows missing from II"):**
+8/9 tables = **0 missing**; `ii_curated_log` = 1 (a row appended by the live writer mid-check).
+FK orphan checks on II all **0** (curated_log→curations, curations→content,
+content→story_cluster). Final II counts: content 6897 (emb 1411) · curated_log 5483 ·
+curations 295 · experiment_outputs 30 · intro_archive 10 · personal_linkedin_posts 0 ·
+prefilter_log 14091 · published_archive 810 (810) · reddit_signals 550 (38).
+
+**Caveats carried forward:**
+- II is now a **superset** on `ii_curated_log` (it retains a few older rows MES has since
+  pruned). Harmless for a log; if exact parity is wanted, reconcile at the freeze.
+- Interim only — MES keeps drifting until consumers are repointed. **Final freeze-sync is
+  still required and is authoritative** (re-enable dblink, repeat the anti-join to 0, validate
+  FKs with `session_replication_role=default`).
+- The MES DB password was used inline in the dblink conn string (already shared in chat and on
+  the post-migration rotation list) — rotating it after cutover remains required; it also now
+  appears in II query logs/pg_stat_statements.
+
+**Hard Stop 2 status:** copy is verified faithful AND now topped-up to ~live, but the MES drop
+remains BLOCKED on (a) edge-fn source/secrets + consumer repoint, and (b) the final
+freeze-sync + explicit operator "yes". No destructive action taken on MES.
