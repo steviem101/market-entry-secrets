@@ -70,21 +70,39 @@ for t in $TABLES; do
   done
 done
 
-echo "=== LOAD into Irish Insights (Ireland = fast/local) ==="
-LOAD="$PARTS/_load.sql"
-{ echo "\\set ON_ERROR_STOP on"
-  echo "set session_replication_role = replica;"
-  echo "truncate ii_content, ii_curations, ii_curated_log, ii_experiment_outputs, ii_reddit_signals, ii_published_archive, ii_personal_linkedin_posts, ii_prefilter_log, ii_intro_archive;"; } > "$LOAD"
+echo "=== LOAD into Irish Insights (resumable, per-chunk, NO statement timeout) ==="
+# session GUCs prepended to every load connection: kill the statement timeout
+# (slow uploads were getting cut off), disable FK/triggers for the load.
+LOAD_SETS="set statement_timeout=0; set idle_in_transaction_session_timeout=0; set lock_timeout=0; set session_replication_role=replica;"
+LOADED="$PARTS/.loaded"
+
+if [ ! -d "$LOADED" ]; then
+  echo "  fresh load: truncating target tables"
+  if ! psql "$II_CONN" -v ON_ERROR_STOP=1 -q \
+       -c "$LOAD_SETS truncate ii_content, ii_curations, ii_curated_log, ii_experiment_outputs, ii_reddit_signals, ii_published_archive, ii_personal_linkedin_posts, ii_prefilter_log, ii_intro_archive;"; then
+    echo ">>> truncate failed — paste output to Claude."; exit 1
+  fi
+  mkdir -p "$LOADED"
+fi
+
 for t in $TABLES; do
   for f in "$PARTS"/${t}__*.tsv; do
-    [ -e "$f" ] && echo "\\copy public.$t from '$f'" >> "$LOAD"
+    [ -e "$f" ] || continue
+    base=$(basename "$f")
+    [ -f "$LOADED/$base" ] && continue      # already loaded -> skip (resume)
+    attempt=0
+    # -1 wraps the chunk in one txn; a failure rolls back (no partial rows)
+    until psql "$II_CONN" -v ON_ERROR_STOP=1 -q -1 \
+          -c "$LOAD_SETS" \
+          -c "\copy public.$t from '$f'"; do
+      attempt=$(( attempt + 1 ))
+      if [ "$attempt" -ge 8 ]; then echo "  load: $base failed after $attempt tries — re-run to resume."; exit 1; fi
+      printf '    (load retry %s on %s)\n' "$attempt" "$base"; sleep 2
+    done
+    : > "$LOADED/$base"
+    printf '    loaded %s (%s)\n' "$t" "$base"
   done
 done
-echo "set session_replication_role = default;" >> "$LOAD"
-
-if ! psql "$II_CONN" -v ON_ERROR_STOP=1 -q -f "$LOAD"; then
-  echo ">>> LOAD failed — paste output to Claude."; exit 1
-fi
 
 echo
 echo "=== DONE. Tell Claude to verify row counts + embeddings. ==="
