@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  expectedVisibleSections, gatedSections, tierMeets, buildCompactInput, buildScoringMessages,
+  expectedVisibleSections, gatedSections, tierMeets, normalizeTier, buildCompactInput, buildScoringMessages,
   parseScoring, toProposalRows, rankAndCap, rankScore, themeKey, summariseThemes,
   RUBRIC_VERSION, CATEGORIES,
 } from "./rubric.ts";
@@ -48,6 +48,27 @@ test("scale and enterprise gate nothing", () => {
 test("unknown tier is denied access to gated sections (fails closed)", () => {
   assert.equal(tierMeets("bogus", "growth"), false);
   assert.equal(tierMeets("free", "bogus"), false);
+});
+
+test("normalizeTier maps legacy tiers and falls back to free", () => {
+  assert.equal(normalizeTier("premium"), "growth");
+  assert.equal(normalizeTier("concierge"), "enterprise");
+  assert.equal(normalizeTier("Premium"), "growth"); // case-insensitive
+  assert.equal(normalizeTier("growth"), "growth"); // current tiers pass through
+  assert.equal(normalizeTier("scale"), "scale");
+  assert.equal(normalizeTier(null), "free");
+  assert.equal(normalizeTier(undefined), "free");
+  assert.equal(normalizeTier("bogus"), "free"); // unknown → free
+});
+
+test("a legacy 'premium' report is judged as growth-tier, not all-gated", () => {
+  // Before the fix, tier='premium' failed every tierMeets() check → gatedSections = ALL,
+  // so the judge could never flag a missing section. After normalizeTier it behaves as growth.
+  const tier = normalizeTier("premium");
+  assert.equal(tier, "growth");
+  assert.ok(expectedVisibleSections(tier).includes("mentor_recommendations")); // growth-gated, now expected
+  assert.ok(gatedSections(tier).includes("lead_list")); // still scale-only
+  assert.ok(!gatedSections(tier).includes("swot_analysis")); // growth unlocks swot
 });
 
 // --- compact input + PII scrubbing ---------------------------------------------------

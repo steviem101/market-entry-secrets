@@ -37,6 +37,18 @@ export const SECTION_ORDER = [
   "setup_compliance", "lead_list",
 ];
 
+// Legacy tier values still present in user_reports.tier_at_generation: the app remaps
+// these via mapDatabaseTier() (useSubscription.ts), but the loop reads the raw DB value.
+// Without this, a 'premium'/'concierge' report fails every tierMeets() check and is judged
+// as if ALL sections were gated — so its fidelity/coverage can never flag a missing
+// section. Map them the same way; unknown/null falls back to 'free'.
+const LEGACY_TIER_MAP: Record<string, string> = { premium: "growth", concierge: "enterprise" };
+export function normalizeTier(raw: string | null | undefined): string {
+  const t = String(raw ?? "free").trim().toLowerCase();
+  const mapped = LEGACY_TIER_MAP[t] ?? t;
+  return TIER_HIERARCHY.includes(mapped) ? mapped : "free";
+}
+
 export function tierMeets(userTier: string, requiredTier: string): boolean {
   const u = TIER_HIERARCHY.indexOf(userTier);
   const r = TIER_HIERARCHY.indexOf(requiredTier);
@@ -105,7 +117,7 @@ export interface CompactInput {
 // deno-lint-ignore no-explicit-any
 export function buildCompactInput(rq: any, report: any, intake: any): CompactInput {
   const rj = report?.report_json ?? {};
-  const tier = String(report?.tier_at_generation ?? "free");
+  const tier = normalizeTier(report?.tier_at_generation);
   const gated = new Set(gatedSections(tier));
   const sectionsObj = rj.sections ?? {};
 

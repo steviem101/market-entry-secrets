@@ -255,40 +255,60 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const tokensUsed = inTok + outTok;
     const cost = { input_tokens: inTok, output_tokens: outTok, usd: Number(((inTok * PRICE_IN + outTok * PRICE_OUT) / 1_000_000).toFixed(4)) };
 
+    // Persist proposals. A failed insert must NOT be reported as a successful run —
+    // otherwise automation_runs shows success/proposed=N and Slack announces N proposals
+    // while the queue stays empty (silent data loss). Capture the error and reflect the
+    // count actually written.
+    let insertError: string | null = null;
+    let proposalsWritten = 0;
     if (!dryRun && runId && ranked.length) {
       const insertRows = ranked.map((r) => ({ ...r, run_id: runId, status: "new" }));
       const { error: insErr } = await supabase.from("report_quality_proposals").insert(insertRows);
-      if (insErr) log("proposal insert error", insErr.message);
+      if (insErr) { insertError = insErr.message; log("proposal insert error", insErr.message); }
+      else proposalsWritten = ranked.length;
+    } else if (dryRun) {
+      proposalsWritten = ranked.length; // not persisted, but report what would be written
     }
 
-    await finish("success", {
-      reviewed, proposed: ranked.length, tokens_used: tokensUsed, cost,
+    await finish(insertError ? "error" : "success", {
+      reviewed, proposed: proposalsWritten, tokens_used: tokensUsed, cost,
       metadata: {
         batch_size: batchSize, token_budget: tokenBudget, lookback_days: lookbackDays,
         max_run_ms: maxRunMs, deadline_hit: deadlineHit, eligible: batch.length,
         model: ANTHROPIC_MODEL, rubric_version: RUBRIC_VERSION,
         avg_axes: { relevance: avg(axisRel), conciseness: avg(axisCon), fidelity: avg(axisFid) },
       },
-    });
+    }, insertError ?? undefined);
 
     // --- Slack digest ------------------------------------------------------------------
-    const themes = summariseThemes(ranked);
-    const topProposals = ranked.slice(0, 5).map((r) =>
-      `• ${band(Math.round(r.confidence * 100))} *${r.category}* — ${r.title}  _(impact ${r.impact_estimate}, conf ${r.confidence}, risk ${r.risk})_ <${REPORT_BASE_URL}/${r.report_id}|↗>`,
-    );
-    const blocks: unknown[] = [
-      { type: "header", text: { type: "plain_text", text: "🔁 Report Quality loop — proposals" } },
-      { type: "section", text: { type: "mrkdwn", text:
-        `*${reviewed} reviewed* · *${ranked.length} proposals* · ${tokensUsed.toLocaleString()} tokens ($${cost.usd})\n` +
-        `Avg axes — Relevance ${avg(axisRel)} · Conciseness ${avg(axisCon)} · Fidelity ${avg(axisFid)}` } },
-      { type: "section", text: { type: "mrkdwn", text: `*Top recurring themes*\n${themes.length ? themes.map((t) => `${t.category} ×${t.count} — _${t.example}_`).join("\n") : "_none_"}` } },
-      { type: "divider" },
-      { type: "section", text: { type: "mrkdwn", text: `*Top proposals*\n${topProposals.join("\n") || "_none_"}` } },
-      { type: "context", elements: [{ type: "mrkdwn", text: `propose-only · review in report_quality_proposals · rubric ${RUBRIC_VERSION}${deadlineHit ? ` · partial run (${reviewed}/${batch.length}; rest next run)` : ""} · ${new Date().toUTCString()}` }] },
-    ];
-    if (!dryRun) await postToSlack(channel, `Report-quality loop — ${ranked.length} proposals from ${reviewed} reports`, blocks);
+    let blocks: unknown[];
+    if (insertError) {
+      // Be loud about a write failure rather than claiming proposals that never landed.
+      blocks = [
+        { type: "header", text: { type: "plain_text", text: "🔁 Report Quality loop — ⚠️ write failed" } },
+        { type: "section", text: { type: "mrkdwn", text:
+          `*${reviewed} reviewed* · scored *${ranked.length}* proposals but the insert into report_quality_proposals FAILED — *0 written*.\n\`${insertError}\`` } },
+        { type: "context", elements: [{ type: "mrkdwn", text: `run logged as error · rubric ${RUBRIC_VERSION} · ${new Date().toUTCString()}` }] },
+      ];
+    } else {
+      const themes = summariseThemes(ranked);
+      const topProposals = ranked.slice(0, 5).map((r) =>
+        `• ${band(Math.round(r.confidence * 100))} *${r.category}* — ${r.title}  _(impact ${r.impact_estimate}, conf ${r.confidence}, risk ${r.risk})_ <${REPORT_BASE_URL}/${r.report_id}|↗>`,
+      );
+      blocks = [
+        { type: "header", text: { type: "plain_text", text: "🔁 Report Quality loop — proposals" } },
+        { type: "section", text: { type: "mrkdwn", text:
+          `*${reviewed} reviewed* · *${proposalsWritten} proposals* · ${tokensUsed.toLocaleString()} tokens ($${cost.usd})\n` +
+          `Avg axes — Relevance ${avg(axisRel)} · Conciseness ${avg(axisCon)} · Fidelity ${avg(axisFid)}` } },
+        { type: "section", text: { type: "mrkdwn", text: `*Top recurring themes*\n${themes.length ? themes.map((t) => `${t.category} ×${t.count} — _${t.example}_`).join("\n") : "_none_"}` } },
+        { type: "divider" },
+        { type: "section", text: { type: "mrkdwn", text: `*Top proposals*\n${topProposals.join("\n") || "_none_"}` } },
+        { type: "context", elements: [{ type: "mrkdwn", text: `propose-only · review in report_quality_proposals · rubric ${RUBRIC_VERSION}${deadlineHit ? ` · partial run (${reviewed}/${batch.length}; rest next run)` : ""} · ${new Date().toUTCString()}` }] },
+      ];
+    }
+    if (!dryRun) await postToSlack(channel, insertError ? `Report-quality loop — write FAILED (${ranked.length} scored, 0 written)` : `Report-quality loop — ${proposalsWritten} proposals from ${reviewed} reports`, blocks);
 
-    return json({ ok: true, reviewed, proposed: ranked.length, eligible: batch.length, deadline_hit: deadlineHit, tokens_used: tokensUsed, cost, dry_run: dryRun, proposals: dryRun ? ranked : undefined });
+    return json({ ok: !insertError, error: insertError ?? undefined, reviewed, proposed: proposalsWritten, eligible: batch.length, deadline_hit: deadlineHit, tokens_used: tokensUsed, cost, dry_run: dryRun, proposals: dryRun ? ranked : undefined });
   } catch (e) {
     log("run failed", String(e));
     await finish("error", { reviewed: 0, proposed: 0 }, String(e));
