@@ -197,3 +197,51 @@ These double as the function portion of the step-8 down-migration.
 **Still needed from the operator:** edge-function source for `apify-webhook` +
 `notion-research-trigger` (not in this repo) and their secret values, OR have CC deploy via
 MCP given the source. External-consumer repoint is operator-side (see step 6).
+
+---
+
+### Session C (2026-06-29) — schema + data move COMPLETE; Hard-Stop-2 copy verification PASS
+
+**Schema move (step 4a) DONE** on `schyrnxekxcoaragofgv`, in the corrected order
+(extensions → trigger fns → schema dump → RPC fns). Verified via MCP: 9 tables, 54
+indexes (incl. 4 ivfflat), 11 functions, 4 BEFORE UPDATE triggers, RLS enabled on all 9,
+1 policy (`ii_content` "Read relevant content"). Vector columns present on the same 4
+tables as MES (`ii_content`, `ii_published_archive`, `ii_reddit_signals`,
+`ii_personal_linkedin_posts`).
+
+**Data move (step 4b) DONE.** Moved on the operator's Mac via the resumable, pooler-safe
+keyset-pagination script `migrate-ii-data.sh` (Session pooler, IPv4; statement timeout
+disabled for the slow trans-Pacific→Ireland upload; per-chunk `.loaded` markers for
+resume). Survived multiple pooler drops, a sleep-induced stall, and two transient DNS
+blips — resumed cleanly each time. Final target row counts equal the dump-time snapshot
+exactly (all 9 tables).
+
+**Hard-Stop-2 copy verification (via MCP) — PASS:**
+- **Row counts:** target == dump-time snapshot for all 9 tables
+  (content 6754 · curated_log 5204 · curations 292 · experiment_outputs 30 ·
+  intro_archive 10 · personal_linkedin_posts 0 · prefilter_log 13298 ·
+  published_archive 810 · reddit_signals 550).
+- **Embeddings:** all `vector(1536)`, single dim variant, counts match dump snapshot
+  (published_archive 810/810, reddit_signals 38, content 1362). `vector_dims` uniform.
+- **Similarity / RPC end-to-end:** `match_content(self_embedding, …)` returns the source
+  row at similarity **exactly 1.000000** (lossless vector round-trip + live ivfflat index +
+  working `LANGUAGE sql` RPC), with sane runner-up neighbours (0.69, 0.67).
+- **Id-set checksums** `md5(string_agg(id ORDER BY id))`, target vs **live MES**:
+  6 of 9 tables **bit-identical right now** (curations, experiment_outputs, intro_archive,
+  personal_linkedin_posts, published_archive, reddit_signals). The other 3 differ only by
+  post-dump drift on the high-churn ingest tables: **ii_content +143, ii_curated_log +9,
+  ii_prefilter_log +793** (MES total +945). Target faithfully holds the dump-time snapshot.
+
+**Consequence — NOT yet safe to drop MES `ii_*` (Hard Stop 2 not cleared for the drop).**
+The copy is verified faithful, but live MES has drifted +945 rows on 3 ingest tables since
+the dump. Dropping now would lose those rows. Before step 8 we need EITHER:
+  (A) **Freeze + final delta sync** (recommended): quiesce the external writers
+      (Apify task `3RnAZzC9CsXXPZrbM`, `research.yml`, Beehiiv, the Python classifier),
+      delta-sync only rows newer than the dump watermark, repoint consumers to II, resume; OR
+  (B) **Delta top-up now**, accepting continued drift until consumers are repointed.
+Either way the drop is the LAST action, after consumers point at Irish Insights.
+
+**Still blocked on the operator (unchanged):** edge-function source for `apify-webhook` +
+`notion-research-trigger` (not in this repo) + their secrets (or have CC deploy via MCP given
+source), and the external-consumer repoint (step 6). Cutover strategy (A vs B) is an operator
+decision.
