@@ -281,3 +281,68 @@ DB triggers on `auth.users` insert create `profiles`, assign `user` role, and cr
 ---
 
 *Audit only. No production auth, RLS, payment, or OAuth configuration was modified. P0/P1 dashboard changes require explicit approval and a staged rollout.*
+
+---
+
+## 8. Addendum — additional findings (live advisor scan + deeper code review)
+
+Added after the initial pass. The dashboard items below came from a **read-only** Supabase security-advisor scan of project `xhziwveaiuhzdoutpgrh`; the code/DB items were verified against the repo. These are **security/correctness** findings and are additive to (not a revision of) §1–§7, which are UX/redirect.
+
+### 8.1 Live Supabase security-advisor hits (auth-relevant)
+
+- **A1 — `auth_otp_long_expiry` (P1, dashboard).** The email OTP / magic-link expiry is set to **> 1 hour**. Long-lived magic links widen the interception window and compound Journey 5 (a stale link that *also* points at Lovable). **Fix:** Authentication → Providers → Email → set OTP expiry **< 1 hour** (3600s). Remediation: https://supabase.com/docs/guides/database/database-linter?lint=0024_auth_otp_long_expiry
+- **A2 — `auth_leaked_password_protection` disabled (P1, dashboard).** HaveIBeenPwned compromised-password checking is **off**. **Fix:** Authentication → Policies → enable "Leaked password protection." One toggle; hardens sign-up (Journey 1) and reset (Journey 7). Remediation: https://supabase.com/docs/guides/auth/password-security#leaked-password-protection
+- **A3 — `vulnerable_postgres_version` (P2, infra).** `supabase-postgres-17.4.1.041` has outstanding security patches. Tangential to auth flows but this is the identity store. **Fix:** schedule a DB upgrade in a maintenance window.
+
+> The advisor scan also returned ~45 lower-relevance lints (mostly `*_security_definer_function_executable` INFO/WARN on `emit_*` activity-trigger functions, `rls_enabled_no_policy` on internal tables, `extension_in_public`). These are largely outside the customer-auth scope of MES-33 and are noted here only so they aren't mistaken for new regressions; triage separately.
+
+### 8.2 `profiles.stripe_customer_id` is client-writable — billing-integrity hole (P1, approval-gated)
+
+**Finding.** `profiles` RLS UPDATE policy (`20250621012036…sql:54`) is:
+
+```sql
+CREATE POLICY "Users can update their own profile"
+  ON public.profiles FOR UPDATE TO authenticated
+  USING (auth.uid() = id);     -- no WITH CHECK, no column restriction
+```
+
+`authenticated` retains a broad column UPDATE grant on `profiles` (the SEC-02 fanout deliberately left owner/RLS-backed tables writable). Because Postgres defaults UPDATE `WITH CHECK` to the `USING` expression, a user **cannot** reassign `id` (ownership is safe) — **but they can freely write any other column on their own row, including `stripe_customer_id`.** `authService.updateProfile` (`upsert({ id, ...updates })`) accepts an arbitrary `Partial<UserProfile>`, so the path is reachable without bespoke tooling.
+
+**Impact.** A signed-in user can set their own `profiles.stripe_customer_id` to an arbitrary / another user's Stripe customer id. `create-checkout` reads that value and creates the session against it (`customer: stripeCustomerId`) → cross-customer billing association (attach a card to a victim's customer, or pull a victim's saved payment context). Tier provisioning itself stays keyed on `metadata.supabase_user_id`, so entitlements aren't escalated — this is a **billing-integrity / data-integrity** issue, not a tier bypass.
+
+**Why P1, not P0.** No in-app exploit today: `OnboardingDialog` and `ProfileDialog` only send safe fields (`first_name`, `last_name`, `username`, `avatar_url`, `persona`, onboarding flags). It is a **latent** hole, the same shape SEC-01 closed for `user_subscriptions`. Fix promptly; no emergency.
+
+**Recommended fix (mirror SEC-01 — review-ready draft, NOT applied):**
+
+```sql
+-- SEC-05 (proposed): stop clients writing identity/billing columns on profiles.
+-- stripe_customer_id is set only by create-checkout (service role). Clients keep
+-- UPDATE on safe profile columns via the existing owner policy.
+REVOKE UPDATE ON public.profiles FROM authenticated;
+GRANT  UPDATE (first_name, last_name, username, avatar_url, persona,
+               onboarding_completed /* + any other user-editable cols */)
+  ON public.profiles TO authenticated;
+-- (Optional defense-in-depth: BEFORE UPDATE trigger raising if NEW.stripe_customer_id
+--  IS DISTINCT FROM OLD.stripe_customer_id and current_user <> 'service_role'.)
+```
+
+Also harden client-side: have `authService.updateProfile` allowlist columns rather than spreading arbitrary `updates`.
+
+> ⚠️ Approval-gated (RLS/grant change). Draft only — verify the exact editable-column set against the live `profiles` schema before applying, and confirm no other client path depends on writing a now-revoked column.
+
+### 8.3 Lower-severity code findings
+
+- **C1 — Weak password policy (P2).** `ResetPassword.tsx` enforces only `minLength={6}`; Supabase default min is also 6. Raise to **≥ 8** (client + dashboard) — pairs with A2.
+- **C2 — Welcome email re-fires on every login (P3).** `useAuthState.ts:67` invokes `send-email` (welcome) on `SIGNED_IN`, not just `SIGNED_UP`, so a `send-email` edge invocation runs on each new-session login. Server-side idempotency (`welcome:{userId}`) makes it harmless, but it's a wasted call per login. Narrow the trigger to genuine first-signup, or accept the cost as deliberate (the existing comment says SIGNED_UP is unreliable for OAuth).
+- **C3 — Email enumeration on signup (P3).** `signUpWithEmail` surfaces Supabase's raw "User already registered" error in a toast (reset is correctly silent/non-enumerating). Consider a neutral message.
+
+### 8.4 Added sub-tickets
+
+| Sub-ticket | Title | Priority | Approval gate |
+|---|---|---|---|
+| MES-33m | Lock `profiles.stripe_customer_id` to service-role writes (SEC-05) | P1 | RLS/grant |
+| MES-33n | Enable leaked-password protection + raise min password length | P1 | Auth config |
+| MES-33o | Reduce email OTP / magic-link expiry to < 1 hour | P1 | Auth config |
+| MES-33p | Schedule Postgres security-patch upgrade | P2 | Infra/maintenance window |
+| MES-33q | Narrow welcome-email trigger + neutralise signup enumeration | P3 | None (frontend/edge) |
+
