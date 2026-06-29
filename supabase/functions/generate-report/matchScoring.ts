@@ -236,6 +236,64 @@ export function withMatchMeta(s: Scored): Row {
   return { ...s.row, match_score: s.score, match_reasons: s.reasons };
 }
 
+/**
+ * Relevance gate (report-quality loop, refs d6a6ce3d / b29b88c1).
+ *
+ * Keep every row that `isRelevant`, but NEVER empty a section: if fewer than
+ * `minKeep` rows are relevant, backfill with the (already-ranked) non-relevant rows
+ * up to `minKeep`. So when a healthy set of genuinely on-target rows exists the weak
+ * ones (sector-agnostic / location-only matches like a fitness expo for a cyber
+ * company) drop out; when the directory is thin the old behaviour is preserved.
+ * Pure + order-preserving (input must already be best-first).
+ */
+export function preferRelevant<T>(rows: T[], isRelevant: (r: T) => boolean, minKeep: number): T[] {
+  const rel: T[] = [], weak: T[] = [];
+  for (const r of rows || []) (isRelevant(r) ? rel : weak).push(r);
+  if (rel.length >= minKeep) return rel;
+  return [...rel, ...weak.slice(0, Math.max(0, minKeep - rel.length))];
+}
+
+/**
+ * Did this ranked row earn a genuine industry / sells-to sector match (vs. surfacing
+ * only via sector_agnostic or a location bonus)? Reads the explainable `match_reasons`
+ * that withMatchMeta() attaches, so it works on decorated rows for surfaces that carry
+ * sector_tags (events, content).
+ */
+export function hasSectorRelevance(row: Row): boolean {
+  const reasons: string[] = row?.match_reasons || [];
+  return reasons.some((r) => r.startsWith("industry match") || r.startsWith("sells-to sector"));
+}
+
+/**
+ * Free-text relevance for surfaces WITHOUT sector_tags (lead_databases carry a `sector`
+ * string + `tags[]` instead, so scoreRow is blind to their industry). True when any of
+ * the row's text fields contains any of the supplied industry tokens. Case-insensitive,
+ * token must be >= 3 chars to avoid spurious substring hits.
+ */
+export function textMatchesAnyToken(haystackParts: Array<string | string[] | null | undefined>, tokens: string[]): boolean {
+  const hay = haystackParts
+    .flatMap((p) => (Array.isArray(p) ? p : [p]))
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (!hay) return false;
+  return tokens.some((t) => t && t.length >= 3 && hay.includes(t.toLowerCase()));
+}
+
+/** Lowercased word/slug tokens from human industry labels, for textMatchesAnyToken. */
+export function industryTokens(labels: string[]): string[] {
+  const out = new Set<string>();
+  for (const label of labels || []) {
+    const l = (label || "").trim().toLowerCase();
+    if (l.length >= 3) out.add(l);
+    for (const w of l.split(/[\s/&,]+/)) {
+      // skip noise words that would match almost anything
+      if (w.length >= 4 && !["and", "the", "services", "industry", "other"].includes(w)) out.add(w);
+    }
+  }
+  return [...out];
+}
+
 /** Canonical person-name key for de-duping near-identical mentors ("Sarah Chen" / "Dr. Sarah Chen"). */
 export function normalizePersonName(name: string): string {
   return (name || "")
