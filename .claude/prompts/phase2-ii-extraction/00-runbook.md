@@ -289,3 +289,35 @@ prefilter_log 14091 · published_archive 810 (810) · reddit_signals 550 (38).
 **Hard Stop 2 status:** copy is verified faithful AND now topped-up to ~live, but the MES drop
 remains BLOCKED on (a) edge-fn source/secrets + consumer repoint, and (b) the final
 freeze-sync + explicit operator "yes". No destructive action taken on MES.
+
+---
+
+### Session C (2026-06-29) cont. — edge functions deployed to Irish Insights (step 6, partial)
+
+The two ingest functions were **not in this repo** (canonical home: the `ii-ingest`
+codebase) but **were deployed on MES**, so I pulled them verbatim via MCP
+`get_edge_function(xhziwveaiuhzdoutpgrh, …)` and redeployed to `schyrnxekxcoaragofgv`
+via `deploy_edge_function`. Both `verify_jwt=false` (in-code shared-secret auth, matching
+MES). Exact deployed source captured under
+`.claude/prompts/phase2-ii-extraction/edge-functions/` as a migration record/backup.
+
+- `apify-webhook` → II v1 ACTIVE. Files: `index.ts`, `normalisers/linkedin.ts`,
+  `filters/prefilter.ts` (+ a reconstructed `types.ts`; the original `./types.ts` import is
+  type-only/erased — MES stored only 3 files). Entry `index.ts` at source root, mirroring MES.
+- `notion-research-trigger` → II v1 ACTIVE. Single self-contained `index.ts`.
+
+**New endpoints:**
+`https://schyrnxekxcoaragofgv.supabase.co/functions/v1/apify-webhook` and
+`…/functions/v1/notion-research-trigger`.
+
+**Secrets — still operator action (MCP cannot set secret values).** `SUPABASE_URL` +
+`SUPABASE_SERVICE_ROLE_KEY` auto-inject. Must set on II:
+- apify-webhook: `APIFY_WEBHOOK_SECRET`, `APIFY_TOKEN` (reuse MES values).
+- notion-research-trigger: `NOTION_TRIGGER_SECRET`, `GITHUB_DISPATCH_TOKEN`,
+  `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME` (+ optional `GITHUB_REF`, `GITHUB_WORKFLOW_FILE`).
+With secrets unset both fail closed (401 / 500), so they're safely inert pre-repoint.
+
+**Still pending for step 6:** set the secrets above on II; repoint Apify task
+`3RnAZzC9CsXXPZrbM` webhook URL + the Notion automation URL to the new endpoints (keep the
+same header secrets); repoint DB consumers (Python classifier, Beehiiv, `research.yml`) to the
+II connection string/keys. Then final freeze-sync + Hard Stop 2 + MES drop.
