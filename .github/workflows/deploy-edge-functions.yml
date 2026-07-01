@@ -1,0 +1,56 @@
+# Auto-deploy the report-pipeline edge functions to production on push to main.
+#
+# Why: the Supabase↔GitHub integration auto-applies MIGRATIONS to prod on merge,
+# but it does NOT deploy edge functions to prod — so generate-report / scrape-company
+# have had to be deployed by hand (`supabase functions deploy …`) after every merge,
+# which twice shipped stale code from an out-of-date local checkout. This closes
+# that gap: merging a change to these functions deploys them automatically.
+#
+# One-time setup required: add a repo secret SUPABASE_ACCESS_TOKEN
+#   (GitHub → Settings → Secrets and variables → Actions → New repository secret).
+#   Generate the token at https://supabase.com/dashboard/account/tokens.
+# The project ref (xhziwveaiuhzdoutpgrh) is not a secret — it's public and already
+# throughout the repo/CLAUDE.md.
+#
+# verify_jwt and other per-function settings come from supabase/config.toml, which
+# the CLI reads on deploy — so the in-code auth (generate-report JWT+ownership,
+# scrape-company rate-limit) is preserved.
+#
+# Scope: only the two functions this pipeline actively changes. To add another,
+# append a `supabase functions deploy <name> …` line below. To deploy ALL
+# functions instead, replace the two lines with a single `supabase functions deploy`.
+
+name: Deploy Edge Functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/generate-report/**"
+      - "supabase/functions/scrape-company/**"
+      - "supabase/functions/_shared/**"
+      - ".github/workflows/deploy-edge-functions.yml"
+
+# Never run two deploys concurrently; a newer push supersedes an in-flight one.
+concurrency:
+  group: deploy-edge-functions
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: xhziwveaiuhzdoutpgrh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy generate-report
+        run: supabase functions deploy generate-report --project-ref "$PROJECT_REF"
+
+      - name: Deploy scrape-company
+        run: supabase functions deploy scrape-company --project-ref "$PROJECT_REF"
