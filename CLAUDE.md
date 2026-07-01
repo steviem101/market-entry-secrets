@@ -33,6 +33,23 @@
 4. **Edge functions** use Deno runtime with `esm.sh` imports (e.g. `https://esm.sh/@supabase/supabase-js@2`), not npm.
 5. **No `VITE_*` env vars** — Lovable doesn't support them. Use full Supabase URLs/keys directly or secrets.
 
+### Migration hygiene (the ledger is fragile — see `docs/migrations.md`)
+
+6. **Migrations reach prod via the CLI / PR flow (`supabase db push`).** Do NOT apply
+   schema to prod out-of-band — no dashboard SQL editor, no ad-hoc `psql`, and **agents
+   must NOT `apply_migration` (MCP) against prod**. Commit the migration file in a PR and
+   let a human apply it. Out-of-band applies stamp apply-time versions and drift the ledger.
+7. **Name migrations `<timestamp>_snake_name.sql`.** The CLI silently **skips** anything
+   else (including legacy `<timestamp>-<uuid>.sql`) — a skipped file never applies.
+8. **Never change the version/filename of an already-applied migration** (renumbering to
+   dodge a collision is how the ledger drifted). Fix collisions before first apply, or add
+   a new migration.
+9. **The main→prod migration integration is currently in a known drift state**
+   (`MIGRATIONS_FAILED`; ~94% ledger divergence). Until it's re-baselined (runbook in
+   `docs/migrations.md`), **a merged migration does NOT auto-apply** — treat any PR that
+   adds a migration as *not live until confirmed applied to prod*. (Edge functions DO
+   auto-deploy on merge; migrations do not.)
+
 ---
 
 ## 3. Route Map
