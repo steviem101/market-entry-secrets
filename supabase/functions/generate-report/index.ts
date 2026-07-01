@@ -6,6 +6,7 @@ import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shared/scrapeCache.ts";
 import { selectKeyPages } from "./keyPageSelect.ts";
+import { buildCompetitorQueries, dedupeCompetitorResults, domainOf } from "./competitorQueries.ts";
 import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
@@ -437,6 +438,10 @@ interface CompetitorData {
   url: string;
   description: string;
   key_info: string;
+  // Populated only under FIRECRAWL_COMPETITOR_DEPTH: the competitor's Australian
+  // footprint (local office / AU case studies / .com.au / "no AU presence found"),
+  // the single most decision-useful fact for a market-entry competitive read.
+  au_presence?: string;
 }
 
 async function scrapeKnownCompetitors(
@@ -446,6 +451,7 @@ async function scrapeKnownCompetitors(
   companyName: string,
   stats?: FirecrawlStats,
   cache?: ScrapeCache,
+  deep = false,
 ): Promise<CompetitorData[]> {
   if (!firecrawlKey || knownCompetitors.length === 0) return [];
 
@@ -480,7 +486,7 @@ async function scrapeKnownCompetitors(
           {
             role: "user",
             content: `Analyze this website content for "${comp.name}" (${website}), a competitor of "${companyName}".
-Return a JSON object: {"name": "${comp.name}", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"}
+Return a JSON object: {"name": "${comp.name}", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"${deep ? `, "au_presence": "their Australian footprint from the site ONLY — local office/address, AU case studies or customers, .com.au domain, AU pricing. If none is evident, say 'No Australian presence evident on their site'. Do NOT guess."` : ""}}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -516,35 +522,35 @@ async function searchCompetitors(
     const knownCompetitors = intake.known_competitors || [];
     const targetRegions = (intake.target_regions || []).join(", ") || "Australia";
     const industrySectorText = (intake.industry_sector || []).join(", ");
-    const query = `${industrySectorText} companies in Australia ${targetRegions} competitors`;
 
-    console.log(`Searching competitors: "${query}" (parallel with known competitor scraping)`);
+    // FIRECRAWL_COMPETITOR_DEPTH (default off): OFF runs the single legacy query
+    // and keeps the top 3 (unchanged behaviour); ON runs 2-3 angled queries
+    // (buildCompetitorQueries), keeps the top 5 deduped by domain, and the
+    // extraction adds an Australian-presence signal per competitor.
+    const deep = !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH");
+    const queries = deep
+      ? buildCompetitorQueries(intake)
+      : [`${industrySectorText} companies in Australia ${targetRegions} competitors`];
+    const discoveredCap = deep ? 5 : 3;
 
-    // Run known competitor scraping AND web search in parallel
-    const [knownResults, results] = await Promise.all([
-      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name, stats, cache),
-      firecrawlSearch(firecrawlKey, query, 5, 15000, stats),
+    console.log(`Searching competitors (deep=${deep}, ${queries.length} query/ies): ${JSON.stringify(queries)}`);
+
+    // Known-competitor scrape + all discovery searches, in parallel.
+    const [knownResults, ...searchSets] = await Promise.all([
+      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name, stats, cache, deep),
+      ...queries.map((q) => firecrawlSearch(firecrawlKey, q, 5, 15000, stats)),
     ]);
 
-    const userDomain = new URL(
-      intake.website_url.startsWith("http") ? intake.website_url : `https://${intake.website_url}`
-    ).hostname.replace("www.", "");
+    let userDomain = "";
+    try {
+      userDomain = new URL(intake.website_url.startsWith("http") ? intake.website_url : `https://${intake.website_url}`)
+        .hostname.replace(/^www\./, "").toLowerCase();
+    } catch { /* leave blank */ }
+    const knownDomains = (knownCompetitors as Array<{ website: string }>).map((c) => domainOf(c.website || ""));
 
-    const knownDomains = new Set(
-      knownCompetitors.map((c: { website: string }) => {
-        try { return new URL(c.website.startsWith("http") ? c.website : `https://${c.website}`).hostname.replace("www.", ""); }
-        catch { return ""; }
-      }).filter(Boolean)
-    );
-
-    const filtered = results.filter((r) => {
-      try {
-        const resultDomain = new URL(r.url).hostname.replace("www.", "");
-        return resultDomain !== userDomain && !knownDomains.has(resultDomain);
-      } catch {
-        return true;
-      }
-    }).slice(0, 3);
+    // Combine all queries' results, exclude the user's own + known-competitor
+    // domains, dedupe by domain, and cap. (domainOf/dedupe are pure + unit-tested.)
+    const filtered = dedupeCompetitorResults(searchSets.flat(), [userDomain, ...knownDomains], discoveredCap);
 
     let searchCompetitorsList: CompetitorData[] = [];
     if (filtered.length > 0) {
@@ -554,7 +560,7 @@ async function searchCompetitors(
           role: "user",
           content: `Analyze these search results about ${industrySectorText} companies in Australia. For each, extract competitor intelligence relevant to ${intake.company_name}.
 
-Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"}]
+Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"${deep ? `, "au_presence": "their Australian footprint if evident in the result (local office, AU customers/case studies, .com.au). If not evident, 'No Australian presence evident'. Do NOT guess."` : ""}}]${deep ? "\nOnly include genuine commercial vendors — not regulators, directories, news sites, or the company itself." : ""}
 
 Search results:
 ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.title}\nContent: ${r.markdown}`).join("\n\n")}`,
@@ -567,7 +573,7 @@ ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.tit
 
     const allCompetitors = [...knownResults, ...searchCompetitorsList];
 
-    console.log(`Total competitors: ${allCompetitors.length} (${knownResults.length} known + ${searchCompetitorsList.length} discovered)`);
+    console.log(`Total competitors: ${allCompetitors.length} (${knownResults.length} known + ${searchCompetitorsList.length} discovered; deep=${deep})`);
     return { competitors: allCompetitors, raw_results: filtered };
   } catch (e) {
     console.error("Competitor search failed (continuing):", e);
