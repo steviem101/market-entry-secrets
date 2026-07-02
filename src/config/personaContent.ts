@@ -163,7 +163,7 @@ export interface PersonaSectionContent {
   testimonials: TestimonialsContent;
   pricing: PricingContent;
   cta: CTAContent;
-  floatingCTA: FloatingCTAContent;
+  floatingCTA?: FloatingCTAContent;
 }
 
 // ===========================================================================
