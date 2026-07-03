@@ -113,63 +113,32 @@ Reuses the repo's proven pattern: *staging table with review statuses* (`trade_a
 
 ### 5.1 One additive staging table
 
-```sql
--- supabase/migrations/<ts>_create_ecosystem_import_candidates.sql (ADDITIVE ONLY)
-CREATE TABLE IF NOT EXISTS ecosystem_import_candidates (
-  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  batch_id             text NOT NULL,             -- e.g. 'startmate-2026-07'
-  source_name          text NOT NULL,             -- 'startmate_community_sheet'
-  source_url           text,
-  source_tab           text NOT NULL,
-  source_row           integer,
-  raw                  jsonb NOT NULL,            -- verbatim sheet row (auditability)
-  entity_type          text NOT NULL,             -- investor_fund|investor_person|accelerator|coworking_space|newsletter|podcast|...
-  proposed_destination text NOT NULL,             -- 'investors'|'innovation_ecosystem'|'content_items'|'none'
-  proposed_payload     jsonb NOT NULL,            -- normalized column values for the destination
-  dedupe_key           text NOT NULL,
-  matched_existing_id  uuid,                      -- fuzzy/exact match found in destination table
-  match_note           text,
-  confidence           text NOT NULL CHECK (confidence IN ('high','medium','low')),
-  validation_flags     text[] NOT NULL DEFAULT '{}',
-  status               text NOT NULL DEFAULT 'pending'
-                       CHECK (status IN ('pending','approved','rejected','duplicate','applied','invalid')),
-  review_notes         text,
-  reviewed_by          uuid,
-  reviewed_at          timestamptz,
-  applied_at           timestamptz,
-  target_record_id     uuid,                      -- provenance: row created/updated on apply
-  created_at           timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (batch_id, dedupe_key)                   -- idempotent re-runs per batch
-);
-CREATE INDEX ON ecosystem_import_candidates (status, entity_type);
+**Implemented as `supabase/migrations/20260703120000_create_ecosystem_import_candidates.sql`** (rollback: `supabase/rollback/20260703120000_create_ecosystem_import_candidates_revert.sql`). Key points beyond the original sketch:
 
--- RLS per SEC-02 convention: service-role writes, admin reads/reviews, zero anon access
-ALTER TABLE ecosystem_import_candidates ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON ecosystem_import_candidates FROM anon, authenticated;
-CREATE POLICY "Admins read import candidates" ON ecosystem_import_candidates
-  FOR SELECT TO authenticated USING (has_role((SELECT auth.uid()), 'admin'::app_role));
-CREATE POLICY "Admins review import candidates" ON ecosystem_import_candidates
-  FOR UPDATE TO authenticated USING (has_role((SELECT auth.uid()), 'admin'::app_role))
-  WITH CHECK (has_role((SELECT auth.uid()), 'admin'::app_role));
-GRANT SELECT, UPDATE ON ecosystem_import_candidates TO authenticated; -- gated by the policies above
-```
+- `proposed_action` column (`insert_new` / `enrich_existing` / `related_review` / `content_guide` / `review` / `exclude`) so the reviewer filters by decision type.
+- `verification jsonb` + `verified_at` — each researched candidate carries a web-research verdict `{status, evidence, sources, corrections}` from the pre-staging verification pass (§5.2 step 3).
+- `matched_table` / `match_method` alongside `matched_existing_id`, so §4.5's duplicate-vs-related distinction is visible in-row.
+- RLS mirrors `report_quality_proposals` exactly: `ENABLE ROW LEVEL SECURITY`, `REVOKE ALL FROM anon, authenticated`, admin SELECT/UPDATE policies via `has_role`, inserts service-role only, **no client grants** (a future admin-UI ticket would add a scoped `GRANT` — stricter than the earlier sketch in this doc, which included one).
+- `UNIQUE (batch_id, dedupe_key)` for idempotent re-staging; `source_rows integer[]` because campus-grouped candidates span several sheet rows.
 
-Matches `report_quality_proposals` (admin read+update, service-role insert) and the SEC-02 revoke convention. **No existing RLS policy is touched; public read access is not widened anywhere.**
+
+**No existing RLS policy is touched; public read access is not widened anywhere.**
 
 > Migration-hygiene reminder (docs/migrations.md): the main→prod ledger is in `MIGRATIONS_FAILED` drift — a merged migration does **not** auto-apply. The staging DDL ships as a PR'd migration file that a human applies via `supabase db push`; agents must not `apply_migration` against prod.
 
 ### 5.2 Pipeline steps (all dry-run-first)
 
 1. **Parse (exists, this PR):** `python3 scripts/parse_startmate_sheet.py` — xlsx → `data/private/startmate/parsed_startmate_ecosystem.json` + PII-free profile on stdout. No DB access, rerunnable.
-2. **Match & payload build (proposed):** `scripts/generate_startmate_candidates.py` — joins parsed JSON against read-only exports of `investors` + `innovation_ecosystem` (name-normalized + pg_trgm-style fuzzy), fills `matched_existing_id`, builds `proposed_payload`, and emits `scripts/startmate_import_blocks/*.sql` INSERT blocks for the staging table only (repo `*_blocks` convention). `--dry-run` default prints counts and writes no files without `--write`.
-3. **Stage:** apply the INSERT blocks to `ecosystem_import_candidates` (supervised MCP session or psql by an admin — the trade-agencies Phase-3 precedent). Idempotent via `UNIQUE (batch_id, dedupe_key)` `ON CONFLICT DO NOTHING`.
-4. **Review gate:** a staging-review doc like `docs/trade-agencies-staging-review-2026-05-09.md` — summary stats, confidence distribution, flagged duplicates, 10–15 representative diffs. Admin flips `status` to approved/rejected/duplicate (SQL or, later, an AdminSubmissions-style page — see §5.4).
-5. **Apply (approved rows only):** per-destination apply script generating SQL that:
+2. **Match & payload build (exists, this PR):** `scripts/generate_startmate_candidates.py` — joins parsed JSON against a read-only snapshot of `investors` / `innovation_ecosystem` / `service_providers` / `trade_investment_agencies` / `community_members` / `content_items` (snapshot SQL embedded in the script), applies the §4.5 match tiers, assigns `proposed_action`, builds `proposed_payload`, and emits `scripts/startmate_import_blocks/*.sql` INSERT blocks for the staging table only (repo `*_blocks` convention). Dry-run by default; `--write` emits files; `--self-test` covers the matching rules (alias map, institutional-domain guard, cross-table action mapping).
+3. **Verification research pass (run 2026-07-03):** community sheets go stale, so every `insert_new`/`related_review`/`content_guide` candidate (186 of 314) was checked by parallel web-research agents (Claude Sonnet-class, ~11 orgs each) before staging: does the org still exist and operate in 2025–2026, correct website/location, one-line factual description, founding year. Verdicts land in `verification` jsonb (`verified/inactive/defunct/not_found/uncertain` + evidence + source URLs); `defunct`/`inactive`/`not_found` flips `proposed_action` to `exclude`; confirmed corrections merge into `proposed_payload`. Results file: `data/private/startmate/verification_results.json` (rerunnable; merged by the generator). LinkedIn is never scraped. `enrich_existing` candidates skip research — their writes are COALESCE-only fills reviewed by an admin anyway.
+4. **Stage:** apply the INSERT blocks to `ecosystem_import_candidates` (supervised MCP session or psql by an admin — the trade-agencies Phase-3 precedent). Idempotent via `UNIQUE (batch_id, dedupe_key)` `ON CONFLICT DO NOTHING`.
+5. **Review gate:** a staging-review doc like `docs/trade-agencies-staging-review-2026-05-09.md` — summary stats, confidence distribution, flagged duplicates, 10–15 representative diffs. Admin flips `status` to approved/rejected/duplicate (SQL or, later, an AdminSubmissions-style page — see §5.4).
+6. **Apply (approved rows only):** per-destination apply script generating SQL that:
    - **new rows** → plain INSERTs (never upsert-overwrite);
    - **enrichment of matched rows** → `COALESCE(existing, new)` per field — only fills NULLs, mirroring the trade-agencies apply rules; extra fund contacts merge into `investors.details.contacts` with `{source:'startmate_community_sheet', batch_id}` attribution;
    - stamps `applied_at` + `target_record_id` back on the candidate row (provenance ledger).
-6. **KB / report grounding:** nothing extra to build. `upsert_kb_investor` / `upsert_kb_ecosystem` triggers sync promoted rows into `mes_knowledge_base` (PII-stripped) and the `embed-knowledge` cron embeds them within minutes. Investor rows are `member`-visibility by design. The newsletters guide flows through the content-chunk fan-out the same way. **Raw unreviewed sheet rows are never embedded.**
-7. **Post-promotion enrichment:** run existing admin edge fns `enrich-investors` (`only_missing`) and `enrich-innovation-ecosystem` to backfill descriptions/logos from websites.
+7. **KB / report grounding:** nothing extra to build. `upsert_kb_investor` / `upsert_kb_ecosystem` triggers sync promoted rows into `mes_knowledge_base` (PII-stripped) and the `embed-knowledge` cron embeds them within minutes. Investor rows are `member`-visibility by design. The newsletters guide flows through the content-chunk fan-out the same way. **Raw unreviewed sheet rows are never embedded.**
+8. **Post-promotion enrichment:** run existing admin edge fns `enrich-investors` (`only_missing`) and `enrich-innovation-ecosystem` to backfill descriptions/logos from websites.
 
 ### 5.3 Validation & dedupe rules (implemented in the parser; enforced again at apply)
 
