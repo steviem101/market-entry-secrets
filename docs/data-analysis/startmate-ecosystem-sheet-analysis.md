@@ -29,12 +29,12 @@ Cross-checked (read-only) against live MES production data on 2026-07-03: `inves
 
 ### High value
 
-1. **VCs tab (219 people across 117 distinct funds)** — the strongest asset. Overlap with `investors`:
-   - **Fund level:** 38 exact + 12 near-name matches (AirTree→AirTree Ventures, SquarePeg Capital→Square Peg Capital, Blacknova→Black Nova VC, …) = **50 of 117 funds already exist; 67 are new** (≈40 AU/NZ — e.g. XV Capital, GD1, MOVAC, Icehouse Ventures, NZGCP, Kilara Capital, 1835i, OneVentures*, Potentia, Reinventure; ≈25 US funds noted as ANZ-active — Base10, Battery, Lightspeed, Peak XV, M12…). (*OneVentures exists as "1v (oneventures)" — a fuzzy match the normalizer must catch.)
-   - **Person level:** only 17 of 218 people match existing `investors` rows by name. The bigger win is **contact enrichment of existing fund rows**: today `investors` has `contact_name` NULL on 446/447 rows, `linkedin_url` NULL on 207, `website` NULL on 197. The sheet provides named partners with real LinkedIn profile URLs (205 of 219) and job titles for the biggest AU funds (Blackbird ×11, Main Sequence ×7, Square Peg ×7, AirTree ×7…).
+1. **VCs tab (219 people across 117 distinct funds)** — the strongest asset. Overlap with `investors` (verified audit in §4.5):
+   - **Fund level:** **53 of 117 funds already exist** (51 exact/normalized-name matches plus 2 alias duplicates only caught by manual review: Artesian→"Artesian Capital Management", OneVentures→"1V (OneVentures)"); 2 more are probable aliases of "NZ Growth Capital Partners" (NZGCP, Aspire); 1 row is junk ("At" — a truncated entry). **61 funds are genuinely new** (≈30 AU/NZ — e.g. XV Capital, GD1, MOVAC, Icehouse Ventures, Kilara Capital, 1835i, Potentia, Reinventure, Tenmile, Outset; ≈31 US/global funds noted as ANZ-active — Base10, Battery, Lightspeed, Peak XV, M12…).
+   - **Person level:** 18 of 219 people are already `investors` rows (17 verified by matching LinkedIn profile slugs — including "Ed Hooper"→"Edward Hooper", which name matching alone misses). The bigger win is **contact enrichment of existing fund rows**: today `investors` has `contact_name` NULL on 446/447 rows, `linkedin_url` NULL on 207, `website` NULL on 197. The sheet provides named partners with real LinkedIn profile URLs (205 of 219) and job titles for the biggest AU funds (Blackbird ×11, Main Sequence ×7, Square Peg ×7, AirTree ×7…).
    - PII note: `investors_public` deliberately excludes `contact_email`/`contact_name`/`linkedin_url`, so person data lands admin/member-side only — no public exposure change.
-2. **Accelerators (90; 67 Active)** — maps to `innovation_ecosystem` (which already models accelerators: 53 rows carry the `Accelerator` service tag). ~19 exact/near matches (Startmate, BlueChilli, MAP, Monash Generator, River City Labs, SproutX, Startupbootcamp, muru-D…) plus ~10 more fuzzy matches needing review (Cicada→Cicada Innovations, CSIRO ON Accelerate→On Accelerate, Griffin Accelerator→Griffin Accelerator Program, iAccelerate→iAccelerate Wollongong, Techstars→Techstars Sydney, Innovyz, Plus Eight, Runway HQ). **≈55–60 Active accelerators are genuinely new**, with program metadata MES lacks today: investment amount, cohort timing, sector focus, backing fund.
-3. **Coworking Spaces (49 rows ≈ 40 orgs)** — maps to `innovation_ecosystem` (`Co-working` service tag: 23 rows today, only 2 sheet matches — Fishburners, Harbour City Labs). City/suburb granularity (Sydney 18, Melbourne 10, Perth 5, plus regional: Newcastle, Wollongong, Byron Bay, Newman, Shoalhaven) directly supports location pages and the "landing infrastructure" story in reports.
+2. **Accelerators (90; 67 Active)** — maps to `innovation_ecosystem` (which already models accelerators: 53 rows carry the `Accelerator` service tag). The verified audit (§4.5) found **42 of 90 already on the platform or run by an org that is** — far more than name matching alone suggested, because domain + program/parent matching catches renames and umbrella orgs (Cicada→Cicada Innovations, SVG|THRIVE→THRIVE APAC Accelerator, iLab UQ→ilab, Genesis→Sydney Genesis Program, Fishburners Women's Accelerator→Fishburners, CSIRO ON Accelerate→On Accelerate…). Net: **≈32 Active accelerators are genuinely new** (Farmers2Founders, HATCH Taronga, Boab, LuminaX*, Ocean Impact Organisation, The Factory NZ, Creative HQ, Whakatipu Incubator, Kokiri, UTS Techcelerator, Founders Bio/Climate/Defence 10x, Australian Clinical Entrepreneur Program…), with program metadata MES lacks today: investment amount, cohort timing, sector focus, backing fund. (*LuminaX needs a manual check — it shares a domain with investors."LX Health".)
+3. **Coworking Spaces (49 rows ≈ 40 orgs)** — maps to `innovation_ecosystem` (`Co-working` service tag: 23 rows today). Verified audit: **9 of 49 rows belong to orgs already on the platform** (all four Stone & Chalk campuses, Fishburners, Harbour City Labs, EnergyLab, I2N Hub Honeysuckle, CHICC→ANDHealth+), leaving **≈33 new orgs** after campus grouping. City/suburb granularity (Sydney 18, Melbourne 10, Perth 5, plus regional: Newcastle, Wollongong, Byron Bay, Newman, Shoalhaven) directly supports location pages and the "landing infrastructure" story in reports.
 4. **Startup Newsletters (48)** — not directory material, but excellent **ecosystem-monitoring and report-grounding source material**: 47/48 ANZ-focused with working subscribe links, spanning sector niches (What the Health, Funding Climatetech, Talking HealthTech, Fintechfun) and institutional sources (LaunchVic, NZGCP Aspire, CSIRO ON). Best first landing: one curated `content_items` guide (+ KB chunks via the existing content pipeline), not a new table.
 
 ### Medium value
@@ -50,13 +50,13 @@ Cross-checked (read-only) against live MES production data on 2026-07-03: `inves
 
 | Sheet entity | Rows in scope | Destination | Field mapping | Missing/derived fields | Confidence |
 |---|---:|---|---|---|---|
-| VC **funds** (new, AU/NZ) | ≈40 | `investors` (new rows, `investor_type='vc'`) | name←Fund; sector_focus[]←Sector Focus (split/normalized); location←City; country←Country; linkedin_url←(company page if present) | description, website, slug — **must be enriched before/at promotion** (existing `enrich-investors` edge fn fills `basic_info`/`why_work_with_us` post-insert); check sizes unknown | High |
-| VC **funds** (new, US/global ANZ-active) | ≈25 | `investors` (new rows) — second batch | as above + country='US' | as above; decide whether US funds belong in the directory at all | Medium |
+| VC **funds** (new, AU/NZ) | ≈30 | `investors` (new rows, `investor_type='vc'`) | name←Fund; sector_focus[]←Sector Focus (split/normalized); location←City; country←Country; linkedin_url←(company page if present) | description, website, slug — **must be enriched before/at promotion** (existing `enrich-investors` edge fn fills `basic_info`/`why_work_with_us` post-insert); check sizes unknown | High |
+| VC **funds** (new, US/global ANZ-active) | ≈31 | `investors` (new rows) — second batch | as above + country='US' | as above; decide whether US funds belong in the directory at all | Medium |
 | VC **people** at matched funds | ≈100+ | `investors` **enrichment of existing rows** | contact_name←Full Name (most senior person); linkedin_url←LinkedIn; extra people → `details.contacts` jsonb array `{name, title, linkedin, source}` | nothing new required — columns exist and are mostly NULL | High |
 | VC people with no fund / angels | ≈29 | review case-by-case → possible `investors` `investor_type='angel'` rows | name, linkedin_url, location | description; verify they actually invest | Low–Med |
-| Accelerators (Active) | ≈55–60 new | `innovation_ecosystem` | name; website; location←City/Country (normalized); services=['Accelerator'] (+'Seed Funding' when Investment present); sectors/sector_tags←Focus; description←composed from Focus+Investment+Cohort Timing+Association | `description`, `employees`, `founded` are **NOT NULL** — seed with composed description + `employees='Unknown'`, `founded='Unknown'`, then run existing `enrich-innovation-ecosystem` edge fn | High |
+| Accelerators (Active, verified new) | ≈32 | `innovation_ecosystem` | name; website; location←City/Country (normalized); services=['Accelerator'] (+'Seed Funding' when Investment present); sectors/sector_tags←Focus; description←composed from Focus+Investment+Cohort Timing+Association | `description`, `employees`, `founded` are **NOT NULL** — seed with composed description + `employees='Unknown'`, `founded='Unknown'`, then run existing `enrich-innovation-ecosystem` edge fn | High |
 | Accelerators (Inactive/CVC) | 22 | **exclude** (`innovation_ecosystem` has no `is_active` flag; importing dead programs pollutes the directory) | — | — | — |
-| Coworking spaces | ≈40 orgs | `innovation_ecosystem` | name (campus rows merged to one org); website; location←City (+Suburb); services=['Co-working']; description←Focus (+cost when present) | same NOT NULL trio as accelerators; multi-campus orgs keep one row, campuses listed in description/experience_tiles | High |
+| Coworking spaces (verified new) | ≈33 orgs | `innovation_ecosystem` | name (campus rows merged to one org); website; location←City (+Suburb); services=['Co-working']; description←Focus (+cost when present) | same NOT NULL trio as accelerators; multi-campus orgs keep one row, campuses listed in description/experience_tiles | High |
 | Newsletters + Podcasts | 50 | `content_items` — one curated guide ("ANZ startup media & newsletters") with sections per category; KB chunks follow automatically via the content fan-out triggers | title/body composed from Name+Focus+Link, grouped by sector | none — fits existing content pipeline; no schema change | High |
 | Student societies | 477 | **exclude** phase 1 (optional later: KB summary of ~60 startup societies) | — | — | — |
 | Workshop hosts | 11 | **exclude** (manual `directory_submissions` if ever wanted) | — | — | — |
@@ -74,6 +74,38 @@ From `scripts/parse_startmate_sheet.py` against the 2026-07-03 snapshot:
 - **Geography:** VCs 141 AU / 20 NZ / 43 US / 15 unknown; Accelerators 83 ANZ-classifiable; Coworking 48 ANZ; Newsletters 47 ANZ. Unknowns default to low confidence, never dropped silently.
 - **Normalization needed:** fund-name variants (AirTree/AirTree Ventures, SquarePeg/Square Peg), location free-text ("Naarm/Melbourne/Australia"), sector focus is comma-separated free text needing mapping onto MES `sector_tags` vocabulary.
 - **Confidence distribution (all tabs):** high 317 / medium 47 / low 532 (societies dominate low).
+
+## 4.5 Verified duplicate audit vs live platform data (2026-07-03)
+
+Full cross-table sweep of every sheet candidate against `investors` (447), `innovation_ecosystem` (124), `service_providers` (95), `community_members` (134), `trade_investment_agencies` (134) and `content_items` (141), using four match tiers in priority order: **website domain** → **LinkedIn slug** → **normalized name** → **fuzzy name (SequenceMatcher ≥ 0.87, review-only)**. Read-only; no writes.
+
+### VC funds — 53/117 duplicates
+- 51 caught automatically by normalized-name matching (incl. AirTree→Airtree Ventures, Blacknova→Black Nova VC, SquarePeg→Square Peg Capital, Sprint+Sprint Ventures→one row, NAB→service_providers."NAB (National Australia Bank)" — a cross-table *related* hit, see rules below).
+- 2 caught only by alias review: **Artesian → "Artesian Capital Management"**, **OneVentures → "1V (OneVentures)"**. These prove an alias table is required, not optional.
+- 2 probable aliases needing Stephen's call: **NZGCP** and **Aspire (part of NZGCP)** vs existing "NZ Growth Capital Partners".
+- 1 junk row: fund "At" (truncated cell; the person row — Will O'Connell, Sydney — is still usable).
+- Net new: **61 funds** (≈30 ANZ / ≈31 US-global).
+
+### VC people — 18/219 already on platform
+17 verified by LinkedIn-slug equality (the strongest person key; catches "Ed Hooper"→"Edward Hooper") + 1 by name. All 18 become *enrichment* candidates (fill NULL `linkedin_url`/title), never new rows.
+
+### Accelerators — 42/90 duplicate or platform-related
+- 35 Active + 7 Inactive rows match existing records. Notable non-obvious catches: Cicada→Cicada Innovations, SVG|THRIVE→THRIVE APAC Accelerator, iLab UQ→ilab, Genesis→Sydney Genesis Program, CSIRO ON Accelerate→On Accelerate, Fishburners Women's Accelerator→Fishburners, Techstars→Techstars Sydney, iAccelerate→iAccelerate Wollongong, RMIT Activator→Activator LaunchHUB, Runway HQ Geelong→Runway HQ, Plus Eight (Spacecubed)→Plus Eight, muruD→muru-D, I2N ×3→I2N Accelerator Program.
+- **Known fuzzy false positives (both rejected on review): LaunchAI ≠ "Launch It", Sprout (NZ) ≠ "SproutX" (AU).** This is why the fuzzy tier (0.87–0.98) must always be human-reviewed, never auto-merged.
+- **Cross-table relations, not duplicates:** Startmate + 77 Challenge + Melt + LuminaX match `investors` rows (the program's *fund* is on the platform, the *program* may still merit its own `innovation_ecosystem` row) — routed to reviewer as `related_record`, not `duplicate`.
+- Net new Active: **≈32 programs**.
+
+### Coworking — 9/49 rows already covered
+Stone & Chalk ×4 campuses → existing "Stone & Chalk"; Fishburners; Harbour City Labs; EnergyLab; I2N Hub Honeysuckle → I2N; CHICC → ANDHealth+ (same operator). Net new after campus grouping: **≈33 orgs**.
+
+### Newsletters / Podcasts — 0 duplicates in `content_items`
+6 newsletters are published by orgs already on the platform (Startmate, Main Sequence's Deeptech MSV, Emily Casey's What the Health, UNSW Founders, River City Labs, CSIRO ON) — useful as attribution links in the curated guide, not blockers.
+
+### Lessons folded into the dedupe rules (§5.3)
+1. **Shared institutional domains must not count as duplicate keys.** 12 accelerator rows sit on university/agency domains (`*.edu.au`, `*.edu`, `*.ac.nz`, `*.gov.au`, `csiro.au`) — e.g. Genesis and USYD Innovation Hub both on `sydney.edu.au` are *different programs*. Domain matches on these TLD groups downgrade to `related_record`.
+2. **A cross-table match is a relation, not a duplicate.** Same org can legitimately exist as an investor *and* an ecosystem program (Startmate does today). The candidate carries `matched_existing_id` + `match_note` and the reviewer decides merge vs. coexist.
+3. **Maintain a small alias map** seeded with: Artesian↔Artesian Capital Management, OneVentures↔1V (OneVentures), NZGCP↔NZ Growth Capital Partners, AirTree↔Airtree Ventures, Blacknova↔Black Nova VC, muruD↔muru-D.
+4. **Fuzzy tier is review-only.** Auto-dedupe only on domain (non-institutional), LinkedIn slug, or normalized-name equality.
 
 ## 5. Proposed ingestion architecture (phase 2 — needs approval)
 
@@ -144,7 +176,7 @@ Matches `report_quality_proposals` (admin read+update, service-role insert) and 
 - Normalize URLs (https, lowercase host, strip `www.`/trailing slash); reject non-URLs; prefer xlsx hyperlink targets over display text.
 - Dedupe key: **website domain** when real (LinkedIn/Facebook domains don't count) else **normalized org name + geography** (suffixes like Ventures/Capital/Partners/Accelerator stripped). Multi-campus chains collapse to one org candidate; campuses preserved in `raw`.
 - Person key: normalized full name + fund.
-- Cross-table match: exact name → fuzzy normalized name → domain equality against the destination table; matches become *enrichment* candidates, never new rows.
+- Cross-table match: domain equality (excluding shared institutional domains — `*.edu.au`, `*.edu`, `*.ac.nz`, `*.gov.au`, `csiro.au`) → LinkedIn slug → alias map → normalized-name equality → fuzzy (≥0.87, **review-only**, see §4.5 false positives). Same-table matches become *enrichment* candidates, never new rows; cross-table matches are flagged `related_record` for the reviewer.
 - LinkedIn search URLs / Google search links ⇒ `placeholder_search_link`, confidence low.
 - No website + no LinkedIn + no contact ⇒ confidence low. Inactive accelerators ⇒ excluded. Unknown geography ⇒ flagged, never silently dropped.
 - Every candidate carries the verbatim `raw` row, source tab + row number, and batch id.
