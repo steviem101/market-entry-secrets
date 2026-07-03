@@ -86,6 +86,12 @@ def is_institutional(domain: str | None) -> bool:
     return bool(domain) and any(domain.endswith(sfx) for sfx in INSTITUTIONAL_SUFFIXES)
 
 
+def key_slug(name: str) -> str:
+    """Lossless-ish key slug: keeps parentheticals/qualifiers that
+    normalize_name() strips, so sibling programs get distinct keys."""
+    return re.sub(r"[^a-z0-9]+", "", (name or "").lower())
+
+
 def li_slug(url: str | None) -> str | None:
     if not url:
         return None
@@ -292,9 +298,11 @@ def build_candidates(parsed: list[dict], idx: dict) -> list[dict]:
                 "program": {k: c["raw"].get(k) for k in
                             ("investment", "cohort_timing", "focus", "association", "contact")},
             }
+        # full-name slug, not domain: distinct programs legitimately share a
+        # host domain (UNSW Founders family, I2N streams)
         out.append({**base("accelerator", "Accelerators", [c["row_index"]], c["name"],
                            "innovation_ecosystem", action, payload,
-                           f"accelerator:{c.get('domain') if c.get('domain') and not is_institutional(c['domain']) else normalize_name(c['name'])}",
+                           f"accelerator:{key_slug(c['name'])}",
                            c["confidence"], flags, m, note), "raw": c["raw"]})
 
     # --- Coworking (group campuses by non-institutional domain) ---
