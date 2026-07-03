@@ -36,7 +36,9 @@ from difflib import SequenceMatcher
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from parse_startmate_sheet import clean, extract_domain, normalize_name  # noqa: E402
+from parse_startmate_sheet import (  # noqa: E402
+    AU_CITIES, NZ_CITIES, clean, extract_domain, normalize_name,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PRIVATE = REPO_ROOT / "data" / "private" / "startmate"
@@ -384,6 +386,112 @@ def merge_verification(cands: list[dict], verification: dict) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Scope rules — applied AFTER verification merge so they use corrected data.
+# ---------------------------------------------------------------------------
+
+AU_STATE_ABBR = ("nsw", "qld", "vic", "wa", "sa", "tas", "act", "nt")
+
+
+def _has_word(text: str, words) -> bool:
+    return any(re.search(rf"\b{re.escape(w)}\b", text) for w in words)
+
+
+def anz_bucket(text: str | None) -> str:
+    """australia | new_zealand | other | unknown from a free-text location/country.
+
+    ANZ signals (country name, state abbreviation, or a known city as a word)
+    win over foreign-city signals so 'Sydney office of <US fund>' reads as AU.
+    'International' / 'Global' stay unknown (can't confirm ANZ).
+    """
+    t = (text or "").lower()
+    if not t.strip():
+        return "unknown"
+    au = ("australia" in t or "australian" in t or "naarm" in t
+          or _has_word(t, AU_STATE_ABBR) or _has_word(t, AU_CITIES))
+    nz = ("new zealand" in t or "aotearoa" in t or _has_word(t, ["nz"])
+          or _has_word(t, NZ_CITIES))
+    if au and not nz:
+        return "australia"
+    if nz and not au:
+        return "new_zealand"
+    if au and nz:  # e.g. "AUS/NZ" — still ANZ; bias to australia for bucketing
+        return "australia"
+    if any(k in t for k in ("united states", "usa", "silicon valley",
+                            "san francisco", "new york", "california", "boston",
+                            "singapore", "london", "michigan", "massachusetts",
+                            "palo alto", "menlo park")) or _has_word(t, ["us", "uk"]):
+        return "other"
+    return "unknown"
+
+
+def candidate_anz(c: dict) -> str:
+    """Best-available ANZ verdict for a candidate, preferring verified corrections."""
+    payload = c.get("proposed_payload") or {}
+    corr = (c.get("verification") or {}).get("corrections") or {}
+    for signal in (corr.get("location"), payload.get("location"),
+                   payload.get("country"), payload.get("city")):
+        b = anz_bucket(signal)
+        if b in ("australia", "new_zealand"):
+            return b
+        if b == "other":
+            return "other"
+    # dedupe_key carries the sheet-derived geo for funds (…:australia)
+    tail = c["dedupe_key"].rsplit(":", 1)[-1]
+    if tail in ("australia", "new_zealand", "anz"):
+        return "australia" if tail != "new_zealand" else "new_zealand"
+    if tail == "us":
+        return "other"
+    return "unknown"
+
+
+def apply_scope_rules(cands: list[dict]) -> dict:
+    """Batch-1 scope decisions (idempotent). Returns a stats dict.
+
+    1. ANZ-only: non-ANZ `insert_new` rows are deferred to `exclude`
+       (unknown-geography inserts go to `related_review` — not lost, not auto-imported).
+    2. Fund-less VC people (`review`) are deferred to `exclude` — revisit in a
+       dedicated mentors/angels batch, not this ecosystem import.
+    3. `uncertain` verification on an `insert_new` row downgrades to
+       `related_review` — a human confirms existence before it becomes a row.
+    """
+    stats = {"non_anz_deferred": 0, "geography_unconfirmed": 0,
+             "fundless_deferred": 0, "uncertain_downgraded": 0}
+    INSERT_TYPES = ("investor_fund", "accelerator", "coworking_space")
+    for c in cands:
+        # 3. uncertain inserts need human confirmation first
+        if (c["proposed_action"] == "insert_new"
+                and (c.get("verification") or {}).get("status") == "uncertain"):
+            c["proposed_action"] = "related_review"
+            c["validation_flags"] = sorted(set(c["validation_flags"] + ["verification_uncertain"]))
+            c["match_note"] = (c.get("match_note") or "") + " | verification uncertain — confirm before insert"
+            stats["uncertain_downgraded"] += 1
+
+        # 1. ANZ-only gate on remaining inserts
+        if c["proposed_action"] == "insert_new" and c["entity_type"] in INSERT_TYPES:
+            bucket = candidate_anz(c)
+            if bucket in ("australia", "new_zealand"):
+                pass
+            elif bucket == "unknown":
+                c["proposed_action"] = "related_review"
+                c["validation_flags"] = sorted(set(c["validation_flags"] + ["geography_unconfirmed"]))
+                c["match_note"] = (c.get("match_note") or "") + " | geography unconfirmed — ANZ-only batch, review before insert"
+                stats["geography_unconfirmed"] += 1
+            else:  # other (US/global)
+                c["proposed_action"] = "exclude"
+                c["validation_flags"] = sorted(set(c["validation_flags"] + ["non_anz_deferred"]))
+                c["match_note"] = (c.get("match_note") or "") + " | non-ANZ — deferred from ANZ-only batch 1"
+                stats["non_anz_deferred"] += 1
+
+        # 2. defer fund-less VC people
+        if c["proposed_action"] == "review" and c["entity_type"] == "investor_person":
+            c["proposed_action"] = "exclude"
+            c["validation_flags"] = sorted(set(c["validation_flags"] + ["deferred_fundless_person"]))
+            c["match_note"] = (c.get("match_note") or "") + " | fund-less person — defer to a mentors/angels batch"
+            stats["fundless_deferred"] += 1
+    return stats
+
+
+# ---------------------------------------------------------------------------
 # SQL emission
 # ---------------------------------------------------------------------------
 
@@ -496,6 +604,41 @@ def self_test() -> int:
         (is_institutional("startmate.com"), False),
         (sql_str("O'Brien"), "'O''Brien'"),
         (sql_text_array([]), "'{}'::text[]"),
+        # ANZ bucketing (uses verified corrections)
+        (anz_bucket("Sydney, Australia"), "australia"),
+        (anz_bucket("San Francisco, California, United States"), "other"),
+        (anz_bucket("Auckland, New Zealand"), "new_zealand"),
+        (anz_bucket("Perth"), "australia"),
+        (anz_bucket(None), "unknown"),
+        (candidate_anz({"dedupe_key": "investor_fund:x:us",
+                        "proposed_payload": {"location": "Menlo Park, United States"}}), "other"),
+        (candidate_anz({"dedupe_key": "investor_fund:x:australia",
+                        "proposed_payload": {},
+                        "verification": {"corrections": {"location": "Sydney, Australia"}}}), "australia"),
+    ]
+    # scope-rule behaviours
+    scope_cands = [
+        {"entity_type": "investor_fund", "proposed_action": "insert_new",
+         "dedupe_key": "investor_fund:a:us", "validation_flags": [], "match_note": "",
+         "proposed_payload": {"location": "San Francisco, United States"}},
+        {"entity_type": "investor_fund", "proposed_action": "insert_new",
+         "dedupe_key": "investor_fund:b:australia", "validation_flags": [], "match_note": "",
+         "proposed_payload": {"location": "Sydney, Australia"}},
+        {"entity_type": "investor_person", "proposed_action": "review",
+         "dedupe_key": "investor_person:c", "validation_flags": [], "match_note": "",
+         "proposed_payload": {}},
+        {"entity_type": "accelerator", "proposed_action": "insert_new",
+         "dedupe_key": "accelerator:d", "validation_flags": [], "match_note": "",
+         "proposed_payload": {"location": "Auckland"},
+         "verification": {"status": "uncertain"}},
+    ]
+    apply_scope_rules(scope_cands)
+    cases += [
+        (scope_cands[0]["proposed_action"], "exclude"),       # US fund deferred
+        ("non_anz_deferred" in scope_cands[0]["validation_flags"], True),
+        (scope_cands[1]["proposed_action"], "insert_new"),    # AU fund kept
+        (scope_cands[2]["proposed_action"], "exclude"),       # fund-less person deferred
+        (scope_cands[3]["proposed_action"], "related_review"),  # uncertain insert -> review
     ]
     failures = [(i, got, want) for i, (got, want) in enumerate(cases) if got != want]
     for i, got, want in failures:
@@ -525,6 +668,8 @@ def main() -> int:
         merged = merge_verification(cands, json.loads(VERIFICATION_FILE.read_text()))
         print(f"merged verification for {merged} candidates")
 
+    scope = apply_scope_rules(cands)
+    print(f"scope rules (ANZ-only batch): {scope}")
     print(summarize(cands))
     if args.write:
         CANDIDATES_FILE.write_text(json.dumps(cands, indent=1, ensure_ascii=False))

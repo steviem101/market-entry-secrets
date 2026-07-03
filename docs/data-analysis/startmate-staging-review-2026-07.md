@@ -3,23 +3,35 @@
 **Date:** 2026-07-03
 **Precedes:** applying `scripts/startmate_import_blocks/*.sql` to `ecosystem_import_candidates`, then any promotion into live tables.
 **Companion docs:** analysis + rules in `docs/data-analysis/startmate-ecosystem-sheet-analysis.md`; staging DDL in `supabase/migrations/20260703120000_create_ecosystem_import_candidates.sql`.
-**No production writes have been made.** The migration is unapplied; the blocks are generated but not executed.
+**No production writes have been made.** The migration is unapplied; the blocks are generated but not executed. **Scope: ANZ-only (batch 1).** The pipeline was **tested end-to-end against a real Postgres** — see "Pre-merge test" below.
 
 ## Summary
 
-314 candidates generated from the 896-row sheet. Every candidate proposed for import or flagged as related (186) was **web-verified by parallel research agents on 2026-07-03** — existence, current activity (2024+ evidence), corrected website/location/description/founded, with source URLs stored in each candidate's `verification` jsonb.
+314 candidates generated from the 896-row sheet. Every candidate proposed for import or flagged as related (186) was **web-verified by parallel research agents on 2026-07-03** — existence, current activity (2024+ evidence), corrected website/location/description/founded, with source URLs stored in each candidate's `verification` jsonb. Then three **scope rules** were applied (see "Scope decisions" below): ANZ-only, defer fund-less people, downgrade uncertain inserts.
 
 | Entity type | Total | insert_new | enrich_existing | related_review | content_guide | review | exclude |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| investor_fund | 117 | 59 | 54 | 1 | — | — | 3 |
-| investor_person | 29 | — | 1 | — | — | 28 | — |
-| accelerator | 90 | 26 | 18 | 17 | — | — | 29 |
-| coworking_space (grouped orgs) | 28 | 22 | 3 | 3 | — | — | — |
-| newsletter | 48 | — | — | — | 40 | — | 8 |
-| podcast | 2 | — | — | — | 2 | — | — |
-| **Total** | **314** | **107** | **76** | **21** | **42** | **28** | **40** |
+| investor_fund | 117 | 14 | 54 | 3 | — | 46 |
+| investor_person | 29 | — | 1 | — | — | 28 |
+| accelerator | 90 | 24 | 18 | 19 | — | 29 |
+| coworking_space (grouped orgs) | 28 | 22 | 3 | 3 | — | — |
+| newsletter | 48 | — | — | — | 40 | 8 |
+| podcast | 2 | — | — | — | 2 | — |
+| **Total** | **314** | **60** | **76** | **25** | **42** | **111** |
 
-**Verification verdicts (186 researched):** 160 verified · 11 inactive · 3 defunct · 2 not_found · 10 uncertain. 134 candidates received field corrections (websites, HQ cities, founding years, one-line descriptions). The 128 unresearched candidates are `enrich_existing` (COALESCE-only NULL-fills reviewed at apply time), `review` (fund-less people), or sheet-flagged excludes.
+(The `review` column is gone — those 28 fund-less people are now `exclude` per scope rule 2.)
+
+**Net new ANZ records to import: 60** (14 funds + 24 accelerators + 22 coworking orgs) + **76** NULL-fill enrichments of existing rows + **42** newsletter/podcast sources for a curated guide.
+
+**Verification verdicts (186 researched):** 160 verified · 11 inactive · 3 defunct · 2 not_found · 10 uncertain. 134 candidates received field corrections (websites, HQ cities, founding years, one-line descriptions). The 128 unresearched candidates are `enrich_existing` (COALESCE-only NULL-fills reviewed at apply time) or sheet-flagged excludes.
+
+## Scope decisions applied (this batch)
+
+Encoded in `scripts/generate_startmate_candidates.py::apply_scope_rules` (run post-verification, so they use corrected locations) and covered by `--self-test`:
+
+1. **ANZ-only** — 43 non-ANZ (US/global) funds deferred to `exclude` (`non_anz_deferred`): AIX Ventures, Base10, Battery, Lightspeed, Peak XV, M12, General Catalyst, etc. They stay in staging as audit rows and can be revived for a future international batch by clearing the flag. **2 rows** with genuinely unresolvable geography (Battery Ventures "International", TinySeed "Global") went to `related_review` (`geography_unconfirmed`) rather than being dropped. ANZ presence of a global firm counts — KKR (Sydney) and Nuance (Auckland) are kept.
+2. **Defer fund-less VC people** — the 28 VC-tab people with no fund and no existing-record match went to `exclude` (`deferred_fundless_person`); recommendation is to handle them in a dedicated mentors/angels batch, not this ecosystem import. (1 fund-less person that matched an existing investor stays `enrich_existing`.)
+3. **Uncertain inserts → review** — the 2 `insert_new` candidates whose verification came back `uncertain` (Power of N/Headline; Kokiri) were downgraded to `related_review` so a human confirms existence before a row is created.
 
 ## What the research pass caught (would have polluted the directory)
 
@@ -74,9 +86,23 @@ python3 scripts/generate_startmate_candidates.py --write   # candidates JSON + S
 
 `live_snapshot.json` is produced by the read-only SQL embedded in the generator's docstring; `verification_results.json` came from the 2026-07-03 research pass (20 parallel agents, ~11 orgs each, evidence + sources per verdict; LinkedIn never scraped).
 
+## Pre-merge test (run 2026-07-03)
+
+`scripts/test_startmate_staging.sh` exercises the migration + generated blocks against a **throwaway local Postgres** (Supabase-specific objects — `app_role`, `has_role`, `auth.uid()`, the `anon`/`authenticated`/`service_role` roles — stubbed), so bugs surface before prod ever sees the SQL. It is re-runnable (`PGPORT=… scripts/test_startmate_staging.sh`) and asserts, all passing:
+
+- migration applies cleanly; RLS enabled; 2 admin policies present; anon/authenticated writes revoked;
+- all six INSERT blocks load (314 rows) — proving every `entity_type` / `proposed_action` / `confidence` / `status` value satisfies its CHECK and no `dedupe_key` collides within the batch;
+- re-running the blocks is idempotent (`ON CONFLICT (batch_id, dedupe_key) DO NOTHING`);
+- required jsonb/array fields are populated; every `enrich_existing` row carries `matched_existing_id` + `match_method`;
+- an admin review `UPDATE … SET status='approved'` succeeds, an illegal status is rejected by the CHECK;
+- batch rollback (`DELETE WHERE batch_id`) clears the batch.
+
+This tests the schema and data end-to-end without touching prod. It does **not** exercise live `has_role` semantics (stubbed to `false`) — that RLS behaviour matches the identical pattern already in production on `report_quality_proposals`.
+
 ## Open items for Stephen
 
 1. Approve applying the migration + staging blocks (steps 1–2 above).
-2. §7 questions from the analysis doc still stand — most importantly: US/global funds in batch 1 or ANZ-only? (59 insert_new funds ≈ 28 ANZ / 31 US-global; easy to approve by geography in the review query.)
-3. NZGCP / Aspire alias call (probable aliases of the existing "NZ Growth Capital Partners" row — staged as `enrich_existing` with a match note).
-4. The 10 `uncertain` records — approve, reject, or hold per row.
+2. ~~US/global funds in batch 1?~~ **Resolved: ANZ-only.** 43 US/global funds are deferred (`non_anz_deferred`) and revivable later; 14 new ANZ funds remain. If you later want the internationals, it's a one-line status flip in the review query.
+3. NZGCP / Aspire alias call (probable aliases of the existing "NZ Growth Capital Partners" row — staged as `enrich_existing` with a match note; both NZ so in-scope).
+4. The `uncertain` records: the 2 uncertain *inserts* (Power of N/Headline, Kokiri) are now `related_review` awaiting your confirmation; the 8 uncertain *newsletters* remain in the guide list for editorial review.
+5. Battery Ventures & TinySeed (`geography_unconfirmed`, `related_review`) — confirm ANZ relevance or leave excluded.
