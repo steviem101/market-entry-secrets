@@ -195,7 +195,8 @@ All edge functions are in `supabase/functions/`. Shared modules in `_shared/`:
 - `_shared/log.ts` — `log()` and `logError()` structured logging
 - `_shared/auth.ts` — `requireAdmin(req)` admin role check
 
-~21 functions are deployed (verify in the dashboard / via `list_edge_functions`).
+The table below is a curated subset, not exhaustive — verify the deployed set via the
+dashboard / `list_edge_functions` before assuming a function does or doesn't exist.
 Functions with `verify_jwt = false` authenticate in-code (JWT, signature, or `x-internal-secret`).
 
 | Function | Purpose | `verify_jwt` | External APIs |
@@ -221,7 +222,7 @@ Functions with `verify_jwt = false` authenticate in-code (JWT, signature, or `x-
 | `apify-webhook` | Apify ingest webhook (Irish Insights pipeline) | ❌ (webhook) | — |
 | `notion-research-trigger` | Notion research trigger | ❌ (webhook) | — |
 | `report-quality-rollup` | Weekly cross-report rollup card to Slack `#report-quality` (cron) | ❌ (`x-webhook-secret`) | Slack |
-| `report-quality-loop` | Scheduled **propose-only** report-quality review loop — scores reports on relevance/conciseness/fidelity, writes ranked proposals to `report_quality_proposals`, logs to `automation_runs`, posts a digest with Accept/Reject buttons. | ❌ (`x-webhook-secret`) | Anthropic, Slack |
+| `report-quality-loop` | Scheduled **propose-only** report-quality review loop — scores reports on relevance/conciseness/fidelity, writes ranked proposals to `report_quality_proposals`, logs to `automation_runs`, posts a digest with Accept/Reject buttons, sweeps accepted proposals into Notion MES tickets. | ❌ (`x-webhook-secret`) | Anthropic, Slack, Notion |
 | `rq-slack-actions` | Slack interactivity receiver for the report-quality queue — Accept/Reject button clicks flip `report_quality_proposals.status` (review only; never ships code) | ❌ (Slack request signing) | Slack |
 
 ---
@@ -427,6 +428,8 @@ Both `useToast` (shadcn) and `sonner` (`toast()`) are available. Use either.
 | `SLACK_NOTIFY_WEBHOOK_SECRET` | `x-webhook-secret` guarding `slack-notify` / `report-quality-rollup` / `report-quality-loop` |
 | `SLACK_SIGNING_SECRET` | Slack app signing secret — verifies interaction payloads hitting `rq-slack-actions` |
 | `NOTION_API_KEY` | Notion internal-integration token — `report-quality-loop`'s sweep tickets accepted proposals into the MES Tickets DB (optional; sweep skips without it) |
+| `NOTION_TICKETS_DB_ID` | MES Tickets Notion database id for the sweep (no default — must be set alongside the key) |
+| `RQ_SLACK_REVIEWERS` | Optional comma-separated Slack user IDs allowed to click Accept/Reject on `rq-slack-actions` (unset = channel membership gates) |
 | `RESEND_API_KEY` | Resend transactional email (`send-email`, `send-lead-followup`) |
 | `EMAIL_INTERNAL_SECRET` | Internal `x-internal-secret` for server-to-server calls to `send-email` |
 | `CONTENT_CREATOR_URL` | Content Creator (`rcgaviwbsudouvfwzydq`) API URL — read source for the `kb-sync` LinkedIn sync |

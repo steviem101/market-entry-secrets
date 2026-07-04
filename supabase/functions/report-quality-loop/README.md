@@ -56,7 +56,8 @@ rollup). It POSTs to the function with the `x-webhook-secret` header (same patte
 | `SLACK_NOTIFY_WEBHOOK_SECRET` | Authenticates the cron POST (`x-webhook-secret`) |
 | `RQ_LOOP_MODEL` (optional) | Override the Claude model (default `claude-sonnet-4-6`) |
 | `NOTION_API_KEY` (optional) | Enables the Notion ticket sweep (internal integration token; the integration must be shared with the MES Tickets database). Missing → sweep skips quietly |
-| `NOTION_TICKETS_DB_ID` (optional) | Override the MES Tickets database id (defaults to the prod one) |
+| `NOTION_TICKETS_DB_ID` (optional) | MES Tickets database id (prod: `3865de22266780408c6eef94b1d5ac63`). No default — both this and the key must be set for the sweep to run, so a non-prod deploy can never write into the prod ticket DB |
+| `RQ_SLACK_REVIEWERS` (optional, on `rq-slack-actions`) | Comma-separated Slack user IDs allowed to click Accept/Reject. Unset → anyone who can see the channel |
 
 ## Caps (POST body overrides)
 
@@ -125,9 +126,19 @@ Workstream `Reports`; `data-coverage-gap` tickets are flagged "needs human data
 sourcing"), and writes each ticket's URL back to the proposals' `fix_ref`. So: click
 Accept in Slack during the week → grouped tickets appear in the Notion pipeline on the
 next run (or immediately via the on-demand call). Proposals that already have a
-`fix_ref` are never re-ticketed. Requires `NOTION_API_KEY`; without it the sweep skips
-quietly. A short "🗂 Notion sweep" note posts to `#report-quality` whenever tickets were
-created.
+`fix_ref` are never re-ticketed. Requires `NOTION_API_KEY` **and** `NOTION_TICKETS_DB_ID`;
+without them the sweep skips quietly. A "🗂 Notion sweep" note posts to `#report-quality`
+whenever tickets were created, and a ⚠️ warning posts if any sweep step failed (so an
+expired Notion token can't silently strand accepted proposals).
+
+Operational notes:
+- The on-demand `sync_notion` mode works even while the scoring loop's routing flag is
+  disabled — ticketing accepted proposals doesn't require Anthropic-spending scoring.
+- On deadline-hit (partial) scheduled runs the sweep is deferred to the next cycle so it
+  can't push the function into the edge gateway kill window; Notion calls are bounded by
+  a 10s timeout for the same reason.
+- Re-decisions: if a proposal is rejected *after* it was ticketed, the ticket keeps
+  listing it (`fix_ref` stays as provenance) — prune the ticket manually if it matters.
 
 ### Slack app setup for the buttons (one-time)
 

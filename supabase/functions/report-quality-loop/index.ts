@@ -14,7 +14,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   buildCompactInput, buildScoringMessages, parseScoring, toProposalRows,
-  rankAndCap, summariseThemes, RUBRIC_VERSION, type ProposalRow,
+  rankAndCap, summariseThemes, RUBRIC_VERSION, type Category, type ProposalRow,
 } from "./rubric.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -25,7 +25,10 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 const ANTHROPIC_MODEL = Deno.env.get("RQ_LOOP_MODEL") ?? "claude-sonnet-4-6";
 const REPORT_BASE_URL = "https://market-entry-secrets.lovable.app/report";
 const NOTION_API_KEY = Deno.env.get("NOTION_API_KEY") ?? "";
-const NOTION_TICKETS_DB_ID = Deno.env.get("NOTION_TICKETS_DB_ID") ?? "3865de22266780408c6eef94b1d5ac63"; // MES Tickets
+// No hardcoded fallback: a non-prod deploy with a Notion key but no DB id must skip,
+// not write test tickets into the production MES Tickets database.
+const NOTION_TICKETS_DB_ID = Deno.env.get("NOTION_TICKETS_DB_ID") ?? "";
+const NOTION_TIMEOUT_MS = 10000;
 const LOOP_NAME = "report-quality-loop";
 const ROUTING_EVENT = "report.quality.loop";
 const DAY = 86400000;
@@ -159,8 +162,12 @@ async function postQueue(supabase: any, channel: string, limit: number): Promise
   });
   if (buf) blocks.push({ type: "section", text: { type: "mrkdwn", text: buf } });
   blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `review in report_quality_proposals · ${new Date().toUTCString()}` }] });
-  const res = await postToSlack(channel, `Report-quality review queue — ${props.length} proposals`, blocks.slice(0, 50));
-  return json({ ok: res.ok, posted: props.length, error: res.error });
+  // Slack caps a message at 50 blocks — truncate visibly rather than dropping the tail silently.
+  const sendBlocks = blocks.length > 50
+    ? [...blocks.slice(0, 49), { type: "context", elements: [{ type: "mrkdwn", text: `⚠️ truncated to Slack's 50-block cap — remaining proposals are in report_quality_proposals · ${new Date().toUTCString()}` }] }]
+    : blocks;
+  const res = await postToSlack(channel, `Report-quality review queue — ${props.length} proposals`, sendBlocks);
+  return json({ ok: res.ok, posted: props.length, truncated: blocks.length > 50, error: res.error });
 }
 
 // --- Notion ticket sweep -------------------------------------------------------------
@@ -169,7 +176,10 @@ async function postQueue(supabase: any, channel: string, limit: number): Promise
 // writes the ticket URL back to each proposal's fix_ref. Runs at the end of every
 // scheduled run and on demand via POST {"sync_notion": true}. Skips quietly when
 // NOTION_API_KEY isn't configured.
-const CAT_META: Record<string, { type: string; priority: string; gate: string; label: string; note?: string }> = {
+// Typed against the rubric's Category union so a category rename/addition in rubric.ts
+// is a compile error here instead of silently falling back to generic ticket metadata
+// (which would drop e.g. the data-coverage-gap "do NOT invent records" safety note).
+const CAT_META: Record<Category, { type: string; priority: string; gate: string; label: string; note?: string }> = {
   "matching/relevance": { type: "Bug", priority: "P1", gate: "Plan", label: "Matching relevance" },
   "content/prompt-bulk": { type: "Refactor", priority: "P2", gate: "Plan", label: "Content bulk / prompt tightening" },
   "input-not-actioned": { type: "Feature", priority: "P1", gate: "Plan", label: "Input-actioning fidelity" },
@@ -182,6 +192,7 @@ interface NotionSweepResult { created: number; ticketed: number; skipped?: strin
 // deno-lint-ignore no-explicit-any
 async function syncAcceptedToNotion(supabase: any): Promise<NotionSweepResult> {
   if (!NOTION_API_KEY) return { created: 0, ticketed: 0, skipped: "missing_notion_key" };
+  if (!NOTION_TICKETS_DB_ID) return { created: 0, ticketed: 0, skipped: "missing_notion_db_id" };
   const { data: rows, error } = await supabase.from("report_quality_proposals")
     .select("id, category, title, impact_estimate, confidence, risk, recommended_change, evidence, report_id")
     .eq("status", "accepted").is("fix_ref", null)
@@ -201,7 +212,7 @@ async function syncAcceptedToNotion(supabase: any): Promise<NotionSweepResult> {
   const result: NotionSweepResult = { created: 0, ticketed: 0, errors: [] };
   const today = new Date().toISOString().slice(0, 10);
   for (const [category, props] of groups) {
-    const meta = CAT_META[category] ?? { type: "Feature", priority: "P2", gate: "Plan", label: category };
+    const meta = CAT_META[category as Category] ?? { type: "Feature", priority: "P2", gate: "Plan", label: category };
     const refs = props.map((p) => String(p.id).slice(0, 8));
     const children: unknown[] = [
       { object: "block", type: "callout", callout: { icon: { type: "emoji", emoji: "🔁" }, rich_text: [{ type: "text", text: { content:
@@ -213,8 +224,14 @@ async function syncAcceptedToNotion(supabase: any): Promise<NotionSweepResult> {
     // deno-lint-ignore no-explicit-any
     let page: any = null;
     try {
+      // Bounded: the sweep may run after the scoring loop has spent its wall-clock
+      // budget, so a hung Notion connection must not push the function into the
+      // ~150s gateway kill (which would strand tickets without fix_ref).
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), NOTION_TIMEOUT_MS);
       const resp = await fetch("https://api.notion.com/v1/pages", {
         method: "POST",
+        signal: ctrl.signal,
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${NOTION_API_KEY}`, "Notion-Version": "2022-06-28" },
         body: JSON.stringify({
           parent: { database_id: NOTION_TICKETS_DB_ID },
@@ -233,6 +250,7 @@ async function syncAcceptedToNotion(supabase: any): Promise<NotionSweepResult> {
           children,
         }),
       });
+      clearTimeout(to);
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok) {
         result.errors!.push(`${category}: ${data?.message ?? `http_${resp.status}`}`);
@@ -245,11 +263,20 @@ async function syncAcceptedToNotion(supabase: any): Promise<NotionSweepResult> {
       log("notion sweep exception", { category, error: String(e) });
       continue;
     }
+    // The ticket now exists in Notion; if fix_ref isn't written the next sweep would
+    // re-select these rows and create a duplicate ticket. Retry once, and surface a
+    // loud error (sweepAndNotify posts it to Slack) if it still fails.
     const pageUrl: string = page?.url ?? "";
-    if (pageUrl) {
-      const { error: updErr } = await supabase.from("report_quality_proposals")
-        .update({ fix_ref: pageUrl }).in("id", props.map((p) => p.id));
-      if (updErr) result.errors!.push(`${category} fix_ref: ${updErr.message}`);
+    if (!pageUrl) {
+      result.errors!.push(`${category}: notion response had no url — fix_ref not set, next sweep will re-ticket`);
+    } else {
+      let updErr = (await supabase.from("report_quality_proposals")
+        .update({ fix_ref: pageUrl }).in("id", props.map((p) => p.id))).error;
+      if (updErr) {
+        updErr = (await supabase.from("report_quality_proposals")
+          .update({ fix_ref: pageUrl }).in("id", props.map((p) => p.id))).error;
+      }
+      if (updErr) result.errors!.push(`${category} fix_ref failed twice (${updErr.message}) — next sweep will duplicate this ticket: ${pageUrl}`);
       else result.ticketed += props.length;
     }
     result.created += 1;
@@ -257,6 +284,25 @@ async function syncAcceptedToNotion(supabase: any): Promise<NotionSweepResult> {
   }
   if (!result.errors!.length) delete result.errors;
   return result;
+}
+
+// Run the Notion sweep and tell the channel what happened — a success note when tickets
+// were created, a loud warning when anything failed (a silent sweep failure means
+// accepted proposals pile up unticketed with no signal anywhere).
+// deno-lint-ignore no-explicit-any
+async function sweepAndNotify(supabase: any, channel: string): Promise<NotionSweepResult> {
+  const sweep = await syncAcceptedToNotion(supabase);
+  if (sweep.created > 0) {
+    await postToSlack(channel, `Report-quality — ${sweep.ticketed} accepted proposals ticketed into Notion`, [
+      { type: "section", text: { type: "mrkdwn", text: `🗂 *Notion sweep* — ${sweep.ticketed} accepted proposal(s) grouped into ${sweep.created} MES ticket(s). Each proposal's \`fix_ref\` now links to its ticket.` } },
+    ]);
+  }
+  if (sweep.errors?.length) {
+    await postToSlack(channel, "Report-quality — Notion sweep errors", [
+      { type: "section", text: { type: "mrkdwn", text: `⚠️ *Notion sweep errors* — accepted proposals may not be ticketed:\n${sweep.errors.map((e) => `• ${e}`).join("\n")}`.slice(0, 2900) } },
+    ]);
+  }
+  return sweep;
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -276,28 +322,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
-  // --- feature flag: disabled by default via routing.enabled -------------------------
+  // --- feature flag ---------------------------------------------------------------------
   const { data: rt } = await supabase.from("activity_event_routing")
     .select("channel_id,enabled").eq("event_type", ROUTING_EVENT).maybeSingle();
-  if (!rt || !rt.enabled || !rt.channel_id) {
+  const channel = (rt?.channel_id ?? "") as string;
+
+  // --- sweep-only mode: ticket accepted proposals into Notion (no scoring) ------------
+  // Deliberately NOT gated on routing.enabled: ticketing already-accepted proposals
+  // doesn't require the (Anthropic-spending) scoring loop to be switched on.
+  if (body.sync_notion === true) {
+    if (!channel) return json({ ok: false, error: "no_channel_configured" }, 500);
+    const sweep = await sweepAndNotify(supabase, channel);
+    return json({ ok: !sweep.errors, notion: sweep });
+  }
+
+  // Everything below (scoring runs + queue posts) is gated on the routing flag.
+  if (!rt || !rt.enabled || !channel) {
     log("loop disabled (routing flag off) — skipping");
     return json({ ok: true, skipped: "loop_disabled" });
   }
-  const channel = rt.channel_id as string;
 
   // --- post-only mode: push the open review queue to Slack (no scoring) ---------------
   if (body.post_queue === true) return await postQueue(supabase, channel, Math.min(Math.max(Number(body.limit) || 40, 1), 100));
-
-  // --- sweep-only mode: ticket accepted proposals into Notion (no scoring) ------------
-  if (body.sync_notion === true) {
-    const sweep = await syncAcceptedToNotion(supabase);
-    if (sweep.created > 0) {
-      await postToSlack(channel, `Report-quality — ${sweep.ticketed} accepted proposals ticketed into Notion`, [
-        { type: "section", text: { type: "mrkdwn", text: `🗂 *Notion sweep* — ${sweep.ticketed} accepted proposal(s) grouped into ${sweep.created} MES ticket(s). Each proposal's \`fix_ref\` now links to its ticket.` } },
-      ]);
-    }
-    return json({ ok: !sweep.errors, notion: sweep });
-  }
 
   // --- open an automation_runs row ---------------------------------------------------
   const startedAt = new Date().toISOString();
@@ -388,12 +434,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // count actually written.
     let insertError: string | null = null;
     let proposalsWritten = 0;
-    let insertedIds: string[] = []; // aligned with ranked order; used for digest buttons
+    // Generate ids client-side so the digest's Accept/Reject buttons are keyed to the
+    // exact row, with no reliance on INSERT..RETURNING row order (not a PG contract).
+    let insertedIds: string[] = [];
     if (!dryRun && runId && ranked.length) {
-      const insertRows = ranked.map((r) => ({ ...r, run_id: runId, status: "new" }));
-      const { data: inserted, error: insErr } = await supabase.from("report_quality_proposals").insert(insertRows).select("id");
+      const insertRows = ranked.map((r) => ({ ...r, id: crypto.randomUUID(), run_id: runId, status: "new" }));
+      const { error: insErr } = await supabase.from("report_quality_proposals").insert(insertRows);
       if (insErr) { insertError = insErr.message; log("proposal insert error", insErr.message); }
-      else { proposalsWritten = ranked.length; insertedIds = (inserted ?? []).map((r) => r.id as string); }
+      else { proposalsWritten = ranked.length; insertedIds = insertRows.map((r) => r.id); }
     } else if (dryRun) {
       proposalsWritten = ranked.length; // not persisted, but report what would be written
     }
@@ -445,15 +493,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     // --- Notion sweep: ticket anything accepted since the last run ----------------------
     // Runs after the digest so a sweep failure can never block scoring/logging/posting.
+    // Skipped on deadline-hit runs: the wall-clock budget is already spent and even a
+    // bounded sweep risks the ~150s gateway kill mid-write — it runs next cycle instead.
     let notionSweep: NotionSweepResult | undefined;
-    if (!dryRun) {
-      notionSweep = await syncAcceptedToNotion(supabase);
-      if (notionSweep.created > 0) {
-        await postToSlack(channel, `Report-quality — ${notionSweep.ticketed} accepted proposals ticketed into Notion`, [
-          { type: "section", text: { type: "mrkdwn", text: `🗂 *Notion sweep* — ${notionSweep.ticketed} accepted proposal(s) grouped into ${notionSweep.created} MES ticket(s). Each proposal's \`fix_ref\` now links to its ticket.` } },
-        ]);
-      }
-    }
+    if (!dryRun && !deadlineHit) notionSweep = await sweepAndNotify(supabase, channel);
+    else if (deadlineHit) log("skipping notion sweep (deadline hit) — will run next cycle");
 
     return json({ ok: !insertError, error: insertError ?? undefined, reviewed, proposed: proposalsWritten, eligible: batch.length, deadline_hit: deadlineHit, tokens_used: tokensUsed, cost, notion: notionSweep, dry_run: dryRun, proposals: dryRun ? ranked : undefined });
   } catch (e) {
