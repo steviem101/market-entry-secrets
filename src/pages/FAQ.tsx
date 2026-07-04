@@ -176,6 +176,9 @@ const FAQ = () => {
                 <Button variant="outline" asChild>
                   <Link to="/partner">Partner With Us</Link>
                 </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/market-entry-questions">Top 10 Market Entry Questions</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
