@@ -163,7 +163,7 @@ export interface PersonaSectionContent {
   testimonials: TestimonialsContent;
   pricing: PricingContent;
   cta: CTAContent;
-  floatingCTA: FloatingCTAContent;
+  floatingCTA?: FloatingCTAContent;
 }
 
 // ===========================================================================
@@ -479,11 +479,6 @@ const internationalContent: PersonaSectionContent = {
     secondaryCTA: { label: "Schedule Consultation", href: "/contact" },
   },
 
-  floatingCTA: {
-    label: "Start My Report",
-    shortLabel: "Report",
-    href: "/report-creator?persona=international",
-  },
 };
 
 // ===========================================================================
@@ -799,11 +794,6 @@ const startupContent: PersonaSectionContent = {
     secondaryCTA: { label: "Find a Mentor", href: "/mentors" },
   },
 
-  floatingCTA: {
-    label: "Growth Report",
-    shortLabel: "Report",
-    href: "/report-creator?persona=startup",
-  },
 };
 
 // ===========================================================================
@@ -1080,11 +1070,6 @@ const defaultContent: PersonaSectionContent = {
     secondaryCTA: { label: "Explore Providers", href: "/service-providers" },
   },
 
-  floatingCTA: {
-    label: "Start My Report",
-    shortLabel: "Report",
-    href: "/report-creator",
-  },
 };
 
 // ===========================================================================

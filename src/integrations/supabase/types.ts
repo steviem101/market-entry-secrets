@@ -322,6 +322,54 @@ export type Database = {
           },
         ]
       }
+      automation_runs: {
+        Row: {
+          accepted: number
+          cost: Json | null
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          loop: string
+          metadata: Json
+          proposed: number
+          reviewed: number
+          started_at: string
+          status: string
+          tokens_used: number | null
+        }
+        Insert: {
+          accepted?: number
+          cost?: Json | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          loop: string
+          metadata?: Json
+          proposed?: number
+          reviewed?: number
+          started_at?: string
+          status?: string
+          tokens_used?: number | null
+        }
+        Update: {
+          accepted?: number
+          cost?: Json | null
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          loop?: string
+          metadata?: Json
+          proposed?: number
+          reviewed?: number
+          started_at?: string
+          status?: string
+          tokens_used?: number | null
+        }
+        Relationships: []
+      }
       bookmarks: {
         Row: {
           content_description: string | null
@@ -1690,6 +1738,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      firecrawl_scrape_cache: {
+        Row: {
+          byte_len: number | null
+          content: string | null
+          fetched_at: string
+          ok: boolean
+          status: number | null
+          url_key: string
+        }
+        Insert: {
+          byte_len?: number | null
+          content?: string | null
+          fetched_at?: string
+          ok?: boolean
+          status?: number | null
+          url_key: string
+        }
+        Update: {
+          byte_len?: number | null
+          content?: string | null
+          fetched_at?: string
+          ok?: boolean
+          status?: number | null
+          url_key?: string
+        }
+        Relationships: []
       }
       guide_attachments: {
         Row: {
@@ -3867,6 +3942,83 @@ export type Database = {
         }
         Relationships: []
       }
+      report_quality_proposals: {
+        Row: {
+          axis_scores: Json
+          category: string
+          confidence: number
+          created_at: string
+          dedup_theme: string | null
+          evidence: Json
+          fix_ref: string | null
+          id: string
+          impact_estimate: string
+          rank_score: number
+          recommended_change: string
+          report_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk: string
+          rubric_version: string | null
+          run_id: string | null
+          status: string
+          tier_at_generation: string | null
+          title: string
+        }
+        Insert: {
+          axis_scores?: Json
+          category: string
+          confidence?: number
+          created_at?: string
+          dedup_theme?: string | null
+          evidence?: Json
+          fix_ref?: string | null
+          id?: string
+          impact_estimate?: string
+          rank_score?: number
+          recommended_change: string
+          report_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk?: string
+          rubric_version?: string | null
+          run_id?: string | null
+          status?: string
+          tier_at_generation?: string | null
+          title: string
+        }
+        Update: {
+          axis_scores?: Json
+          category?: string
+          confidence?: number
+          created_at?: string
+          dedup_theme?: string | null
+          evidence?: Json
+          fix_ref?: string | null
+          id?: string
+          impact_estimate?: string
+          rank_score?: number
+          recommended_change?: string
+          report_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk?: string
+          rubric_version?: string | null
+          run_id?: string | null
+          status?: string
+          tier_at_generation?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_quality_proposals_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "automation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_templates: {
         Row: {
           created_at: string
@@ -4519,13 +4671,19 @@ export type Database = {
           created_at: string
           feedback_notes: string | null
           feedback_score: number | null
+          firecrawl_ops: number | null
+          firecrawl_scrape_ok: boolean | null
+          generation_time_ms: number | null
           id: string
           intake_form_id: string | null
+          perplexity_ok: boolean | null
+          polish_applied: boolean | null
           report_json: Json
           sections_generated: string[] | null
           share_token: string | null
           status: string
           tier_at_generation: string
+          total_matches: number | null
           updated_at: string
           user_id: string | null
         }
@@ -4533,13 +4691,19 @@ export type Database = {
           created_at?: string
           feedback_notes?: string | null
           feedback_score?: number | null
+          firecrawl_ops?: number | null
+          firecrawl_scrape_ok?: boolean | null
+          generation_time_ms?: number | null
           id?: string
           intake_form_id?: string | null
+          perplexity_ok?: boolean | null
+          polish_applied?: boolean | null
           report_json?: Json
           sections_generated?: string[] | null
           share_token?: string | null
           status?: string
           tier_at_generation?: string
+          total_matches?: number | null
           updated_at?: string
           user_id?: string | null
         }
@@ -4547,13 +4711,19 @@ export type Database = {
           created_at?: string
           feedback_notes?: string | null
           feedback_score?: number | null
+          firecrawl_ops?: number | null
+          firecrawl_scrape_ok?: boolean | null
+          generation_time_ms?: number | null
           id?: string
           intake_form_id?: string | null
+          perplexity_ok?: boolean | null
+          polish_applied?: boolean | null
           report_json?: Json
           sections_generated?: string[] | null
           share_token?: string | null
           status?: string
           tier_at_generation?: string
+          total_matches?: number | null
           updated_at?: string
           user_id?: string | null
         }

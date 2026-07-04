@@ -7,7 +7,7 @@ import { ValueSection } from "@/components/sections/ValueSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { PricingSection } from "@/components/sections/PricingSection";
 import { CTASection } from "@/components/sections/CTASection";
-import { FloatingCTAButton } from "@/components/FloatingCTAButton";
+
 
 const FALLBACK_URL = "https://market-entry-secrets.lovable.app";
 
@@ -88,8 +88,6 @@ const Index = () => {
       {/* Final Conversion CTA Section */}
       <CTASection />
 
-      {/* Floating CTA Button */}
-      <FloatingCTAButton />
     </>
   );
 };
