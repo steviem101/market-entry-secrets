@@ -195,7 +195,7 @@ All edge functions are in `supabase/functions/`. Shared modules in `_shared/`:
 - `_shared/log.ts` — `log()` and `logError()` structured logging
 - `_shared/auth.ts` — `requireAdmin(req)` admin role check
 
-20 functions are deployed (verify in the dashboard / via `list_edge_functions`).
+~21 functions are deployed (verify in the dashboard / via `list_edge_functions`).
 Functions with `verify_jwt = false` authenticate in-code (JWT, signature, or `x-internal-secret`).
 
 | Function | Purpose | `verify_jwt` | External APIs |
@@ -221,7 +221,8 @@ Functions with `verify_jwt = false` authenticate in-code (JWT, signature, or `x-
 | `apify-webhook` | Apify ingest webhook (Irish Insights pipeline) | ❌ (webhook) | — |
 | `notion-research-trigger` | Notion research trigger | ❌ (webhook) | — |
 | `report-quality-rollup` | Weekly cross-report rollup card to Slack `#report-quality` (cron) | ❌ (`x-webhook-secret`) | Slack |
-| `report-quality-loop` | Scheduled **propose-only** report-quality review loop — scores reports on relevance/conciseness/fidelity, writes ranked proposals to `report_quality_proposals`, logs to `automation_runs`, posts a digest. Disabled by default. | ❌ (`x-webhook-secret`) | Anthropic, Slack |
+| `report-quality-loop` | Scheduled **propose-only** report-quality review loop — scores reports on relevance/conciseness/fidelity, writes ranked proposals to `report_quality_proposals`, logs to `automation_runs`, posts a digest with Accept/Reject buttons. | ❌ (`x-webhook-secret`) | Anthropic, Slack |
+| `rq-slack-actions` | Slack interactivity receiver for the report-quality queue — Accept/Reject button clicks flip `report_quality_proposals.status` (review only; never ships code) | ❌ (Slack request signing) | Slack |
 
 ---
 
@@ -424,6 +425,7 @@ Both `useToast` (shadcn) and `sonner` (`toast()`) are available. Use either.
 | `RQ_LOOP_MODEL` | Optional override for the `report-quality-loop` Claude model (default `claude-sonnet-4-6`) |
 | `SLACK_BOT_TOKEN` | Slack `chat.postMessage` token for `#report-quality` (rollup + loop) |
 | `SLACK_NOTIFY_WEBHOOK_SECRET` | `x-webhook-secret` guarding `slack-notify` / `report-quality-rollup` / `report-quality-loop` |
+| `SLACK_SIGNING_SECRET` | Slack app signing secret — verifies interaction payloads hitting `rq-slack-actions` |
 | `RESEND_API_KEY` | Resend transactional email (`send-email`, `send-lead-followup`) |
 | `EMAIL_INTERNAL_SECRET` | Internal `x-internal-secret` for server-to-server calls to `send-email` |
 | `CONTENT_CREATOR_URL` | Content Creator (`rcgaviwbsudouvfwzydq`) API URL — read source for the `kb-sync` LinkedIn sync |

@@ -53,6 +53,15 @@ function json(b: unknown, s = 200): Response {
   return new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
 }
 function band(s: number): string { return s >= 80 ? "🟢" : s >= 60 ? "🟡" : "🔴"; }
+// Accept/Reject buttons for one proposal. Clicks hit the rq-slack-actions function
+// (Slack-signature-verified), which flips the row's status — review only, never ships code.
+function proposalActions(id: string): unknown {
+  const ref = String(id).slice(0, 8);
+  return { type: "actions", elements: [
+    { type: "button", action_id: `rq_accept_${ref}`, style: "primary", text: { type: "plain_text", text: "✅ Accept" }, value: id },
+    { type: "button", action_id: `rq_reject_${ref}`, style: "danger", text: { type: "plain_text", text: "❌ Reject" }, value: id },
+  ] };
+}
 function avg(a: number[]): number { return a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : 0; }
 function log(msg: string, data?: unknown): void {
   console.log(`[${new Date().toISOString()}] [${LOOP_NAME}] ${msg}`, data !== undefined ? JSON.stringify(data) : "");
@@ -122,21 +131,30 @@ async function postQueue(supabase: any, channel: string, limit: number): Promise
     ]);
     return json({ ok: true, posted: 0 });
   }
-  const lines = props.map((p, i) => {
+  // deno-lint-ignore no-explicit-any
+  const line = (p: any, i: number) => {
     const ref = String(p.id).slice(0, 8);
     const company = p.evidence?.company ?? "(unknown)";
     return `${i + 1}. \`[${ref}]\` *${company}* · ${p.category} — ${p.title} _(${p.impact_estimate}, conf ${p.confidence}, risk ${p.risk})_\n    ↳ ${String(p.recommended_change ?? "").slice(0, 180)}  <${REPORT_BASE_URL}/${p.report_id}|report ↗>`;
-  });
+  };
   const blocks: unknown[] = [
     { type: "header", text: { type: "plain_text", text: `🔁 Report Quality — ${props.length} proposals for review` } },
-    { type: "section", text: { type: "mrkdwn", text: "*Reply in-thread with the* `[ref]` *codes* — e.g. _approve 3f27c7ed, 808f0171 / reject cd6a333d_. Propose-only: nothing ships until a proposal is accepted." } },
+    { type: "section", text: { type: "mrkdwn", text: "*Click ✅ Accept / ❌ Reject* to action a proposal (updates `report_quality_proposals` directly). Propose-only: accepted proposals still ship via PRs." } },
     { type: "divider" },
   ];
+  // Buttons for the top proposals (Slack caps a message at 50 blocks; 2 blocks each).
+  const BUTTONED = 10;
+  props.slice(0, BUTTONED).forEach((p, i) => {
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: line(p, i) } });
+    blocks.push(proposalActions(p.id));
+  });
+  // The tail (if any) stays as compact text — action those by ref via Claude/admin.
   let buf = "";
-  for (const ln of lines) {
+  props.slice(BUTTONED).forEach((p, j) => {
+    const ln = line(p, BUTTONED + j);
     if (buf && (buf + "\n" + ln).length > 2800) { blocks.push({ type: "section", text: { type: "mrkdwn", text: buf } }); buf = ln; }
     else buf = buf ? buf + "\n" + ln : ln;
-  }
+  });
   if (buf) blocks.push({ type: "section", text: { type: "mrkdwn", text: buf } });
   blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `review in report_quality_proposals · ${new Date().toUTCString()}` }] });
   const res = await postToSlack(channel, `Report-quality review queue — ${props.length} proposals`, blocks.slice(0, 50));
@@ -261,11 +279,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // count actually written.
     let insertError: string | null = null;
     let proposalsWritten = 0;
+    let insertedIds: string[] = []; // aligned with ranked order; used for digest buttons
     if (!dryRun && runId && ranked.length) {
       const insertRows = ranked.map((r) => ({ ...r, run_id: runId, status: "new" }));
-      const { error: insErr } = await supabase.from("report_quality_proposals").insert(insertRows);
+      const { data: inserted, error: insErr } = await supabase.from("report_quality_proposals").insert(insertRows).select("id");
       if (insErr) { insertError = insErr.message; log("proposal insert error", insErr.message); }
-      else proposalsWritten = ranked.length;
+      else { proposalsWritten = ranked.length; insertedIds = (inserted ?? []).map((r) => r.id as string); }
     } else if (dryRun) {
       proposalsWritten = ranked.length; // not persisted, but report what would be written
     }
@@ -292,9 +311,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       ];
     } else {
       const themes = summariseThemes(ranked);
-      const topProposals = ranked.slice(0, 5).map((r) =>
-        `• ${band(Math.round(r.confidence * 100))} *${r.category}* — ${r.title}  _(impact ${r.impact_estimate}, conf ${r.confidence}, risk ${r.risk})_ <${REPORT_BASE_URL}/${r.report_id}|↗>`,
-      );
       blocks = [
         { type: "header", text: { type: "plain_text", text: "🔁 Report Quality loop — proposals" } },
         { type: "section", text: { type: "mrkdwn", text:
@@ -302,9 +318,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
           `Avg axes — Relevance ${avg(axisRel)} · Conciseness ${avg(axisCon)} · Fidelity ${avg(axisFid)}` } },
         { type: "section", text: { type: "mrkdwn", text: `*Top recurring themes*\n${themes.length ? themes.map((t) => `${t.category} ×${t.count} — _${t.example}_`).join("\n") : "_none_"}` } },
         { type: "divider" },
-        { type: "section", text: { type: "mrkdwn", text: `*Top proposals*\n${topProposals.join("\n") || "_none_"}` } },
-        { type: "context", elements: [{ type: "mrkdwn", text: `propose-only · review in report_quality_proposals · rubric ${RUBRIC_VERSION}${deadlineHit ? ` · partial run (${reviewed}/${batch.length}; rest next run)` : ""} · ${new Date().toUTCString()}` }] },
       ];
+      const top = ranked.slice(0, 5);
+      if (!top.length) {
+        blocks.push({ type: "section", text: { type: "mrkdwn", text: "*Top proposals*\n_none_" } });
+      } else {
+        blocks.push({ type: "section", text: { type: "mrkdwn", text: "*Top proposals* — ✅/❌ actions the proposal directly; the full queue is in `report_quality_proposals`:" } });
+        top.forEach((r, i) => {
+          blocks.push({ type: "section", text: { type: "mrkdwn", text:
+            `• ${band(Math.round(r.confidence * 100))} *${r.category}* — ${r.title}  _(impact ${r.impact_estimate}, conf ${r.confidence}, risk ${r.risk})_ <${REPORT_BASE_URL}/${r.report_id}|↗>` } });
+          if (insertedIds[i]) blocks.push(proposalActions(insertedIds[i]));
+        });
+      }
+      blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: `propose-only · review in report_quality_proposals · rubric ${RUBRIC_VERSION}${deadlineHit ? ` · partial run (${reviewed}/${batch.length}; rest next run)` : ""} · ${new Date().toUTCString()}` }] });
     }
     if (!dryRun) await postToSlack(channel, insertError ? `Report-quality loop — write FAILED (${ranked.length} scored, 0 written)` : `Report-quality loop — ${proposalsWritten} proposals from ${reviewed} reports`, blocks);
 

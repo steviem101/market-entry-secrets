@@ -94,16 +94,33 @@ curl -sS -X POST "$SUPABASE_FUNCTIONS_URL/report-quality-loop" \
 
 `POST {"post_queue": true}` reads the open proposals (`status='new'`, ranked) and posts
 the full list to `#report-quality` via the loop's own bot — no scoring, no writes, no
-`automation_runs` row. Each line carries a `[ref]` (first 8 chars of the proposal id) so
-reviewers can reply in-thread (e.g. "approve 3f27c7ed / reject cd6a333d"). Optional
-`limit` (default 40, max 100).
+`automation_runs` row. The top 10 get ✅ Accept / ❌ Reject buttons; the tail is compact
+text with a `[ref]` (first 8 chars of the proposal id) for actioning via Claude/admin.
+Optional `limit` (default 40, max 100).
 
 ## Reviewing proposals
 
-`report_quality_proposals` is admin-read + admin-update. A reviewer accepts/rejects by
-setting `status` (`new` → `accepted` | `rejected` | `shipped`) and may set `fix_ref` to
-the tracking ticket/PR. Accepted proposals are the prioritised quality backlog; any
-resulting code change ships as a normal human-reviewed PR — the loop never merges.
+**From Slack (easiest):** digests carry ✅ Accept / ❌ Reject buttons (top 5 on run
+digests, top 10 on `post_queue`). Clicks hit the `rq-slack-actions` function
+(Slack-signature-verified), which sets `status` + `reviewed_at`, records the reviewer in
+`evidence.slack_review`, and posts an in-channel confirmation. Shipped rows are immutable
+from Slack; accept↔reject re-decisions are allowed. Plain thread replies are **not**
+machine-read — only the buttons act.
+
+**From SQL/admin:** `report_quality_proposals` is admin-read + admin-update. A reviewer
+accepts/rejects by setting `status` (`new` → `accepted` | `rejected` | `shipped`) and may
+set `fix_ref` to the tracking ticket/PR.
+
+Either way, accepted proposals are the prioritised quality backlog; any resulting change
+ships as a normal human-reviewed PR — the loop never merges.
+
+### Slack app setup for the buttons (one-time)
+
+1. In the MES Events Bot Slack app config: **Interactivity & Shortcuts → On**, Request URL
+   `https://xhziwveaiuhzdoutpgrh.supabase.co/functions/v1/rq-slack-actions`.
+2. Copy the app's **Signing Secret** (Basic Information) into the Supabase secret
+   `SLACK_SIGNING_SECRET`.
+3. Buttons appear on the next digest; clicks before setup fall back to a Slack error toast.
 
 ## Tests
 
