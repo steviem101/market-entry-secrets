@@ -1,11 +1,16 @@
 # Database migrations — how they work here (and how NOT to break them)
 
+> **Status: healthy.** The migration history was re-baselined on **2026-07-04** (PR #263)
+> after months in a `MIGRATIONS_FAILED` drift state. Merged migrations **auto-apply to prod**
+> again — proven end-to-end by PR #263's own fixup migration applying on merge. The rules
+> below are what keep it that way.
+
 ## TL;DR rules (read before touching `supabase/migrations/`)
 
-1. **Migrations reach prod via the CLI / PR flow (`supabase db push`), not out-of-band.**
-   Do **not** apply schema to prod through the dashboard SQL editor, ad-hoc `psql`, or an
-   agent's MCP `apply_migration`. Each of those stamps its own apply-time version and
-   drifts the ledger (see "Why it's currently broken").
+1. **Migrations reach prod via the CLI / PR flow (`supabase db push` / merge to main), not
+   out-of-band.** Do **not** apply schema to prod through the dashboard SQL editor, ad-hoc
+   `psql`, or an agent's MCP `apply_migration`. Each of those stamps its own apply-time
+   version and drifts the ledger (see "How it broke last time").
 2. **File names must be `<timestamp>_snake_name.sql`.** The Supabase CLI **silently skips**
    any file it can't parse — including the legacy `<timestamp>-<uuid>.sql` Lovable-style
    names — with `Skipping migration … (file name must match pattern "<timestamp>_name.sql")`.
@@ -14,62 +19,44 @@
    Renumbering an applied migration (e.g. to dodge a collision) makes the recorded version
    and the file version disagree → instant ledger drift. Fix collisions *before* first
    apply, or add a *new* migration instead.
-4. **Until the integration is re-baselined (below), a merged migration does NOT auto-apply
-   to prod.** Edge functions auto-deploy on merge; migrations currently do not. Treat any
-   PR that adds a migration as **"not live until you've confirmed it applied to prod."**
+4. **Merging a PR with a migration applies it to prod automatically.** Still glance at the
+   Supabase integration check on the PR before assuming it's live — a red migration step
+   means it did NOT apply. `supabase/migrations_archive/` is historical reference only; the
+   CLI ignores it. Never move a file from the archive back into `supabase/migrations/`.
 
-## Why it's currently broken
+## Current state (post re-baseline)
 
-Prod project `xhziwveaiuhzdoutpgrh` has a **divergent migration ledger**. As of Jun 2026:
+- `supabase/migrations/` starts fresh from `20260704095538_remote_baseline.sql` (full prod
+  schema snapshot) plus `20260704100740_baseline_grant_lockdown.sql` (grant revokes that a
+  schema dump can't represent). Prod's ledger matches the files 1:1.
+- The 362 pre-baseline files live in `supabase/migrations_archive/` for git history.
+- New migrations go in `supabase/migrations/` with a timestamp **after** the baseline and
+  apply automatically on merge to main.
 
-- `supabase/migrations/` has ~361 files; `supabase_migrations.schema_migrations` has ~289
-  rows; **only ~22 versions match** (~94% divergence).
-- The divergence is almost entirely **the same migrations recorded under apply-time
-  timestamps a few seconds off the filename version** (e.g. file `20260206223728` ↔ ledger
-  `20260206223725`). Prod's **schema is correct** — this is a bookkeeping problem, not
-  missing schema.
-- ~37 early files use the legacy `<timestamp>-<uuid>.sql` name and are **skipped by the CLI
-  entirely**.
+## How it broke last time (Feb–Jul 2026) — kept for the post-mortem
 
-Because the ledger doesn't line up with the files, Supabase's GitHub/branching integration
-fails its migration step (`MIGRATIONS_FAILED` since Feb 2026): `supabase db push` would try
-to re-apply hundreds of "local-only" migrations (→ "already exists") and chokes on the
-"remote migration versions not found in local" mismatch. So merges don't auto-apply
-migrations, preview branches' migration step is red, and migrations get applied manually.
+Prod project `xhziwveaiuhzdoutpgrh` had a **divergent migration ledger**: ~361 files vs
+~289 ledger rows with **only ~22 versions matching** (~94% divergence). The divergence was
+almost entirely the same migrations recorded under apply-time timestamps a few seconds off
+the filename version (e.g. file `20260206223728` ↔ ledger `20260206223725`) — a bookkeeping
+problem, not missing schema. ~37 early files also used the legacy `<ts>-<uuid>.sql` name
+the CLI skips entirely.
+
+Because the ledger didn't line up with the files, the GitHub/branching integration failed
+its migration step (`MIGRATIONS_FAILED` since Feb 2026), merges didn't auto-apply
+migrations, and everything was applied manually — with the standing risk of merging a
+migration your code depends on and forgetting to apply it.
 
 Root causes: (a) migrations applied out-of-band (dashboard editor / agent MCP
 `apply_migration`) stamping apply-time versions; (b) renumbering already-applied files; (c)
-legacy `<ts>-<uuid>` filenames the CLI can't manage.
+legacy `<ts>-<uuid>` filenames the CLI can't manage. The TL;DR rules above block all three.
 
-## Severity
+## Re-baseline runbook (used 2026-07-04; keep in case it's ever needed again)
 
-**Low operationally, but a loaded footgun.** Prod is healthy and has been fine for months —
-nothing is down or at risk. The real danger: because edge functions *do* auto-deploy on
-merge, it's easy to assume migrations did too. They didn't. Merge a migration that adds a
-column your code reads, forget to apply it manually, and prod throws at runtime. The
-interim rule (#4 above) neutralizes this for free.
+A clean baseline beats file-by-file `migration repair` when divergence is deep: snapshot
+current prod schema into a single migration and reset the ledger to it. Bookkeeping only —
+it runs no destructive SQL. Needs Docker Desktop and an authenticated Supabase CLI.
 
-## Interim workflow (do this today, zero effort)
-
-- Any PR touching `supabase/migrations/` is **not "done" until the migration is confirmed
-  applied to prod.** Apply it via `supabase db push` (once re-baselined) or, until then,
-  by running the migration's exact SQL against prod and recording it.
-- Agents (Claude Code etc.) **must not** `apply_migration` against prod — commit the file
-  in the PR and let a human apply it.
-
-## Permanent fix — re-baseline (recommended over ledger repair)
-
-Given the depth of divergence *and* the ~37 CLI-skipped files, a file-by-file
-`migration repair` (600+ ops) is fiddly and error-prone. Prefer a **clean baseline**: snapshot
-current prod schema into a single migration and reset the ledger to it. One-time, needs
-Docker Desktop, ~30–45 min. It only edits schema *bookkeeping* — it runs no destructive SQL.
-
-### Prerequisites
-- Docker Desktop **running** (`supabase db pull` / `db diff` build a shadow DB).
-- Supabase CLI authenticated (`supabase login`); recent version.
-- A clean feature branch off `main`.
-
-### Steps
 ```bash
 # 0. Link + snapshot the current state for your records.
 supabase link --project-ref xhziwveaiuhzdoutpgrh
@@ -79,30 +66,25 @@ supabase migration list > /tmp/mig_before.txt
 mkdir -p supabase/migrations_archive
 git mv supabase/migrations/*.sql supabase/migrations_archive/
 
-# 2. Generate ONE baseline migration reflecting current prod schema.
-supabase db pull            # writes supabase/migrations/<ts>_remote_schema.sql
+# 2. Reset the ledger FIRST (db pull refuses while history mismatches).
+#    Mark EVERY existing remote version reverted (repair edits bookkeeping only; runs no SQL):
+supabase migration list | awk -F'|' '{ v=$2; gsub(/[^0-9]/,"",v); if (length(v)==14) print v }' > /tmp/remote_versions.txt
+supabase migration repair --status reverted $(cat /tmp/remote_versions.txt)
+
+# 3. Generate ONE baseline migration reflecting current prod schema.
+supabase db pull remote_baseline   # writes the file AND records it applied (answer Y)
 #   REVIEW the baseline: db pull captures tables/columns/constraints/policies/functions,
-#   but double-check it also carries what you rely on — RLS policies, grants, triggers,
-#   pg_cron jobs, and any Vault-dependent bits. Add anything missing as follow-up migrations.
+#   but not default-privilege revokes, and it may render policies cosmetically differently.
 
-# 3. Reset the ledger to just the baseline (repair edits bookkeeping only; runs no SQL).
-#    a) mark EVERY existing remote version reverted:
-supabase migration list --linked \
-  | awk 'NF && $3 ~ /^[0-9]{14}$/ {print $3}' \
-  | xargs -n 40 sh -c 'supabase migration repair --status reverted "$@"' _
-#    b) mark the new baseline applied (replace <BASELINE_TS> with the file's timestamp):
-supabase migration repair --status applied <BASELINE_TS>
+# 4. Verify, and capture any residual diff as a fixup migration.
+supabase migration list                  # single baseline row, Local == Remote
+supabase db diff --linked --schema public -f baseline_fixup   # revokes / cosmetic recreates land here
 
-# 4. Verify: only the baseline should remain, with Local == Remote, and schema unchanged.
-supabase migration list        # single baseline row, both columns populated
-supabase db diff --linked      # MUST be empty — we changed bookkeeping, not schema
-
-# 5. Commit (archived files + baseline), open a PR, merge.
+# 5. Commit (archived files + baseline + fixup), open a PR, merge. The fixup auto-applying
+#    on merge is the end-to-end proof the integration works again.
 ```
 
-After this: `supabase db push` is clean, merges auto-apply, and preview branches work again.
-Keep it healthy by following the TL;DR rules — especially: **all migrations via CLI/PR, no
-out-of-band applies, never re-version an applied migration.**
-
-> Exact version lists for step 3a can be regenerated any time from
-> `supabase migration list` (or `select version from supabase_migrations.schema_migrations`).
+Notes from the 2026-07-04 run: zsh chokes on pasted `#` comments (use comment-free blocks);
+the residual diff contained only SEC-02 `REVOKE REFERENCES/TRIGGER/TRUNCATE` statements
+(default privileges aren't dump-representable), three byte-identical policy recreations,
+and a `pg_net` no-op — all safe to replay.
