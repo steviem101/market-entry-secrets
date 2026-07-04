@@ -3,6 +3,7 @@ import { log, logError } from "../_shared/log.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
 import { sendViaResend } from "../_shared/email/resend.ts";
 import { render as renderLeadFollowup } from "../_shared/email/templates/leadFollowup.ts";
+import { checkRateLimit } from "../_shared/rateLimit.ts";
 
 function json(status: number, body: Record<string, unknown>, headers: Record<string, string>): Response {
   return new Response(JSON.stringify(body), {
@@ -34,29 +35,48 @@ Deno.serve(async (req) => {
       return json(401, { error: "Unauthorized" }, corsHeaders);
     }
 
-    const { email, sector, target_market } = await req.json();
+    // Anti-abuse rate limit: max 3 follow-up emails per user per 24 hours.
+    // Prevents this endpoint being used as an authenticated email relay.
+    const rateLimitError = await checkRateLimit(user.id, "send-lead-followup", 3, 60 * 24);
+    if (rateLimitError) {
+      return json(429, { error: rateLimitError }, corsHeaders);
+    }
 
-    if (!email || !sector || !target_market) {
+    const { sector, target_market } = await req.json();
+
+    if (!sector || !target_market) {
       return json(400, { error: "Missing required fields" }, corsHeaders);
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return json(400, { error: "Invalid email format" }, corsHeaders);
+    // Recipient is ALWAYS the authenticated user's own verified email.
+    // Never accept an arbitrary `email` from the request body — that would
+    // turn this endpoint into an open email relay.
+    const email = user.email;
+    if (!email) {
+      return json(400, { error: "Authenticated user has no email on file" }, corsHeaders);
     }
 
-    log("send-lead-followup", "Processing follow-up email request", { sector, target_market });
+    // Cap user-supplied prompt inputs so they can't bloat the email body.
+    const safeSector = String(sector).slice(0, 120);
+    const safeTargetMarket = String(target_market).slice(0, 120);
+
+    log("send-lead-followup", "Processing follow-up email request", {
+      sector: safeSector,
+      target_market: safeTargetMarket,
+    });
 
     // Render via the shared, blue-branded email module (handles HTML escaping).
-    const { subject, html } = renderLeadFollowup({ sector, target_market });
+    const { subject, html } = renderLeadFollowup({
+      sector: safeSector,
+      target_market: safeTargetMarket,
+    });
     const result = await sendViaResend(email, subject, html);
     const emailSent = !result.error;
 
     if (result.error) {
       logError("send-lead-followup", "Resend API error", result.error);
     } else {
-      log("send-lead-followup", "Follow-up email sent", { sector });
+      log("send-lead-followup", "Follow-up email sent", { sector: safeSector });
     }
 
     return json(
@@ -65,7 +85,7 @@ Deno.serve(async (req) => {
         success: true,
         message: emailSent ? "Follow-up email sent successfully" : "Email send failed",
         email_sent: emailSent,
-        sector,
+        sector: safeSector,
       },
       corsHeaders
     );
