@@ -80,3 +80,32 @@ test("isAgencyInCorridor: US founder keeps US body (underscore-normalised) and d
   assert.equal(isAgencyInCorridor({ name: "SelectUSA", organisation_type: "foreign_trade_agency", location_country: "united_states", jurisdiction: ["United States", "Australia"] }, us), true);
   assert.equal(isAgencyInCorridor({ name: "Trade Commissioner Service (Canada)", organisation_type: "foreign_trade_agency", location_country: "canada", jurisdiction: ["Canada"] }, us), false);
 });
+
+test("isAgencyInCorridor: NZ body + 'au' location_country variant kept (ANZ market)", () => {
+  const irish = geoOriginTerms("Ireland");
+  assert.equal(isAgencyInCorridor({ name: "NZTE", organisation_type: "nz_government", location_country: "new_zealand" }, irish), true);
+  assert.equal(isAgencyInCorridor({ name: "Some AU Body", organisation_type: "bilateral", location_country: "au" }, irish), true);
+});
+
+test("isAgencyInCorridor: HQ-abroad body kept when jurisdiction covers ANZ (any founder)", () => {
+  // ALTIOS/Expandys: private trade consultancies HQ'd in France/UK that SERVE Australia.
+  const altios = { name: "ALTIOS International", organisation_type: "trade_consultancy", location_country: "france", jurisdiction: ["Australia", "New Zealand", "Global"] };
+  const expandys = { name: "Expandys", organisation_type: "trade_consultancy", location_country: "united_kingdom", jurisdiction: ["Australia", "United Kingdom", "India"] };
+  for (const terms of [geoOriginTerms("Ireland"), geoOriginTerms("Japan"), geoOriginTerms("Australia")]) {
+    assert.equal(isAgencyInCorridor(altios, terms), true);
+    assert.equal(isAgencyInCorridor(expandys, terms), true);
+  }
+  // Mis-tagged AU chamber (location_country=canada by bad data) rescued by jurisdiction.
+  assert.equal(isAgencyInCorridor({ name: "Italian Chamber of Commerce in Australia - Melbourne", organisation_type: "bilateral", location_country: "canada", jurisdiction: ["Italy", "Australia - Victoria", "Australia - Tasmania"] }, geoOriginTerms("Ireland")), true);
+});
+
+test("isAgencyInCorridor: foreign mission NOT rescued by an 'Australia' jurisdiction entry", () => {
+  // Canadian Consulate has jurisdiction ["Canada","Australia"] — but it's a foreign
+  // mission, so the ANZ-jurisdiction escape must NOT apply; it stays origin-gated.
+  const irish = geoOriginTerms("Ireland");
+  assert.equal(isAgencyInCorridor({ name: "Canadian Consulate", organisation_type: "foreign_trade_agency", location_country: "australia", jurisdiction: ["Canada", "Australia"] }, irish), false);
+  // Invest Northern Ireland: non-mission but jurisdiction has NO ANZ → origin-only.
+  const invNI = { name: "Invest Northern Ireland", organisation_type: "federal_agency", location_country: "united_kingdom", jurisdiction: ["Northern Ireland", "United Kingdom"] };
+  assert.equal(isAgencyInCorridor(invNI, irish), true);                    // Irish founder → kept (name)
+  assert.equal(isAgencyInCorridor(invNI, geoOriginTerms("Japan")), false); // Japanese founder → dropped
+});

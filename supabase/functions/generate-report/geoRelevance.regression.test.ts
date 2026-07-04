@@ -38,6 +38,12 @@ const AGENCIES: Array<Record<string, unknown> & { expect: boolean }> = [
   { name: "Consulate General of Malaysia, Perth", organisation_type: "foreign_trade_agency", location_country: "australia", jurisdiction: ["Malaysia", "Australia - Western Australia"], expect: false },
   { name: "Export Development Canada", organisation_type: "foreign_trade_agency", location_country: "canada", jurisdiction: ["CA", "AU"], expect: false },
   { name: "Trade Commissioner Service (Canada)", organisation_type: "foreign_trade_agency", location_country: "canada", jurisdiction: ["Canada"], expect: false },
+  // False-negative guards (real rows) — HQ'd abroad / mis-tagged but operate in ANZ:
+  { name: "ALTIOS International", organisation_type: "trade_consultancy", location_country: "france", jurisdiction: ["Australia", "New Zealand", "Global"], expect: true },
+  { name: "Expandys", organisation_type: "trade_consultancy", location_country: "united_kingdom", jurisdiction: ["Australia", "United Kingdom", "India"], expect: true },
+  { name: "Italian Chamber of Commerce in Australia - Melbourne", organisation_type: "bilateral", location_country: "canada", jurisdiction: ["Italy", "Australia - Victoria", "Australia - Tasmania"], expect: true },
+  { name: "NZTE (New Zealand Trade & Enterprise)", organisation_type: "nz_government", location_country: "new_zealand", jurisdiction: ["New Zealand"], expect: true },
+  { name: "Consulate General of the Arab Republic of Egypt", organisation_type: "foreign_trade_agency", location_country: "au", jurisdiction: ["Egypt", "Australia"], expect: false },
 ];
 
 test("B3 regression: real providers — foreign dropped, AU kept (Irish → Australia)", () => {

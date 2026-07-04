@@ -56,6 +56,7 @@ function toWordBoundaryRegex(tokens: string[]): RegExp {
 }
 
 const ambiguousRe = toWordBoundaryRegex(AMBIGUOUS_TOKENS);
+const anzRe = toWordBoundaryRegex(ANZ_TOKENS);
 
 /** The directory-row fields the gates read; everything is optional + unknown-typed
  *  so a raw Supabase row (or a decorated match card) satisfies it without casts. */
@@ -116,7 +117,15 @@ export function isGeoRelevant(row: Row, matcher: RegExp): boolean {
 }
 
 const norm = (s: unknown): string =>
-  (s == null ? "" : String(s)).toLowerCase().replace(/[_-]+/g, " ");
+  (s == null ? "" : String(s)).toLowerCase().replace(/[_-]+/g, " ").trim();
+
+// In-market `location_country` values (normalised). The platform targets the
+// Australian/ANZ market, so a domestic ANZ body counts regardless of the exact
+// spelling used — real data carries "australia", "new_zealand" AND the bare code
+// "au". Kept in sync with the ANZ tokens used for the provider surfaces.
+const ANZ_MARKET_COUNTRIES = new Set<string>([
+  "australia", "au", "aus", "anz", "new zealand", "nz",
+]);
 
 /**
  * Is this trade/government agency in the report's corridor (AU target market OR
@@ -132,15 +141,35 @@ const norm = (s: unknown): string =>
  * / UK / Malaysian missions drop. `originTerms` = [] (domestic AU founder) drops every
  * foreign mission, which is correct.
  */
+/** Does this agency operate in the ANZ market — by recorded country (or blank, in an
+ *  AU-centric directory) or by a `jurisdiction` entry that names an ANZ region? */
+function operatesInANZ(row: NonNullable<Row>): boolean {
+  const locCountry = norm(row.location_country);
+  if (locCountry === "" || ANZ_MARKET_COUNTRIES.has(locCountry)) return true;
+  const j = row.jurisdiction;
+  const arr = Array.isArray(j) ? j : j == null ? [] : [j];
+  return arr.some((x) => anzRe.test(norm(x)));
+}
+
 export function isAgencyInCorridor(row: Row, originTerms: string[]): boolean {
   if (!row) return false;
   const orgType = norm(row.organisation_type);
-  const locCountry = norm(row.location_country);
   const isForeignMission = orgType === "foreign trade agency";
 
-  // (A) Australian domestic body (not a foreign mission), or one with no recorded
-  // country in an AU-centric directory → in scope.
-  if (!isForeignMission && (locCountry === "australia" || locCountry === "")) return true;
+  // (A) Domestic ANZ body (not a foreign mission) — an Australian/NZ government,
+  // state, bilateral chamber, industry body, or a private trade consultancy that
+  // OPERATES in the ANZ market — is always in scope. "Operates in ANZ" means either
+  // its recorded country is ANZ (or blank, in an AU-centric directory) OR its
+  // `jurisdiction` covers ANZ. The jurisdiction escape is what keeps a consultancy
+  // HQ'd abroad but serving Australia (ALTIOS/Expandys — jurisdiction ["Australia",…])
+  // and rescues rows with a mis-set location_country (e.g. an AU chamber tagged
+  // location_country=canada whose jurisdiction still names Australia). It does NOT
+  // re-admit foreign government missions — those are `foreign_trade_agency` and never
+  // take this branch, so a Canadian consulate (jurisdiction ["Canada","Australia"])
+  // still falls to the origin check below. A genuinely-foreign inward-investment
+  // agency (Invest Northern Ireland — jurisdiction ["Northern Ireland","United
+  // Kingdom"], no ANZ) also falls through, appearing only for a founder from there.
+  if (!isForeignMission && operatesInANZ(row)) return true;
 
   // (B) Represents the founder's origin corridor. Check the structured fields that
   // actually encode the represented country, normalised so "united_kingdom" matches.
