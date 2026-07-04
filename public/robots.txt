@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://market-entry-secrets.lovable.app/sitemap.xml
+Sitemap: https://marketentrysecrets.com/sitemap.xml
