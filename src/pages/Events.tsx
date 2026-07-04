@@ -349,6 +349,7 @@ const Events = () => {
         ) : (
           <>
             <ListingPageGate contentType="events">
+              <h2 className="sr-only">Event results</h2>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {paginatedEvents.map((event) => (
                   <EventCard key={event.id} event={event} />

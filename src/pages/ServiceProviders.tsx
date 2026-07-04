@@ -162,6 +162,7 @@ const ServiceProviders = () => {
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                   <PersonaFilter value={personaFilterValue} onChange={(v) => { setPersonaFilterValue(v); setCurrentPage(1); }} />
+                  <h2 className="sr-only">Service provider results</h2>
                   <p className="text-muted-foreground text-sm">
                     Showing {paginatedCompanies.length} of {filteredCompanies.length} service providers
                   </p>

@@ -1,10 +1,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SEOHead } from "@/components/common/SEOHead";
 
 const TermsOfService = () => {
   return (
     <>
-      
+      <SEOHead
+        title="Terms of Service | Market Entry Secrets"
+        description="Read the Market Entry Secrets Terms of Service governing use of our platform, directory listings, AI market entry reports, and paid subscriptions."
+        canonicalPath="/terms"
+      />
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-foreground mb-8 text-center">Terms of Service</h1>
