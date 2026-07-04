@@ -18,6 +18,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 import { splitEventsAndResources } from '@/lib/reportEventsSplit';
 import {
   SECTION_LABELS,
@@ -40,6 +42,11 @@ const ReportViewInner = () => {
     () => new URLSearchParams(window.location.search).get('stripe_status') === 'success'
   );
 
+  // Post-payment unlock progress: 'polling' while we wait for the Stripe
+  // webhook to land, 'timeout' when the window elapses (manual refresh
+  // offered), 'unlocked' once the tier flips.
+  const [unlockState, setUnlockState] = useState<'idle' | 'polling' | 'timeout' | 'unlocked'>('idle');
+
   // Handle Stripe checkout return — poll for subscription update
   // because the webhook may not have processed yet when Stripe redirects.
   // Intentionally uses empty deps: runs once on mount using initial URL params.
@@ -53,17 +60,25 @@ const ReportViewInner = () => {
 
     if (initialStatus === 'success') {
       toast.success('Payment successful! Unlocking your premium sections...');
+      setUnlockState('polling');
 
       // Poll for subscription update — webhook may take a few seconds.
-      // Compare against 'free' (default tier before purchase).
+      // Compare against 'free' (default tier before purchase). ~30s window:
+      // 15 attempts x 2s covers slow webhook delivery.
       let attempts = 0;
       let cancelled = false;
       const poll = async () => {
         if (cancelled) return;
         const newTier = await refetchSubscription();
         attempts++;
-        if (!cancelled && attempts < 8 && newTier === 'free') {
+        if (cancelled) return;
+        if (newTier && newTier !== 'free') {
+          setUnlockState('unlocked');
+          toast.success('Your premium sections are unlocked.');
+        } else if (attempts < 15) {
           timerId = window.setTimeout(poll, 2000);
+        } else {
+          setUnlockState('timeout');
         }
       };
       // Start polling after a brief delay to give the webhook time
@@ -78,6 +93,17 @@ const ReportViewInner = () => {
       toast.info('Checkout was cancelled. You can upgrade anytime.');
     }
   }, []);
+
+  // Manual "refresh access" for when the webhook outlasts the polling window.
+  const handleRefreshAccess = async () => {
+    const newTier = await refetchSubscription();
+    if (newTier && newTier !== 'free') {
+      setUnlockState('unlocked');
+      toast.success('Access refreshed — your premium sections are unlocked.');
+    } else {
+      toast.info('Payment is still processing. Give it a few more seconds and try again.');
+    }
+  };
 
   // Wait for auth to settle before showing report (especially after Stripe redirect)
   if (isLoading || (authLoading && cameFromStripe)) {
@@ -172,6 +198,26 @@ const ReportViewInner = () => {
 
             {/* Main content */}
             <div className="flex-1 max-w-3xl space-y-8">
+              {unlockState === 'polling' && (
+                <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+                  <div className="h-4 w-4 shrink-0 animate-spin rounded-full border-b-2 border-primary" />
+                  <p className="text-sm text-foreground">
+                    Payment received — still unlocking your premium sections. This usually takes a few seconds.
+                  </p>
+                </div>
+              )}
+              {unlockState === 'timeout' && (
+                <div className="flex flex-col gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-foreground">
+                    Your payment went through, but access is taking longer than usual to activate.
+                  </p>
+                  <Button variant="outline" size="sm" className="shrink-0" onClick={handleRefreshAccess}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Refresh access
+                  </Button>
+                </div>
+              )}
+
               {/* Key Metrics stat cards — only for new reports with metrics */}
               <ReportKeyMetrics metrics={keyMetrics} />
 
