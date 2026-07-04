@@ -14,7 +14,7 @@ interface ReportShareDialogProps {
   onTokenChange: (token: string | null) => void;
 }
 
-const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app";
+const BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://marketentrysecrets.com";
 
 export const ReportShareDialog = ({
   open,

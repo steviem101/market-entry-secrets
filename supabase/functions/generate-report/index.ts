@@ -11,6 +11,7 @@ import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServ
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
+import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
@@ -1390,7 +1391,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
 
   // Trade & investment agencies — sector + country corridor + location (+ agnostic)
   try {
-    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, sector_tags, sector_agnostic").limit(CAND);
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, organisation_type, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic").limit(CAND);
     taQuery = taQuery.or(buildOr({ service: "services" }));
     const { data: ta, error: taErr } = await taQuery;
     if (taErr) console.error("TIA query error:", taErr);
@@ -1654,6 +1655,41 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
     }
   }
+  // ── Geography / origin gate (Stage 7 bugs B3 & B4) ──────────────────────
+  // The scorer only ADDS a +1 location nudge; it never excludes, so a wrong-market
+  // row (a New-York firm on an AU report; a UK/Canadian agency for an Irish founder)
+  // could still win a slot as backfill. Drop out-of-scope rows here — at the union,
+  // so it covers BOTH the overlap and semantic paths — while never emptying a section
+  // (preferRelevant backfills weak rows only when too few in-scope rows exist).
+  // Providers + innovation hubs: geography is free-text `location`. Gate via the
+  // ANZ/target matcher, backfilling (preferRelevant) so a thin directory never
+  // empties the section — a clearly-foreign location (a New-York firm) drops.
+  const geoTargetRegions = deriveLocationPatterns(intake);
+  const geoMatcher = buildGeoMatcher({ targetRegions: geoTargetRegions });
+  const GEO_MIN_KEEP = 3;
+  for (const tbl of ["service_providers", "innovation_ecosystem"]) {
+    if (merged[tbl]?.length) {
+      const before = merged[tbl].length;
+      merged[tbl] = preferRelevant(merged[tbl], (r) => isGeoRelevant(r, geoMatcher), GEO_MIN_KEEP);
+      if (merged[tbl].length !== before) console.log(`geo gate ${tbl}: ${before} → ${merged[tbl].length}`);
+    }
+  }
+  // Trade/government agencies: nearly all are foreign missions PHYSICALLY in Australia,
+  // so a text match is useless — use the structured corridor gate (organisation_type +
+  // represented country). HARD filter (no backfill): re-adding foreign missions to hit a
+  // minimum would just reintroduce B4, and the providers section stays populated from
+  // service_providers + innovation regardless.
+  const agencyOriginTerms = geoOriginTerms(intake.country_of_origin);
+  if (merged.trade_investment_agencies?.length) {
+    const before = merged.trade_investment_agencies.length;
+    merged.trade_investment_agencies = merged.trade_investment_agencies.filter(
+      (r) => isAgencyInCorridor(r, agencyOriginTerms),
+    );
+    if (merged.trade_investment_agencies.length !== before) {
+      console.log(`geo gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);
+    }
+  }
+
   // lead_databases is the real catalog; expose it under the report's existing
   // `leads` variable so report_templates needs no change.
   if (merged.lead_databases) { merged.leads = merged.lead_databases; delete merged.lead_databases; }

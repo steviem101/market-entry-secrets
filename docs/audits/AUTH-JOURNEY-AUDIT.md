@@ -336,6 +336,17 @@ Also harden client-side: have `authService.updateProfile` allowlist columns rath
 - **C2 — Welcome email re-fires on every login (P3).** `useAuthState.ts:67` invokes `send-email` (welcome) on `SIGNED_IN`, not just `SIGNED_UP`, so a `send-email` edge invocation runs on each new-session login. Server-side idempotency (`welcome:{userId}`) makes it harmless, but it's a wasted call per login. Narrow the trigger to genuine first-signup, or accept the cost as deliberate (the existing comment says SIGNED_UP is unreliable for OAuth).
 - **C3 — Email enumeration on signup (P3).** `signUpWithEmail` surfaces Supabase's raw "User already registered" error in a toast (reset is correctly silent/non-enumerating). Consider a neutral message.
 
+### 8.3a Implementation status (this follow-up PR)
+
+Delivered in the follow-up branch (in-repo, verifiable):
+- **MES-33m — done (pending review/apply).** `supabase/migrations/20260701120000_sec_05_protect_profiles_stripe_customer_id.sql` adds a `BEFORE INSERT OR UPDATE` trigger (`protect_profiles_privileged_columns`) that blocks the `authenticated`/`anon` roles from setting or changing `profiles.stripe_customer_id`; service-role writes (create-checkout) pass through. Trigger chosen over column REVOKE/GRANT so it needs no maintenance as the table evolves. Verified against the live schema (`stripe_customer_id text` exists; client UPDATE is table-level). Applies via the normal Supabase migration/preview pipeline — **not** applied directly to prod.
+- **MES-33n (partial) — done.** Client password minimum raised 6→8 (`ResetPassword.tsx` validation + inputs, `AuthDialog` signup field). The **leaked-password-protection** half is a dashboard toggle (still open, §8.1 A2).
+- **Defense-in-depth — done.** `authService.updateProfile` now strips server-managed keys (`id`, `stripe_customer_id`, `created_at`, `updated_at`) before upsert, so legitimate clients never trip the SEC-05 trigger.
+
+Still **dashboard-only** (cannot be done from the repo — exact steps handed to the team): MES-33a/b (Site URL + redirect allow-list, Google/Azure providers), MES-33n leaked-password toggle, MES-33o OTP expiry, MES-33p Postgres upgrade.
+
+> Note discovered while implementing: OnboardingDialog writes `company_name`/`country`/`target_market`/`use_case`/`onboarding_completed`, but those columns are **absent from the live `profiles` table** (their migrations appear stranded), so onboarding upserts likely fail in prod today. Out of scope for MES-33; logged for a separate ticket.
+
 ### 8.4 Added sub-tickets
 
 | Sub-ticket | Title | Priority | Approval gate |

@@ -124,19 +124,19 @@ const Leads = () => {
   return (
     <>
       <Helmet>
-        <title>B2B Lead Databases — Find Your First Customers | Market Entry Secrets</title>
+        <title>B2B Lead Databases for Australian Market Entry</title>
         <meta
           name="description"
           content="Pre-verified B2B contact lists for the sectors you're entering. Lead databases, market data, and TAM maps — updated monthly."
         />
-        <meta property="og:title" content="B2B Lead Databases — Find Your First Customers | Market Entry Secrets" />
+        <meta property="og:title" content="B2B Lead Databases for Australian Market Entry" />
         <meta
           property="og:description"
           content="Pre-verified B2B contact lists for the sectors you're entering. Lead databases, market data, and TAM maps — updated monthly."
         />
-        <meta property="og:url" content="https://market-entry-secrets.lovable.app/leads" />
+        <meta property="og:url" content="https://marketentrysecrets.com/leads" />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://market-entry-secrets.lovable.app/leads" />
+        <link rel="canonical" href="https://marketentrysecrets.com/leads" />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -144,7 +144,7 @@ const Leads = () => {
             name: "B2B Lead Databases for Australian Market Entry",
             description:
               "Directory of pre-verified B2B contact lists, market data, and TAM maps for companies entering the Australian and ANZ market.",
-            url: "https://market-entry-secrets.lovable.app/leads",
+            url: "https://marketentrysecrets.com/leads",
             mainEntity: {
               "@type": "ItemList",
               name: "Lead Databases",
@@ -153,7 +153,7 @@ const Leads = () => {
                 "@type": "ListItem",
                 position: (currentPage - 1) * PAGE_SIZE + i + 1,
                 name: lead.title,
-                url: `https://market-entry-secrets.lovable.app/leads/${lead.slug}`,
+                url: `https://marketentrysecrets.com/leads/${lead.slug}`,
               })),
             },
           })}

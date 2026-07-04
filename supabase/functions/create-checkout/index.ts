@@ -59,6 +59,19 @@ Deno.serve(async (req: Request) => {
       priceId = leadDb.stripe_price_id;
     }
 
+    // Guard: if a direct price_id was supplied for a tier upgrade (no lead_database_id),
+    // it MUST match the server-side price for the requested tier. Prevents a user from
+    // paying a cheaper tier's price while metadata grants them a higher tier.
+    if (directPriceId && !extraMetadata.lead_database_id) {
+      if (!PRICE_IDS[tier] || directPriceId !== PRICE_IDS[tier]) {
+        logError("create-checkout", "price_id/tier mismatch", { tier });
+        return new Response(JSON.stringify({ error: "Invalid price for tier" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (!priceId) {
       logError("create-checkout", "No valid price_id or tier provided", { tier });
       return new Response(JSON.stringify({ error: "Invalid tier or price_id" }), {

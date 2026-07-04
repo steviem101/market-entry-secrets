@@ -89,7 +89,7 @@ const SharedReportView = () => {
               <span className="sr-only sm:hidden">Shared Report</span>
             </Badge>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">{companyName}</h1>
+              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">Market Entry Report: {companyName}</h1>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="w-3 h-3 flex-shrink-0" />

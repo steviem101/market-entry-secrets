@@ -59,7 +59,7 @@ export const ReportHeader = ({
               </Button>
             </Link>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">{companyName}</h1>
+              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">Market Entry Report: {companyName}</h1>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="w-3 h-3 flex-shrink-0" />
@@ -99,7 +99,7 @@ export const ReportHeader = ({
       {/* Print-only header */}
       <div className="hidden print:block px-8 pt-8 pb-4 border-b border-border">
         <p className="text-xs text-muted-foreground mb-1">Market Entry Secrets</p>
-        <h1 className="text-2xl font-bold text-foreground">{companyName}</h1>
+        <h1 className="text-2xl font-bold text-foreground">Market Entry Report: {companyName}</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Market Entry Report • {format(new Date(generatedAt), 'MMMM d, yyyy')} • {tierLabels[tier] || tier} Plan
         </p>

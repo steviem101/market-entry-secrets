@@ -9,7 +9,7 @@ import { PricingSection } from "@/components/sections/PricingSection";
 import { CTASection } from "@/components/sections/CTASection";
 
 
-const FALLBACK_URL = "https://market-entry-secrets.lovable.app";
+const FALLBACK_URL = "https://marketentrysecrets.com";
 
 const Index = () => {
   const siteUrl = typeof window !== "undefined" ? window.location.origin : FALLBACK_URL;
@@ -46,12 +46,12 @@ const Index = () => {
         <title>Market Entry Secrets | Intelligence for the ANZ Market</title>
         <meta
           name="description"
-          content="AI-powered intelligence for the ANZ market. 500+ vetted providers, mentors, leads, and custom plans in minutes, whether you are entering Australia or scaling within it."
+          content="AI-powered intelligence for the ANZ market: 500+ vetted providers, mentors, leads, and custom market entry plans generated in minutes."
         />
         <meta property="og:title" content="Market Entry Secrets | Intelligence for the ANZ Market" />
         <meta
           property="og:description"
-          content="AI-powered intelligence for the ANZ market. 500+ vetted providers, mentors, leads, and custom plans in minutes, whether you are entering Australia or scaling within it."
+          content="AI-powered intelligence for the ANZ market: 500+ vetted providers, mentors, leads, and custom market entry plans generated in minutes."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${siteUrl}/`} />

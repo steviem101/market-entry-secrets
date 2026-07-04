@@ -2,7 +2,7 @@
 // Deterministic layers (utilization, presentation) + an LLM "substance" judge via the Lovable
 // AI Gateway (Gemini). Substance is computed once per report and cached on the report_quality row.
 
-const REPORT_BASE_URL = "https://market-entry-secrets.lovable.app/report";
+const REPORT_BASE_URL = "https://marketentrysecrets.com/report";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const AI_MODEL = "google/gemini-3-flash-preview";
 

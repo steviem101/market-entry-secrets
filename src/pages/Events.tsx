@@ -211,7 +211,7 @@ const Events = () => {
           name="description"
           content="Discover upcoming events, conferences, and networking opportunities for companies entering the Australian and New Zealand markets."
         />
-        <link rel="canonical" href={`${typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app"}/events`} />
+        <link rel="canonical" href={`${typeof window !== "undefined" ? window.location.origin : "https://marketentrysecrets.com"}/events`} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -220,7 +220,7 @@ const Events = () => {
             itemListElement: upcomingEvents.slice(0, 25).map((ev: any, i: number) => ({
               "@type": "ListItem",
               position: i + 1,
-              url: `https://market-entry-secrets.lovable.app/events/${ev.slug}`,
+              url: `https://marketentrysecrets.com/events/${ev.slug}`,
               name: ev.title,
             })),
           })}
@@ -349,6 +349,7 @@ const Events = () => {
         ) : (
           <>
             <ListingPageGate contentType="events">
+              <h2 className="sr-only">Event results</h2>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {paginatedEvents.map((event) => (
                   <EventCard key={event.id} event={event} />

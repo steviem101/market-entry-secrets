@@ -23,7 +23,7 @@ const SLACK_BOT_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("SLACK_NOTIFY_WEBHOOK_SECRET") ?? "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 const ANTHROPIC_MODEL = Deno.env.get("RQ_LOOP_MODEL") ?? "claude-sonnet-4-6";
-const REPORT_BASE_URL = "https://market-entry-secrets.lovable.app/report";
+const REPORT_BASE_URL = "https://marketentrysecrets.com/report";
 const NOTION_API_KEY = Deno.env.get("NOTION_API_KEY") ?? "";
 // No hardcoded fallback: a non-prod deploy with a Notion key but no DB id must skip,
 // not write test tickets into the production MES Tickets database.

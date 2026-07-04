@@ -113,7 +113,7 @@ const Content = () => {
             hasPart: contentItems.slice(0, 25).map((item) => ({
               "@type": "Article",
               headline: item.title,
-              url: `https://market-entry-secrets.lovable.app/content/${item.slug}`,
+              url: `https://marketentrysecrets.com/content/${item.slug}`,
             })),
           },
         }}
