@@ -30,6 +30,6 @@ export const publishedOrigin = (): string => {
   const isPreview =
     host === 'localhost' ||
     host === '127.0.0.1' ||
-    host.endsWith('.lovable.app') && host !== 'market-entry-secrets.lovable.app';
+    host.endsWith('.lovable.app');
   return isPreview ? CANONICAL_ORIGIN : window.location.origin;
 };
