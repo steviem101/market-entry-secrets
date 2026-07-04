@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { genericSearchError, sanitizeFilterValue } from "./_shared";
 
 function sb() {
   return createClient(
@@ -28,12 +29,18 @@ export default defineTool({
       .from("community_members_public")
       .select("name, title, company, specialties, location, origin_country, associated_countries")
       .limit(limit);
-    if (query) q = q.or(`name.ilike.%${query}%,title.ilike.%${query}%,company.ilike.%${query}%`);
+    if (query) {
+      const s = sanitizeFilterValue(query);
+      if (s) q = q.or(`name.ilike.%${s}%,title.ilike.%${s}%,company.ilike.%${s}%`);
+    }
     if (specialty) q = q.contains("specialties", [specialty]);
-    if (location) q = q.ilike("location", `%${location}%`);
-    if (origin_country) q = q.ilike("origin_country", `%${origin_country}%`);
+    if (location) q = q.ilike("location", `%${sanitizeFilterValue(location)}%`);
+    if (origin_country) q = q.ilike("origin_country", `%${sanitizeFilterValue(origin_country)}%`);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("search_mentors query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] },
