@@ -11,7 +11,7 @@ import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServ
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
-import { buildGeoMatcher, geoOriginTerms, isGeoRelevant } from "./geoRelevance.ts";
+import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
@@ -1391,7 +1391,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
 
   // Trade & investment agencies — sector + country corridor + location (+ agnostic)
   try {
-    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, sector_tags, sector_agnostic").limit(CAND);
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, organisation_type, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic").limit(CAND);
     taQuery = taQuery.or(buildOr({ service: "services" }));
     const { data: ta, error: taErr } = await taQuery;
     if (taErr) console.error("TIA query error:", taErr);
@@ -1661,16 +1661,11 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // could still win a slot as backfill. Drop out-of-scope rows here — at the union,
   // so it covers BOTH the overlap and semantic paths — while never emptying a section
   // (preferRelevant backfills weak rows only when too few in-scope rows exist).
+  // Providers + innovation hubs: geography is free-text `location`. Gate via the
+  // ANZ/target matcher, backfilling (preferRelevant) so a thin directory never
+  // empties the section — a clearly-foreign location (a New-York firm) drops.
   const geoTargetRegions = deriveLocationPatterns(intake);
   const geoMatcher = buildGeoMatcher({ targetRegions: geoTargetRegions });
-  // Trade/government agencies: origin trade bodies (e.g. Enterprise Ireland for an
-  // Irish founder) are legitimately useful, so origin-country terms are ALSO in scope
-  // — and the check is strict (name/description, no blank-location escape) so a
-  // wrong-origin agency rendering "Unknown" location is still dropped.
-  const geoAgencyMatcher = buildGeoMatcher({
-    targetRegions: geoTargetRegions,
-    originTerms: geoOriginTerms(intake.country_of_origin),
-  });
   const GEO_MIN_KEEP = 3;
   for (const tbl of ["service_providers", "innovation_ecosystem"]) {
     if (merged[tbl]?.length) {
@@ -1679,12 +1674,16 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       if (merged[tbl].length !== before) console.log(`geo gate ${tbl}: ${before} → ${merged[tbl].length}`);
     }
   }
+  // Trade/government agencies: nearly all are foreign missions PHYSICALLY in Australia,
+  // so a text match is useless — use the structured corridor gate (organisation_type +
+  // represented country). HARD filter (no backfill): re-adding foreign missions to hit a
+  // minimum would just reintroduce B4, and the providers section stays populated from
+  // service_providers + innovation regardless.
+  const agencyOriginTerms = geoOriginTerms(intake.country_of_origin);
   if (merged.trade_investment_agencies?.length) {
     const before = merged.trade_investment_agencies.length;
-    merged.trade_investment_agencies = preferRelevant(
-      merged.trade_investment_agencies,
-      (r) => isGeoRelevant(r, geoAgencyMatcher, { strict: true }),
-      GEO_MIN_KEEP,
+    merged.trade_investment_agencies = merged.trade_investment_agencies.filter(
+      (r) => isAgencyInCorridor(r, agencyOriginTerms),
     );
     if (merged.trade_investment_agencies.length !== before) {
       console.log(`geo gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);

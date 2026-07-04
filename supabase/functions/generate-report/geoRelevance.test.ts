@@ -1,66 +1,82 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildGeoMatcher, geoOriginTerms, isGeoRelevant } from "./geoRelevance.ts";
+import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
 
-test("geoOriginTerms: intl origin kept, AU/blank/short dropped", () => {
+test("geoOriginTerms: intl origin kept, AU/blank/short dropped, underscores normalised", () => {
   assert.deepEqual(geoOriginTerms("Ireland"), ["ireland"]);
   assert.deepEqual(geoOriginTerms("United States"), ["united states"]);
+  assert.deepEqual(geoOriginTerms("united_kingdom"), ["united kingdom"]);
   assert.deepEqual(geoOriginTerms("Australia"), []);
   assert.deepEqual(geoOriginTerms(""), []);
   assert.deepEqual(geoOriginTerms(null), []);
   assert.deepEqual(geoOriginTerms("US"), []); // too short → avoids "contact us" false-match
 });
 
-test("non-strict: foreign location dropped, AU kept (B3 — service providers)", () => {
+// ── Providers / innovation (location-based) — B3 ──────────────────────────
+test("isGeoRelevant: foreign location dropped, AU kept (B3)", () => {
   const m = buildGeoMatcher({ targetRegions: ["Australia"] });
-  // The actual B3 leak: a New-York firm on an Australia report.
-  assert.equal(isGeoRelevant({ name: "SIS International Research", location: "New York City, USA" }, m), false);
-  assert.equal(isGeoRelevant({ name: "Grant Thornton", location: "Sydney, Australia" }, m), true);
-  assert.equal(isGeoRelevant({ name: "Local Co", location: "Melbourne" }, m), true);
+  assert.equal(isGeoRelevant({ name: "SIS International Research", location: "New York City, NY, USA" }, m), false);
+  assert.equal(isGeoRelevant({ name: "Sodali & Co", location: "New York, NY" }, m), false);
+  assert.equal(isGeoRelevant({ name: "Marsh Australia", location: "Sydney, NSW" }, m), true);
+  assert.equal(isGeoRelevant({ name: "Airwallex", location: "Melbourne, VIC" }, m), true);
 });
 
-test("non-strict: blank + ambiguous locations are kept", () => {
+test("isGeoRelevant: blank + ambiguous locations kept; bare ', AU' kept", () => {
   const m = buildGeoMatcher({ targetRegions: ["Australia"] });
   assert.equal(isGeoRelevant({ name: "No Location Co", location: "" }, m), true);
   assert.equal(isGeoRelevant({ name: "No Location Co" }, m), true); // undefined location
   assert.equal(isGeoRelevant({ name: "Global Co", location: "Global" }, m), true);
-  assert.equal(isGeoRelevant({ name: "Remote Co", location: "Remote / Worldwide" }, m), true);
+  assert.equal(isGeoRelevant({ name: "Postcode Co", location: "6000, AU" }, m), true); // ", AU" country code
 });
 
-test("non-strict: word boundaries — 'software'/'international' don't false-match WA/NT", () => {
+test("isGeoRelevant: word boundaries — 'software'/'international' don't false-match", () => {
   const m = buildGeoMatcher({ targetRegions: ["Australia"] });
-  // "software house, Berlin" must NOT pass via the "wa" inside "software".
   assert.equal(isGeoRelevant({ name: "X", location: "Software House, Berlin" }, m), false);
-  // But a standalone "WA" (Western Australia) passes.
-  assert.equal(isGeoRelevant({ name: "X", location: "Perth, WA" }, m), true);
+  assert.equal(isGeoRelevant({ name: "X", location: "Perth, WA" }, m), true); // standalone WA
+  // 'usa' must not match the bare 'au' token
+  assert.equal(isGeoRelevant({ name: "X", location: "Austin, USA" }, m), false);
 });
 
-test("non-strict: target region beyond ANZ is honoured", () => {
+test("isGeoRelevant: target region beyond ANZ is honoured", () => {
   const m = buildGeoMatcher({ targetRegions: ["Singapore"] });
   assert.equal(isGeoRelevant({ name: "SG Co", location: "Singapore" }, m), true);
   assert.equal(isGeoRelevant({ name: "AU Co", location: "Brisbane" }, m), true); // ANZ still in scope
 });
 
-test("strict agencies: wrong-origin dropped, AU + origin kept (B4)", () => {
-  const m = buildGeoMatcher({ targetRegions: ["Australia"], originTerms: geoOriginTerms("Ireland") });
-  // The actual B4 leaks — neither AU nor Irish → dropped, even though location renders "Unknown".
-  assert.equal(isGeoRelevant({ name: "UK Department for International Trade", location: "Unknown" }, m, { strict: true }), false);
-  assert.equal(isGeoRelevant({ name: "Canadian Consulate / Global Affairs Canada", location: "Unknown" }, m, { strict: true }), false);
-  // Origin trade body for an Irish founder — kept via the name.
-  assert.equal(isGeoRelevant({ name: "Enterprise Ireland", location: "Unknown" }, m, { strict: true }), true);
-  // Australian agency — kept.
-  assert.equal(isGeoRelevant({ name: "Austrade (Australian Trade and Investment Commission)", location: "Sydney" }, m, { strict: true }), true);
+// ── Trade / government agencies (structured columns) — B4 ─────────────────
+test("isAgencyInCorridor: Australian bodies always kept", () => {
+  const irish = geoOriginTerms("Ireland");
+  assert.equal(isAgencyInCorridor({ name: "Austrade", organisation_type: "federal_agency", location_country: "australia" }, irish), true);
+  assert.equal(isAgencyInCorridor({ name: "Investment NSW", organisation_type: "state_body", location_country: "australia" }, irish), true);
+  assert.equal(isAgencyInCorridor({ name: "Australia-United Kingdom Chamber of Commerce", organisation_type: "bilateral", location_country: "australia" }, irish), true);
 });
 
-test("strict agencies: 'Global Affairs Canada' not saved by the ambiguous escape", () => {
-  // "global" only rescues NON-strict rows; strict agencies must positively match.
-  const m = buildGeoMatcher({ targetRegions: ["Australia"], originTerms: geoOriginTerms("Ireland") });
-  assert.equal(isGeoRelevant({ name: "Global Affairs Canada", location: "Global" }, m, { strict: true }), false);
+test("isAgencyInCorridor: wrong-origin foreign missions dropped even though located in AU (B4)", () => {
+  const irish = geoOriginTerms("Ireland");
+  // These render "Australia" all over their text (they're AU-based missions) — only the
+  // structured signal (foreign_trade_agency + non-Irish jurisdiction) catches them.
+  assert.equal(isAgencyInCorridor({ name: "UK Department for International Trade", organisation_type: "foreign_trade_agency", location_country: "australia", jurisdiction: ["United Kingdom", "Australia"], description: "supports UK companies entering Australia" }, irish), false);
+  assert.equal(isAgencyInCorridor({ name: "Canadian Consulate / Global Affairs Canada", organisation_type: "foreign_trade_agency", location_country: "australia", jurisdiction: ["Canada", "Australia"] }, irish), false);
+  assert.equal(isAgencyInCorridor({ name: "Consulate General of Malaysia, Perth", organisation_type: "foreign_trade_agency", location_country: "australia", jurisdiction: ["Malaysia", "Australia - Western Australia"] }, irish), false);
 });
 
-test("strict agencies: origin-country agency for a US founder is in scope", () => {
-  const m = buildGeoMatcher({ targetRegions: ["Australia"], originTerms: geoOriginTerms("United States") });
-  assert.equal(isGeoRelevant({ name: "U.S. Commercial Service", description: "helps United States firms export" }, m, { strict: true }), true);
-  // A Canadian agency is still out for a US founder.
-  assert.equal(isGeoRelevant({ name: "Canadian Trade Commissioner Service", location: "Ottawa" }, m, { strict: true }), false);
+test("isAgencyInCorridor: origin-country trade bodies kept", () => {
+  const irish = geoOriginTerms("Ireland");
+  // Enterprise Ireland: foreign_trade_agency, HQ in Ireland, jurisdiction is its target markets [Australia, NZ].
+  assert.equal(isAgencyInCorridor({ name: "Enterprise Ireland", organisation_type: "foreign_trade_agency", location_country: "ireland", jurisdiction: ["Australia", "New Zealand"] }, irish), true);
+  // Invest Northern Ireland: federal_agency located in the UK; name carries "Northern Ireland".
+  assert.equal(isAgencyInCorridor({ name: "Invest Northern Ireland", organisation_type: "federal_agency", location_country: "united_kingdom", jurisdiction: ["Northern Ireland", "United Kingdom"] }, irish), true);
+});
+
+test("isAgencyInCorridor: domestic AU founder drops all foreign missions", () => {
+  const none = geoOriginTerms("Australia"); // []
+  assert.equal(isAgencyInCorridor({ name: "Austrade", organisation_type: "federal_agency", location_country: "australia" }, none), true);
+  assert.equal(isAgencyInCorridor({ name: "Canadian Consulate", organisation_type: "foreign_trade_agency", location_country: "australia", jurisdiction: ["Canada", "Australia"] }, none), false);
+  assert.equal(isAgencyInCorridor({ name: "Enterprise Ireland", organisation_type: "foreign_trade_agency", location_country: "ireland" }, none), false);
+});
+
+test("isAgencyInCorridor: US founder keeps US body (underscore-normalised) and drops Canadian", () => {
+  const us = geoOriginTerms("United States");
+  assert.equal(isAgencyInCorridor({ name: "SelectUSA", organisation_type: "foreign_trade_agency", location_country: "united_states", jurisdiction: ["United States", "Australia"] }, us), true);
+  assert.equal(isAgencyInCorridor({ name: "Trade Commissioner Service (Canada)", organisation_type: "foreign_trade_agency", location_country: "canada", jurisdiction: ["Canada"] }, us), false);
 });

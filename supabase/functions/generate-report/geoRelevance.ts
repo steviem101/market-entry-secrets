@@ -6,25 +6,30 @@
  * keyPageSelect.ts / competitorQueries.ts.
  *
  * Why it exists (Stage 7 bug review — Kota report, bugs B3 & B4):
- *   B3 — a New-York firm ("SIS International Research — New York City, USA") was
- *        recommended under Service Providers on an *Australia* entry report.
+ *   B3 — a New-York firm ("SIS International Research — New York City, NY, USA")
+ *        was recommended under Service Providers on an *Australia* entry report.
  *   B4 — UK & Canadian trade agencies were shown as Trade & Government for an
  *        *Irish* company (neither the AU target market nor the Irish origin).
  * Root cause: the scorer is purely additive — a location hit is only worth `+1`,
  * it never EXCLUDES. So when the on-target pool is thin, a wrong-market row can
- * still win a slot as backfill. This module adds an explicit geo predicate that
- * `preferRelevant()` uses to drop wrong-market rows while never emptying a
- * section (it backfills weak rows only when too few in-scope rows exist).
+ * still win a slot as backfill.
  *
- * Matching is word-boundary based so short abbreviations (NSW, WA, NZ, ACT)
- * can't substring-match inside unrelated words — e.g. "NT" must not match
- * "internatioNal Trade", "WA" must not match "softWAre".
+ * Two gates, because the two surfaces carry different signals:
+ *   • Providers / innovation hubs — geography lives in a free-text `location`.
+ *     `isGeoRelevant` drops a clearly-foreign location (word-boundary matched so
+ *     "NT" can't match "inter**nt**ional", "WA" can't match "soft**wa**re").
+ *   • Trade / government agencies — nearly every one is a foreign mission
+ *     PHYSICALLY in Australia (so its text says "Australia"), so a text match is
+ *     useless. `isAgencyInCorridor` uses the structured columns instead:
+ *     `organisation_type` separates Australian bodies from foreign missions, and
+ *     the represented country (jurisdiction / location_country / name) must be the
+ *     founder's origin for a foreign mission to stay.
  */
 
 // Australia + New Zealand (ANZ) region recogniser. Full names + safe
 // abbreviations; the word-boundary regex below keeps the 2-3 letter ones honest.
 const ANZ_TOKENS: string[] = [
-  "australia", "australian", "aus", "anz",
+  "australia", "australian", "aus", "au", "anz",
   "new south wales", "nsw", "victoria", "vic", "queensland", "qld",
   "western australia", "wa", "south australia", "sa", "tasmania", "tas",
   "australian capital territory", "act", "northern territory", "nt",
@@ -34,7 +39,7 @@ const ANZ_TOKENS: string[] = [
 ];
 
 // A non-blank location that reads as location-agnostic rather than foreign —
-// keep these on the non-strict surfaces (a "Global"/"Remote" provider is not a
+// keep these on the provider surfaces (a "Global"/"Remote" provider is not a
 // wrong-geography leak the way "New York City, USA" is).
 const AMBIGUOUS_TOKENS: string[] = [
   "global", "international", "worldwide", "remote", "online", "anywhere",
@@ -52,67 +57,99 @@ function toWordBoundaryRegex(tokens: string[]): RegExp {
 
 const ambiguousRe = toWordBoundaryRegex(AMBIGUOUS_TOKENS);
 
-// deno-lint-ignore no-explicit-any
-type Row = any;
+/** The directory-row fields the gates read; everything is optional + unknown-typed
+ *  so a raw Supabase row (or a decorated match card) satisfies it without casts. */
+interface GeoRow {
+  location?: unknown;
+  name?: unknown;
+  title?: unknown;
+  company_name?: unknown;
+  description?: unknown;
+  country?: unknown;
+  organisation_type?: unknown;
+  location_country?: unknown;
+  country_iso2?: unknown;
+  jurisdiction?: unknown;
+}
+type Row = GeoRow | null | undefined;
 
 export interface GeoScope {
   /** user's target regions, already split on "/" and sanitised (e.g. ["Australia"]) */
   targetRegions?: string[];
-  /** origin-country terms that should ALSO be in-scope (agencies only) */
-  originTerms?: string[];
 }
 
 /**
- * Origin-country terms for the corridor surfaces (trade/government agencies).
- * An origin trade body (e.g. Enterprise Ireland for an Irish founder) is genuinely
- * useful, so it must stay in scope. Returns [] for a blank/Australian origin
- * (already covered by the ANZ tokens). Length >= 4 avoids "us"/"uk"/"uae" style
- * codes false-matching common words ("contact us").
+ * Origin-country terms for the corridor check (agencies). An origin trade body
+ * (Enterprise Ireland for an Irish founder) is genuinely useful, so it must stay
+ * in scope. Returns [] for a blank/Australian origin (already the target market).
+ * Length >= 4 avoids "us"/"uk"/"uae" codes false-matching common words.
+ * Underscores/dashes are normalised to spaces to match stored values like
+ * "united_kingdom".
  */
 export function geoOriginTerms(countryOfOrigin?: string | null): string[] {
-  const term = (countryOfOrigin || "").trim().toLowerCase();
+  const term = (countryOfOrigin || "").trim().toLowerCase().replace(/[_-]+/g, " ");
   if (term.length < 4) return [];
   if (term === "australia" || term === "australian") return [];
   return [term];
 }
 
-/** Build the in-scope matcher: ANZ tokens + the user's target regions (+ origin terms). */
+/** Build the ANZ + target-region matcher used for the provider/innovation surfaces. */
 export function buildGeoMatcher(scope: GeoScope = {}): RegExp {
-  const extra = [...(scope.targetRegions || []), ...(scope.originTerms || [])]
+  const extra = (scope.targetRegions || [])
     .map((s) => (s || "").trim().toLowerCase())
     .filter((t) => t.length >= 2);
   return toWordBoundaryRegex([...ANZ_TOKENS, ...extra]);
 }
 
 /**
- * Is this directory row in the report's target geography?
- *
- * Non-strict (default — service providers, innovation hubs): a row passes when its
- * location is blank/ambiguous ("Global"/"Remote") OR its location names an in-scope
- * region. Only a clearly-foreign location ("New York City, USA") is dropped. The
- * blank escape matters because many genuine AU rows carry no location.
- *
- * Strict (trade/government agencies): NO blank escape — the row must POSITIVELY name
- * an in-scope region (AU/ANZ or the founder's origin country) somewhere in its name /
- * location / description. This is what drops a wrong-origin agency whose location is
- * "Unknown" but whose name gives it away ("UK Department for International Trade",
- * "Canadian Consulate").
+ * Is this provider/innovation row in the report's target geography?
+ * Passes when the `location` is blank/ambiguous ("Global"/"Remote") OR names an
+ * in-scope region; only a clearly-foreign location ("New York City, NY, USA") is
+ * dropped. The blank escape matters — many genuine AU rows carry no location.
  */
-export function isGeoRelevant(
-  row: Row,
-  matcher: RegExp,
-  opts: { strict?: boolean } = {},
-): boolean {
+export function isGeoRelevant(row: Row, matcher: RegExp): boolean {
   if (!row) return false;
-  const loc = (row.location || row.country || "").toString().toLowerCase().trim();
-
-  if (opts.strict) {
-    const text = [row.name, row.title, row.company_name, row.location, row.country, row.description]
-      .filter(Boolean).join(" ").toLowerCase();
-    return matcher.test(text);
-  }
-
+  const loc = String(row.location ?? "").toLowerCase().trim();
   if (!loc) return true;                  // blank location: can't tell — keep
   if (ambiguousRe.test(loc)) return true; // "Global"/"Remote"/etc — keep
   return matcher.test(loc);
+}
+
+const norm = (s: unknown): string =>
+  (s == null ? "" : String(s)).toLowerCase().replace(/[_-]+/g, " ");
+
+/**
+ * Is this trade/government agency in the report's corridor (AU target market OR
+ * the founder's origin country)?
+ *
+ * `organisation_type` is the key signal: a non-`foreign_trade_agency` row located
+ * in Australia (federal_agency / state_body / bilateral chamber — Austrade,
+ * Investment NSW, the AU-UK Chamber) is an Australian body and always in scope. A
+ * `foreign_trade_agency` is a foreign country's mission — nearly all are physically
+ * in Australia, so their text says "Australia"; they stay ONLY when they represent
+ * the founder's origin country (checked against name / jurisdiction / location_country
+ * / description). So Enterprise Ireland stays for an Irish founder while the Canadian
+ * / UK / Malaysian missions drop. `originTerms` = [] (domestic AU founder) drops every
+ * foreign mission, which is correct.
+ */
+export function isAgencyInCorridor(row: Row, originTerms: string[]): boolean {
+  if (!row) return false;
+  const orgType = norm(row.organisation_type);
+  const locCountry = norm(row.location_country);
+  const isForeignMission = orgType === "foreign trade agency";
+
+  // (A) Australian domestic body (not a foreign mission), or one with no recorded
+  // country in an AU-centric directory → in scope.
+  if (!isForeignMission && (locCountry === "australia" || locCountry === "")) return true;
+
+  // (B) Represents the founder's origin corridor. Check the structured fields that
+  // actually encode the represented country, normalised so "united_kingdom" matches.
+  if (originTerms.length > 0) {
+    const hay = norm([
+      row.name, row.description, row.location, row.location_country, row.country_iso2,
+      Array.isArray(row.jurisdiction) ? row.jurisdiction.join(" ") : row.jurisdiction,
+    ].filter(Boolean).join(" "));
+    if (originTerms.some((t) => t && hay.includes(t))) return true;
+  }
+  return false;
 }
