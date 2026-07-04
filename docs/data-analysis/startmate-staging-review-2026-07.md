@@ -1,9 +1,9 @@
 # Startmate import batch `startmate-2026-07` — staging review gate
 
-**Date:** 2026-07-03
-**Precedes:** applying `scripts/startmate_import_blocks/*.sql` to `ecosystem_import_candidates`, then any promotion into live tables.
+**Date:** 2026-07-03 (staged) → **2026-07-04 (applied, polished, tested, closed)**
+**Status: CLOSED.** The migration is live in prod, all approved rows are promoted and polished, and the batch has passed post-apply verification. See "Closure summary (2026-07-04)" at the end of this doc for the final state and open follow-ups.
 **Companion docs:** analysis + rules in `docs/data-analysis/startmate-ecosystem-sheet-analysis.md`; staging DDL in `supabase/migrations/20260703120000_create_ecosystem_import_candidates.sql`.
-**No production writes have been made.** The migration is unapplied; the blocks are generated but not executed. **Scope: ANZ-only (batch 1).** The pipeline was **tested end-to-end against a real Postgres** — see "Pre-merge test" below.
+**Scope: ANZ-only (batch 1).** The pipeline was **tested end-to-end against a real Postgres** before apply — see "Pre-merge test" below — and the applied data was **re-verified against prod** after promotion — see "Closure summary" below.
 
 ## Summary
 
@@ -99,10 +99,45 @@ python3 scripts/generate_startmate_candidates.py --write   # candidates JSON + S
 
 This tests the schema and data end-to-end without touching prod. It does **not** exercise live `has_role` semantics (stubbed to `false`) — that RLS behaviour matches the identical pattern already in production on `report_quality_proposals`.
 
-## Open items for Stephen
+## Open items for Stephen (pre-apply — now resolved, kept for history)
 
-1. Approve applying the migration + staging blocks (steps 1–2 above).
-2. ~~US/global funds in batch 1?~~ **Resolved: ANZ-only.** 43 US/global funds are deferred (`non_anz_deferred`) and revivable later; 14 new ANZ funds remain. If you later want the internationals, it's a one-line status flip in the review query.
-3. NZGCP / Aspire alias call (probable aliases of the existing "NZ Growth Capital Partners" row — staged as `enrich_existing` with a match note; both NZ so in-scope).
-4. The `uncertain` records: the 2 uncertain *inserts* (Power of N/Headline, Kokiri) are now `related_review` awaiting your confirmation; the 8 uncertain *newsletters* remain in the guide list for editorial review.
+1. ~~Approve applying the migration + staging blocks.~~ **Done 2026-07-04** — migration applied via dashboard SQL editor, ledger repaired (`supabase migration repair --status applied 20260703120000`), all 314 rows staged via the Supabase MCP channel.
+2. ~~US/global funds in batch 1?~~ **Resolved: ANZ-only.** 43 US/global funds deferred (`non_anz_deferred`), revivable later; 14 new ANZ funds promoted.
+3. ~~NZGCP / Aspire alias call.~~ **Approved and applied** as `enrich_existing` merges into the existing "NZ Growth Capital Partners" row.
+4. ~~The `uncertain` records.~~ **Approved and applied per recommendation:** Power of N/Headline and Kokiri held at `related_review` (not imported); Battery Ventures and TinySeed excluded (not ANZ); uncertain newsletters left `pending` untouched per instruction (newsletters/podcasts guide explicitly deferred — no action taken on the 42 `content_guide` rows).
+
+## Closure summary (2026-07-04)
+
+**Promoted to live tables** (idempotent SQL run via the Supabase MCP channel, each staging row stamped `status='applied'`, `applied_at`, `target_record_id` for full rollback traceability):
+
+| Group | Action | Count | Destination |
+|---|---|---:|---|
+| New ANZ funds | `insert_new` | 14 | `investors` (447 → 461) |
+| New ANZ accelerators + coworking orgs | `insert_new` | 45 → 44 unique rows | `innovation_ecosystem` (124 → 169); Creative HQ's accelerator + coworking candidates merged into one row (`services: ['Accelerator','Co-working']`) rather than two |
+| Fund contact enrichment | `enrich_existing` (COALESCE NULL-fill only) | 52 funds + 1 person | `investors.contact_name` / `linkedin_url` / `details.startmate.contacts` |
+| Held per review decisions | `related_review` / `rejected` | 4 + 111 | no write — Power of N, Kokiri, Battery Ventures, TinySeed held; non-ANZ funds, fund-less people, inactive/defunct programs, dead newsletters rejected |
+| Already on platform | `duplicate` | 21 | no write — accelerator/coworking rows matching an existing `innovation_ecosystem` record |
+| Newsletters/podcasts | *(untouched, explicit instruction)* | 42 | still `pending` in staging; no guide drafted, no data touched |
+
+**Polish pass** (web research via parallel Sonnet subagents, applied after promotion):
+- All 14 new funds: `basic_info`, `why_work_with_us`, logo (via the repo's `logo.dev` domain convention); 8 got `stage_focus`, 5 got `fund_size`, 2 got `year_fund_closed`.
+- 44 of 45 new orgs: same fields + logo. The 45th ("Anyone Can") had an unreachable site and no independent coverage — correctly left without fabricated content rather than guessed.
+- 3 records gained a corrected/discovered website during research (Tenmile, WeWork AU, WOTSO) and got a logo backfilled from it.
+- **Quality fix:** the initial placeholder `founded`/`employees` value (`'Unknown'`, required by a `NOT NULL` constraint) rendered literally on the public detail page (`Founded Unknown`, `Unknown employees`) because the component's conditional (`org.founded && …`) treats any non-empty string as truthy. Confirmed zero pre-existing rows used this placeholder (it is not a platform convention), so all 45 new rows were corrected to `''` (still `NOT NULL`-safe, but falsy — the line no longer renders) wherever a real value wasn't found by research.
+
+**Post-apply verification:**
+- `mcp__Supabase__get_advisors` (security + performance): zero new findings on `investors`, `innovation_ecosystem`, or `ecosystem_import_candidates` beyond expected `unused_index` INFO notices on the brand-new table.
+- `investors_public` view re-confirmed to exclude `contact_name`/`contact_email`/`linkedin_url`/`details` — the new funds' partner-contact data is not publicly exposed; KB visibility for investor rows is `member`, as designed.
+- `mes_knowledge_base`: 115/115 applied rows synced and embedded (0 stale) via the existing triggers + `embed-knowledge` cron — no manual KB work needed.
+- Staging table re-confirmed admin-only (`anon` has zero table privileges) after all the write activity.
+- No duplicate slugs introduced in either destination table.
+- Confirmed via direct query that the two live-app listing hooks (`useInvestors`, `useInnovationEcosystem`, both `.limit(500)`) return all new rows within their window — current totals (461 / 169) are comfortably under the limit, though `investors` is worth watching as it approaches 500.
+- Traced the exact React components (`InvestorCard`, `InnovationOrgHero`, `CompanyCard`) rendering these tables end-to-end to confirm every nullable field our batch could produce (`sector_focus`, `stage_focus`, `check_size_*`, `services`, `contact_persons`, `experience_tiles`) is handled safely — no code changes were needed or made.
+- **Known limitation:** a live in-browser (Playwright) smoke test of `/investors` and `/innovation-ecosystem` was attempted but blocked — the sandboxed session's outbound network policy resets connections that a spawned browser subprocess makes to the Supabase REST API, even though the same domain is reachable from `curl` and from this session's own Supabase MCP tool. This appears to be an environment/proxy limitation specific to browser-originated traffic, not an application defect; it was not it worth working around given the equivalent verification already available (direct query simulation of the page's exact `select/order/limit`, plus static analysis of the rendering components). Flagging so a future session with browser network access can do a final visual pass if desired.
+
+**Rollback, if ever needed:** every promoted row is traceable — new rows via `SELECT target_record_id FROM ecosystem_import_candidates WHERE batch_id='startmate-2026-07' AND proposed_action='insert_new' AND status='applied'`; enrichments are COALESCE-only (original values were `NULL`, so reverting means setting those specific fields back to `NULL` for the batch's `target_record_id`s). The staging ledger itself remains intact for audit — nothing was deleted.
+
+**Remaining open work (not part of this closure, no action taken):**
+- The 42 newsletter/podcast `content_guide` rows — explicitly left untouched this round.
+- 21 `related_review` rows where a program/fund is cross-table-related to an existing record (e.g. a fund whose accelerator program isn't yet its own `innovation_ecosystem` row) — a merge-vs-coexist judgment call, not urgent.
 5. Battery Ventures & TinySeed (`geography_unconfirmed`, `related_review`) — confirm ANZ relevance or leave excluded.
