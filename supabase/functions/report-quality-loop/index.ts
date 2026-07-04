@@ -24,6 +24,8 @@ const WEBHOOK_SECRET = Deno.env.get("SLACK_NOTIFY_WEBHOOK_SECRET") ?? "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 const ANTHROPIC_MODEL = Deno.env.get("RQ_LOOP_MODEL") ?? "claude-sonnet-4-6";
 const REPORT_BASE_URL = "https://market-entry-secrets.lovable.app/report";
+const NOTION_API_KEY = Deno.env.get("NOTION_API_KEY") ?? "";
+const NOTION_TICKETS_DB_ID = Deno.env.get("NOTION_TICKETS_DB_ID") ?? "3865de22266780408c6eef94b1d5ac63"; // MES Tickets
 const LOOP_NAME = "report-quality-loop";
 const ROUTING_EVENT = "report.quality.loop";
 const DAY = 86400000;
@@ -161,6 +163,102 @@ async function postQueue(supabase: any, channel: string, limit: number): Promise
   return json({ ok: res.ok, posted: props.length, error: res.error });
 }
 
+// --- Notion ticket sweep -------------------------------------------------------------
+// Batches accepted-but-unticketed proposals (status='accepted', fix_ref is null) into
+// grouped tickets in the Notion "MES Tickets" database, one ticket per category, then
+// writes the ticket URL back to each proposal's fix_ref. Runs at the end of every
+// scheduled run and on demand via POST {"sync_notion": true}. Skips quietly when
+// NOTION_API_KEY isn't configured.
+const CAT_META: Record<string, { type: string; priority: string; gate: string; label: string; note?: string }> = {
+  "matching/relevance": { type: "Bug", priority: "P1", gate: "Plan", label: "Matching relevance" },
+  "content/prompt-bulk": { type: "Refactor", priority: "P2", gate: "Plan", label: "Content bulk / prompt tightening" },
+  "input-not-actioned": { type: "Feature", priority: "P1", gate: "Plan", label: "Input-actioning fidelity" },
+  "accuracy/hallucination": { type: "Bug", priority: "P1", gate: "Plan", label: "Accuracy / hallucination guards" },
+  "data-coverage-gap": { type: "Data", priority: "P2", gate: "Audit", label: "Directory data seeding", note: "Needs human data sourcing — do NOT auto-implement or invent records." },
+};
+
+interface NotionSweepResult { created: number; ticketed: number; skipped?: string; errors?: string[] }
+
+// deno-lint-ignore no-explicit-any
+async function syncAcceptedToNotion(supabase: any): Promise<NotionSweepResult> {
+  if (!NOTION_API_KEY) return { created: 0, ticketed: 0, skipped: "missing_notion_key" };
+  const { data: rows, error } = await supabase.from("report_quality_proposals")
+    .select("id, category, title, impact_estimate, confidence, risk, recommended_change, evidence, report_id")
+    .eq("status", "accepted").is("fix_ref", null)
+    .order("category", { ascending: true }).order("rank_score", { ascending: false }).limit(200);
+  if (error) return { created: 0, ticketed: 0, errors: [error.message] };
+  // deno-lint-ignore no-explicit-any
+  const pending = (rows ?? []) as any[];
+  if (!pending.length) return { created: 0, ticketed: 0 };
+
+  // deno-lint-ignore no-explicit-any
+  const groups = new Map<string, any[]>();
+  for (const p of pending) {
+    if (!groups.has(p.category)) groups.set(p.category, []);
+    groups.get(p.category)!.push(p);
+  }
+
+  const result: NotionSweepResult = { created: 0, ticketed: 0, errors: [] };
+  const today = new Date().toISOString().slice(0, 10);
+  for (const [category, props] of groups) {
+    const meta = CAT_META[category] ?? { type: "Feature", priority: "P2", gate: "Plan", label: category };
+    const refs = props.map((p) => String(p.id).slice(0, 8));
+    const children: unknown[] = [
+      { object: "block", type: "callout", callout: { icon: { type: "emoji", emoji: "🔁" }, rich_text: [{ type: "text", text: { content:
+        `Accepted report-quality proposals, auto-swept from report_quality_proposals on ${today}. Rows carry fix_ref → this ticket; flip them to 'shipped' once implemented + merged.${meta.note ? " ⚠️ " + meta.note : ""}` } }] } },
+      // one bullet per proposal, capped to stay under Notion's 100-blocks-per-request limit
+      ...props.slice(0, 90).map((p) => ({ object: "block", type: "bulleted_list_item", bulleted_list_item: { rich_text: [{ type: "text", text: { content:
+        `[${String(p.id).slice(0, 8)}] ${p.evidence?.company ?? "(unknown)"} — ${p.title} (${p.impact_estimate}, conf ${p.confidence}, risk ${p.risk}) → ${String(p.recommended_change ?? "").slice(0, 400)}`.slice(0, 1900) } }] } })),
+    ];
+    // deno-lint-ignore no-explicit-any
+    let page: any = null;
+    try {
+      const resp = await fetch("https://api.notion.com/v1/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${NOTION_API_KEY}`, "Notion-Version": "2022-06-28" },
+        body: JSON.stringify({
+          parent: { database_id: NOTION_TICKETS_DB_ID },
+          icon: { type: "emoji", emoji: "🔁" },
+          properties: {
+            Name: { title: [{ text: { content: `RQ sweep: ${meta.label} — ${props.length} accepted proposal${props.length === 1 ? "" : "s"} (${today})` } }] },
+            Status: { select: { name: "Scoped" } },
+            "Gate stage": { select: { name: meta.gate } },
+            Priority: { select: { name: meta.priority } },
+            Project: { select: { name: "MES Platform" } },
+            Workstream: { select: { name: "Reports" } },
+            Type: { select: { name: meta.type } },
+            "Supabase ref": { select: { name: "xhziwveaiuhzdoutpgrh" } },
+            Notes: { rich_text: [{ text: { content: `Auto-created by report-quality-loop Notion sweep. Proposal refs: ${refs.join(", ")}`.slice(0, 1900) } }] },
+          },
+          children,
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        result.errors!.push(`${category}: ${data?.message ?? `http_${resp.status}`}`);
+        log("notion sweep create failed", { category, status: resp.status, error: data?.message });
+        continue;
+      }
+      page = data;
+    } catch (e) {
+      result.errors!.push(`${category}: ${String(e)}`);
+      log("notion sweep exception", { category, error: String(e) });
+      continue;
+    }
+    const pageUrl: string = page?.url ?? "";
+    if (pageUrl) {
+      const { error: updErr } = await supabase.from("report_quality_proposals")
+        .update({ fix_ref: pageUrl }).in("id", props.map((p) => p.id));
+      if (updErr) result.errors!.push(`${category} fix_ref: ${updErr.message}`);
+      else result.ticketed += props.length;
+    }
+    result.created += 1;
+    log("notion ticket created", { category, proposals: props.length, url: pageUrl });
+  }
+  if (!result.errors!.length) delete result.errors;
+  return result;
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
@@ -189,6 +287,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // --- post-only mode: push the open review queue to Slack (no scoring) ---------------
   if (body.post_queue === true) return await postQueue(supabase, channel, Math.min(Math.max(Number(body.limit) || 40, 1), 100));
+
+  // --- sweep-only mode: ticket accepted proposals into Notion (no scoring) ------------
+  if (body.sync_notion === true) {
+    const sweep = await syncAcceptedToNotion(supabase);
+    if (sweep.created > 0) {
+      await postToSlack(channel, `Report-quality — ${sweep.ticketed} accepted proposals ticketed into Notion`, [
+        { type: "section", text: { type: "mrkdwn", text: `🗂 *Notion sweep* — ${sweep.ticketed} accepted proposal(s) grouped into ${sweep.created} MES ticket(s). Each proposal's \`fix_ref\` now links to its ticket.` } },
+      ]);
+    }
+    return json({ ok: !sweep.errors, notion: sweep });
+  }
 
   // --- open an automation_runs row ---------------------------------------------------
   const startedAt = new Date().toISOString();
@@ -334,7 +443,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
     if (!dryRun) await postToSlack(channel, insertError ? `Report-quality loop — write FAILED (${ranked.length} scored, 0 written)` : `Report-quality loop — ${proposalsWritten} proposals from ${reviewed} reports`, blocks);
 
-    return json({ ok: !insertError, error: insertError ?? undefined, reviewed, proposed: proposalsWritten, eligible: batch.length, deadline_hit: deadlineHit, tokens_used: tokensUsed, cost, dry_run: dryRun, proposals: dryRun ? ranked : undefined });
+    // --- Notion sweep: ticket anything accepted since the last run ----------------------
+    // Runs after the digest so a sweep failure can never block scoring/logging/posting.
+    let notionSweep: NotionSweepResult | undefined;
+    if (!dryRun) {
+      notionSweep = await syncAcceptedToNotion(supabase);
+      if (notionSweep.created > 0) {
+        await postToSlack(channel, `Report-quality — ${notionSweep.ticketed} accepted proposals ticketed into Notion`, [
+          { type: "section", text: { type: "mrkdwn", text: `🗂 *Notion sweep* — ${notionSweep.ticketed} accepted proposal(s) grouped into ${notionSweep.created} MES ticket(s). Each proposal's \`fix_ref\` now links to its ticket.` } },
+        ]);
+      }
+    }
+
+    return json({ ok: !insertError, error: insertError ?? undefined, reviewed, proposed: proposalsWritten, eligible: batch.length, deadline_hit: deadlineHit, tokens_used: tokensUsed, cost, notion: notionSweep, dry_run: dryRun, proposals: dryRun ? ranked : undefined });
   } catch (e) {
     log("run failed", String(e));
     await finish("error", { reviewed: 0, proposed: 0 }, String(e));

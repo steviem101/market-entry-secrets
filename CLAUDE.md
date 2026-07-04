@@ -426,6 +426,7 @@ Both `useToast` (shadcn) and `sonner` (`toast()`) are available. Use either.
 | `SLACK_BOT_TOKEN` | Slack `chat.postMessage` token for `#report-quality` (rollup + loop) |
 | `SLACK_NOTIFY_WEBHOOK_SECRET` | `x-webhook-secret` guarding `slack-notify` / `report-quality-rollup` / `report-quality-loop` |
 | `SLACK_SIGNING_SECRET` | Slack app signing secret — verifies interaction payloads hitting `rq-slack-actions` |
+| `NOTION_API_KEY` | Notion internal-integration token — `report-quality-loop`'s sweep tickets accepted proposals into the MES Tickets DB (optional; sweep skips without it) |
 | `RESEND_API_KEY` | Resend transactional email (`send-email`, `send-lead-followup`) |
 | `EMAIL_INTERNAL_SECRET` | Internal `x-internal-secret` for server-to-server calls to `send-email` |
 | `CONTENT_CREATOR_URL` | Content Creator (`rcgaviwbsudouvfwzydq`) API URL — read source for the `kb-sync` LinkedIn sync |

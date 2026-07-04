@@ -55,6 +55,8 @@ rollup). It POSTs to the function with the `x-webhook-secret` header (same patte
 | `SLACK_BOT_TOKEN` | Posts the digest to `#report-quality` |
 | `SLACK_NOTIFY_WEBHOOK_SECRET` | Authenticates the cron POST (`x-webhook-secret`) |
 | `RQ_LOOP_MODEL` (optional) | Override the Claude model (default `claude-sonnet-4-6`) |
+| `NOTION_API_KEY` (optional) | Enables the Notion ticket sweep (internal integration token; the integration must be shared with the MES Tickets database). Missing → sweep skips quietly |
+| `NOTION_TICKETS_DB_ID` (optional) | Override the MES Tickets database id (defaults to the prod one) |
 
 ## Caps (POST body overrides)
 
@@ -113,6 +115,19 @@ set `fix_ref` to the tracking ticket/PR.
 
 Either way, accepted proposals are the prioritised quality backlog; any resulting change
 ships as a normal human-reviewed PR — the loop never merges.
+
+## Notion ticket sweep (accepted → MES Tickets)
+
+At the end of every scheduled run (and on demand via `POST {"sync_notion": true}`), the
+loop sweeps proposals with `status='accepted'` and `fix_ref IS NULL`, groups them **by
+category** into tickets in the Notion **MES Tickets** database (Status `Scoped`,
+Workstream `Reports`; `data-coverage-gap` tickets are flagged "needs human data
+sourcing"), and writes each ticket's URL back to the proposals' `fix_ref`. So: click
+Accept in Slack during the week → grouped tickets appear in the Notion pipeline on the
+next run (or immediately via the on-demand call). Proposals that already have a
+`fix_ref` are never re-ticketed. Requires `NOTION_API_KEY`; without it the sweep skips
+quietly. A short "🗂 Notion sweep" note posts to `#report-quality` whenever tickets were
+created.
 
 ### Slack app setup for the buttons (one-time)
 
