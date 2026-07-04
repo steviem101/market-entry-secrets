@@ -23,7 +23,7 @@ export const ServiceProviderProfileHero = ({ provider }: ServiceProviderProfileH
           <img
             loading="lazy"
             src={provider.cover_image_url}
-            alt={`${provider.name} cover`}
+            alt={`${provider.name} cover image`}
             className="w-full h-full object-cover"
           />
         )}
