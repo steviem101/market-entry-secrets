@@ -35,7 +35,7 @@ import { getCountryCode } from "@/lib/countryCodes";
 // Per-slug SEO overrides — keep bespoke copy data-driven rather than branching in JSX.
 const SEO_OVERRIDES: Record<string, { title: string; description: (c: { name: string; key_industries?: string[] }) => string }> = {
   ireland: {
-    title: "Ireland to Australia Market Entry: The Founder's Playbook (2026) | Market Entry Secrets",
+    title: "Ireland to Australia Market Entry Playbook 2026",
     description: (c) =>
       `Ireland to Australia market entry. The founder's playbook covering grants, agencies, ${(c.key_industries || []).slice(0, 2).join(" and ")} partners, and case studies.`,
   },
