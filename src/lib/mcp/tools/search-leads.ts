@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { genericSearchError, sanitizeFilterValue } from "./_shared";
 
 function sb() {
   return createClient(
@@ -27,11 +28,14 @@ export default defineTool({
       .from("leads")
       .select("name, industry, location, category, price, record_count, provider_name")
       .limit(limit);
-    if (query) q = q.ilike("name", `%${query}%`);
-    if (industry) q = q.ilike("industry", `%${industry}%`);
-    if (location) q = q.ilike("location", `%${location}%`);
+    if (query) q = q.ilike("name", `%${sanitizeFilterValue(query)}%`);
+    if (industry) q = q.ilike("industry", `%${sanitizeFilterValue(industry)}%`);
+    if (location) q = q.ilike("location", `%${sanitizeFilterValue(location)}%`);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("search_lead_databases query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] },
