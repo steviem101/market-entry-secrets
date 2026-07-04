@@ -63,6 +63,19 @@ export const useAuthService = () => {
       });
 
       if (error) {
+        // Don't confirm whether an email is registered (account enumeration).
+        // Show the same neutral guidance an unknown email would get; the
+        // dialog stays open so an existing user can switch to Sign In.
+        const alreadyRegistered =
+          (error as { code?: string }).code === 'user_already_exists' ||
+          /already (been )?registered|already exists/i.test(error.message);
+        if (alreadyRegistered) {
+          toast({
+            title: "Check your email",
+            description: "If this email isn't already registered, you'll receive a confirmation link shortly. Already have an account? Sign in instead.",
+          });
+          return { error };
+        }
         toast({
           title: "Sign Up Error",
           description: error.message,
