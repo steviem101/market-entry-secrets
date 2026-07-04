@@ -11,7 +11,7 @@
  * ReportMatchCard) picks it up automatically.
  */
 
-const CANONICAL_ORIGIN = 'https://market-entry-secrets.lovable.app';
+const CANONICAL_ORIGIN = 'https://marketentrysecrets.com';
 
 /**
  * Returns the host this app is "really" served from for the purpose of

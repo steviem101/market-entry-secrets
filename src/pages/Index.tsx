@@ -9,7 +9,7 @@ import { PricingSection } from "@/components/sections/PricingSection";
 import { CTASection } from "@/components/sections/CTASection";
 
 
-const FALLBACK_URL = "https://market-entry-secrets.lovable.app";
+const FALLBACK_URL = "https://marketentrysecrets.com";
 
 const Index = () => {
   const siteUrl = typeof window !== "undefined" ? window.location.origin : FALLBACK_URL;
