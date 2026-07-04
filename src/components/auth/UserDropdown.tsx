@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription, SubscriptionTier } from '@/hooks/useSubscription';
 import { ProfileDialog } from './ProfileDialog';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getInitials, getDisplayName } from '@/lib/profileUtils';
 import { cn } from '@/lib/utils';
 
@@ -36,11 +36,16 @@ export const UserDropdown = () => {
   const { user, profile, signOut, isAdmin, isModerator } = useAuth();
   const { subscription } = useSubscription();
   const [showProfile, setShowProfile] = useState(false);
+  const navigate = useNavigate();
 
   if (!user || !profile) return null;
 
   const handleSignOut = async () => {
     await signOut();
+    // Leave whatever page they were on — protected pages (/my-reports,
+    // /member-hub, /bookmarks) would otherwise strand them on a
+    // "please sign in" fallback.
+    navigate('/');
   };
 
   return (
