@@ -79,12 +79,12 @@ export const CARD_CTA_CONFIG: Record<DirectoryEntity, CtaConfig> = {
     gatedLabel: unlockWith,
   },
   content: {
-    primary: { label: "Read more", action: "navigate" },
+    primary: { label: "Read full guide", action: "navigate" },
     secondary: { label: "Save" },
     gatedLabel: unlockWith,
   },
   case_study: {
-    primary: { label: "Read more", action: "navigate" },
+    primary: { label: "Read case study", action: "navigate" },
     secondary: { label: "Save" },
     gatedLabel: unlockWith,
   },
