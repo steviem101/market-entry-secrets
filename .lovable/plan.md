@@ -1,13 +1,13 @@
-## Plan: Final Custom-Domain Cleanup in CLAUDE.md
+Connection confirmed. The Lovable-connected Google account now has **siteOwner** access to `marketentrysecrets.com` (domain property) in Google Search Console.
 
-### Goal
-Update the single remaining out-of-date reference so every agent-facing document reflects the custom domain.
+## Next step
 
-### Change
-- **File:** `CLAUDE.md`  
-  **Line 11:** Replace the Published URL from `https://market-entry-secrets.lovable.app` → `https://marketentrysecrets.com`.
+Submit `sitemap.xml` to the domain property so Google picks it up:
 
-### Verification
-- Re-run the full-text audit for `lovable.app` / `lovable.dev` / `market-entry-secrets.lovable.app` to confirm zero functional hits remain.
+```
+PUT https://connector-gateway.lovable.dev/google_search_console/webmasters/v3/sites/sc-domain%3Amarketentrysecrets.com/sitemaps/https%3A%2F%2Fmarketentrysecrets.com%2Fsitemap.xml
+```
 
-No other files need modification.
+Then re-fetch it to confirm GSC accepted the submission and report back the `lastSubmitted` / `isPending` / `errors` / `warnings` fields.
+
+If it succeeds, mark the `gsc:gsc` SEO finding as fixed.
