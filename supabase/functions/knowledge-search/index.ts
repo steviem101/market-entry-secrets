@@ -18,9 +18,9 @@ const EMBED_MODEL = "text-embedding-3-small";
 
 const ALLOWED_ORIGINS = [
   Deno.env.get("FRONTEND_URL"),
-  "https://market-entry-secrets.lovable.app",
   "https://marketentrysecrets.com",
   "https://www.marketentrysecrets.com",
+  "https://market-entry-secrets.lovable.app",
 ].filter(Boolean) as string[];
 
 function corsHeaders(req: Request): Record<string, string> {

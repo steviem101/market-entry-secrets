@@ -8,7 +8,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SLACK_BOT_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("SLACK_NOTIFY_WEBHOOK_SECRET") ?? "";
-const REPORT_BASE_URL = "https://market-entry-secrets.lovable.app/report";
+const REPORT_BASE_URL = "https://marketentrysecrets.com/report";
 const DAY = 86400000;
 
 const RAG_LABELS: Record<string, string> = {
