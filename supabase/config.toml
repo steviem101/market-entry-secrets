@@ -1,5 +1,41 @@
 project_id = "xhziwveaiuhzdoutpgrh"
 
+# ---------------------------------------------------------------------------
+# Auth configuration — version-controlled source of truth (MES-33j).
+#
+# These values mirror what the production dashboard MUST be set to (MES-33a /
+# MES-33n / MES-33o runbook). The CLI applies this block to local dev and
+# `supabase config push`; the hosted dashboard is NOT auto-synced on merge —
+# after changing values here, apply them in the dashboard (or `config push`)
+# and keep the two in lockstep so auth redirects can never silently drift back
+# to a Lovable preview origin again.
+# ---------------------------------------------------------------------------
+[auth]
+enabled = true
+# Fallback destination for auth emails / OAuth returns when the requested
+# redirect is not on the allow-list. Must be the customer domain, never a
+# *.lovable.app preview (root cause of magic links opening Lovable, audit §5).
+site_url = "https://marketentrysecrets.com"
+# Exact-match allow-list for emailRedirectTo / redirectTo values used by the
+# app: /auth/callback (OAuth, magic link, confirm signup) and /reset-password
+# (recovery). Keep explicit — no broad wildcards.
+additional_redirect_urls = [
+  "https://marketentrysecrets.com/auth/callback",
+  "https://marketentrysecrets.com/reset-password",
+  "https://www.marketentrysecrets.com/auth/callback",
+  "https://www.marketentrysecrets.com/reset-password",
+  # Lovable preview origin — keep only while previews are used for QA.
+  "https://market-entry-secrets.lovable.app/auth/callback",
+  "https://market-entry-secrets.lovable.app/reset-password",
+]
+# Match the client-side minimum (AuthDialog signup + ResetPassword, MES-33n).
+minimum_password_length = 8
+
+[auth.email]
+# Magic-link / email-OTP lifetime: 1 hour, the advisor lint threshold
+# (auth_otp_long_expiry fires above 3600s — MES-33o).
+otp_expiry = 3600
+
 [functions.create-checkout]
 verify_jwt = true
 
