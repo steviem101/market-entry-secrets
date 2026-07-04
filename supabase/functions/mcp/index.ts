@@ -9,6 +9,17 @@ import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { createClient } from "npm:@supabase/supabase-js@^2.56.0";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z } from "npm:zod@^3.23.8";
+
+// src/lib/mcp/tools/_shared.ts
+function sanitizeFilterValue(v) {
+  return (v || "").replace(/[\\,().*"'%\r\n]/g, " ").trim();
+}
+var genericSearchError = {
+  content: [{ type: "text", text: "search_failed" }],
+  isError: true
+};
+
+// src/lib/mcp/tools/search-service-providers.ts
 function sb() {
   return createClient(
     process.env.SUPABASE_URL,
@@ -29,11 +40,17 @@ var search_service_providers_default = defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, location, service, limit }) => {
     let q = sb().from("service_providers").select("name, location, services, description, website").limit(limit);
-    if (query) q = q.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
-    if (location) q = q.ilike("location", `%${location}%`);
+    if (query) {
+      const s = sanitizeFilterValue(query);
+      if (s) q = q.or(`name.ilike.%${s}%,description.ilike.%${s}%`);
+    }
+    if (location) q = q.ilike("location", `%${sanitizeFilterValue(location)}%`);
     if (service) q = q.contains("services", [service]);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("search_service_providers query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] }
@@ -66,12 +83,18 @@ var search_mentors_default = defineTool2({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, specialty, location, origin_country, limit }) => {
     let q = sb2().from("community_members_public").select("name, title, company, specialties, location, origin_country, associated_countries").limit(limit);
-    if (query) q = q.or(`name.ilike.%${query}%,title.ilike.%${query}%,company.ilike.%${query}%`);
+    if (query) {
+      const s = sanitizeFilterValue(query);
+      if (s) q = q.or(`name.ilike.%${s}%,title.ilike.%${s}%,company.ilike.%${s}%`);
+    }
     if (specialty) q = q.contains("specialties", [specialty]);
-    if (location) q = q.ilike("location", `%${location}%`);
-    if (origin_country) q = q.ilike("origin_country", `%${origin_country}%`);
+    if (location) q = q.ilike("location", `%${sanitizeFilterValue(location)}%`);
+    if (origin_country) q = q.ilike("origin_country", `%${sanitizeFilterValue(origin_country)}%`);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("search_mentors query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] }
@@ -105,11 +128,17 @@ var list_events_default = defineTool3({
   handler: async ({ query, sector, location, upcoming_only, limit }) => {
     let q = sb3().from("events").select("title, slug, date, location, category, type, organizer, sector").order("date", { ascending: true }).limit(limit);
     if (upcoming_only) q = q.gte("date", (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
-    if (query) q = q.or(`title.ilike.%${query}%,organizer.ilike.%${query}%`);
-    if (sector) q = q.ilike("sector", `%${sector}%`);
-    if (location) q = q.ilike("location", `%${location}%`);
+    if (query) {
+      const s = sanitizeFilterValue(query);
+      if (s) q = q.or(`title.ilike.%${s}%,organizer.ilike.%${s}%`);
+    }
+    if (sector) q = q.ilike("sector", `%${sanitizeFilterValue(sector)}%`);
+    if (location) q = q.ilike("location", `%${sanitizeFilterValue(location)}%`);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("list_events query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] }
@@ -139,10 +168,13 @@ var search_content_default = defineTool4({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, content_type, limit }) => {
-    let q = sb4().from("content_items").select("title, slug, content_type, category_id, sector_tags, status").eq("status", "published").ilike("title", `%${query}%`).limit(limit);
+    let q = sb4().from("content_items").select("title, slug, content_type, category_id, sector_tags, status").eq("status", "published").ilike("title", `%${sanitizeFilterValue(query)}%`).limit(limit);
     if (content_type) q = q.eq("content_type", content_type);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("search_content query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] }
@@ -174,11 +206,14 @@ var search_leads_default = defineTool5({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, industry, location, limit }) => {
     let q = sb5().from("leads").select("name, industry, location, category, price, record_count, provider_name").limit(limit);
-    if (query) q = q.ilike("name", `%${query}%`);
-    if (industry) q = q.ilike("industry", `%${industry}%`);
-    if (location) q = q.ilike("location", `%${location}%`);
+    if (query) q = q.ilike("name", `%${sanitizeFilterValue(query)}%`);
+    if (industry) q = q.ilike("industry", `%${sanitizeFilterValue(industry)}%`);
+    if (location) q = q.ilike("location", `%${sanitizeFilterValue(location)}%`);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("search_lead_databases query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] }
