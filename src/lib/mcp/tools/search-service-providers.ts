@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { genericSearchError, sanitizeFilterValue } from "./_shared";
 
 function sb() {
   return createClient(
@@ -27,11 +28,17 @@ export default defineTool({
       .from("service_providers")
       .select("name, location, services, description, website")
       .limit(limit);
-    if (query) q = q.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
-    if (location) q = q.ilike("location", `%${location}%`);
+    if (query) {
+      const s = sanitizeFilterValue(query);
+      if (s) q = q.or(`name.ilike.%${s}%,description.ilike.%${s}%`);
+    }
+    if (location) q = q.ilike("location", `%${sanitizeFilterValue(location)}%`);
     if (service) q = q.contains("services", [service]);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("search_service_providers query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] },

@@ -9,6 +9,17 @@ import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { createClient } from "npm:@supabase/supabase-js@^2.56.0";
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
 import { z } from "npm:zod@^3.23.8";
+
+// src/lib/mcp/tools/_shared.ts
+function sanitizeFilterValue(v) {
+  return (v || "").replace(/[\\,().*"'%\r\n]/g, " ").trim();
+}
+var genericSearchError = {
+  content: [{ type: "text", text: "search_failed" }],
+  isError: true
+};
+
+// src/lib/mcp/tools/search-service-providers.ts
 function sb() {
   return createClient(
     process.env.SUPABASE_URL,
@@ -29,11 +40,17 @@ var search_service_providers_default = defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, location, service, limit }) => {
     let q = sb().from("service_providers").select("name, location, services, description, website").limit(limit);
-    if (query) q = q.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
-    if (location) q = q.ilike("location", `%${location}%`);
+    if (query) {
+      const s = sanitizeFilterValue(query);
+      if (s) q = q.or(`name.ilike.%${s}%,description.ilike.%${s}%`);
+    }
+    if (location) q = q.ilike("location", `%${sanitizeFilterValue(location)}%`);
     if (service) q = q.contains("services", [service]);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("search_service_providers query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] }
