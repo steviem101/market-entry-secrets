@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "market-entry-secrets-mcp",
+      "version": "0.1.0",
+      "title": "Market Entry Secrets"
+    },
+    "tools": [
+      {
+        "name": "search_service_providers",
+        "title": "Search service providers",
+        "description": "Search Market Entry Secrets' directory of vetted service providers helping companies enter the Australian/ANZ market. Filter by free-text query, location, or service.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Free-text search across name and description."
+            },
+            "location": {
+              "type": "string",
+              "description": "Australian city or region, e.g. 'Sydney'."
+            },
+            "service": {
+              "type": "string",
+              "description": "Service keyword, e.g. 'legal', 'marketing'."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_mentors",
+        "title": "Search mentors",
+        "description": "Search Market Entry Secrets' mentor directory (experienced operators helping companies enter the ANZ market). Filter by specialty, location, or origin country.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Free-text search across name, title, and company."
+            },
+            "specialty": {
+              "type": "string",
+              "description": "Specialty keyword, e.g. 'fintech', 'sales'."
+            },
+            "location": {
+              "type": "string"
+            },
+            "origin_country": {
+              "type": "string",
+              "description": "Mentor's country of origin, e.g. 'Ireland'."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_events",
+        "title": "List events",
+        "description": "List upcoming Australian/ANZ market entry events (conferences, meetups, trade missions) from the Market Entry Secrets directory.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Free-text search across title and organizer."
+            },
+            "sector": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "upcoming_only": {
+              "type": "boolean",
+              "default": true
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_content",
+        "title": "Search guides and case studies",
+        "description": "Search Market Entry Secrets articles, guides, and case studies about entering the Australian/ANZ market. Returns titles and slugs — build URLs as https://marketentrysecrets.com/content/<slug> or /case-studies/<slug>.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Free-text search across title and excerpt."
+            },
+            "content_type": {
+              "type": "string",
+              "enum": [
+                "article",
+                "guide",
+                "case_study"
+              ]
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_lead_databases",
+        "title": "Search B2B lead databases",
+        "description": "Search Market Entry Secrets' catalog of B2B lead databases for Australian market entry (targeting industries, roles, and regions).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Free-text search across name and description."
+            },
+            "industry": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
