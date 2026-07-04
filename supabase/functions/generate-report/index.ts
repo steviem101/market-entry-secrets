@@ -514,8 +514,16 @@ async function searchCompetitors(
   intake: any,
   stats?: FirecrawlStats,
   cache?: ScrapeCache,
-): Promise<{ competitors: CompetitorData[]; raw_results: any[] }> {
-  const empty = { competitors: [], raw_results: [] };
+): Promise<{ competitors: CompetitorData[]; raw_results: any[]; competitor_depth: boolean }> {
+  // FIRECRAWL_COMPETITOR_DEPTH (default off): OFF runs the single legacy query
+  // and keeps the top 3 (unchanged behaviour); ON runs 2-3 angled queries
+  // (buildCompetitorQueries), keeps the top 5 deduped by domain, and the
+  // extraction adds an Australian-presence signal per competitor. Hoisted out of
+  // the try so it's returned on every path — buildReportJson persists it to
+  // report_json.metadata.competitor_depth so the flag state is verifiable from
+  // telemetry (au_presence itself isn't persisted / logs carry no console output).
+  const deep = !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH");
+  const empty = { competitors: [], raw_results: [], competitor_depth: deep };
   if (!firecrawlKey) return empty;
 
   try {
@@ -523,11 +531,6 @@ async function searchCompetitors(
     const targetRegions = (intake.target_regions || []).join(", ") || "Australia";
     const industrySectorText = (intake.industry_sector || []).join(", ");
 
-    // FIRECRAWL_COMPETITOR_DEPTH (default off): OFF runs the single legacy query
-    // and keeps the top 3 (unchanged behaviour); ON runs 2-3 angled queries
-    // (buildCompetitorQueries), keeps the top 5 deduped by domain, and the
-    // extraction adds an Australian-presence signal per competitor.
-    const deep = !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH");
     const queries = deep
       ? buildCompetitorQueries(intake)
       : [`${industrySectorText} companies in Australia ${targetRegions} competitors`];
@@ -574,7 +577,7 @@ ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.tit
     const allCompetitors = [...knownResults, ...searchCompetitorsList];
 
     console.log(`Total competitors: ${allCompetitors.length} (${knownResults.length} known + ${searchCompetitorsList.length} discovered; deep=${deep})`);
-    return { competitors: allCompetitors, raw_results: filtered };
+    return { competitors: allCompetitors, raw_results: filtered, competitor_depth: deep };
   } catch (e) {
     console.error("Competitor search failed (continuing):", e);
     return empty;
@@ -1759,7 +1762,7 @@ async function generateReportInBackground(
       matchesAndEnrichTask(),
       firecrawlKey
         ? searchCompetitors(firecrawlKey, lovableKey, intake, firecrawlStats, firecrawlCache)
-        : Promise.resolve({ competitors: [], raw_results: [] }),
+        : Promise.resolve({ competitors: [], raw_results: [], competitor_depth: !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH") }),
       firecrawlKey && (intake.end_buyers || []).length > 0
         ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name, firecrawlStats, firecrawlCache)
         : Promise.resolve([]),
@@ -2153,6 +2156,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         firecrawl_health: firecrawlStats,
         firecrawl_providers_enriched: (matches.service_providers || []).filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
+        // Whether the FIRECRAWL_COMPETITOR_DEPTH flag was ON for this report
+        // (multi-angle discovery + au_presence signal). Persisted so the flag
+        // state is verifiable from telemetry — the count above alone can't
+        // distinguish a deep run from a lucky legacy run.
+        competitor_depth: competitorResult.competitor_depth ?? false,
         polish_applied: polishApplied,
         key_metrics: keyMetrics,
         discovered_events_count: discoveredEvents.length,
