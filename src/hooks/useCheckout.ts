@@ -14,7 +14,7 @@ export const useCheckout = () => {
 
   const startCheckout = async ({ tier, returnUrl }: CheckoutOptions) => {
     if (!user || !session?.access_token) {
-      toast.error('Please login or register first in order to subscribe to a plan.');
+      toast.info('Sign in to continue — checkout will resume automatically afterwards.');
       return { needsAuth: true };
     }
 
