@@ -168,10 +168,13 @@ var search_content_default = defineTool4({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, content_type, limit }) => {
-    let q = sb4().from("content_items").select("title, slug, content_type, category_id, sector_tags, status").eq("status", "published").ilike("title", `%${query}%`).limit(limit);
+    let q = sb4().from("content_items").select("title, slug, content_type, category_id, sector_tags, status").eq("status", "published").ilike("title", `%${sanitizeFilterValue(query)}%`).limit(limit);
     if (content_type) q = q.eq("content_type", content_type);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("search_content query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] }
