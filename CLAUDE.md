@@ -35,20 +35,20 @@
 
 ### Migration hygiene (the ledger is fragile — see `docs/migrations.md`)
 
-6. **Migrations reach prod via the CLI / PR flow (`supabase db push`).** Do NOT apply
+6. **Migrations reach prod via the PR flow (merge to main auto-applies).** Do NOT apply
    schema to prod out-of-band — no dashboard SQL editor, no ad-hoc `psql`, and **agents
-   must NOT `apply_migration` (MCP) against prod**. Commit the migration file in a PR and
-   let a human apply it. Out-of-band applies stamp apply-time versions and drift the ledger.
+   must NOT `apply_migration` (MCP) against prod**. Commit the migration file in a PR.
+   Out-of-band applies stamp apply-time versions and drift the ledger.
 7. **Name migrations `<timestamp>_snake_name.sql`.** The CLI silently **skips** anything
    else (including legacy `<timestamp>-<uuid>.sql`) — a skipped file never applies.
 8. **Never change the version/filename of an already-applied migration** (renumbering to
-   dodge a collision is how the ledger drifted). Fix collisions before first apply, or add
-   a new migration.
-9. **The main→prod migration integration is currently in a known drift state**
-   (`MIGRATIONS_FAILED`; ~94% ledger divergence). Until it's re-baselined (runbook in
-   `docs/migrations.md`), **a merged migration does NOT auto-apply** — treat any PR that
-   adds a migration as *not live until confirmed applied to prod*. (Edge functions DO
-   auto-deploy on merge; migrations do not.)
+   dodge a collision is how the ledger drifted last time). Fix collisions before first
+   apply, or add a new migration.
+9. **The migration history was re-baselined 2026-07-04** (PR #263): the active dir starts
+   at `20260704095538_remote_baseline.sql`, prior files live in `supabase/migrations_archive/`
+   (reference only — never move them back), and **merged migrations auto-apply to prod
+   again**. Still check the Supabase integration check is green on the PR before assuming
+   a migration is live; new migration timestamps must be after the baseline.
 
 ---
 
