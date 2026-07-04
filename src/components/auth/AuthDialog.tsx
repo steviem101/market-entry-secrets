@@ -337,8 +337,9 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password"
+                    placeholder="Create a password (min 8 characters)"
                     required
+                    minLength={8}
                   />
                   <Button
                     type="button"

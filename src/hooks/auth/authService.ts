@@ -152,9 +152,18 @@ export const useAuthService = () => {
     if (!user) return { error: 'No user logged in' };
 
     try {
+      // Never let the client write server-managed columns. `stripe_customer_id`
+      // is set only by create-checkout (service role); the DB also enforces this
+      // via the SEC-05 trigger, but stripping here avoids surfacing that error to
+      // legitimate users and keeps the write payload to user-editable fields.
+      const safeUpdates = { ...updates } as Record<string, unknown>;
+      for (const k of ['id', 'stripe_customer_id', 'created_at', 'updated_at']) {
+        delete safeUpdates[k];
+      }
+
       const { data, error } = await supabase
         .from('profiles')
-        .upsert({ id: user.id, ...updates })
+        .upsert({ id: user.id, ...safeUpdates })
         .select()
         .single();
 
