@@ -8,7 +8,7 @@
 
 **Market Entry Secrets** is a B2B SaaS directory and AI report platform that helps international companies enter the Australian/ANZ market. It connects global companies with vetted service providers, mentors, market intelligence, lead data, and AI-generated market entry reports.
 
-- **Published URL:** https://market-entry-secrets.lovable.app
+- **Published URL:** https://marketentrysecrets.com
 - **Supabase project ID:** `xhziwveaiuhzdoutpgrh` (MES Platform — the only project in scope for this repo).
 - **Out of scope:** Content Studio (Supabase ref `rcgaviwbsudouvfwzydq`). Never read from, write to, or migrate against it from this repo.
 
