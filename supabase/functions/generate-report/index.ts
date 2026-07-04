@@ -2028,6 +2028,18 @@ async function generateReportInBackground(
       ? `\n\nHOME-MARKET COMPARISON: The user explicitly wants a comparison between their home market (${intake.country_of_origin}) and Australia. Where relevant — especially in the SWOT analysis and action plan — explicitly contrast home-market vs Australian conditions (regulatory, cost of doing business, procurement / go-to-market, and competitive intensity), grounded in the provided market research and bilateral-trade data. Do not invent home-market figures you cannot support.`
       : "";
 
+    // Competitor-depth surfacing (only when FIRECRAWL_COMPETITOR_DEPTH ran, so the
+    // au_presence signal actually exists in the data). Deep mode discovers up to 5
+    // competitors and extracts a per-competitor Australian-footprint signal, but the
+    // section prompt didn't require surfacing all of them or the AU signal — so the
+    // polish pass was trimming to ~3 and burying au_presence in prose (Floats report:
+    // 5 found, 3 shown, no explicit AU line). Force full coverage + a labelled AU line
+    // per competitor, grounded strictly in the provided data (no guessing). Applied
+    // only to competitor_landscape via the section guard on systemContent below.
+    const competitorDepthNote = (competitorResult.competitor_depth && competitorResult.competitors.length > 0)
+      ? `\n\nCOMPETITOR COVERAGE (this section): The competitor data provided lists ${competitorResult.competitors.length} competitors. Cover EVERY one of them — do not trim, merge, or silently drop any to shorten the section. For EACH competitor, include a distinct labelled line "**Australian presence:**" describing their AU footprint using ONLY the provided data (local office/address, AU customers or case studies, a .com.au domain, AU pricing). If the provided data indicates none is evident, write "No Australian presence evident". Never guess, infer, or invent an Australian presence that is not in the data.`
+      : "";
+
     // Phase C (RQ refs 3f27c7ed / 340c7245): the providers list may include trade/government
     // agencies and innovation hubs/accelerators alongside private firms — make sure they're
     // covered in prose, not just listed as cards. Applied only to the providers section.
@@ -2087,7 +2099,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote : ""}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
