@@ -1368,6 +1368,96 @@ export type Database = {
         }
         Relationships: []
       }
+      ecosystem_import_candidates: {
+        Row: {
+          applied_at: string | null
+          batch_id: string
+          confidence: string
+          created_at: string
+          dedupe_key: string
+          entity_type: string
+          id: string
+          match_method: string | null
+          match_note: string | null
+          matched_existing_id: string | null
+          matched_table: string | null
+          proposed_action: string
+          proposed_destination: string
+          proposed_payload: Json
+          raw: Json
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_name: string
+          source_rows: number[]
+          source_tab: string
+          source_url: string | null
+          status: string
+          target_record_id: string | null
+          validation_flags: string[]
+          verification: Json
+          verified_at: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          batch_id: string
+          confidence: string
+          created_at?: string
+          dedupe_key: string
+          entity_type: string
+          id?: string
+          match_method?: string | null
+          match_note?: string | null
+          matched_existing_id?: string | null
+          matched_table?: string | null
+          proposed_action: string
+          proposed_destination: string
+          proposed_payload?: Json
+          raw: Json
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_name: string
+          source_rows?: number[]
+          source_tab: string
+          source_url?: string | null
+          status?: string
+          target_record_id?: string | null
+          validation_flags?: string[]
+          verification?: Json
+          verified_at?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          batch_id?: string
+          confidence?: string
+          created_at?: string
+          dedupe_key?: string
+          entity_type?: string
+          id?: string
+          match_method?: string | null
+          match_note?: string | null
+          matched_existing_id?: string | null
+          matched_table?: string | null
+          proposed_action?: string
+          proposed_destination?: string
+          proposed_payload?: Json
+          raw?: Json
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_name?: string
+          source_rows?: number[]
+          source_tab?: string
+          source_url?: string | null
+          status?: string
+          target_record_id?: string | null
+          validation_flags?: string[]
+          verification?: Json
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       edge_function_rate_limits: {
         Row: {
           function_name: string
