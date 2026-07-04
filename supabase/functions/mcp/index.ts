@@ -128,11 +128,17 @@ var list_events_default = defineTool3({
   handler: async ({ query, sector, location, upcoming_only, limit }) => {
     let q = sb3().from("events").select("title, slug, date, location, category, type, organizer, sector").order("date", { ascending: true }).limit(limit);
     if (upcoming_only) q = q.gte("date", (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
-    if (query) q = q.or(`title.ilike.%${query}%,organizer.ilike.%${query}%`);
-    if (sector) q = q.ilike("sector", `%${sector}%`);
-    if (location) q = q.ilike("location", `%${location}%`);
+    if (query) {
+      const s = sanitizeFilterValue(query);
+      if (s) q = q.or(`title.ilike.%${s}%,organizer.ilike.%${s}%`);
+    }
+    if (sector) q = q.ilike("sector", `%${sanitizeFilterValue(sector)}%`);
+    if (location) q = q.ilike("location", `%${sanitizeFilterValue(location)}%`);
     const { data, error } = await q;
-    if (error) return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("list_events query failed", error);
+      return genericSearchError;
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { results: data ?? [] }
