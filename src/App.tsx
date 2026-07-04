@@ -45,6 +45,7 @@ const AgencyDetailPage = React.lazy(() => import("./pages/AgencyDetailPage"));
 const CaseStudies = React.lazy(() => import("./pages/CaseStudies"));
 const CaseStudyDetail = React.lazy(() => import("./pages/CaseStudyDetail"));
 const FAQ = React.lazy(() => import("./pages/FAQ"));
+const MarketEntryQuestions = React.lazy(() => import("./pages/MarketEntryQuestions"));
 const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
 const PartnerWithUs = React.lazy(() => import("./pages/PartnerWithUs"));
@@ -122,6 +123,7 @@ const App = () => (
                   <Route path="/case-studies" element={<CaseStudies />} />
                   <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
                   <Route path="/faq" element={<FAQ />} />
+                  <Route path="/market-entry-questions" element={<MarketEntryQuestions />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/partner" element={<PartnerWithUs />} />
