@@ -105,7 +105,7 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
   },
   trade_investment_agencies: {
     table: "trade_investment_agencies",
-    select: "id, name, slug, location, services, description, website, tagline, target_company_origin, sector_tags, sector_agnostic",
+    select: "id, name, slug, location, services, description, website, tagline, target_company_origin, organisation_type, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic",
     cap: 5,
     decorate: (a: any) => ({
       ...a,
