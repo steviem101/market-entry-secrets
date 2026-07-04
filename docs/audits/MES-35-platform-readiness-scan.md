@@ -3,6 +3,7 @@
 > Fable MES platform readiness: sign-in, reports, payments, quality.
 > Discovery/audit output only — no product code was changed. Date: 2026-07-04.
 > Sources: full read-only codebase scan (frontend, edge functions, migrations, docs/migrations.md, CI).
+> **Companion:** a dedicated data & security audit (RLS/PII exposure, edge-function security, secrets & GDPR governance, live Supabase advisors) lives in [`MES-35-security-data-audit.md`](./MES-35-security-data-audit.md), with security tickets **T19–T27**.
 
 ---
 
