@@ -28,7 +28,7 @@ const PROVIDERS: Array<{ name: string; location: string; expect: boolean }> = [
 const AGENCIES: Array<Record<string, unknown> & { expect: boolean }> = [
   { name: "Austrade", organisation_type: "federal_agency", location_country: "australia", jurisdiction: ["australia", "global"], expect: true },
   { name: "Investment NSW", organisation_type: "state_body", location_country: "australia", jurisdiction: ["nsw", "australia"], expect: true },
-  { name: "Australia-United Kingdom Chamber of Commerce", organisation_type: "bilateral", location_country: "australia", jurisdiction: ["australia", "united_kingdom"], expect: true },
+  { name: "Australia-United Kingdom Chamber of Commerce", organisation_type: "bilateral", location_country: "australia", jurisdiction: ["australia", "united_kingdom"], expect: false }, // bilateral partner UK ≠ Irish origin → dropped
   { name: "Enterprise Ireland", organisation_type: "foreign_trade_agency", location_country: "ireland", jurisdiction: ["Australia", "New Zealand"], expect: true }, // origin
   { name: "Invest Northern Ireland", organisation_type: "federal_agency", location_country: "united_kingdom", jurisdiction: ["Northern Ireland", "United Kingdom"], expect: true }, // origin (name)
   // B4 offenders — all physically in Australia, all say "Australia" in their text:
@@ -41,9 +41,12 @@ const AGENCIES: Array<Record<string, unknown> & { expect: boolean }> = [
   // False-negative guards (real rows) — HQ'd abroad / mis-tagged but operate in ANZ:
   { name: "ALTIOS International", organisation_type: "trade_consultancy", location_country: "france", jurisdiction: ["Australia", "New Zealand", "Global"], expect: true },
   { name: "Expandys", organisation_type: "trade_consultancy", location_country: "united_kingdom", jurisdiction: ["Australia", "United Kingdom", "India"], expect: true },
-  { name: "Italian Chamber of Commerce in Australia - Melbourne", organisation_type: "bilateral", location_country: "canada", jurisdiction: ["Italy", "Australia - Victoria", "Australia - Tasmania"], expect: true },
   { name: "NZTE (New Zealand Trade & Enterprise)", organisation_type: "nz_government", location_country: "new_zealand", jurisdiction: ["New Zealand"], expect: true },
   { name: "Consulate General of the Arab Republic of Egypt", organisation_type: "foreign_trade_agency", location_country: "au", jurisdiction: ["Egypt", "Australia"], expect: false },
+  // Bilateral chambers of a THIRD country — dropped for an Irish founder (partner ≠ Ireland):
+  { name: "Italian Chamber of Commerce in Australia - Melbourne", organisation_type: "bilateral", location_country: "canada", jurisdiction: ["Italy", "Australia - Victoria", "Australia - Tasmania"], expect: false },
+  { name: "AmCham Australia", organisation_type: "bilateral", location_country: "australia", jurisdiction: ["Australia", "United States"], expect: false },
+  { name: "Italian Chamber of Commerce in New Zealand (ICCNZ)", organisation_type: "bilateral", location_country: "new_zealand", jurisdiction: ["Italy", "New Zealand"], expect: false },
 ];
 
 test("B3 regression: real providers — foreign dropped, AU kept (Irish → Australia)", () => {

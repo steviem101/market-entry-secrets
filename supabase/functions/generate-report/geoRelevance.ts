@@ -151,6 +151,23 @@ function operatesInANZ(row: NonNullable<Row>): boolean {
   return arr.some((x) => anzRe.test(norm(x)));
 }
 
+/**
+ * A bilateral chamber's `jurisdiction` pairs an ANZ member with its partner country
+ * (or countries) — AmCham Australia → ["Australia","United States"]; the Italian
+ * Chamber of Commerce in NZ → ["Italy","New Zealand"]. Strip the ANZ entries; what
+ * remains is the foreign partner. Such a chamber is only relevant to a founder FROM
+ * that partner country, so it's in corridor when a partner matches the origin — or
+ * when no specific foreign partner is named (a generic ANZ chamber, kept for all).
+ * Missing jurisdiction is treated as generic (kept) rather than guessed.
+ */
+function bilateralPartnerInCorridor(row: NonNullable<Row>, originTerms: string[]): boolean {
+  const j = row.jurisdiction;
+  const arr = Array.isArray(j) ? j : j == null ? [] : [j];
+  const partners = arr.map((x) => norm(x)).filter((x) => x && !anzRe.test(x));
+  if (partners.length === 0) return true; // generic ANZ chamber — no specific foreign partner
+  return partners.some((p) => originTerms.some((t) => t && p.includes(t)));
+}
+
 export function isAgencyInCorridor(row: Row, originTerms: string[]): boolean {
   if (!row) return false;
   const orgType = norm(row.organisation_type);
@@ -169,7 +186,14 @@ export function isAgencyInCorridor(row: Row, originTerms: string[]): boolean {
   // still falls to the origin check below. A genuinely-foreign inward-investment
   // agency (Invest Northern Ireland — jurisdiction ["Northern Ireland","United
   // Kingdom"], no ANZ) also falls through, appearing only for a founder from there.
-  if (!isForeignMission && operatesInANZ(row)) return true;
+  if (!isForeignMission && operatesInANZ(row)) {
+    // A bilateral chamber (ANZ ↔ one partner country) is relevant only to founders from
+    // that partner country — AmCham Australia (partner US) is noise for a Singaporean;
+    // an Italy–NZ chamber is noise for anyone but an Italian founder. Gate it by partner;
+    // every other ANZ body (federal/state govt, industry association, trade consultancy)
+    // stays for everyone.
+    return orgType === "bilateral" ? bilateralPartnerInCorridor(row, originTerms) : true;
+  }
 
   // (B) Represents the founder's origin corridor. Check the structured fields that
   // actually encode the represented country, normalised so "united_kingdom" matches.

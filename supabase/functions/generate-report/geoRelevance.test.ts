@@ -95,8 +95,27 @@ test("isAgencyInCorridor: HQ-abroad body kept when jurisdiction covers ANZ (any 
     assert.equal(isAgencyInCorridor(altios, terms), true);
     assert.equal(isAgencyInCorridor(expandys, terms), true);
   }
-  // Mis-tagged AU chamber (location_country=canada by bad data) rescued by jurisdiction.
-  assert.equal(isAgencyInCorridor({ name: "Italian Chamber of Commerce in Australia - Melbourne", organisation_type: "bilateral", location_country: "canada", jurisdiction: ["Italy", "Australia - Victoria", "Australia - Tasmania"] }, geoOriginTerms("Ireland")), true);
+  // Mis-tagged AU-Italy chamber (location_country=canada by bad data): the ANZ jurisdiction
+  // still places it in-market, and it's now partner-gated — kept for an ITALIAN founder,
+  // dropped for others (see the dedicated bilateral test below).
+  const itChamber = { name: "Italian Chamber of Commerce in Australia - Melbourne", organisation_type: "bilateral", location_country: "canada", jurisdiction: ["Italy", "Australia - Victoria", "Australia - Tasmania"] };
+  assert.equal(isAgencyInCorridor(itChamber, geoOriginTerms("Italy")), true);
+  assert.equal(isAgencyInCorridor(itChamber, geoOriginTerms("Ireland")), false);
+});
+
+test("isAgencyInCorridor: bilateral chamber gated by its partner country (AmCham/ICCNZ)", () => {
+  // AmCham Australia (Australia↔US) — kept only for a US founder; noise for a Singaporean.
+  const amcham = { name: "AmCham Australia", organisation_type: "bilateral", location_country: "australia", jurisdiction: ["Australia", "United States"] };
+  assert.equal(isAgencyInCorridor(amcham, geoOriginTerms("United States")), true);
+  assert.equal(isAgencyInCorridor(amcham, geoOriginTerms("Singapore")), false);
+  assert.equal(isAgencyInCorridor(amcham, geoOriginTerms("Ireland")), false);
+  // Italian Chamber in NEW ZEALAND (Italy↔NZ) — ANZ-located but partner Italy; dropped for a Singaporean.
+  const iccnz = { name: "Italian Chamber of Commerce in New Zealand (ICCNZ)", organisation_type: "bilateral", location_country: "new_zealand", jurisdiction: ["Italy", "New Zealand"] };
+  assert.equal(isAgencyInCorridor(iccnz, geoOriginTerms("Singapore")), false);
+  assert.equal(isAgencyInCorridor(iccnz, geoOriginTerms("Italy")), true);
+  // A generic ANZ chamber with no specific foreign partner stays for everyone.
+  const generic = { name: "Australian Chamber of Commerce", organisation_type: "bilateral", location_country: "australia", jurisdiction: ["Australia"] };
+  assert.equal(isAgencyInCorridor(generic, geoOriginTerms("Singapore")), true);
 });
 
 test("isAgencyInCorridor: foreign mission NOT rescued by an 'Australia' jurisdiction entry", () => {
