@@ -20,13 +20,17 @@ const Pricing = () => {
       setPaymentStatus(status);
       setSessionId(checkoutSessionId || undefined);
       setShowStatusModal(true);
+      // Strip the Stripe params right away so refresh/back doesn't replay the modal
+      navigate('/pricing', { replace: true });
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   const handleCloseModal = () => {
     setShowStatusModal(false);
-    // Clean up URL parameters
-    navigate('/pricing', { replace: true });
+    if (paymentStatus === 'success') {
+      // Don't strand the buyer on the pricing page — take them to their reports
+      navigate('/my-reports');
+    }
   };
 
   return (
@@ -46,6 +50,7 @@ const Pricing = () => {
           onClose={handleCloseModal}
           status={paymentStatus}
           sessionId={sessionId}
+          successActionLabel="Go to My Reports"
         />
       </>
     </PageTransition>
