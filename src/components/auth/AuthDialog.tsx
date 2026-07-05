@@ -31,8 +31,9 @@ interface AuthDialogProps {
   reassurance?: { title: string; subtitle: string };
   /**
    * Path to navigate to after OAuth / magic-link auth completes via
-   * /auth/callback. Defaults to '/'. Must be a same-origin path beginning with
-   * '/' (rejected otherwise — open-redirect safe).
+   * /auth/callback. Defaults to the page the user is on (pathname + search)
+   * so sign-in never dumps them on '/'. Must be a same-origin path beginning
+   * with '/' (rejected otherwise — open-redirect safe).
    */
   returnTo?: string;
 }
@@ -70,6 +71,9 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    // The confirm-signup email link also lands on /auth/callback — return the
+    // user to the page they signed up from, not '/'.
+    setAuthReturnPath(resolveReturnTo());
     const { error } = await signUpWithEmail(email, password, {
       first_name: firstName,
       last_name: lastName,
@@ -89,11 +93,18 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
     setResetEmail('');
   };
 
+  // Explicit returnTo wins; otherwise return to the page the dialog was
+  // opened on. Resolved at click time so it reflects the live location.
+  const resolveReturnTo = () =>
+    returnTo ?? (typeof window !== 'undefined'
+      ? window.location.pathname + window.location.search
+      : undefined);
+
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     // Persist the desired post-auth destination so /auth/callback can navigate
     // back to the calling page (e.g. /report-creator?v2=1) instead of '/'.
-    setAuthReturnPath(returnTo);
+    setAuthReturnPath(resolveReturnTo());
     const result = await signInWithMagicLink(magicLinkEmail);
     if (!result.error) {
       setMagicLinkSent(true);
@@ -101,7 +112,7 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
   };
 
   const handleSocialSignIn = async (provider: 'google' | 'azure') => {
-    setAuthReturnPath(returnTo);
+    setAuthReturnPath(resolveReturnTo());
     await signInWithProvider(provider);
   };
 
