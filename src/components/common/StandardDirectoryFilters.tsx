@@ -3,6 +3,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
 
+// A plain string is used as both the option's value and its display label
+// (existing behaviour). Pass {value,label} when the underlying DB value
+// shouldn't be reconstructed from a prettified display label.
+export type FilterOption = string | { value: string; label: string };
+
+const toOption = (option: FilterOption): { value: string; label: string } =>
+  typeof option === "string" ? { value: option, label: option } : option;
+
 export interface StandardDirectoryFiltersProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
@@ -16,12 +24,12 @@ export interface StandardDirectoryFiltersProps {
   onToggleFilters: () => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
-  
+
   // Data arrays
-  locations: string[];
-  types: string[];
-  sectors: string[];
-  
+  locations: FilterOption[];
+  types: FilterOption[];
+  sectors: FilterOption[];
+
   // Customization
   searchPlaceholder?: string;
   searchLoading?: boolean;
@@ -53,9 +61,9 @@ export const StandardDirectoryFilters = ({
       {/* Main Filter Bar */}
       <section className="bg-background border-b">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:items-center">
             {/* Search Bar */}
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 min-w-[200px] max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder={searchPlaceholder}
@@ -71,16 +79,16 @@ export const StandardDirectoryFilters = ({
             </div>
 
             {/* Location Filter */}
-            <div className="w-40">
+            <div className="w-full sm:w-40">
               <Select value={selectedLocation} onValueChange={onLocationChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Location" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Locations</SelectItem>
-                  {locations.map((location) => (
-                    <SelectItem key={location} value={location}>
-                      {location}
+                  {locations.map(toOption).map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -88,16 +96,16 @@ export const StandardDirectoryFilters = ({
             </div>
 
             {/* Type Filter */}
-            <div className="w-36">
+            <div className="w-full sm:w-36">
               <Select value={selectedType} onValueChange={onTypeChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  {types.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
+                  {types.map(toOption).map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -105,16 +113,16 @@ export const StandardDirectoryFilters = ({
             </div>
 
             {/* Sector Filter */}
-            <div className="w-40">
+            <div className="w-full sm:w-40">
               <Select value={selectedSector} onValueChange={onSectorChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sector" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Sectors</SelectItem>
-                  {sectors.map((sector) => (
-                    <SelectItem key={sector} value={sector}>
-                      {sector}
+                  {sectors.map(toOption).map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -126,7 +134,7 @@ export const StandardDirectoryFilters = ({
               <Button
                 variant="outline"
                 onClick={onToggleFilters}
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 <Filter className="w-4 h-4" />
                 Filters

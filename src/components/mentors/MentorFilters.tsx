@@ -63,7 +63,7 @@ export const useMentorFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const filters: MentorFilterState = useMemo(() => ({
-    search: searchParams.get("q") || "",
+    search: searchParams.get("search") || searchParams.get("q") || "",
     persona: (searchParams.get("persona") as PersonaFilterValue) || "all",
     category: searchParams.get("category") || "all",
     sector: searchParams.get("sector") || "all",
@@ -74,7 +74,7 @@ export const useMentorFilters = () => {
 
   const setFilters = useCallback((newFilters: MentorFilterState) => {
     const params = new URLSearchParams();
-    if (newFilters.search) params.set("q", newFilters.search);
+    if (newFilters.search) params.set("search", newFilters.search);
     if (newFilters.persona !== "all") params.set("persona", newFilters.persona);
     if (newFilters.category !== "all") params.set("category", newFilters.category);
     if (newFilters.sector !== "all") params.set("sector", newFilters.sector);

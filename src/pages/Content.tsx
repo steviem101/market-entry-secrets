@@ -177,20 +177,20 @@ const Content = () => {
             ))}
           </div>
 
-          {/* Active filter summary */}
-          {hasActiveFilters && (
-            <div className="mt-3 flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                Showing {filteredContent.length} result{filteredContent.length !== 1 ? 's' : ''}
-              </span>
+          {/* Result summary */}
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Showing {filteredContent.length} of {contentItems.length} result{contentItems.length !== 1 ? 's' : ''}
+            </span>
+            {hasActiveFilters && (
               <button
                 onClick={handleClearFilters}
                 className="text-sm text-primary hover:underline"
               >
                 Clear filters
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </section>
 

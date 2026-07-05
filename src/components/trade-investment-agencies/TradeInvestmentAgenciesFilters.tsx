@@ -68,8 +68,8 @@ const TradeInvestmentAgenciesFilters = ({
       onClearFilters={clearAllFilters}
       hasActiveFilters={hasActiveFilters}
       locations={uniqueLocations}
-      types={uniqueTypes.map(t => formatTypeLabel(t))}
-      sectors={uniqueSectors.map(s => formatTypeLabel(s))}
+      types={uniqueTypes.map(t => ({ value: t, label: formatTypeLabel(t) }))}
+      sectors={uniqueSectors.map(s => ({ value: s, label: formatTypeLabel(s) }))}
       searchPlaceholder="Search agencies, associations, or services..."
     >
       <div className="flex flex-wrap gap-4">

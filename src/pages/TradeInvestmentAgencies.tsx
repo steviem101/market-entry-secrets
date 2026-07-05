@@ -41,14 +41,13 @@ const TradeInvestmentAgencies = () => {
       agency.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (a.tagline && a.tagline.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = selectedLocation === "all" || agency.location?.toLowerCase().includes(selectedLocation.toLowerCase());
-    const normalise = (v: string) => v.replace(/_/g, ' ').toLowerCase();
     const matchesSector = selectedSector === "all" ||
       (a.sectors_supported && (
         a.sectors_supported.includes('all') ||
-        a.sectors_supported.some((s: string) => normalise(s) === selectedSector.toLowerCase())
+        a.sectors_supported.includes(selectedSector)
       ));
     const matchesType = selectedType === "all" ||
-      (a.organisation_type && normalise(a.organisation_type) === selectedType.toLowerCase());
+      a.organisation_type === selectedType;
     const matchesCategory = selectedCategory === "all" ||
       (a.category_slug && a.category_slug === selectedCategory);
     return matchesSearch && matchesLocation && matchesSector && matchesType && matchesCategory;
@@ -60,7 +59,7 @@ const TradeInvestmentAgencies = () => {
     currentPage * PAGE_SIZE
   );
 
-  const uniqueLocations = [...new Set(agencies?.map(agency => agency.location) || [])];
+  const uniqueLocations = [...new Set(agencies?.map(agency => agency.location) || [])].sort();
   const uniqueSectors = [...new Set(
     agencies?.flatMap(agency => (agency as any).sectors_supported || [])
       .filter((s: string) => s && s !== 'all') || []
