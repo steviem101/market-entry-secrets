@@ -9985,3 +9985,26 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Reference-data seed: content_categories (added 2026-07-04 — fixes preview replay).
+--
+-- The remote-baseline dump captured this table's SCHEMA but not its ROWS. Those rows
+-- exist only in prod (seeded pre-baseline). Post-baseline content migrations (e.g.
+-- 20260704155252) INSERT content_items referencing these category ids, so a
+-- from-scratch Supabase preview-branch replay FK-failed here (content_items_category_id_fkey)
+-- even though prod was fine. Seeding the rows in the baseline satisfies the FK on every
+-- fresh replay. Idempotent (ON CONFLICT DO NOTHING); prod already holds these rows and
+-- never re-runs the baseline, so this is a no-op there.
+-- ─────────────────────────────────────────────────────────────────────────────
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('8816e5be-a9f2-47ce-b82f-c353363e7215', 'Success Stories', 'Real businesses that conquered the Australian market', 'TrendingUp', 'text-green-600', 1) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('9bace3d9-8ba3-4961-a6ce-6de1d81b364b', 'Market Entry Guides', 'Step-by-step guides for entering the Australian market', 'BookOpen', 'text-blue-600', 2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('90a582ff-ca36-4e42-a37e-8cccc2c806ce', 'Expert Interviews', 'Insights from industry leaders and market experts', 'Users', 'text-purple-600', 3) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('e836d932-ac9d-4333-a1bf-9c05faa12340', 'Legal & Compliance', 'Essential legal requirements and compliance guides', 'FileText', 'text-red-600', 4) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('862a9290-b652-4126-98eb-3ec37b6e39cd', 'Video Tutorials', 'Visual guides and walkthroughs for market entry', 'Play', 'text-orange-600', 5) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('91408d4b-6a81-4adc-b3f8-af69ea24c2a9', 'Best Practices', 'Proven strategies and methodologies for success', 'Star', 'text-yellow-600', 6) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('0563b826-2123-4627-b912-14f63e9fbfb6', 'Fintech Success', 'Financial technology companies that conquered Australia', 'TrendingUp', 'text-emerald-600', 7) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('f50eb094-bde4-4b21-800f-cc1c45d9d948', 'E-commerce Giants', 'Online retail success stories in the Australian market', 'TrendingUp', 'text-blue-600', 8) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('3035972f-3190-4a46-99bf-3075b9e2f880', 'Healthcare Innovation', 'Medical and health tech companies in Australia', 'TrendingUp', 'text-red-600', 9) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('6a837ef6-c7b5-457c-8069-2b8da9c85716', 'Technology Market Entry', 'International technology companies entering the Australian market', 'Globe', 'text-violet-600', 10) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.content_categories (id, name, description, icon, color, sort_order) VALUES ('e1b408ed-bf02-4b29-b63b-a9a417616513', 'Australian Startup Success', 'How Australian-born tech startups scaled from zero to success', 'Rocket', '#2B7A8C', 11) ON CONFLICT (id) DO NOTHING;
