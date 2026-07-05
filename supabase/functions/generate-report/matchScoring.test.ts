@@ -6,7 +6,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type Scored } from "./matchScoring.ts";
+import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type Scored } from "./matchScoring.ts";
 
 const CTX: MatchContext = {
   userSectors: ["technology-information-and-media", "construction", "professional-services"],
@@ -160,6 +160,30 @@ test("selectTopN returns rows in best-first order even after specialist swaps", 
     assert.ok(picked[i - 1].score >= picked[i].score, `score order broken at ${i}: ${picked[i - 1].score} < ${picked[i].score}`);
   }
   assert.equal(picked.filter((p) => p.specialist).length, 2, "both specialists present");
+});
+
+test("pruneAcrossGroups: entity in a higher-priority group is removed from later groups (B10)", () => {
+  const key = (r: { name?: string }) => (r.name || "").toLowerCase();
+  // providers > mentors > investors. Stone & Chalk (providers+investors), Aaron (mentor+investor).
+  const providers = [{ name: "Stone & Chalk" }, { name: "KPMG" }];
+  const mentors = [{ name: "Aaron Birkby" }, { name: "Jane Doe" }];
+  const investors = [{ name: "Stone & Chalk" }, { name: "Aaron Birkby" }, { name: "Blackbird" }];
+  const [p, m, i] = pruneAcrossGroups([providers, mentors, investors], key);
+  assert.deepEqual(p.map((r) => r.name), ["Stone & Chalk", "KPMG"]);           // tier 1 untouched
+  assert.deepEqual(m.map((r) => r.name), ["Aaron Birkby", "Jane Doe"]);         // mentor kept (above investors)
+  assert.deepEqual(i.map((r) => r.name), ["Blackbird"]);                        // both dupes pruned from investors
+});
+
+test("pruneAcrossGroups: preserves order, keeps empty-keyed rows, tolerates nulls", () => {
+  const key = (r: { name?: string }) => (r.name || "").toLowerCase();
+  const [a, b] = pruneAcrossGroups([
+    [{ name: "X" }, { name: "" }],
+    [{ name: "x" }, { name: "" }, { name: "Y" }],
+  ], key);
+  assert.deepEqual(a.map((r) => r.name), ["X", ""]);
+  // "x" pruned (dup of X); both empty-keyed rows survive (never collapsed); Y kept
+  assert.deepEqual(b.map((r) => r.name), ["", "Y"]);
+  assert.deepEqual(pruneAcrossGroups([], key), []);
 });
 
 test("dedupeByKey keeps the first occurrence per key and preserves order; empty keys are never collapsed", () => {

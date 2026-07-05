@@ -12,7 +12,7 @@ import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
@@ -1689,6 +1689,33 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       console.log(`geo gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);
     }
   }
+
+  // ── Cross-section dedupe (Stage 7 bug B10) ──────────────────────────────
+  // An entity in the providers section (service_providers + agencies + innovation)
+  // or the mentors section must not ALSO surface as a card in a later section — e.g.
+  // "Stone & Chalk" (innovation hub AND investor) or "Aaron Birkby" (mentor AND
+  // investor). getMatchesForSection still dedupes WITHIN the providers section
+  // (dedupeByKey); this prunes the later sections' source arrays by section priority:
+  // providers > mentors > investors. First section to claim an entity keeps it.
+  const entityKey = (r: { name?: unknown; title?: unknown; company_name?: unknown }) =>
+    String(r?.name || r?.title || r?.company_name || "").toLowerCase().trim();
+  const providerPool = [
+    ...(merged.service_providers || []),
+    ...(merged.trade_investment_agencies || []),
+    ...(merged.innovation_ecosystem || []),
+  ];
+  const [, dedupMentors, dedupInvestors] = pruneAcrossGroups(
+    [providerPool, merged.community_members || [], merged.investors || []],
+    entityKey,
+  );
+  if ((merged.community_members || []).length !== dedupMentors.length) {
+    console.log(`cross-section dedupe mentors: ${(merged.community_members || []).length} → ${dedupMentors.length}`);
+  }
+  if ((merged.investors || []).length !== dedupInvestors.length) {
+    console.log(`cross-section dedupe investors: ${(merged.investors || []).length} → ${dedupInvestors.length}`);
+  }
+  merged.community_members = dedupMentors;
+  merged.investors = dedupInvestors;
 
   // lead_databases is the real catalog; expose it under the report's existing
   // `leads` variable so report_templates needs no change.
