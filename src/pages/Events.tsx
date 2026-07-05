@@ -165,6 +165,8 @@ const Events = () => {
     setSelectedCity("all");
     setSelectedSector("all");
     setSelectedTopic("all");
+    setPersonaFilterValue("all");
+    setSelectedSource("curated");
     clearSearch();
     setCurrentPage(1);
   };
@@ -179,8 +181,9 @@ const Events = () => {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = selectedCategory !== "all" || selectedType !== "all" ||
-    selectedCity !== "all" || selectedSector !== "all" || selectedTopic !== "all";
+  const hasActiveFilters = localSearchQuery !== "" || selectedCategory !== "all" || selectedType !== "all" ||
+    selectedCity !== "all" || selectedSector !== "all" || selectedTopic !== "all" ||
+    personaFilterValue !== "all" || selectedSource !== "curated";
 
   if (loading) {
     return (
