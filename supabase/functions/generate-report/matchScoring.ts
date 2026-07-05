@@ -76,24 +76,42 @@ function diminishing(matches: number, base: number, step: number): number {
 const SPECIALIST_BONUS = 2;
 const AGNOSTIC_NUDGE = 0.25;  // small — "eligible for everyone" != "relevant"
 
+// A row that claims a large share of the 20-sector taxonomy isn't a genuine
+// specialist in any of them — it's "matches everyone" noise (Stage 7 bug B8: a
+// marketing association tagged across 8 sectors surfaced for an HR-fintech). The
+// directory bears this out — genuine rows average ~3 tags, so 6+ is generalist
+// territory (yet 31 investors / 13 innovation hubs / 11 agencies carry 6+ WITHOUT
+// the sector_agnostic flag). For these, a sector overlap is weak evidence of focus,
+// so score it as flat "broad overlap" (a single unit, no breadth accumulation) and
+// deny the specialist bonus — focused matches then rank above it. Ranking-only; the
+// row is not dropped (a thin section still backfills it).
+const OVERTAG_THRESHOLD = 6;
+
 export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
   const tags: string[] = row.sector_tags || [];
   const reasons: string[] = [];
   let s = 0;
 
+  // Over-tagged (but not explicitly agnostic) → treat a match as broad, not specialist.
+  const overTagged = !row.sector_agnostic && tags.length >= OVERTAG_THRESHOLD;
+
   const ownMatches = overlapCount(tags, ctx.userSectors);
   if (ownMatches > 0) {
-    const add = diminishing(ownMatches, 3, 1);
+    const add = overTagged ? 1 : diminishing(ownMatches, 3, 1);
     s += add;
-    reasons.push(`industry match ×${ownMatches} (+${add})`);
+    reasons.push(overTagged
+      ? `broad sector overlap ×${ownMatches} (+${add})`
+      : `industry match ×${ownMatches} (+${add})`);
   }
 
   if (opts.applySellsTo) {
     const sellMatches = overlapCount(tags, ctx.sellsToSectors);
     if (sellMatches > 0) {
-      const add = diminishing(sellMatches, 2, 1);
+      const add = overTagged ? 1 : diminishing(sellMatches, 2, 1);
       s += add;
-      reasons.push(`sells-to sector ×${sellMatches} (+${add})`);
+      reasons.push(overTagged
+        ? `broad sells-to overlap ×${sellMatches} (+${add})`
+        : `sells-to sector ×${sellMatches} (+${add})`);
     }
   }
 
@@ -112,9 +130,10 @@ export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
     reasons.push("location (+1)");
   }
 
-  // Specialist: a sector-SPECIFIC row that matches the user's own industry. This is
-  // the genuine domain expert the breadth-driven scorer used to bury under generalists.
-  const specialist = !row.sector_agnostic && ownMatches > 0;
+  // Specialist: a sector-SPECIFIC (not agnostic, not over-tagged) row that matches the
+  // user's own industry — the genuine domain expert the breadth-driven scorer used to
+  // bury under generalists. An over-tagged row claims too many sectors to count as focused.
+  const specialist = !row.sector_agnostic && !overTagged && ownMatches > 0;
   if (specialist) {
     s += SPECIALIST_BONUS;
     reasons.push(`industry specialist (+${SPECIALIST_BONUS})`);

@@ -60,6 +60,44 @@ test("breadth has diminishing returns (3 matched sectors is not 3x a single matc
   assert.equal(threeTags.score, 5.25);
 });
 
+test("over-tagged 'matches everyone' row is demoted below a focused specialist (B8)", () => {
+  // ADMA-shaped: a marketing association tagged across 8 sectors (two overlap the user's).
+  const adma = { id: "adma", sector_agnostic: false, sector_tags: [
+    "administrative-and-support-services", "construction", "education", "entertainment-providers",
+    "financial-services", "government-administration", "technology-information-and-media", "utilities",
+  ] };
+  const broad = scoreRow(adma, {}, CTX);
+  const expert = scoreRow(aiExpert, {}, CTX);
+  assert.ok(!broad.specialist, "an 8-sector row must not be flagged specialist");
+  assert.ok(broad.reasons.some((r) => r.startsWith("broad sector overlap")), "match scored as broad overlap");
+  assert.ok(!broad.reasons.some((r) => r.startsWith("industry match")), "no genuine industry-match breadth points");
+  assert.ok(expert.score > broad.score, `focused expert ${expert.score} must beat over-tagged ${broad.score}`);
+});
+
+test("over-tag threshold: 5 sectors still specialist, 6 is demoted", () => {
+  const five = { id: "5", sector_agnostic: false, sector_tags: [
+    "technology-information-and-media", "construction", "education", "utilities", "financial-services",
+  ] };
+  const six = { id: "6", sector_agnostic: false, sector_tags: [
+    "technology-information-and-media", "construction", "education", "utilities", "financial-services", "entertainment-providers",
+  ] };
+  const a = scoreRow(five, {}, CTX);
+  const b = scoreRow(six, {}, CTX);
+  assert.ok(a.specialist, "5-tag row is still a specialist");
+  assert.ok(!b.specialist, "6-tag row is demoted (over-tagged)");
+  assert.ok(a.score > b.score, `5-tag ${a.score} should outscore 6-tag ${b.score}`);
+});
+
+test("over-tag demotion also dampens the sells-to (buyer) surface", () => {
+  const broadBuyer = { id: "bb", sector_agnostic: false, sector_tags: [
+    "construction", "professional-services", "oil-gas-and-mining",
+    "transportation-logistics-supply-chain-and-storage", "education", "utilities",
+  ] };
+  const s = scoreRow(broadBuyer, { applySellsTo: true }, CTX);
+  assert.ok(s.reasons.some((r) => r.startsWith("broad sells-to overlap")), "buyer overlap scored as broad");
+  assert.ok(!s.reasons.some((r) => r.startsWith("sells-to sector ×")), "no genuine sells-to breadth points");
+});
+
 test("sells-to (buyers' industry) only counts on buyer-facing surfaces, not for providers/mentors", () => {
   const miningProvider = { id: "m", sector_agnostic: false, sector_tags: ["oil-gas-and-mining"] };
   // As a service provider (default applySellsTo undefined/false): you sell to mining,

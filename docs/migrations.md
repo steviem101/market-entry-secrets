@@ -23,6 +23,17 @@
    Supabase integration check on the PR before assuming it's live — a red migration step
    means it did NOT apply. `supabase/migrations_archive/` is historical reference only; the
    CLI ignores it. Never move a file from the archive back into `supabase/migrations/`.
+5. **Data-seed migrations must be self-sufficient and idempotent.** Preview branches
+   replay every migration against an **empty** database, so a seed that references a
+   prod-only row by FK (a category id, sector, location…) applies fine to prod and then
+   turns every PR's Migrations check red. Upsert FK targets first and use
+   `ON CONFLICT ... DO NOTHING` (see `20260704155252` for the pattern — and for what it
+   looks like when this rule is skipped).
+6. **Editing the CONTENT of an already-applied migration is allowed only for idempotent
+   replay-safety fixes that cannot alter prod** (e.g. adding the guard from rule 5).
+   Prod never re-runs an applied version, so such edits affect fresh replays (previews,
+   local resets) only. Anything that would change prod schema/data belongs in a NEW
+   migration — never smuggle real changes into an applied file.
 
 ## Current state (post re-baseline)
 
