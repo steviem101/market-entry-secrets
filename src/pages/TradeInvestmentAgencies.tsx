@@ -41,13 +41,19 @@ const TradeInvestmentAgencies = () => {
       agency.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (a.tagline && a.tagline.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesLocation = selectedLocation === "all" || agency.location?.toLowerCase().includes(selectedLocation.toLowerCase());
+    // Filter values are raw slugs. Fall back to a normalised comparison so old
+    // bookmarked links that carried the prettified label (e.g. ?type=Trade%20Agency)
+    // still match after the switch to slug-based values.
+    const normalise = (v: string) => v.replace(/_/g, ' ').toLowerCase();
     const matchesSector = selectedSector === "all" ||
       (a.sectors_supported && (
         a.sectors_supported.includes('all') ||
-        a.sectors_supported.includes(selectedSector)
+        a.sectors_supported.includes(selectedSector) ||
+        a.sectors_supported.some((s: string) => normalise(s) === normalise(selectedSector))
       ));
     const matchesType = selectedType === "all" ||
-      a.organisation_type === selectedType;
+      a.organisation_type === selectedType ||
+      (a.organisation_type && normalise(a.organisation_type) === normalise(selectedType));
     const matchesCategory = selectedCategory === "all" ||
       (a.category_slug && a.category_slug === selectedCategory);
     return matchesSearch && matchesLocation && matchesSector && matchesType && matchesCategory;
