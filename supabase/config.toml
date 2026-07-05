@@ -132,3 +132,10 @@ verify_jwt = false
 # x-internal-secret == KB_SYNC_SECRET (same pattern as process-email-queue). Must
 # stay false or the gateway rejects the cron POST (no JWT) before the function runs.
 verify_jwt = false
+
+[functions.sitemap]
+# Public DB-driven sitemap (MES-79 / SEO-03). Must be fetchable by search-engine
+# crawlers (Googlebot, Bingbot) with no auth header at all, so verify_jwt = false —
+# with true, the API gateway would reject the crawler's anonymous GET before the
+# function runs. Reads with the anon key only, so RLS decides visibility.
+verify_jwt = false
