@@ -1,4 +1,12 @@
 -- Long-form guide: Market Entry Services in Australia
+-- Preview-safety: the category below exists as prod data only, so replaying this
+-- migration on a data-less preview branch broke the FK. Upsert it first (no-op on
+-- prod, where this migration is already recorded as applied and never re-runs).
+INSERT INTO public.content_categories (id, name, description, color, icon)
+VALUES ('9bace3d9-8ba3-4961-a6ce-6de1d81b364b', 'Market Entry Guides',
+        'Step-by-step guides for entering the Australian market', 'text-blue-600', 'BookOpen')
+ON CONFLICT (id) DO NOTHING;
+
 INSERT INTO public.content_items
   (id, slug, title, subtitle, category_id, content_type, status, featured,
    read_time, publish_date, meta_description, sector_tags, sector_agnostic, tldr, style_version)
