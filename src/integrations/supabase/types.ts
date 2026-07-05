@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -3892,42 +3892,57 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          company_name: string | null
+          country: string | null
           created_at: string
           first_name: string | null
           id: string
           is_email_subscribed: boolean | null
           last_name: string | null
           location: string | null
+          onboarding_completed: boolean
           stripe_customer_id: string | null
+          target_market: string | null
           updated_at: string
+          use_case: string | null
           username: string | null
           website: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          company_name?: string | null
+          country?: string | null
           created_at?: string
           first_name?: string | null
           id: string
           is_email_subscribed?: boolean | null
           last_name?: string | null
           location?: string | null
+          onboarding_completed?: boolean
           stripe_customer_id?: string | null
+          target_market?: string | null
           updated_at?: string
+          use_case?: string | null
           username?: string | null
           website?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          company_name?: string | null
+          country?: string | null
           created_at?: string
           first_name?: string | null
           id?: string
           is_email_subscribed?: boolean | null
           last_name?: string | null
           location?: string | null
+          onboarding_completed?: boolean
           stripe_customer_id?: string | null
+          target_market?: string | null
           updated_at?: string
+          use_case?: string | null
           username?: string | null
           website?: string | null
         }
