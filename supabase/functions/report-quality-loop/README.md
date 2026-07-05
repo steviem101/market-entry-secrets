@@ -134,11 +134,22 @@ expired Notion token can't silently strand accepted proposals).
 Operational notes:
 - The on-demand `sync_notion` mode works even while the scoring loop's routing flag is
   disabled — ticketing accepted proposals doesn't require Anthropic-spending scoring.
-- On deadline-hit (partial) scheduled runs the sweep is deferred to the next cycle so it
-  can't push the function into the edge gateway kill window; Notion calls are bounded by
-  a 10s timeout for the same reason.
+- **Claim protocol:** rows are atomically claimed (`fix_ref = "claim:<iso>:<rand>"`)
+  before any ticket is created, so overlapping sweeps (manual + scheduled) can't
+  double-ticket; claims stranded by a dead sweep are recovered after ~15 min. Tickets
+  list at most 90 proposals — overflow rows are released and ticketed on the next sweep,
+  never silently dropped.
+- **Budgeted:** the sweep respects the run's wall-clock budget (deferring remaining
+  groups) and each Notion call has a 10s timeout, so it can't push the function into the
+  edge gateway kill window; deadline-hit runs skip it entirely.
+- **Observable:** the sweep outcome (created/ticketed/deferred/errors) is recorded in
+  the run's `automation_runs.metadata.notion_sweep` as well as posted to Slack, so an
+  expired Notion token is queryable even if the Slack warning fails.
 - Re-decisions: if a proposal is rejected *after* it was ticketed, the ticket keeps
   listing it (`fix_ref` stays as provenance) — prune the ticket manually if it matters.
+- Button clicks: decisions post in-channel (audit trail); errors and allowlist
+  rejections post ephemerally to the clicker only. `evidence.slack_review` records both
+  the display name (`by`) and the immutable Slack user id (`by_id`).
 
 ### Slack app setup for the buttons (one-time)
 
