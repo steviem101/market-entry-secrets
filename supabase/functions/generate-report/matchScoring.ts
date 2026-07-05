@@ -343,6 +343,37 @@ export function dedupeByKey<T>(rows: T[], keyOf: (r: T) => string): T[] {
 }
 
 /**
+ * Cross-SECTION de-dupe (Stage 7 bug B10). `dedupeByKey` collapses duplicates WITHIN a
+ * single section; this collapses them ACROSS sections. Given `groups` ordered by section
+ * priority (highest first), it removes from each group any row whose key already appeared
+ * in an earlier (higher-priority) group, so the same entity renders in exactly one section.
+ *
+ * Why it's needed: an accelerator like "Stone & Chalk" lives in innovation_ecosystem AND
+ * investors; a person like "Aaron Birkby" is both a mentor and an investor. Without this,
+ * they render as cards in two different sections of the same report. First (highest-priority)
+ * section keeps the entity. Within-group order is preserved; empty-keyed rows are never
+ * collapsed. Pure; returns new arrays (no mutation).
+ */
+export function pruneAcrossGroups<T>(groups: T[][], keyOf: (r: T) => string): T[][] {
+  const seen = new Set<string>();
+  return (groups || []).map((group) => {
+    const kept: T[] = [];
+    for (const r of group || []) {
+      const k = keyOf(r);
+      if (k && seen.has(k)) continue; // claimed by a higher-priority section
+      kept.push(r);
+    }
+    // Claim this group's keys only AFTER filtering, so an intra-group duplicate isn't
+    // dropped here (that's dedupeByKey's job on the section's own combined pool).
+    for (const r of kept) {
+      const k = keyOf(r);
+      if (k) seen.add(k);
+    }
+    return kept;
+  });
+}
+
+/**
  * Merge two candidate pools (e.g. array-overlap `primary` + semantic `secondary`),
  * dedupe by id (primary wins), then rank the UNION through the rebalanced scorer +
  * selection rules. This is the key to making the rebalance govern: semantic search
