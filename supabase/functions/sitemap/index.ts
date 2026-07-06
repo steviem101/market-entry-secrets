@@ -21,6 +21,8 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+type Db = ReturnType<typeof createClient>;
+
 // The site whose *pages* the sitemap points at (never the Supabase host).
 const SITE_ORIGIN = "https://marketentrysecrets.com";
 
@@ -29,14 +31,26 @@ const SITE_ORIGIN = "https://marketentrysecrets.com";
 // silently truncated by PostgREST's default 1,000-row limit (drift = bug).
 const MAX_ROWS = 50000;
 
-type Row = { slug: string | null; updated_at?: string | null; created_at?: string | null };
+type Row = { slug: string | null; updated_at?: string | null };
+
+// deno-lint-ignore no-explicit-any
+type Query = any; // the PostgREST filter builder; kept loose for chaining.
+
+// A section is one or more table reads (taxonomy spans three). Each source
+// declares its table, the page path for a slug, and any publish/visibility
+// filter that mirrors the site's RLS + published semantics. This is the single
+// place each URL shape is defined — no duplicated path lambdas.
+interface Source {
+  table: string;
+  path: (slug: string) => string;
+  filter?: (q: Query) => Query;
+}
 
 interface Section {
   key: string;
   priority: string;
   changefreq: string;
-  path: (slug: string) => string;
-  fetch: (db: ReturnType<typeof createClient>) => Promise<UrlEntry[]>;
+  sources: Source[];
 }
 
 interface UrlEntry {
@@ -51,196 +65,144 @@ const xmlEscape = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 
-// Build UrlEntry[] from a simple {slug, updated_at} table read.
-async function rowsToEntries(
-  rows: Row[] | null,
-  path: (slug: string) => string,
-): Promise<UrlEntry[]> {
-  return (rows ?? [])
+const rowsToEntries = (rows: Row[] | null, path: (slug: string) => string): UrlEntry[] =>
+  (rows ?? [])
     .filter((r) => r.slug && r.slug.trim() !== "")
     .map((r) => ({
       loc: `${SITE_ORIGIN}${path(r.slug as string)}`,
-      lastmod: isoDate(r.updated_at ?? r.created_at),
+      lastmod: isoDate(r.updated_at),
     }));
-}
 
 // --- Section definitions -----------------------------------------------------
 // Filters mirror the site's RLS + published semantics so the sitemap lists only
-// pages that actually render for an anonymous visitor.
+// pages that actually render for an anonymous visitor. Case studies live ONLY
+// under /case-studies/ (audit: they were double-listed under /content/).
 
 const SECTIONS: Section[] = [
   {
     key: "providers",
     priority: "0.8",
     changefreq: "weekly",
-    path: (s) => `/service-providers/${s}`,
-    fetch: async (db) => {
-      const { data, error } = await db
-        .from("service_providers")
-        .select("slug, updated_at")
-        .not("slug", "is", null)
-        .limit(MAX_ROWS);
-      if (error) throw error;
-      return rowsToEntries(data as Row[], (s) => `/service-providers/${s}`);
-    },
+    sources: [{ table: "service_providers", path: (s) => `/service-providers/${s}` }],
   },
   {
     key: "mentors",
     priority: "0.7",
     changefreq: "weekly",
-    // community_members has no category_slug column, so every mentor resolves
-    // under the default "experts" category (matches MentorProfile canonical).
-    path: (s) => `/mentors/experts/${s}`,
-    fetch: async (db) => {
-      const { data, error } = await db
-        .from("community_members_public") // anon-safe view (no PII)
-        .select("slug, updated_at")
-        .eq("is_active", true)
-        .not("slug", "is", null)
-        .limit(MAX_ROWS);
-      if (error) throw error;
-      return rowsToEntries(data as Row[], (s) => `/mentors/experts/${s}`);
-    },
+    // community_members(_public) has no category_slug column, so every mentor
+    // resolves under the default "experts" category (matches MentorProfile).
+    sources: [{
+      table: "community_members_public", // anon-safe view (no PII)
+      path: (s) => `/mentors/experts/${s}`,
+      filter: (q) => q.eq("is_active", true),
+    }],
   },
   {
     key: "events",
     priority: "0.7",
     changefreq: "weekly",
-    path: (s) => `/events/${s}`,
-    fetch: async (db) => {
-      const { data, error } = await db
-        .from("events")
-        .select("slug, updated_at")
-        .eq("status", "approved") // mirrors events_public_read RLS
-        .not("slug", "is", null)
-        .limit(MAX_ROWS);
-      if (error) throw error;
-      return rowsToEntries(data as Row[], (s) => `/events/${s}`);
-    },
+    sources: [{
+      table: "events",
+      path: (s) => `/events/${s}`,
+      filter: (q) => q.eq("status", "approved"), // mirrors events_public_read RLS
+    }],
   },
   {
     key: "content",
     priority: "0.7",
     changefreq: "monthly",
-    path: (s) => `/content/${s}`,
-    fetch: async (db) => {
-      // Non-case-study published content only. Case studies are served ONLY
-      // under /case-studies/ (audit: they were double-listed here).
-      const { data, error } = await db
-        .from("content_items")
-        .select("slug, updated_at")
-        .eq("status", "published")
-        .neq("content_type", "case_study")
-        .not("slug", "is", null)
-        .limit(MAX_ROWS);
-      if (error) throw error;
-      return rowsToEntries(data as Row[], (s) => `/content/${s}`);
-    },
+    sources: [{
+      table: "content_items",
+      path: (s) => `/content/${s}`,
+      filter: (q) => q.eq("status", "published").neq("content_type", "case_study"),
+    }],
   },
   {
     key: "case-studies",
     priority: "0.8",
     changefreq: "monthly",
-    path: (s) => `/case-studies/${s}`,
-    fetch: async (db) => {
-      const { data, error } = await db
-        .from("content_items")
-        .select("slug, updated_at")
-        .eq("status", "published")
-        .eq("content_type", "case_study")
-        .not("slug", "is", null)
-        .limit(MAX_ROWS);
-      if (error) throw error;
-      return rowsToEntries(data as Row[], (s) => `/case-studies/${s}`);
-    },
+    sources: [{
+      table: "content_items",
+      path: (s) => `/case-studies/${s}`,
+      filter: (q) => q.eq("status", "published").eq("content_type", "case_study"),
+    }],
   },
   {
     key: "investors",
     priority: "0.6",
     changefreq: "monthly",
-    path: (s) => `/investors/${s}`,
-    fetch: async (db) => {
-      const { data, error } = await db
-        .from("investors_public") // anon-safe view (no PII)
-        .select("slug, updated_at")
-        .not("slug", "is", null)
-        .limit(MAX_ROWS);
-      if (error) throw error;
-      return rowsToEntries(data as Row[], (s) => `/investors/${s}`);
-    },
+    sources: [{ table: "investors_public", path: (s) => `/investors/${s}` }], // anon-safe view
   },
   {
     key: "agencies",
     priority: "0.7",
     changefreq: "monthly",
-    path: (s) => `/government-support/${s}`,
-    fetch: async (db) => {
-      const { data, error } = await db
-        .from("trade_investment_agencies")
-        .select("slug, updated_at")
-        .eq("is_active", true)
-        .not("slug", "is", null)
-        .limit(MAX_ROWS);
-      if (error) throw error;
-      return rowsToEntries(data as Row[], (s) => `/government-support/${s}`);
-    },
+    sources: [{
+      table: "trade_investment_agencies",
+      path: (s) => `/government-support/${s}`,
+      filter: (q) => q.eq("is_active", true),
+    }],
   },
   {
     key: "innovation",
     priority: "0.6",
     changefreq: "monthly",
-    path: (s) => `/innovation-ecosystem/${s}`,
-    fetch: async (db) => {
-      const { data, error } = await db
-        .from("innovation_ecosystem")
-        .select("slug, updated_at")
-        .not("slug", "is", null)
-        .limit(MAX_ROWS);
-      if (error) throw error;
-      return rowsToEntries(data as Row[], (s) => `/innovation-ecosystem/${s}`);
-    },
+    sources: [{ table: "innovation_ecosystem", path: (s) => `/innovation-ecosystem/${s}` }],
   },
   {
     key: "leads",
     priority: "0.6",
     changefreq: "weekly",
-    path: (s) => `/leads/${s}`,
-    fetch: async (db) => {
-      const { data, error } = await db
-        .from("lead_databases")
-        .select("slug, updated_at")
-        .eq("status", "active")
-        .not("slug", "is", null)
-        .limit(MAX_ROWS);
-      if (error) throw error;
-      return rowsToEntries(data as Row[], (s) => `/leads/${s}`);
-    },
+    sources: [{
+      table: "lead_databases",
+      path: (s) => `/leads/${s}`,
+      filter: (q) => q.eq("status", "active"),
+    }],
   },
   {
     key: "taxonomy",
     priority: "0.7",
     changefreq: "weekly",
-    path: (s) => s, // mixed prefixes; handled inside fetch
-    fetch: async (db) => {
-      const [locations, countries, sectors] = await Promise.all([
-        db.from("locations").select("slug, updated_at").eq("active", true)
-          .not("slug", "is", null).limit(MAX_ROWS),
-        db.from("countries").select("slug, updated_at")
-          .not("slug", "is", null).limit(MAX_ROWS),
-        db.from("industry_sectors").select("slug, updated_at")
-          .not("slug", "is", null).limit(MAX_ROWS),
-      ]);
-      for (const r of [locations, countries, sectors]) {
-        if (r.error) throw r.error;
-      }
-      return [
-        ...await rowsToEntries(locations.data as Row[], (s) => `/locations/${s}`),
-        ...await rowsToEntries(countries.data as Row[], (s) => `/countries/${s}`),
-        ...await rowsToEntries(sectors.data as Row[], (s) => `/sectors/${s}`),
-      ];
-    },
+    sources: [
+      { table: "locations", path: (s) => `/locations/${s}`, filter: (q) => q.eq("active", true) },
+      { table: "countries", path: (s) => `/countries/${s}` },
+      { table: "industry_sectors", path: (s) => `/sectors/${s}` },
+    ],
   },
 ];
+
+// Base read for a source: published/visible rows with a non-empty slug. Used
+// both to build the full URL list and (with an order+limit) the section lastmod.
+const baseQuery = (db: Db, source: Source): Query => {
+  const q = db.from(source.table).select("slug, updated_at").not("slug", "is", null);
+  return source.filter ? source.filter(q) : q;
+};
+
+// Full URL list for a section (all its sources).
+async function fetchEntries(db: Db, section: Section): Promise<UrlEntry[]> {
+  const out: UrlEntry[] = [];
+  for (const source of section.sources) {
+    const { data, error } = await baseQuery(db, source).limit(MAX_ROWS);
+    if (error) throw error;
+    out.push(...rowsToEntries(data as Row[], source.path));
+  }
+  return out;
+}
+
+// Cheap freshness signal for the index: the newest updated_at across the
+// section's sources — one row per source, not the whole table.
+async function fetchLastmod(db: Db, section: Section): Promise<string | undefined> {
+  let latest: string | undefined;
+  for (const source of section.sources) {
+    const { data, error } = await baseQuery(db, source)
+      .order("updated_at", { ascending: false, nullsFirst: false })
+      .limit(1);
+    if (error) throw error;
+    const d = isoDate((data?.[0] as Row | undefined)?.updated_at);
+    if (d && (!latest || d > latest)) latest = d;
+  }
+  return latest;
+}
 
 // Static hub + informational pages. Excludes redirect aliases (/community,
 // /trade-investment-agencies) and private/auth routes (handled by SEO-05 noindex).
@@ -285,9 +247,7 @@ function renderUrlset(
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }
 
-function renderIndex(
-  children: { loc: string; lastmod?: string }[],
-): string {
+function renderIndex(children: { loc: string; lastmod?: string }[]): string {
   const sitemaps = children
     .map((c) => {
       const parts = [`<loc>${xmlEscape(c.loc)}</loc>`];
@@ -346,7 +306,7 @@ Deno.serve(async (req: Request) => {
     if (section) {
       const def = SECTIONS.find((s) => s.key === section);
       if (!def) return new Response("Unknown sitemap section", { status: 404 });
-      const entries = (await def.fetch(db)).map((e) => ({
+      const entries = (await fetchEntries(db, def)).map((e) => ({
         ...e,
         priority: def.priority,
         changefreq: def.changefreq,
@@ -354,17 +314,20 @@ Deno.serve(async (req: Request) => {
       return new Response(req.method === "HEAD" ? null : renderUrlset(entries), { headers: XML_HEADERS });
     }
 
-    // No section → the sitemap index. Fetch every section so each child's
-    // <lastmod> reflects the freshest row it contains.
+    // No section → the sitemap index. Compute each child's <lastmod> from a
+    // single freshest row (not a full-table read). A section that fails to
+    // report a lastmod is still listed — one broken section must not 502 the
+    // whole index and blank out every other section for crawlers.
     const results = await Promise.all(
       SECTIONS.map(async (s) => {
-        const entries = await s.fetch(db);
-        const lastmod = entries
-          .map((e) => e.lastmod)
-          .filter(Boolean)
-          .sort()
-          .pop();
-        return { key: s.key, lastmod };
+        try {
+          return { key: s.key, lastmod: await fetchLastmod(db, s) };
+        } catch (err) {
+          console.error(
+            `sitemap: lastmod failed for section '${s.key}': ${err instanceof Error ? err.message : String(err)}`,
+          );
+          return { key: s.key, lastmod: undefined };
+        }
       }),
     );
 
