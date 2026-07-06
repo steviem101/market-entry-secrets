@@ -13,7 +13,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   type FilterSpec,
   type FilterValues,
-  defaultFilters,
+  clearedFilters,
   hasActiveFilters as computeHasActiveFilters,
   parseFilters,
   parsePage,
@@ -60,8 +60,8 @@ export function useDirectoryFilters(spec: FilterSpec): UseDirectoryFiltersResult
   );
 
   const clearAll = useCallback(() => {
-    commit(defaultFilters(spec), 1);
-  }, [spec, commit]);
+    commit(clearedFilters(spec, filters), 1);
+  }, [spec, filters, commit]);
 
   const hasActiveFilters = useMemo(
     () => computeHasActiveFilters(spec, filters),

@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 
 import {
   type FilterSpec,
+  clearedFilters,
   defaultFilters,
   parseFilters,
   parsePage,
@@ -18,6 +19,14 @@ const SPEC: FilterSpec = {
   search: { param: "search", default: "" },
   type: { param: "type", default: "all" },
   location: { param: "location", default: "all" },
+};
+
+// Spec with presentation-only dimensions (sort/view).
+const PRES_SPEC: FilterSpec = {
+  search: { param: "search", default: "" },
+  outcome: { param: "outcome", default: "all" },
+  sort: { param: "sort", default: "recent", presentation: true },
+  view: { param: "view", default: "grid", presentation: true },
 };
 
 test("defaultFilters returns every dimension at its default", () => {
@@ -68,4 +77,29 @@ test("parsePage clamps to 1 for missing, zero, and negative values", () => {
 test("hasActiveFilters reflects whether any dimension differs from default", () => {
   assert.equal(hasActiveFilters(SPEC, defaultFilters(SPEC)), false);
   assert.equal(hasActiveFilters(SPEC, { search: "", type: "vc", location: "all" }), true);
+});
+
+test("hasActiveFilters ignores presentation dimensions (sort/view)", () => {
+  // Only sort + view changed → not considered "active filters".
+  const values = { search: "", outcome: "all", sort: "views", view: "list" };
+  assert.equal(hasActiveFilters(PRES_SPEC, values), false);
+  // A real filter changed → active.
+  assert.equal(hasActiveFilters(PRES_SPEC, { ...values, outcome: "successful" }), true);
+});
+
+test("clearedFilters resets filters but preserves presentation dimensions", () => {
+  const current = { search: "acme", outcome: "successful", sort: "views", view: "list" };
+  assert.deepEqual(clearedFilters(PRES_SPEC, current), {
+    search: "",
+    outcome: "all",
+    sort: "views", // preserved
+    view: "list", // preserved
+  });
+});
+
+test("presentation dimensions still serialise to the URL when non-default", () => {
+  const params = serialiseFilters(PRES_SPEC, { search: "", outcome: "all", sort: "views", view: "list" });
+  assert.equal(params.get("sort"), "views");
+  assert.equal(params.get("view"), "list");
+  assert.equal(params.has("outcome"), false); // default omitted
 });

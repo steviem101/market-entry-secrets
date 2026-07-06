@@ -19,6 +19,12 @@ export interface FilterFieldSpec {
   param: string;
   /** Value treated as unset — omitted from the URL. Usually "all"; "" for search. */
   default: string;
+  /**
+   * Presentation-only dimension (sort order, grid/list view): still URL-synced,
+   * but excluded from `hasActiveFilters` and NOT reset by `clearAll` — clearing
+   * *filters* shouldn't change how the user chose to view or order results.
+   */
+  presentation?: boolean;
 }
 
 /** Maps a stable state key to its URL param + default sentinel. */
@@ -74,7 +80,21 @@ export function serialiseFilters(
   return params;
 }
 
-/** True when any dimension differs from its default sentinel. */
+/** True when any non-presentation dimension differs from its default sentinel. */
 export function hasActiveFilters(spec: FilterSpec, values: FilterValues): boolean {
-  return Object.keys(spec).some((key) => values[key] !== spec[key].default);
+  return Object.keys(spec).some(
+    (key) => !spec[key].presentation && values[key] !== spec[key].default,
+  );
+}
+
+/**
+ * The "clear filters" state: reset every filter dimension to its default while
+ * preserving presentation dimensions (sort/view) at their current value.
+ */
+export function clearedFilters(spec: FilterSpec, current: FilterValues): FilterValues {
+  const out: FilterValues = {};
+  for (const key of Object.keys(spec)) {
+    out[key] = spec[key].presentation ? current[key] : spec[key].default;
+  }
+  return out;
 }
