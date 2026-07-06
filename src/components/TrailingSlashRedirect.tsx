@@ -14,7 +14,9 @@ export const TrailingSlashRedirect = () => {
 
   useEffect(() => {
     if (pathname.length > 1 && pathname.endsWith("/")) {
-      const normalized = pathname.replace(/\/+$/, "");
+      // `|| "/"` guards an all-slashes path (e.g. "//"), which would otherwise
+      // strip to "" and make navigate() a relative no-op (MES-80 review).
+      const normalized = pathname.replace(/\/+$/, "") || "/";
       navigate(`${normalized}${search}${hash}`, { replace: true });
     }
   }, [pathname, search, hash, navigate]);

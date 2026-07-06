@@ -10,12 +10,6 @@
 // only ever see (and index) one URL per entity. Redirects, never 404s, so
 // existing bookmarks and shared links keep working.
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export const isUuid = (value?: string | null): boolean =>
-  !!value && UUID_RE.test(value);
-
 /**
  * Returns the path to redirect to when `param` isn't the entity's canonical
  * slug, or null when it already is (or when no canonical slug exists — e.g. a

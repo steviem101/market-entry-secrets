@@ -1,4 +1,4 @@
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, useLocation, Navigate } from "react-router-dom";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { canonicalSlugRedirect } from "@/lib/canonicalRedirect";
 import { FreemiumGate } from "@/components/FreemiumGate";
@@ -15,6 +15,7 @@ import {
 
 const ServiceProviderPage = () => {
   const { providerSlug } = useParams<{ providerSlug: string }>();
+  const { search, hash } = useLocation();
   const { data: provider, isLoading, error } = useServiceProviderBySlug(providerSlug || "");
 
   const { data: reviews = [] } = useServiceProviderReviews(provider?.id || "");
@@ -47,7 +48,7 @@ const ServiceProviderPage = () => {
     provider.slug,
     (s) => `/service-providers/${s}`,
   );
-  if (redirectTo) return <Navigate to={redirectTo} replace />;
+  if (redirectTo) return <Navigate to={`${redirectTo}${search}${hash}`} replace />;
 
   const pageTitle = provider.meta_title || `${provider.name} | Service Providers | Market Entry Secrets`;
   const pageDescription = provider.meta_description || provider.tagline || provider.description?.slice(0, 160) || "";

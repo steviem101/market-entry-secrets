@@ -1,4 +1,4 @@
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, useLocation, Navigate } from "react-router-dom";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { canonicalSlugRedirect } from "@/lib/canonicalRedirect";
 import { FreemiumGate } from "@/components/FreemiumGate";
@@ -10,6 +10,7 @@ import { useInvestorBySlug, useRelatedInvestors } from "@/hooks/useInvestors";
 
 const InvestorPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { search, hash } = useLocation();
   const { data: investor, isLoading, error } = useInvestorBySlug(slug || "");
   const { data: relatedInvestors = [] } = useRelatedInvestors(
     investor?.id || "",
@@ -38,7 +39,7 @@ const InvestorPage = () => {
     investor.slug,
     (s) => `/investors/${s}`,
   );
-  if (redirectTo) return <Navigate to={redirectTo} replace />;
+  if (redirectTo) return <Navigate to={`${redirectTo}${search}${hash}`} replace />;
 
   return (
     <>

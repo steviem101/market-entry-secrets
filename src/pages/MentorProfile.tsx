@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, useLocation, Link, Navigate } from "react-router-dom";
 import {
   MapPin,
   Globe,
@@ -71,6 +71,7 @@ const MentorProfile = () => {
     categorySlug: string;
     mentorSlug: string;
   }>();
+  const { search, hash } = useLocation();
   const { data: mentor, isLoading, error } = useMentorBySlug(categorySlug, mentorSlug);
   const { data: experiences = [] } = useMentorExperience(mentor?.id);
   const { data: testimonials = [] } = useMentorTestimonials(mentor?.id);
@@ -134,7 +135,7 @@ const MentorProfile = () => {
   // so Google holds one URL per mentor.
   const canonicalCategory = mentor.category_slug || "experts";
   if (mentor.slug && (mentorSlug !== mentor.slug || categorySlug !== canonicalCategory)) {
-    return <Navigate to={`/mentors/${canonicalCategory}/${mentor.slug}`} replace />;
+    return <Navigate to={`/mentors/${canonicalCategory}/${mentor.slug}${search}${hash}`} replace />;
   }
 
   const metaTitle =
