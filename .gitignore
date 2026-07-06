@@ -57,3 +57,6 @@ scripts/__pycache__/
 australian_angel_investors_*.csv
 Accelerators.csv
 data/private/
+
+# Claude Code personal (non-shared) settings
+.claude/settings.local.json
