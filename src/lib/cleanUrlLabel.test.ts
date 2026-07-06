@@ -32,6 +32,18 @@ test("cleanUrlLabel: real text labels are left untouched", () => {
   assert.equal(cleanUrlLabel(""), "");
 });
 
+test("cleanUrlLabel: domain-like intentional link text is NOT mangled (regression)", () => {
+  // An intentional markdown link [Node.js](https://nodejs.org) has visible text
+  // "Node.js" — a bare word.tld token that is NOT a raw URL. It must render verbatim,
+  // not be lowercased/rewritten to "node.js". Only scheme/www.-prefixed URLs shorten.
+  assert.equal(cleanUrlLabel("Node.js"), "Node.js");
+  assert.equal(cleanUrlLabel("React.dev"), "React.dev");
+  assert.equal(cleanUrlLabel("Vue.js"), "Vue.js");
+  assert.equal(cleanUrlLabel("Web3.js"), "Web3.js");
+  // A bare host with no scheme/www is also left alone (already short; avoids case loss).
+  assert.equal(cleanUrlLabel("example.com"), "example.com");
+});
+
 test("cleanUrlLabel: query strings and ports resolve to clean host", () => {
   assert.equal(cleanUrlLabel("https://example.com/search?q=anz+market"), "example.com/search");
   assert.equal(cleanUrlLabel("https://www.example.com:8080/"), "example.com");

@@ -11,18 +11,21 @@
  * Pure module — no DOM, no I/O — unit-tested under `node --test`.
  */
 
-// A label is "URL-like" if it starts with a scheme or www., or is a bare
-// host.tld(/path). Deliberately conservative so real prose ("e.g. 3.5% APR",
-// "Section 4.2") is never mistaken for a URL.
-const URL_LIKE_RE = /^(?:https?:\/\/|www\.)\S+$|^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/\S*)?$/i;
+// Only a label that carries an explicit scheme or `www.` prefix is treated as a
+// raw URL to shorten. This is deliberately strict: an intentional link whose
+// visible text is a bare domain-like token — "Node.js", "React.dev", "Vue.js" —
+// must NOT be rewritten to "node.js". A genuine GFM autolink of a bare URL always
+// renders the scheme (http/https) or the www. prefix, so this still catches the
+// noise B1 is about while leaving product/library names as the author wrote them.
+const RAW_URL_RE = /^(?:https?:\/\/|www\.)\S+$/i;
 
 /**
- * If `label` looks like a raw URL, return a compact host-based label
- * (e.g. "example.com" or "example.com/reports"); otherwise return it unchanged.
+ * If `label` is a raw URL (scheme- or www.-prefixed), return a compact host-based
+ * label (e.g. "example.com" or "example.com/reports"); otherwise return it unchanged.
  */
 export function cleanUrlLabel(label: string): string {
   const raw = (label || "").trim();
-  if (!raw || !URL_LIKE_RE.test(raw)) return label;
+  if (!raw || !RAW_URL_RE.test(raw)) return label;
 
   // Normalise to something the URL parser accepts.
   const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
