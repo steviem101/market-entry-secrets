@@ -11,6 +11,7 @@ import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServ
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
+import { metaLine, recordCountLabel } from "./cardFields.ts";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
@@ -1318,7 +1319,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
 
     matches.events = eventResults.map((e: any) => ({
       ...e, name: e.title, link: e.slug ? `/events/${e.slug}` : "/events", linkLabel: "View Event",
-      subtitle: `${e.date} · ${e.location}`, tags: [e.category, e.type].filter(Boolean),
+      subtitle: metaLine([e.date, e.location]), tags: [e.category, e.type].filter(Boolean),
     }));
   } catch (e) { console.error("Events search error:", e); }
 
@@ -1373,7 +1374,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     matches.lead_databases = gatedLeads.map((l: any) => ({
       ...l, name: l.title, price: l.price_aud,
       link: l.slug ? `/leads/${l.slug}` : "/leads", linkLabel: "View Dataset",
-      subtitle: `${l.location ?? ""} · ${l.record_count ?? "?"} records`,
+      subtitle: metaLine([l.location, recordCountLabel(l.record_count)]),
       tags: (l.tags || []).slice(0, 3),
     }));
   } catch (e) { console.error("Lead databases search error:", e); }
@@ -1412,7 +1413,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     if (invErr) console.error("Investors query error:", invErr);
     matches.investors = rank(inv, { countryCol: "country" }, 8).map((i: any) => ({
       ...i, link: i.slug ? `/investors/${i.slug}` : "/investors", linkLabel: "View Investor",
-      subtitle: `${i.investor_type} · ${i.location}`,
+      subtitle: metaLine([i.investor_type, i.location]),
       tags: (i.stage_focus || []).slice(0, 3),
     }));
   } catch (e) { console.error("Investors search error:", e); }
@@ -1878,7 +1879,7 @@ async function generateReportInBackground(
     if (discoveredEvents.length > 0) {
       const discoveredEventMatches = discoveredEvents.map((e) => ({
         name: e.name,
-        subtitle: `${e.date} · ${e.location}`,
+        subtitle: metaLine([e.date, e.location]),
         tags: ["Web Discovery"],
         link: e.url,
         linkLabel: "View Event",
