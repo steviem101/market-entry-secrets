@@ -30,6 +30,8 @@ on:
       - "supabase/functions/generate-report/**"
       - "supabase/functions/scrape-company/**"
       - "supabase/functions/sitemap/**"
+      - "supabase/functions/generate-plan/**"
+      - "supabase/functions/admin-mentor-anonymity/**"
       - "supabase/functions/_shared/**"
       - ".github/workflows/deploy-edge-functions.yml"
 
@@ -59,3 +61,9 @@ jobs:
 
       - name: Deploy sitemap
         run: supabase functions deploy sitemap --project-ref "$PROJECT_REF"
+
+      - name: Deploy generate-plan
+        run: supabase functions deploy generate-plan --project-ref "$PROJECT_REF"
+
+      - name: Deploy admin-mentor-anonymity
+        run: supabase functions deploy admin-mentor-anonymity --project-ref "$PROJECT_REF"

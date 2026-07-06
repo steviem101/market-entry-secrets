@@ -1,0 +1,116 @@
+/**
+ * Pure display helpers for mentor identity masking.
+ *
+ * Identity data for anonymous mentors is already withheld server-side by the
+ * community_members_public view (alias name, masked headline, "Undisclosed"
+ * company, NULL image, empty experience_tiles, anon-<id> slug). These helpers
+ * cover the presentation layer on top of that: which heading to show and
+ * whether initials may be derived, so cards and the profile page mask
+ * consistently and never leak identity through a fallback path.
+ */
+
+export interface MentorIdentity {
+  name: string;
+  title: string;
+  is_anonymous: boolean;
+}
+
+/** Card/profile heading: anonymous mentors surface their masked headline. */
+export const mentorDisplayName = (m: MentorIdentity): string =>
+  m.is_anonymous ? m.title : m.name;
+
+/**
+ * Avatar initials. Returns null for anonymous mentors — callers render a
+ * neutral glyph (Globe) instead, never initials derived from any field.
+ */
+export const mentorInitials = (m: MentorIdentity): string | null => {
+  if (m.is_anonymous) return null;
+  return m.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+/**
+ * Origin-country and market-corridor codes are stored as snake_case slugs
+ * ("uk", "usa", "hong_kong", "other_asia"; corridors "uk-to-australia").
+ * These map them to presentable labels so the coarse geography we DO show
+ * for anonymous mentors doesn't read as raw database codes.
+ */
+const COUNTRY_LABELS: Record<string, { label: string; flag: string }> = {
+  australia: { label: "Australia", flag: "🇦🇺" },
+  new_zealand: { label: "New Zealand", flag: "🇳🇿" },
+  uk: { label: "UK", flag: "🇬🇧" },
+  usa: { label: "USA", flag: "🇺🇸" },
+  ireland: { label: "Ireland", flag: "🇮🇪" },
+  singapore: { label: "Singapore", flag: "🇸🇬" },
+  canada: { label: "Canada", flag: "🇨🇦" },
+  france: { label: "France", flag: "🇫🇷" },
+  germany: { label: "Germany", flag: "🇩🇪" },
+  china: { label: "China", flag: "🇨🇳" },
+  korea: { label: "South Korea", flag: "🇰🇷" },
+  japan: { label: "Japan", flag: "🇯🇵" },
+  india: { label: "India", flag: "🇮🇳" },
+  hong_kong: { label: "Hong Kong", flag: "🇭🇰" },
+  south_africa: { label: "South Africa", flag: "🇿🇦" },
+  other_asia: { label: "Asia", flag: "🌏" },
+  other_eu: { label: "Europe", flag: "🇪🇺" },
+};
+
+const countryKey = (raw: string): string =>
+  raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
+
+/** "uk" → "🇬🇧 UK". Unknown values pass through untouched. */
+export const countryLabel = (raw: string | null | undefined): string | null => {
+  if (!raw) return null;
+  const hit = COUNTRY_LABELS[countryKey(raw)];
+  return hit ? `${hit.flag} ${hit.label}` : raw;
+};
+
+/** Country name without the flag, for prose like alias suggestions. */
+export const countryName = (raw: string | null | undefined): string | null => {
+  if (!raw) return null;
+  return COUNTRY_LABELS[countryKey(raw)]?.label ?? null;
+};
+
+/** "uk-to-australia" → "🇬🇧 UK → 🇦🇺 Australia". */
+export const corridorLabel = (corridor: string): string | null => {
+  const [from, to] = corridor.split("-to-");
+  if (!from || !to) return null;
+  return `${countryLabel(from)} → ${countryLabel(to)}`;
+};
+
+/** "financial-services" → "Financial Services". */
+export const sectorTagLabel = (tag: string): string =>
+  tag.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+/**
+ * Anonymous mentors' masked location is the raw origin-country slug straight
+ * from the view (e.g. "uk"); named mentors keep their human-written location.
+ */
+export const mentorLocationLabel = (m: {
+  location: string | null;
+  is_anonymous: boolean;
+}): string | null =>
+  m.is_anonymous ? countryLabel(m.location) : m.location;
+
+/**
+ * Suggested anonymous alias for the admin marking UI, built only from
+ * non-identifying taxonomy: "UK International Founder", "Fintech Active
+ * Advisor". Keeps concurrently-anonymous mentors distinguishable without
+ * an admin having to invent a label from scratch.
+ */
+export const suggestAnonymousAlias = (m: {
+  archetype: string | null;
+  origin_country: string | null;
+  sector_tags: string[] | null;
+}): string => {
+  const base = m.archetype || "Verified Expert";
+  const origin = countryName(m.origin_country);
+  if (origin) return `${origin} ${base}`;
+  const sector = m.sector_tags?.[0];
+  if (sector) return `${sectorTagLabel(sector)} ${base}`;
+  return base;
+};

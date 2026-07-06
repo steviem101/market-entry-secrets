@@ -5,6 +5,13 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import type { Mentor } from "@/hooks/useMentors";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import {
+  mentorDisplayName,
+  mentorInitials,
+  mentorLocationLabel,
+  corridorLabel,
+  sectorTagLabel,
+} from "@/lib/mentorDisplay";
 import { DirectoryCard } from "@/components/directory/DirectoryCard";
 import { CardCTA } from "@/components/directory/CardCTA";
 
@@ -13,14 +20,6 @@ interface MentorCardProps {
   /** @deprecated warm intro now routes through the shared IntroRequestProvider. */
   onContact?: (mentor: Mentor) => void;
 }
-
-const getInitials = (name: string) =>
-  name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
 const AvailabilityBadge = ({ availability }: { availability: string | null }) => {
   if (!availability) return null;
@@ -68,7 +67,7 @@ const ExperienceTileItem = ({ tile }: { tile: { id?: string; name: string; logo?
 };
 
 const MentorCard = memo(({ mentor }: MentorCardProps) => {
-  const displayName = mentor.is_anonymous ? mentor.title : mentor.name;
+  const displayName = mentorDisplayName(mentor);
   const profileUrl = `/mentors/${mentor.category_slug || "experts"}/${mentor.slug || mentor.id}`;
 
   const experienceTiles = mentor.experience_tiles
@@ -104,7 +103,7 @@ const MentorCard = memo(({ mentor }: MentorCardProps) => {
                   alt={mentor.name}
                 />
                 <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                  {getInitials(mentor.name)}
+                  {mentorInitials(mentor)}
                 </AvatarFallback>
               </>
             )}
@@ -135,7 +134,7 @@ const MentorCard = memo(({ mentor }: MentorCardProps) => {
                   <MapPin className="w-3.5 h-3.5 mr-1" />
                   {mentor.location_city && mentor.location_state
                     ? `${mentor.location_city}, ${mentor.location_state}`
-                    : mentor.location}
+                    : mentorLocationLabel(mentor)}
                 </span>
                 <AvailabilityBadge availability={mentor.availability} />
               </div>
@@ -170,7 +169,8 @@ const MentorCard = memo(({ mentor }: MentorCardProps) => {
           : mentor.description}
       </p>
 
-      {/* Specialties */}
+      {/* Specialties — for anonymous mentors, pad with sector tags so the
+          masked card still communicates what they're strong in */}
       <div className="flex flex-wrap gap-1.5 mb-3">
         {mentor.specialties.slice(0, 3).map((specialty) => (
           <Badge key={specialty} variant="secondary" className="text-xs">
@@ -182,7 +182,30 @@ const MentorCard = memo(({ mentor }: MentorCardProps) => {
             +{mentor.specialties.length - 3} more
           </Badge>
         )}
+        {mentor.is_anonymous &&
+          mentor.specialties.length < 3 &&
+          (mentor.sector_tags || [])
+            .slice(0, 3 - mentor.specialties.length)
+            .map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {sectorTagLabel(tag)}
+              </Badge>
+            ))}
       </div>
+
+      {/* Market corridors, e.g. 🇬🇧 UK → 🇦🇺 Australia */}
+      {mentor.market_corridors && mentor.market_corridors.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {mentor.market_corridors.slice(0, 2).map((c) => {
+            const label = corridorLabel(c);
+            return label ? (
+              <span key={c} className="inline-flex items-center text-xs bg-muted px-1.5 py-0.5 rounded">
+                {label}
+              </span>
+            ) : null;
+          })}
+        </div>
+      )}
 
       {/* Markets served */}
       {mentor.markets_served && mentor.markets_served.length > 0 && (
