@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { KeyRound } from "lucide-react";
+import { NoIndex } from "@/components/common/NoIndex";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ const ResetPassword = () => {
 
   return (
     <div className="container mx-auto px-4 py-12">
+      <NoIndex />
       <div className="max-w-md mx-auto">
         <Card>
           <CardHeader className="text-center">

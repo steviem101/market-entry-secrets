@@ -1,0 +1,39 @@
+# X-Robots-Tag: noindex for private / semi-private routes (MES-81 / SEO-05).
+#
+# Defence-in-depth alongside the client-side <NoIndex /> meta tag: this header
+# reaches non-JS crawlers (GPTBot, ClaudeBot, CCBot, etc.) that never run the
+# React app and so never see the meta directive. Netlify/Lovable-style _headers
+# are matched by REQUEST PATH, so these apply even though every route is served
+# the same index.html shell.
+#
+# Only private routes are listed — NEVER add a public directory/content path
+# here or it would be deindexed. Keep in sync with the <NoIndex /> usages.
+
+# All report views: /report/shared/:token (private-by-obscurity) and
+# /report/:reportId (owner-only). Both must stay out of search.
+/report/*
+  X-Robots-Tag: noindex, nofollow
+
+/my-reports
+  X-Robots-Tag: noindex, nofollow
+
+/dashboard
+  X-Robots-Tag: noindex, nofollow
+
+/member-hub
+  X-Robots-Tag: noindex, nofollow
+
+/bookmarks
+  X-Robots-Tag: noindex, nofollow
+
+/mentor-connections
+  X-Robots-Tag: noindex, nofollow
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+
+/auth/*
+  X-Robots-Tag: noindex, nofollow
+
+/reset-password
+  X-Robots-Tag: noindex, nofollow

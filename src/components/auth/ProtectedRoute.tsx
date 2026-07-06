@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { AuthButton } from './AuthButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { NoIndex } from '@/components/common/NoIndex';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -12,11 +13,26 @@ interface ProtectedRouteProps {
   requireModerator?: boolean;
 }
 
-export const ProtectedRoute = ({ 
-  children, 
+/**
+ * Any route behind auth is private by definition, so it must never be indexed
+ * (MES-81 / SEO-05). NoIndex is emitted here — outside the auth branching — so
+ * the directive is present in every state: the loading skeleton, the sign-in
+ * fallback a logged-out crawler actually sees, and the authenticated content.
+ * (A crawler is always logged-out, so a noindex placed inside the children
+ * would never render for it.)
+ */
+export const ProtectedRoute = (props: ProtectedRouteProps) => (
+  <>
+    <NoIndex />
+    <ProtectedRouteContent {...props} />
+  </>
+);
+
+const ProtectedRouteContent = ({
+  children,
   fallbackMessage = "Please sign in to access this content.",
   requireAdmin = false,
-  requireModerator = false 
+  requireModerator = false
 }: ProtectedRouteProps) => {
   const { user, loading, isAdmin, isModerator } = useAuth();
 
