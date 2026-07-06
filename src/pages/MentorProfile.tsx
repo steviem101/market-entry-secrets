@@ -23,19 +23,12 @@ import { BookmarkButton } from "@/components/BookmarkButton";
 import { MentorContactModal } from "@/components/mentors/MentorContactModal";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import { domainToWebsite } from "@/lib/logoUtils";
+import { mentorDisplayName, mentorInitials } from "@/lib/mentorDisplay";
 import {
   useMentorBySlug,
   useMentorExperience,
   useMentorTestimonials,
 } from "@/hooks/useMentors";
-
-const getInitials = (name: string) =>
-  name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
 const AvailabilityBadge = ({ availability }: { availability: string | null }) => {
   if (!availability) return null;
@@ -129,9 +122,11 @@ const MentorProfile = () => {
     );
   }
 
+  const displayName = mentorDisplayName(mentor);
+
   const metaTitle =
     mentor.meta_title ||
-    `${mentor.name} | ${mentor.title} | Market Entry Secrets`;
+    `${displayName} | ${mentor.title} | Market Entry Secrets`;
   const metaDescription =
     mentor.meta_description ||
     mentor.tagline ||
@@ -142,7 +137,7 @@ const MentorProfile = () => {
     ...(mentor.category_slug
       ? [{ label: mentor.category_slug.replace(/-/g, " "), href: `/mentors/${mentor.category_slug}` }]
       : []),
-    { label: mentor.name },
+    { label: displayName },
   ];
 
   return (
@@ -155,7 +150,7 @@ const MentorProfile = () => {
         jsonLd={{
           type: "Person",
           data: {
-            name: mentor.name,
+            name: displayName,
             jobTitle: mentor.title,
             description: mentor.description,
             ...(mentor.company ? { worksFor: { "@type": "Organization", name: mentor.company } } : {}),
@@ -170,7 +165,7 @@ const MentorProfile = () => {
       <FreemiumGate
         contentType="mentors"
         itemId={mentor.id}
-        contentTitle={mentor.name}
+        contentTitle={displayName}
         contentDescription={mentor.tagline || mentor.description}
       >
 
@@ -195,10 +190,18 @@ const MentorProfile = () => {
         <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
           <div className="relative -mt-12 md:-mt-14">
             <Avatar className="w-24 h-24 md:w-28 md:h-28 border-4 border-background shadow-lg">
-              <AvatarImage src={mentor.avatar_url || mentor.image || undefined} alt={mentor.name} />
-              <AvatarFallback className="bg-primary/10 text-primary text-2xl md:text-3xl">
-                {getInitials(mentor.name)}
-              </AvatarFallback>
+              {mentor.is_anonymous ? (
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  <Globe className="w-10 h-10" />
+                </AvatarFallback>
+              ) : (
+                <>
+                  <AvatarImage src={mentor.avatar_url || mentor.image || undefined} alt={displayName} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-2xl md:text-3xl">
+                    {mentorInitials(mentor)}
+                  </AvatarFallback>
+                </>
+              )}
             </Avatar>
             {mentor.is_verified && (
               <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
@@ -211,7 +214,7 @@ const MentorProfile = () => {
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">{mentor.name}</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">{displayName}</h1>
                   {mentor.is_featured && (
                     <Badge className="bg-amber-500 hover:bg-amber-500 text-white">
                       <Star className="w-3 h-3 mr-1 fill-current" />
@@ -219,8 +222,10 @@ const MentorProfile = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-primary font-medium text-lg">{mentor.title}</p>
-                {mentor.company && (
+                {!mentor.is_anonymous && (
+                  <p className="text-primary font-medium text-lg">{mentor.title}</p>
+                )}
+                {!mentor.is_anonymous && mentor.company && (
                   <p className="text-muted-foreground">{mentor.company}</p>
                 )}
                 <div className="flex items-center gap-4 mt-2 flex-wrap">
@@ -241,7 +246,7 @@ const MentorProfile = () => {
                 <BookmarkButton
                   contentType="community_member"
                   contentId={mentor.id}
-                  title={mentor.name}
+                  title={displayName}
                   description={mentor.description}
                   metadata={{
                     title: mentor.title,
@@ -495,7 +500,7 @@ const MentorProfile = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Interested in connecting with {mentor.name}? Request a warm
+                  Interested in connecting with {displayName}? Request a warm
                   intro and we'll facilitate the connection.
                 </p>
                 <Button className="w-full" onClick={() => setShowContact(true)}>

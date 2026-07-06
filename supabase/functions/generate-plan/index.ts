@@ -91,6 +91,10 @@ Deno.serve(async (req: Request) => {
         supabase
           .from("community_members")
           .select("name, title, company")
+          .eq("is_active", true)
+          // Anonymous mentors must never surface by real name in generated
+          // plans — same exclusion generate-report applies to its mentor pool.
+          .eq("is_anonymous", false)
           .or(personaFilter("serves_personas"))
           .limit(10),
       ]);
