@@ -74,18 +74,38 @@ test("over-tagged 'matches everyone' row is demoted below a focused specialist (
   assert.ok(expert.score > broad.score, `focused expert ${expert.score} must beat over-tagged ${broad.score}`);
 });
 
-test("over-tag threshold: 5 sectors still specialist, 6 is demoted", () => {
+test("over-tag threshold: 4 sectors still specialist, 5 is demoted (B8, lowered 6→5)", () => {
+  const four = { id: "4", sector_agnostic: false, sector_tags: [
+    "technology-information-and-media", "construction", "education", "utilities",
+  ] };
   const five = { id: "5", sector_agnostic: false, sector_tags: [
     "technology-information-and-media", "construction", "education", "utilities", "financial-services",
   ] };
-  const six = { id: "6", sector_agnostic: false, sector_tags: [
-    "technology-information-and-media", "construction", "education", "utilities", "financial-services", "entertainment-providers",
+  const a = scoreRow(four, {}, CTX);
+  const b = scoreRow(five, {}, CTX);
+  assert.ok(a.specialist, "4-tag row is still a specialist");
+  assert.ok(!b.specialist, "5-tag row is now demoted (over-tagged)");
+  assert.ok(a.score > b.score, `4-tag ${a.score} should outscore 5-tag ${b.score}`);
+});
+
+test("over-tag threshold: real Infact leak — AusAgritech demoted below a focused fintech body (B8)", () => {
+  // Verbatim tags from innovation_ecosystem. Its defining vertical is agritech
+  // (farming), but it carries 3 broad umbrella tags that overlap the fintech's
+  // mapped sectors — so it must NOT out-specialist a focused financial-services body.
+  const ausAgritech = { id: "agri", sector_agnostic: false, sector_tags: [
+    "farming-ranching-forestry", "financial-services", "professional-services",
+    "technology-information-and-media", "transportation-logistics-supply-chain-and-storage",
   ] };
-  const a = scoreRow(five, {}, CTX);
-  const b = scoreRow(six, {}, CTX);
-  assert.ok(a.specialist, "5-tag row is still a specialist");
-  assert.ok(!b.specialist, "6-tag row is demoted (over-tagged)");
-  assert.ok(a.score > b.score, `5-tag ${a.score} should outscore 6-tag ${b.score}`);
+  // Australian Banking Association — 3 focused, genuinely-relevant tags.
+  const bankingAssoc = { id: "aba", sector_agnostic: false, sector_tags: [
+    "financial-services", "government-administration", "professional-services",
+  ] };
+  const agri = scoreRow(ausAgritech, {}, CTX);
+  const aba = scoreRow(bankingAssoc, {}, CTX);
+  assert.ok(!agri.specialist, "5-tag agritech association must not be a specialist");
+  assert.ok(agri.reasons.some((r) => r.startsWith("broad sector overlap")), "scored as broad overlap");
+  assert.ok(aba.specialist, "focused 3-tag banking body stays a specialist");
+  assert.ok(aba.score > agri.score, `focused banking body ${aba.score} must beat agritech ${agri.score}`);
 });
 
 test("over-tag demotion also dampens the sells-to (buyer) surface", () => {

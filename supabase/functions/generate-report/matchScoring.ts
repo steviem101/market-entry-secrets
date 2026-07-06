@@ -79,13 +79,19 @@ const AGNOSTIC_NUDGE = 0.25;  // small — "eligible for everyone" != "relevant"
 // A row that claims a large share of the 20-sector taxonomy isn't a genuine
 // specialist in any of them — it's "matches everyone" noise (Stage 7 bug B8: a
 // marketing association tagged across 8 sectors surfaced for an HR-fintech). The
-// directory bears this out — genuine rows average ~3 tags, so 6+ is generalist
-// territory (yet 31 investors / 13 innovation hubs / 11 agencies carry 6+ WITHOUT
-// the sector_agnostic flag). For these, a sector overlap is weak evidence of focus,
-// so score it as flat "broad overlap" (a single unit, no breadth accumulation) and
-// deny the specialist bonus — focused matches then rank above it. Ranking-only; the
-// row is not dropped (a thin section still backfills it).
-const OVERTAG_THRESHOLD = 6;
+// directory bears this out — genuine rows average ~3 tags, so 5+ is generalist
+// territory. Lowered 6→5 after a live report (Infact, a credit fintech) surfaced
+// the Australian Agritech Association at score 8.0: 5 tags — its defining vertical
+// is farming/agritech, but it ALSO carries financial-services + professional-services
+// + technology, so it "industry match ×3"-ed the fintech purely on broad umbrella
+// tags and, sitting one under the old threshold of 6, still won the specialist bonus.
+// Blast radius of 5 (measured): +14 innovation hubs / +38 investors / +2 agencies
+// newly treated as broad (service_providers carry no tags — unaffected). For these a
+// sector overlap is weak evidence of focus, so score it as flat "broad overlap" (a
+// single unit, no breadth accumulation) and deny the specialist bonus — focused
+// matches then rank above it. Ranking-only; the row is not dropped (a thin section
+// still backfills it), so a genuinely-relevant broad row still appears, just lower.
+const OVERTAG_THRESHOLD = 5;
 
 export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
   const tags: string[] = row.sector_tags || [];
