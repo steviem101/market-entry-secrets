@@ -21,7 +21,14 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-type Db = ReturnType<typeof createClient>;
+// Anon-only client factory (RLS decides visibility). Db is derived from the
+// factory's actual return type so the helper signatures match exactly —
+// `ReturnType<typeof createClient>` (uninstantiated) resolves to different
+// generic params than the value createClient(url, key, opts) actually returns.
+const createSitemapClient = (supabaseUrl: string, anonKey: string) =>
+  createClient(supabaseUrl, anonKey, { auth: { persistSession: false } });
+
+type Db = ReturnType<typeof createSitemapClient>;
 
 // The site whose *pages* the sitemap points at (never the Supabase host).
 const SITE_ORIGIN = "https://marketentrysecrets.com";
@@ -279,17 +286,20 @@ Deno.serve(async (req: Request) => {
 
   const url = new URL(req.url);
   const section = url.searchParams.get("s");
-  // Self URL for the child-sitemap <loc>s in the index — the exact origin+path
-  // this request came in on, so proxying at another host stays consistent.
-  const selfUrl = `${url.origin}${url.pathname}`;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   if (!supabaseUrl || !anonKey) {
     return new Response("sitemap misconfigured", { status: 500 });
   }
+  // Public URL of this function for the child-sitemap <loc>s in the index. Built
+  // from SUPABASE_URL, NOT req.url: behind the Supabase edge gateway req.url is
+  // the internal route (http scheme, path rewritten to /sitemap), so deriving
+  // the base from it produced child URLs that 404 in production. The canonical
+  // public path is always <project>.supabase.co/functions/v1/sitemap.
+  const selfUrl = `${supabaseUrl}/functions/v1/sitemap`;
   // ANON key only → RLS decides visibility (never service role here).
-  const db = createClient(supabaseUrl, anonKey, { auth: { persistSession: false } });
+  const db = createSitemapClient(supabaseUrl, anonKey);
 
   try {
     // Static child sitemap.
