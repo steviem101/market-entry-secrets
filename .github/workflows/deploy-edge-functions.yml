@@ -16,9 +16,10 @@
 # the CLI reads on deploy — so the in-code auth (generate-report JWT+ownership,
 # scrape-company rate-limit) is preserved.
 #
-# Scope: only the two functions this pipeline actively changes. To add another,
-# append a `supabase functions deploy <name> …` line below. To deploy ALL
-# functions instead, replace the two lines with a single `supabase functions deploy`.
+# Scope: only the functions this pipeline actively changes (generate-report,
+# scrape-company, sitemap). To add another, append a `supabase functions deploy
+# <name> …` line below. To deploy ALL functions instead, replace the lines with a
+# single `supabase functions deploy`.
 
 name: Deploy Edge Functions
 
@@ -28,6 +29,7 @@ on:
     paths:
       - "supabase/functions/generate-report/**"
       - "supabase/functions/scrape-company/**"
+      - "supabase/functions/sitemap/**"
       - "supabase/functions/_shared/**"
       - ".github/workflows/deploy-edge-functions.yml"
 
@@ -54,3 +56,6 @@ jobs:
 
       - name: Deploy scrape-company
         run: supabase functions deploy scrape-company --project-ref "$PROJECT_REF"
+
+      - name: Deploy sitemap
+        run: supabase functions deploy sitemap --project-ref "$PROJECT_REF"

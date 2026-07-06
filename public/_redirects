@@ -1,1 +1,9 @@
+# Serve the DB-driven sitemap at the apex path too (MES-79). robots.txt already
+# points crawlers straight at the Supabase function (reliable cross-host
+# discovery), but proxying /sitemap.xml here keeps the old GSC/Bing-submitted
+# apex URL working — it serves the real XML instead of the SPA shell — and lets
+# GSC's "Add sitemap" UI accept a same-host URL. Best-effort: if the host
+# doesn't honour external proxies, discovery still works via robots.txt.
+/sitemap.xml    https://xhziwveaiuhzdoutpgrh.supabase.co/functions/v1/sitemap    200
+
 /*    /index.html   200
