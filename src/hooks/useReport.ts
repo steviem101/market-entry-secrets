@@ -23,3 +23,10 @@ export const useMyReports = () => {
     queryFn: () => reportApi.fetchMyReports(),
   });
 };
+
+export const useMyMentorMatches = () => {
+  return useQuery({
+    queryKey: ['my-mentor-matches'],
+    queryFn: () => reportApi.fetchMyMentorMatches(),
+  });
+};

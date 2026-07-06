@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { useMyReports } from "@/hooks/useReport";
+import { useMyMentorMatches } from "@/hooks/useReport";
 
 interface MentorMatch {
   name: string;
@@ -54,26 +54,10 @@ const statusConfig: Record<ConnectionStatus, { label: string; icon: typeof Clock
 };
 
 const MentorConnections = () => {
-  const { data: reports, isLoading } = useMyReports();
-
-  // Extract unique mentor recommendations from all completed reports
-  const mentors: MentorMatch[] = (reports || [])
-    .filter((r: any) => r.status === "completed")
-    .reduce((acc: MentorMatch[], report: any) => {
-      const mentorMatches = report.report_json?.matches?.mentor_recommendations;
-      if (Array.isArray(mentorMatches)) {
-        mentorMatches.forEach((mentor: any) => {
-          if (!acc.find((m) => m.name === mentor.name)) {
-            acc.push({
-              ...mentor,
-              reportId: report.id,
-              reportName: report.user_intake_forms?.company_name || "Market Entry Report",
-            });
-          }
-        });
-      }
-      return acc;
-    }, []);
+  // Mentor recommendations come via the tier-gated RPC per completed report;
+  // the my-reports list no longer carries report_json (MES-38).
+  const { data: mentorMatches, isLoading } = useMyMentorMatches();
+  const mentors: MentorMatch[] = (mentorMatches || []) as unknown as MentorMatch[];
 
   // Default status for all mentors is "pending" since we don't persist this yet
   const getStatus = (_mentor: MentorMatch): ConnectionStatus => "pending";

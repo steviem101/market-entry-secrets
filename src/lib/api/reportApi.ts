@@ -151,14 +151,14 @@ export const reportApi = {
       }
 
       if (status === 'failed') {
-        // Fetch ONLY the error field via JSON path, not the whole report_json,
-        // so we surface the failure message without leaking anything else.
-        const { data: errData } = await (supabase as any)
-          .from('user_reports')
-          .select('error_message:report_json->>error')
-          .eq('id', reportId)
-          .single();
-        const errorMsg = errData?.error_message || 'Report generation failed';
+        // Surface the failure message via the tier-gated RPC rather than a
+        // direct report_json select: MES-38 revokes SELECT on report_json for
+        // authenticated, so the SECURITY DEFINER RPC is the only read path.
+        const { data: gatedJson } = await supabase
+          .rpc('get_tier_gated_report', { p_report_id: reportId });
+        const errorMsg =
+          (gatedJson as Record<string, unknown> | null)?.['error'] as string | undefined
+          || 'Report generation failed';
         return { status: 'failed', error: errorMsg };
       }
 
@@ -207,9 +207,12 @@ export const reportApi = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
+    // List columns only — never `*`. Selecting `*` shipped the full
+    // report_json (including tier-gated premium prose) to the /my-reports
+    // network panel for free-tier owners (MES-38 / audit R1).
     const { data, error } = await (supabase as any)
       .from('user_reports')
-      .select('*, user_intake_forms(company_name)')
+      .select('id, status, tier_at_generation, created_at, user_intake_forms(company_name)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -221,6 +224,40 @@ export const reportApi = {
       created_at: string;
       user_intake_forms: { company_name: string } | null;
     }>;
+  },
+
+  /**
+   * Mentor recommendations across the user's completed reports, read via the
+   * tier-gated RPC — list rows no longer carry report_json (MES-38), so this
+   * is the only sanctioned way to get match data outside a report view.
+   * Deduped by mentor name (first occurrence wins), matching the previous
+   * client-side behaviour in MemberHub/MentorConnections.
+   */
+  async fetchMyMentorMatches() {
+    const reports = await this.fetchMyReports();
+    const completed = reports.filter((r) => r.status === 'completed');
+
+    const perReport = await Promise.all(
+      completed.map(async (report) => {
+        const { data: gatedJson, error } = await supabase
+          .rpc('get_tier_gated_report', { p_report_id: report.id });
+        if (error || !gatedJson) return [];
+        const matches = (gatedJson as any)?.matches?.mentor_recommendations;
+        if (!Array.isArray(matches)) return [];
+        return matches.map((mentor: any) => ({
+          ...mentor,
+          reportId: report.id,
+          reportName: report.user_intake_forms?.company_name || 'Market Entry Report',
+        }));
+      })
+    );
+
+    const seen = new Set<string>();
+    return perReport.flat().filter((mentor) => {
+      if (!mentor.name || seen.has(mentor.name)) return false;
+      seen.add(mentor.name);
+      return true;
+    }) as Array<Record<string, unknown> & { name: string; reportId: string; reportName: string }>;
   },
 
   async submitFeedback(reportId: string, score: number, notes?: string) {
