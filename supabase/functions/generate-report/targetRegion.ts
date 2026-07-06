@@ -35,6 +35,8 @@ const GENERIC = new Set<string>([
   "anz", "australia and new zealand", "global", "worldwide", "international",
   "various", "multiple", "all", "any", "remote", "online", "anywhere",
   "apac", "asia pacific", "oceania",
+  // intake placeholders that are not a region (real submitted values)
+  "not sure", "unsure", "undecided", "tbd", "n a", "none",
 ]);
 
 /**

@@ -12,6 +12,12 @@ test("expandTargetRegions: generic nation-wide words are dropped", () => {
   assert.deepEqual(expandTargetRegions(["Sydney/NSW", "National"]), ["sydney", "new south wales", "nsw"]);
 });
 
+test("expandTargetRegions: intake placeholders ('Not Sure') are dropped, not treated as a region", () => {
+  // Real submitted values: {"Not Sure",National} → no location signal at all.
+  assert.deepEqual(expandTargetRegions(["Not Sure", "National"]), []);
+  assert.deepEqual(expandTargetRegions(["Perth/WA", "Not Sure"]), ["perth", "western australia"]);
+});
+
 test("expandTargetRegions: 2-letter states survive only as full name (no includes() false-match)", () => {
   // "sa" must NOT appear (would match "Pasadena, USA"); "south australia" is safe.
   assert.deepEqual(expandTargetRegions(["Adelaide/SA"]), ["adelaide", "south australia"]);
