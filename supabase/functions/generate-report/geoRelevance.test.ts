@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
+import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch } from "./geoRelevance.ts";
 
 test("geoOriginTerms: intl origin kept, AU/blank/short dropped, underscores normalised", () => {
   assert.deepEqual(geoOriginTerms("Ireland"), ["ireland"]);
@@ -127,4 +127,51 @@ test("isAgencyInCorridor: foreign mission NOT rescued by an 'Australia' jurisdic
   const invNI = { name: "Invest Northern Ireland", organisation_type: "federal_agency", location_country: "united_kingdom", jurisdiction: ["Northern Ireland", "United Kingdom"] };
   assert.equal(isAgencyInCorridor(invNI, irish), true);                    // Irish founder → kept (name)
   assert.equal(isAgencyInCorridor(invNI, geoOriginTerms("Japan")), false); // Japanese founder → dropped
+});
+
+// ── National chambers on the provider surfaces (B8: AmCham leak) ───────────
+test("chamberOriginMismatch: real Infact case — AmCham dropped for UK founder, ABCC kept", () => {
+  const uk = geoOriginTerms("United Kingdom");
+  const amcham = { name: "American Chamber of Commerce in Australia (AmCham Australia)", location: "Sydney, NSW" };
+  const abcc = { name: "Australian British Chamber of Commerce (ABCC)", location: "Sydney, NSW" };
+  assert.equal(chamberOriginMismatch(amcham, uk), true);  // US chamber, UK founder → drop
+  assert.equal(chamberOriginMismatch(abcc, uk), false);   // UK chamber, UK founder → keep
+});
+
+test("chamberOriginMismatch: same chambers flip for a US founder", () => {
+  const us = geoOriginTerms("United States");
+  const amcham = { name: "American Chamber of Commerce in Australia (AmCham Australia)" };
+  const abcc = { name: "Australian British Chamber of Commerce (ABCC)" };
+  assert.equal(chamberOriginMismatch(amcham, us), false); // US chamber, US founder → keep
+  assert.equal(chamberOriginMismatch(abcc, us), true);    // UK chamber, US founder → drop
+});
+
+test("chamberOriginMismatch: non-chambers and generic/AU chambers are never dropped", () => {
+  const uk = geoOriginTerms("United Kingdom");
+  assert.equal(chamberOriginMismatch({ name: "PwC Australia" }, uk), false);            // not a chamber
+  assert.equal(chamberOriginMismatch({ name: "EY Australia", location: "Sydney" }, uk), false);
+  assert.equal(chamberOriginMismatch({ name: "Australian Chamber of Commerce and Industry" }, uk), false); // generic AU
+  assert.equal(chamberOriginMismatch({ name: "Sydney Business Chamber of Commerce" }, uk), false);          // no foreign demonym
+});
+
+test("chamberOriginMismatch: other-nationality chambers gated by origin", () => {
+  assert.equal(chamberOriginMismatch({ name: "German-Australian Chamber of Industry and Commerce" }, geoOriginTerms("Germany")), false); // German founder → keep
+  assert.equal(chamberOriginMismatch({ name: "German-Australian Chamber of Industry and Commerce" }, geoOriginTerms("United Kingdom")), true); // UK founder → drop
+  assert.equal(chamberOriginMismatch({ name: "Italian Chamber of Commerce and Industry in Australia" }, geoOriginTerms("Italy")), false);
+  assert.equal(chamberOriginMismatch({ name: "Italian Chamber of Commerce and Industry in Australia" }, geoOriginTerms("France")), true);
+});
+
+test("chamberOriginMismatch: domestic AU founder drops every national chamber", () => {
+  const none = geoOriginTerms("Australia"); // []
+  assert.equal(chamberOriginMismatch({ name: "American Chamber of Commerce in Australia" }, none), true);
+  assert.equal(chamberOriginMismatch({ name: "Australian British Chamber of Commerce" }, none), true);
+  // ...but a generic AU chamber with no foreign side is still kept
+  assert.equal(chamberOriginMismatch({ name: "Australian Chamber of Commerce and Industry" }, none), false);
+});
+
+test("chamberOriginMismatch: null/blank rows are a safe no-op", () => {
+  const uk = geoOriginTerms("United Kingdom");
+  assert.equal(chamberOriginMismatch(null, uk), false);
+  assert.equal(chamberOriginMismatch({ name: "" }, uk), false);
+  assert.equal(chamberOriginMismatch({}, uk), false);
 });
