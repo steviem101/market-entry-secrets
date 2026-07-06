@@ -14,6 +14,7 @@ import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semant
 import { metaLine, recordCountLabel } from "./cardFields.ts";
 import { buildCompetitorCards } from "./competitorCards.ts";
 import { renumberCitations } from "./citationRenumber.ts";
+import { expandTargetRegions } from "./targetRegion.ts";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
@@ -1090,9 +1091,12 @@ const sanitizeFilterValue = (v: string): string =>
 // near-duplicate Melbourne pitch nights that this PR fixed in the overlap
 // path. Pure functions, no I/O.
 
+// Expand target_regions into complete, includes()-safe location tokens (B13):
+// "Sydney/NSW" → ["sydney","new south wales","nsw"] (state half no longer dropped),
+// nation-wide words ("National"/"Australia") → no token (no specific city to prefer).
 const deriveLocationPatterns = (intake: any): string[] =>
-  ((intake?.target_regions as string[] | undefined) || [])
-    .map((r: string) => sanitizeFilterValue((r || "").split("/")[0]))
+  expandTargetRegions((intake?.target_regions as string[] | undefined) || [])
+    .map((r: string) => sanitizeFilterValue(r))
     .filter(Boolean);
 
 const normalizeEventKeyPart = (s: string): string =>

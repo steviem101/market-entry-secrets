@@ -124,10 +124,18 @@ export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
     }
   }
 
+  // Target-region match (B13): the row's location names the report's specific target
+  // city/region (e.g. Sydney/NSW). Worth +2 — a meaningful prioritisation of the
+  // target market, roughly one service-fit unit — so a same-region provider clusters
+  // with (not below) an out-of-region one that happens to match one more service.
+  // It never DROPS an out-of-region AU row (the geo gate already keeps all in-market
+  // providers); it only reorders. `locationPatterns` are the specific target regions
+  // only (nation-wide words are excluded upstream), so this is a target signal, not a
+  // generic "is in Australia" one.
   const loc = (row.location || "").toLowerCase();
   if (ctx.locationPatterns.some((l) => l && loc.includes(l.toLowerCase()))) {
-    s += 1;
-    reasons.push("location (+1)");
+    s += 2;
+    reasons.push("target region (+2)");
   }
 
   // Specialist: a sector-SPECIFIC (not agnostic, not over-tagged) row that matches the
