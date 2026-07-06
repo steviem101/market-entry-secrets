@@ -12,6 +12,7 @@ import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
+import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
@@ -1887,6 +1888,42 @@ async function generateReportInBackground(
       matches.events = [...(matches.events || []), ...discoveredEventMatches];
     }
 
+    // ── LLM relevance curation (MATCH_RERANK_ENABLED, default off) ───────────
+    // Selection so far is embeddings-recall + a deterministic scorer + rule gates —
+    // no model ever asks "is this entity actually useful for THIS company?". The
+    // 20-sector taxonomy is coarse, so plausible-but-wrong picks pass (an insurtech
+    // association / Asia-gateway hub for an Irish credit-decisioning fintech; a
+    // "Legal Technology Buyers" lead list). Hand the whole selected slate + the
+    // enriched company profile to ONE cheap Gemini call and drop what an analyst would
+    // cut. Drop-only, floor-guarded, and fail-open (see matchRerank.ts) so it can
+    // never empty a section or add/reorder — worst case it's a no-op.
+    let matchRerankInfo: { applied: boolean; dropped: Record<string, number>; dropped_count: number } | null = null;
+    if (Deno.env.get("MATCH_RERANK_ENABLED")) {
+      try {
+        const rerankItems = buildRerankItems(matches);
+        if (rerankItems.length > 0) {
+          const rerankContext = [
+            `${intake.company_name || "The company"} — ${(intake.industry_sector || []).join(" / ") || "sector not specified"}`,
+            `from ${intake.country_of_origin || "unknown origin"}`,
+            `entering ${(intake.target_regions || []).join(", ") || "Australia"}`,
+            (intake.end_buyer_industries || []).length ? `sells to: ${(intake.end_buyer_industries || []).join(", ")}` : "",
+            enrichedSummary ? `Profile: ${String(enrichedSummary).slice(0, 600)}` : "",
+          ].filter(Boolean).join(". ");
+          const aiText = await callAI(lovableKey, [
+            { role: "system", content: "You are a meticulous market-entry analyst. Return only valid JSON, no markdown fences." },
+            { role: "user", content: buildRerankPrompt(rerankContext, rerankItems) },
+          ], "google/gemini-3-flash-preview", { temperature: 0.1 });
+          const verdicts = parseRerankVerdicts(aiText, rerankItems.length);
+          const result = applyRerankVerdicts(matches, rerankItems, verdicts);
+          for (const [tbl, arr] of Object.entries(result.matches)) matches[tbl] = arr;
+          matchRerankInfo = { applied: verdicts.parsed, dropped: result.droppedByTable, dropped_count: result.droppedNames.length };
+          if (result.droppedNames.length > 0) {
+            console.log(`match rerank dropped ${result.droppedNames.length}: ${JSON.stringify(result.droppedByTable)}`);
+          }
+        }
+      } catch (e) { console.error("match rerank failed (continuing):", e); }
+    }
+
     // All Firecrawl work for this report is done — log plumbing health + op count.
     console.log(`Firecrawl health: ${firecrawlStats.succeeded}/${firecrawlStats.ops} OK (scrape ${firecrawlStats.scrape.ok}/${firecrawlStats.scrape.attempted}, map ${firecrawlStats.map.ok}/${firecrawlStats.map.attempted}, search ${firecrawlStats.search.ok}/${firecrawlStats.search.attempted}); cache ${firecrawlStats.cache_hits} hit / ${firecrawlStats.cache_misses} miss; statuses [${firecrawlStats.statuses.join(",")}]`);
 
@@ -2236,6 +2273,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // state is verifiable from telemetry — the count above alone can't
         // distinguish a deep run from a lucky legacy run.
         competitor_depth: competitorResult.competitor_depth ?? false,
+        // LLM relevance curation (MATCH_RERANK_ENABLED): null when the flag is off,
+        // else { applied, dropped: {table: n}, dropped_count } so the effect is
+        // verifiable per report. `applied:false` = the LLM reply failed to parse
+        // (fail-open, zero drops).
+        match_rerank: matchRerankInfo,
         polish_applied: polishApplied,
         key_metrics: keyMetrics,
         discovered_events_count: discoveredEvents.length,

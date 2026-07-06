@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { NoIndex } from '@/components/common/NoIndex';
 import { ReportSection } from '@/components/report/ReportSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
 import { ReportSources } from '@/components/report/ReportSources';
@@ -19,7 +20,7 @@ import {
   estimateReadingTime,
 } from '@/components/report/reportSectionConfig';
 
-const SharedReportView = () => {
+const SharedReportViewInner = () => {
   const { shareToken } = useParams<{ shareToken: string }>();
   const { data: report, isLoading, error } = useSharedReport(shareToken);
 
@@ -227,5 +228,15 @@ const SharedReportView = () => {
     </>
   );
 };
+
+// Shared report URLs are private-by-obscurity documents — NoIndex wraps every
+// state (loading, the invalid-token not-found, and the rendered report) so a
+// crawler can never index one regardless of which branch it hits (MES-81).
+const SharedReportView = () => (
+  <>
+    <NoIndex />
+    <SharedReportViewInner />
+  </>
+);
 
 export default SharedReportView;

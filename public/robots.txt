@@ -42,4 +42,8 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://marketentrysecrets.com/sitemap.xml
+# DB-driven sitemap index (MES-79 / SEO-03). Hosted on the Supabase edge
+# function so it regenerates from the database on every crawl and can never
+# drift; Google/Bing accept a cross-host sitemap that is referenced here in
+# robots.txt on the target site.
+Sitemap: https://xhziwveaiuhzdoutpgrh.supabase.co/functions/v1/sitemap
