@@ -302,3 +302,30 @@ test("textMatchesAnyToken ignores sub-3-char tokens and empty haystacks", () => 
   assert.equal(textMatchesAnyToken([null, [], ""], ["software"]), false);
   assert.equal(textMatchesAnyToken(["AI consulting"], ["ai"]), false, "2-char token must not match");
 });
+
+// ── B13: target-region prioritisation (Infact: Sydney target, VIC firms on top) ──
+test("scoreRow: target-region provider outranks equal-fit out-of-region one (B13)", () => {
+  const opts = { service: "services" } as const;
+  const sydney1svc = scoreRow(
+    { id: "syd", location: "Sydney, NSW", sector_agnostic: true, services: ["Advisory"] }, opts, CTX);
+  const melbourne1svc = scoreRow(
+    { id: "melb", location: "Melbourne, VIC", sector_agnostic: true, services: ["Advisory"] }, opts, CTX);
+  // Same service fit → the in-target-region provider wins on the +2 region bonus.
+  assert.ok(sydney1svc.score > melbourne1svc.score,
+    `Sydney ${sydney1svc.score} should beat equal-fit Melbourne ${melbourne1svc.score}`);
+  assert.ok(sydney1svc.reasons.some((r) => r.startsWith("target region")));
+  assert.ok(!melbourne1svc.reasons.some((r) => r.startsWith("target region")));
+});
+
+test("scoreRow: target region offsets ~one extra service match, not more (B13 tuning)", () => {
+  const opts = { service: "services" } as const;
+  // Sydney firm with 1 service vs Melbourne firm with 2 — the real Infact shape.
+  const sydney1svc = scoreRow(
+    { id: "syd", location: "Sydney, NSW", sector_agnostic: true, services: ["Advisory"] }, opts, CTX);
+  const melbourne2svc = scoreRow(
+    { id: "melb", location: "Melbourne, VIC", sector_agnostic: true, services: ["Advisory", "Investment"] }, opts, CTX);
+  // +2 region brings the same-region single-service firm LEVEL with the out-of-region
+  // double-service firm (clusters them) rather than burying it — and doesn't overshoot.
+  assert.equal(sydney1svc.score, melbourne2svc.score,
+    `region bonus should tie these (got ${sydney1svc.score} vs ${melbourne2svc.score})`);
+});

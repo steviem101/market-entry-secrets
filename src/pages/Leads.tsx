@@ -1,13 +1,11 @@
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { LeadCard } from "@/components/LeadCard";
 import { LeadsHero } from "@/components/leads/LeadsHero";
 import { LeadPreviewModal } from "@/components/leads/LeadPreviewModal";
-import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
+import { DirectoryFilterBar, type FilterOption, type SelectFilterConfig } from "@/components/common/DirectoryFilterBar";
 import { ListPagination } from "@/components/common/ListPagination";
 import { EmptyState } from "@/components/common/EmptyState";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp } from "lucide-react";
 import { useLeadCheckout } from "@/hooks/useLeadCheckout";
 import { AuthDialog } from "@/components/auth/AuthDialog";
@@ -15,101 +13,68 @@ import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { getStandardTypes } from "@/utils/sectorMapping";
 import { useLeadDatabases, useLeadDatabaseStats } from "@/hooks/useLeadDatabases";
+import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
+import type { FilterSpec } from "@/lib/directoryFilters";
+import { filterAndSortLeads } from "@/lib/leadFilters";
 import type { LeadDatabase } from "@/types/leadDatabase";
 
 const PAGE_SIZE = 12;
 
-const SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest' },
-  { value: 'most_records', label: 'Most Records' },
-];
-
-const sortLeads = (leads: LeadDatabase[], sortBy: string): LeadDatabase[] => {
-  const sorted = [...leads];
-  switch (sortBy) {
-    case 'newest':
-      return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    case 'most_records':
-      return sorted.sort((a, b) => (b.record_count || 0) - (a.record_count || 0));
-    default:
-      return sorted;
-  }
+const LEAD_FILTER_SPEC: FilterSpec = {
+  search: { param: "search", default: "" },
+  type: { param: "type", default: "all" },
+  location: { param: "location", default: "all" },
+  sector: { param: "sector", default: "all" },
+  sort: { param: "sort", default: "newest", presentation: true },
 };
 
+const SORT_OPTIONS: FilterOption[] = [
+  { value: "newest", label: "Newest" },
+  { value: "most_records", label: "Most Records" },
+];
+
 const Leads = () => {
-  const { startLeadCheckout, loading: checkoutLoading } = useLeadCheckout();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
-  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
-  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
-  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
-  const [selectedSort, setSelectedSort] = useState<string>(searchParams.get("sort") ?? "newest");
-  const [showFilters, setShowFilters] = useState(false);
+  const { startLeadCheckout } = useLeadCheckout();
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(LEAD_FILTER_SPEC);
   const [previewLead, setPreviewLead] = useState<LeadDatabase | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
-
-  useEffect(() => {
-    const p = new URLSearchParams();
-    if (searchTerm) p.set("search", searchTerm);
-    if (selectedType !== "all") p.set("type", selectedType);
-    if (selectedLocation !== "all") p.set("location", selectedLocation);
-    if (selectedSector !== "all") p.set("sector", selectedSector);
-    if (selectedSort !== "newest") p.set("sort", selectedSort);
-    if (currentPage > 1) p.set("page", String(currentPage));
-    setSearchParams(p, { replace: true });
-  }, [searchTerm, selectedType, selectedLocation, selectedSector, selectedSort, currentPage, setSearchParams]);
 
   const { data: leadDatabases, isLoading, error } = useLeadDatabases();
   const { data: stats } = useLeadDatabaseStats();
 
-  const filteredLeads = leadDatabases?.filter(lead => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = !searchTerm ||
-      lead.title.toLowerCase().includes(searchLower) ||
-      (lead.description || '').toLowerCase().includes(searchLower) ||
-      (lead.short_description || '').toLowerCase().includes(searchLower) ||
-      lead.tags?.some(tag => tag.toLowerCase().includes(searchLower));
-    const matchesType = selectedType === "all" || lead.list_type === selectedType;
-    const matchesLocation = selectedLocation === "all" || lead.location === selectedLocation;
-    const matchesSector = selectedSector === "all" || lead.sector === selectedSector;
-    return matchesSearch && matchesType && matchesLocation && matchesSector;
-  });
-
-  const sortedLeads = filteredLeads ? sortLeads(filteredLeads, selectedSort) : [];
-
-  const totalPages = Math.ceil(sortedLeads.length / PAGE_SIZE);
-  const paginatedLeads = sortedLeads.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+  const sortedLeads = useMemo(
+    () => (leadDatabases ? filterAndSortLeads(leadDatabases, filters) : []),
+    [leadDatabases, filters]
   );
 
-  const types = getStandardTypes.leads;
-  const locations = Array.from(new Set(leadDatabases?.map(lead => lead.location).filter(Boolean) as string[] || []));
-  const sectors = Array.from(new Set(leadDatabases?.map(lead => lead.sector).filter(Boolean) as string[] || [])).sort();
+  const totalPages = Math.ceil(sortedLeads.length / PAGE_SIZE);
+  const paginatedLeads = sortedLeads.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const handleClearFilters = () => {
-    setSelectedType("all");
-    setSelectedLocation("all");
-    setSelectedSector("all");
-    setSearchTerm("");
-    setSelectedSort("newest");
-    setCurrentPage(1);
-  };
+  const locations = useMemo(
+    () => Array.from(new Set((leadDatabases ?? []).map((l) => l.location).filter(Boolean) as string[])).sort(),
+    [leadDatabases]
+  );
+  const sectors = useMemo(
+    () => Array.from(new Set((leadDatabases ?? []).map((l) => l.sector).filter(Boolean) as string[])).sort(),
+    [leadDatabases]
+  );
 
-  const handlePreview = (lead: LeadDatabase) => {
-    setPreviewLead(lead);
-  };
+  const countsByType = stats?.countsByType ?? {};
+  const typeTabs: FilterOption[] = [
+    { value: "all", label: "All", count: stats?.totalDatabases ?? leadDatabases?.length ?? 0 },
+    ...getStandardTypes.leads.map((t) => ({ value: t, label: t, count: countsByType[t] ?? 0 })),
+  ];
+
+  const selects: SelectFilterConfig[] = [
+    { key: "location", allLabel: "All Locations", options: locations.map((l) => ({ value: l, label: l })) },
+    { key: "sector", allLabel: "All Sectors", options: sectors.map((s) => ({ value: s, label: s })) },
+  ];
 
   const handleCheckout = async (lead: LeadDatabase) => {
     const result = await startLeadCheckout(lead);
-    if (result.needsAuth) {
-      setShowAuthDialog(true);
-    }
+    if (result.needsAuth) setShowAuthDialog(true);
   };
-
-  const hasActiveFilters = selectedType !== "all" || selectedLocation !== "all" ||
-    selectedSector !== "all" || searchTerm !== "";
 
   if (error) {
     return (
@@ -151,7 +116,7 @@ const Leads = () => {
               numberOfItems: sortedLeads.length,
               itemListElement: paginatedLeads.map((lead, i) => ({
                 "@type": "ListItem",
-                position: (currentPage - 1) * PAGE_SIZE + i + 1,
+                position: (page - 1) * PAGE_SIZE + i + 1,
                 name: lead.title,
                 url: `https://marketentrysecrets.com/leads/${lead.slug}`,
               })),
@@ -166,23 +131,18 @@ const Leads = () => {
         countsByType={stats?.countsByType || {}}
       />
 
-      <StandardDirectoryFilters
-        searchTerm={searchTerm}
-        onSearchChange={(v) => { setSearchTerm(v); setCurrentPage(1); }}
-        selectedLocation={selectedLocation}
-        onLocationChange={(v) => { setSelectedLocation(v); setCurrentPage(1); }}
-        selectedType={selectedType}
-        onTypeChange={(v) => { setSelectedType(v); setCurrentPage(1); }}
-        selectedSector={selectedSector}
-        onSectorChange={(v) => { setSelectedSector(v); setCurrentPage(1); }}
-        showFilters={showFilters}
-        onToggleFilters={() => setShowFilters(!showFilters)}
-        onClearFilters={handleClearFilters}
+      <DirectoryFilterBar
+        filters={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}
-        locations={locations}
-        types={types}
-        sectors={sectors}
-        searchPlaceholder="Search lead databases, sectors, or tags..."
+        noun="lead databases"
+        shownCount={paginatedLeads.length}
+        totalCount={sortedLeads.length}
+        tabs={{ key: "type", options: typeTabs }}
+        search={{ key: "search", placeholder: "Search lead databases, sectors, or tags..." }}
+        selects={selects}
+        sort={{ key: "sort", options: SORT_OPTIONS }}
       />
 
       <div className="container mx-auto px-4 py-8">
@@ -197,41 +157,22 @@ const Leads = () => {
             </div>
           ) : sortedLeads.length > 0 ? (
             <>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold text-foreground">
-                  Showing {paginatedLeads.length} of {sortedLeads.length} Database{sortedLeads.length !== 1 ? 's' : ''}
-                </h2>
-                <div className="w-48">
-                  <Select value={selectedSort} onValueChange={(v) => { setSelectedSort(v); setCurrentPage(1); }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SORT_OPTIONS.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
               <ListingPageGate contentType="leads">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {paginatedLeads.map(lead => (
                     <LeadCard
                       key={lead.id}
                       lead={lead}
-                      onPreview={handlePreview}
+                      onPreview={setPreviewLead}
                       onCheckout={handleCheckout}
                     />
                   ))}
                 </div>
               </ListingPageGate>
               <ListPagination
-                currentPage={currentPage}
+                currentPage={page}
                 totalPages={totalPages}
-                onPageChange={setCurrentPage}
+                onPageChange={setPage}
               />
             </>
           ) : (
@@ -239,8 +180,8 @@ const Leads = () => {
               icon={<TrendingUp className="w-16 h-16" />}
               title="No lead databases found"
               description="Try adjusting your search criteria or filters"
-              actionLabel="Clear all filters"
-              onAction={handleClearFilters}
+              actionLabel={hasActiveFilters ? "Clear all filters" : undefined}
+              onAction={hasActiveFilters ? clearAll : undefined}
             />
           )}
         </section>

@@ -5,7 +5,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import type { Mentor } from "@/hooks/useMentors";
 import CompanyLogo from "@/components/shared/CompanyLogo";
-import { domainToWebsite } from "@/lib/logoUtils";
 import {
   mentorDisplayName,
   mentorInitials,
@@ -56,12 +55,12 @@ const ExperienceTileItem = ({ tile }: { tile: { id?: string; name: string; logo?
     <div className="flex-shrink-0" title={tile.name}>
       <CompanyLogo
         existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
-        websiteUrl={domainToWebsite(tile.domain)}
+        domain={tile.domain}
         companyName={tile.name}
-        size="sm"
-        className="w-10 h-10 rounded-lg border bg-white"
+        size="md"
+        className="rounded-lg border bg-white"
         fallbackClassName="bg-white text-primary"
-        imgClassName="object-contain p-0.5"
+        imgClassName="object-contain p-1"
       />
     </div>
   );
@@ -217,16 +216,17 @@ const MentorCard = memo(({ mentor }: MentorCardProps) => {
         </div>
       )}
 
-      {/* Experience with - text fallback, no grey boxes */}
-      {experienceTiles.length > 0 && (
+      {/* Experience with — hidden for anonymous mentors (logos are identifying).
+          The public view already masks tiles server-side; this is belt-and-braces. */}
+      {!mentor.is_anonymous && experienceTiles.length > 0 && (
         <div className="mb-3">
           <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Experience with:</h4>
-          <div className="flex gap-1.5 overflow-x-auto">
+          <div className="flex flex-wrap gap-1.5">
             {experienceTiles.slice(0, 4).map((tile, index) => (
               <ExperienceTileItem key={tile.id || index} tile={tile} />
             ))}
             {experienceTiles.length > 4 && (
-              <div className="flex-shrink-0 w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+              <div className="flex-shrink-0 w-10 h-10 bg-muted border rounded-lg flex items-center justify-center">
                 <span className="text-xs text-muted-foreground">+{experienceTiles.length - 4}</span>
               </div>
             )}

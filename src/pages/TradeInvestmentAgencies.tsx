@@ -1,88 +1,76 @@
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { TradeInvestmentAgenciesHero } from "@/components/trade-investment-agencies/TradeInvestmentAgenciesHero";
-import TradeInvestmentAgenciesFilters from "@/components/trade-investment-agencies/TradeInvestmentAgenciesFilters";
 import TradeInvestmentAgenciesResults from "@/components/trade-investment-agencies/TradeInvestmentAgenciesResults";
+import { DirectoryFilterBar, type FilterOption, type SelectFilterConfig } from "@/components/common/DirectoryFilterBar";
 import { ListPagination } from "@/components/common/ListPagination";
 import { UsageBanner } from "@/components/UsageBanner";
 import { useTradeAgencies, useOrganisationCategories } from "@/hooks/useTradeAgencies";
+import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
+import type { FilterSpec } from "@/lib/directoryFilters";
+import { filterAgencies } from "@/lib/agencyFilters";
 
 const PAGE_SIZE = 12;
 
-const TradeInvestmentAgencies = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
-  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
-  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
-  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
-  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get("category") ?? "all");
-  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
+const AGENCY_FILTER_SPEC: FilterSpec = {
+  search: { param: "search", default: "" },
+  category: { param: "category", default: "all" },
+  location: { param: "location", default: "all" },
+  type: { param: "type", default: "all" },
+  sector: { param: "sector", default: "all" },
+};
 
-  useEffect(() => {
-    const p = new URLSearchParams();
-    if (searchTerm) p.set("search", searchTerm);
-    if (selectedLocation !== "all") p.set("location", selectedLocation);
-    if (selectedSector !== "all") p.set("sector", selectedSector);
-    if (selectedType !== "all") p.set("type", selectedType);
-    if (selectedCategory !== "all") p.set("category", selectedCategory);
-    if (currentPage > 1) p.set("page", String(currentPage));
-    setSearchParams(p, { replace: true });
-  }, [searchTerm, selectedLocation, selectedSector, selectedType, selectedCategory, currentPage, setSearchParams]);
+const formatTypeLabel = (value: string) =>
+  value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+const TradeInvestmentAgencies = () => {
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(AGENCY_FILTER_SPEC);
 
   const { data: agencies, isLoading, error } = useTradeAgencies();
   const { data: categories = [] } = useOrganisationCategories();
 
-  const filteredAgencies = agencies?.filter(agency => {
-    const a = agency as any;
-    const matchesSearch = searchTerm === "" ||
-      agency.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      agency.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      agency.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (a.tagline && a.tagline.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesLocation = selectedLocation === "all" || agency.location?.toLowerCase().includes(selectedLocation.toLowerCase());
-    // Filter values are raw slugs. Fall back to a normalised comparison so old
-    // bookmarked links that carried the prettified label (e.g. ?type=Trade%20Agency)
-    // still match after the switch to slug-based values.
-    const normalise = (v: string) => v.replace(/_/g, ' ').toLowerCase();
-    const matchesSector = selectedSector === "all" ||
-      (a.sectors_supported && (
-        a.sectors_supported.includes('all') ||
-        a.sectors_supported.includes(selectedSector) ||
-        a.sectors_supported.some((s: string) => normalise(s) === normalise(selectedSector))
-      ));
-    const matchesType = selectedType === "all" ||
-      a.organisation_type === selectedType ||
-      (a.organisation_type && normalise(a.organisation_type) === normalise(selectedType));
-    const matchesCategory = selectedCategory === "all" ||
-      (a.category_slug && a.category_slug === selectedCategory);
-    return matchesSearch && matchesLocation && matchesSector && matchesType && matchesCategory;
-  }) || [];
-
-  const totalPages = Math.ceil(filteredAgencies.length / PAGE_SIZE);
-  const paginatedAgencies = filteredAgencies.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+  const filteredAgencies = useMemo(
+    () => (agencies ? filterAgencies(agencies, filters) : []),
+    [agencies, filters]
   );
 
-  const uniqueLocations = [...new Set(agencies?.map(agency => agency.location) || [])].sort();
-  const uniqueSectors = [...new Set(
-    agencies?.flatMap(agency => (agency as any).sectors_supported || [])
-      .filter((s: string) => s && s !== 'all') || []
-  )];
-  const uniqueTypes = [...new Set(
-    agencies?.map(agency => (agency as any).organisation_type)
-      .filter(Boolean) || []
-  )];
+  const totalPages = Math.ceil(filteredAgencies.length / PAGE_SIZE);
+  const paginatedAgencies = filteredAgencies.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const clearAllFilters = () => {
-    setSearchTerm("");
-    setSelectedLocation("all");
-    setSelectedSector("all");
-    setSelectedType("all");
-    setSelectedCategory("all");
-    setCurrentPage(1);
-  };
+  const uniqueLocations = useMemo(
+    () => [...new Set((agencies ?? []).map((a) => a.location).filter(Boolean))].sort() as string[],
+    [agencies]
+  );
+  const uniqueSectors = useMemo(
+    () => [...new Set(
+      (agencies ?? []).flatMap((a) => (a as any).sectors_supported || []).filter((s: string) => s && s !== "all")
+    )] as string[],
+    [agencies]
+  );
+  const uniqueTypes = useMemo(
+    () => [...new Set((agencies ?? []).map((a) => (a as any).organisation_type).filter(Boolean))] as string[],
+    [agencies]
+  );
+
+  // Category tabs (primary axis) with per-category counts.
+  const categoryTabs: FilterOption[] = useMemo(() => {
+    const counts: Record<string, number> = {};
+    (agencies ?? []).forEach((a) => {
+      const slug = (a as any).category_slug;
+      if (slug) counts[slug] = (counts[slug] || 0) + 1;
+    });
+    return [
+      { value: "all", label: "All", count: agencies?.length ?? 0 },
+      ...categories.map((c: any) => ({ value: c.slug, label: c.name, count: counts[c.slug] ?? 0 })),
+    ];
+  }, [agencies, categories]);
+
+  const selects: SelectFilterConfig[] = [
+    { key: "location", allLabel: "All Locations", options: uniqueLocations.map((l) => ({ value: l, label: l })) },
+    { key: "type", allLabel: "All Types", options: uniqueTypes.map((t) => ({ value: t, label: formatTypeLabel(t) })) },
+    { key: "sector", allLabel: "All Sectors", options: uniqueSectors.map((s) => ({ value: s, label: formatTypeLabel(s) })) },
+  ];
 
   if (error) {
     return (
@@ -117,40 +105,32 @@ const TradeInvestmentAgencies = () => {
         agencies={agencies || []}
       />
 
+      <DirectoryFilterBar
+        filters={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        hasActiveFilters={hasActiveFilters}
+        noun="organisations"
+        shownCount={paginatedAgencies.length}
+        totalCount={filteredAgencies.length}
+        tabs={{ key: "category", options: categoryTabs }}
+        search={{ key: "search", placeholder: "Search agencies, associations, or services..." }}
+        selects={selects}
+      />
+
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
-
-        <TradeInvestmentAgenciesFilters
-          searchTerm={searchTerm}
-          setSearchTerm={(v: string) => { setSearchTerm(v); setCurrentPage(1); }}
-          selectedLocation={selectedLocation}
-          setSelectedLocation={(v: string) => { setSelectedLocation(v); setCurrentPage(1); }}
-          selectedSector={selectedSector}
-          setSelectedSector={(v: string) => { setSelectedSector(v); setCurrentPage(1); }}
-          selectedType={selectedType}
-          setSelectedType={(v: string) => { setSelectedType(v); setCurrentPage(1); }}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={(v: string) => { setSelectedCategory(v); setCurrentPage(1); }}
-          uniqueLocations={uniqueLocations as string[]}
-          uniqueSectors={uniqueSectors as string[]}
-          uniqueTypes={uniqueTypes as string[]}
-          categories={categories}
-        />
-
-        <p className="text-muted-foreground text-sm mb-4">
-          Showing {paginatedAgencies.length} of {filteredAgencies.length} organisations
-        </p>
 
         <TradeInvestmentAgenciesResults
           filteredAgencies={paginatedAgencies}
           isLoading={isLoading}
-          onClearFilters={clearAllFilters}
+          onClearFilters={clearAll}
         />
 
         <ListPagination
-          currentPage={currentPage}
+          currentPage={page}
           totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          onPageChange={setPage}
         />
       </div>
     </>

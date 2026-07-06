@@ -3,6 +3,10 @@ import { getLogoUrl, getLogoUrlFromDomain } from "@/lib/logoUtils";
 import { getCompanyInitials } from "@/components/company-card/CompanyCardHelpers";
 import { cn } from "@/lib/utils";
 
+// `px` is the CSS display size matching `container` — logoUtils requests 2x
+// pixels from Logo.dev for high-DPR screens. Keep the `size` prop in sync with
+// the rendered tile size; overriding w-/h- via className desyncs the requested
+// resolution and fallback text scale (the cause of the blurry mentor logos).
 const SIZE_MAP = {
   sm: { px: 24, container: "w-6 h-6", text: "text-[10px]" },
   md: { px: 40, container: "w-10 h-10", text: "text-sm" },
