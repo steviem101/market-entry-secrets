@@ -1,16 +1,18 @@
-import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { AlertCircle, Search } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 import { useContentItems, useContentCategories } from "@/hooks/useContent";
 import { useAttachmentCounts } from "@/hooks/useGuideAttachments";
 import { ContentHero } from "@/components/content/ContentHero";
 import { FeaturedContent } from "@/components/content/FeaturedContent";
 import { ContentGrid } from "@/components/content/ContentGrid";
+import { DirectoryFilterBar, type FilterOption, type SelectFilterConfig } from "@/components/common/DirectoryFilterBar";
 import { UsageBanner } from "@/components/UsageBanner";
 import { SEOHead } from "@/components/common/SEOHead";
+import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
+import type { FilterSpec } from "@/lib/directoryFilters";
+import { filterContent } from "@/lib/contentFilters";
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
   guide: "Guides",
@@ -18,25 +20,24 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   success_story: "Success Stories",
 };
 
-const VALID_CONTENT_TYPES = new Set(Object.keys(CONTENT_TYPE_LABELS));
+const CONTENT_TYPE_TABS: FilterOption[] = [
+  { value: "all", label: "All Content" },
+  ...Object.entries(CONTENT_TYPE_LABELS).map(([value, label]) => ({ value, label })),
+];
+
+// Allowlist so a stale/invalid ?type= (e.g. a retired content_type) falls back
+// to "All" instead of matching nothing and rendering an empty grid.
+const VALID_CONTENT_TYPES = new Set(["all", ...Object.keys(CONTENT_TYPE_LABELS)]);
+
+const CONTENT_FILTER_SPEC: FilterSpec = {
+  search: { param: "search", default: "" },
+  type: { param: "type", default: "all" },
+  // Category carries the category id (content_categories has no slug — MES-100).
+  category: { param: "category", default: "all" },
+};
 
 const Content = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") ?? "");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get("category") ?? null);
-  const [selectedType, setSelectedType] = useState(() => {
-    const t = searchParams.get("type") ?? "all";
-    return VALID_CONTENT_TYPES.has(t) ? t : "all";
-  });
-
-  useEffect(() => {
-    const p = new URLSearchParams();
-    if (searchQuery) p.set("search", searchQuery);
-    if (selectedCategory) p.set("category", selectedCategory);
-    if (selectedType !== "all") p.set("type", selectedType);
-    setSearchParams(p, { replace: true });
-  }, [searchQuery, selectedCategory, selectedType, setSearchParams]);
+  const { filters, setFilter, clearAll, hasActiveFilters } = useDirectoryFilters(CONTENT_FILTER_SPEC);
 
   const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems({
     contentType: ['guide', 'article', 'success_story']
@@ -45,33 +46,40 @@ const Content = () => {
   const contentItemIds = useMemo(() => contentItems.map(item => item.id), [contentItems]);
   const { data: attachmentCounts = {} } = useAttachmentCounts(contentItemIds);
 
-  const filteredContent = contentItems.filter(item => {
-    const matchesSearch = searchQuery === "" ||
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.subtitle?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredContent = useMemo(() => {
+    const type = VALID_CONTENT_TYPES.has(filters.type) ? filters.type : "all";
+    return filterContent(contentItems, { ...filters, type });
+  }, [contentItems, filters]);
 
-    const matchesCategory = selectedCategory === null ||
-      item.category_id === selectedCategory;
-
-    const matchesType = selectedType === "all" ||
-      item.content_type === selectedType;
-
-    return matchesSearch && matchesCategory && matchesType;
-  });
-
-  // Only show categories that have at least 1 piece of content
-  const categoriesWithContent = categories.filter(category =>
-    contentItems.some(item => item.category_id === category.id)
+  // Only show categories that have at least 1 piece of content.
+  const categoriesWithContent = useMemo(
+    () => categories.filter(category => contentItems.some(item => item.category_id === category.id)),
+    [categories, contentItems]
   );
 
-  const featuredContent = contentItems.filter(item => item.featured);
-  const hasActiveFilters = selectedCategory !== null || selectedType !== "all";
+  const featuredContent = useMemo(() => contentItems.filter(item => item.featured), [contentItems]);
 
-  const handleClearFilters = () => {
-    setSelectedCategory(null);
-    setSelectedType("all");
-    setSearchQuery("");
-  };
+  // Per-type counts for the tab suffixes.
+  const typeTabs: FilterOption[] = useMemo(() => {
+    const counts: Record<string, number> = {};
+    contentItems.forEach((item) => {
+      if (item.content_type) counts[item.content_type] = (counts[item.content_type] || 0) + 1;
+    });
+    return CONTENT_TYPE_TABS.map((t) => ({
+      ...t,
+      count: t.value === "all" ? contentItems.length : (counts[t.value] ?? 0),
+    }));
+  }, [contentItems]);
+
+  const selects: SelectFilterConfig[] = [
+    {
+      key: "category",
+      allLabel: "All Categories",
+      options: categoriesWithContent.map((c) => ({ value: c.id, label: c.name })),
+    },
+  ];
+
+  const selectedCategoryId = filters.category === "all" ? null : filters.category;
 
   if (itemsLoading || categoriesLoading) {
     return (
@@ -123,92 +131,34 @@ const Content = () => {
         totalCategories={categoriesWithContent.length}
       />
 
-      {/* Simplified Filter Bar: Search + Type Tabs + Category Pills */}
-      <section className="bg-background border-b">
-        <div className="container mx-auto px-4 py-4">
-          {/* Search */}
-          <div className="relative max-w-md mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search market entry guides..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          {/* Type Tabs */}
-          <div className="flex gap-4 text-sm mb-3">
-            <button
-              className={`pb-1 ${selectedType === "all" ? "text-foreground font-medium border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}
-              onClick={() => setSelectedType("all")}
-            >
-              All Content
-            </button>
-            {Object.entries(CONTENT_TYPE_LABELS).map(([value, label]) => (
-              <button
-                key={value}
-                className={`pb-1 ${selectedType === value ? "text-foreground font-medium border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}
-                onClick={() => setSelectedType(value)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Category Pills — only show categories with content */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedCategory === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(null)}
-            >
-              All Categories
-            </Button>
-            {categoriesWithContent.map((category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category.id)}
-              >
-                {category.name}
-              </Button>
-            ))}
-          </div>
-
-          {/* Result summary */}
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Showing {filteredContent.length} of {contentItems.length} result{contentItems.length !== 1 ? 's' : ''}
-            </span>
-            {hasActiveFilters && (
-              <button
-                onClick={handleClearFilters}
-                className="text-sm text-primary hover:underline"
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
-        </div>
-      </section>
+      <DirectoryFilterBar
+        filters={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        hasActiveFilters={hasActiveFilters}
+        noun="results"
+        shownCount={filteredContent.length}
+        totalCount={contentItems.length}
+        tabs={{ key: "type", options: typeTabs }}
+        search={{ key: "search", placeholder: "Search market entry guides..." }}
+        selects={selects}
+      />
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
 
         <FeaturedContent
           featuredContent={featuredContent}
-          selectedCategory={selectedCategory}
+          selectedCategory={selectedCategoryId}
           attachmentCounts={attachmentCounts}
         />
 
         <ContentGrid
           filteredContent={filteredContent}
-          selectedCategory={selectedCategory}
+          selectedCategory={selectedCategoryId}
           categories={categoriesWithContent}
           totalContent={contentItems.length}
-          excludeFeatured={selectedCategory === null && featuredContent.length > 0}
+          excludeFeatured={selectedCategoryId === null && featuredContent.length > 0}
           attachmentCounts={attachmentCounts}
         />
       </div>
