@@ -1740,14 +1740,22 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
     // must not be double-counted by the utilization metric). First occurrence wins, so
     // the service_providers pool (the primary) keeps the entry. Per-pool caps upstream
     // (10 / 5 / 5) already bound the total.
+    // `card_group` tags each card with its entity kind so the frontend renders
+    // one sub-headed grid per type instead of a single mixed grid (Stage 5 B9).
     case "service_providers": return dedupeByKey([
-      ...(matches.service_providers || []),
-      ...(matches.trade_investment_agencies || []),
-      ...(matches.innovation_ecosystem || []),
+      ...(matches.service_providers || []).map((r: any) => ({ ...r, card_group: "providers" })),
+      ...(matches.trade_investment_agencies || []).map((r: any) => ({ ...r, card_group: "agencies" })),
+      ...(matches.innovation_ecosystem || []).map((r: any) => ({ ...r, card_group: "innovation" })),
     ], (r: any) => (r?.name || r?.title || r?.company_name || "").toString().toLowerCase().trim());
     case "mentor_recommendations": return matches.community_members || [];
-    case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
-    case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
+    case "events_resources": return [
+      ...(matches.events || []).map((r: any) => ({ ...r, card_group: "events" })),
+      ...(matches.content_items || []).map((r: any) => ({ ...r, card_group: "resources" })),
+    ];
+    case "lead_list": return [
+      ...(matches.leads || []).map((r: any) => ({ ...r, card_group: "leads" })),
+      ...(matches.lemlist_contacts || []).map((r: any) => ({ ...r, card_group: "contacts" })),
+    ];
     case "investor_recommendations": return matches.investors || [];
     case "competitor_landscape": return [];
     default: return [];
