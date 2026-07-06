@@ -13,7 +13,8 @@ import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
 import { metaLine, recordCountLabel } from "./cardFields.ts";
 import { buildCompetitorCards } from "./competitorCards.ts";
-import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
+import { renumberCitations } from "./citationRenumber.ts";
+import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
@@ -1692,6 +1693,19 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       console.log(`geo gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);
     }
   }
+  // National chambers of commerce that are filed in the PROVIDER pools (no
+  // jurisdiction column, so the agency gate above can't see them) are gated by
+  // the foreign demonym in their NAME — keep the corridor chamber (Australian
+  // British Chamber for a UK founder), drop the wrong one (AmCham/US). Hard filter:
+  // a wrong-corridor chamber is pure noise and the section stays full from the many
+  // non-chamber providers. (Stage 7 bug B8.)
+  for (const tbl of ["service_providers", "innovation_ecosystem"]) {
+    if (merged[tbl]?.length) {
+      const before = merged[tbl].length;
+      merged[tbl] = merged[tbl].filter((r) => !chamberOriginMismatch(r, agencyOriginTerms));
+      if (merged[tbl].length !== before) console.log(`chamber gate ${tbl}: ${before} → ${merged[tbl].length}`);
+    }
+  }
 
   // ── Cross-section dedupe (Stage 7 bug B10) ──────────────────────────────
   // An entity in the providers section (service_providers + agencies + innovation)
@@ -2259,9 +2273,16 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
     const sectionOrder = templates ? templates.map((t: any) => t.section_name) : Object.keys(sections);
 
-    const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => ({
+    const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => {
+      // Citation integrity (B11/B15): renumber inline [N] markers to a contiguous
+      // 1..M and store only the actually-cited sources, so inline indices and the
+      // Sources footer are 1:1 (no more "[1][2][3][6][9]" against "Sources (19)").
+      // Pure + no-op when nothing is cited; runs on both the unpolished and
+      // polished builds so each stored snapshot is internally consistent.
+      const cited = renumberCitations(currentSections, sectionOrder, marketResearch.citations);
+      return {
       company_name: intake.company_name,
-      sections: currentSections,
+      sections: cited.sections,
       matches,
       metadata: {
         tables_searched: Object.keys(matches),
@@ -2269,7 +2290,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         generation_time_ms: Date.now() - startTime,
         perplexity_used: marketResearch.used,
         perplexity_health: marketResearch.health,
-        perplexity_citations: marketResearch.citations,
+        perplexity_citations: cited.citations,
         // Accurate now: true only when the scrape produced usable content, not
         // merely when Firecrawl was attempted (the fallback profile is truthy).
         // Distinguishes a real scrape from a key/quota failure or a no-content site.
@@ -2303,7 +2324,8 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         cost_of_business_available: !!marketResearch.cost_of_business,
         grants_available: !!marketResearch.grants,
       },
-    });
+      };
+    };
 
     // Save immediately with unpolished content — report is now viewable.
     // This protects against worker death between generation and polish: the
