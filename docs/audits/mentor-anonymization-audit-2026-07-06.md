@@ -74,10 +74,19 @@ persisted.
 - Masking display logic centralised in `src/lib/mentorDisplay.ts` with unit
   tests for both states (`npm test`).
 
-## 5. Runbook — marking a mentor anonymous
+## 5. Marking a mentor anonymous
 
-The flag is service-role-only by design. To anonymize a mentor, run as owner
-(Supabase dashboard SQL editor is acceptable here — this is data, not schema):
+**Preferred: the admin toggle at `/admin/mentors`** (added in this ticket's
+follow-up commit). Admin-gated page listing all mentors with an on/off switch;
+switching on opens a dialog pre-filled with a suggested identity-free alias
+("UK International Founder"), headline, company label, and bio. Writes go
+through the `admin-mentor-anonymity` edge function (`verify_jwt` +
+`requireAdmin()` + service role) since client write grants on
+`community_members` are revoked. The toast reminds the admin to regenerate
+the sitemap.
+
+**Fallback: service-role SQL** (Supabase dashboard SQL editor is acceptable
+here — this is data, not schema):
 
 ```sql
 UPDATE public.community_members
@@ -117,11 +126,28 @@ To reverse, set `is_anonymous = false` (overrides can stay; they are inert).
 | Admin (app UI) | Also masked — the app's hooks all read the view. |
 | Admin (direct query / dashboard) | Real identity — base-table SELECT policy is admin-only. This is the intended "admins can still operate" path. |
 
-## 7. Follow-ups (out of scope here)
+## 7. Anonymous-presentation quality (added after initial audit)
 
-- **Admin marking UX**: a small admin-only edge function + toggle, so
-  anonymization doesn't require dashboard SQL. (Ticket explicitly deferred.)
+An anonymous mentor should still be pickable. The view keeps a genuinely
+useful non-identifying signal set — specialties, `sector_tags` (121/132
+mentors), `market_corridors` (98/132, e.g. `uk-to-australia`),
+`origin_country` (101/132), archetype (132/132) — but none of the taxonomy
+fields were rendered anywhere. Fixed in this ticket:
+
+- Profile: empty "Experience" section and empty "Quick Facts" card no longer
+  render as bare headers; Quick Facts now shows Origin (flag + name), Market
+  Corridors ("🇬🇧 UK → 🇦🇺 Australia") and Sectors from view data — for all
+  mentors, named or anonymous.
+- Cards: market-corridor chips for everyone; anonymous cards pad thin
+  specialty lists (most mentors have only 2) with sector tags.
+- Country/corridor slugs are prettified (`uk` → "🇬🇧 UK") instead of leaking
+  raw database codes as the anonymous mentor's location.
+- The admin dialog pre-fills a distinguishing alias, since archetype alone
+  collides (47 "International Founder"s).
+
+## 8. Follow-ups (out of scope here)
+
 - **Sitemap generation**: automate rebuilding `public/sitemap.xml` from the
   masked view so anonymization can't be undone by a stale static file.
 - **Flag the real mentors**: business decision — which mentors agreed to
-  anonymous-only participation. Use the runbook above per mentor.
+  anonymous-only participation. Use `/admin/mentors` per mentor.

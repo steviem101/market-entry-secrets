@@ -5,7 +5,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { mentorDisplayName, mentorInitials } from "./mentorDisplay.ts";
+import {
+  mentorDisplayName,
+  mentorInitials,
+  countryLabel,
+  corridorLabel,
+  sectorTagLabel,
+  mentorLocationLabel,
+  suggestAnonymousAlias,
+} from "./mentorDisplay.ts";
 
 const named = {
   name: "Jane Citizen",
@@ -38,5 +46,46 @@ test("initials cap at two characters and uppercase", () => {
   assert.equal(
     mentorInitials({ ...named, name: "mary anne o'brien smith" }),
     "MA",
+  );
+});
+
+test("country codes render as flag + label, unknown values pass through", () => {
+  assert.equal(countryLabel("uk"), "🇬🇧 UK");
+  assert.equal(countryLabel("new-zealand"), "🇳🇿 New Zealand"); // hyphen variant in prod data
+  assert.equal(countryLabel("hong_kong"), "🇭🇰 Hong Kong");
+  assert.equal(countryLabel("VIC"), "VIC");
+  assert.equal(countryLabel(null), null);
+});
+
+test("market corridors render as from → to", () => {
+  assert.equal(corridorLabel("uk-to-australia"), "🇬🇧 UK → 🇦🇺 Australia");
+  assert.equal(corridorLabel("other_asia-to-new_zealand"), "🌏 Asia → 🇳🇿 New Zealand");
+  assert.equal(corridorLabel("not-a-corridor"), null);
+});
+
+test("sector tags are humanised", () => {
+  assert.equal(sectorTagLabel("financial-services"), "Financial Services");
+});
+
+test("anonymous location is prettified, named location untouched", () => {
+  assert.equal(mentorLocationLabel({ location: "uk", is_anonymous: true }), "🇬🇧 UK");
+  assert.equal(
+    mentorLocationLabel({ location: "Sydney, NSW, Australia", is_anonymous: false }),
+    "Sydney, NSW, Australia",
+  );
+});
+
+test("alias suggestion prefers origin + archetype, degrades safely", () => {
+  assert.equal(
+    suggestAnonymousAlias({ archetype: "International Founder", origin_country: "uk", sector_tags: ["fintech"] }),
+    "UK International Founder",
+  );
+  assert.equal(
+    suggestAnonymousAlias({ archetype: "Active Advisor", origin_country: null, sector_tags: ["financial-services"] }),
+    "Financial Services Active Advisor",
+  );
+  assert.equal(
+    suggestAnonymousAlias({ archetype: null, origin_country: null, sector_tags: null }),
+    "Verified Expert",
   );
 });

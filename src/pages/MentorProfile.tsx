@@ -23,7 +23,14 @@ import { BookmarkButton } from "@/components/BookmarkButton";
 import { MentorContactModal } from "@/components/mentors/MentorContactModal";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import { domainToWebsite } from "@/lib/logoUtils";
-import { mentorDisplayName, mentorInitials } from "@/lib/mentorDisplay";
+import {
+  mentorDisplayName,
+  mentorInitials,
+  mentorLocationLabel,
+  countryLabel,
+  corridorLabel,
+  sectorTagLabel,
+} from "@/lib/mentorDisplay";
 import {
   useMentorBySlug,
   useMentorExperience,
@@ -233,7 +240,7 @@ const MentorProfile = () => {
                     <MapPin className="w-4 h-4 mr-1" />
                     {mentor.location_city && mentor.location_state
                       ? `${mentor.location_city}, ${mentor.location_state}`
-                      : mentor.location}
+                      : mentorLocationLabel(mentor)}
                   </span>
                   <AvailabilityBadge availability={mentor.availability} />
                 </div>
@@ -292,19 +299,24 @@ const MentorProfile = () => {
               </section>
             )}
 
-            {/* Experience */}
-            <section>
-              <h2 className="text-xl font-semibold mb-3">Experience</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {mentor.experience}
-              </p>
-              {mentor.years_experience && (
-                <div className="flex items-center gap-2 mt-3 text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  <span>{mentor.years_experience}+ years of experience</span>
-                </div>
-              )}
-            </section>
+            {/* Experience — hidden entirely when the view withholds it
+                (anonymous mentors) or it was never populated. */}
+            {(mentor.experience || mentor.years_experience) && (
+              <section>
+                <h2 className="text-xl font-semibold mb-3">Experience</h2>
+                {mentor.experience && (
+                  <p className="text-muted-foreground leading-relaxed">
+                    {mentor.experience}
+                  </p>
+                )}
+                {mentor.years_experience && (
+                  <div className="flex items-center gap-2 mt-3 text-muted-foreground">
+                    <Clock className="w-4 h-4" />
+                    <span>{mentor.years_experience}+ years of experience</span>
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* Experience with */}
             {allExperiences.length > 0 && (
@@ -387,6 +399,47 @@ const MentorProfile = () => {
                 <CardTitle className="text-lg">Quick Facts</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Origin — coarse geography, safe for anonymous mentors */}
+                {mentor.origin_country && countryLabel(mentor.origin_country) !== mentor.origin_country && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1.5">From</h4>
+                    <Badge variant="outline" className="text-xs">
+                      {countryLabel(mentor.origin_country)}
+                    </Badge>
+                  </div>
+                )}
+
+                {/* Market corridors, e.g. 🇬🇧 UK → 🇦🇺 Australia */}
+                {mentor.market_corridors && mentor.market_corridors.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1.5">Market Corridors</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {mentor.market_corridors.map((c) => {
+                        const label = corridorLabel(c);
+                        return label ? (
+                          <Badge key={c} variant="outline" className="text-xs">
+                            {label}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sector tags survive anonymization */}
+                {mentor.sector_tags && mentor.sector_tags.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1.5">Sectors</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {mentor.sector_tags.map((s) => (
+                        <Badge key={s} variant="secondary" className="text-xs">
+                          {sectorTagLabel(s)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Markets */}
                 {mentor.markets_served && mentor.markets_served.length > 0 && (
                   <div>

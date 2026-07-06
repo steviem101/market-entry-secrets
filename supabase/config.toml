@@ -132,3 +132,7 @@ verify_jwt = false
 # x-internal-secret == KB_SYNC_SECRET (same pattern as process-email-queue). Must
 # stay false or the gateway rejects the cron POST (no JWT) before the function runs.
 verify_jwt = false
+
+[functions.admin-mentor-anonymity]
+# Admin-only mentor anonymity toggle; requireAdmin() re-checks the role in-code.
+verify_jwt = true
