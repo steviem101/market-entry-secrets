@@ -115,8 +115,11 @@ export const useAgencyContacts = (agencyId: string) => {
   return useQuery({
     queryKey: ['agency-contacts', agencyId],
     queryFn: async () => {
+      // Masked view only (MES-56): the agency_contacts base table is
+      // admin-locked; this view exposes name/title/LinkedIn but never
+      // email/phone.
       const { data, error } = await (supabase as any)
-        .from('agency_contacts')
+        .from('agency_contacts_public')
         .select('*')
         .eq('agency_id', agencyId)
         .eq('is_archived', false)
