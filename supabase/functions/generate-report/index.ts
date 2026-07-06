@@ -12,6 +12,7 @@ import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
 import { metaLine, recordCountLabel } from "./cardFields.ts";
+import { buildCompetitorCards } from "./competitorCards.ts";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
@@ -2215,12 +2216,19 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
               { role: "user", content: prompt },
             ], "google/gemini-3-flash-preview", { temperature: 0.4 });
 
+            // competitor_landscape has no directory pool — its prose names the
+            // scraped competitors, so render THOSE as cards (B7) instead of the
+            // empty getMatchesForSection default, keeping prose and cards aligned.
+            const sectionMatches = tmpl.section_name === "competitor_landscape"
+              ? buildCompetitorCards(competitorResult.competitors)
+              : getMatchesForSection(tmpl.section_name, matches);
+
             return {
               name: tmpl.section_name,
               data: {
                 content,
                 visible: willBeVisible,
-                matches: getMatchesForSection(tmpl.section_name, matches),
+                matches: sectionMatches,
               },
             };
           } catch (e) {
