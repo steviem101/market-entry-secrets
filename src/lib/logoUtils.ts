@@ -1,4 +1,11 @@
+// Publishable Logo.dev key (pk_) — safe to ship client-side.
 const LOGO_DEV_TOKEN = "pk_L3JbJjCeT0-mUdhpPlS6SA";
+
+// Logo.dev serves rasters at exactly the requested `size`, so a 1x request
+// looks blurry on high-DPR screens. Callers pass the CSS display size; we
+// request 2x pixels (capped at Logo.dev's 512px max).
+const DPR_MULTIPLIER = 2;
+const MAX_REQUEST_SIZE = 512;
 
 /**
  * Extracts the bare domain from a URL string.
@@ -30,9 +37,11 @@ export function extractDomain(url: string): string | null {
 
 /**
  * Builds a Logo.dev image URL for a given domain.
+ * `size` is the CSS display size in px; the image is requested at 2x for DPR.
  */
 export function getLogoDevUrl(domain: string, size: number = 64): string {
-  return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=${size}&format=png`;
+  const requestSize = Math.min(size * DPR_MULTIPLIER, MAX_REQUEST_SIZE);
+  return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=${requestSize}&format=png`;
 }
 
 /**

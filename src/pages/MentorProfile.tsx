@@ -90,7 +90,7 @@ const MentorProfile = () => {
       : experienceTiles.map((t, i) => ({
           id: t.id || String(i),
           company_name: t.name,
-          company_logo_url: t.logo || null,
+          company_logo_url: t.logo && t.logo !== "/placeholder.svg" ? t.logo : null,
           // Derive a website from the tile's logo.dev domain so CompanyLogo renders
           // the brand logo (monogram fallback when no domain).
           company_website: domainToWebsite(t.domain),
@@ -326,9 +326,8 @@ const MentorProfile = () => {
                           existingLogoUrl={exp.company_logo_url}
                           companyName={exp.company_name}
                           size="lg"
-                          className="w-14 h-14 rounded-lg border bg-white mb-2"
+                          className="rounded-lg border bg-white mb-2"
                           fallbackClassName="bg-white text-primary"
-                          imgClassName="object-contain p-1"
                         />
                         <span className="text-sm text-center font-medium">
                           {exp.company_name}
