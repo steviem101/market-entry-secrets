@@ -20,7 +20,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { splitEventsAndResources } from '@/lib/reportEventsSplit';
+import { groupSectionCards } from '@/lib/reportCardGroups';
 import {
   SECTION_LABELS,
   SECTION_ORDER,
@@ -259,12 +259,6 @@ const ReportViewInner = () => {
                 // Case 4: Section is unlocked with content → render normally
                 const sectionMatches = section.matches || matches[sectionId] || [];
 
-                // For events_resources the matches array mixes events with
-                // content items (case studies, guides). Split so case studies
-                // don't render under "Upcoming Events" with a raw subtitle.
-                const isEventsSection = sectionId === 'events_resources';
-                const eventsSplit = isEventsSection ? splitEventsAndResources(sectionMatches) : null;
-
                 const renderCardGrid = (items: any[]) => (
                   <div className="grid gap-3 sm:grid-cols-2">
                     {items.map((match: any, idx: number) => (
@@ -285,6 +279,30 @@ const ReportViewInner = () => {
                   </div>
                 );
 
+                // Sections that mix entity types (service providers + agencies +
+                // hubs; events + resources; datasets + contacts) render one
+                // sub-headed grid per type instead of a single jumbled grid (B9).
+                const cardGroups = groupSectionCards(sectionId, sectionMatches);
+                const renderMatchArea = () => {
+                  if (sectionMatches.length === 0) return null;
+                  if (!cardGroups || cardGroups.length <= 1) return renderCardGrid(sectionMatches);
+                  return (
+                    <div className="space-y-6">
+                      {cardGroups.map((group) => (
+                        <div key={group.key}>
+                          <div className="flex items-center gap-3 mb-4">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                              {group.label}
+                            </span>
+                            <div className="flex-1 border-t border-border" />
+                          </div>
+                          {renderCardGrid(group.items)}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                };
+
                 return (
                   <ReportSection
                     key={sectionId}
@@ -293,24 +311,7 @@ const ReportViewInner = () => {
                     content={section.content || ''}
                     citations={perplexityCitations}
                   >
-                    {isEventsSection && eventsSplit ? (
-                      <>
-                        {eventsSplit.events.length > 0 && renderCardGrid(eventsSplit.events)}
-                        {eventsSplit.resources.length > 0 && (
-                          <div className="pt-4">
-                            <div className="flex items-center gap-3 mb-4">
-                              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                                Case Studies &amp; Resources
-                              </span>
-                              <div className="flex-1 border-t border-border" />
-                            </div>
-                            {renderCardGrid(eventsSplit.resources)}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      sectionMatches.length > 0 && renderCardGrid(sectionMatches)
-                    )}
+                    {renderMatchArea()}
                   </ReportSection>
                 );
               })}

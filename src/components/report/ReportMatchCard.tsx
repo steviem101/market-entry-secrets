@@ -5,6 +5,7 @@ import { ExternalLink, Lock, Globe, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { publishedOrigin } from '@/lib/publishedOrigin';
 import { tierDisplayName } from '@/components/directory/cardCtaConfig';
+import { classifyLinkedIn } from '@/lib/linkedinLabel';
 
 interface ReportMatchCardProps {
   name: string;
@@ -48,12 +49,6 @@ const humanizeSubtitle = (s?: string): string | undefined => {
   }
   return s;
 };
-
-// LinkedIn URLs are stored in the website column but the card hard-coded
-// "Website" — relabel + use the right icon when the URL is a LinkedIn
-// profile so users aren't misled.
-const isLinkedInUrl = (url: string): boolean =>
-  /(?:^|\/\/(?:www\.)?)linkedin\.com\//.test(url || '');
 
 // Print/PDF needs absolute internal links so they don't break when the
 // page is exported (window.print's a[href^="/"] resolves relative to the
@@ -105,8 +100,12 @@ export const ReportMatchCard = ({
 
   const isWebSource = source === 'web';
   const displaySubtitle = humanizeSubtitle(subtitle);
-  const websiteIsLinkedIn = website ? isLinkedInUrl(website) : false;
-  const websiteLabel = websiteIsLinkedIn ? 'LinkedIn' : 'Website';
+  // Classify the website/LinkedIn slot so the label is honest about what it
+  // points to — a personal "LinkedIn Profile" vs an org "LinkedIn Page" vs a
+  // plain "Website" — instead of a flat "LinkedIn" that mislabels the wrong type.
+  const websiteInfo = classifyLinkedIn(website);
+  const websiteIsLinkedIn = websiteInfo.isLinkedIn;
+  const websiteLabel = websiteInfo.label;
 
   return (
     <Card className="border-border/50 border-l-[3px] border-l-primary/30 hover:border-l-primary/60 hover:shadow-sm transition-all">

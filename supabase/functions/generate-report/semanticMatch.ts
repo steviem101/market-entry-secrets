@@ -13,6 +13,7 @@
  */
 
 import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
+import { metaLine, recordCountLabel } from "./cardFields.ts";
 
 export interface SemanticTypeConfig {
   /** source table to hydrate full rows from */
@@ -74,7 +75,7 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
       name: e.title,
       link: e.slug ? `/events/${e.slug}` : "/events",
       linkLabel: "View Event",
-      subtitle: `${e.date} · ${e.location}`,
+      subtitle: metaLine([e.date, e.location]),
       tags: [e.category, e.type].filter(Boolean),
     }),
   },
@@ -123,7 +124,7 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
       ...i,
       link: i.slug ? `/investors/${i.slug}` : "/investors",
       linkLabel: "View Investor",
-      subtitle: `${i.investor_type} · ${i.location}`,
+      subtitle: metaLine([i.investor_type, i.location]),
       tags: (i.stage_focus || []).slice(0, 3),
     }),
   },
@@ -145,7 +146,7 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
       price: l.price_aud,
       link: l.slug ? `/leads/${l.slug}` : "/leads",
       linkLabel: "View Dataset",
-      subtitle: `${l.location ?? ""} · ${l.record_count ?? "?"} records`,
+      subtitle: metaLine([l.location, recordCountLabel(l.record_count)]),
       tags: (l.tags || []).slice(0, 3),
     }),
   },
