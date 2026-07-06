@@ -2,6 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { InlineCitation } from './InlineCitation';
+import { cleanUrlLabel } from '@/lib/cleanUrlLabel';
 
 interface CitationRendererProps {
   content: string;
@@ -17,15 +18,39 @@ const REMARK_PLUGINS = [remarkGfm];
  * Renders markdown content with inline citation markers [N] converted
  * to interactive superscript links.
  */
+// Anchor override (B1): GFM autolinks a bare URL in the prose into
+// <a href="url">url</a>, so the visible text is the full raw URL. When the
+// link's visible label IS the raw URL, shorten it to a clean host-based label;
+// genuine text labels ([Austrade](…)) pass through unchanged. Applied on both
+// the citation and no-citation paths.
+const LinkRenderer = ({ children, href, ...props }: any) => {
+  const label =
+    typeof children === 'string'
+      ? cleanUrlLabel(children)
+      : Array.isArray(children) && children.length === 1 && typeof children[0] === 'string'
+        ? cleanUrlLabel(children[0])
+        : children;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+      {label}
+    </a>
+  );
+};
+
 export const CitationRenderer = ({ content, citations }: CitationRendererProps) => {
   if (!citations || citations.length === 0) {
-    // No citations — render plain markdown, [N] will show as text
-    return <ReactMarkdown remarkPlugins={REMARK_PLUGINS}>{content}</ReactMarkdown>;
+    // No citations — still clean any autolinked raw-URL labels ([N] shows as text)
+    return (
+      <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={{ a: LinkRenderer }}>
+        {content}
+      </ReactMarkdown>
+    );
   }
 
   // Custom components override for react-markdown: we process text nodes
   // to find [N] patterns and replace them with InlineCitation components
   const components: Record<string, React.ComponentType<any>> = {
+    a: LinkRenderer,
     p: ({ children, ...props }: any) => (
       <p {...props}>{processChildren(children, citations)}</p>
     ),

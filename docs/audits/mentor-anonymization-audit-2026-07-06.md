@@ -106,10 +106,10 @@ To reverse, set `is_anonymous = false` (overrides can stay; they are inert).
 
 1. Verify masked payload:
    `SELECT name, title, company, image, slug FROM community_members_public WHERE id = '<uuid>';`
-2. **Regenerate `public/sitemap.xml`** — it is static and contains real-name
-   mentor slugs (`/mentors/experts/<real-name>`). The flagged mentor's old URL
-   keeps leaking their name in the sitemap until it is rebuilt; the masked
-   profile now lives at `/mentors/experts/anon-<id prefix>`.
+2. Sitemap: since MES-79 the sitemap is served by the `sitemap` edge function
+   reading `community_members_public`, so the flagged mentor's entry switches
+   to the masked `anon-<id prefix>` slug automatically — no manual rebuild.
+   Search engines drop the old real-name URL on their next crawl (it 404s).
 3. Check `bookmarks` rows for the mentor: `content_title` snapshots the name
    at bookmark time, so pre-flag bookmarks retain the real name. Scrub if the
    privacy agreement requires it:
@@ -147,7 +147,8 @@ fields were rendered anywhere. Fixed in this ticket:
 
 ## 8. Follow-ups (out of scope here)
 
-- **Sitemap generation**: automate rebuilding `public/sitemap.xml` from the
-  masked view so anonymization can't be undone by a stale static file.
 - **Flag the real mentors**: business decision — which mentors agreed to
   anonymous-only participation. Use `/admin/mentors` per mentor.
+- ~~Sitemap generation~~: resolved by MES-79 — the sitemap is now a DB-driven
+  edge function reading the masked view, so anonymization propagates
+  automatically.

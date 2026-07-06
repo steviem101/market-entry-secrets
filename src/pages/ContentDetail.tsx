@@ -1,6 +1,6 @@
 
 import { useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, Link, Navigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +36,7 @@ const CONTENT_TYPE_BADGE_LABELS: Record<string, string> = {
 
 const ContentDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { search, hash } = useLocation();
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
@@ -58,14 +59,17 @@ const ContentDetail = () => {
   const sectionIds = content?.content_sections?.map((section: any) => section.slug) || [];
   const { activeSection, scrollToSection } = useScrollSpy({ sectionIds });
 
-  // Increment view count once when content loads
+  // Increment view count once when content loads. Skip case studies: they
+  // redirect to /case-studies/:slug below, where CaseStudyDetail counts the
+  // view — counting here too would double-count and record a view on the
+  // legacy URL we're deindexing (MES-80 review).
   const hasCountedRef = useRef(false);
   useEffect(() => {
-    if (content?.id && !hasCountedRef.current) {
+    if (content?.id && content.content_type !== "case_study" && !hasCountedRef.current) {
       hasCountedRef.current = true;
       incrementViewCount(content.id);
     }
-  }, [content?.id, incrementViewCount]);
+  }, [content?.id, content?.content_type, incrementViewCount]);
 
 
   if (isLoading) {
@@ -93,6 +97,17 @@ const ContentDetail = () => {
         </div>
       </div>
     );
+  }
+
+  // Case studies are canonical at /case-studies/:slug only (MES-80 / SEO-04).
+  // A case study reached via the legacy /content/:slug route (this component
+  // resolves any content_type by slug) redirects to its canonical URL so the
+  // two routes never both index the same content. Admins are exempted so the
+  // enrichment / attachment controls (which only exist on this page, not on
+  // CaseStudyDetail) stay reachable for case studies (MES-80 review).
+  const isCaseStudy = content.content_type === "case_study" && !!content.slug;
+  if (isCaseStudy && !isAdmin()) {
+    return <Navigate to={`/case-studies/${content.slug}${search}${hash}`} replace />;
   }
 
   const companyProfile = content.content_company_profiles?.[0];
@@ -129,7 +144,7 @@ const ContentDetail = () => {
       <SEOHead
         title={`${content.title} | Market Entry Secrets`}
         description={descriptionText}
-        canonicalPath={`/content/${content.slug}`}
+        canonicalPath={isCaseStudy ? `/case-studies/${content.slug}` : `/content/${content.slug}`}
         ogType="article"
         ogImage={companyProfile?.company_logo || primaryFounder?.image || undefined}
         jsonLd={{

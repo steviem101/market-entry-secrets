@@ -10,7 +10,40 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+# AI crawlers — explicitly allowed (MES-82 / SEO-06).
+# Default-allow is the deliberate posture for a discoverability-driven business:
+# we want our public directories, guides, and case studies to be readable by and
+# citable in AI answers. Private/auth/report routes are kept out of reach by the
+# per-route noindex + X-Robots-Tag rules (MES-81), not here.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
 User-agent: *
 Allow: /
 
-Sitemap: https://marketentrysecrets.com/sitemap.xml
+# DB-driven sitemap index (MES-79 / SEO-03). Hosted on the Supabase edge
+# function so it regenerates from the database on every crawl and can never
+# drift; Google/Bing accept a cross-host sitemap that is referenced here in
+# robots.txt on the target site.
+Sitemap: https://xhziwveaiuhzdoutpgrh.supabase.co/functions/v1/sitemap

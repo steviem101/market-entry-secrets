@@ -11,7 +11,10 @@ import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServ
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
-import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor } from "./geoRelevance.ts";
+import { metaLine, recordCountLabel } from "./cardFields.ts";
+import { buildCompetitorCards } from "./competitorCards.ts";
+import { renumberCitations } from "./citationRenumber.ts";
+import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
@@ -1318,7 +1321,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
 
     matches.events = eventResults.map((e: any) => ({
       ...e, name: e.title, link: e.slug ? `/events/${e.slug}` : "/events", linkLabel: "View Event",
-      subtitle: `${e.date} · ${e.location}`, tags: [e.category, e.type].filter(Boolean),
+      subtitle: metaLine([e.date, e.location]), tags: [e.category, e.type].filter(Boolean),
     }));
   } catch (e) { console.error("Events search error:", e); }
 
@@ -1373,7 +1376,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     matches.lead_databases = gatedLeads.map((l: any) => ({
       ...l, name: l.title, price: l.price_aud,
       link: l.slug ? `/leads/${l.slug}` : "/leads", linkLabel: "View Dataset",
-      subtitle: `${l.location ?? ""} · ${l.record_count ?? "?"} records`,
+      subtitle: metaLine([l.location, recordCountLabel(l.record_count)]),
       tags: (l.tags || []).slice(0, 3),
     }));
   } catch (e) { console.error("Lead databases search error:", e); }
@@ -1412,7 +1415,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     if (invErr) console.error("Investors query error:", invErr);
     matches.investors = rank(inv, { countryCol: "country" }, 8).map((i: any) => ({
       ...i, link: i.slug ? `/investors/${i.slug}` : "/investors", linkLabel: "View Investor",
-      subtitle: `${i.investor_type} · ${i.location}`,
+      subtitle: metaLine([i.investor_type, i.location]),
       tags: (i.stage_focus || []).slice(0, 3),
     }));
   } catch (e) { console.error("Investors search error:", e); }
@@ -1690,6 +1693,19 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       console.log(`geo gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);
     }
   }
+  // National chambers of commerce that are filed in the PROVIDER pools (no
+  // jurisdiction column, so the agency gate above can't see them) are gated by
+  // the foreign demonym in their NAME — keep the corridor chamber (Australian
+  // British Chamber for a UK founder), drop the wrong one (AmCham/US). Hard filter:
+  // a wrong-corridor chamber is pure noise and the section stays full from the many
+  // non-chamber providers. (Stage 7 bug B8.)
+  for (const tbl of ["service_providers", "innovation_ecosystem"]) {
+    if (merged[tbl]?.length) {
+      const before = merged[tbl].length;
+      merged[tbl] = merged[tbl].filter((r) => !chamberOriginMismatch(r, agencyOriginTerms));
+      if (merged[tbl].length !== before) console.log(`chamber gate ${tbl}: ${before} → ${merged[tbl].length}`);
+    }
+  }
 
   // ── Cross-section dedupe (Stage 7 bug B10) ──────────────────────────────
   // An entity in the providers section (service_providers + agencies + innovation)
@@ -1739,14 +1755,22 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
     // must not be double-counted by the utilization metric). First occurrence wins, so
     // the service_providers pool (the primary) keeps the entry. Per-pool caps upstream
     // (10 / 5 / 5) already bound the total.
+    // `card_group` tags each card with its entity kind so the frontend renders
+    // one sub-headed grid per type instead of a single mixed grid (Stage 5 B9).
     case "service_providers": return dedupeByKey([
-      ...(matches.service_providers || []),
-      ...(matches.trade_investment_agencies || []),
-      ...(matches.innovation_ecosystem || []),
+      ...(matches.service_providers || []).map((r: any) => ({ ...r, card_group: "providers" })),
+      ...(matches.trade_investment_agencies || []).map((r: any) => ({ ...r, card_group: "agencies" })),
+      ...(matches.innovation_ecosystem || []).map((r: any) => ({ ...r, card_group: "innovation" })),
     ], (r: any) => (r?.name || r?.title || r?.company_name || "").toString().toLowerCase().trim());
     case "mentor_recommendations": return matches.community_members || [];
-    case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
-    case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
+    case "events_resources": return [
+      ...(matches.events || []).map((r: any) => ({ ...r, card_group: "events" })),
+      ...(matches.content_items || []).map((r: any) => ({ ...r, card_group: "resources" })),
+    ];
+    case "lead_list": return [
+      ...(matches.leads || []).map((r: any) => ({ ...r, card_group: "leads" })),
+      ...(matches.lemlist_contacts || []).map((r: any) => ({ ...r, card_group: "contacts" })),
+    ];
     case "investor_recommendations": return matches.investors || [];
     case "competitor_landscape": return [];
     default: return [];
@@ -1878,7 +1902,7 @@ async function generateReportInBackground(
     if (discoveredEvents.length > 0) {
       const discoveredEventMatches = discoveredEvents.map((e) => ({
         name: e.name,
-        subtitle: `${e.date} · ${e.location}`,
+        subtitle: metaLine([e.date, e.location]),
         tags: ["Web Discovery"],
         link: e.url,
         linkLabel: "View Event",
@@ -2206,12 +2230,19 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
               { role: "user", content: prompt },
             ], "google/gemini-3-flash-preview", { temperature: 0.4 });
 
+            // competitor_landscape has no directory pool — its prose names the
+            // scraped competitors, so render THOSE as cards (B7) instead of the
+            // empty getMatchesForSection default, keeping prose and cards aligned.
+            const sectionMatches = tmpl.section_name === "competitor_landscape"
+              ? buildCompetitorCards(competitorResult.competitors)
+              : getMatchesForSection(tmpl.section_name, matches);
+
             return {
               name: tmpl.section_name,
               data: {
                 content,
                 visible: willBeVisible,
-                matches: getMatchesForSection(tmpl.section_name, matches),
+                matches: sectionMatches,
               },
             };
           } catch (e) {
@@ -2242,9 +2273,16 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
     const sectionOrder = templates ? templates.map((t: any) => t.section_name) : Object.keys(sections);
 
-    const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => ({
+    const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => {
+      // Citation integrity (B11/B15): renumber inline [N] markers to a contiguous
+      // 1..M and store only the actually-cited sources, so inline indices and the
+      // Sources footer are 1:1 (no more "[1][2][3][6][9]" against "Sources (19)").
+      // Pure + no-op when nothing is cited; runs on both the unpolished and
+      // polished builds so each stored snapshot is internally consistent.
+      const cited = renumberCitations(currentSections, sectionOrder, marketResearch.citations);
+      return {
       company_name: intake.company_name,
-      sections: currentSections,
+      sections: cited.sections,
       matches,
       metadata: {
         tables_searched: Object.keys(matches),
@@ -2252,7 +2290,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         generation_time_ms: Date.now() - startTime,
         perplexity_used: marketResearch.used,
         perplexity_health: marketResearch.health,
-        perplexity_citations: marketResearch.citations,
+        perplexity_citations: cited.citations,
         // Accurate now: true only when the scrape produced usable content, not
         // merely when Firecrawl was attempted (the fallback profile is truthy).
         // Distinguishes a real scrape from a key/quota failure or a no-content site.
@@ -2286,7 +2324,8 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         cost_of_business_available: !!marketResearch.cost_of_business,
         grants_available: !!marketResearch.grants,
       },
-    });
+      };
+    };
 
     // Save immediately with unpolished content — report is now viewable.
     // This protects against worker death between generation and polish: the

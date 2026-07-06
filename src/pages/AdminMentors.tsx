@@ -129,7 +129,7 @@ const AdminMentors = () => {
           ? `${mentor.name} is now anonymous`
           : `${mentor.name} is now shown with full identity`,
         description: isAnonymous
-          ? `Public listing shows "${data?.public_view?.name ?? "masked identity"}". Remember to regenerate the sitemap — the old real-name URL lingers there until rebuilt.`
+          ? `Public listing shows "${data?.public_view?.name ?? "masked identity"}". The sitemap serves the masked slug automatically; search engines pick it up on their next crawl.`
           : undefined,
       });
     } catch (err) {

@@ -168,6 +168,68 @@ function bilateralPartnerInCorridor(row: NonNullable<Row>, originTerms: string[]
   return partners.some((p) => originTerms.some((t) => t && p.includes(t)));
 }
 
+// ── National chambers of commerce on the PROVIDER surfaces ────────────────
+// A bilateral chamber is corridor-gated cleanly when it lives in
+// trade_investment_agencies (structured organisation_type + jurisdiction). But
+// some are filed in service_providers / innovation_ecosystem instead — and those
+// tables have NO jurisdiction column, only a free-text name. Such a chamber is
+// almost always sector_agnostic, so it matches EVERY report and the location gate
+// keeps it (it's physically in Australia). The one signal in the name is the
+// foreign side's DEMONYM: "American Chamber of Commerce in Australia" → US,
+// "Australian British Chamber of Commerce" → UK. We keep the chamber only for a
+// founder from that country; for anyone else it's noise (Stage 7 bug B8: AmCham
+// surfaced for an Irish/UK company).
+const CHAMBER_RE = /chamber of commerce|chamber of industry|\bamcham\b|\bbritcham\b/i;
+
+// Demonym (nationality adjective / contraction) → normalised country, matched to
+// what geoOriginTerms() yields (e.g. "united kingdom", "united states"). ANZ
+// nationalities are deliberately absent — the Australian/NZ side of a bilateral
+// chamber is the local half, never the foreign partner that gates relevance.
+const CHAMBER_DEMONYMS: Array<[RegExp, string]> = [
+  [/\bamerican\b|\bamcham\b/i, "united states"],
+  [/\bbritish\b|\bbritcham\b/i, "united kingdom"],
+  [/\birish\b/i, "ireland"],
+  [/\bgerman\b/i, "germany"],
+  [/\bfrench\b/i, "france"],
+  [/\bitalian\b/i, "italy"],
+  [/\bspanish\b/i, "spain"],
+  [/\bdutch\b/i, "netherlands"],
+  [/\bcanadian\b/i, "canada"],
+  [/\bjapanese\b/i, "japan"],
+  [/\bchinese\b/i, "china"],
+  [/\bindian\b/i, "india"],
+  [/\bkorean\b/i, "korea"],
+  [/\bsingaporean\b/i, "singapore"],
+  [/\bswiss\b/i, "switzerland"],
+  [/\bswedish\b/i, "sweden"],
+  [/\bhong kong\b/i, "hong kong"],
+];
+
+/**
+ * Should this PROVIDER-surface row be dropped as a wrong-corridor national chamber?
+ * Returns false (no opinion — keep) for anything that isn't a chamber, or a chamber
+ * that names no foreign nationality (a generic/Australian chamber, useful to all).
+ * Returns true (DROP) only for a chamber whose named foreign side ≠ the founder's
+ * origin. A domestic AU founder (originTerms = []) drops every national chamber,
+ * mirroring the agency gate.
+ */
+export function chamberOriginMismatch(row: Row, originTerms: string[]): boolean {
+  if (!row) return false;
+  const name = norm(row.name ?? row.title ?? row.company_name);
+  if (!name || !CHAMBER_RE.test(name)) return false;
+
+  const foreign: string[] = [];
+  for (const [re, country] of CHAMBER_DEMONYMS) {
+    if (re.test(name)) foreign.push(country);
+  }
+  if (foreign.length === 0) return false; // generic / purely-Australian chamber — keep
+
+  const matchesOrigin = foreign.some((c) =>
+    originTerms.some((t) => t && (c.includes(t) || t.includes(c)))
+  );
+  return !matchesOrigin;
+}
+
 export function isAgencyInCorridor(row: Row, originTerms: string[]): boolean {
   if (!row) return false;
   const orgType = norm(row.organisation_type);

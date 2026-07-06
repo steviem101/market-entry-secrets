@@ -12,8 +12,12 @@
     <meta name="description" content="Vetted providers, leads, events, case studies, and AI-generated plans for entering or scaling in the Australian and New Zealand market.">
     <meta name="author" content="Market Entry Secrets" />
     <meta name="google-site-verification" content="tRduCW2OpklTOmUIu-4rKEhgkaPt3EOSCCLAZjv9BUU" />
-    <link rel="canonical" href="https://marketentrysecrets.com/" />
-    <meta property="og:url" content="https://marketentrysecrets.com/" />
+    <!--
+      No hardcoded canonical / og:url here on purpose. SEOHead
+      (react-helmet-async) sets a route-specific canonical + og:url on every
+      page; a static homepage canonical here made all routes self-declare as
+      duplicates of "/" in raw HTML (MES-77 / SEO-01).
+    -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,15 +26,36 @@
     
     
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/FoMwhVeRTLhFdP2Qf2nV5vR2rm52/social-images/social-1770588515929-pexels-debitirarmorefotos-33977177.jpg">
+    <meta property="og:image" content="https://marketentrysecrets.com/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Market Entry Secrets — intelligence for the Australian & New Zealand market">
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/FoMwhVeRTLhFdP2Qf2nV5vR2rm52/social-images/social-1770588515929-pexels-debitirarmorefotos-33977177.jpg">
+    <meta name="twitter:image" content="https://marketentrysecrets.com/og-image.png">
     <meta property="og:title" content="Market Entry Secrets | Intelligence for the ANZ Market">
   <meta name="twitter:title" content="Market Entry Secrets | Intelligence for the ANZ Market">
   <meta property="og:description" content="Vetted providers, leads, events, case studies, and AI-generated plans for entering or scaling in the Australian and New Zealand market.">
   <meta name="twitter:description" content="Vetted providers, leads, events, case studies, and AI-generated plans for entering or scaling in the Australian and New Zealand market.">
+
+    <!--
+      Sitewide Organization entity (MES-77 / SEO-01). Kept static in the raw
+      HTML — not JS-injected — so non-JS crawlers (GPTBot, ClaudeBot,
+      PerplexityBot) and social scrapers see the brand entity on every route.
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Market Entry Secrets",
+      "url": "https://marketentrysecrets.com",
+      "logo": "https://marketentrysecrets.com/email/logo.png",
+      "image": "https://marketentrysecrets.com/og-image.png",
+      "description": "Vetted providers, leads, events, case studies, and AI-generated plans for entering or scaling in the Australian and New Zealand market.",
+      "areaServed": ["AU", "NZ"],
+      "sameAs": ["https://www.linkedin.com/company/market-entry-secrets"]
+    }
+    </script>
 </head>
 
   <body>
