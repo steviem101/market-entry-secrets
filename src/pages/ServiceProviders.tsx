@@ -1,70 +1,42 @@
-
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ServiceProvidersHero } from "@/components/service-providers/ServiceProvidersHero";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
-import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
-import { ServiceProvidersAdvancedFilters } from "@/components/service-providers/ServiceProvidersAdvancedFilters";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
+import { DirectoryFilterBar, type FilterOption, type SelectFilterConfig } from "@/components/common/DirectoryFilterBar";
 import { ListPagination } from "@/components/common/ListPagination";
 import { UsageBanner } from "@/components/UsageBanner";
-import { mapServicesToSectors, getStandardTypes } from "@/utils/sectorMapping";
-import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
-import { usePersona } from "@/contexts/PersonaContext";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { mapServicesToSectors } from "@/utils/sectorMapping";
+import { type PersonaFilterValue } from "@/components/PersonaFilter";
+import { useServiceProviderCategories } from "@/hooks/useServiceProviders";
+import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
+import type { FilterSpec } from "@/lib/directoryFilters";
 
 const PAGE_SIZE = 12;
 
+const SP_FILTER_SPEC: FilterSpec = {
+  search: { param: "search", default: "" },
+  category: { param: "category", default: "all" },
+  location: { param: "location", default: "all" },
+  sector: { param: "sector", default: "all" },
+  verified: { param: "verified", default: "false" },
+  persona: { param: "persona", default: "all" },
+  sort: { param: "sort", default: "featured", presentation: true },
+};
+
+const SORT_OPTIONS: FilterOption[] = [
+  { value: "featured", label: "Featured first" },
+  { value: "name", label: "A-Z" },
+  { value: "views", label: "Most viewed" },
+];
+
 const ServiceProviders = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { persona } = usePersona();
-  const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
-    (searchParams.get("persona") as PersonaFilterValue) ?? (persona as PersonaFilterValue) ?? 'all'
-  );
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
-  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
-  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
-  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
-  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get("category") ?? "all");
-  const [verifiedOnly, setVerifiedOnly] = useState(searchParams.get("verified") === "true");
-  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") ?? "featured");
-  const [showFilters, setShowFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(SP_FILTER_SPEC);
+  const { data: categories = [] } = useServiceProviderCategories();
 
-  useEffect(() => {
-    const p = new URLSearchParams();
-    if (searchTerm) p.set("search", searchTerm);
-    if (selectedLocation !== "all") p.set("location", selectedLocation);
-    if (selectedType !== "all") p.set("type", selectedType);
-    if (selectedSector !== "all") p.set("sector", selectedSector);
-    if (selectedCategory !== "all") p.set("category", selectedCategory);
-    if (verifiedOnly) p.set("verified", "true");
-    if (sortBy !== "featured") p.set("sort", sortBy);
-    if (personaFilterValue !== "all") p.set("persona", personaFilterValue);
-    if (currentPage > 1) p.set("page", String(currentPage));
-    setSearchParams(p, { replace: true });
-  }, [searchTerm, selectedLocation, selectedType, selectedSector, selectedCategory, verifiedOnly, sortBy, personaFilterValue, currentPage, setSearchParams]);
-
-  const handleLocationChange = (location: string) => {
-    setSelectedLocation(location);
-    setCurrentPage(1);
-  };
-
-  const handleClearFilters = () => {
-    setSearchTerm("");
-    setSelectedLocation("all");
-    setSelectedType("all");
-    setSelectedSector("all");
-    setSelectedCategory("all");
-    setVerifiedOnly(false);
-    setSortBy("featured");
-    setCurrentPage(1);
-  };
-
-  const handleSearchChange = (term: string) => {
-    setSearchTerm(term);
-    setCurrentPage(1);
-  };
+  const verifiedOnly = filters.verified === "true";
 
   return (
     <>
@@ -94,30 +66,41 @@ const ServiceProviders = () => {
       </Helmet>
 
       <ServiceProvidersDataProvider
-        selectedLocations={selectedLocation === "all" ? [] : [selectedLocation]}
-        searchTerm={searchTerm}
-        selectedType={selectedType}
-        selectedSector={selectedSector}
-        selectedCategory={selectedCategory}
+        selectedLocations={filters.location === "all" ? [] : [filters.location]}
+        searchTerm={filters.search}
+        selectedType="all"
+        selectedSector={filters.sector}
+        selectedCategory={filters.category}
         verifiedOnly={verifiedOnly}
-        sortBy={sortBy}
-        personaFilter={personaFilterValue}
+        sortBy={filters.sort}
+        personaFilter={filters.persona as PersonaFilterValue}
       >
-        {({ companies, loading, filteredCompanies, uniqueTypes, uniqueSectors, totalCompanies, uniqueLocations, uniqueLocationValues, totalServices }) => {
-          const hasActiveFilters = selectedLocation !== "all" || selectedType !== "all" || selectedSector !== "all" || searchTerm !== "" || selectedCategory !== "all" || verifiedOnly;
-          const types = getStandardTypes.serviceProviders;
+        {({ companies, filteredCompanies, totalCompanies, uniqueLocations, uniqueLocationValues, totalServices }) => {
           const sectors = Array.from(new Set(companies.flatMap(company => mapServicesToSectors(company.services || [])))).sort();
-          const allServices = Array.from(new Set(companies.flatMap(company => company.services || []))).sort();
 
           const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
-          const clampedPage = Math.max(1, Math.min(currentPage, totalPages || 1));
-          if (clampedPage !== currentPage) {
-            setTimeout(() => setCurrentPage(clampedPage), 0);
-          }
+          // Clamp an out-of-range page to the last page for display (derived,
+          // no setState-during-render / URL write-back) so it shows results
+          // instead of a blank grid.
+          const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
           const paginatedCompanies = filteredCompanies.slice(
             (clampedPage - 1) * PAGE_SIZE,
             clampedPage * PAGE_SIZE
           );
+
+          const categoryTabs: FilterOption[] = [
+            { value: "all", label: "All", count: companies.length },
+            ...categories.map((c) => ({
+              value: c.slug,
+              label: c.name,
+              count: companies.filter((co) => (co as any).category_slug === c.slug).length,
+            })),
+          ];
+
+          const selects: SelectFilterConfig[] = [
+            { key: "location", allLabel: "All Locations", options: uniqueLocationValues.map((l) => ({ value: l, label: l })) },
+            { key: "sector", allLabel: "All Sectors", options: sectors.map((s) => ({ value: s, label: s })) },
+          ];
 
           return (
             <>
@@ -127,46 +110,35 @@ const ServiceProviders = () => {
                 totalServices={totalServices}
               />
 
-              <StandardDirectoryFilters
-                searchTerm={searchTerm}
-                onSearchChange={handleSearchChange}
-                selectedLocation={selectedLocation}
-                onLocationChange={handleLocationChange}
-                selectedType={selectedType}
-                onTypeChange={(t) => { setSelectedType(t); setCurrentPage(1); }}
-                selectedSector={selectedSector}
-                onSectorChange={(s) => { setSelectedSector(s); setCurrentPage(1); }}
-                showFilters={showFilters}
-                onToggleFilters={() => setShowFilters(!showFilters)}
-                onClearFilters={handleClearFilters}
+              <DirectoryFilterBar
+                filters={filters}
+                onFilterChange={setFilter}
+                onClearAll={clearAll}
                 hasActiveFilters={hasActiveFilters}
-                locations={uniqueLocationValues}
-                types={types}
-                sectors={sectors}
-                searchPlaceholder="Search service providers..."
+                noun="service providers"
+                shownCount={paginatedCompanies.length}
+                totalCount={filteredCompanies.length}
+                tabs={{ key: "category", options: categoryTabs }}
+                search={{ key: "search", placeholder: "Search service providers..." }}
+                selects={selects}
+                sort={{ key: "sort", options: SORT_OPTIONS }}
+                audience={{ key: "persona" }}
               >
-                <ServiceProvidersAdvancedFilters
-                  selectedCategory={selectedCategory}
-                  onCategoryChange={(c) => { setSelectedCategory(c); setCurrentPage(1); }}
-                  verifiedOnly={verifiedOnly}
-                  onVerifiedChange={(v) => { setVerifiedOnly(v); setCurrentPage(1); }}
-                  sortBy={sortBy}
-                  onSortChange={(s) => { setSortBy(s); setCurrentPage(1); }}
-                  services={allServices}
-                  onServiceClick={(s) => { setSearchTerm(s); setCurrentPage(1); }}
-                />
-              </StandardDirectoryFilters>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="verified-only"
+                    checked={verifiedOnly}
+                    onCheckedChange={(v) => setFilter("verified", v ? "true" : "false")}
+                  />
+                  <Label htmlFor="verified-only" className="text-sm text-muted-foreground cursor-pointer">
+                    Verified only
+                  </Label>
+                </div>
+              </DirectoryFilterBar>
 
               <div className="container mx-auto px-4 py-8">
                 <UsageBanner />
-
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                  <PersonaFilter value={personaFilterValue} onChange={(v) => { setPersonaFilterValue(v); setCurrentPage(1); }} />
-                  <h2 className="sr-only">Service provider results</h2>
-                  <p className="text-muted-foreground text-sm">
-                    Showing {paginatedCompanies.length} of {filteredCompanies.length} service providers
-                  </p>
-                </div>
+                <h2 className="sr-only">Service provider results</h2>
 
                 <ServiceProvidersList
                   companies={paginatedCompanies}
@@ -175,14 +147,13 @@ const ServiceProviders = () => {
                 <ListPagination
                   currentPage={clampedPage}
                   totalPages={totalPages}
-                  onPageChange={setCurrentPage}
+                  onPageChange={setPage}
                 />
               </div>
             </>
           );
         }}
       </ServiceProvidersDataProvider>
-
     </>
   );
 };
