@@ -30,7 +30,10 @@ const InnovationEcosystem = () => {
   );
 
   const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
-  const paginatedOrganizations = filteredOrganizations.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Clamp an out-of-range ?page= (bookmarked deep page, or a result set that
+  // shrank) to the last page so it shows results instead of a blank grid.
+  const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
+  const paginatedOrganizations = filteredOrganizations.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
   const uniqueLocations = useMemo(
     () => [...new Set((organizations ?? []).map((org) => org.location).filter(Boolean))].sort() as string[],
@@ -100,7 +103,7 @@ const InnovationEcosystem = () => {
         />
 
         <ListPagination
-          currentPage={page}
+          currentPage={clampedPage}
           totalPages={totalPages}
           onPageChange={setPage}
         />

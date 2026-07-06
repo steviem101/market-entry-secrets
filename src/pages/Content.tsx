@@ -25,6 +25,10 @@ const CONTENT_TYPE_TABS: FilterOption[] = [
   ...Object.entries(CONTENT_TYPE_LABELS).map(([value, label]) => ({ value, label })),
 ];
 
+// Allowlist so a stale/invalid ?type= (e.g. a retired content_type) falls back
+// to "All" instead of matching nothing and rendering an empty grid.
+const VALID_CONTENT_TYPES = new Set(["all", ...Object.keys(CONTENT_TYPE_LABELS)]);
+
 const CONTENT_FILTER_SPEC: FilterSpec = {
   search: { param: "search", default: "" },
   type: { param: "type", default: "all" },
@@ -42,7 +46,10 @@ const Content = () => {
   const contentItemIds = useMemo(() => contentItems.map(item => item.id), [contentItems]);
   const { data: attachmentCounts = {} } = useAttachmentCounts(contentItemIds);
 
-  const filteredContent = useMemo(() => filterContent(contentItems, filters), [contentItems, filters]);
+  const filteredContent = useMemo(() => {
+    const type = VALID_CONTENT_TYPES.has(filters.type) ? filters.type : "all";
+    return filterContent(contentItems, { ...filters, type });
+  }, [contentItems, filters]);
 
   // Only show categories that have at least 1 piece of content.
   const categoriesWithContent = useMemo(
