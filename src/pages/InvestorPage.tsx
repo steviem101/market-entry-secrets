@@ -1,5 +1,6 @@
-import { useParams } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { canonicalSlugRedirect } from "@/lib/canonicalRedirect";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
@@ -30,6 +31,14 @@ const InvestorPage = () => {
       </div>
     );
   }
+
+  // Legacy UUID URLs redirect to the canonical slug URL (MES-80 / SEO-04).
+  const redirectTo = canonicalSlugRedirect(
+    slug,
+    investor.slug,
+    (s) => `/investors/${s}`,
+  );
+  if (redirectTo) return <Navigate to={redirectTo} replace />;
 
   return (
     <>

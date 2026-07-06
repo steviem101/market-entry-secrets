@@ -1,6 +1,6 @@
 
 import { useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -93,6 +93,14 @@ const ContentDetail = () => {
         </div>
       </div>
     );
+  }
+
+  // Case studies are canonical at /case-studies/:slug only (MES-80 / SEO-04).
+  // A case study reached via the legacy /content/:slug route (this component
+  // resolves any content_type by slug) redirects to its canonical URL so the
+  // two routes never both index the same content.
+  if (content.content_type === "case_study" && content.slug) {
+    return <Navigate to={`/case-studies/${content.slug}`} replace />;
   }
 
   const companyProfile = content.content_company_profiles?.[0];

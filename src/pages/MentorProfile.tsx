@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import {
   MapPin,
   Globe,
@@ -127,6 +127,14 @@ const MentorProfile = () => {
         </div>
       </>
     );
+  }
+
+  // Legacy UUID URLs (useMentorBySlug falls back to an id lookup) and any
+  // stale category segment redirect to the canonical slug URL (MES-80 / SEO-04)
+  // so Google holds one URL per mentor.
+  const canonicalCategory = mentor.category_slug || "experts";
+  if (mentor.slug && (mentorSlug !== mentor.slug || categorySlug !== canonicalCategory)) {
+    return <Navigate to={`/mentors/${canonicalCategory}/${mentor.slug}`} replace />;
   }
 
   const metaTitle =
