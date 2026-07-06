@@ -8,6 +8,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { LeadGenPopupProvider } from "@/components/LeadGenPopupProvider";
 import { IntroRequestProvider } from "@/components/directory/IntroRequestProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { TrailingSlashRedirect } from "@/components/TrailingSlashRedirect";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PersonaProvider } from "@/contexts/PersonaContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -87,6 +88,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <ScrollToTop />
+              <TrailingSlashRedirect />
               <IntroRequestProvider>
               <ErrorBoundary>
               <Layout>
