@@ -1,16 +1,13 @@
-Lock the headline layout so only the blue rotating word changes; everything else stays static.
+The rotating word ticker currently contains both "Providers" and "Service Providers", which is redundant and risks a third line when the longer phrase appears. The user also wants two new words added.
 
-## Changes
+Changes to `src/components/hero/heroContent.ts` only:
 
-**1. `src/components/hero/HeroHeadline.tsx`** — restructure to a fixed two-line layout matching the screenshot:
-- Line 1: `Find the [RotatingWord]`
-- Line 2: `to enter Australia`
+1. **Remove** `"Service Providers"` from `rotatingWords` (the word "Providers" already exists).
+2. **Add** `"Conferences"` and `"Communities"` to `rotatingWords`.
 
-Both lines stay put regardless of which word is rotating.
+The headline layout in `HeroHeadline.tsx` remains unchanged — it already renders on two fixed lines with only the rotating word animating.
 
-**2. Prevent layout shift on the rotating word** — reserve horizontal space for the longest word ("Accelerators" / "Service Providers") so "Find the" doesn't slide left/right as words swap:
-- Wrap `<RotatingText>` in an `inline-block` span with `min-width` sized to the widest word (approx `13ch`), left-aligned so "Find the " stays anchored.
-
-**3. `src/components/RotatingText.tsx`** — no behaviour change; keep the fade transition on just the word.
-
-Result: the "Find the ___" / "to enter Australia" frame is completely static; only the blue word fades in/out in place.
+New `rotatingWords` array will be:
+```text
+Leads, Mentors, Events, Guides, Providers, Investors, Accelerators, Advisors, Grants, Playbooks, Associations, Conferences, Communities
+```
