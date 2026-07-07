@@ -24,6 +24,7 @@
 
 import { overlapCount } from "./sectorTaxonomy.ts";
 import { normalizeCountry } from "./countryNormalize.ts";
+import { countServiceMatches } from "./serviceMatch.ts";
 
 // deno-lint-ignore no-explicit-any
 type Row = any;
@@ -162,7 +163,11 @@ export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
   }
 
   if (opts.service) {
-    const k = overlapCount(row[opts.service] || [], ctx.serviceTags);
+    // Token overlap, not exact string equality: the row's services/specialties are
+    // free text ("Deal Advisory & Infrastructure"), the goal tags are canonical
+    // ("Advisory") — exact-contains only rewarded rows that happened to use the
+    // bare canonical word, one driver of the same-slate problem. See serviceMatch.ts.
+    const k = countServiceMatches(row[opts.service] || [], ctx.serviceTags);
     if (k > 0) {
       const add = Math.min(k, 2) * 2; // cap service/skill fit so it can't run away
       s += add;
