@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { ServiceProvidersHero } from "@/components/service-providers/ServiceProvidersHero";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { mapServicesToSectors } from "@/utils/sectorMapping";
 import { type PersonaFilterValue } from "@/components/PersonaFilter";
 import { useServiceProviderCategories } from "@/hooks/useServiceProviders";
-import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
+import { useDirectoryFilters, type UseDirectoryFiltersResult } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 
 const PAGE_SIZE = 12;
@@ -31,12 +32,114 @@ const SORT_OPTIONS: FilterOption[] = [
   { value: "views", label: "Most viewed" },
 ];
 
-const ServiceProviders = () => {
-  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
-    useDirectoryFilters(SP_FILTER_SPEC);
-  const { data: categories = [] } = useServiceProviderCategories();
+interface Category { slug: string; name: string }
 
+// Inner component so option/tab derivations that depend only on `companies`
+// can be memoised (hooks aren't available inside the data-provider render prop).
+const ServiceProvidersContent = ({
+  companies,
+  filteredCompanies,
+  totalCompanies,
+  uniqueLocations,
+  uniqueLocationValues,
+  totalServices,
+  categories,
+  filterState,
+}: {
+  companies: any[];
+  filteredCompanies: any[];
+  totalCompanies: number;
+  uniqueLocations: number;
+  uniqueLocationValues: string[];
+  totalServices: number;
+  categories: Category[];
+  filterState: UseDirectoryFiltersResult;
+}) => {
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } = filterState;
   const verifiedOnly = filters.verified === "true";
+
+  const sectors = useMemo(
+    () => Array.from(new Set(companies.flatMap((c) => mapServicesToSectors(c.services || [])))).sort(),
+    [companies]
+  );
+
+  const categoryTabs: FilterOption[] = useMemo(() => {
+    const counts: Record<string, number> = {};
+    companies.forEach((c) => {
+      const slug = c.category_slug;
+      if (slug) counts[slug] = (counts[slug] || 0) + 1;
+    });
+    return [
+      { value: "all", label: "All", count: companies.length },
+      ...categories.map((c) => ({ value: c.slug, label: c.name, count: counts[c.slug] ?? 0 })),
+    ];
+  }, [companies, categories]);
+
+  const selects: SelectFilterConfig[] = useMemo(() => [
+    { key: "location", allLabel: "All Locations", options: uniqueLocationValues.map((l) => ({ value: l, label: l })) },
+    { key: "sector", allLabel: "All Sectors", options: sectors.map((s) => ({ value: s, label: s })) },
+  ], [uniqueLocationValues, sectors]);
+
+  const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
+  // Clamp an out-of-range page to the last page for display (derived, no
+  // setState-during-render / URL write-back) so it shows results, not a blank grid.
+  const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
+  const paginatedCompanies = filteredCompanies.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
+
+  return (
+    <>
+      <ServiceProvidersHero
+        totalCompanies={totalCompanies}
+        uniqueLocations={uniqueLocations}
+        totalServices={totalServices}
+      />
+
+      <DirectoryFilterBar
+        filters={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        hasActiveFilters={hasActiveFilters}
+        noun="service providers"
+        shownCount={paginatedCompanies.length}
+        totalCount={filteredCompanies.length}
+        tabs={{ key: "category", options: categoryTabs }}
+        search={{ key: "search", placeholder: "Search service providers..." }}
+        selects={selects}
+        sort={{ key: "sort", options: SORT_OPTIONS }}
+        audience={{ key: "persona" }}
+      >
+        <div className="flex items-center gap-2">
+          <Switch
+            id="verified-only"
+            checked={verifiedOnly}
+            onCheckedChange={(v) => setFilter("verified", v ? "true" : "false")}
+          />
+          <Label htmlFor="verified-only" className="text-sm text-muted-foreground cursor-pointer">
+            Verified only
+          </Label>
+        </div>
+      </DirectoryFilterBar>
+
+      <div className="container mx-auto px-4 py-8">
+        <UsageBanner />
+        <h2 className="sr-only">Service provider results</h2>
+
+        <ServiceProvidersList companies={paginatedCompanies} />
+
+        <ListPagination
+          currentPage={clampedPage}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
+      </div>
+    </>
+  );
+};
+
+const ServiceProviders = () => {
+  const filterState = useDirectoryFilters(SP_FILTER_SPEC);
+  const { filters } = filterState;
+  const { data: categories = [] } = useServiceProviderCategories();
 
   return (
     <>
@@ -71,88 +174,22 @@ const ServiceProviders = () => {
         selectedType="all"
         selectedSector={filters.sector}
         selectedCategory={filters.category}
-        verifiedOnly={verifiedOnly}
+        verifiedOnly={filters.verified === "true"}
         sortBy={filters.sort}
         personaFilter={filters.persona as PersonaFilterValue}
       >
-        {({ companies, filteredCompanies, totalCompanies, uniqueLocations, uniqueLocationValues, totalServices }) => {
-          const sectors = Array.from(new Set(companies.flatMap(company => mapServicesToSectors(company.services || [])))).sort();
-
-          const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
-          // Clamp an out-of-range page to the last page for display (derived,
-          // no setState-during-render / URL write-back) so it shows results
-          // instead of a blank grid.
-          const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
-          const paginatedCompanies = filteredCompanies.slice(
-            (clampedPage - 1) * PAGE_SIZE,
-            clampedPage * PAGE_SIZE
-          );
-
-          const categoryTabs: FilterOption[] = [
-            { value: "all", label: "All", count: companies.length },
-            ...categories.map((c) => ({
-              value: c.slug,
-              label: c.name,
-              count: companies.filter((co) => (co as any).category_slug === c.slug).length,
-            })),
-          ];
-
-          const selects: SelectFilterConfig[] = [
-            { key: "location", allLabel: "All Locations", options: uniqueLocationValues.map((l) => ({ value: l, label: l })) },
-            { key: "sector", allLabel: "All Sectors", options: sectors.map((s) => ({ value: s, label: s })) },
-          ];
-
-          return (
-            <>
-              <ServiceProvidersHero
-                totalCompanies={totalCompanies}
-                uniqueLocations={uniqueLocations}
-                totalServices={totalServices}
-              />
-
-              <DirectoryFilterBar
-                filters={filters}
-                onFilterChange={setFilter}
-                onClearAll={clearAll}
-                hasActiveFilters={hasActiveFilters}
-                noun="service providers"
-                shownCount={paginatedCompanies.length}
-                totalCount={filteredCompanies.length}
-                tabs={{ key: "category", options: categoryTabs }}
-                search={{ key: "search", placeholder: "Search service providers..." }}
-                selects={selects}
-                sort={{ key: "sort", options: SORT_OPTIONS }}
-                audience={{ key: "persona" }}
-              >
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="verified-only"
-                    checked={verifiedOnly}
-                    onCheckedChange={(v) => setFilter("verified", v ? "true" : "false")}
-                  />
-                  <Label htmlFor="verified-only" className="text-sm text-muted-foreground cursor-pointer">
-                    Verified only
-                  </Label>
-                </div>
-              </DirectoryFilterBar>
-
-              <div className="container mx-auto px-4 py-8">
-                <UsageBanner />
-                <h2 className="sr-only">Service provider results</h2>
-
-                <ServiceProvidersList
-                  companies={paginatedCompanies}
-                />
-
-                <ListPagination
-                  currentPage={clampedPage}
-                  totalPages={totalPages}
-                  onPageChange={setPage}
-                />
-              </div>
-            </>
-          );
-        }}
+        {({ companies, filteredCompanies, totalCompanies, uniqueLocations, uniqueLocationValues, totalServices }) => (
+          <ServiceProvidersContent
+            companies={companies}
+            filteredCompanies={filteredCompanies}
+            totalCompanies={totalCompanies}
+            uniqueLocations={uniqueLocations}
+            uniqueLocationValues={uniqueLocationValues}
+            totalServices={totalServices}
+            categories={categories}
+            filterState={filterState}
+          />
+        )}
       </ServiceProvidersDataProvider>
     </>
   );

@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterMentors } from "@/lib/mentorFilters";
+import { humanizeSlug } from "@/lib/humanizeSlug";
 import type { Mentor } from "@/hooks/useMentors";
 
 const PAGE_SIZE = 12;
@@ -44,8 +45,7 @@ const ORIGIN_LABELS: Record<string, string> = {
   hong_kong: "🇭🇰 Hong Kong", china: "🇨🇳 China", korea: "🇰🇷 Korea",
   south_africa: "🇿🇦 South Africa", other_asia: "🌏 Other Asia", other_eu: "🇪🇺 Other EU",
 };
-const prettify = (s: string) => s.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-const originLabel = (o: string) => ORIGIN_LABELS[o] || prettify(o);
+const originLabel = (o: string) => ORIGIN_LABELS[o] || humanizeSlug(o);
 
 const MentorsDirectory = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
@@ -113,7 +113,7 @@ const MentorsDirectory = () => {
           </Button>
           {allSectors.map((s) => (
             <Button key={s} variant={filters.sector === s ? "default" : "outline"} size="sm" onClick={() => setFilter("sector", s)}>
-              {prettify(s)}
+              {humanizeSlug(s)}
             </Button>
           ))}
         </div>
