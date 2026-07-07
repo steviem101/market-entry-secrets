@@ -1397,13 +1397,29 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("IE search error:", e); }
 
-  // Trade & investment agencies — sector + country corridor + location (+ agnostic)
+  // Trade & investment agencies — sector + country corridor + location (+ agnostic).
+  // Corridor-gate the CANDIDATES before the rank cap (gate-before-cap). The Daon
+  // report (Irish founder, 7 Jul 2026) stored trade_investment_agencies: 0 even
+  // though 22 of the 134 rows pass the corridor gate for Ireland (Enterprise
+  // Ireland, Irish Australian Chamber, Austrade, Investment NSW): the fetch took
+  // an ARBITRARY 40 rows (no .order()), rank capped to 5, and the union-level gate
+  // then dropped all 5 — an empty "Government & Trade" surface despite a healthy
+  // directory. Fetch the whole small table (134 rows) so ordering can't starve the
+  // pool, filter to in-corridor rows, THEN rank into the 5 slots. The union-level
+  // gate stays as the safety net for the semantic path.
   try {
-    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, organisation_type, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic").limit(CAND);
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, organisation_type, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic").limit(300);
     taQuery = taQuery.or(buildOr({ service: "services" }));
     const { data: ta, error: taErr } = await taQuery;
     if (taErr) console.error("TIA query error:", taErr);
-    matches.trade_investment_agencies = rank(ta, { service: "services", persona: true }, 5).map((a: any) => ({
+    const taOriginTerms = geoOriginTerms(intake.country_of_origin);
+    const taInCorridor = (ta || []).filter((r: any) => isAgencyInCorridor(r, taOriginTerms));
+    console.log(`TIA corridor pre-filter: ${(ta || []).length} candidates → ${taInCorridor.length} in corridor`);
+    // countryCol gives the founder's ORIGIN trade body (Enterprise Ireland for an
+    // Irish founder — location_country "ireland") the scorer's structured +2 corridor
+    // boost; agencies never passed it, so origin bodies lost the 5 slots to generic
+    // AU industry groups despite being the most corridor-valuable row in the pool.
+    matches.trade_investment_agencies = rank(taInCorridor, { service: "services", persona: true, countryCol: "location_country" }, 5).map((a: any) => ({
       ...a, link: a.slug ? `/government-support/${a.slug}` : "/government-support", linkLabel: "View Organisation",
       subtitle: a.location, tags: (a.services || []).slice(0, 3),
     }));
