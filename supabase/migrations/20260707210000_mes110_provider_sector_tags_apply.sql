@@ -1,16 +1,25 @@
 -- MES-110 Phase B step 4b: apply the reviewed provider sector tags.
 --
--- Source: docs/audits/mes-110/proposed-provider-sector-tags.csv (propose-only artifact
--- reviewed + merged in PR #324; validated: 95/95 names match live service_providers,
--- all slugs canonical V2, max 4 tags/row so the OVERTAG_THRESHOLD=5 demotion in
--- matchScoring.ts never fires on freshly tagged rows).
+-- Source: docs/audits/mes-110/proposed-provider-sector-tags.csv — proposed in PR #324,
+-- then corrected by the hallucination audit in commit 67cf252 (13 rows demoted to
+-- pure-agnostic; reviewed together with this migration in PR #326). The VALUES below
+-- embed the CORRECTED artifact: 17 specialists / 18 tagged-agnostic / 60 pure-agnostic.
 --
--- Original state of ALL 95 rows (verified in the MES-110 audit §4): sector_tags empty,
--- sector_agnostic = true. Reversal is therefore uniform:
---   update public.service_providers set sector_tags = '{}', sector_agnostic = true;
--- The update below is guarded to rows whose sector_tags are still empty, so it will
--- never clobber tags added manually after this migration ships (idempotent re-run safe,
--- no-op on empty preview databases).
+-- Safety properties:
+--   * Completeness is asserted at APPLY time: if the live table is non-empty and any
+--     proposal name no longer matches a row (renamed since review), the migration
+--     ABORTS loudly instead of silently part-applying. Empty preview databases skip
+--     the assertion and the update is a no-op there.
+--   * The update only touches rows still in their audited original state
+--     (sector_tags empty AND sector_agnostic = true), and only when it would actually
+--     change something — so re-runs never clobber manual tag OR flag edits, and no-op
+--     rows are not rewritten (no updated_at/sitemap-lastmod churn, no needless
+--     mes_knowledge_base re-embeds).
+--   * Reversal (scoped to exactly these 95 rows — do NOT run an unscoped update):
+--       re-create mes110_provider_tags from this file's VALUES, then
+--       update public.service_providers sp
+--         set sector_tags = '{}', sector_agnostic = true
+--         from mes110_provider_tags m where m.name = sp.name;
 
 drop table if exists mes110_provider_tags;
 create temporary table mes110_provider_tags (
@@ -116,11 +125,38 @@ insert into mes110_provider_tags (name, tags, agnostic) values
   ('Visa Executive', '{}'::text[], true),
   ('Zeller', '{}'::text[], true);
 
+-- Apply-time completeness assertion (see header). Names were validated 95/95 against
+-- prod at review time; this re-checks at the moment the update actually runs.
+do $$
+declare
+  total integer;
+  unmatched integer;
+  missing text;
+begin
+  select count(*) into total from public.service_providers;
+  if total > 0 then
+    select count(*), string_agg(m.name, '; ')
+      into unmatched, missing
+      from mes110_provider_tags m
+      where not exists (
+        select 1 from public.service_providers sp where sp.name = m.name
+      );
+    if unmatched > 0 then
+      raise exception
+        'MES-110 provider tag apply: % proposal name(s) no longer match a service_providers row (renamed since review?): %. Aborting so the miss is loud — re-key the affected rows and re-run.',
+        unmatched, missing;
+    end if;
+  end if;
+end $$;
+
 update public.service_providers sp
   set sector_tags = m.tags,
       sector_agnostic = m.agnostic
   from mes110_provider_tags m
   where m.name = sp.name
-    and (sp.sector_tags is null or array_length(sp.sector_tags, 1) is null);
+    and (sp.sector_tags is null or array_length(sp.sector_tags, 1) is null)
+    and sp.sector_agnostic
+    and (sp.sector_tags is distinct from m.tags
+         or sp.sector_agnostic is distinct from m.agnostic);
 
 drop table if exists mes110_provider_tags;

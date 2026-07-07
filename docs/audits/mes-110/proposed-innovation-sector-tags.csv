@@ -1,45 +1,45 @@
-id,name,current_labels,proposed_sector_tags,proposed_sector_agnostic,confidence,rationale
-08e9b69a-abf3-4065-ba31-819350cf4924,Western Sydney Start up Hub,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-134aaa02-792e-4464-abbd-be5c518f83a1,Curago Coworking,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-188bfdb3-14e1-44ea-b1d9-49d6fc6bf424,Launch Lab / Outset Ventures,Deep Tech,technology-information-and-media|professional-services|manufacturing,false,high,Deep Tech (vocabulary: deep tech)
-1a118575-435f-4876-8c3d-f19bc909706f,StartSpace (State Library Victoria),,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-1ac27f4d-e2ea-48c0-a04b-98305c1b5f96,Mill House Social Enterprise Accelerator,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-1b998fc2-4ce0-404c-8f46-48dbe584f4be,Aeona,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-3276af0f-4174-402e-a931-b1d82b644a81,Founders Climate 10x,CleanTech,utilities|manufacturing|professional-services,false,high,CleanTech (vocabulary: cleantech)
-3d2a02ca-a9c4-4bf3-8289-cab56b09cda4,Commons - Surry Hills,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-44ec2a34-c432-4200-904d-f9dbbd5f9dfb,Works By Scentre Group,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-5413c39a-b921-4635-aa13-ccbd2391eeba,cirque South Brisbane,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-5810ade5-ae0d-43a3-8982-4100fedd642e,CreativeCubes.Co,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-5b1f62ca-b39c-4715-aa67-71671ac7e22a,Australian Clinical Entrepreneur Program,Healthcare,hospitals-and-health-care,false,high,Healthcare (alias: healthcare)
-5fc93ee5-69a4-4733-b21a-bc8b55553aab,New Wave,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-62a5d233-cca5-40f3-9e0c-82301bbed3fc,UTS Startups,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-66545b8a-e626-4e1d-92c7-07f0caec46ff,Ocean Impact Organisation,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-69b5776b-51ed-456c-940b-5ba77abbb31e,WorkLife,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-7abf5c61-c3ce-4d26-8959-d6fd8c85f3bf,Tank Stream Labs,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-800576bf-d691-4158-8df3-78d636e3d7f3,Farmers2Founders,AgTech,farming-ranching-forestry|technology-information-and-media,false,high,AgTech (vocabulary: agritech)
-80e28efc-1e44-4e5b-83fa-c6a39b1fb1b7,"The Hub, Bentley Tech Park, powered by S",,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-81a3dcb2-b8cb-4eff-a72c-5d39338d61d5,The Precinct,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-9c85c47a-1169-48fd-8ec1-f0e474044168,Greenhouse,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-b0573410-db1a-4b74-aa58-d8396436fff4,Boab,AI,technology-information-and-media,false,high,AI (vocabulary: ai)
-b3f864db-8648-4b6d-b383-6dc052f22899,Anyone Can,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-b613bd2e-0096-4b71-aa99-5df35ea5aedb,Founders Bio 10x,Biotechnology,hospitals-and-health-care|manufacturing,false,high,Biotechnology (alias: biotech)
-c070fe03-7b67-43d9-b7ec-60c2938f4e40,CICALab,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-c1ab9efe-105b-4332-908e-76c01df2f800,Grid Auckland / John Lysaght Coworking,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-c32cc3da-107f-422c-ad6e-35650f2e74ad,WOTSO,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-ca3b0fb6-e1dd-49e0-b141-5e32a9ff080d,Urban Collective,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-cd9c566f-67e0-4840-986f-37a9ba6c0e8a,WeWork,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-d541370b-0357-4a59-b3e7-cbb384c61611,Founders Defence 10x,Defence & Space,government-administration|manufacturing,false,high,Defence & Space (vocabulary: defence)
-e0fee71c-2465-4078-a98d-221925e87cf1,Banquet Studio,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-e432da5c-1d8d-4919-890f-fe80acf28c15,Founders Health 10x,Healthcare,hospitals-and-health-care,false,high,Healthcare (alias: healthcare)
-e6071edd-f223-4f33-af3b-6d8e931f4ddf,Electrify Accelator / Ministry of Awesom,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-e9ba4073-fdd6-42b4-abc3-ad265abaf147,CORE Innovation Hub,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-f6fcc286-ca0c-4097-b1ad-410e328a4ddd,Impact X,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-faaf35b1-c37f-424b-9432-cfb596be45b6,CoLabs,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-27a28ee2-0080-496b-b853-d33f46a0e034,HATCH (Taronga Accelerator Program),,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-4516f8e6-7dae-4511-a609-f29838932571,Launch VIC - CIVVIC Labs,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-6b578305-c7c4-4b26-aa6e-9fd01d424723,Creative HQ,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-75ae3dfb-1e2a-4433-bc2f-fc7d4462207d,The Factory NZ,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-8e95ecc0-c5e5-4cf2-9675-d98718308bb9,National Energy Transition Accelerator (,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-9d71aa30-9fe5-4b8f-bc86-6183fc79fcee,Venture Catalyst Space Accelerator,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-bb6e71ca-0946-4268-a025-e7280a4d6697,Swinburne Accelerator,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
-e0bc60e7-2d49-4950-8613-015c31f85b38,Curtin University Accelerator,,,true,medium,no sector labels — generic coworking/startup hub; propose agnostic
+id,name_truncated,current_labels,proposed_sector_tags,proposed_sector_agnostic,confidence,rationale
+08e9b69a-abf3-4065-ba31-819350cf4924,Western Sydney Start up Hub,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+134aaa02-792e-4464-abbd-be5c518f83a1,Curago Coworking,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+188bfdb3-14e1-44ea-b1d9-49d6fc6bf424,Launch Lab / Outset Ventures,Deep Tech,technology-information-and-media|professional-services|manufacturing,false,medium,Deep Tech (vocabulary: deep tech) — derived from the stored label only; verify against the name/title before applying
+1a118575-435f-4876-8c3d-f19bc909706f,StartSpace (State Library Victoria),,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+1ac27f4d-e2ea-48c0-a04b-98305c1b5f96,Mill House Social Enterprise Accelerator,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+1b998fc2-4ce0-404c-8f46-48dbe584f4be,Aeona,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+3276af0f-4174-402e-a931-b1d82b644a81,Founders Climate 10x,CleanTech,utilities|manufacturing|professional-services,false,medium,CleanTech (vocabulary: cleantech) — derived from the stored label only; verify against the name/title before applying
+3d2a02ca-a9c4-4bf3-8289-cab56b09cda4,Commons - Surry Hills,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+44ec2a34-c432-4200-904d-f9dbbd5f9dfb,Works By Scentre Group,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+5413c39a-b921-4635-aa13-ccbd2391eeba,cirque South Brisbane,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+5810ade5-ae0d-43a3-8982-4100fedd642e,CreativeCubes.Co,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+5b1f62ca-b39c-4715-aa67-71671ac7e22a,Australian Clinical Entrepreneur Program,Healthcare,hospitals-and-health-care,false,medium,Healthcare (alias: healthcare) — derived from the stored label only; verify against the name/title before applying
+5fc93ee5-69a4-4733-b21a-bc8b55553aab,New Wave,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+62a5d233-cca5-40f3-9e0c-82301bbed3fc,UTS Startups,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+66545b8a-e626-4e1d-92c7-07f0caec46ff,Ocean Impact Organisation,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+69b5776b-51ed-456c-940b-5ba77abbb31e,WorkLife,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+7abf5c61-c3ce-4d26-8959-d6fd8c85f3bf,Tank Stream Labs,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+800576bf-d691-4158-8df3-78d636e3d7f3,Farmers2Founders,AgTech,farming-ranching-forestry|technology-information-and-media,false,medium,AgTech (vocabulary: agritech) — derived from the stored label only; verify against the name/title before applying
+80e28efc-1e44-4e5b-83fa-c6a39b1fb1b7,"The Hub, Bentley Tech Park, powered by S",,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+81a3dcb2-b8cb-4eff-a72c-5d39338d61d5,The Precinct,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+9c85c47a-1169-48fd-8ec1-f0e474044168,Greenhouse,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+b0573410-db1a-4b74-aa58-d8396436fff4,Boab,AI,technology-information-and-media,false,medium,AI (vocabulary: ai) — derived from the stored label only; verify against the name/title before applying
+b3f864db-8648-4b6d-b383-6dc052f22899,Anyone Can,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+b613bd2e-0096-4b71-aa99-5df35ea5aedb,Founders Bio 10x,Biotechnology,hospitals-and-health-care|manufacturing,false,medium,Biotechnology (alias: biotech) — derived from the stored label only; verify against the name/title before applying
+c070fe03-7b67-43d9-b7ec-60c2938f4e40,CICALab,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+c1ab9efe-105b-4332-908e-76c01df2f800,Grid Auckland / John Lysaght Coworking,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+c32cc3da-107f-422c-ad6e-35650f2e74ad,WOTSO,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+ca3b0fb6-e1dd-49e0-b141-5e32a9ff080d,Urban Collective,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+cd9c566f-67e0-4840-986f-37a9ba6c0e8a,WeWork,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+d541370b-0357-4a59-b3e7-cbb384c61611,Founders Defence 10x,Defence & Space,government-administration|manufacturing,false,medium,Defence & Space (vocabulary: defence) — derived from the stored label only; verify against the name/title before applying
+e0fee71c-2465-4078-a98d-221925e87cf1,Banquet Studio,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+e432da5c-1d8d-4919-890f-fe80acf28c15,Founders Health 10x,Healthcare,hospitals-and-health-care,false,medium,Healthcare (alias: healthcare) — derived from the stored label only; verify against the name/title before applying
+e6071edd-f223-4f33-af3b-6d8e931f4ddf,Electrify Accelator / Ministry of Awesom,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+e9ba4073-fdd6-42b4-abc3-ad265abaf147,CORE Innovation Hub,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+f6fcc286-ca0c-4097-b1ad-410e328a4ddd,Impact X,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+faaf35b1-c37f-424b-9432-cfb596be45b6,CoLabs,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+27a28ee2-0080-496b-b853-d33f46a0e034,HATCH (Taronga Accelerator Program),,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+4516f8e6-7dae-4511-a609-f29838932571,Launch VIC - CIVVIC Labs,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+6b578305-c7c4-4b26-aa6e-9fd01d424723,Creative HQ,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+75ae3dfb-1e2a-4433-bc2f-fc7d4462207d,The Factory NZ,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+8e95ecc0-c5e5-4cf2-9675-d98718308bb9,National Energy Transition Accelerator (,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+9d71aa30-9fe5-4b8f-bc86-6183fc79fcee,Venture Catalyst Space Accelerator,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+bb6e71ca-0946-4268-a025-e7280a4d6697,Swinburne Accelerator,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)
+e0bc60e7-2d49-4950-8613-015c31f85b38,Curtin University Accelerator,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the coworking/startup hub name may indicate a vertical (do not rubber-stamp)

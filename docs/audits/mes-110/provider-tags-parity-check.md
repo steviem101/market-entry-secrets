@@ -4,7 +4,7 @@
 
 ## Fidelity
 - **Migration ↔ CSV: 95/95 rows, zero drift** (machine diff of the temp-table inserts vs the corrected CSV — includes all 13 hallucination-audit corrections).
-- Idempotency guard (`sector_tags` still empty), empty-preview-DB no-op, and uniform reversal (`set sector_tags='{}', sector_agnostic=true`) verified present in the migration.
+- Idempotency guard, empty-preview-DB no-op, and reversal verified present in the migration. *(Post-review hardening in PR #326 strengthened all three: the guard now also requires `sector_agnostic = true` and an actual value change — protecting manual flag edits and eliminating no-op `updated_at` churn; an apply-time completeness assertion aborts loudly if any proposal name no longer matches a live row; and the documented reversal is now scoped to the 95 migrated rows instead of the previously-documented unscoped update.)*
 
 ## Before/after slates (top 5; `*` = specialist bonus firing; goals = find_providers-style unless noted)
 
@@ -24,3 +24,18 @@
 ## Notes for the record
 - Two NEXTGEN entities (Group + oSpace) can co-occur in a top-5 — distinct rows, no org-diversity cap is configured for the provider surface (pre-existing; flag if undesired).
 - `MinterEllisonRuddWatts` (NZ firm) carries `location: "Sydney, NSW"` in the live table — data quirk, ops queue.
+
+## Addendum — sector-axis-only deltas (post-hardening, production `scoreRow`)
+
+Service/location signals zeroed to isolate what the tags alone change, per intake profile:
+
+| Profile | Sector score changed | New specialists (+2) | Specialists at 0 on the sector axis (still reachable via services/location) |
+|---|---|---|---|
+| SaaS / tech | 20 / 95 | 12 (ADAPT, BENCH PR, Cloud Recruit, Fullstack Advisory, Halcyon Knights, Hatch Quarter, NEXTGEN Group, oSpace, Standard Ledger, Stone & Chalk, TechVisa, Think & Grow) | 5 (the health-regulatory cluster) |
+| MedTech (health + manufacturing) | 23 / 95 | 5 (Emergo by UL, Freyr Solutions, PharmOut, R2 Pharma Solutions, The Adjutor Group) | 12 (the tech cluster) |
+| Construction | 18 / 95 | 0 (Pinsent Masons is tagged-agnostic by design — industry match without specialist bonus) | 17 (all specialists) |
+
+Watch item for the first post-apply reports: on tech intakes, tech-focused service firms
+(recruiter/PR/accounting) now outrank big-4 generalists on the sector axis — the documented
+`HORIZONTAL_SECTORS` intent (matchScoring.ts:115-118), with service-fit and location signals
+still composing on top.

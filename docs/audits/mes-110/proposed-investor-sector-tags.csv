@@ -1,15 +1,15 @@
-id,name,current_labels,proposed_sector_tags,proposed_sector_agnostic,confidence,rationale
+id,name_truncated,current_labels,proposed_sector_tags,proposed_sector_agnostic,confidence,rationale
 20d6e883-273c-4093-ae46-1b1fcb72e84a,Backbone Ventures,Education;FinTech;Healthcare;Logistics;Marketplace;Retail;SaaS,,true,medium,"6 sectors derived from ['Education', 'FinTech', 'Healthcare', 'Logistics', 'Marketplace', 'Retail', 'SaaS'] — effectively multi-sector; propose agnostic (avoids OVERTAG demotion)"
-34a5058a-94a6-48c8-8052-8260daff845a,Kilara Capital,CleanTech,utilities|manufacturing|professional-services,false,high,CleanTech (vocabulary: cleantech)
-3ac1aa3b-e29e-479d-b77f-875e31b1f32c,GD1,Hardware,manufacturing|technology-information-and-media,false,high,Hardware (computer hardware spans both)
-81b45638-4659-4114-ad28-a96d848a7412,MOVAC,Deep Tech,technology-information-and-media|professional-services|manufacturing,false,high,Deep Tech (vocabulary: deep tech)
-9108766f-f587-4f44-abb8-a3ce2983b541,Tenmile,Biotechnology;Healthcare,hospitals-and-health-care|manufacturing,false,high,Biotechnology (alias: biotech); Healthcare (alias: healthcare)
-f33de277-3c4e-4424-8bca-ee96697dd4a9,XV Capital,Gaming;Sports;SportTech,entertainment-providers|technology-information-and-media,false,high,Gaming (alias: gaming); Sports (spectator sports group under Entertainment Providers); SportTech (sports + tech)
-012b27c7-a93d-4b14-af08-5ed4ffdc4570,KKR & Co. Inc.,,,true,medium,no sector labels — generic investor; propose agnostic
-09c3e678-7026-4b52-adc5-dafb48017b21,Potentia Capital,,,true,medium,no sector labels — generic investor; propose agnostic
-139060fd-c555-4eaf-b05b-f0cb7a8965fd,Icehouse Ventures,,,true,medium,no sector labels — generic investor; propose agnostic
-54b590d6-3b13-4e33-b901-92b71d8303fb,Larsen Ventures,,,true,medium,no sector labels — generic investor; propose agnostic
-946dfa3a-aa8e-4827-b88b-556fe86c62d6,Outset Venture,,,true,medium,no sector labels — generic investor; propose agnostic
-af373908-2e76-471e-a8af-7a31a7f7ea1a,Nuance,,,true,medium,no sector labels — generic investor; propose agnostic
-af83be3e-8a26-4e19-934a-c411595507a9,Co Ventures,,,true,medium,no sector labels — generic investor; propose agnostic
-e075317f-7e60-41bb-8e90-a6a39c8b97ad,Reinventure Group,,,true,medium,no sector labels — generic investor; propose agnostic
+34a5058a-94a6-48c8-8052-8260daff845a,Kilara Capital,CleanTech,utilities|manufacturing|professional-services,false,medium,CleanTech (vocabulary: cleantech) — derived from the stored label only; verify against the name/title before applying
+3ac1aa3b-e29e-479d-b77f-875e31b1f32c,GD1,Hardware,manufacturing|technology-information-and-media,false,medium,Hardware (computer hardware spans both) — derived from the stored label only; verify against the name/title before applying
+81b45638-4659-4114-ad28-a96d848a7412,MOVAC,Deep Tech,technology-information-and-media|professional-services|manufacturing,false,medium,Deep Tech (vocabulary: deep tech) — derived from the stored label only; verify against the name/title before applying
+9108766f-f587-4f44-abb8-a3ce2983b541,Tenmile,Biotechnology;Healthcare,hospitals-and-health-care|manufacturing,false,medium,Biotechnology (alias: biotech); Healthcare (alias: healthcare) — derived from the stored label only; verify against the name/title before applying
+f33de277-3c4e-4424-8bca-ee96697dd4a9,XV Capital,Gaming;Sports;SportTech,entertainment-providers|technology-information-and-media,false,medium,Gaming (alias: gaming); Sports (spectator sports group under Entertainment Providers); SportTech (sports + tech) — derived from the stored label only; verify against the name/title before applying
+012b27c7-a93d-4b14-af08-5ed4ffdc4570,KKR & Co. Inc.,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the investor name may indicate a vertical (do not rubber-stamp)
+09c3e678-7026-4b52-adc5-dafb48017b21,Potentia Capital,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the investor name may indicate a vertical (do not rubber-stamp)
+139060fd-c555-4eaf-b05b-f0cb7a8965fd,Icehouse Ventures,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the investor name may indicate a vertical (do not rubber-stamp)
+54b590d6-3b13-4e33-b901-92b71d8303fb,Larsen Ventures,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the investor name may indicate a vertical (do not rubber-stamp)
+946dfa3a-aa8e-4827-b88b-556fe86c62d6,Outset Venture,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the investor name may indicate a vertical (do not rubber-stamp)
+af373908-2e76-471e-a8af-7a31a7f7ea1a,Nuance,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the investor name may indicate a vertical (do not rubber-stamp)
+af83be3e-8a26-4e19-934a-c411595507a9,Co Ventures,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the investor name may indicate a vertical (do not rubber-stamp)
+e075317f-7e60-41bb-8e90-a6a39c8b97ad,Reinventure Group,,,true,low,no stored sector labels — propose agnostic PENDING OPERATOR REVIEW; the investor name may indicate a vertical (do not rubber-stamp)
