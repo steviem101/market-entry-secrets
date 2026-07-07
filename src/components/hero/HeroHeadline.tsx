@@ -13,7 +13,6 @@ export const HeroHeadline = () => {
         loop
         className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent"
       />
-      <br className="hidden sm:block" />
       <span className="text-foreground"> {suffix}</span>
     </h1>
   );
