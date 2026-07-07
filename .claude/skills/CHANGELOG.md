@@ -3,6 +3,25 @@
 Log every skill gap, wrong rule, or contradiction you find here (newest first), so it can be
 fixed in a follow-up PR. Format: `- YYYY-MM-DD [skill-name] what was wrong/missing — found while <task>`.
 
+## 2026-07-07 — Wave 3 (MES-113): 6 P2/P3 skills — library complete (22/22)
+
+Added the final 6 skills, grounded in two fresh read-only research passes (Crisp/MCP/content-copy;
+freshness/insights): `market-entry-research`, `content-and-vendor-copy`,
+`content-freshness-and-seo-ops-loop`, `mcp-integration-and-capability-boundaries`,
+`support-crisp-and-user-debug-tooling`, `market-entry-secrets-insights`.
+
+- **`market-entry-secrets-insights` was authored, not deferred.** The ticket says defer if
+  grounding is thin; the evidence pass found ≥5 concrete real examples (country playbook stages 30,
+  funding instruments 50, case-study sources 631, corridor demand telemetry, report meta-telemetry),
+  so it clears the bar — with an explicit caveat encoded that coverage is uneven (only 5 of 8
+  countries have full playbook/funding content; ~63 usable reports; no web analytics yet).
+- New current-state facts documented (not changed): Crisp runs fully anonymous (no identity/tier
+  pushed, no consent gate); the `mcp` edge function is read-only, anon/RLS-scoped, filter-sanitised,
+  but has no rate limit and declares `auth:none` in the Lovable manifest not `config.toml`; CTA copy
+  drift between `reportCta.ts` and legacy `CTAButton.tsx`/inline detail-page CTAs; the sitemap has
+  no event-date filter so past approved events persist.
+- README statuses set to ✅ for all 22 skills.
+
 ## 2026-07-07 — Wave 2 (MES-113): 8 P1 skills
 
 Added the 8 P1 skills, grounded in fresh read-only repo/schema inspection (two research passes on
