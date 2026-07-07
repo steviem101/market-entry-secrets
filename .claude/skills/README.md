@@ -27,14 +27,14 @@ code — at the same quality and safety level, without re-learning conventions e
 | `report-generation-quality` | P0 | ✅ Wave 1 | Report rubric; **owns anti-hallucination/grounding rules** |
 | `edge-functions-and-cost-controls` | P0 | ✅ Wave 1 | Edge function conventions, LLM cost caps, idempotency |
 | `qa-and-exam` | P0 | ✅ Wave 1 | Exam scenarios, Fable baselines, pass/fail scoring rubric |
-| `observability-logging-and-cost-attribution` | P1 | Wave 2 | Will own logging/cost-attribution rules |
-| `post-payment-activation-and-entitlements-ux` | P1 | Wave 2 | Post-redirect polling, webhook-delay races |
-| `seo-rendering-indexing-and-programmatic-pages` | P1 | Wave 2 | Prerendering without cloaking, sitemaps, canonicals |
-| `directory-data-enrichment` | P1 | Wave 2 | Staging/proposal-first writes, dedupe, taxonomy |
-| `mes-ticket-workflow` | P1 | Wave 2 | Gate stages, branch naming, Notion ticket updates |
-| `admin-submissions-and-moderation-workflows` | P1 | Wave 2 | Review queues, safe write paths |
-| `slack-notifications-and-ops-triage` | P1 | Wave 2 | Slack signing, routing, idempotent delivery |
-| `launch-readiness-and-production-audits` | P1 | Wave 2 | Repeatable production-readiness audit checklist |
+| `observability-logging-and-cost-attribution` | P1 | ✅ Wave 2 | Structured logging, correlation ids; **owns logging/cost-attribution rules** |
+| `post-payment-activation-and-entitlements-ux` | P1 | ✅ Wave 2 | Post-redirect polling, webhook-delay races, no silent re-paywall |
+| `seo-rendering-indexing-and-programmatic-pages` | P1 | ✅ Wave 2 | Prerender-as-anon, sitemaps, canonicals, soft-404 guardrails |
+| `directory-data-enrichment` | P1 | ✅ Wave 2 | Staging/proposal-first writes, confidence gates, taxonomy |
+| `mes-ticket-workflow` | P1 | ✅ Wave 2 | Gate stages, branch naming, approval gates, Notion updates |
+| `admin-submissions-and-moderation-workflows` | P1 | ✅ Wave 2 | Submission funnels, CHECK constraint, safe admin write paths |
+| `slack-notifications-and-ops-triage` | P1 | ✅ Wave 2 | Slack signing, escaping, routing, idempotent delivery, RQ triage |
+| `launch-readiness-and-production-audits` | P1 | ✅ Wave 2 | Repeatable production-readiness audit method + ticketing |
 | `market-entry-research` | P2 | Wave 3 | Grounded ANZ research method |
 | `content-and-vendor-copy` | P2 | Wave 3 | House style, CTA system, mentor anonymity model |
 | `content-freshness-and-seo-ops-loop` | P2 | Wave 3 | Expiring events, stale-content detection |
@@ -49,8 +49,7 @@ One skill owns each cross-cutting topic; others must **link, not restate**:
 - Entitlement invariants → `stripe-payments-and-webhooks`
 - Secret handling → `secrets-and-env-management`
 - Anti-hallucination / grounding → `report-generation-quality`
-- Logging / cost attribution → `observability-logging-and-cost-attribution` (Wave 2; interim
-  operational rules live in `edge-functions-and-cost-controls`)
+- Logging / cost attribution → `observability-logging-and-cost-attribution`
 
 ## Keeping the library honest
 

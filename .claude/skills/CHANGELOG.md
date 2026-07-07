@@ -3,6 +3,24 @@
 Log every skill gap, wrong rule, or contradiction you find here (newest first), so it can be
 fixed in a follow-up PR. Format: `- YYYY-MM-DD [skill-name] what was wrong/missing — found while <task>`.
 
+## 2026-07-07 — Wave 2 (MES-113): 8 P1 skills
+
+Added the 8 P1 skills, grounded in fresh read-only repo/schema inspection (two research passes on
+SEO/rendering and admin/enrichment, plus the earlier edge-function/audit analysis):
+`observability-logging-and-cost-attribution` (now the source of truth for logging/cost — the
+README pointer and `edge-functions-and-cost-controls` defer to it),
+`post-payment-activation-and-entitlements-ux`, `seo-rendering-indexing-and-programmatic-pages`,
+`directory-data-enrichment`, `mes-ticket-workflow`, `admin-submissions-and-moderation-workflows`,
+`slack-notifications-and-ops-triage`, `launch-readiness-and-production-audits`.
+
+- Grounded in MES-111 findings (AUD-004/005/006/011/028/029/032/037/046/051) plus the SEO,
+  submission-forms, and staging-review docs.
+- Noted current-state corrections the SEO agent surfaced: several 2026-07-04 SEO-audit issues are
+  already fixed (static homepage canonical removed, DB-driven sitemap live, `llms.txt` v2) — the
+  skill tells models to verify before "re-fixing" them.
+- Flagged a live inconsistency (not a change): `enrich-*` functions write directly to live tables
+  despite staging tables existing — documented as tolerated fill-missing, not a bulk-import licence.
+
 ## 2026-07-07 — MES-111 audit findings folded into Wave 1
 
 `docs/prelaunch-audit.md` (MES-111, PR #309) landed — 0 P0, 5 P1, 18 P2, 22 P3. Its findings were
