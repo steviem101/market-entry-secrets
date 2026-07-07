@@ -1,7 +1,7 @@
 import { REPORT_CREATOR_PATH, REPORT_CTA_LABEL } from "@/config/reportCta";
 
 export interface HeroContent {
-  headline: { line1: string; line2: string };
+  headline: { prefix: string; rotatingWords: string[]; suffix: string };
   subheadline: string;
   primaryCTA: { label: string; href: string };
   secondaryCTA: { label: string; href: string };
@@ -15,8 +15,22 @@ export interface HeroContent {
 
 export const HERO_CONTENT: HeroContent = {
   headline: {
-    line1: "Your Australian market entry plan,",
-    line2: "generated in minutes.",
+    prefix: "Find the",
+    rotatingWords: [
+      "leads",
+      "mentors",
+      "events",
+      "guides",
+      "providers",
+      "investors",
+      "accelerators",
+      "advisors",
+      "service providers",
+      "grants",
+      "playbooks",
+      "associations",
+    ],
+    suffix: "to enter Australia",
   },
   subheadline:
     "Market Entry Secrets turns a 5-minute questionnaire into a full ANZ market entry report — live market intelligence, competitor landscape, vetted providers, mentors, and a step-by-step action plan.",
