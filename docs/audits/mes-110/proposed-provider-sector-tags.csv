@@ -14,14 +14,14 @@ Australian Trade and Investment Commission (Austrade),,true,high,federal agency;
 B2B International (a dentsu company),,true,medium,B2B market research across industries
 BDO Australia,,true,high,audit/tax/advisory generalist
 BENCH PR,technology-information-and-media,false,high,PR consultancy specialising in B2B and technology markets
-Bolter,technology-information-and-media,true,medium,startup-focused law firm; startup clientele skews tech
+Bolter,,true,high,startup-focused law; startup is a stage not a vertical - no tech clientele stated
 Cloud Recruit,technology-information-and-media,false,high,specialist technology recruitment only
 Convera,,true,high,FX/payments for all sectors
 Counsel House (Counsel House Pty Ltd),government-administration,true,medium,public affairs/government advisory; relevant to policy-exposed sectors
 Deloitte Australia,,true,high,big-4 generalist
 Dentons Australia,utilities|hospitals-and-health-care|real-estate-and-equipment-rental-services|financial-services,true,medium,full-service law with named energy/health/real-estate/banking practices
 DLA Piper Australia,,true,high,global full-service law generalist
-Ellis Jones,hospitals-and-health-care|government-administration,true,low,multidisciplinary agency; health & social-impact leaning per site
+Ellis Jones,,true,high,multidisciplinary strategy/communications agency; no vertical stated in data (prior health/gov tags were unsupported inference)
 Emergo by UL,hospitals-and-health-care|manufacturing,false,high,medical device / IVD regulatory consulting only
 Employment Hero,,true,high,HR/payroll platform for all sectors
 EWR (Elite Woodhams Relocation),,true,high,relocation services for all sectors
@@ -29,18 +29,18 @@ EY Australia,,true,high,big-4 generalist
 Freyr Solutions,hospitals-and-health-care,false,high,life-sciences/TGA regulatory services only
 Fullstack Advisory,technology-information-and-media,false,high,chartered accounting exclusively for startups/tech companies
 Gadens,financial-services,true,medium,full-service law; named banking & financial services practice
-Gilbert + Tobin (G+T Ventures),technology-information-and-media,false,medium,ventures practice dedicated to early-stage/emerging tech companies
+Gilbert + Tobin (G+T Ventures),,true,medium,ventures practice for early-stage companies; vertical not stated in data
 GRACosway,government-administration,true,medium,public affairs; most relevant to policy-exposed sectors
 Grant Thornton Australia,,true,high,advisory generalist
 Granton,technology-information-and-media,true,medium,R&D/grants consultancy for startups & tech companies
-Gridware,technology-information-and-media,true,medium,cybersecurity consultancy; serves all sectors but domain is tech
+Gridware,,true,high,cybersecurity consultancy serves every sector; domain affinity is not a served vertical
 Halcyon Knights,technology-information-and-media,false,high,specialist tech recruitment only
 Hall & Wilcox,,true,high,full-service law generalist
 Hatch Quarter,technology-information-and-media,false,high,startup incubator for tech ventures
 Hawker Britton (Hawker Britton Group Pty Ltd),government-administration,true,medium,government relations; policy-exposed sectors
 Hays Recruitment,,true,high,generalist recruitment
 ICS Global Logistics,manufacturing|retail|wholesale,true,medium,customs/freight serves goods-moving sectors specifically
-Industry 4.01,manufacturing,true,low,name/positioning suggests industry-4.0 /operations focus; verify
+Industry 4.01,,true,high,generic CEO/transformation advisory; industry-4.0 branding only - no manufacturing clientele stated
 Invest Victoria,,true,high,state investment agency; all sectors
 Jaywing (officially Jaywing Pty Ltd in Australia),,true,medium,data/marketing agency across sectors
 Judo Bank,,true,high,SME bank lends across sectors
@@ -49,8 +49,8 @@ KPMG Australia,,true,high,big-4 generalist
 LandedFlow,manufacturing|retail|wholesale,true,medium,supply-chain/logistics consulting for goods businesses
 Lander & Rogers,financial-services|real-estate-and-equipment-rental-services|technology-information-and-media,true,medium,law firm with named insurance/real-estate/technology practices
 LegalVision,,true,high,online legal platform for all businesses
-Liquid Digital,technology-information-and-media,true,medium,digital strategy for B2B brands; tech-leaning
-LUNA Startup Studio,technology-information-and-media,true,medium,startup studio; clientele skews tech/VC-backed
+Liquid Digital,,true,high,digital strategy for B2B businesses/global brands; no vertical stated
+LUNA Startup Studio,,true,high,startup studio for high-growth companies/VCs; vertical not stated in data
 Lunik,government-administration,true,medium,public affairs/lobbying; policy-exposed sectors
 Marsh Australia,,true,high,insurance brokerage for all sectors
 McKinsey & Company,,true,high,generalist strategy consulting
@@ -68,23 +68,23 @@ Pinsent Masons LLP,construction|real-estate-and-equipment-rental-services,true,m
 Pitcher Partners,,true,high,accounting/advisory generalist
 PwC Australia,,true,high,big-4 generalist
 R2 Pharma Solutions,hospitals-and-health-care,false,high,pharma/medical-device regulatory consultancy only
-Radium Capital,technology-information-and-media,true,medium,R&D-incentive finance; clientele skews R&D/tech
+Radium Capital,,true,high,R&D-incentive finance serves any R&D-performing sector (biotech/manufacturing/agtech alike)
 Redhill Communications,,true,medium,communications agency across sectors
 Rippling Australia,,true,high,workforce platform for all sectors
-SalesTribe,technology-information-and-media,true,medium,digital sales enablement; B2B tech-leaning
+SalesTribe,,true,high,B2B sales enablement for any sector; digital-first refers to buyers not a vertical
 SGS Australia,manufacturing,true,medium,testing/inspection/certification; strongest fit for product/goods sectors
 SIS International Research,,true,medium,generalist market research
 Sleek,,true,high,incorporation/accounting platform for all sectors
-Sodali & Co,financial-services,true,medium,shareholder/governance advisory; listed-company & capital-markets leaning
+Sodali & Co,,true,high,governance/shareholder advisory for listed companies of any sector; ASX focus is not a financial-services vertical
 Speak Your Language,,true,high,translation/interpreting for all sectors
 Standard Ledger,technology-information-and-media,false,high,accounting/CFO built specifically for startups & scale-ups
-Standards Australia Limited,manufacturing|construction|utilities,true,medium,standards body; strongest fit for regulated/product sectors
+Standards Australia Limited,,true,high,standards apply to every sector; product-sector affinity was unsupported inference
 Stockwells,manufacturing|retail|wholesale,true,medium,freight/customs serves goods-moving sectors
-Stone & Chalk,technology-information-and-media,false,high,innovation hub for startups/scaleups (tech)
+Stone & Chalk,technology-information-and-media,false,medium,innovation hub for startups/scaleups; tech-ecosystem positioning (downgraded from high - inferential)
 TechVisa,technology-information-and-media,false,high,immigration law exclusively for tech professionals/companies
 TG Public Affairs,government-administration,true,medium,public affairs; policy-exposed sectors
 The Adjutor Group (comprising Adjutor Healthcare Pty Ltd and Adjutor Clinical),hospitals-and-health-care,false,high,healthcare/clinical development services only
-The Instant Group,real-estate-and-equipment-rental-services,false,medium,workspace/CRE brokerage & strategy
+The Instant Group,,true,high,workspace/CRE brokerage serves companies of every sector; real estate is its domain not its served vertical
 The Polyglot Group,,true,high,expansion/EOR/HR services for all sectors
 Think & Grow,technology-information-and-media,false,high,growth consultancy for tech companies only
 Think Global Logistics (TGL),manufacturing|retail|wholesale,true,medium,freight forwarding serves goods-moving sectors
