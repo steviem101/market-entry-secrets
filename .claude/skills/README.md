@@ -61,3 +61,5 @@ One skill owns each cross-cutting topic; others must **link, not restate**:
 - Notion sources of truth: [MES Ticket Writing Context](https://app.notion.com/p/95be3b3db0d3427295fba8664011d7ad)
   (ticket structure, risk flags, status workflow). Skills encode operational rules only — link,
   don't duplicate.
+- Launch-readiness source of truth: `docs/prelaunch-audit.md` (MES-111) — its §13 manual checklist
+  and §14 launch-day smoke test are canonical; skills cite its AUD-### findings as live pitfalls.

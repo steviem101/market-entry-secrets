@@ -82,5 +82,6 @@ Inspected 2026-07-07: `src/integrations/supabase/client.ts:5-6`; `Deno.env.get` 
    (MES-35 S8). Mask or omit PII in notifications.
 3. **Raw webhook payloads stored wholesale** — `payment_webhook_logs.stripe_payload` retains
    customer emails (`docs/audits/SECURITY_AUDIT.md` §7); don't widen access to that table.
-4. **"It's only the anon key" normalisation** — the committed `.env` trained contributors that
-   env files in git are fine; they aren't. Anything credential-shaped stays out.
+4. **"It's only the anon key" normalisation** — `.env` is *tracked in git* despite being in
+   `.gitignore` (MES-111 AUD-053; public values only today). It must be `git rm --cached`-ed
+   before any real secret ever lands in it. Anything credential-shaped stays out of git.

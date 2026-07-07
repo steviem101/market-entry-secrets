@@ -46,17 +46,25 @@ at minimum: one account below the gate (expect teaser + CTA, no data in the netw
 one at the gate, admin, and legacy tiers `premium`/`concierge` (must map, not deny).
 
 ## Launch-blocker drills (from real incidents — run the relevant one before shipping)
+AUD refs = MES-111 (`docs/prelaunch-audit.md`); its §13 manual checklist and §14 launch-day smoke
+test are the canonical pre/post-launch runbooks — use them, don't reinvent.
 1. **Paid-content leak:** as a `free` user, fetch the raw row/response (not the UI) for a gated
-   asset — e.g. `user_reports.report_json` via the client. Gated content present = blocker
-   (real: MES-35 R1; DevTools predecessor `SECURITY_AUDIT.md` §6.1).
-2. **Webhook failure:** replay `checkout.session.completed` twice (dedupe = one grant); force the
-   entitlement write to fail (must 5xx so Stripe retries — not 200); send missing/invalid
-   `metadata.tier` (must reject, never default) (real: MES-35 R2/R7, `SECURITY_AUDIT.md` §7.5).
+   asset. `fetchReport` is safe (RPC strips content) but `fetchMyReports` `select('*')` still
+   leaks gated `report_json` (AUD-004, open P1; lineage MES-35 R1, `SECURITY_AUDIT.md` §6.1).
+   Gated content in any network payload = blocker.
+2. **Webhook/checkout failure:** replay `checkout.session.completed` twice (dedupe = one grant —
+   but see AUD-007: the current log-first ordering turns one transient failure into a permanent
+   loss); force the entitlement write to fail (must 5xx, not 200 — the lead branch violates this,
+   AUD-008); send missing/invalid `metadata.tier` (reject, never default — MES-35 R7,
+   `SECURITY_AUDIT.md` §7.5); and attempt the AUD-005 exploit: lead-DB `price_id` +
+   `tier:"enterprise"` must be rejected.
 3. **RLS regression:** after any policy/grant change, diff `get_advisors` and probe as anon AND as
-   a plain authenticated user — the `investors` leak was authenticated-only and write-lockdown
-   survivors are the known shape (real: MES-35 S1/S2). Check PII tables read via `*_public` views.
-4. **Report pipeline:** kill a generation mid-run — row must not sit `processing` forever
-   unnoticed; per-section failure must not present as a complete report (real: MES-35 R3).
+   a plain authenticated user — MES-111's adversarial pass showed anon fully blocked while free
+   accounts could export `investors`/`agency_contacts`/`lead_database_records` PII
+   (AUD-001/002/020). Check PII reads route via `*_public` views; confirm tables actually exist
+   in prod (AUD-006).
+4. **Report pipeline:** kill a generation mid-run — row must not sit `processing` forever and
+   block regeneration (AUD-027); per-section failure must not present as complete (MES-35 R3).
 5. **Auth round-trip:** OAuth/magic-link full-page redirects lose in-memory state — any "resume
    after auth" flow must survive a reload (real: MES-35 R4, `pendingGenerate` in a `useRef`).
 
@@ -84,6 +92,7 @@ one at the gate, admin, and legacy tiers `premium`/`concierge` (must map, not de
 - [ ] Any skill gap found was logged in CHANGELOG.md.
 
 ## Evidence
+MES-111 pre-launch audit: `docs/prelaunch-audit.md` (AUD-### findings folded in 2026-07-07).
 Drills derived from verified incidents: `docs/audits/MES-35-platform-readiness-scan.md` R1-R4/R7,
 `docs/audits/MES-35-security-data-audit.md` S1/S2, `docs/audits/SECURITY_AUDIT.md` §1.1/§6.1/§7.5,
 `docs/audits/AUTH-JOURNEY-AUDIT.md` §3. Baseline section grounded in live `service_providers`

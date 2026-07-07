@@ -46,10 +46,13 @@ code that matches the repo — and so it knows where the root `CLAUDE.md` has dr
 6. **Language:** Australian English in UI copy — "personalised" (`src/pages/ReportCreator.tsx:125`),
    "Organisation" (`AgencyDetailPage.tsx:26`). Match it in new copy.
 7. **Edge functions:** Deno + `esm.sh` imports; see `edge-functions-and-cost-controls`.
-8. **Verify:** `npm run lint` (eslint flat config) and `npm test` — Node's built-in runner over
-   `src/**/*.test.ts` + `supabase/functions/**/*.test.ts` (`package.json:10-12`). No
-   vitest/jest, no DOM tests — put testable logic in pure modules (e.g. `src/lib/eventFilters.ts`).
-   No typecheck script; `npm run build` catches type errors.
+8. **Verify:** `npm test` (Node's built-in runner over `src/**/*.test.ts` +
+   `supabase/functions/**/*.test.ts`, `package.json:10-12`; 242 tests) must pass, and
+   `npx tsc -p tsconfig.app.json --noEmit` + `npm run build` must be clean. **Know that
+   `npm run lint` currently exits non-zero with ~437 pre-existing `no-explicit-any` errors**
+   (MES-111 AUD-051) — the bar is *no new lint errors*, checked by linting only your changed
+   files. No vitest/jest, no DOM tests — put testable logic in pure modules
+   (e.g. `src/lib/eventFilters.ts`).
 
 ## Red flags / approval gates
 - Introducing `VITE_*` env vars or `import.meta.env` reads — Lovable doesn't support them; the repo
@@ -70,7 +73,7 @@ code that matches the repo — and so it knows where the root `CLAUDE.md` has dr
 - [ ] No `VITE_*`/`import.meta.env`; no hardcoded palette colors (outside the documented exception).
 - [ ] Query keys kebab-case; `(supabase as any)` used only for tables absent from generated types.
 - [ ] New page: lazy route in `App.tsx`, Helmet SEO, no double `<Layout>`.
-- [ ] `npm run lint` and `npm test` pass; new pure logic has a `.test.ts`.
+- [ ] `npm test` + typecheck pass; no NEW lint errors; new pure logic has a `.test.ts`.
 - [ ] UI copy is Australian English.
 
 ## Evidence
@@ -82,8 +85,9 @@ Inspected 2026-07-07: `src/App.tsx`, `src/integrations/supabase/client.ts:5-35`,
 
 ## Common MES pitfalls (real)
 1. **Trusting `CLAUDE.md` verbatim.** Verified drift: sections generate in one parallel batch not
-   "batches of 3"; `apify-webhook`/`notion-research-trigger` don't exist; route map incomplete
-   (`/market-entry-questions`, `/reset-password`, `/admin/mentors`). Verify before encoding.
+   "batches of 3"; `apify-webhook`/`notion-research-trigger` don't exist (confirmed again by
+   MES-111 AUD-048); route map incomplete (`/market-entry-questions`, `/reset-password`,
+   `/admin/mentors`). Verify before encoding.
 2. **The dead `.env`.** Root `.env` contains `VITE_SUPABASE_*` vars nothing consumes
    (`docs/audits/AUDIT-REPORT-2-MEDIUM-LOW-ARCHITECTURE.md:159-162`). Don't "fix" code to read it.
 3. **Supabase default 1000-row limit** read as "missing data" bugs (`CLAUDE.md` gotcha #6 — this

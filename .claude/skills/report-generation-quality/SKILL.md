@@ -85,6 +85,7 @@ next step present (esp. `action_plan`). Cross-report: no section contradicts ano
 - [ ] Rubric (a)-(g) passes on sampled output; grade with `qa-and-exam` baselines before shipping.
 
 ## Evidence
+MES-111 pre-launch audit: `docs/prelaunch-audit.md` (AUD-### findings folded in 2026-07-07).
 Inspected 2026-07-07: `supabase/functions/generate-report/index.ts` (L299-311, 659-798, 955-988,
 1786-2617), `src/components/report/reportSectionConfig.ts:101-124`, `src/lib/api/reportApi.ts`,
 live tables `report_templates` (10 rows), `report_quality`, `user_reports`. Audits:
@@ -92,8 +93,12 @@ live tables `report_templates` (10 rows), `report_quality`, `user_reports`. Audi
 R3/R11/R12, `docs/trade-agencies-staging-review-2026-05-09.md`.
 
 ## Common MES pitfalls (real)
-1. **Stuck-`processing` orphans** — isolate death leaves rows processing forever; no watchdog/retry
-   (MES-35 R3). Don't add long pre-save steps without a failure path.
+0. Context: MES-111 (`docs/prelaunch-audit.md` §9) verified the pipeline's auth/ownership, SSRF
+   guards, sanitisation, and server-trusted tier as CLEAN — don't "fix" those; the open issues
+   are the ones below.
+1. **Stuck-`processing` orphans** — isolate death leaves rows processing forever AND the
+   duplicate guard then blocks that intake from ever regenerating; no reaper (MES-35 R3;
+   MES-111 AUD-027). Don't add long pre-save steps without a failure path.
 2. **Canonical-metric amplification** — one hallucinated Perplexity number became "consistently
    wrong everywhere" (MES-35 R11).
 3. **Silently incomplete "completed" reports** — per-section failures don't fail the run (R3/§6).

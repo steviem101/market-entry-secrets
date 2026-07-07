@@ -28,7 +28,7 @@ gates are security and which are UX.
 | Audience | Sees | Enforced by |
 |---|---|---|
 | Anonymous | 3 free detail views, then `PaywallModal` | **Client-only**: localStorage `view_count`, per-item `viewed_<type>_<id>`, `FREE_TIER_LIMIT = 3` (`useUsageTracking.ts:6,64`); `user_usage` insert is analytics, not enforcement. Never call this a security control (`docs/audits/AUTH-JOURNEY-AUDIT.md` §2). |
-| `free` | executive_summary, service_providers, events_resources, action_plan | Section `visible:false` in stored JSON + frontend config |
+| `free` | executive_summary, service_providers, events_resources, action_plan | **Server-side**: `fetchReport` gets content via the `get_tier_gated_report` RPC, which strips `visible:false` section *content* before it leaves the DB (verified clean, MES-111 §7); frontend config is defense-in-depth only |
 | `growth` | + swot_analysis, competitor_landscape, mentor_recommendations, **investor_recommendations** | `TIER_REQUIREMENTS` (`reportSectionConfig.ts:108-114`) |
 | `scale` | + lead_list | same |
 | `enterprise` | everything | same |
@@ -78,6 +78,7 @@ gates are security and which are UX.
 - [ ] Teaser/upgrade state exists for the gated-out audiences.
 
 ## Evidence
+MES-111 pre-launch audit: `docs/prelaunch-audit.md` (AUD-### findings folded in 2026-07-07).
 Inspected 2026-07-07: `src/hooks/useSubscription.ts:7,21-36,60-101`;
 `src/components/report/reportSectionConfig.ts:101-124`; `src/components/FreemiumGate.tsx:28-61`;
 `src/hooks/useUsageTracking.ts:6,33-79`; `supabase/functions/generate-report/index.ts:1958-2248`;
@@ -85,13 +86,18 @@ live `pg_policies` on `user_subscriptions`/`user_reports`. Audits:
 `docs/audits/AUTH-JOURNEY-AUDIT.md` §2-3, `docs/audits/MES-35-platform-readiness-scan.md` R1/R12,
 `docs/audits/SECURITY_AUDIT.md` §1.1/§6.1.
 
-## Common MES pitfalls (real)
+## Common MES pitfalls (real — AUD refs are MES-111, `docs/prelaunch-audit.md`)
 1. **Client-writable tier** — ownership-only UPDATE policy let users self-upgrade to enterprise
-   (`SECURITY_AUDIT.md` §1.1; closed as SEC-01).
-2. **Gating by convention** — free owners could read gated premium prose because base-table RLS +
-   `fetchMyReports` `select('*')` (`reportApi.ts:210`) shipped full `report_json`
-   (MES-35 R1). Check what the *row* exposes, not just what the UI renders.
-3. **Three sources of section truth** drifting (MES-35 R12).
-4. **Freemium gate mistaken for security** (`AUTH-JOURNEY-AUDIT.md` §2) — it's localStorage.
-5. **Premium sections cost money even for free users** — they're generated regardless of tier
-   (MES-35 R5); cost implications live in `edge-functions-and-cost-controls`.
+   (`SECURITY_AUDIT.md` §1.1; closed as SEC-01). The current P1 variant is checkout-side:
+   client `tier` trusted in the lead-purchase branch (AUD-005 — owned by
+   `stripe-payments-and-webhooks`).
+2. **One `select('*')` undoes the RPC** — `fetchReport` is safe via `get_tier_gated_report`, but
+   `fetchMyReports` (`reportApi.ts:210`) still ships full `report_json` with gated content to
+   free owners (AUD-004, open P1). Check what the *row/response* exposes, not what the UI renders.
+3. **Paid data gated only client-side** — `lead_database_records` is `USING(true)` for any
+   authenticated user with no entitlement table behind it (AUD-001/006); preview "masking" is
+   cosmetic — raw values sit in the network payload (AUD-035).
+4. **Three sources of section truth** drifting (MES-35 R12); **freemium 3-view gate is
+   localStorage** — by design it protects no revenue (AUD-034).
+5. **Premium sections cost money even for free users** — generated regardless of tier
+   (MES-35 R5); cost rules live in `edge-functions-and-cost-controls`.

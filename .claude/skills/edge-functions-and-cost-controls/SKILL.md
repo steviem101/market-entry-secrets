@@ -94,6 +94,7 @@ safe-to-re-run design — and keep LLM/scrape spend bounded.
 - [ ] No PII in logs; secrets via `Deno.env.get` (rules in `secrets-and-env-management`).
 
 ## Evidence
+MES-111 pre-launch audit: `docs/prelaunch-audit.md` (AUD-### findings folded in 2026-07-07).
 Inspected 2026-07-07: `supabase/config.toml:39-145`; all of `supabase/functions/_shared/`
 (`http.ts`, `log.ts`, `auth.ts`, `rateLimit.ts`, `sanitize.ts`, `scrapeCache.ts`, `url.ts`,
 `slack.ts`, `email/`); `generate-report/index.ts`, `stripe-webhook/index.ts`,
@@ -101,13 +102,17 @@ Inspected 2026-07-07: `supabase/config.toml:39-145`; all of `supabase/functions/
 `send-email/index.ts:22-171`, `process-email-queue/index.ts:46-268`. Audits: MES-35 S10/S12/S13,
 `docs/audits/SECURITY_AUDIT.md` §3.
 
-## Common MES pitfalls (real)
-1. **Rate limiter fails open + spoofable IP key** (MES-35 S12) — treat as throttle, not security.
-2. **String-only SSRF guard** bypassable via DNS rebinding/decimal IPs (MES-35 S10) — don't relax
-   it further; prefer allowlists for new fetch targets.
-3. **Non-constant-time secret comparison** — six webhook guards used `===` (MES-35 S13); use the
-   `timingSafeEqual` pattern from `rq-slack-actions`.
-4. **Ghost functions in docs** — CLAUDE.md lists functions that don't exist; trust the directory
-   listing and `config.toml`.
+## Common MES pitfalls (real — AUD refs are MES-111, `docs/prelaunch-audit.md`)
+1. **Expensive endpoints with no rate limit** — `generate-plan` lets any authed user spam
+   `claude-sonnet-4-6` calls (AUD-025); `knowledge-search` may fire paid embeddings for anon
+   callers, unpinned + unlimited (AUD-030). Copy `generate-report`'s `checkRateLimit` pattern.
+2. **Rate limiter fails open + spoofable IP key** (MES-35 S12; AUD-028) — throttle, not security.
+3. **Missing `config.toml` blocks** — 5 functions have no `[functions.X]` entry, so their
+   deployed `verify_jwt` depends on unsynced dashboard defaults (AUD-031). Ghost functions in
+   CLAUDE.md too (AUD-048) — trust the directory + config.toml.
+4. **Inconsistent hardening** — `escapeSlack` exists but untrusted intake still reaches Slack
+   unescaped in `report-quality-rollup:98` / `slack-notify` (AUD-032); raw `error.message`
+   returned to clients in several functions (AUD-029); `===` secret compares in six guards
+   (MES-35 S13) — use `rq-slack-actions`' `timingSafeEqual`.
 5. **No cost ceiling on generation** — free users trigger full-cost premium-section generation,
    5×/hour (MES-35 R5). Any new expensive path needs a tier/credit/budget decision up front.

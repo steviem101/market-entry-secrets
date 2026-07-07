@@ -58,8 +58,13 @@ PII or entitlements.
    (`generate-plan` nearly leaked anonymised mentor names:
    `docs/audits/mentor-anonymization-audit-2026-07-06.md` §4).
 6. **Verify after apply:** run `get_advisors` (security) before and after any RLS change and diff.
-   Live example this skill found: `public.ingest_state` still has **RLS disabled** (out-of-band
-   artifact, in no migration) — flagged critical by advisors as of 2026-07-07.
+   Live example: `public.ingest_state` has **RLS disabled + anon INSERT/UPDATE/DELETE/TRUNCATE
+   grants** (out-of-band artifact, in no migration) — MES-111 AUD-003, open P1.
+7. **The live DB, not migration files, is the source of truth.** The 2026-07-04 re-baseline
+   silently dropped anything not in the baseline snapshot: the `lead_database_purchases` table +
+   its purchase-scoped RLS existed only in `migrations_archive/` and are **absent from prod**,
+   breaking lead purchases (MES-111 AUD-006). Before relying on a table/policy, confirm it via
+   live introspection.
 
 ## Red flags / approval gates (stop and get approval)
 - Any policy/grant change; anything DROP/TRUNCATE/bulk-UPDATE; changing `user_subscriptions`,
@@ -79,6 +84,7 @@ PII or entitlements.
 - [ ] `get_advisors` clean (or diff explained) after apply; seeds replay on an empty DB.
 
 ## Evidence
+MES-111 pre-launch audit: `docs/prelaunch-audit.md` (AUD-### findings folded in 2026-07-07).
 Live inspection 2026-07-07 (project `xhziwveaiuhzdoutpgrh`): `pg_policies` for user/payment/content
 tables; views `community_members_public`, `investors_public`, `agencies_report_view`;
 SECURITY DEFINER fns `has_role`, `get_shared_report`, `match_knowledge`, `handle_new_user`,
@@ -86,14 +92,19 @@ SECURITY DEFINER fns `has_role`, `get_shared_report`, `match_knowledge`, `handle
 `docs/audits/MES-35-security-data-audit.md`, `docs/audits/SECURITY_AUDIT.md`,
 `docs/audits/mentor-anonymization-audit-2026-07-06.md`.
 
-## Common MES pitfalls (real)
+## Common MES pitfalls (real — AUD refs are MES-111, `docs/prelaunch-audit.md`)
 1. **Out-of-band applies drift the ledger** — apply-time version stamps diverged from filenames,
-   auto-apply died for 5 months, `ingest_state` (RLS off) appeared in no migration
-   (`docs/migrations.md`; MES-35 S5).
-2. **Ownership-only UPDATE on entitlements** let any user set `tier='enterprise'` free
-   (`docs/audits/SECURITY_AUDIT.md` §1.1); same shape recurred on `profiles.stripe_customer_id`
-   (`docs/audits/AUTH-JOURNEY-AUDIT.md` §8.2). Entitlement invariants:
-   see `stripe-payments-and-webhooks`.
-3. **Write-only lockdowns leaving PII SELECT holes** (MES-35 S1/S2, above).
-4. **Migrations ≠ prod**: SEC-03 `REVOKE EXECUTE` migrations existed while advisors still showed 18
-   anon-executable RPCs (MES-35 S7). Always verify live.
+   auto-apply died for 5 months, `ingest_state` (RLS off, anon-writable — AUD-003) appeared in
+   no migration (`docs/migrations.md`; MES-35 S5).
+2. **The re-baseline dropped archived schema** — `lead_database_purchases` + purchase-scoped RLS
+   survive only in `migrations_archive/`, not prod (AUD-006). Live introspection over migration
+   archaeology, always.
+3. **Ownership-only UPDATE on entitlements** let any user set `tier='enterprise'` free
+   (`SECURITY_AUDIT.md` §1.1); same shape on `profiles.stripe_customer_id`
+   (`AUTH-JOURNEY-AUDIT.md` §8.2). Invariants: see `stripe-payments-and-webhooks`.
+4. **`USING(true)` + authenticated grants on PII** — anon probes pass (401) while any free
+   signup can still export `investors` contact PII (~447 rows, AUD-002), `agency_contacts` /
+   `service_provider_contacts` (AUD-020), and all `lead_database_records` (AUD-001). Test
+   *authenticated* reachability, not just anon.
+5. **Migrations ≠ prod** — SEC-03 `REVOKE EXECUTE` migrations existed while advisors still showed
+   18 anon-executable RPCs (MES-35 S7); MES-111 re-verified prod by direct anon-key probes.

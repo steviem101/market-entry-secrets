@@ -1,8 +1,9 @@
 # Baseline: safe RLS-touching implementation plan (canonical, Fable-authored 2026-07-07)
 
 A known-good *plan* for an approval-gated change. Task: "enable RLS on `public.ingest_state`" —
-a real open finding (Supabase advisor, 2026-07-07: table created out-of-band, RLS disabled, in no
-migration). The plan is the deliverable; **no implementation happens before approval**.
+a real open P1 (MES-111 AUD-003, `docs/prelaunch-audit.md`: table created out-of-band, RLS
+disabled, anon holds INSERT/UPDATE/DELETE/TRUNCATE grants — confirmed by anon-key probe). The
+plan is the deliverable; **no implementation happens before approval**.
 
 Grading notes appear as `▸` annotations.
 

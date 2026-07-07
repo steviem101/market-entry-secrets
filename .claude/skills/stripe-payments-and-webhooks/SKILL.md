@@ -42,17 +42,22 @@ Two purchase kinds: tier upgrade → `user_subscriptions`; `tier === "lead_purch
 5. Unknown tier at read time = `free` (`mapDatabaseTier`), never an upgrade.
 
 ## Playbook
-1. **Webhook changes:** preserve the exact order — raw body (`arrayBuffer` → `TextDecoder`) →
+1. **Webhook changes:** raw body (`arrayBuffer` → `TextDecoder`) →
    `constructEventAsync(rawBody, sig, STRIPE_WEBHOOK_SECRET)` → dedupe pre-check on
-   `payment_webhook_logs.stripe_event_id` (duplicate → 200) → log event → validate metadata →
-   **process → only then rely on the log for dedupe** (L21-164). Any body-parsing middleware
-   breaks signature verification.
+   `payment_webhook_logs.stripe_event_id` (duplicate → 200) → validate metadata → process
+   (L21-164). Any body-parsing middleware breaks signature verification. **Known open defect
+   (AUD-007, `docs/prelaunch-audit.md`):** the log row is inserted *before* the upsert, so a
+   transient upsert failure returns 500 but the retry hits the dedupe check and is skipped
+   forever. The correct design (mark dedupe only after processing succeeds) is not yet shipped —
+   don't copy the current ordering into new handlers.
 2. **Checkout changes:** price IDs come from server env (`STRIPE_GROWTH_PRICE_ID`/
    `STRIPE_SCALE_PRICE_ID`, L12-15); client-supplied `price_id` is accepted only if it matches a
-   `lead_databases.stripe_price_id` or the server-side tier price (anti-underpay, L43-73).
-   Redirect URLs validated against `ALLOWED_ORIGINS` by origin; relative paths must not start
-   `http`/`//`, fallback `/pricing` (L161-192). Verified `tier`/`supabase_user_id` metadata is
-   spread **after** `extraMetadata` so callers can't override it (L198-203).
+   `lead_databases.stripe_price_id` or the server-side tier price (L43-73). **Known open P1
+   (AUD-005):** that tier↔price guard is *skipped* when `lead_database_id` is present, and the
+   client's `tier` survives into metadata (L65,202) — pay a lead-DB price, receive `enterprise`.
+   Any checkout change must force `tier="lead_purchase"` in the direct-price branch and validate
+   paid amount↔tier in the webhook (AUD-009). Redirect URLs validated against `ALLOWED_ORIGINS`
+   by origin; relative paths must not start `http`/`//`, fallback `/pricing` (L161-192).
 3. **Testing:** use Stripe test mode + Stripe CLI (`stripe listen --forward-to`) against a dev
    function; replay `checkout.session.completed` twice to prove dedupe; send one with a bad
    signature (expect 400) and one with missing metadata (expect logged-and-rejected, not silently
@@ -69,9 +74,12 @@ entitlement tables as approval-gated (MES Ticket Writing Context risk flags). Ex
 
 ## Good / bad examples
 - ✅ Reject-and-log: unknown tier → 400 + `payment_webhook_logs` row (current code).
-- ❌ Dedupe row inserted **before** processing — first-attempt upsert failure short-circuited
-  Stripe's retry: user charged, never upgraded (MES-35 R2; since fixed to return 500 on upsert
-  failure). Dedupe must mark *completed* work, not *attempted* work.
+- ❌ Dedupe row inserted **before** processing — first-attempt upsert failure short-circuits
+  Stripe's retry: user charged, never upgraded (MES-35 R2; **still open as AUD-007**). Dedupe
+  must mark *completed* work, not *attempted* work.
+- ❌ Swallowing a purchase-write failure and returning 200 — the lead-purchase branch does this
+  today against a table that doesn't even exist in prod (AUD-006/AUD-008): buyers charged,
+  entitlement silently lost, Stripe never retries.
 - ❌ `onConflict: "user_id"` upsert with no current-tier comparison — a `scale` user buying
   `growth` gets silently downgraded (MES-35 R8, open risk: compare tiers before overwrite).
 
@@ -83,6 +91,7 @@ entitlement tables as approval-gated (MES Ticket Writing Context risk flags). Ex
 - [ ] Redirect URLs allowlisted; prices resolved server-side; tested with Stripe CLI replay.
 
 ## Evidence
+MES-111 pre-launch audit: `docs/prelaunch-audit.md` (AUD-### findings folded in 2026-07-07).
 Inspected 2026-07-07: `supabase/functions/stripe-webhook/index.ts` (L21-223),
 `supabase/functions/create-checkout/index.ts` (L12-207), `src/hooks/useCheckout.ts`,
 live `pg_policies` on `user_subscriptions` (SELECT-own only). Audits:
@@ -91,10 +100,15 @@ live `pg_policies` on `user_subscriptions` (SELECT-own only). Audits:
 `STRIPE_WEBHOOK_SECRET`, `STRIPE_GROWTH_PRICE_ID`, `STRIPE_SCALE_PRICE_ID`, `FRONTEND_URL` —
 handling rules in `secrets-and-env-management`.
 
-## Common MES pitfalls (real)
-1. **Dedupe-before-processing** killed Stripe retries (MES-35 R2).
-2. **Fail-open tier default** granted paid tiers on malformed metadata (`SECURITY_AUDIT.md` §7.5).
-3. **Silent 200 on missing metadata** — charged users invisibly never upgraded (MES-35 R7).
-4. **Upsert downgrades** — no current-tier check on `onConflict: user_id` (MES-35 R8).
-5. **No refund/dispute path** — access grants are manual-revoke only; don't promise otherwise in
-   UX copy (MES-35 §5).
+## Common MES pitfalls (real — AUD refs are MES-111, `docs/prelaunch-audit.md`)
+1. **Client `tier` trusted in the lead-purchase branch** — P1 paywall bypass: lead-DB price buys
+   `enterprise` (AUD-005; escalate any similar guard-skip you find).
+2. **Entitlement table lost in the re-baseline** — `lead_database_purchases` exists only in
+   `migrations_archive/`; the live webhook upserts a missing table and swallows the error
+   (AUD-006/008). Verify tables exist in the *live* DB, not in archived migrations.
+3. **Dedupe-before-processing** kills Stripe retries (MES-35 R2; still open as AUD-007).
+4. **Fail-open tier default / silent 200 on bad metadata** granted or lost paid tiers
+   (`SECURITY_AUDIT.md` §7.5; MES-35 R7) — and paid amount is still never validated against the
+   granted tier (AUD-009).
+5. **Upsert downgrades + no refund path** — no current-tier check; manual revoke only
+   (MES-35 R8/§5).
