@@ -4,6 +4,8 @@ Reviewed operating knowledge for working on Market Entry Secrets (MES-113). Thes
 that **any** Claude model (especially Opus) delivers MES work — research, reports, content, data,
 code — at the same quality and safety level, without re-learning conventions each session.
 
+All 22 skills are live (Waves 1–3 merged). Start with the read-first order below.
+
 **Read-first order** (before your first MES task, read at least 1–3):
 
 1. `mes-codebase-conventions` — repo map, stack rules, verified conventions. Always read first.
@@ -35,12 +37,12 @@ code — at the same quality and safety level, without re-learning conventions e
 | `admin-submissions-and-moderation-workflows` | P1 | ✅ Wave 2 | Submission funnels, CHECK constraint, safe admin write paths |
 | `slack-notifications-and-ops-triage` | P1 | ✅ Wave 2 | Slack signing, escaping, routing, idempotent delivery, RQ triage |
 | `launch-readiness-and-production-audits` | P1 | ✅ Wave 2 | Repeatable production-readiness audit method + ticketing |
-| `market-entry-research` | P2 | Wave 3 | Grounded ANZ research method |
-| `content-and-vendor-copy` | P2 | Wave 3 | House style, CTA system, mentor anonymity model |
-| `content-freshness-and-seo-ops-loop` | P2 | Wave 3 | Expiring events, stale-content detection |
-| `mcp-integration-and-capability-boundaries` | P2 | Wave 3 | Secure MCP design, prompt-injection handling |
-| `support-crisp-and-user-debug-tooling` | P3 | Wave 3 | Crisp integration and support workflows |
-| `market-entry-secrets-insights` | P3 | Wave 3 | What makes a genuine MES "secret" |
+| `market-entry-research` | P2 | ✅ Wave 3 | Grounded ANZ research method, source hierarchy, trace-to-record |
+| `content-and-vendor-copy` | P2 | ✅ Wave 3 | House style, the two CTA systems, mentor anonymity model |
+| `content-freshness-and-seo-ops-loop` | P2 | ✅ Wave 3 | Event expiry/past states, sitemap staleness, monthly SEO health |
+| `mcp-integration-and-capability-boundaries` | P2 | ✅ Wave 3 | Read-only capability design, anon/RLS scope, filter sanitisation |
+| `support-crisp-and-user-debug-tooling` | P3 | ✅ Wave 3 | Crisp (anonymous), error boundary, feature flags, safe identity |
+| `market-entry-secrets-insights` | P3 | ✅ Wave 3 | What makes a genuine MES "secret"; distilling proprietary insight |
 
 ## Source-of-truth boundaries
 
