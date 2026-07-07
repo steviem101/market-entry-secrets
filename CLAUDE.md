@@ -2,6 +2,12 @@
 
 > Preprocessor file for Claude Code. Auto-loaded before every task.
 
+> **Skills library (MES-113):** reviewed operating skills live in
+> [`.claude/skills/README.md`](.claude/skills/README.md) — read `mes-codebase-conventions` first,
+> then the skill matching your task (RLS/migrations, secrets, tier gating, Stripe, reports, edge
+> functions, QA). Skills are evidence-cited and correct known drift in this file; where they
+> conflict with CLAUDE.md, trust the skill and log it in `.claude/skills/CHANGELOG.md`.
+
 ---
 
 ## 1. Project Identity
