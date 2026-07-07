@@ -10,14 +10,21 @@ interface ProofStat {
 
 // The single source of truth for homepage counts. Every number shown on the
 // homepage comes from get_ecosystem_stats() via useHeroStats — no hardcoded
-// inventory claims anywhere else on the page.
+// inventory claims anywhere else on the page. Fallbacks render only if the
+// RPC fails and must stay at-or-below the real counts (checked 2026-07-07:
+// 95 providers, 132 active mentors, 461 investors, 65 lead lists, 145 events).
 const PROOF_STATS: ProofStat[] = [
-  { key: "serviceProviders", label: "Service providers", fallback: 100, href: "/service-providers" },
-  { key: "communityMembers", label: "Mentors", fallback: 30, href: "/mentors" },
-  { key: "investors", label: "Investors", fallback: 50, href: "/investors" },
-  { key: "leads", label: "Lead databases", fallback: 20, href: "/leads" },
-  { key: "events", label: "Events", fallback: 50, href: "/events" },
+  { key: "serviceProviders", label: "Service providers", fallback: 90, href: "/service-providers" },
+  { key: "communityMembers", label: "Mentors", fallback: 130, href: "/mentors" },
+  { key: "investors", label: "Investors", fallback: 450, href: "/investors" },
+  { key: "leads", label: "Lead databases", fallback: 60, href: "/leads" },
+  { key: "events", label: "Events", fallback: 140, href: "/events" },
 ];
+
+// "132" reads as a live number that will look stale tomorrow; "130+" stays
+// truthful as counts grow. Floor to the nearest 10 (raw below 20).
+const displayCount = (value: number): number =>
+  value >= 20 ? Math.floor(value / 10) * 10 : value;
 
 export const ProofStrip = () => {
   const { data } = useHeroStats();
@@ -27,7 +34,7 @@ export const ProofStrip = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
           {PROOF_STATS.map((stat) => {
-            const value = data?.[stat.key] ?? stat.fallback;
+            const value = displayCount(data?.[stat.key] ?? stat.fallback);
             return (
               <Link
                 key={stat.key}
