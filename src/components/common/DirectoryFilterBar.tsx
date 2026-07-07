@@ -11,7 +11,7 @@
  * The component is presentational: it renders the values a page holds (usually
  * via `useDirectoryFilters`) and calls back on change. It owns no filter state.
  */
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -86,6 +86,41 @@ export const DirectoryFilterBar = ({
   children,
 }: DirectoryFilterBarProps) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Keep the page still when a filter changes. Radix tabs/selects move focus to
+  // the clicked control and the browser scrolls it into view; swapping the card
+  // list also reflows height and clamps scroll. Snapshot scroll at interaction
+  // start (capture phase, before focus moves), then pin it back for a few frames
+  // after the re-render. Owned here so every directory using the bar benefits.
+  const restoreScrollY = useRef<number | null>(null);
+  useEffect(() => {
+    const snapshot = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.('[data-radix-popper-content-wrapper],[role="listbox"],[role="menu"],[role="dialog"]')) return;
+      restoreScrollY.current = window.scrollY;
+    };
+    document.addEventListener("pointerdown", snapshot, true);
+    document.addEventListener("keydown", snapshot, true);
+    return () => {
+      document.removeEventListener("pointerdown", snapshot, true);
+      document.removeEventListener("keydown", snapshot, true);
+    };
+  }, []);
+  const filterSignature = JSON.stringify(filters);
+  const didMountRef = useRef(false);
+  useLayoutEffect(() => {
+    if (!didMountRef.current) { didMountRef.current = true; return; }
+    const target = restoreScrollY.current;
+    if (target == null) return;
+    let frame = 0;
+    let count = 0;
+    const pin = () => {
+      if (Math.abs(window.scrollY - target) > 1) window.scrollTo(0, target);
+      if (count++ < 4) frame = requestAnimationFrame(pin);
+    };
+    pin();
+    return () => cancelAnimationFrame(frame);
+  }, [filterSignature]);
 
   return (
     <>

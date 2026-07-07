@@ -24,6 +24,7 @@ import type { CaseStudyQuote, CaseStudySource, QuickFact } from "@/lib/case-stud
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getLogoUrl } from "@/lib/logoUtils";
+import { getCountryFlag } from "@/lib/countryFlags";
 
 interface CaseStudySection {
   id: string;
@@ -31,30 +32,6 @@ interface CaseStudySection {
   slug: string;
   isActive?: boolean;
 }
-
-const COUNTRY_FLAGS: Record<string, string> = {
-  "United States": "\u{1F1FA}\u{1F1F8}",
-  "United Kingdom": "\u{1F1EC}\u{1F1E7}",
-  "Canada": "\u{1F1E8}\u{1F1E6}",
-  "Germany": "\u{1F1E9}\u{1F1EA}",
-  "France": "\u{1F1EB}\u{1F1F7}",
-  "Japan": "\u{1F1EF}\u{1F1F5}",
-  "China": "\u{1F1E8}\u{1F1F3}",
-  "India": "\u{1F1EE}\u{1F1F3}",
-  "Singapore": "\u{1F1F8}\u{1F1EC}",
-  "Israel": "\u{1F1EE}\u{1F1F1}",
-  "South Korea": "\u{1F1F0}\u{1F1F7}",
-  "Sweden": "\u{1F1F8}\u{1F1EA}",
-  "Netherlands": "\u{1F1F3}\u{1F1F1}",
-  "Ireland": "\u{1F1EE}\u{1F1EA}",
-  "New Zealand": "\u{1F1F3}\u{1F1FF}",
-  "Australia": "\u{1F1E6}\u{1F1FA}",
-};
-
-const getCountryFlag = (country: string | null | undefined): string => {
-  if (!country) return "\u{1F30D}";
-  return COUNTRY_FLAGS[country] || "\u{1F30D}";
-};
 
 const CaseStudyDetail = () => {
   const { slug } = useParams<{ slug: string }>();

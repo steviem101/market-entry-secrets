@@ -9,6 +9,7 @@ import { useTradeAgencies, useOrganisationCategories } from "@/hooks/useTradeAge
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterAgencies } from "@/lib/agencyFilters";
+import { humanizeSlug } from "@/lib/humanizeSlug";
 
 const PAGE_SIZE = 12;
 
@@ -19,9 +20,6 @@ const AGENCY_FILTER_SPEC: FilterSpec = {
   type: { param: "type", default: "all" },
   sector: { param: "sector", default: "all" },
 };
-
-const formatTypeLabel = (value: string) =>
-  value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 const TradeInvestmentAgencies = () => {
   const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
@@ -68,8 +66,8 @@ const TradeInvestmentAgencies = () => {
 
   const selects: SelectFilterConfig[] = [
     { key: "location", allLabel: "All Locations", options: uniqueLocations.map((l) => ({ value: l, label: l })) },
-    { key: "type", allLabel: "All Types", options: uniqueTypes.map((t) => ({ value: t, label: formatTypeLabel(t) })) },
-    { key: "sector", allLabel: "All Sectors", options: uniqueSectors.map((s) => ({ value: s, label: formatTypeLabel(s) })) },
+    { key: "type", allLabel: "All Types", options: uniqueTypes.map((t) => ({ value: t, label: humanizeSlug(t) })) },
+    { key: "sector", allLabel: "All Sectors", options: uniqueSectors.map((s) => ({ value: s, label: humanizeSlug(s) })) },
   ];
 
   if (error) {
