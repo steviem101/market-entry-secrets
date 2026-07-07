@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useTimerTrigger } from "@/hooks/useTimerTrigger";
+import { REPORT_CTA_LABEL, REPORT_CTA_MICROCOPY } from "@/config/reportCta";
 import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -89,12 +90,12 @@ export const LeadGenPopupProvider = ({ children }: LeadGenPopupProviderProps) =>
               className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white py-3 text-base rounded-xl group"
               size="lg"
             >
-              Generate my free report
+              {REPORT_CTA_LABEL}
               <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
             </Button>
 
             <p className="text-xs text-muted-foreground text-center">
-              No credit card required. Takes under 5 minutes.
+              {REPORT_CTA_MICROCOPY}
             </p>
           </div>
         </DialogContent>

@@ -1,11 +1,10 @@
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { ReportCTAButton } from "@/components/cta/ReportCTAButton";
 import {
   SECTION_CONFIG,
   SECTION_LABELS,
+  TIER_LABELS,
   TIER_REQUIREMENTS,
 } from "@/components/report/reportSectionConfig";
 
@@ -46,11 +45,13 @@ const SHOWCASED_SECTIONS: { key: string; description: string }[] = [
 ];
 
 const tierLabel = (key: string) => {
-  const tier = TIER_REQUIREMENTS[key];
-  if (!tier) return { label: "Free", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" };
+  const tier = TIER_REQUIREMENTS[key] ?? "free";
   return {
-    label: tier.charAt(0).toUpperCase() + tier.slice(1),
-    className: "bg-primary/10 text-primary",
+    label: TIER_LABELS[tier] ?? tier,
+    className:
+      tier === "free"
+        ? "bg-accent/10 text-accent border-accent/20"
+        : "bg-primary/10 text-primary border-primary/20",
   };
 };
 
@@ -72,7 +73,9 @@ export const WhatsInYourReport = () => {
 
           {/* Report section cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SHOWCASED_SECTIONS.map(({ key, description }) => {
+            {SHOWCASED_SECTIONS.filter(
+              ({ key }) => SECTION_CONFIG[key] && SECTION_LABELS[key]
+            ).map(({ key, description }) => {
               const config = SECTION_CONFIG[key];
               const Icon = config.icon;
               const tier = tierLabel(key);
@@ -100,17 +103,7 @@ export const WhatsInYourReport = () => {
           </div>
 
           {/* Single CTA */}
-          <div className="text-center mt-12">
-            <Link to="/report-creator">
-              <Button size="lg" className="px-8 py-6 text-base rounded-xl group">
-                Generate my free report
-                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </Button>
-            </Link>
-            <p className="text-xs text-muted-foreground mt-3">
-              Free · No credit card · Ready in about 3 minutes
-            </p>
-          </div>
+          <ReportCTAButton withMicrocopy className="mt-12" />
         </div>
       </div>
     </section>

@@ -27,7 +27,7 @@ export const ProofStrip = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
           {PROOF_STATS.map((stat) => {
-            const value = data?.[stat.key] || stat.fallback;
+            const value = data?.[stat.key] ?? stat.fallback;
             return (
               <Link
                 key={stat.key}

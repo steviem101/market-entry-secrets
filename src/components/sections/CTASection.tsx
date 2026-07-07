@@ -1,6 +1,4 @@
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ReportCTAButton } from "@/components/cta/ReportCTAButton";
 
 export const CTASection = () => {
   return (
@@ -20,17 +18,7 @@ export const CTASection = () => {
             minutes — built from live market intelligence, vetted providers, and
             mentors who have done it before.
           </p>
-          <div className="flex flex-col items-center gap-3">
-            <Link to="/report-creator">
-              <Button size="lg" className="px-8 py-6 text-lg rounded-xl group">
-                Generate my free report
-                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </Button>
-            </Link>
-            <p className="text-xs text-muted-foreground">
-              Free · No credit card · Ready in about 3 minutes
-            </p>
-          </div>
+          <ReportCTAButton withMicrocopy />
         </div>
       </div>
     </section>

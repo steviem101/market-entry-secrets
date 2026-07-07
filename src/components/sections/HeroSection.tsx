@@ -14,21 +14,21 @@ export const HeroSection = () => {
           {/* Left column: Copy */}
           <div className="space-y-6">
             <div className="animate-fade-in-up" style={{ animationDelay: "0ms" }}>
-              <HeroHeadline persona="default" />
+              <HeroHeadline />
             </div>
 
             <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-              <HeroSubheadline persona="default" />
+              <HeroSubheadline />
             </div>
 
             <div className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-              <HeroCTAGroup persona="default" />
+              <HeroCTAGroup />
             </div>
           </div>
 
           {/* Right column: Report mockup */}
           <div className="animate-fade-in-up lg:pl-4" style={{ animationDelay: "100ms" }}>
-            <HeroProductMockup persona="default" />
+            <HeroProductMockup />
           </div>
         </div>
       </div>

@@ -1,6 +1,5 @@
-import { ClipboardList, Cpu, Users, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { ClipboardList, Cpu, Users } from "lucide-react";
+import { ReportCTAButton } from "@/components/cta/ReportCTAButton";
 
 interface Step {
   icon: typeof ClipboardList;
@@ -84,14 +83,7 @@ export const HowItWorksSection = () => {
           </div>
 
           {/* Single CTA */}
-          <div className="text-center mt-14">
-            <Link to="/report-creator">
-              <Button size="lg" className="px-8 py-6 text-base rounded-xl group">
-                Generate my free report
-                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </Button>
-            </Link>
-          </div>
+          <ReportCTAButton className="mt-14" />
         </div>
       </div>
     </section>

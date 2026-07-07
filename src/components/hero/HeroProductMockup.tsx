@@ -9,16 +9,11 @@ import {
   CheckCircle2,
   MapPin,
 } from "lucide-react";
-import { HERO_PERSONAS } from "./heroContent";
-import type { HeroPersona } from "./heroContent";
-
-interface HeroProductMockupProps {
-  persona: HeroPersona;
-}
+import { HERO_CONTENT } from "./heroContent";
 
 // --- Mockup view: Report Preview ---
-const ReportPreview = ({ persona }: { persona: HeroPersona }) => {
-  const scenario = HERO_PERSONAS[persona].mockupScenario;
+const ReportPreview = () => {
+  const scenario = HERO_CONTENT.mockupScenario;
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-3">
@@ -62,8 +57,7 @@ const ReportPreview = ({ persona }: { persona: HeroPersona }) => {
       <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
         <span>
-          Report generated &mdash; {persona !== "startup" ? "12" : "8"}{" "}
-          sections
+          Report generated &mdash; 12 sections
         </span>
       </div>
     </div>
@@ -71,49 +65,27 @@ const ReportPreview = ({ persona }: { persona: HeroPersona }) => {
 };
 
 // --- Mockup view: Provider Matches ---
-const ProviderMatches = ({ persona }: { persona: HeroPersona }) => {
-  const providers =
-    persona !== "startup"
-      ? [
-          {
-            name: "Austrade Connect",
-            location: "Sydney",
-            match: 97,
-            services: ["Market Entry", "Regulation"],
-          },
-          {
-            name: "ANZ Legal Partners",
-            location: "Melbourne",
-            match: 94,
-            services: ["Compliance", "Entity Setup"],
-          },
-          {
-            name: "Pacific Growth Advisory",
-            location: "Brisbane",
-            match: 91,
-            services: ["Strategy", "Local Partners"],
-          },
-        ]
-      : [
-          {
-            name: "LaunchPad Accelerator",
-            location: "Sydney",
-            match: 96,
-            services: ["Funding", "Mentorship"],
-          },
-          {
-            name: "Scale Capital Partners",
-            location: "Melbourne",
-            match: 93,
-            services: ["Series A", "Growth"],
-          },
-          {
-            name: "Startup Melbourne Hub",
-            location: "Melbourne",
-            match: 89,
-            services: ["Networking", "Talent"],
-          },
-        ];
+const ProviderMatches = () => {
+  const providers = [
+    {
+      name: "Austrade Connect",
+      location: "Sydney",
+      match: 97,
+      services: ["Market Entry", "Regulation"],
+    },
+    {
+      name: "ANZ Legal Partners",
+      location: "Melbourne",
+      match: 94,
+      services: ["Compliance", "Entity Setup"],
+    },
+    {
+      name: "Pacific Growth Advisory",
+      location: "Brisbane",
+      match: 91,
+      services: ["Strategy", "Local Partners"],
+    },
+  ];
 
   return (
     <div className="space-y-3">
@@ -164,8 +136,8 @@ const ProviderMatches = ({ persona }: { persona: HeroPersona }) => {
 };
 
 // --- Mockup view: Intake Form ---
-const IntakePreview = ({ persona }: { persona: HeroPersona }) => {
-  const scenario = HERO_PERSONAS[persona].mockupScenario;
+const IntakePreview = () => {
+  const scenario = HERO_CONTENT.mockupScenario;
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-3">
@@ -224,7 +196,7 @@ const VIEWS = [
 ] as const;
 
 // --- Main mockup component ---
-export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
+export const HeroProductMockup = () => {
   const [activeView, setActiveView] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -252,13 +224,6 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
     const interval = setInterval(cycleView, 4000);
     return () => clearInterval(interval);
   }, [isPaused, cycleView]);
-
-  // Reset view on persona change
-  useEffect(() => {
-    startTransition(() => {
-      setActiveView(0);
-    });
-  }, [persona, startTransition]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -300,7 +265,7 @@ export const HeroProductMockup = ({ persona }: HeroProductMockupProps) => {
               : "opacity-100 translate-y-0"
           }`}
         >
-          <ActiveComponent persona={persona} />
+          <ActiveComponent />
         </div>
 
         {/* View indicator dots */}
