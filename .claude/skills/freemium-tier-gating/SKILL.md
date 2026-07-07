@@ -47,10 +47,14 @@ gates are security and which are UX.
 2. State the enforcement layer explicitly: client UX (FreemiumGate/ListingPageGate/PaywallModal),
    stored-JSON visibility, RLS, or SECURITY DEFINER RPC. If a paid asset's only protection is
    client-side, that's a finding, not a pattern to copy.
-3. New gated report section → update **all three** section-truth sources together: frontend
-   `SECTION_ORDER`/`TIER_REQUIREMENTS`, DB `report_templates.visibility_tier`, and the quality-loop
-   rubric — a template added to only one silently never displays
-   (`docs/audits/MES-35-platform-readiness-scan.md` R12).
+3. New gated report section → update **all four** section-truth sources together: (1) frontend
+   `SECTION_ORDER`/`TIER_REQUIREMENTS` (`reportSectionConfig.ts`), (2) DB
+   `report_templates.visibility_tier`, (3) the `report-quality-loop/rubric.ts` map, and — the
+   **security-critical one** — (4) the `get_tier_gated_report` SECURITY DEFINER RPC's hardcoded
+   `v_tier_requirements` JSONB, which is what actually strips `visible:false` content server-side.
+   A section added everywhere except (4) ships its paid prose to free/anon users in the payload; a
+   section missing from (1)/(3) silently never displays or isn't judged
+   (`docs/audits/MES-35-platform-readiness-scan.md` R12; verified 2026-07-07 via the exam dry-run).
 4. Never write tier state from the client. Upgrades happen only via the Stripe webhook →
    see `stripe-payments-and-webhooks` for invariants and post-payment polling.
 5. Conversion safety: gates must fail toward *teaser + upgrade CTA*, not blank content or silent
@@ -63,8 +67,9 @@ gates are security and which are UX.
 - Weakening `userTierMeetsRequirement`'s deny-by-default on unknown tiers.
 
 ## Good / bad examples
-- ✅ Gating a new section: add to `TIER_REQUIREMENTS` + `report_templates.visibility_tier` + rubric;
-  verify a `free` account sees teaser state, a `growth` account sees content.
+- ✅ Gating a new section: add to `TIER_REQUIREMENTS` + `report_templates.visibility_tier` + rubric
+  + the `get_tier_gated_report` RPC map; verify a `free` account sees teaser + no content in the
+  network payload, a `growth` account sees content.
 - ❌ `if (tier !== 'free') showLeads()` — breaks for legacy `premium` and unknown tiers; use
   `canAccessFeature`/`userTierMeetsRequirement`.
 - ❌ Documenting the 3-view localStorage gate as preventing content access — clearing localStorage
@@ -73,7 +78,8 @@ gates are security and which are UX.
 ## Self-check rubric (pass/fail)
 - [ ] Matrix (anon/free/growth/scale/enterprise/admin) written for the change; enforcement layer named.
 - [ ] Legacy tiers `premium`/`concierge` handled; unknown tier denies.
-- [ ] All three section-truth sources updated together (if sections touched).
+- [ ] All four section-truth sources updated together (frontend config, `report_templates`,
+      `rubric.ts`, AND the `get_tier_gated_report` RPC) if sections touched.
 - [ ] No client-side write of tier state; no paid content reachable below its tier.
 - [ ] Teaser/upgrade state exists for the gated-out audiences.
 
@@ -97,7 +103,9 @@ live `pg_policies` on `user_subscriptions`/`user_reports`. Audits:
 3. **Paid data gated only client-side** — `lead_database_records` is `USING(true)` for any
    authenticated user with no entitlement table behind it (AUD-001/006); preview "masking" is
    cosmetic — raw values sit in the network payload (AUD-035).
-4. **Three sources of section truth** drifting (MES-35 R12); **freemium 3-view gate is
+4. **Four sources of section truth** drifting — the `get_tier_gated_report` RPC has its own
+   hardcoded tier map and is the server-side strip point; miss it and paid prose leaks (MES-35 R12,
+   extended by the 2026-07-07 exam); **freemium 3-view gate is
    localStorage** — by design it protects no revenue (AUD-034).
 5. **Premium sections cost money even for free users** — generated regardless of tier
    (MES-35 R5); cost rules live in `edge-functions-and-cost-controls`.
