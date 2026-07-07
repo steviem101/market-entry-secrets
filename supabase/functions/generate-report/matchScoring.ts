@@ -89,8 +89,14 @@ const AGNOSTIC_NUDGE = 0.25;  // small — "eligible for everyone" != "relevant"
 // newly treated as broad (service_providers carry no tags — unaffected). For these a
 // sector overlap is weak evidence of focus, so score it as flat "broad overlap" (a
 // single unit, no breadth accumulation) and deny the specialist bonus — focused
-// matches then rank above it. Ranking-only; the row is not dropped (a thin section
-// still backfills it), so a genuinely-relevant broad row still appears, just lower.
+// matches then rank above it. On the providers/innovation/investor surfaces this is
+// ranking-only: the row is not dropped (a thin section still backfills it), so a
+// genuinely-relevant broad row still appears, just lower. NOTE: the events surface
+// additionally gates on hasSectorRelevance via preferRelevant() — a demoted row now
+// reads as "broad overlap" (not "industry match"), so when ≥minKeep focused events
+// exist a demoted event can be excluded, not merely reranked. That's aligned with
+// preferRelevant's purpose (shed weak/broad matches when focused ones exist) and
+// backfill still guarantees the section fills, but it IS a drop on that surface.
 const OVERTAG_THRESHOLD = 5;
 
 export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
