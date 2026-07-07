@@ -124,6 +124,63 @@ test("inflection support: manufacturer, consulting, miners", () => {
   assert.ok(industryGroupsToSectorSlugs(["Mineral Exploration"]).includes("oil-gas-and-mining"));
 });
 
+test("MES-110: intake quick-pick chips all resolve via the canonical group lookup", async () => {
+  const { TOP_INDUSTRIES, MORE_INDUSTRIES } = await import(
+    "../../../src/components/report-creator/v2/rcData.ts"
+  );
+  for (const chip of [...TOP_INDUSTRIES, ...MORE_INDUSTRIES]) {
+    assert.ok(
+      industryGroupsToSectorSlugs([chip]).length >= 1,
+      `chip "${chip}" resolves to no sector slugs`,
+    );
+  }
+});
+
+test("MES-110: previously-dropped live intake values now roll up to sectors", () => {
+  // Every value here was observed in user_intake_forms and resolved to NOTHING
+  // before the MES-110 alias extension (audit §6.1-6.2).
+  const cases: Array<[string, string]> = [
+    ["Financial Services", "financial-services"],
+    ["finance", "financial-services"],
+    ["Software as a Service", "technology-information-and-media"],
+    ["Software", "technology-information-and-media"],
+    ["Automation Software", "technology-information-and-media"],
+    ["Banking Software", "technology-information-and-media"],
+    ["Recruitment Technology", "administrative-and-support-services"],
+    ["Staffing & Recruiting", "administrative-and-support-services"],
+    ["HR Tech", "administrative-and-support-services"],
+    ["Human Resources", "administrative-and-support-services"],
+    ["Credit Bureau", "financial-services"],
+    ["lending", "financial-services"],
+    ["Biometrics", "technology-information-and-media"],
+    ["Identity Management", "technology-information-and-media"],
+    ["Identity Verification", "technology-information-and-media"],
+    ["Market Research", "professional-services"],
+    ["Decision Intelligence", "technology-information-and-media"],
+    ["Medical Devices", "hospitals-and-health-care"],
+    ["Pharmaceuticals", "hospitals-and-health-care"],
+    ["Biotechnology Research", "hospitals-and-health-care"],
+    ["Agriculture", "farming-ranching-forestry"],
+    ["Education", "education"],
+    ["Architecture & Planning", "professional-services"],
+  ];
+  for (const [value, expectedSlug] of cases) {
+    assert.ok(
+      industryGroupsToSectorSlugs([value]).includes(expectedSlug),
+      `"${value}" no longer rolls up to ${expectedSlug}`,
+    );
+  }
+});
+
+test("MES-110 aliases keep word boundaries (no new false positives)", () => {
+  // "Softwareland" must not trip \bsoftware\b via partial word.
+  assert.deepEqual(industryGroupsToSectorSlugs(["Softwarehouse Widgets"]), []);
+  // "Refinance" must not trip \bfinance\b.
+  assert.deepEqual(industryGroupsToSectorSlugs(["Refinanced Assets"]), []);
+  // "Educational" must not trip bare \beducation\b (edtech alias handles education technology).
+  assert.deepEqual(industryGroupsToSectorSlugs(["Educationalists"]), []);
+});
+
 test("overlapCount counts shared elements", () => {
   assert.equal(overlapCount(["a", "b", "c"], ["b", "c", "d"]), 2);
   assert.equal(overlapCount(["a"], ["x"]), 0);

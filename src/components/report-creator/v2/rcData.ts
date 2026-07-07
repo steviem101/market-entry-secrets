@@ -66,16 +66,21 @@ export const PERSONA_COPY: Record<ReportPersona, PersonaCopy> = {
 
 // Top-10 industries surfaced first (≈70% of real usage); the rest sit behind
 // "More (N)". Both are quick-picks — the search field covers the full taxonomy.
+// Every chip MUST be an exact INDUSTRY_GROUP_OPTIONS value (MES-110): non-canonical
+// labels were stored verbatim and silently resolved to zero sectors in the report
+// matcher. rcData.test.ts enforces this.
 export const TOP_INDUSTRIES = [
-  'Architecture & Planning', 'Data Infrastructure & Analytics', 'Capital Markets',
-  'Credit Intermediation', 'Software Development', 'IT Services & Consulting',
-  'Financial Services', 'Biotechnology Research', 'Medical Devices', 'Renewables & Environment',
+  'Data Infrastructure and Analytics', 'Software Development', 'Architecture and Planning',
+  'Capital Markets', 'Credit Intermediation', 'IT Services and IT Consulting',
+  'Funds and Trusts', 'Staffing and Recruiting', 'Medical Equipment Manufacturing',
+  'Services for Renewable Energy',
 ];
 
 export const MORE_INDUSTRIES = [
-  'Advertising Services', 'Manufacturing', 'Retail', 'Logistics & Supply Chain',
-  'Education', 'Hospitality', 'Real Estate', 'Telecommunications', 'Agriculture',
-  'Legal Services', 'Pharmaceuticals', 'Insurance', 'Construction', 'Media & Entertainment',
+  'Advertising Services', 'Machinery Manufacturing', 'Online and Mail Order Retail',
+  'Freight and Package Transportation', 'Higher Education', 'Hospitality', 'Real Estate',
+  'Telecommunications', 'Farming', 'Legal Services', 'Chemical Manufacturing', 'Insurance',
+  'Building Construction', 'Broadcast Media Production and Distribution',
 ];
 
 /**
