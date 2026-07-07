@@ -48,7 +48,7 @@ export const HeroCTAGroup = () => {
         to={REPORT_CREATOR_STARTUP_PATH}
         className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
       >
-        Growing an Australian startup instead? Start here
+        Growing an Australian startup? Start here
       </Link>
     </div>
   );

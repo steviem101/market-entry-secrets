@@ -15,7 +15,7 @@ const SHOWCASED_SECTIONS: { key: string; description: string }[] = [
   {
     key: "executive_summary",
     description:
-      "Your market opportunity, sized and summarised — built from live research on your company and sector.",
+      "Your market opportunity, sized and summarised from live research on your company and sector.",
   },
   {
     key: "swot_analysis",
@@ -40,7 +40,7 @@ const SHOWCASED_SECTIONS: { key: string; description: string }[] = [
   {
     key: "action_plan",
     description:
-      "A step-by-step plan with timelines — what to do first, next, and after landing.",
+      "A step-by-step plan with timelines: what to do first, next, and after landing.",
   },
 ];
 
@@ -67,7 +67,7 @@ export const WhatsInYourReport = () => {
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Every report is generated for your company from live market data.
-              Start free — upgrade any time to unlock the deeper sections.
+              Start free, then upgrade any time to unlock the deeper sections.
             </p>
           </div>
 

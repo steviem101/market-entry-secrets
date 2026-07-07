@@ -14,14 +14,14 @@ const STEPS: Step[] = [
     iconColor: "from-primary/15 to-primary/5 text-primary",
     title: "Tell us about your company",
     description:
-      "Answer a few questions about your industry, target region, and goals. Takes under 5 minutes — no credit card required.",
+      "Answer a few questions about your industry, target region, and goals. Takes under 5 minutes, no credit card required.",
   },
   {
     icon: Cpu,
     iconColor: "from-primary/15 to-accent/5 text-primary",
     title: "AI builds your market entry plan",
     description:
-      "Our engine scrapes live data, analyses competitors, maps the market, and matches you with vetted providers — in minutes, not months.",
+      "Our engine scrapes live data, analyses competitors, maps the market, and matches you with vetted providers, all in minutes, not months.",
   },
   {
     icon: Users,
