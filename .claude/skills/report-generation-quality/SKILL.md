@@ -64,8 +64,11 @@ next step present (esp. `action_plan`). Cross-report: no section contradicts ano
 (polish pass exists for this; don't rely on it — it's best-effort with a timeout).
 
 ## Red flags / approval gates
-- New/renamed section → update frontend `SECTION_ORDER`+`TIER_REQUIREMENTS`, DB `report_templates`,
-  and the quality-loop rubric **together** (MES-35 R12: three sources of truth).
+- New/renamed section → update **four** places together: frontend `SECTION_ORDER`+`TIER_REQUIREMENTS`,
+  DB `report_templates`, the quality-loop `rubric.ts`, AND the `get_tier_gated_report` RPC's
+  hardcoded `v_tier_requirements` (the server-side strip point — miss it and gated prose leaks to
+  free/anon; MES-35 R12, extended by the 2026-07-07 exam dry-run). Gating in the pipeline itself is
+  generic on `visibility_tier` — no `generate-report` code change needed.
 - Prompt changes that remove grounding instructions or citation requirements.
 - Anything increasing per-report external calls → cost gate in `edge-functions-and-cost-controls`.
 

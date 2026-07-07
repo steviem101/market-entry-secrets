@@ -3,6 +3,33 @@
 Log every skill gap, wrong rule, or contradiction you find here (newest first), so it can be
 fixed in a follow-up PR. Format: `- YYYY-MM-DD [skill-name] what was wrong/missing — found while <task>`.
 
+## 2026-07-07 — Opus exam dry-run results + skill correction (MES-113 test plan)
+
+Ran the ticket's 4 Opus dry-run evaluation tasks against the merged library, graded each with the
+`qa-and-exam` rubric (5 dims, 0–2, pass = ≥8 with no 0s):
+
+- Stripe webhook reliability fix (plan) — **10/10**
+- SEO/prerendering for programmatic pages (plan) — **10/10**
+- Tier-gated `regulatory_landscape` report section (draft) — **10/10**
+- Staging-first `service_providers` enrichment (plan) — **10/10**
+
+All four cold Opus runs hit the MES-specific safety gates, grounding, and conventions the skills
+encode (approval gates, prerender-as-anon, no invented providers / excluded the fabricated "AMCC"
+org, staging-first). Verdict: the library lifts an uncontextualised Opus session to Fable level.
+
+**Correction the exam surfaced (now applied):** the tier-gated-section task discovered that
+section-truth lives in **FOUR** places, not the "three" the skills stated. The fourth is the
+`get_tier_gated_report` SECURITY DEFINER RPC's hardcoded `v_tier_requirements` JSONB — verified live
+2026-07-07 (`swot_analysis/competitor_landscape/mentor_recommendations/investor_recommendations`→
+growth, `lead_list`→scale). It is the **server-side strip point**: a new gated section added
+everywhere except the RPC ships its paid prose to free/anon users in the payload. Updated
+`freemium-tier-gating` and `report-generation-quality` to say four sources and name the RPC as the
+security-critical one.
+
+Also logged (already noted in Wave-3 authoring, reconfirmed by the enrichment run): there is no
+`service_providers` staging table yet — `directory-data-enrichment`'s example list should gain one
+when the first SP-enrichment ticket lands.
+
 ## 2026-07-07 — Wave 3 (MES-113): 6 P2/P3 skills — library complete (22/22)
 
 Added the final 6 skills, grounded in two fresh read-only research passes (Crisp/MCP/content-copy;
