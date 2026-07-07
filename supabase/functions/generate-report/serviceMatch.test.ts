@@ -63,3 +63,17 @@ test("countServiceMatches: empty/null inputs are safe zeros", () => {
   assert.equal(countServiceMatches(["Legal Services"], []), 0);
   assert.equal(countServiceMatches(["Legal Services"], null), 0);
 });
+
+test("CRITICAL: every tag in the goal vocabulary survives tokenization and self-matches", async () => {
+  // A goal tag whose tokens are all stopworded would silently never match
+  // anything again — pin the whole live vocabulary against that regression.
+  const { GOAL_SERVICE_TAGS_BY_ID, GOAL_SERVICE_TAGS_BY_LABEL } = await import("./goalServiceTags.ts");
+  const allTags = new Set([
+    ...Object.values(GOAL_SERVICE_TAGS_BY_ID).flat(),
+    ...Object.values(GOAL_SERVICE_TAGS_BY_LABEL).flat(),
+  ]);
+  for (const tag of allTags) {
+    assert.ok(serviceTokens(tag).size > 0, `tag "${tag}" lost all tokens to stopwords`);
+    assert.equal(countServiceMatches([tag], [tag]), 1, `tag "${tag}" must self-match`);
+  }
+});
