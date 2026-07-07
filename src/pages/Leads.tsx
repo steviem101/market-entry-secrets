@@ -61,9 +61,20 @@ const Leads = () => {
   );
 
   const countsByType = stats?.countsByType ?? {};
+  // Data-driven type tabs: show the curated types in their canonical order, then
+  // append any list_type value that exists in the data but isn't in the standard
+  // list — so a new DB type surfaces instead of being silently dropped (MES-100).
+  const typeValues = useMemo(() => {
+    const known = getStandardTypes.leads;
+    const inData = Object.keys(countsByType);
+    return [
+      ...known.filter((t) => inData.includes(t)),
+      ...inData.filter((t) => !known.includes(t)).sort(),
+    ];
+  }, [countsByType]);
   const typeTabs: FilterOption[] = [
     { value: "all", label: "All", count: stats?.totalDatabases ?? leadDatabases?.length ?? 0 },
-    ...getStandardTypes.leads.map((t) => ({ value: t, label: t, count: countsByType[t] ?? 0 })),
+    ...typeValues.map((t) => ({ value: t, label: t, count: countsByType[t] ?? 0 })),
   ];
 
   const selects: SelectFilterConfig[] = [

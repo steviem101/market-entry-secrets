@@ -12,6 +12,7 @@ import { mapServicesToSectors } from "@/utils/sectorMapping";
 import { type PersonaFilterValue } from "@/components/PersonaFilter";
 import { useServiceProviderCategories } from "@/hooks/useServiceProviders";
 import { useDirectoryFilters, type UseDirectoryFiltersResult } from "@/hooks/useDirectoryFilters";
+import { useContextPersonaSeed } from "@/hooks/useContextPersonaSeed";
 import type { FilterSpec } from "@/lib/directoryFilters";
 
 const PAGE_SIZE = 12;
@@ -139,6 +140,7 @@ const ServiceProvidersContent = ({
 const ServiceProviders = () => {
   const filterState = useDirectoryFilters(SP_FILTER_SPEC);
   const { filters } = filterState;
+  useContextPersonaSeed(filterState.setFilter);
   const { data: categories = [] } = useServiceProviderCategories();
 
   return (
