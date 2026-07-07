@@ -1,13 +1,15 @@
-The rotating word ticker currently contains both "Providers" and "Service Providers", which is redundant and risks a third line when the longer phrase appears. The user also wants two new words added.
+## Problem
 
-Changes to `src/components/hero/heroContent.ts` only:
+The hero mockup right of the headline auto-cycles through three views (Report / Providers / Intake). The content wrapper is `p-5 min-h-[320px]` — the third view (Intake, "Your Details / Step 1 of 3") renders taller than the min-height because of the 4 stacked form fields, so every time the cycle lands on it the whole mockup card grows by ~40px and the page below shifts down by one line. This matches what you're seeing.
 
-1. **Remove** `"Service Providers"` from `rotatingWords` (the word "Providers" already exists).
-2. **Add** `"Conferences"` and `"Communities"` to `rotatingWords`.
+## Fix
 
-The headline layout in `HeroHeadline.tsx` remains unchanged — it already renders on two fixed lines with only the rotating word animating.
+In `src/components/hero/HeroProductMockup.tsx` (line 262), swap the `min-h-[320px]` for a fixed height sized to the tallest view so the card never resizes as views cycle:
 
-New `rotatingWords` array will be:
-```text
-Leads, Mentors, Events, Guides, Providers, Investors, Accelerators, Advisors, Grants, Playbooks, Associations, Conferences, Communities
-```
+- `p-5 min-h-[320px] transition-all…` → `p-5 h-[400px] transition-all…`
+
+No other changes — headline, badges, and view contents stay as they are.
+
+## Verification
+
+Load `/`, let the mockup auto-cycle through all three views, and confirm the card, the floating badges, and every section below the hero stay perfectly still (no line jump when the Intake view is shown).

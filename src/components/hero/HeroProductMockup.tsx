@@ -259,7 +259,7 @@ export const HeroProductMockup = () => {
 
         {/* Content area */}
         <div
-          className={`p-5 min-h-[320px] transition-all duration-200 ${
+          className={`p-5 h-[400px] transition-all duration-200 ${
             isTransitioning
               ? "opacity-0 translate-y-2"
               : "opacity-100 translate-y-0"
