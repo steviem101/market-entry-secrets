@@ -683,6 +683,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          slug: string | null
           sort_order: number | null
           updated_at: string
         }
@@ -693,6 +694,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          slug?: string | null
           sort_order?: number | null
           updated_at?: string
         }
@@ -703,6 +705,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          slug?: string | null
           sort_order?: number | null
           updated_at?: string
         }
@@ -5179,6 +5182,7 @@ export type Database = {
         Returns: string
       }
       generate_slug: { Args: { input_text: string }; Returns: string }
+      get_ecosystem_stats: { Args: never; Returns: Json }
       get_shared_report: {
         Args: { p_share_token: string }
         Returns: {
