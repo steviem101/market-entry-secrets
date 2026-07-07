@@ -1,0 +1,611 @@
+surface,raw_value,row_count,merged_value,linkedin_code,linkedin_description,confidence,note
+investors.sector_focus,SaaS,188,SaaS,4,Computer Software,high,
+investors.sector_focus,Consumer,121,Consumer,25,Consumer Goods,low,Investor shorthand for consumer-facing; part business-model
+investors.sector_focus,FinTech,83,FinTech,43,Financial Services,high,
+investors.sector_focus,Marketplace,67,Marketplace,6,Internet,medium,Part business-model
+investors.sector_focus,Generalist,61,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,HealthTech,55,HealthTech,14,Hospital & Health Care,high,
+investors.sector_focus,AI,45,AI & Data,4,Computer Software,medium,84 secondary
+investors.sector_focus,B2B,45,B2B,,,high,UNMAPPABLE:business-model
+investors.sector_focus,Tech,37,Technology,96,Information Technology and Services,medium,
+investors.sector_focus,EdTech,33,EdTech,132,E-Learning,high,
+investors.sector_focus,Technology,29,Technology,96,Information Technology and Services,medium,
+investors.sector_focus,B2B SaaS,27,SaaS,4,Computer Software,high,
+investors.sector_focus,Fintech,23,FinTech,43,Financial Services,high,Casing variant
+investors.sector_focus,Sustainability,23,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,E-commerce,20,E-commerce,27,Retail,medium,6 secondary
+investors.sector_focus,Impact,20,Impact,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,DeepTech,19,Deep Tech,96,Information Technology and Services,low,No deep-tech entry in 147
+investors.sector_focus,Energy,19,Energy,57,Oil & Energy,medium,144 secondary
+investors.sector_focus,Climate Tech,17,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,MedTech,17,MedTech,17,Medical Devices,high,
+investors.sector_focus,PropTech,17,PropTech,44,Real Estate,high,
+investors.sector_focus,Deep Tech,16,Deep Tech,96,Information Technology and Services,low,
+investors.sector_focus,Climate,15,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Software,15,Software,4,Computer Software,high,
+investors.sector_focus,Health,14,Healthcare,14,Hospital & Health Care,high,
+investors.sector_focus,EnergyTech,13,CleanTech,144,Renewables & Environment,medium,57 secondary
+investors.sector_focus,CleanTech,12,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Enterprise Software,12,Software,4,Computer Software,high,
+investors.sector_focus,Web3,12,Web3,43,Financial Services,low,Crypto cluster; MES-extension candidate
+investors.sector_focus,Cybersecurity,11,Cybersecurity,118,Computer & Network Security,high,
+investors.sector_focus,DevTools,11,Software,4,Computer Software,high,
+investors.sector_focus,Enterprise SaaS,11,SaaS,4,Computer Software,high,
+investors.sector_focus,AgTech,10,AgTech,63,Farming,high,
+investors.sector_focus,Blockchain,10,Web3,43,Financial Services,low,
+investors.sector_focus,Capital Markets,10,Capital Markets,129,Capital Markets,high,
+investors.sector_focus,Hardware,10,Hardware,3,Computer Hardware,medium,
+investors.sector_focus,Infrastructure,10,Infrastructure,51,Civil Engineering,low,Ambiguous (digital vs physical)
+investors.sector_focus,Healthcare,9,Healthcare,14,Hospital & Health Care,high,
+investors.sector_focus,IoT,9,IoT,8,Telecommunications,medium,
+investors.sector_focus,Logistics,9,Logistics,116,Logistics and Supply Chain,high,
+investors.sector_focus,RegTech,9,RegTech,4,Computer Software,low,43 secondary
+investors.sector_focus,Technology (agnostic),9,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,Biotech,8,Biotechnology,12,Biotechnology,high,
+investors.sector_focus,ClimateTech,8,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Crypto,8,Web3,43,Financial Services,low,
+investors.sector_focus,Education,8,Education,69,Education Management,medium,
+investors.sector_focus,MarTech,8,MarTech,80,Marketing and Advertising,high,
+investors.sector_focus,Mobile,8,Software,4,Computer Software,medium,
+investors.sector_focus,Renewables,8,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Software Development,8,Software,4,Computer Software,high,
+investors.sector_focus,Agriculture,7,Agriculture,63,Farming,high,
+investors.sector_focus,Cross-border,7,Cross-border,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,DTC,7,DTC,,,high,UNMAPPABLE:business-model
+investors.sector_focus,Future of Work,7,Future of Work,,,medium,UNMAPPABLE:investment-thesis
+investors.sector_focus,InsurTech,7,InsurTech,42,Insurance,high,
+investors.sector_focus,Marketplaces,7,Marketplace,6,Internet,medium,Plural variant
+investors.sector_focus,Medical Practices,7,Medical Practice,13,Medical Practice,high,Post-migration V2 group value
+investors.sector_focus,Robotics,7,Robotics,147,Industrial Automation,medium,
+investors.sector_focus,Social Impact,7,Impact,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,Defence,6,Defence,1,Defense & Space,high,
+investors.sector_focus,Developer Tools,6,Software,4,Computer Software,high,
+investors.sector_focus,Digital Health,6,HealthTech,14,Hospital & Health Care,high,
+investors.sector_focus,Female Founders,6,Founder Audience,,,high,UNMAPPABLE:audience
+investors.sector_focus,FoodTech,6,FoodTech,23,Food Production,high,
+investors.sector_focus,LegalTech,6,LegalTech,10,Legal Services,high,
+investors.sector_focus,Life Sciences,6,Life Sciences,12,Biotechnology,medium,
+investors.sector_focus,Services for Renewable Energy,6,CleanTech,144,Renewables & Environment,high,Post-migration V2 group value
+investors.sector_focus,Social Enterprise,6,Impact,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,AgriTech,5,AgTech,63,Farming,high,Casing variant
+investors.sector_focus,All Sectors,5,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,BioTech,5,Biotechnology,12,Biotechnology,high,Casing variant
+investors.sector_focus,Compliance,5,RegTech,4,Computer Software,low,
+investors.sector_focus,Gaming,5,Gaming,109,Computer Games,high,
+investors.sector_focus,Health Tech,5,HealthTech,14,Hospital & Health Care,high,Spacing variant
+investors.sector_focus,Hospitality Tech,5,Hospitality,31,Hospitality,medium,4 secondary
+investors.sector_focus,Payments,5,FinTech,43,Financial Services,high,
+investors.sector_focus,Renewable Energy,5,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Space,5,Defence & Space,1,Defense & Space,high,
+investors.sector_focus,Wellness,5,Wellness,124,"Health, Wellness and Fitness",high,
+investors.sector_focus,Women-Led,5,Founder Audience,,,high,UNMAPPABLE:audience
+investors.sector_focus,AdTech,4,AdTech,80,Marketing and Advertising,high,
+investors.sector_focus,Advanced Manufacturing,4,Advanced Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry
+investors.sector_focus,Circular Economy,4,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,Cleantech,4,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,Data Infrastructure and Analytics,4,AI & Data,4,Computer Software,medium,Post-migration V2 group value; 84 secondary
+investors.sector_focus,Diversity,4,Founder Audience,,,high,UNMAPPABLE:audience
+investors.sector_focus,Energy Transition,4,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Fashion,4,Apparel,19,Apparel & Fashion,high,
+investors.sector_focus,Government Tech,4,GovTech,75,Government Administration,high,
+investors.sector_focus,Hospitality,4,Hospitality,31,Hospitality,high,
+investors.sector_focus,Internet,4,Internet,6,Internet,high,
+investors.sector_focus,Mining Tech,4,Mining & Metals,56,Mining & Metals,high,
+investors.sector_focus,Mobility,4,Mobility,92,Transportation/Trucking/Railroad,medium,
+investors.sector_focus,Open Source,4,Software,4,Computer Software,medium,
+investors.sector_focus,Retail,4,Retail,27,Retail,high,
+investors.sector_focus,Retail Tech,4,Retail,27,Retail,medium,4 secondary
+investors.sector_focus,Sport Tech,4,SportTech,33,Sports,medium,
+investors.sector_focus,Telco,4,Telecommunications,8,Telecommunications,high,
+investors.sector_focus,Telehealth,4,HealthTech,14,Hospital & Health Care,high,
+investors.sector_focus,Travel Tech,4,TravelTech,30,"Leisure, Travel & Tourism",medium,
+investors.sector_focus,Aerospace,3,Aerospace,52,Aviation & Aerospace,high,
+investors.sector_focus,B2C,3,B2C,,,high,UNMAPPABLE:business-model
+investors.sector_focus,Clean Energy,3,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Climate tech,3,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,Consumer Goods,3,Consumer Goods,25,Consumer Goods,high,
+investors.sector_focus,Consumer Tech,3,Consumer,25,Consumer Goods,low,
+investors.sector_focus,ConTech,3,ConstructionTech,48,Construction,medium,
+investors.sector_focus,D2C,3,DTC,,,high,UNMAPPABLE:business-model
+investors.sector_focus,DeFi,3,Web3,43,Financial Services,low,
+investors.sector_focus,Design,3,Design,99,Design,high,
+investors.sector_focus,Digital Assets,3,Web3,43,Financial Services,low,
+investors.sector_focus,Engineering,3,Engineering,135,Mechanical or Industrial Engineering,medium,
+investors.sector_focus,Enterprise Tech,3,Software,4,Computer Software,medium,
+investors.sector_focus,EV Charging,3,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,EventTech,3,Events Tech,110,Events Services,medium,
+investors.sector_focus,Food,3,Food & Beverage,34,Food & Beverages,medium,23 secondary
+investors.sector_focus,HRTech,3,HR Tech,137,Human Resources,high,
+investors.sector_focus,Industrial,3,Industrial,135,Mechanical or Industrial Engineering,medium,
+investors.sector_focus,Innovation,3,Innovation,,,medium,UNMAPPABLE:investment-thesis
+investors.sector_focus,Medical Devices,3,MedTech,17,Medical Devices,high,
+investors.sector_focus,ML,3,AI & Data,4,Computer Software,medium,
+investors.sector_focus,Regional Tech,3,Technology,96,Information Technology and Services,low,Part geography
+investors.sector_focus,Regtech,3,RegTech,4,Computer Software,low,Casing variant
+investors.sector_focus,Security,3,Cybersecurity,118,Computer & Network Security,medium,121 secondary
+investors.sector_focus,Solar,3,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Studio,3,Venture Studio,,,medium,UNMAPPABLE:business-model
+investors.sector_focus,Tech-Enabled Services,3,Tech-Enabled Services,,,medium,UNMAPPABLE:business-model
+investors.sector_focus,VR/AR Health,3,HealthTech,14,Hospital & Health Care,medium,
+investors.sector_focus,Accounting Tech,2,Accounting,47,Accounting,high,
+investors.sector_focus,Ad Tech,2,AdTech,80,Marketing and Advertising,high,Spacing variant
+investors.sector_focus,Aged Care,2,Aged Care,14,Hospital & Health Care,medium,
+investors.sector_focus,Agri-food tech,2,AgTech,63,Farming,high,
+investors.sector_focus,Agrifood,2,AgTech,63,Farming,medium,23 secondary
+investors.sector_focus,AI/ML,2,AI & Data,4,Computer Software,medium,
+investors.sector_focus,Automation,2,Software,4,Computer Software,medium,147 secondary
+investors.sector_focus,Beauty,2,Cosmetics,18,Cosmetics,high,
+investors.sector_focus,Beverage,2,Food & Beverage,34,Food & Beverages,medium,142 secondary
+investors.sector_focus,Biochar,2,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,biotech,2,Biotechnology,12,Biotechnology,high,Casing variant
+investors.sector_focus,Biotechnology,2,Biotechnology,12,Biotechnology,high,
+investors.sector_focus,Bitcoin,2,Web3,43,Financial Services,low,
+investors.sector_focus,BNPL,2,FinTech,43,Financial Services,high,
+investors.sector_focus,Carbon Removal,2,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Clean energy,2,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,cleantech,2,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,Clinical Decision Support,2,HealthTech,14,Hospital & Health Care,high,
+investors.sector_focus,Construction,2,Construction,48,Construction,high,
+investors.sector_focus,Consumer Internet,2,Internet,6,Internet,medium,
+investors.sector_focus,Creator Economy,2,Creator Economy,6,Internet,medium,
+investors.sector_focus,Cyber,2,Cybersecurity,118,Computer & Network Security,high,
+investors.sector_focus,Data Analytics,2,AI & Data,4,Computer Software,medium,
+investors.sector_focus,Decarbonization,2,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Deep tech,2,Deep Tech,96,Information Technology and Services,low,Casing variant
+investors.sector_focus,Deeptech,2,Deep Tech,96,Information Technology and Services,low,Spelling variant
+investors.sector_focus,Developer Tooling,2,Software,4,Computer Software,high,
+investors.sector_focus,DevOps,2,Software,4,Computer Software,high,
+investors.sector_focus,Digital Games,2,Gaming,109,Computer Games,high,
+investors.sector_focus,Diversified,2,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,E-Learning Providers,2,EdTech,132,E-Learning,high,Post-migration V2 group value
+investors.sector_focus,eCommerce,2,E-commerce,27,Retail,medium,Casing variant
+investors.sector_focus,Energy Efficiency,2,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Energy Storage,2,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Entertainment,2,Entertainment,28,Entertainment,high,
+investors.sector_focus,ESG,2,Impact,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,Family Tech,2,FamilyTech,,,low,UNMAPPABLE:other — niche consumer segment
+investors.sector_focus,FemTech,2,FemTech,14,Hospital & Health Care,medium,
+investors.sector_focus,Financial Services,2,Financial Services,43,Financial Services,high,
+investors.sector_focus,fintech,2,FinTech,43,Financial Services,high,Casing variant
+investors.sector_focus,FMCG,2,Consumer Goods,25,Consumer Goods,high,
+investors.sector_focus,Food Tech,2,FoodTech,23,Food Production,high,Spacing variant
+investors.sector_focus,Frontier Tech,2,Deep Tech,96,Information Technology and Services,low,
+investors.sector_focus,GreenTech,2,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Insurtech,2,InsurTech,42,Insurance,high,Casing variant
+investors.sector_focus,Interactive Media,2,Media,113,Online Media,medium,109 secondary
+investors.sector_focus,Internet Marketplace Platforms,2,Marketplace,6,Internet,high,Post-migration V2 group value
+investors.sector_focus,IT,2,Technology,96,Information Technology and Services,medium,
+investors.sector_focus,Life sciences,2,Life Sciences,12,Biotechnology,medium,Casing variant
+investors.sector_focus,logistics,2,Logistics,116,Logistics and Supply Chain,high,Casing variant
+investors.sector_focus,Manufacturing,2,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry
+investors.sector_focus,Marketing,2,Marketing,80,Marketing and Advertising,high,
+investors.sector_focus,Media,2,Media,113,Online Media,medium,126 secondary
+investors.sector_focus,Medical Equipment Manufacturing,2,MedTech,17,Medical Devices,high,Post-migration V2 group value
+investors.sector_focus,Observability,2,Software,4,Computer Software,high,
+investors.sector_focus,Online Marketplaces,2,Marketplace,6,Internet,medium,
+investors.sector_focus,Productivity,2,Software,4,Computer Software,medium,
+investors.sector_focus,Productivity SaaS,2,SaaS,4,Computer Software,high,
+investors.sector_focus,Property Tech,2,PropTech,44,Real Estate,high,Spacing variant
+investors.sector_focus,Quantum,2,Deep Tech,96,Information Technology and Services,low,
+investors.sector_focus,Real Estate,2,Real Estate,44,Real Estate,high,
+investors.sector_focus,Recruitment,2,HR & Recruiting,104,Staffing and Recruiting,high,
+investors.sector_focus,Research Commercialisation,2,Research,70,Research,medium,
+investors.sector_focus,Rural Industries,2,Agriculture,63,Farming,medium,
+investors.sector_focus,Semiconductor,2,Semiconductors,7,Semiconductors,high,
+investors.sector_focus,Services,2,Services,,,low,UNMAPPABLE:other — too generic
+investors.sector_focus,Social Innovation,2,Impact,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,SportTech,2,SportTech,33,Sports,medium,Casing variant
+investors.sector_focus,Streaming,2,Media,113,Online Media,medium,
+investors.sector_focus,Technology (global scale),2,Technology,96,Information Technology and Services,low,Part thesis
+investors.sector_focus,Wearables,2,Consumer Electronics,24,Consumer Electronics,medium,
+investors.sector_focus,Wine/FoodTech,2,Wine & Food,142,Wine and Spirits,medium,23 secondary
+investors.sector_focus,Women-led,2,Founder Audience,,,high,UNMAPPABLE:audience — casing variant
+investors.sector_focus,Workforce Tech,2,HR Tech,137,Human Resources,medium,
+investors.sector_focus,4th Industrial Revolution,1,Deep Tech,96,Information Technology and Services,low,UNMAPPABLE-adjacent thesis label
+investors.sector_focus,Accessibility,1,Accessibility,,,medium,UNMAPPABLE:theme
+investors.sector_focus,Accounting Integrations,1,Accounting,47,Accounting,medium,4 secondary
+investors.sector_focus,Advanced Compute,1,Deep Tech,96,Information Technology and Services,low,3 secondary
+investors.sector_focus,Advanced Computing,1,Deep Tech,96,Information Technology and Services,low,
+investors.sector_focus,Advanced manufacturing,1,Advanced Manufacturing,135,Mechanical or Industrial Engineering,low,Casing variant
+investors.sector_focus,Advanced Materials,1,Advanced Materials,54,Chemicals,low,114 secondary
+investors.sector_focus,Aerospace/Autonomy,1,Aerospace,52,Aviation & Aerospace,medium,
+investors.sector_focus,Aged Care Tech,1,Aged Care,14,Hospital & Health Care,medium,
+investors.sector_focus,Agile/PM Tools,1,Software,4,Computer Software,high,
+investors.sector_focus,Agnostic,1,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,Agnostic (bias to big markets),1,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,Agnostic (healthcare,1,Sector Agnostic,,,high,UNMAPPABLE:corrupted-fragment — comma-split of 'Agnostic (healthcare, ...)'
+investors.sector_focus,Agnostic (Sustainable Tech,1,Sector Agnostic,,,high,UNMAPPABLE:corrupted-fragment
+investors.sector_focus,Agnostic (women founders,1,Sector Agnostic,,,high,UNMAPPABLE:corrupted-fragment
+investors.sector_focus,Agri,1,Agriculture,63,Farming,high,
+investors.sector_focus,Agri-Food,1,AgTech,63,Farming,medium,
+investors.sector_focus,Agricultural technology,1,AgTech,63,Farming,high,
+investors.sector_focus,agriculture,1,Agriculture,63,Farming,high,Casing variant
+investors.sector_focus,agrifood,1,AgTech,63,Farming,medium,Casing variant
+investors.sector_focus,agtech,1,AgTech,63,Farming,high,Casing variant
+investors.sector_focus,Agtech,1,AgTech,63,Farming,high,Casing variant
+investors.sector_focus,AI Coding Agents,1,AI & Data,4,Computer Software,high,
+investors.sector_focus,AI Services,1,AI & Data,4,Computer Software,high,
+investors.sector_focus,AI-enabled B2B software,1,AI & Data,4,Computer Software,high,
+investors.sector_focus,AI-first software,1,AI & Data,4,Computer Software,high,
+investors.sector_focus,AI-first technology (operator-led,1,AI & Data,4,Computer Software,medium,UNMAPPABLE-adjacent corrupted-fragment; mapped on prefix
+investors.sector_focus,AI),1,AI & Data,4,Computer Software,medium,UNMAPPABLE:corrupted-fragment — trailing fragment of comma-split list; likely '(... AI)'
+investors.sector_focus,AI/Robotics,1,AI & Data,4,Computer Software,medium,147 secondary
+investors.sector_focus,All especially Fintech,1,FinTech,43,Financial Services,low,Agnostic-with-tilt
+investors.sector_focus,Alt Proteins,1,FoodTech,23,Food Production,high,
+investors.sector_focus,Analytics,1,AI & Data,4,Computer Software,medium,
+investors.sector_focus,ANU Spinoffs,1,University Spinouts,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,Artificial Intelligence (ANZ),1,AI & Data,4,Computer Software,medium,Part geography
+investors.sector_focus,Atlassian Marketplace,1,Software,4,Computer Software,medium,
+investors.sector_focus,Audio/Podcast,1,Media,113,Online Media,medium,
+investors.sector_focus,Authentication,1,Cybersecurity,118,Computer & Network Security,high,
+investors.sector_focus,Auto Finance,1,FinTech,43,Financial Services,medium,
+investors.sector_focus,Automotive,1,Automotive,53,Automotive,high,
+investors.sector_focus,Autonomous Vehicles,1,Automotive,53,Automotive,medium,
+investors.sector_focus,B2B Marketplaces,1,Marketplace,6,Internet,medium,
+investors.sector_focus,B2B SAAS,1,SaaS,4,Computer Software,high,Casing variant
+investors.sector_focus,B2B SaaS (mission-critical,1,SaaS,4,Computer Software,medium,UNMAPPABLE-adjacent corrupted-fragment; mapped on prefix
+investors.sector_focus,B2B SaaS (via Black Nova VC),1,SaaS,4,Computer Software,high,
+investors.sector_focus,B2B Software,1,Software,4,Computer Software,high,
+investors.sector_focus,B2B Technology (SE Asia),1,Technology,96,Information Technology and Services,low,Part geography
+investors.sector_focus,B2B2C SaaS,1,SaaS,4,Computer Software,high,
+investors.sector_focus,Banking Tech,1,FinTech,43,Financial Services,high,41 secondary
+investors.sector_focus,Batteries,1,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,Beauty Tech,1,Cosmetics,18,Cosmetics,medium,
+investors.sector_focus,Beverages,1,Food & Beverage,34,Food & Beverages,medium,
+investors.sector_focus,Bio,1,Biotechnology,12,Biotechnology,medium,
+investors.sector_focus,Bioplastics,1,CleanTech,144,Renewables & Environment,medium,117 secondary
+investors.sector_focus,BIPOC Founders,1,Founder Audience,,,high,UNMAPPABLE:audience
+investors.sector_focus,Bitcoin Financial Services,1,Web3,43,Financial Services,low,
+investors.sector_focus,Bitcoin Mining,1,Web3,43,Financial Services,low,Not mineral mining
+investors.sector_focus,Branding,1,Marketing,80,Marketing and Advertising,medium,
+investors.sector_focus,Brands,1,Consumer Goods,25,Consumer Goods,low,
+investors.sector_focus,built environment,1,Construction,48,Construction,medium,44 secondary
+investors.sector_focus,Business Services,1,Professional Services,11,Management Consulting,low,FLAG: umbrella
+investors.sector_focus,carbon markets,1,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,Career Tech,1,HR & Recruiting,104,Staffing and Recruiting,medium,
+investors.sector_focus,carve-outs,1,Deal Type,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,Charity Tech,1,Non-Profit,100,Non-Profit Organization Management,medium,
+investors.sector_focus,Childcare,1,Childcare,88,Individual & Family Services,medium,
+investors.sector_focus,circular economy,1,CleanTech,144,Renewables & Environment,medium,Casing variant
+investors.sector_focus,Clean Economy,1,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,clean energy,1,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,Clean Tech,1,CleanTech,144,Renewables & Environment,high,Spacing variant
+investors.sector_focus,Clean technology,1,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,CleanEnergy,1,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,cleantech),1,CleanTech,144,Renewables & Environment,medium,UNMAPPABLE:corrupted-fragment — trailing fragment
+investors.sector_focus,climate,1,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,climate tech,1,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,Climate tech — energy,1,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Climate tech (clean energy,1,CleanTech,144,Renewables & Environment,medium,UNMAPPABLE-adjacent corrupted-fragment; mapped on prefix
+investors.sector_focus,climate.,1,CleanTech,144,Renewables & Environment,medium,Punctuation variant
+investors.sector_focus,Climate/Energy/Health/Society,1,CleanTech,144,Renewables & Environment,low,Composite; 14 secondary
+investors.sector_focus,Clinical AI,1,HealthTech,14,Hospital & Health Care,high,
+investors.sector_focus,Clinical Trials,1,Life Sciences,12,Biotechnology,medium,
+investors.sector_focus,Cloud,1,Software,4,Computer Software,high,
+investors.sector_focus,Cloud Infrastructure,1,Software,4,Computer Software,high,
+investors.sector_focus,Cloud Security,1,Cybersecurity,118,Computer & Network Security,high,
+investors.sector_focus,Cloud Storage,1,Software,4,Computer Software,high,
+investors.sector_focus,Co-working / PropTech,1,PropTech,44,Real Estate,high,
+investors.sector_focus,Commerce APIs,1,Software,4,Computer Software,high,
+investors.sector_focus,CommunicationsAPI,1,Software,4,Computer Software,high,
+investors.sector_focus,Comparison Tech,1,Internet,6,Internet,medium,
+investors.sector_focus,Complex Systems,1,Deep Tech,96,Information Technology and Services,low,
+investors.sector_focus,Computer Vision,1,AI & Data,4,Computer Software,medium,
+investors.sector_focus,Connectivity,1,Telecommunications,8,Telecommunications,medium,
+investors.sector_focus,Construction Tech,1,ConstructionTech,48,Construction,medium,
+investors.sector_focus,Consulting Tech,1,Professional Services,11,Management Consulting,low,
+investors.sector_focus,Consumer Electronics,1,Consumer Electronics,24,Consumer Electronics,high,
+investors.sector_focus,Consumer Experience,1,Consumer,25,Consumer Goods,low,
+investors.sector_focus,Consumer Fintech,1,FinTech,43,Financial Services,high,
+investors.sector_focus,Consumer Hardware,1,Consumer Electronics,24,Consumer Electronics,medium,
+investors.sector_focus,Consumer Health,1,Healthcare,14,Hospital & Health Care,medium,
+investors.sector_focus,Consumer Products,1,Consumer Goods,25,Consumer Goods,high,
+investors.sector_focus,Consumer Software,1,Software,4,Computer Software,high,
+investors.sector_focus,consumer tech),1,Consumer,25,Consumer Goods,low,UNMAPPABLE:corrupted-fragment — trailing fragment
+investors.sector_focus,Consumer Technology,1,Consumer,25,Consumer Goods,low,
+investors.sector_focus,consumer),1,Consumer,25,Consumer Goods,low,UNMAPPABLE:corrupted-fragment — trailing fragment
+investors.sector_focus,Content,1,Media,113,Online Media,low,
+investors.sector_focus,Contingent Labour tech,1,HR & Recruiting,104,Staffing and Recruiting,medium,
+investors.sector_focus,Corporate Finance,1,Financial Services,43,Financial Services,medium,
+investors.sector_focus,Creative Tech,1,Creative Industries,99,Design,low,
+investors.sector_focus,Critical tech,1,Deep Tech,96,Information Technology and Services,low,1 secondary
+investors.sector_focus,Crowdfunding,1,FinTech,43,Financial Services,medium,
+investors.sector_focus,Cryptography,1,Cybersecurity,118,Computer & Network Security,medium,
+investors.sector_focus,CX/Feedback Analytics,1,Software,4,Computer Software,medium,
+investors.sector_focus,Cyber Security,1,Cybersecurity,118,Computer & Network Security,high,Spacing variant
+investors.sector_focus,cybersecurity,1,Cybersecurity,118,Computer & Network Security,high,Casing variant
+investors.sector_focus,D2C Health,1,Healthcare,14,Hospital & Health Care,medium,
+investors.sector_focus,Data,1,AI & Data,4,Computer Software,medium,
+investors.sector_focus,Data Infrastructure,1,AI & Data,4,Computer Software,medium,
+investors.sector_focus,Data Privacy,1,Cybersecurity,118,Computer & Network Security,medium,
+investors.sector_focus,Data Science,1,AI & Data,4,Computer Software,medium,
+investors.sector_focus,decarbonisation,1,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,defence,1,Defence,1,Defense & Space,high,Casing variant
+investors.sector_focus,Defence Tech,1,Defence,1,Defense & Space,high,
+investors.sector_focus,DefenceTech),1,Defence,1,Defense & Space,medium,UNMAPPABLE:corrupted-fragment — trailing fragment
+investors.sector_focus,Design Tech,1,Design,99,Design,medium,
+investors.sector_focus,Developer Infrastructure,1,Software,4,Computer Software,high,
+investors.sector_focus,DevSecOps,1,Software,4,Computer Software,high,118 secondary
+investors.sector_focus,Diagnostics,1,Life Sciences,12,Biotechnology,medium,17 secondary
+investors.sector_focus,Digital health,1,HealthTech,14,Hospital & Health Care,high,Casing variant
+investors.sector_focus,Digital Media,1,Media,113,Online Media,high,
+investors.sector_focus,Digital Signage,1,Media,113,Online Media,low,80 secondary
+investors.sector_focus,Digital Technologies,1,Technology,96,Information Technology and Services,medium,
+investors.sector_focus,Disability Tech,1,Disability Tech,88,Individual & Family Services,medium,
+investors.sector_focus,Disruptive Tech,1,Technology,96,Information Technology and Services,low,Thesis-flavoured
+investors.sector_focus,Diversified (global),1,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,Diversified investment,1,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,diversified investments,1,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,Diversified private expansion capital,1,Sector Agnostic,,,high,UNMAPPABLE:agnostic + funding-stage
+investors.sector_focus,Diversity-led,1,Founder Audience,,,high,UNMAPPABLE:audience
+investors.sector_focus,Document Management,1,Software,4,Computer Software,high,
+investors.sector_focus,Document SaaS,1,SaaS,4,Computer Software,high,
+investors.sector_focus,Document Tech,1,Software,4,Computer Software,high,
+investors.sector_focus,Drone,1,Drones,52,Aviation & Aerospace,medium,
+investors.sector_focus,Drone/Mapping,1,Drones,52,Aviation & Aerospace,medium,84 secondary
+investors.sector_focus,DTC Brands,1,DTC,27,Retail,medium,Part business-model
+investors.sector_focus,DTC Health,1,Healthcare,14,Hospital & Health Care,medium,
+investors.sector_focus,E-Gaming,1,Gaming,109,Computer Games,high,
+investors.sector_focus,Early Education,1,Education,67,Primary/Secondary Education,medium,
+investors.sector_focus,early stage,1,Funding Stage,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,early stage),1,Funding Stage,,,high,UNMAPPABLE:corrupted-fragment + funding-stage
+investors.sector_focus,Early-stage Tech,1,Technology,96,Information Technology and Services,low,Part funding-stage
+investors.sector_focus,eCommerce/DTC,1,E-commerce,27,Retail,medium,
+investors.sector_focus,EcoTech,1,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,edtech,1,EdTech,132,E-Learning,high,Casing variant
+investors.sector_focus,education,1,Education,69,Education Management,medium,Casing variant
+investors.sector_focus,EldTech,1,Aged Care,14,Hospital & Health Care,medium,
+investors.sector_focus,Emerging Sectors,1,Emerging Sectors,,,medium,UNMAPPABLE:investment-thesis
+investors.sector_focus,Emissions reduction,1,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Employment Tech,1,HR & Recruiting,104,Staffing and Recruiting,medium,
+investors.sector_focus,Enduring businesses,1,Investment Thesis,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,energy,1,Energy,57,Oil & Energy,medium,Casing variant
+investors.sector_focus,Energy Tech,1,CleanTech,144,Renewables & Environment,medium,57 secondary
+investors.sector_focus,energy transition,1,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,energy transition),1,CleanTech,144,Renewables & Environment,medium,UNMAPPABLE:corrupted-fragment — trailing fragment
+investors.sector_focus,Engineering Tech,1,Engineering,135,Mechanical or Industrial Engineering,medium,
+investors.sector_focus,Engineering Tooling,1,Software,4,Computer Software,medium,
+investors.sector_focus,Engineering Tools,1,Software,4,Computer Software,medium,
+investors.sector_focus,Enterprise,1,B2B,,,low,UNMAPPABLE:business-model
+investors.sector_focus,Enterprise Search,1,Software,4,Computer Software,high,
+investors.sector_focus,Enterprise Security,1,Cybersecurity,118,Computer & Network Security,high,
+investors.sector_focus,Environment,1,Environment,86,Environmental Services,medium,144 secondary
+investors.sector_focus,Environmental,1,Environment,86,Environmental Services,medium,
+investors.sector_focus,environmental impact,1,Impact,,,medium,UNMAPPABLE:investment-thesis
+investors.sector_focus,Environmental impact — circular economy,1,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,esports,1,Gaming,109,Computer Games,high,Casing variant
+investors.sector_focus,eSports,1,Gaming,109,Computer Games,high,Casing variant
+investors.sector_focus,Ethereum,1,Web3,43,Financial Services,low,
+investors.sector_focus,EV,1,Automotive,53,Automotive,medium,144 secondary
+investors.sector_focus,Event Tech,1,Events Tech,110,Events Services,medium,
+investors.sector_focus,Family Office,1,Investor Type,,,high,UNMAPPABLE:other — investor structure not sector
+investors.sector_focus,FamTech,1,FamilyTech,,,low,UNMAPPABLE:other
+investors.sector_focus,Farming,1,Agriculture,63,Farming,high,
+investors.sector_focus,Female-founded technology,1,Founder Audience,,,high,UNMAPPABLE:audience
+investors.sector_focus,Fertility,1,Fertility,13,Medical Practice,medium,
+investors.sector_focus,Film,1,Film,35,Motion Pictures and Film,high,
+investors.sector_focus,fintech),1,FinTech,43,Financial Services,medium,UNMAPPABLE:corrupted-fragment — trailing fragment
+investors.sector_focus,Fitness,1,Fitness,124,"Health, Wellness and Fitness",high,
+investors.sector_focus,Food Systems,1,FoodTech,23,Food Production,medium,
+investors.sector_focus,food/agriculture,1,AgTech,63,Farming,medium,23 secondary
+investors.sector_focus,Foodtech,1,FoodTech,23,Food Production,high,Casing variant
+investors.sector_focus,Fraud Detection,1,Cybersecurity,118,Computer & Network Security,medium,43 secondary
+investors.sector_focus,Frontier Research,1,Research,70,Research,medium,
+investors.sector_focus,FrontierTech,1,Deep Tech,96,Information Technology and Services,low,
+investors.sector_focus,Generalist (healthtech,1,Sector Agnostic,,,high,UNMAPPABLE:corrupted-fragment + agnostic
+investors.sector_focus,Generalist/agnostic (technology,1,Sector Agnostic,,,high,UNMAPPABLE:corrupted-fragment + agnostic
+investors.sector_focus,Genomics,1,Life Sciences,12,Biotechnology,high,
+investors.sector_focus,GeoTech,1,GeoTech,84,Information Services,low,
+investors.sector_focus,Geothermal,1,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Gig Economy,1,Marketplace,6,Internet,low,Part business-model
+investors.sector_focus,Global Expansion,1,Investment Thesis,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,Government,1,Government,75,Government Administration,medium,
+investors.sector_focus,Grid,1,Utilities,59,Utilities,medium,
+investors.sector_focus,Grid Tech,1,Utilities,59,Utilities,medium,
+investors.sector_focus,Group Buying,1,E-commerce,27,Retail,low,
+investors.sector_focus,growth companies,1,Funding Stage,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,Growth Stage,1,Funding Stage,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,Growth Stage Tech,1,Technology,96,Information Technology and Services,low,Part funding-stage
+investors.sector_focus,Hard Tech,1,Deep Tech,96,Information Technology and Services,low,
+investors.sector_focus,hard-to-abate emissions),1,CleanTech,144,Renewables & Environment,medium,UNMAPPABLE:corrupted-fragment
+investors.sector_focus,Hard-to-abate industry decarbonisation,1,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,hardware (broad),1,Hardware,3,Computer Hardware,medium,
+investors.sector_focus,Health & Life Sciences,1,Life Sciences,12,Biotechnology,medium,14 secondary
+investors.sector_focus,health IT,1,HealthTech,14,Hospital & Health Care,high,
+investors.sector_focus,health),1,Healthcare,14,Hospital & Health Care,medium,UNMAPPABLE:corrupted-fragment
+investors.sector_focus,Health/Medtech,1,HealthTech,14,Hospital & Health Care,high,17 secondary
+investors.sector_focus,healthcare,1,Healthcare,14,Hospital & Health Care,high,Casing variant
+investors.sector_focus,Healthcare — pharma,1,Pharmaceuticals,15,Pharmaceuticals,high,
+investors.sector_focus,Healthcare Talent,1,HR & Recruiting,104,Staffing and Recruiting,medium,14 secondary
+investors.sector_focus,Healthtech,1,HealthTech,14,Hospital & Health Care,high,Casing variant
+investors.sector_focus,healthtech priority),1,HealthTech,14,Hospital & Health Care,medium,UNMAPPABLE:corrupted-fragment
+investors.sector_focus,High Growth Tech,1,Technology,96,Information Technology and Services,low,Part thesis
+investors.sector_focus,High-growth,1,Investment Thesis,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,High-growth global tech (agnostic),1,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,Highly scalable breakthrough technology (global),1,Technology,96,Information Technology and Services,low,Part thesis
+investors.sector_focus,Highly thematic technology,1,Technology,96,Information Technology and Services,low,Part thesis
+investors.sector_focus,HighTech,1,Technology,96,Information Technology and Services,low,
+investors.sector_focus,Hotel Tech,1,Hospitality,31,Hospitality,medium,
+investors.sector_focus,Household,1,Consumer Goods,25,Consumer Goods,low,
+investors.sector_focus,housing,1,Real Estate,44,Real Estate,medium,
+investors.sector_focus,HR SaaS,1,HR Tech,137,Human Resources,high,
+investors.sector_focus,HR Tech,1,HR Tech,137,Human Resources,high,
+investors.sector_focus,Human augmentation,1,Deep Tech,96,Information Technology and Services,low,
+investors.sector_focus,Human Health,1,Healthcare,14,Hospital & Health Care,medium,
+investors.sector_focus,Impact (Climate,1,Impact,,,high,UNMAPPABLE:corrupted-fragment + investment-thesis
+investors.sector_focus,Impact (climate justice,1,Impact,,,high,UNMAPPABLE:corrupted-fragment + investment-thesis
+investors.sector_focus,Indigenous/Aboriginal Tech,1,Founder Audience,,,medium,UNMAPPABLE:audience
+investors.sector_focus,Industrial AI,1,AI & Data,4,Computer Software,medium,135 secondary
+investors.sector_focus,Industrial Machinery,1,Machinery,55,Machinery,high,
+investors.sector_focus,Industrial Tech,1,Industrial,135,Mechanical or Industrial Engineering,medium,
+investors.sector_focus,Influencer Marketing,1,Marketing,80,Marketing and Advertising,high,
+investors.sector_focus,Information technology — SaaS,1,SaaS,4,Computer Software,high,
+investors.sector_focus,Infrastructure Software,1,Software,4,Computer Software,high,
+investors.sector_focus,Innovation Commercialisation,1,Research,70,Research,medium,
+investors.sector_focus,InsightTech,1,AI & Data,4,Computer Software,low,
+investors.sector_focus,IT Automation,1,Software,4,Computer Software,high,
+investors.sector_focus,Labour,1,HR & Recruiting,104,Staffing and Recruiting,low,
+investors.sector_focus,LatAm cross-border,1,Geography,,,high,UNMAPPABLE:geography
+investors.sector_focus,Legal,1,Legal,10,Legal Services,high,
+investors.sector_focus,LGBTQIA+ Founders,1,Founder Audience,,,high,UNMAPPABLE:audience
+investors.sector_focus,life sciences,1,Life Sciences,12,Biotechnology,medium,Casing variant
+investors.sector_focus,Life Sciences (therapeutics,1,Life Sciences,12,Biotechnology,medium,UNMAPPABLE:corrupted-fragment; mapped on prefix
+investors.sector_focus,Lifestyle,1,Consumer,25,Consumer Goods,low,
+investors.sector_focus,Lightning Network,1,Web3,43,Financial Services,low,
+investors.sector_focus,Location Tech,1,GeoTech,84,Information Services,low,
+investors.sector_focus,Loyalty,1,MarTech,80,Marketing and Advertising,medium,
+investors.sector_focus,M&A,1,Deal Type,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,Maritime,1,Maritime,95,Maritime,high,
+investors.sector_focus,Marketing Measurement,1,MarTech,80,Marketing and Advertising,high,
+investors.sector_focus,MarketPlace,1,Marketplace,6,Internet,medium,Casing variant
+investors.sector_focus,marketplaces,1,Marketplace,6,Internet,medium,Casing variant
+investors.sector_focus,Material Science,1,Advanced Materials,54,Chemicals,low,
+investors.sector_focus,MediaTech,1,Media,113,Online Media,medium,
+investors.sector_focus,Medical,1,Healthcare,14,Hospital & Health Care,medium,
+investors.sector_focus,medical devices,1,MedTech,17,Medical Devices,high,Casing variant
+investors.sector_focus,medical technology),1,MedTech,17,Medical Devices,medium,UNMAPPABLE:corrupted-fragment
+investors.sector_focus,Medtech,1,MedTech,17,Medical Devices,high,Casing variant
+investors.sector_focus,Methane reduction,1,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Microelectronics,1,Semiconductors,7,Semiconductors,medium,
+investors.sector_focus,migration),1,Fragment,,,high,UNMAPPABLE:corrupted-fragment — original unclear
+investors.sector_focus,mining,1,Mining & Metals,56,Mining & Metals,high,Casing variant
+investors.sector_focus,Mining,1,Mining & Metals,56,Mining & Metals,high,
+investors.sector_focus,mining focus),1,Mining & Metals,56,Mining & Metals,medium,UNMAPPABLE:corrupted-fragment
+investors.sector_focus,mobility,1,Mobility,92,Transportation/Trucking/Railroad,medium,Casing variant
+investors.sector_focus,MOOC,1,EdTech,132,E-Learning,high,
+investors.sector_focus,National security,1,Defence,1,Defense & Space,high,
+investors.sector_focus,National Security,1,Defence,1,Defense & Space,high,Casing variant
+investors.sector_focus,Network Security,1,Cybersecurity,118,Computer & Network Security,high,
+investors.sector_focus,NetZero,1,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Obstetrics,1,Medical Practice,13,Medical Practice,high,
+investors.sector_focus,Online and Mail Order Retail,1,E-commerce,27,Retail,medium,Post-migration V2 group value
+investors.sector_focus,Online Learning,1,EdTech,132,E-Learning,high,
+investors.sector_focus,online marketplaces,1,Marketplace,6,Internet,medium,Casing variant
+investors.sector_focus,Open Banking,1,FinTech,43,Financial Services,high,
+investors.sector_focus,Operations Tech,1,Software,4,Computer Software,low,
+investors.sector_focus,Outdoor,1,Consumer Goods,20,Sporting Goods,low,
+investors.sector_focus,Parenting,1,FamilyTech,88,Individual & Family Services,low,
+investors.sector_focus,Parenting Tech,1,FamilyTech,88,Individual & Family Services,low,
+investors.sector_focus,Patents,1,IP Services,10,Legal Services,low,
+investors.sector_focus,People),1,Fragment,,,high,UNMAPPABLE:corrupted-fragment
+investors.sector_focus,Pet Tech,1,Pet Tech,16,Veterinary,medium,
+investors.sector_focus,PFM,1,FinTech,43,Financial Services,medium,Personal financial management
+investors.sector_focus,Pharma,1,Pharmaceuticals,15,Pharmaceuticals,high,
+investors.sector_focus,Pharmaceuticals,1,Pharmaceuticals,15,Pharmaceuticals,high,
+investors.sector_focus,Physical Sciences,1,Research,70,Research,medium,
+investors.sector_focus,Physical World (climate/environment),1,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,Platform,1,Platform,,,low,UNMAPPABLE:business-model
+investors.sector_focus,PLG,1,PLG,,,high,UNMAPPABLE:business-model — product-led growth
+investors.sector_focus,Power Infrastructure,1,Utilities,59,Utilities,high,
+investors.sector_focus,PR/Comms,1,PR & Communications,98,Public Relations and Communications,high,
+investors.sector_focus,Pre-IPO,1,Funding Stage,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,Pre-seed,1,Funding Stage,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,Procurement,1,Procurement,116,Logistics and Supply Chain,low,
+investors.sector_focus,Product-Led,1,PLG,,,high,UNMAPPABLE:business-model
+investors.sector_focus,Property,1,Real Estate,44,Real Estate,high,
+investors.sector_focus,Proptech,1,PropTech,44,Real Estate,high,Casing variant
+investors.sector_focus,PropTech (real estate technology),1,PropTech,44,Real Estate,high,
+investors.sector_focus,PropTech (strata/apartment communities),1,PropTech,44,Real Estate,high,
+investors.sector_focus,Public equities,1,Asset Class,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,QLD-focused (also B2B SaaS,1,Geography,,,high,UNMAPPABLE:corrupted-fragment + geography
+investors.sector_focus,Quant,1,FinTech,43,Financial Services,low,
+investors.sector_focus,Real estate,1,Real Estate,44,Real Estate,high,Casing variant
+investors.sector_focus,RealTech (real estate,1,PropTech,44,Real Estate,medium,UNMAPPABLE:corrupted-fragment; mapped on prefix
+investors.sector_focus,Regenerative economy,1,CleanTech,144,Renewables & Environment,medium,
+investors.sector_focus,regulated industries),1,Fragment,,,high,UNMAPPABLE:corrupted-fragment
+investors.sector_focus,Regulatory Tech,1,RegTech,4,Computer Software,low,
+investors.sector_focus,Renewable energy,1,CleanTech,144,Renewables & Environment,high,Casing variant
+investors.sector_focus,Renewable energy (REVC Fund),1,CleanTech,144,Renewables & Environment,high,
+investors.sector_focus,Resources,1,Mining & Metals,56,Mining & Metals,medium,57 secondary
+investors.sector_focus,Retail Technology,1,Retail,27,Retail,medium,
+investors.sector_focus,Revenue-generating businesses,1,Investment Thesis,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,SaaS Marketplaces,1,SaaS,4,Computer Software,high,
+investors.sector_focus,scalable businesses,1,Investment Thesis,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,Scalable technology (early-stage),1,Technology,96,Information Technology and Services,low,Part funding-stage
+investors.sector_focus,SDG,1,Impact,,,high,UNMAPPABLE:investment-thesis
+investors.sector_focus,Search,1,Software,4,Computer Software,medium,
+investors.sector_focus,Secondary,1,Funding Stage,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,Sector Agnostic,1,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+investors.sector_focus,Seed,1,Funding Stage,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,Self-Custody,1,Web3,43,Financial Services,low,
+investors.sector_focus,Self-Driving,1,Automotive,53,Automotive,medium,
+investors.sector_focus,Semiconductors,1,Semiconductors,7,Semiconductors,high,
+investors.sector_focus,services M&A (cross-border advisory),1,Deal Type,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,smart cities,1,Smart Cities,51,Civil Engineering,low,Casing variant
+investors.sector_focus,SMB,1,SMB,,,high,UNMAPPABLE:business-model
+investors.sector_focus,SMBs (PE),1,SMB,,,high,UNMAPPABLE:business-model + funding-stage
+investors.sector_focus,SME Finance,1,FinTech,43,Financial Services,high,
+investors.sector_focus,SMSF,1,FinTech,43,Financial Services,medium,Self-managed super funds
+investors.sector_focus,Social,1,Social Platforms,6,Internet,low,
+investors.sector_focus,Social enterprise,1,Impact,,,high,UNMAPPABLE:investment-thesis — casing variant
+investors.sector_focus,Social impact,1,Impact,,,high,UNMAPPABLE:investment-thesis — casing variant
+investors.sector_focus,Social Media,1,Social Platforms,6,Internet,medium,
+investors.sector_focus,Sole-Trader Tech,1,SMB,4,Computer Software,low,
+investors.sector_focus,South-East Asia connected,1,Geography,,,high,UNMAPPABLE:geography
+investors.sector_focus,Sovereign capability,1,Defence,1,Defense & Space,medium,
+investors.sector_focus,space,1,Defence & Space,1,Defense & Space,high,Casing variant
+investors.sector_focus,Space Research and Technology,1,Defence & Space,1,Defense & Space,high,Post-migration V2 group value
+investors.sector_focus,Space Tech,1,Defence & Space,1,Defense & Space,high,
+investors.sector_focus,Special situations,1,Deal Type,,,high,UNMAPPABLE:funding-stage
+investors.sector_focus,Spend Management,1,FinTech,43,Financial Services,high,
+investors.sector_focus,Sport,1,Sports,33,Sports,high,
+investors.sector_focus,Sports & EventTech,1,SportTech,33,Sports,medium,110 secondary
+investors.sector_focus,Sports Tech,1,SportTech,33,Sports,medium,
+investors.sector_focus,Strategy Consulting,1,Consulting,11,Management Consulting,high,
+investors.sector_focus,Student founders (sector agnostic),1,Sector Agnostic,,,high,UNMAPPABLE:agnostic + audience
+investors.sector_focus,Subscription,1,Subscription,,,high,UNMAPPABLE:business-model
+investors.sector_focus,subscription-based internet,1,Internet,6,Internet,medium,Part business-model
+investors.sector_focus,supply chain,1,Logistics,116,Logistics and Supply Chain,high,Casing variant
+investors.sector_focus,Supply Chain,1,Logistics,116,Logistics and Supply Chain,high,
+investors.sector_focus,sustainable agriculture,1,AgTech,63,Farming,medium,144 secondary
+investors.sector_focus,sustainable aviation fuel,1,CleanTech,144,Renewables & Environment,high,94 secondary
+investors.sector_focus,TaaS,1,Transport-as-a-Service,92,Transportation/Trucking/Railroad,low,
+investors.sector_focus,tax reform,1,Theme,,,high,UNMAPPABLE:theme
+investors.sector_focus,Tech (AI,1,Technology,96,Information Technology and Services,medium,UNMAPPABLE:corrupted-fragment; mapped on prefix
+investors.sector_focus,Tech Enabled,1,Tech-Enabled Services,,,medium,UNMAPPABLE:business-model
+investors.sector_focus,Tech Infrastructure,1,Software,4,Computer Software,high,
+investors.sector_focus,Technology (Asia-Pacific),1,Technology,96,Information Technology and Services,low,Part geography
+investors.sector_focus,Technology (AU early stage),1,Technology,96,Information Technology and Services,low,Part geography + stage
+investors.sector_focus,Technology (Australia–Japan bridge),1,Technology,96,Information Technology and Services,low,Part geography
+investors.sector_focus,Technology (fast-growth),1,Technology,96,Information Technology and Services,low,Part thesis
+investors.sector_focus,Technology (growth-stage),1,Technology,96,Information Technology and Services,low,Part funding-stage
+investors.sector_focus,Technology (high-growth),1,Technology,96,Information Technology and Services,low,Part thesis
+investors.sector_focus,Technology (NZ-focused),1,Technology,96,Information Technology and Services,low,Part geography
+investors.sector_focus,Technology (SaaS,1,SaaS,4,Computer Software,medium,UNMAPPABLE:corrupted-fragment; mapped on content
+investors.sector_focus,Technology (SE Asia / India),1,Technology,96,Information Technology and Services,low,Part geography
+investors.sector_focus,Technology (secondaries),1,Technology,96,Information Technology and Services,low,Part funding-stage
+investors.sector_focus,Technology (thematic),1,Technology,96,Information Technology and Services,low,Part thesis
+investors.sector_focus,Technology (UQ research commercialisation,1,Technology,96,Information Technology and Services,low,UNMAPPABLE:corrupted-fragment; mapped on prefix
+investors.sector_focus,Technology (VC),1,Technology,96,Information Technology and Services,low,
+investors.sector_focus,Technology growth companies,1,Technology,96,Information Technology and Services,low,Part thesis
+investors.sector_focus,Technology-enabled businesses,1,Tech-Enabled Services,,,medium,UNMAPPABLE:business-model
+investors.sector_focus,Technology-enabled companies globally,1,Tech-Enabled Services,,,medium,UNMAPPABLE:business-model
+investors.sector_focus,Telecoms,1,Telecommunications,8,Telecommunications,high,
+investors.sector_focus,Telephony,1,Telecommunications,8,Telecommunications,high,
+investors.sector_focus,Television,1,Broadcast Media,36,Broadcast Media,high,
+investors.sector_focus,Tokenisation,1,Web3,43,Financial Services,low,
+investors.sector_focus,Tourism Tech,1,TravelTech,30,"Leisure, Travel & Tourism",medium,
+investors.sector_focus,Trade Services,1,Trade Services,48,Construction,low,Ambiguous (tradies vs trade)
+investors.sector_focus,Trading,1,Capital Markets,129,Capital Markets,medium,
+investors.sector_focus,transport,1,Logistics,116,Logistics and Supply Chain,medium,Casing variant
+investors.sector_focus,Transport,1,Logistics,116,Logistics and Supply Chain,medium,92 secondary
+investors.sector_focus,Transport-as-a-Service,1,Transport-as-a-Service,92,Transportation/Trucking/Railroad,low,
+investors.sector_focus,TravelTech,1,TravelTech,30,"Leisure, Travel & Tourism",medium,
+investors.sector_focus,University commercialisation (broad technology sectors),1,University Spinouts,70,Research,medium,
+investors.sector_focus,University Spinoffs,1,University Spinouts,70,Research,medium,
+investors.sector_focus,US-footprint Australian,1,Geography,,,high,UNMAPPABLE:geography
+investors.sector_focus,Vacation Rental,1,TravelTech,30,"Leisure, Travel & Tourism",medium,
+investors.sector_focus,Vaccines,1,Pharmaceuticals,15,Pharmaceuticals,high,
+investors.sector_focus,VC (historical),1,Investor Type,,,high,UNMAPPABLE:other
+investors.sector_focus,Vertical AI,1,AI & Data,4,Computer Software,high,
+investors.sector_focus,Vertical SaaS,1,SaaS,4,Computer Software,high,
+investors.sector_focus,Virtual Experience,1,VR/AR,109,Computer Games,low,
+investors.sector_focus,VR,1,VR/AR,109,Computer Games,low,
+investors.sector_focus,Water,1,Water,59,Utilities,high,
+investors.sector_focus,Wealth Management,1,Investment Management,46,Investment Management,high,
+investors.sector_focus,Wealth Tech,1,FinTech,43,Financial Services,high,46 secondary
+investors.sector_focus,Wireless Infrastructure,1,Telecommunications,8,Telecommunications,high,119 secondary
+investors.sector_focus,Women's Business,1,Founder Audience,,,high,UNMAPPABLE:audience
+investors.sector_focus,Women's Health,1,FemTech,14,Hospital & Health Care,medium,
+investors.sector_focus,Women's Leadership,1,Founder Audience,,,high,UNMAPPABLE:audience
+investors.sector_focus,workflow-led,1,Fragment,,,medium,UNMAPPABLE:corrupted-fragment
