@@ -57,7 +57,7 @@ export const MobileNavigation = () => {
             <Link to="/report-creator" onClick={handleLinkClick} className="block">
               <Button variant="default" className="w-full" size="lg">
                 <Sparkles className="h-5 w-5" />
-                Get Your Report
+                Generate my free report
               </Button>
             </Link>
             {!user && (

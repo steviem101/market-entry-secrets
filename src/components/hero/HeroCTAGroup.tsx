@@ -65,7 +65,7 @@ export const HeroCTAGroup = ({ persona }: HeroCTAGroupProps) => {
       {/* Trust micro-label — directly beneath buttons */}
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Shield className="w-3.5 h-3.5 text-emerald-500" />
-        <span>No credit card required · Ready in 3 minutes</span>
+        <span>Free · No credit card · Ready in about 3 minutes</span>
       </div>
     </div>
   );

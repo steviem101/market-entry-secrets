@@ -23,7 +23,7 @@ export const LeadGenPopupProvider = ({ children }: LeadGenPopupProviderProps) =>
   // Don't start timer while auth is still loading (user appears null
   // during the async getSession() call) or when returning from Stripe.
   const { triggered } = useTimerTrigger({
-    delay: 15000, // 15 seconds
+    delay: 30000, // 30 seconds — give visitors time to read the hero first
     enabled: !user && !loading && !isStripeReturn()
   });
 
@@ -89,7 +89,7 @@ export const LeadGenPopupProvider = ({ children }: LeadGenPopupProviderProps) =>
               className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white py-3 text-base rounded-xl group"
               size="lg"
             >
-              Create Your Free Report
+              Generate my free report
               <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
             </Button>
 

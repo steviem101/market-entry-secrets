@@ -17,13 +17,13 @@ export interface PersonaContent {
 export const HERO_PERSONAS: Record<HeroPersona, PersonaContent> = {
   default: {
     headline: {
-      line1: "Win in the Australian and New Zealand market",
-      line2: "whether you enter or scale.",
+      line1: "Your Australian market entry plan,",
+      line2: "generated in minutes.",
     },
     subheadline:
-      "Answer a few questions about your company, sector, and goals. MES combines 500+ vetted providers, real case studies, and AI-powered intelligence to build your plan, whether you are entering ANZ or scaling within it.",
-    primaryCTA: { label: "Create my free report", href: "/report-creator" },
-    secondaryCTA: { label: "Explore providers", href: "/service-providers" },
+      "Market Entry Secrets turns a 5-minute questionnaire into a full ANZ market entry report — live market intelligence, competitor landscape, vetted providers, mentors, and a step-by-step action plan.",
+    primaryCTA: { label: "Generate my free report", href: "/report-creator" },
+    secondaryCTA: { label: "Explore the platform", href: "/service-providers" },
     toggleDescription: "Entering or scaling in ANZ",
     mockupScenario: {
       companyName: "TechStart Solutions",

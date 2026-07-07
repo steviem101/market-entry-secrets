@@ -1,11 +1,10 @@
 import { Helmet } from "react-helmet-async";
 import { HeroSection } from "@/components/sections/HeroSection";
-import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
+import { ProofStrip } from "@/components/sections/ProofStrip";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
+import { WhatsInYourReport } from "@/components/sections/WhatsInYourReport";
 import { SearchSection } from "@/components/sections/SearchSection";
-import { ValueSection } from "@/components/sections/ValueSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
-import { PricingSection } from "@/components/sections/PricingSection";
 import { CTASection } from "@/components/sections/CTASection";
 
 
@@ -43,15 +42,15 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Market Entry Secrets | Intelligence for the ANZ Market</title>
+        <title>Market Entry Secrets | AI Market Entry Reports for ANZ</title>
         <meta
           name="description"
-          content="AI-powered intelligence for the ANZ market: 500+ vetted providers, mentors, leads, and custom market entry plans generated in minutes."
+          content="Turn a 5-minute questionnaire into a full ANZ market entry report: live market intelligence, competitor landscape, vetted providers, mentors, and an action plan."
         />
-        <meta property="og:title" content="Market Entry Secrets | Intelligence for the ANZ Market" />
+        <meta property="og:title" content="Market Entry Secrets | AI Market Entry Reports for ANZ" />
         <meta
           property="og:description"
-          content="AI-powered intelligence for the ANZ market: 500+ vetted providers, mentors, leads, and custom market entry plans generated in minutes."
+          content="Turn a 5-minute questionnaire into a full ANZ market entry report: live market intelligence, competitor landscape, vetted providers, mentors, and an action plan."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${siteUrl}/`} />
@@ -64,28 +63,25 @@ const Index = () => {
         </script>
       </Helmet>
 
-      {/* Interactive Hero Section */}
+      {/* Hero — headline, platform definition, single CTA pair, report mockup */}
       <HeroSection />
 
-      {/* Before vs. After Market Entry Section */}
-      <BeforeAfterSection />
+      {/* Live directory counts — the one source of numbers on the page */}
+      <ProofStrip />
 
-      {/* How It Works — 3-Step Process */}
+      {/* How It Works — 3-step process, single CTA */}
       <HowItWorksSection />
 
-      {/* Search Section */}
+      {/* What's in your report — mirrors real report sections + tier gating */}
+      <WhatsInYourReport />
+
+      {/* Directory / search teaser */}
       <SearchSection />
 
-      {/* Combined Value Section */}
-      <ValueSection />
-
-      {/* Testimonials Section */}
+      {/* Testimonials */}
       <TestimonialsSection />
 
-      {/* Pricing Section */}
-      <PricingSection />
-
-      {/* Final Conversion CTA Section */}
+      {/* Final conversion CTA */}
       <CTASection />
 
     </>

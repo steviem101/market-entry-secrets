@@ -28,7 +28,7 @@ const Navigation = () => {
             <Link to="/report-creator" className="hidden lg:block">
               <Button variant="default" size="sm" className="font-semibold">
                 <Sparkles className="h-4 w-4" />
-                Get Your Report
+                Generate my free report
               </Button>
             </Link>
 
