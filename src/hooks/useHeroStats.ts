@@ -1,10 +1,9 @@
 import { useEcosystemStatsQuery } from "./useEcosystemStats";
 
 /**
- * Legacy shape consumed by the per-persona hero stat cards (HeroStatsRow).
- * Kept intentionally identical so the Lovable-owned component does not change.
- * Now single-sourced from the `get_ecosystem_stats()` RPC via
- * `useEcosystemStatsQuery` (one request shared with `useEcosystemStats`).
+ * Homepage stat counts (consumed by ProofStrip), single-sourced from the
+ * `get_ecosystem_stats()` RPC via `useEcosystemStatsQuery` (one request
+ * shared with `useEcosystemStats`).
  */
 interface HeroStatCount {
   serviceProviders: number;

@@ -5,6 +5,7 @@ import { ArrowLeft, Download, Share2, Calendar, Globe, Clock } from 'lucide-reac
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ReportShareDialog } from './ReportShareDialog';
+import { TIER_LABELS } from './reportSectionConfig';
 
 interface ReportHeaderProps {
   companyName: string;
@@ -16,13 +17,6 @@ interface ReportHeaderProps {
   onShareTokenChange: (token: string | null) => void;
   readingTimeMinutes?: number;
 }
-
-const tierLabels: Record<string, string> = {
-  free: 'Free',
-  growth: 'Growth',
-  scale: 'Scale',
-  enterprise: 'Enterprise',
-};
 
 const tierColors: Record<string, string> = {
   free: 'bg-muted text-muted-foreground',
@@ -66,7 +60,7 @@ export const ReportHeader = ({
                   {format(new Date(generatedAt), 'MMM d, yyyy')}
                 </span>
                 <Badge variant="outline" className={`text-xs ${tierColors[tier] || ''}`}>
-                  {tierLabels[tier] || tier}
+                  {TIER_LABELS[tier] || tier}
                 </Badge>
                 {perplexityUsed && (
                   <Badge variant="secondary" className="text-xs gap-1">
@@ -101,7 +95,7 @@ export const ReportHeader = ({
         <p className="text-xs text-muted-foreground mb-1">Market Entry Secrets</p>
         <h1 className="text-2xl font-bold text-foreground">Market Entry Report: {companyName}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Market Entry Report • {format(new Date(generatedAt), 'MMMM d, yyyy')} • {tierLabels[tier] || tier} Plan
+          Market Entry Report • {format(new Date(generatedAt), 'MMMM d, yyyy')} • {TIER_LABELS[tier] || tier} Plan
         </p>
       </div>
 

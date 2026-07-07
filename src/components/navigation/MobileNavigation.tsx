@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { REPORT_CTA_LABEL } from "@/config/reportCta";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
@@ -57,7 +58,7 @@ export const MobileNavigation = () => {
             <Link to="/report-creator" onClick={handleLinkClick} className="block">
               <Button variant="default" className="w-full" size="lg">
                 <Sparkles className="h-5 w-5" />
-                Get Your Report
+                {REPORT_CTA_LABEL}
               </Button>
             </Link>
             {!user && (

@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import { REPORT_CTA_LABEL } from "@/config/reportCta";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MarketEntryLogo from "./MarketEntryLogo";
@@ -28,7 +29,7 @@ const Navigation = () => {
             <Link to="/report-creator" className="hidden lg:block">
               <Button variant="default" size="sm" className="font-semibold">
                 <Sparkles className="h-4 w-4" />
-                Get Your Report
+                {REPORT_CTA_LABEL}
               </Button>
             </Link>
 

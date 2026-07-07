@@ -115,6 +115,17 @@ export const TIER_REQUIREMENTS: Record<string, string> = {
 
 export const TIER_HIERARCHY = ['free', 'growth', 'scale', 'enterprise'];
 
+// Display names for tiers — the single source for tier naming in the UI
+export const TIER_LABELS: Record<string, string> = {
+  free: 'Free',
+  growth: 'Growth',
+  scale: 'Scale',
+  enterprise: 'Enterprise',
+  // Legacy tiers that may still appear on old reports
+  premium: 'Premium',
+  concierge: 'Concierge',
+};
+
 export const userTierMeetsRequirement = (userTier: string, requiredTier: string): boolean => {
   const userIndex = TIER_HIERARCHY.indexOf(userTier);
   const requiredIndex = TIER_HIERARCHY.indexOf(requiredTier);
