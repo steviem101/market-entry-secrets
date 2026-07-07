@@ -99,6 +99,30 @@ const AGNOSTIC_NUDGE = 0.25;  // small — "eligible for everyone" != "relevant"
 // backfill still guarantees the section fills, but it IS a drop on that surface.
 const OVERTAG_THRESHOLD = 5;
 
+// Horizontal catch-all sectors. Nearly every SaaS / consulting / tech company maps
+// into these, so an overlap that consists ONLY of them says "generically business/
+// tech adjacent" — not "same vertical". (Novade report, 7 Jul 2026: the Space
+// Industry Association and the Information Security Association out-specialist-ed
+// construction advisories for a construction-tech SaaS purely via technology +
+// professional-services; the taxonomy has no space/infosec/construction-tech
+// vertical, so re-tagging can't fix it — the signal itself is weak.)
+//
+// The demotion needs BOTH conditions, or it over-fires:
+//   (a) the row's overlap with the user is exclusively horizontal, AND
+//   (b) the row carries at least one vertical tag that does NOT match the user —
+//       positive evidence its real focus is a DIFFERENT vertical (SIAA's education/
+//       government tags; a banking body's financial-services for a non-fintech).
+// Without (b), a row tagged only [technology] — a genuinely tech-focused mentor —
+// would be demoted for a tech company, which is exactly backwards. Such a row has
+// no foreign vertical, so it keeps its specialist standing. Vertical-inclusive
+// matches (BlueChilli's construction tag for Novade) are untouched by (a).
+// Demoted rows score like over-tagged ones: flat broad unit, no specialist bonus.
+const HORIZONTAL_SECTORS = new Set<string>([
+  "technology-information-and-media",
+  "professional-services",
+  "administrative-and-support-services",
+]);
+
 export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
   const tags: string[] = row.sector_tags || [];
   const reasons: string[] = [];
@@ -107,13 +131,23 @@ export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
   // Over-tagged (but not explicitly agnostic) → treat a match as broad, not specialist.
   const overTagged = !row.sector_agnostic && tags.length >= OVERTAG_THRESHOLD;
 
-  const ownMatches = overlapCount(tags, ctx.userSectors);
+  const userSet = new Set(ctx.userSectors);
+  const matchedOwn = tags.filter((t) => userSet.has(t));
+  const ownMatches = matchedOwn.length;
+  // (a) overlap is exclusively horizontal; (b) the row has a foreign vertical.
+  const horizontalOnly = !row.sector_agnostic && ownMatches > 0 &&
+    matchedOwn.every((t) => HORIZONTAL_SECTORS.has(t)) &&
+    tags.some((t) => !HORIZONTAL_SECTORS.has(t) && !userSet.has(t));
+
   if (ownMatches > 0) {
-    const add = overTagged ? 1 : diminishing(ownMatches, 3, 1);
+    const broadOnly = overTagged || horizontalOnly;
+    const add = broadOnly ? 1 : diminishing(ownMatches, 3, 1);
     s += add;
     reasons.push(overTagged
       ? `broad sector overlap ×${ownMatches} (+${add})`
-      : `industry match ×${ownMatches} (+${add})`);
+      : horizontalOnly
+        ? `horizontal-only overlap ×${ownMatches} (+${add})`
+        : `industry match ×${ownMatches} (+${add})`);
   }
 
   if (opts.applySellsTo) {
@@ -152,8 +186,10 @@ export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
 
   // Specialist: a sector-SPECIFIC (not agnostic, not over-tagged) row that matches the
   // user's own industry — the genuine domain expert the breadth-driven scorer used to
-  // bury under generalists. An over-tagged row claims too many sectors to count as focused.
-  const specialist = !row.sector_agnostic && !overTagged && ownMatches > 0;
+  // bury under generalists. An over-tagged row claims too many sectors to count as
+  // focused; a horizontal-only overlap is focused on the WRONG vertical (see
+  // HORIZONTAL_SECTORS above), so it doesn't count either.
+  const specialist = !row.sector_agnostic && !overTagged && !horizontalOnly && ownMatches > 0;
   if (specialist) {
     s += SPECIALIST_BONUS;
     reasons.push(`industry specialist (+${SPECIALIST_BONUS})`);

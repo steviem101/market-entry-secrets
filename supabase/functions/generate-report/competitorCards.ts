@@ -29,6 +29,12 @@ export interface CompetitorCard {
 
 const clip = (s: unknown, n: number): string => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 
+// Scrape-failure fallback strings from the competitor pipeline ("Website could not
+// be analysed." / "Could not extract competitor intelligence."). They're honest in
+// the raw data but read as a broken card when rendered as the subtitle (Novade
+// report: Hammertech). Suppress them — a name-only card beats an error message.
+const FAILURE_DESCRIPTION_RE = /could not be analysed|could not extract/i;
+
 /** Accept only http(s) URLs so a card never links to a junk/relative string. */
 function httpUrl(u: unknown): string | undefined {
   const s = clip(u, 500);
@@ -56,9 +62,10 @@ export function buildCompetitorCards(competitors: CompetitorLike[] | null | unde
     const au = clip(c?.au_presence, 60);
     const hasAu = au && !/no australian presence/i.test(au);
 
+    const desc = clip(c?.description, 140);
     out.push({
       name,
-      subtitle: clip(c?.description, 140) || undefined,
+      subtitle: desc && !FAILURE_DESCRIPTION_RE.test(desc) ? desc : undefined,
       website: url,
       link: url,
       linkLabel: url ? "Visit site" : "",

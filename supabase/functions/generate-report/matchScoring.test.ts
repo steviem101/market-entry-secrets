@@ -89,6 +89,13 @@ test("over-tag threshold: 4 sectors still specialist, 5 is demoted (B8, lowered 
 });
 
 test("over-tag threshold: real Infact leak — AusAgritech demoted below a focused fintech body (B8)", () => {
+  // Infact is a FINTECH — its own mapping includes the financial-services vertical.
+  // (The file-level CTX is a construction/tech company; using it here would test the
+  // wrong corridor — the banking body would then be a horizontal-only match and is
+  // correctly demoted for THAT company by the HORIZONTAL_SECTORS rule.)
+  const fintechCtx: MatchContext = { ...CTX, userSectors: [
+    "financial-services", "professional-services", "technology-information-and-media",
+  ] };
   // Verbatim tags from innovation_ecosystem. Its defining vertical is agritech
   // (farming), but it carries 3 broad umbrella tags that overlap the fintech's
   // mapped sectors — so it must NOT out-specialist a focused financial-services body.
@@ -100,11 +107,11 @@ test("over-tag threshold: real Infact leak — AusAgritech demoted below a focus
   const bankingAssoc = { id: "aba", sector_agnostic: false, sector_tags: [
     "financial-services", "government-administration", "professional-services",
   ] };
-  const agri = scoreRow(ausAgritech, {}, CTX);
-  const aba = scoreRow(bankingAssoc, {}, CTX);
+  const agri = scoreRow(ausAgritech, {}, fintechCtx);
+  const aba = scoreRow(bankingAssoc, {}, fintechCtx);
   assert.ok(!agri.specialist, "5-tag agritech association must not be a specialist");
   assert.ok(agri.reasons.some((r) => r.startsWith("broad sector overlap")), "scored as broad overlap");
-  assert.ok(aba.specialist, "focused 3-tag banking body stays a specialist");
+  assert.ok(aba.specialist, "focused 3-tag banking body stays a specialist (vertical match)");
   assert.ok(aba.score > agri.score, `focused banking body ${aba.score} must beat agritech ${agri.score}`);
 });
 
@@ -348,4 +355,59 @@ test("scoreRow: target region offsets ~one extra service match, not more (B13 tu
   // double-service firm (clusters them) rather than burying it — and doesn't overshoot.
   assert.equal(sydney1svc.score, melbourne2svc.score,
     `region bonus should tie these (got ${sydney1svc.score} vs ${melbourne2svc.score})`);
+});
+
+// ── Horizontal catch-all rule (Novade report, 7 Jul 2026) ───────────────────
+test("horizontal-only overlap: off-vertical associations demoted, vertical match kept (Novade)", () => {
+  // Novade — construction-tech SaaS: mapping carries the construction VERTICAL
+  // plus the horizontals every tech company has.
+  const novadeCtx: MatchContext = { ...CTX, userSectors: [
+    "construction", "technology-information-and-media", "professional-services",
+  ] };
+  // Verbatim tags from innovation_ecosystem (the real leak: scored 8-9, top of the report).
+  const siaa = { id: "siaa", sector_agnostic: false, sector_tags: [
+    "education", "government-administration", "professional-services", "technology-information-and-media",
+  ] };
+  const aisa = { id: "aisa", sector_agnostic: false, sector_tags: [
+    "administrative-and-support-services", "education", "professional-services", "technology-information-and-media",
+  ] };
+  const bluechilli = { id: "bc", sector_agnostic: false, sector_tags: [
+    "construction", "technology-information-and-media",
+  ] };
+  const s = scoreRow(siaa, {}, novadeCtx);
+  const a = scoreRow(aisa, {}, novadeCtx);
+  const b = scoreRow(bluechilli, {}, novadeCtx);
+  // Space/infosec associations: matched ONLY on horizontals, real verticals elsewhere → demoted.
+  for (const [name, r] of [["SIAA", s], ["AISA", a]] as const) {
+    assert.ok(!r.specialist, `${name} must not be a specialist for a construction-tech SaaS`);
+    assert.ok(r.reasons.some((x) => x.startsWith("horizontal-only overlap")), `${name} reason is horizontal-only`);
+  }
+  // BlueChilli matched the construction VERTICAL → genuine specialist, ranks above both.
+  assert.ok(b.specialist, "BlueChilli (construction match) stays a specialist");
+  assert.ok(b.score > s.score && b.score > a.score,
+    `BlueChilli ${b.score} must outrank SIAA ${s.score} / AISA ${a.score}`);
+});
+
+test("horizontal-only rule does NOT fire on a purely-horizontal row (tech mentor for a tech co)", () => {
+  // aiExpert-shaped: tagged ONLY [technology] — no foreign vertical, so its focus IS
+  // tech. Must keep specialist standing for a company that maps to technology.
+  const mentor = { id: "cv", sector_agnostic: false, sector_tags: ["technology-information-and-media"] };
+  const r = scoreRow(mentor, {}, CTX); // CTX userSectors include technology
+  assert.ok(r.specialist, "pure-tech row keeps specialist standing");
+  assert.ok(r.reasons.some((x) => x.startsWith("industry match")));
+});
+
+test("horizontal-only rule: banking body demoted for construction co, kept for fintech", () => {
+  const aba = { id: "aba", sector_agnostic: false, sector_tags: [
+    "financial-services", "government-administration", "professional-services",
+  ] };
+  // Construction-tech company (CTX): ABA matches only professional-services → demoted.
+  const forConstruction = scoreRow(aba, {}, CTX);
+  assert.ok(!forConstruction.specialist, "banking body is not a specialist for a construction co");
+  assert.ok(forConstruction.reasons.some((x) => x.startsWith("horizontal-only overlap")));
+  // Fintech: matches the financial-services VERTICAL → specialist.
+  const fintechCtx: MatchContext = { ...CTX, userSectors: ["financial-services", "professional-services"] };
+  const forFintech = scoreRow(aba, {}, fintechCtx);
+  assert.ok(forFintech.specialist, "banking body stays a specialist for a fintech");
+  assert.ok(forFintech.score > forConstruction.score);
 });
