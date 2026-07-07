@@ -49,3 +49,14 @@ test("buildCompetitorCards: caps output and tolerates null input", () => {
   const many = Array.from({ length: 10 }, (_, i) => ({ name: `Co ${i}`, url: `https://c${i}.com` }));
   assert.equal(buildCompetitorCards(many, 6).length, 6);
 });
+
+test("buildCompetitorCards: scrape-failure fallback text never renders as a subtitle (Novade/Hammertech)", () => {
+  const cards = buildCompetitorCards([
+    { name: "Hammertech", url: "not-a-url", description: "Website could not be analysed." },
+    { name: "Ghost Co", url: "https://ghost.co", description: "Could not extract competitor intelligence." },
+    { name: "Real Co", url: "https://real.co", description: "A genuine construction platform" },
+  ]);
+  assert.equal(cards[0].subtitle, undefined); // name-only card, no error text
+  assert.equal(cards[1].subtitle, undefined);
+  assert.equal(cards[2].subtitle, "A genuine construction platform");
+});
