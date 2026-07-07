@@ -8,19 +8,22 @@
 --   * non-sector values  -> removed from arrays (audience / funding-stage / thesis /
 --                           corrupted fragments); scalar theme labels keep their merged label
 --   * unknown values     -> left untouched (values added after the audit are not guessed at)
--- Every original value is preserved first in a <column>_legacy copy; this migration is
--- re-runnable (legacy snapshots only fill when null; remaps no-op once applied) and does
--- nothing on an empty preview database. Reversal = copy <column>_legacy back.
+-- Every original value is preserved first in a <column>_legacy copy, and every remap is
+-- computed FROM that snapshot (a pure function of the original), so re-running cannot
+-- chain outputs through the mapping (e.g. 'DTC Brands' -> 'DTC' must not then hit the
+-- raw 'DTC' drop rule). Idempotent; does nothing on an empty preview database.
+-- Reversal = copy <column>_legacy back.
 -- user_intake_forms and sector_tags coverage are deliberately NOT touched here
 -- (audit §9 steps 4-5).
 
+drop table if exists mes110_map;
 create temporary table mes110_map (
   surface text not null,
   raw text not null,
   merged text not null,
   action text not null check (action in ('map', 'agnostic', 'drop')),
   primary key (surface, raw)
-) on commit drop;
+);
 
 insert into mes110_map (surface, raw, merged, action) values
   ('investors.sector_focus', 'SaaS', 'SaaS', 'map'),
@@ -1107,7 +1110,7 @@ with expanded as (
               else null end as out_val,
          (m.action = 'agnostic') as is_agn
   from public.investors t
-  cross join lateral unnest(t.sector_focus) as u(val)
+  cross join lateral unnest(t.sector_focus_legacy) as u(val)
   left join mes110_map m on m.surface = 'investors.sector_focus' and m.raw = u.val
 ),
 rebuilt as (
@@ -1134,7 +1137,7 @@ with expanded as (
               else null end as out_val,
          (m.action = 'agnostic') as is_agn
   from public.innovation_ecosystem t
-  cross join lateral unnest(t.sectors) as u(val)
+  cross join lateral unnest(t.sectors_legacy) as u(val)
   left join mes110_map m on m.surface = 'innovation_ecosystem.sectors' and m.raw = u.val
 ),
 rebuilt as (
@@ -1161,7 +1164,7 @@ with expanded as (
               else null end as out_val,
          (m.action = 'agnostic') as is_agn
   from public.trade_investment_agencies t
-  cross join lateral unnest(t.sectors_supported) as u(val)
+  cross join lateral unnest(t.sectors_supported_legacy) as u(val)
   left join mes110_map m on m.surface = 'trade_investment_agencies.sectors_supported' and m.raw = u.val
 ),
 rebuilt as (
@@ -1188,7 +1191,7 @@ with expanded as (
               else null end as out_val,
          (m.action = 'agnostic') as is_agn
   from public.locations t
-  cross join lateral unnest(t.key_industries) as u(val)
+  cross join lateral unnest(t.key_industries_legacy) as u(val)
   left join mes110_map m on m.surface = 'locations.key_industries' and m.raw = u.val
 ),
 rebuilt as (
@@ -1214,7 +1217,7 @@ with expanded as (
               else null end as out_val,
          (m.action = 'agnostic') as is_agn
   from public.countries t
-  cross join lateral unnest(t.key_industries) as u(val)
+  cross join lateral unnest(t.key_industries_legacy) as u(val)
   left join mes110_map m on m.surface = 'countries.key_industries' and m.raw = u.val
 ),
 rebuilt as (
@@ -1240,7 +1243,7 @@ with expanded as (
               else null end as out_val,
          (m.action = 'agnostic') as is_agn
   from public.industry_sectors t
-  cross join lateral unnest(t.industries) as u(val)
+  cross join lateral unnest(t.industries_legacy) as u(val)
   left join mes110_map m on m.surface = 'industry_sectors.industries' and m.raw = u.val
 ),
 rebuilt as (
@@ -1262,7 +1265,7 @@ update public.events set sector_legacy = sector where sector_legacy is null and 
 update public.events t
   set sector = m.merged
   from mes110_map m
-  where m.surface = 'events.sector' and m.raw = t.sector and t.sector is distinct from m.merged;
+  where m.surface = 'events.sector' and m.raw = t.sector_legacy and t.sector is distinct from m.merged;
 
 -- ---- events.category (scalar) ----
 alter table public.events add column if not exists category_legacy text;
@@ -1271,7 +1274,7 @@ update public.events set category_legacy = category where category_legacy is nul
 update public.events t
   set category = m.merged
   from mes110_map m
-  where m.surface = 'events.category' and m.raw = t.category and t.category is distinct from m.merged;
+  where m.surface = 'events.category' and m.raw = t.category_legacy and t.category is distinct from m.merged;
 
 -- ---- lead_databases.sector (scalar) ----
 alter table public.lead_databases add column if not exists sector_legacy text;
@@ -1280,7 +1283,7 @@ update public.lead_databases set sector_legacy = sector where sector_legacy is n
 update public.lead_databases t
   set sector = m.merged
   from mes110_map m
-  where m.surface = 'lead_databases.sector' and m.raw = t.sector and t.sector is distinct from m.merged;
+  where m.surface = 'lead_databases.sector' and m.raw = t.sector_legacy and t.sector is distinct from m.merged;
 
 -- ---- leads.industry (scalar) ----
 alter table public.leads add column if not exists industry_legacy text;
@@ -1289,7 +1292,7 @@ update public.leads set industry_legacy = industry where industry_legacy is null
 update public.leads t
   set industry = m.merged
   from mes110_map m
-  where m.surface = 'leads.industry' and m.raw = t.industry and t.industry is distinct from m.merged;
+  where m.surface = 'leads.industry' and m.raw = t.industry_legacy and t.industry is distinct from m.merged;
 
 -- ---- leads.category (scalar) ----
 alter table public.leads add column if not exists category_legacy text;
@@ -1298,7 +1301,7 @@ update public.leads set category_legacy = category where category_legacy is null
 update public.leads t
   set category = m.merged
   from mes110_map m
-  where m.surface = 'leads.category' and m.raw = t.category and t.category is distinct from m.merged;
+  where m.surface = 'leads.category' and m.raw = t.category_legacy and t.category is distinct from m.merged;
 
 -- ---- lead_submissions.sector (scalar) ----
 alter table public.lead_submissions add column if not exists sector_legacy text;
@@ -1307,7 +1310,7 @@ update public.lead_submissions set sector_legacy = sector where sector_legacy is
 update public.lead_submissions t
   set sector = m.merged
   from mes110_map m
-  where m.surface = 'lead_submissions.sector' and m.raw = t.sector and t.sector is distinct from m.merged;
+  where m.surface = 'lead_submissions.sector' and m.raw = t.sector_legacy and t.sector is distinct from m.merged;
 
 -- ---- country_case_studies.sector (scalar) ----
 alter table public.country_case_studies add column if not exists sector_legacy text;
@@ -1316,7 +1319,7 @@ update public.country_case_studies set sector_legacy = sector where sector_legac
 update public.country_case_studies t
   set sector = m.merged
   from mes110_map m
-  where m.surface = 'country_case_studies.sector' and m.raw = t.sector and t.sector is distinct from m.merged;
+  where m.surface = 'country_case_studies.sector' and m.raw = t.sector_legacy and t.sector is distinct from m.merged;
 
 -- ---- content_company_profiles.industry (scalar) ----
 alter table public.content_company_profiles add column if not exists industry_legacy text;
@@ -1325,4 +1328,6 @@ update public.content_company_profiles set industry_legacy = industry where indu
 update public.content_company_profiles t
   set industry = m.merged
   from mes110_map m
-  where m.surface = 'content_company_profiles.industry' and m.raw = t.industry and t.industry is distinct from m.merged;
+  where m.surface = 'content_company_profiles.industry' and m.raw = t.industry_legacy and t.industry is distinct from m.merged;
+
+drop table if exists mes110_map;
