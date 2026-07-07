@@ -46,10 +46,17 @@ const Content = () => {
   const contentItemIds = useMemo(() => contentItems.map(item => item.id), [contentItems]);
   const { data: attachmentCounts = {} } = useAttachmentCounts(contentItemIds);
 
-  const filteredContent = useMemo(() => {
-    const type = VALID_CONTENT_TYPES.has(filters.type) ? filters.type : "all";
-    return filterContent(contentItems, { ...filters, type });
-  }, [contentItems, filters]);
+  // Coerce an invalid/stale ?type= to "all" once, so both the filtering and the
+  // tab highlight treat it as "All Content" (rather than a phantom active tab).
+  const safeFilters = useMemo(
+    () => (VALID_CONTENT_TYPES.has(filters.type) ? filters : { ...filters, type: "all" }),
+    [filters]
+  );
+
+  const filteredContent = useMemo(
+    () => filterContent(contentItems, safeFilters),
+    [contentItems, safeFilters]
+  );
 
   // Only show categories that have at least 1 piece of content.
   const categoriesWithContent = useMemo(
@@ -132,7 +139,7 @@ const Content = () => {
       />
 
       <DirectoryFilterBar
-        filters={filters}
+        filters={safeFilters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}

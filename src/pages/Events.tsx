@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useLayoutEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { Calendar, AlertCircle } from "lucide-react";
 import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
@@ -43,43 +43,10 @@ const Events = () => {
   } = useEvents();
 
   // Drive the hook's server-side search from the URL-synced search value.
+  // (Scroll-stability on filter change is handled by DirectoryFilterBar.)
   useEffect(() => {
     setSearchTerm(filters.search);
   }, [filters.search, setSearchTerm]);
-
-  // Keep the page still when a filter changes. Radix tabs/selects move focus to
-  // the clicked control and the browser scrolls it into view; swapping the card
-  // list also reflows height and clamps scroll. Snapshot scroll at interaction
-  // start (capture phase, before focus moves), then pin it back for a few frames.
-  const restoreScrollY = useRef<number | null>(null);
-  useEffect(() => {
-    const snapshot = (e: Event) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest?.('[data-radix-popper-content-wrapper],[role="listbox"],[role="menu"],[role="dialog"]')) return;
-      restoreScrollY.current = window.scrollY;
-    };
-    document.addEventListener("pointerdown", snapshot, true);
-    document.addEventListener("keydown", snapshot, true);
-    return () => {
-      document.removeEventListener("pointerdown", snapshot, true);
-      document.removeEventListener("keydown", snapshot, true);
-    };
-  }, []);
-  const filterSignature = `${filters.source}|${filters.time}|${filters.category}|${filters.type}|${filters.city}|${filters.sector}|${filters.topic}|${filters.persona}|${filters.search}`;
-  const didMountRef = useRef(false);
-  useLayoutEffect(() => {
-    if (!didMountRef.current) { didMountRef.current = true; return; }
-    const target = restoreScrollY.current;
-    if (target == null) return;
-    let frame = 0;
-    let count = 0;
-    const pin = () => {
-      if (Math.abs(window.scrollY - target) > 1) window.scrollTo(0, target);
-      if (count++ < 4) frame = requestAnimationFrame(pin);
-    };
-    pin();
-    return () => cancelAnimationFrame(frame);
-  }, [filterSignature]);
 
   const categories = useMemo(() => Array.from(new Set(events.map((e) => e.category))).sort(), [events]);
   const types = useMemo(() => Array.from(new Set(events.map((e) => e.type))).sort(), [events]);
