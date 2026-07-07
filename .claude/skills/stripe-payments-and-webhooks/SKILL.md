@@ -17,6 +17,10 @@ for — with retries that work, no fail-open defaults, and no client-side write 
 - **Don't trigger:** post-redirect *UX* polling (Wave 2 `post-payment-activation-and-entitlements-ux`;
   interim facts: `ReportView.tsx:40-106` polls every 2s ×15, `Pricing.tsx:15-34` shows a status modal).
 
+## Preconditions — inspect first
+`supabase/functions/stripe-webhook/index.ts`, `supabase/functions/create-checkout/index.ts`,
+live `pg_policies` on `user_subscriptions`, and recent `payment_webhook_logs` rows if debugging.
+
 ## The billing model (verified — do not assume subscriptions)
 One-time payments: `mode: "payment"` (`create-checkout/index.ts:194-207`). No Stripe Subscription
 objects, no renewals, no `customer.subscription.*` events. Only `checkout.session.completed` is

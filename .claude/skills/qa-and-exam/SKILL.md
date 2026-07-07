@@ -16,6 +16,11 @@ artifacts to self-grade against. If your output scores below the bar, fix it bef
   designing a test plan for a tier/auth/payment-touching change.
 - **Don't trigger:** as a substitute for the domain skill — the exam checks work, it doesn't do it.
 
+## Preconditions — inspect first
+The two baselines below; `src/components/report/reportSectionConfig.ts` +
+`src/hooks/useSubscription.ts` (tier machinery the matrix tests against); the audit doc named in
+whichever drill matches your change.
+
 ## Baselines (Fable-authored, in this folder)
 - `references/baseline-tier-gated-section.md` — a known-good growth-gated report section with
   grounding annotations. Compare any report-like output against it.
@@ -55,7 +60,7 @@ one at the gate, admin, and legacy tiers `premium`/`concierge` (must map, not de
 5. **Auth round-trip:** OAuth/magic-link full-page redirects lose in-memory state — any "resume
    after auth" flow must survive a reload (real: MES-35 R4, `pendingGenerate` in a `useRef`).
 
-## Evaluation harness (for grading a model/session, e.g. Opus dry-runs)
+## Playbook — evaluation harness (grading a model/session, e.g. Opus dry-runs)
 1. Give the task cold (skills available, no extra coaching).
 2. Grade output against the rubric + the matching baseline; record per-dimension scores.
 3. Any dimension at 0 → the *skill* may be at fault too: log the gap in `.claude/skills/CHANGELOG.md`
@@ -65,6 +70,12 @@ one at the gate, admin, and legacy tiers `premium`/`concierge` (must map, not de
 ## Red flags / approval gates
 - Shipping with any rubric dimension at 0, or skipping the drill matching your change type.
 - Editing the baselines to match your output (baselines change only via reviewed PRs).
+
+## Good / bad examples
+- ✅ Test plan for a gated change that probes the raw network response as a `free` user AND a
+  legacy `premium` user — the two audiences real leaks hid behind.
+- ❌ "Tested manually, looks right" with no matrix, no drill, no rubric score — that is exactly
+  the evidence level that shipped MES-35 R1.
 
 ## Self-check rubric (pass/fail)
 - [ ] Rubric scored honestly (≥8, no 0s) against the relevant baseline.

@@ -40,7 +40,7 @@ provider, mentor, event, and figure is *real* — traceable to a directory row o
 - Telemetry: `FirecrawlStats` + `perplexity_health` persisted into `report_json.metadata` and
   mirrored to queryable columns; `report_quality` is the scoring system of record.
 
-## Grounding rules (source of truth — link here, don't restate)
+## Playbook — grounding rules (source of truth — link here, don't restate)
 1. **Never invent providers, mentors, investors, events, or leads.** Every recommendation must map
    to a real row in `service_providers`, `community_members(_public)`, `investors_public`,
    `events`, `lead_databases` — cite the name exactly as stored. The enrichment corpus has already
