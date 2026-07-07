@@ -32,7 +32,8 @@ const VALID_CONTENT_TYPES = new Set(["all", ...Object.keys(CONTENT_TYPE_LABELS)]
 const CONTENT_FILTER_SPEC: FilterSpec = {
   search: { param: "search", default: "" },
   type: { param: "type", default: "all" },
-  // Category carries the category id (content_categories has no slug — MES-100).
+  // Category carries the category slug (MES-100); legacy ?category=<uuid> links
+  // are still resolved for back-compat.
   category: { param: "category", default: "all" },
 };
 
@@ -46,22 +47,41 @@ const Content = () => {
   const contentItemIds = useMemo(() => contentItems.map(item => item.id), [contentItems]);
   const { data: attachmentCounts = {} } = useAttachmentCounts(contentItemIds);
 
-  // Coerce an invalid/stale ?type= to "all" once, so both the filtering and the
-  // tab highlight treat it as "All Content" (rather than a phantom active tab).
-  const safeFilters = useMemo(
-    () => (VALID_CONTENT_TYPES.has(filters.type) ? filters : { ...filters, type: "all" }),
-    [filters]
-  );
-
-  const filteredContent = useMemo(
-    () => filterContent(contentItems, safeFilters),
-    [contentItems, safeFilters]
-  );
+  // Coerce an invalid/stale ?type= to "all" so both filtering and the tab
+  // highlight treat it as "All Content" (rather than a phantom active tab).
+  const safeType = VALID_CONTENT_TYPES.has(filters.type) ? filters.type : "all";
 
   // Only show categories that have at least 1 piece of content.
   const categoriesWithContent = useMemo(
     () => categories.filter(category => contentItems.some(item => item.category_id === category.id)),
     [categories, contentItems]
+  );
+
+  // The category param carries a slug (MES-100), but old links used the UUID —
+  // resolve either to the category row + its id.
+  const catSlug = (c: { id: string; slug?: string | null }) => c.slug ?? c.id;
+  const selectedCat = useMemo(
+    () => categoriesWithContent.find(
+      (c) => catSlug(c as any) === filters.category || c.id === filters.category
+    ) ?? null,
+    [categoriesWithContent, filters.category]
+  );
+  const selectedCategoryId = selectedCat?.id ?? null;
+
+  // Bar shows the slug (normalised so old ?category=<uuid> links still highlight).
+  const displayFilters = useMemo(
+    () => ({
+      ...filters,
+      type: safeType,
+      category: selectedCat ? catSlug(selectedCat as any) : (filters.category === "all" ? "all" : filters.category),
+    }),
+    [filters, safeType, selectedCat]
+  );
+
+  // Filtering matches item.category_id, so pass the resolved id (not the slug).
+  const filteredContent = useMemo(
+    () => filterContent(contentItems, { ...filters, type: safeType, category: selectedCategoryId ?? "all" }),
+    [contentItems, filters, safeType, selectedCategoryId]
   );
 
   const featuredContent = useMemo(() => contentItems.filter(item => item.featured), [contentItems]);
@@ -82,11 +102,9 @@ const Content = () => {
     {
       key: "category",
       allLabel: "All Categories",
-      options: categoriesWithContent.map((c) => ({ value: c.id, label: c.name })),
+      options: categoriesWithContent.map((c) => ({ value: catSlug(c as any), label: c.name })),
     },
   ];
-
-  const selectedCategoryId = filters.category === "all" ? null : filters.category;
 
   if (itemsLoading || categoriesLoading) {
     return (
@@ -139,7 +157,7 @@ const Content = () => {
       />
 
       <DirectoryFilterBar
-        filters={safeFilters}
+        filters={displayFilters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}

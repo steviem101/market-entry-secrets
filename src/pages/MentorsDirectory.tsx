@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { usePersona } from "@/contexts/PersonaContext";
 import { Helmet } from "react-helmet-async";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,12 +52,34 @@ const MentorsDirectory = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const { data: mentors = [], isLoading, error } = useMentors();
   const { data: categories = [] } = useMentorCategories();
-  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+  const { filters, page, setFilter, setFilters, setPage, clearAll, hasActiveFilters } =
     useDirectoryFilters(MENTOR_FILTER_SPEC);
+  const { persona } = usePersona();
+  const [rawParams] = useSearchParams();
   const [contactMentor, setContactMentor] = useState<Mentor | null>(null);
 
-  // Pre-filter by category from the URL path (/mentors/:categorySlug).
+  // Mount seed (applied atomically so the parts don't clobber each other):
+  //  - category from the URL path (/mentors/:categorySlug)
+  //  - audience from the global PersonaContext when ?persona= is absent
+  //  - legacy ?q= search param when ?search= is absent (pre-MES-94 links)
+  const seededRef = useRef(false);
   useEffect(() => {
+    if (seededRef.current) return;
+    seededRef.current = true;
+    const seed: Record<string, string> = {};
+    if (categorySlug && categorySlug !== filters.category) seed.category = categorySlug;
+    const q = rawParams.get("q");
+    if (q && !rawParams.has("search")) seed.search = q;
+    if (persona && !rawParams.has("persona")) seed.persona = persona;
+    if (Object.keys(seed).length) setFilters(seed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Post-mount: react to /mentors/:categorySlug route changes (skips the mount
+  // run, which the seed above already handles, to avoid clobbering it).
+  const didMountCat = useRef(false);
+  useEffect(() => {
+    if (!didMountCat.current) { didMountCat.current = true; return; }
     if (categorySlug && categorySlug !== filters.category) {
       setFilter("category", categorySlug);
     }

@@ -25,6 +25,8 @@ export interface UseDirectoryFiltersResult {
   page: number;
   /** Set one dimension; resets page to 1. */
   setFilter: (key: string, value: string) => void;
+  /** Set several dimensions atomically (one URL write); resets page to 1. */
+  setFilters: (partial: FilterValues) => void;
   /** Change page without touching filters. */
   setPage: (page: number) => void;
   /** Reset every dimension to its default and page to 1. */
@@ -52,6 +54,13 @@ export function useDirectoryFilters(spec: FilterSpec): UseDirectoryFiltersResult
     [filters, commit],
   );
 
+  const setFilters = useCallback(
+    (partial: FilterValues) => {
+      commit({ ...filters, ...partial }, 1);
+    },
+    [filters, commit],
+  );
+
   const setPage = useCallback(
     (nextPage: number) => {
       commit(filters, nextPage);
@@ -68,5 +77,5 @@ export function useDirectoryFilters(spec: FilterSpec): UseDirectoryFiltersResult
     [spec, filters],
   );
 
-  return { filters, page, setFilter, setPage, clearAll, hasActiveFilters };
+  return { filters, page, setFilter, setFilters, setPage, clearAll, hasActiveFilters };
 }

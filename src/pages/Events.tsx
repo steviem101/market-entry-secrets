@@ -13,6 +13,7 @@ import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
+import { useContextPersonaSeed } from "@/hooks/useContextPersonaSeed";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterEvents, matchesSource, COMMUNITY_SOURCE, TOPIC_TAGS } from "@/lib/eventFilters";
 
@@ -36,6 +37,7 @@ const EVENT_FILTER_SPEC: FilterSpec = {
 const Events = () => {
   const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
     useDirectoryFilters(EVENT_FILTER_SPEC);
+  useContextPersonaSeed(setFilter);
 
   const {
     events, upcomingEvents, pastEvents, loading, searchLoading, error,
