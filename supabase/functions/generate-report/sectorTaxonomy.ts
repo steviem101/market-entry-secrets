@@ -72,7 +72,7 @@ const SECTOR_KEYWORD_ALIASES: Array<[RegExp, string[]]> = [
   [/\b(?:data|big data|analytics|data infrastructure|data platform|business intelligence)\b/, ['technology-information-and-media', 'professional-services']],
   [/\b(?:cloud|cloud computing|devops|platform engineering)\b/, ['technology-information-and-media']],
   [/\b(?:blockchain|crypto|web3|defi|nft)\b/, ['financial-services', 'technology-information-and-media']],
-  [/\b(?:biotech|pharma|medtech|medical device|life sciences|clinical|therapeutics)\b/, ['hospitals-and-health-care', 'manufacturing']],
+  [/\b(?:biotech\w*|pharma\w*|medtech|medical devices?|life sciences|clinical|therapeutics)\b/, ['hospitals-and-health-care', 'manufacturing']],
   // Deliberately NOT matching bare \bhealth\b — that catches phrases like
   // "Workplace Health and Safety" which is a construction/professional-services
   // domain, not healthcare. Require explicit healthcare-domain words.
@@ -95,6 +95,19 @@ const SECTOR_KEYWORD_ALIASES: Array<[RegExp, string[]]> = [
   [/\b(?:consult\w*|advisory|advisor|advisors|professional services|accounting|tax|legal)\b/, ['professional-services']],
   [/\b(?:government|public sector|defence|defense|aerospace)\b/, ['government-administration']],
   [/\b(?:non[- ]?profit|ngo|charity)\b/, ['consumer-services']],
+  // MES-110: values observed in live intake data that previously resolved to
+  // NOTHING (see docs/audits/mes-110-sector-taxonomy-audit.md §6.1-6.2) — bare
+  // sector names, plurals the earlier boundaries missed, and common free-text.
+  [/\b(?:financial services|finance)\b/, ['financial-services']],
+  [/\bsoftware\b/, ['technology-information-and-media']],
+  [/\b(?:recruit\w*|staffing|talent acquisition|human resources|hr tech)\b/, ['administrative-and-support-services']],
+  [/\b(?:biometrics?|identity management|identity verification)\b/, ['technology-information-and-media', 'professional-services']],
+  [/\bmarket research\b/, ['professional-services']],
+  [/\b(?:credit bureau|lending)\b/, ['financial-services']],
+  [/\bdecision intelligence\b/, ['technology-information-and-media']],
+  [/\beducation\b/, ['education']],
+  [/\bagricultur\w*\b/, ['farming-ranching-forestry']],
+  [/\barchitecture\b/, ['professional-services']],
 ];
 
 /**
