@@ -34,7 +34,7 @@ export const HERO_CONTENT: HeroContent = {
     suffix: "to grow in Australia",
   },
   subheadline:
-    "Whether you're entering Australia from overseas or scaling an Aussie startup, we turn a 5-minute questionnaire into a tailored report: live market intelligence, competitor landscape, vetted providers, mentors, and a step-by-step action plan.",
+    "Whether you're entering Australia from overseas or scaling an Aussie startup, we turn a few quick questions into a tailored report: live market intelligence, competitor landscape, vetted providers, mentors, and a step-by-step action plan.",
   primaryCTA: { label: REPORT_CTA_LABEL, href: REPORT_CREATOR_PATH },
   secondaryCTA: { label: "Explore the platform", href: "/service-providers" },
   mockupScenario: {
