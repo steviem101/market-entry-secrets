@@ -27,6 +27,36 @@
 
 const MARKER_RE = /\[(\d+)\]/g;
 
+/**
+ * Pseudo-citations: the model sometimes cites a labelled CONTEXT VARIABLE
+ * instead of a numbered source — SWOT sections shipped literal "[Cost Data]" /
+ * "[Cost of Business Data]" markers because the cost-of-business research is
+ * injected as a named block with no [N] source of its own. These read as broken
+ * citations in the report. The prompt now forbids them (numeric-only rule); this
+ * strip is the safety net. Deliberately an explicit allowlist of known context
+ * labels — a generic [text] pattern would eat markdown links and legitimate
+ * bracketed prose.
+ */
+const CONTEXT_LABEL_RE =
+  /\s?\[(?:cost (?:of business )?data|cost of business|company profile|enriched company profile|market research(?: data)?|end buyer research)\]/gi;
+
+/** Remove known context-label pseudo-citations from section prose. Pure. */
+export function stripContextLabelCitations(
+  sections: Record<string, { content?: string; [k: string]: unknown }>,
+): Record<string, { content?: string; [k: string]: unknown }> {
+  const out: Record<string, { content?: string; [k: string]: unknown }> = {};
+  for (const [name, data] of Object.entries(sections)) {
+    if (data && typeof data.content === "string" && CONTEXT_LABEL_RE.test(data.content)) {
+      CONTEXT_LABEL_RE.lastIndex = 0;
+      out[name] = { ...data, content: data.content.replace(CONTEXT_LABEL_RE, "") };
+    } else {
+      CONTEXT_LABEL_RE.lastIndex = 0;
+      out[name] = data;
+    }
+  }
+  return out;
+}
+
 export interface RenumberResult {
   sections: Record<string, { content?: string; [k: string]: unknown }>;
   citations: string[];

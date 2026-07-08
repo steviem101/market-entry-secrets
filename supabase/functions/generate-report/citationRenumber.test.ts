@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renumberCitations } from "./citationRenumber.ts";
+import { renumberCitations, stripContextLabelCitations } from "./citationRenumber.ts";
 
 // 19-source list; only a sparse subset is cited (the real Infact report pattern).
 const cites19 = Array.from({ length: 19 }, (_, i) => `https://src${i + 1}.example.com`);
@@ -84,4 +84,32 @@ test("renumberCitations: sections without content and stragglers not in order ar
   assert.equal(res.sections.gated.content, "hidden cites [2]");
   assert.equal(res.sections.gated.visible, false); // other fields preserved
   assert.deepEqual(res.citations, [cites19[1], cites19[4]]);
+});
+
+test("stripContextLabelCitations: removes known context-label pseudo-citations (SWOT [Cost Data] leak)", () => {
+  const sections = {
+    swot: { content: "Rents exceed $700/sqm [4] [Cost Data]. GST is 10% [Cost of Business Data], improving cash flow." },
+    other: { content: "Profile-derived fact [Company Profile] stands." },
+  };
+  const out = stripContextLabelCitations(sections);
+  assert.equal(out.swot.content, "Rents exceed $700/sqm [4]. GST is 10%, improving cash flow.");
+  assert.equal(out.other.content, "Profile-derived fact stands.");
+});
+
+test("stripContextLabelCitations: leaves numeric markers, markdown links and normal brackets alone", () => {
+  const sections = {
+    s: { content: "See [3] and [Allens](https://allens.com.au) and a literal [2024] year and [sic]." },
+    empty: { visible: false },
+  };
+  const before = sections.s.content;
+  const out = stripContextLabelCitations(sections);
+  assert.equal(out.s.content, before); // untouched
+  assert.equal(out.empty, sections.empty); // non-content sections pass through
+  assert.equal(sections.s.content, before); // input not mutated
+});
+
+test("stripContextLabelCitations: case-insensitive and repeated occurrences all removed", () => {
+  const sections = { s: { content: "A [COST DATA] b [cost of business data] c [Cost Data] d" } };
+  const out = stripContextLabelCitations(sections);
+  assert.equal(out.s.content, "A b c d");
 });
