@@ -181,6 +181,44 @@ test("MES-110 aliases keep word boundaries (no new false positives)", () => {
   assert.deepEqual(industryGroupsToSectorSlugs(["Educationalists"]), []);
 });
 
+test("MES-110 step 5: the last matcher-invisible intake values roll up to their crosswalk sector", () => {
+  // Each was observed in user_intake_forms and still resolved to NOTHING after
+  // step 1. Expected slug = legacy_industry_mapping.linkedin_sector for that
+  // value, so the matcher and the crosswalk agree.
+  const cases: Array<[string, string]> = [
+    ["banking", "financial-services"],
+    ["Banking", "financial-services"],
+    ["Investment Banking", "financial-services"], // via \bbanking\b
+    ["cyber", "technology-information-and-media"], // bare, folded into the cybersecurity alias
+    ["Apparel & Fashion", "manufacturing"],        // crosswalk → Apparel Manufacturing
+    ["Restaurants", "accommodation-and-food-services"], // plural the earlier \brestaurant\b missed
+    ["Commercial Real Estate", "real-estate-and-equipment-rental-services"],
+    ["Law Practice", "professional-services"],     // via \blaw\b, alias had only "legal"
+  ];
+  for (const [value, expectedSlug] of cases) {
+    assert.ok(
+      industryGroupsToSectorSlugs([value]).includes(expectedSlug),
+      `"${value}" does not roll up to ${expectedSlug}`,
+    );
+  }
+});
+
+test("MES-110 step 5: horizontal business-functions stay deliberately unresolved", () => {
+  // These are functions, not industries — they denote no target-market sector,
+  // so the matcher correctly ignores them (same principle as tagging-rules.md
+  // rule 1, business-model ≠ industry). Locking this in guards against a future
+  // over-eager alias silently pulling them into a sector.
+  for (const v of ["Project Management", "Customer Experience", "Field Management"]) {
+    assert.deepEqual(industryGroupsToSectorSlugs([v]), [], `"${v}" should stay unresolved`);
+  }
+});
+
+test("MES-110 step 5 aliases keep word boundaries (no new false positives)", () => {
+  assert.deepEqual(industryGroupsToSectorSlugs(["Lawn Care Services"]), []);   // \blaw\b ≠ "lawn"
+  assert.deepEqual(industryGroupsToSectorSlugs(["Cybernetics Lab"]), []);      // \bcyber\b ≠ "cybernetics"
+  assert.deepEqual(industryGroupsToSectorSlugs(["Embankment Works"]), []);     // \bbanking\b ≠ "embankment"
+});
+
 test("overlapCount counts shared elements", () => {
   assert.equal(overlapCount(["a", "b", "c"], ["b", "c", "d"]), 2);
   assert.equal(overlapCount(["a"], ["x"]), 0);
