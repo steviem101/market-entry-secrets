@@ -55,10 +55,11 @@ SELECT
   is_primary,
   display_order,
   is_archived,
-  mes_relevance_score,
-  tier,
   created_at
 FROM public.agency_contacts;
+-- mes_relevance_score and tier are internal PIT-CRM scoring — deliberately
+-- EXCLUDED from the public view so they are never exposed to anon/PostgREST
+-- (the pre-lockdown agencies_report_view leaked them; no frontend reads them).
 
 ALTER VIEW public.agency_contacts_public OWNER TO postgres;
 GRANT SELECT ON public.agency_contacts_public TO anon;
@@ -129,9 +130,7 @@ SELECT
   (SELECT json_agg(json_build_object(
             'name', ac.full_name,
             'title', ac.title,
-            'linkedin_url', ac.linkedin_url,
-            'mes_relevance_score', ac.mes_relevance_score,
-            'tier', ac.tier)
+            'linkedin_url', ac.linkedin_url)
           ORDER BY ac.display_order)
      FROM public.agency_contacts_public ac
     WHERE ac.agency_id = tia.id AND ac.is_primary = true AND ac.is_archived = false
@@ -139,8 +138,7 @@ SELECT
   (SELECT json_agg(json_build_object(
             'name', ac.full_name,
             'title', ac.title,
-            'linkedin_url', ac.linkedin_url,
-            'tier', ac.tier)
+            'linkedin_url', ac.linkedin_url)
           ORDER BY ac.display_order)
      FROM public.agency_contacts_public ac
     WHERE ac.agency_id = tia.id AND ac.is_primary = false AND ac.is_archived = false
