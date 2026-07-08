@@ -19,6 +19,7 @@ import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, cha
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
 import { humanizeMetricLabel } from "./metricLabel.ts";
+import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
@@ -232,7 +233,12 @@ async function resolveDomainFromName(apiKey: string, name: string, stats?: Firec
     // keeps a bogus internal host (e.g. 169.254.169.254) out of the report's
     // competitor/buyer url field.
     if (!host || isPrivateOrReservedUrl(`https://${host}`)) return "";
-    return host;
+    // Return a full https:// URL, not a bare host. Consumers scrape it (firecrawl
+    // handles either) but ALSO store it as the competitor/buyer `url`, and the
+    // card builder's httpUrl() only renders links that start with http(s) — a
+    // bare "sourcewhale.com" produced a competitor card with no "Visit site"
+    // link (Floats report). domainOf() still normalises it for dedupe.
+    return `https://${host}`;
   } catch {
     return "";
   }
@@ -494,7 +500,7 @@ async function scrapeKnownCompetitors(
           {
             role: "user",
             content: `Analyze this website content for "${comp.name}" (${website}), a competitor of "${companyName}".
-Return a JSON object: {"name": "${comp.name}", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"${deep ? `, "au_presence": "their Australian footprint from the site ONLY — local office/address, AU case studies or customers, .com.au domain, AU pricing. If none is evident, say 'No Australian presence evident on their site'. Do NOT guess."` : ""}}
+Return a JSON object: {"name": "<the company's OFFICIAL name as written on their site, correctly capitalised — e.g. 'SourceWhale' not 'source whale'; fall back to '${comp.name}' only if the site doesn't state it>", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"${deep ? `, "au_presence": "their Australian footprint from the site ONLY — local office/address, AU case studies or customers, .com.au domain, AU pricing. If none is evident, say 'No Australian presence evident on their site'. Do NOT guess."` : ""}}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -1943,6 +1949,55 @@ async function generateReportInBackground(
     const enrichedSummary = companyEnrichResult.enrichedSummary;
     const companyProfile = companyEnrichResult.profile;
     const companyScrapeDiag = companyEnrichResult.diagnostics;
+
+    // Competitor recall backfill (Floats feedback): discovery can come up thin
+    // (Floats got 1 competitor) while the market-research prose already fetched
+    // openly names real rivals. When we're below target, mine that prose for
+    // named competitors and verify each through the known-competitor scrape
+    // (resolve domain + read the live site) — only companies that actually
+    // resolve and yield content are added, so nothing unverified enters the
+    // report. Reuses fetched research → no extra Perplexity spend. Best-effort.
+    try {
+      if (firecrawlKey && (competitorResult.competitors?.length || 0) < BACKFILL_TARGET) {
+        const researchText = `${marketResearch.landscape || ""}\n\n${marketResearch.news || ""}`.trim().slice(0, 6000);
+        if (researchText.length > 100) {
+          const existingNames = [
+            ...competitorResult.competitors.map((c: any) => c?.name),
+            intake.company_name,
+          ].filter(Boolean) as string[];
+          const mentionText = await callAI(lovableKey, [
+            { role: "system", content: "You extract competitor company names from analyst notes. Return only valid JSON, no markdown fences." },
+            { role: "user", content: buildMentionPrompt(intake.company_name, (intake.industry_sector || []).join(" / "), researchText, existingNames) },
+          ], "google/gemini-3-flash-preview", { temperature: 0.1 });
+          const names = parseMentions(mentionText, existingNames);
+          if (names.length > 0) {
+            const scraped = await scrapeKnownCompetitors(
+              firecrawlKey, lovableKey,
+              names.map((n) => ({ name: n, website: "" })),
+              intake.company_name, firecrawlStats, firecrawlCache, !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH"),
+            );
+            const existingDomains = new Set(
+              competitorResult.competitors.map((c: any) => domainOf(c?.url || "")).filter(Boolean),
+            );
+            const existingNameSet = new Set(existingNames.map((n) => n.toLowerCase()));
+            const isVerified = (c: any) =>
+              c?.url && !/could not be analysed|could not extract/i.test(String(c?.description || ""));
+            let added = 0;
+            for (const c of scraped) {
+              if (!isVerified(c)) continue; // unresolved / unscrapeable mined name → drop, never surface unverified
+              const dom = domainOf(c.url || "");
+              if (dom && existingDomains.has(dom)) continue;
+              if (existingNameSet.has(String(c.name || "").toLowerCase())) continue;
+              competitorResult.competitors.push(c);
+              if (dom) existingDomains.add(dom);
+              existingNameSet.add(String(c.name || "").toLowerCase());
+              added++;
+            }
+            console.log(`competitor backfill: mined ${names.length} name(s) from research, added ${added} verified`);
+          }
+        }
+      }
+    } catch (e) { console.error("competitor backfill failed (continuing):", e); }
 
     if (companyProfile) {
       await supabase.from("user_intake_forms")
