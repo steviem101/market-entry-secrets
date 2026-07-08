@@ -2,9 +2,10 @@ import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { InnovationEcosystemHero } from "@/components/innovation-ecosystem/InnovationEcosystemHero";
 import InnovationEcosystemResults from "@/components/innovation-ecosystem/InnovationEcosystemResults";
-import { DirectoryFilterBar, type SelectFilterConfig } from "@/components/common/DirectoryFilterBar";
+import { DirectoryFilterBar, type FilterOption, type SelectFilterConfig } from "@/components/common/DirectoryFilterBar";
 import { ListPagination } from "@/components/common/ListPagination";
 import { UsageBanner } from "@/components/UsageBanner";
+import { getStandardTypes } from "@/utils/sectorMapping";
 import { useInnovationEcosystem } from "@/hooks/useInnovationEcosystem";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
@@ -14,6 +15,7 @@ const PAGE_SIZE = 12;
 
 const INNOVATION_FILTER_SPEC: FilterSpec = {
   search: { param: "search", default: "" },
+  type: { param: "type", default: "all" },
   location: { param: "location", default: "all" },
   service: { param: "service", default: "all" },
 };
@@ -43,6 +45,30 @@ const InnovationEcosystem = () => {
     () => [...new Set((organizations ?? []).flatMap((org) => org.services || []))].sort() as string[],
     [organizations]
   );
+
+  // Data-driven, MULTI-VALUE Type tabs (MES-100 spin-off): an org's `type[]` can list
+  // several roles, so it's counted under each tab. Curated order first, then any novel
+  // value appended so nothing is silently dropped (mirrors the Leads pattern). The cast
+  // is temporary until types.ts is regenerated post-merge with the new `type` column.
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const org of (organizations ?? []) as Array<{ type?: string[] | null }>) {
+      for (const t of org.type ?? []) counts[t] = (counts[t] ?? 0) + 1;
+    }
+    return counts;
+  }, [organizations]);
+  const typeValues = useMemo(() => {
+    const known = getStandardTypes.innovationEcosystem;
+    const inData = Object.keys(typeCounts);
+    return [
+      ...known.filter((t) => inData.includes(t)),
+      ...inData.filter((t) => !known.includes(t)).sort(),
+    ];
+  }, [typeCounts]);
+  const typeTabs: FilterOption[] = [
+    { value: "all", label: "All", count: organizations?.length ?? 0 },
+    ...typeValues.map((t) => ({ value: t, label: t, count: typeCounts[t] ?? 0 })),
+  ];
 
   const selects: SelectFilterConfig[] = [
     { key: "location", allLabel: "All Locations", options: uniqueLocations.map((l) => ({ value: l, label: l })) },
@@ -88,6 +114,7 @@ const InnovationEcosystem = () => {
         noun="organisations"
         shownCount={paginatedOrganizations.length}
         totalCount={filteredOrganizations.length}
+        tabs={{ key: "type", options: typeTabs }}
         search={{ key: "search", placeholder: "Search organizations, services, or locations..." }}
         selects={selects}
       />
