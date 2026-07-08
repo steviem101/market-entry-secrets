@@ -26,7 +26,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ProfileDialog } from "@/components/auth/ProfileDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks } from "@/hooks/useBookmarks";
-import { useMyReports } from "@/hooks/useReport";
+import { useMyMentorMatches, useMyReports } from "@/hooks/useReport";
 import { getInitials, getDisplayName } from "@/lib/profileUtils";
 import { format } from "date-fns";
 
@@ -40,21 +40,12 @@ const MemberHub = () => {
     fetchBookmarks();
   }, [fetchBookmarks]);
 
-  const completedReports = reports?.filter((r: any) => r.status === 'completed') || [];
   const reportsCount = reports?.length || 0;
 
-  // Extract mentor recommendations from completed reports
-  const mentorConnections = completedReports.reduce((acc: any[], report: any) => {
-    const mentors = report.report_json?.matches?.mentor_recommendations;
-    if (Array.isArray(mentors)) {
-      mentors.forEach((mentor: any) => {
-        if (!acc.find((m) => m.name === mentor.name)) {
-          acc.push({ ...mentor, reportId: report.id, reportName: report.user_intake_forms?.company_name });
-        }
-      });
-    }
-    return acc;
-  }, []);
+  // Mentor recommendations come via the tier-gated RPC per completed report;
+  // the my-reports list no longer carries report_json (MES-38).
+  const { data: mentorMatches } = useMyMentorMatches();
+  const mentorConnections: any[] = mentorMatches || [];
 
   const hubSections = [
     {
