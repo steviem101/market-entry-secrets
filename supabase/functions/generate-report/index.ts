@@ -6,7 +6,7 @@ import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shared/scrapeCache.ts";
 import { selectKeyPages } from "./keyPageSelect.ts";
-import { buildCompetitorQueries, dedupeCompetitorResults, domainOf } from "./competitorQueries.ts";
+import { buildCompetitorQueries, dedupeCompetitorResults, domainOf, dropNonCompetitors } from "./competitorQueries.ts";
 import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
@@ -561,15 +561,27 @@ async function searchCompetitors(
     // domains, dedupe by domain, and cap. (domainOf/dedupe are pure + unit-tested.)
     const filtered = dedupeCompetitorResults(searchSets.flat(), [userDomain, ...knownDomains], discoveredCap);
 
+    // Relevance anchor for the extraction LLM: prefer the user's declared
+    // competitors (they define the true product niche by example — "compete with
+    // Equifax, Experian" → credit bureaus, not the FinTech ecosystem at large);
+    // fall back to the broad sector text only when none were provided.
+    const knownNamesForAnchor = (knownCompetitors as Array<{ name?: string }>)
+      .map((c) => (c?.name || "").trim())
+      .filter(Boolean)
+      .slice(0, 3);
+    const nicheAnchor = knownNamesForAnchor.length
+      ? `companies that directly compete with ${knownNamesForAnchor.join(", ")}`
+      : `${industrySectorText} product/service vendors`;
+
     let searchCompetitorsList: CompetitorData[] = [];
     if (filtered.length > 0) {
       const competitorSummaries = await callAI(lovableKey, [
         { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
         {
           role: "user",
-          content: `Analyze these search results about ${industrySectorText} companies in Australia. For each, extract competitor intelligence relevant to ${intake.company_name}.
+          content: `Analyze these search results to find DIRECT competitors of ${intake.company_name} — ${nicheAnchor} in Australia. A direct competitor offers a comparable product or service that a buyer would weigh as an alternative to ${intake.company_name} — NOT merely another company in the same broad sector.
 
-Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"${deep ? `, "au_presence": "their Australian footprint if evident in the result (local office, AU customers/case studies, .com.au). If not evident, 'No Australian presence evident'. Do NOT guess."` : ""}}]${deep ? "\nOnly include genuine commercial vendors — not regulators, directories, news sites, or the company itself." : ""}
+Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"${deep ? `, "au_presence": "their Australian footprint if evident in the result (local office, AU customers/case studies, .com.au). If not evident, 'No Australian presence evident'. Do NOT guess."` : ""}}]${deep ? `\nStrict inclusion: ONLY direct product/service competitors. EXCLUDE service agencies, software-development shops, recruiters, employer-branding/talent platforms, ecosystem/community organisations, regulators, directories, news sites, and ${intake.company_name} itself. If a result is not a direct competitor, omit it — do not include it and then note that it is not a competitor.` : ""}
 
 Search results:
 ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.title}\nContent: ${r.markdown}`).join("\n\n")}`,
@@ -580,9 +592,15 @@ ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.tit
       searchCompetitorsList = JSON.parse(cleanedResp) as CompetitorData[];
     }
 
-    const allCompetitors = [...knownResults, ...searchCompetitorsList];
+    // Suppress discovered rows whose own extracted text self-disqualifies as a
+    // competitor (dev shops, recruiters, employer-branding — the extraction LLM
+    // sometimes surfaces then labels these "not a competitor"). Known competitors
+    // are user-declared and trusted, so they are never filtered.
+    const discovered = dropNonCompetitors(searchCompetitorsList);
+    const suppressed = searchCompetitorsList.length - discovered.length;
+    const allCompetitors = [...knownResults, ...discovered];
 
-    console.log(`Total competitors: ${allCompetitors.length} (${knownResults.length} known + ${searchCompetitorsList.length} discovered; deep=${deep})`);
+    console.log(`Total competitors: ${allCompetitors.length} (${knownResults.length} known + ${discovered.length} discovered${suppressed ? `, ${suppressed} non-competitor(s) suppressed` : ""}; deep=${deep})`);
     return { competitors: allCompetitors, raw_results: filtered, competitor_depth: deep };
   } catch (e) {
     console.error("Competitor search failed (continuing):", e);
