@@ -59,25 +59,47 @@ export function stripContextLabelCitations(
   return out;
 }
 
+export interface KeyMetricLike {
+  label: string;
+  value: string;
+  context: string;
+}
+
 export interface RenumberResult {
   sections: Record<string, { content?: string; [k: string]: unknown }>;
   citations: string[];
   /** Count of distinct sources kept (0 = no-op). */
   remapped: number;
+  /** Renumbered key metrics — present only when keyMetrics was passed in. */
+  keyMetrics?: KeyMetricLike[];
 }
 
 /**
  * @param sections     section-name → { content, ... } map (content carries [N] markers)
  * @param sectionOrder render order of sections; drives first-appearance numbering
  * @param citations    the full 1-based source list ([N] refers to citations[N-1])
+ * @param keyMetrics   optional metric cards whose label/value/context carry [N]
+ *                     markers from the SAME original source list. They render at
+ *                     the top of the report, so their citations count FIRST in
+ *                     first-appearance order, are rewritten with the same remap,
+ *                     and their sources are retained in the new list. Without
+ *                     this, metric-card markers keep the ORIGINAL numbering while
+ *                     prose + Sources are renumbered — a metric showing [4] then
+ *                     points at whatever happens to be 4th in the new list
+ *                     (observed: Infact report, metrics [4] vs prose [9] for the
+ *                     same fact).
  */
 export function renumberCitations(
   sections: Record<string, { content?: string; [k: string]: unknown }>,
   sectionOrder: string[],
   citations: string[],
+  keyMetrics?: KeyMetricLike[],
 ): RenumberResult {
   const cites = Array.isArray(citations) ? citations : [];
-  if (cites.length === 0) return { sections, citations: cites, remapped: 0 };
+  const metrics = Array.isArray(keyMetrics) ? keyMetrics : undefined;
+  if (cites.length === 0) {
+    return { sections, citations: cites, remapped: 0, ...(metrics ? { keyMetrics: metrics } : {}) };
+  }
 
   // Iterate sections in render order first, then any stragglers not in the order,
   // so first-appearance numbering follows what the reader sees.
@@ -89,38 +111,56 @@ export function renumberCitations(
   // 1. Collect used in-range indices in first-appearance order.
   const remap = new Map<number, number>(); // old (1-based) → new (1-based)
   let next = 1;
-  for (const name of ordered) {
-    const content = sections[name]?.content;
-    if (typeof content !== "string") continue;
+  const collect = (text: string) => {
     const re = new RegExp(MARKER_RE.source, "g");
     let m: RegExpExecArray | null;
-    while ((m = re.exec(content)) !== null) {
+    while ((m = re.exec(text)) !== null) {
       const old = parseInt(m[1], 10);
       if (old >= 1 && old <= cites.length && !remap.has(old)) remap.set(old, next++);
     }
+  };
+  // Key metrics render above the first section — count them first.
+  for (const km of metrics || []) collect(`${km.label} ${km.value} ${km.context}`);
+  for (const name of ordered) {
+    const content = sections[name]?.content;
+    if (typeof content === "string") collect(content);
   }
-  if (remap.size === 0) return { sections, citations: cites, remapped: 0 };
+  if (remap.size === 0) {
+    return { sections, citations: cites, remapped: 0, ...(metrics ? { keyMetrics: metrics } : {}) };
+  }
+
+  const rewrite = (text: string) =>
+    text.replace(new RegExp(MARKER_RE.source, "g"), (full, n) => {
+      const nw = remap.get(parseInt(n, 10));
+      return nw ? `[${nw}]` : full; // out-of-range → unchanged
+    });
 
   // 2. Rewrite markers in every section (copy — never mutate input). A single
   //    pass with a lookup avoids the double-rewrite hazard of sequential replaces.
   const outSections: Record<string, { content?: string; [k: string]: unknown }> = {};
   for (const [name, data] of Object.entries(sections)) {
     if (data && typeof data.content === "string") {
-      outSections[name] = {
-        ...data,
-        content: data.content.replace(new RegExp(MARKER_RE.source, "g"), (full, n) => {
-          const nw = remap.get(parseInt(n, 10));
-          return nw ? `[${nw}]` : full; // out-of-range → unchanged
-        }),
-      };
+      outSections[name] = { ...data, content: rewrite(data.content) };
     } else {
       outSections[name] = data;
     }
   }
 
+  // 2b. Rewrite the metric cards with the same remap (copies, never mutate).
+  const outMetrics = metrics?.map((km) => ({
+    label: rewrite(km.label),
+    value: rewrite(km.value),
+    context: rewrite(km.context),
+  }));
+
   // 3. Sources list of exactly the cited sources, in new-number order.
   const newCitations: string[] = new Array(remap.size);
   for (const [old, nw] of remap) newCitations[nw - 1] = cites[old - 1];
 
-  return { sections: outSections, citations: newCitations, remapped: remap.size };
+  return {
+    sections: outSections,
+    citations: newCitations,
+    remapped: remap.size,
+    ...(outMetrics ? { keyMetrics: outMetrics } : {}),
+  };
 }

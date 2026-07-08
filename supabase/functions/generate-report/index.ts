@@ -17,7 +17,9 @@ import { renumberCitations, stripContextLabelCitations } from "./citationRenumbe
 import { expandTargetRegions } from "./targetRegion.ts";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
+import { humanizeMetricLabel } from "./metricLabel.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
@@ -1772,6 +1774,28 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   merged.community_members = dedupMentors;
   merged.investors = dedupInvestors;
 
+  // Persona/origin-aware mentor filter (Floats feedback): a DOMESTIC-origin
+  // company (Australian startup) does not need immigration/visa mentors, but the
+  // scorer surfaced "Head of Community, Techvisa" anyway. Demote (floor-guarded
+  // via preferRelevant, so a thin pool still renders) visa/immigration-dominant
+  // mentors — UNLESS the company is international, or explicitly asked for
+  // immigration / relocation / international-hiring help.
+  if (!isInternationalOrigin(intake.country_of_origin)) {
+    const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
+      `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
+    );
+    if (!wantsImmigration && (merged.community_members || []).length) {
+      const before = merged.community_members.length;
+      merged.community_members = preferRelevant(
+        merged.community_members,
+        (m: any) => !isImmigrationMentor(m),
+        3,
+      );
+      const dropped = before - merged.community_members.length;
+      if (dropped > 0) console.log(`mentor persona filter (domestic): demoted ${dropped} immigration mentor(s)`);
+    }
+  }
+
   // lead_databases is the real catalog; expose it under the report's existing
   // `leads` variable so report_templates needs no change.
   if (merged.lead_databases) { merged.leads = merged.lead_databases; delete merged.lead_databases; }
@@ -1907,7 +1931,7 @@ async function generateReportInBackground(
           // these as plain text). Leave [N] citation markers intact.
           if (m) {
             const clean = (s: string) => s.replace(/\*/g, "").trim();
-            keyMetrics.push({ label: clean(m[1]), value: clean(m[2]), context: clean(m[3]) });
+            keyMetrics.push({ label: humanizeMetricLabel(clean(m[1])), value: clean(m[2]), context: clean(m[3]) });
           }
         }
         // Remove the KEY METRICS section from landscape text to keep it clean
@@ -2227,6 +2251,33 @@ async function generateReportInBackground(
     // D2: emphasise (never hide) the sections the user's selected goals map to.
     const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
 
+    // Key-question "who can help" picks (Floats feedback): pick up to 2 entities
+    // FROM THE ALREADY-MATCHED SLATE most able to help with the user's stated
+    // priority, rendered as cards under the exec-summary answer. Grounded (picks
+    // are matched rows only) and fail-open (no focus / no picks → renders as
+    // before). Computed once here; the exec-summary section attaches the cards.
+    let keyQuestionPicks: PickCard[] = [];
+    if (reportFocus) {
+      try {
+        const candidates = buildPickCandidates(matches);
+        if (candidates.length > 0) {
+          const pickContext = [
+            `${intake.company_name || "The company"} — ${(intake.industry_sector || []).join(" / ") || "sector not specified"}`,
+            `${intake.company_stage || "stage n/a"}, from ${intake.country_of_origin || "unknown"}, entering ${(intake.target_regions || []).join(", ") || "Australia"}`,
+            enrichedSummary ? `Profile: ${String(enrichedSummary).slice(0, 400)}` : "",
+          ].filter(Boolean).join(". ");
+          const aiText = await callAI(lovableKey, [
+            { role: "system", content: "You are a sharp market-entry advisor. Return only valid JSON, no markdown fences." },
+            { role: "user", content: buildPicksPrompt(reportFocus, pickContext, candidates) },
+          ], "google/gemini-3-flash-preview", { temperature: 0.2 });
+          keyQuestionPicks = buildPickCards(matches, parsePicks(aiText, candidates));
+          if (keyQuestionPicks.length > 0) {
+            console.log(`key-question picks: ${keyQuestionPicks.length} (${keyQuestionPicks.map((p) => p.name).join(", ")})`);
+          }
+        }
+      } catch (e) { console.error("key-question picks failed (continuing):", e); }
+    }
+
     // Phase 5: practitioner signal from the synced LinkedIn corpus (synthesis-only).
     // Computed once and injected into every section's system prompt under a strict
     // provenance guardrail. Best-effort: failure leaves reports exactly as before.
@@ -2286,14 +2337,24 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             // competitor_landscape has no directory pool — its prose names the
             // scraped competitors, so render THOSE as cards (B7) instead of the
             // empty getMatchesForSection default, keeping prose and cards aligned.
-            const sectionMatches = tmpl.section_name === "competitor_landscape"
-              ? buildCompetitorCards(competitorResult.competitors)
-              : getMatchesForSection(tmpl.section_name, matches);
+            // executive_summary likewise has no pool, but when the user gave a key
+            // question we attach up to 2 grounded "who can help" picks under the
+            // answer (Floats feedback) with a short lead-in line above them.
+            let sectionMatches: any[];
+            let sectionContent = content;
+            if (tmpl.section_name === "competitor_landscape") {
+              sectionMatches = buildCompetitorCards(competitorResult.competitors);
+            } else if (tmpl.section_name === "executive_summary" && keyQuestionPicks.length > 0) {
+              sectionMatches = keyQuestionPicks;
+              sectionContent = `${content}\n\n**Who from your matches can help with this:**`;
+            } else {
+              sectionMatches = getMatchesForSection(tmpl.section_name, matches);
+            }
 
             return {
               name: tmpl.section_name,
               data: {
-                content,
+                content: sectionContent,
                 visible: willBeVisible,
                 matches: sectionMatches,
               },
@@ -2334,10 +2395,15 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       // polished builds so each stored snapshot is internally consistent.
       // stripContextLabelCitations first: removes "[Cost of Business Data]"-style
       // pseudo-citations of named context variables before the numeric remap.
+      // keyMetrics passed too: metric cards carry [N] markers from the same
+      // original source list and render ABOVE the sections — without renumbering
+      // them alongside, a metric's [4] points at the wrong row of the new
+      // Sources list (Infact report: metrics [4] vs prose [9] for one fact).
       const cited = renumberCitations(
         stripContextLabelCitations(currentSections),
         sectionOrder,
         marketResearch.citations,
+        keyMetrics,
       );
       return {
       company_name: intake.company_name,
@@ -2376,7 +2442,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // (fail-open, zero drops).
         match_rerank: matchRerankInfo,
         polish_applied: polishApplied,
-        key_metrics: keyMetrics,
+        // Renumbered alongside the sections so metric-card [N]s and the stored
+        // Sources list stay 1:1 (falls back to the originals when no citations).
+        key_metrics: cited.keyMetrics ?? keyMetrics,
         discovered_events_count: discoveredEvents.length,
         end_buyer_research_available: !!endBuyerProcurementResearch,
         bilateral_trade_available: !!marketResearch.bilateral_trade,

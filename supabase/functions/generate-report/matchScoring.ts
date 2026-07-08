@@ -334,6 +334,27 @@ export function preferRelevant<T>(rows: T[], isRelevant: (r: T) => boolean, minK
 }
 
 /**
+ * True when a mentor's identity is dominated by immigration / visa / relocation /
+ * global-mobility expertise. Used to demote such mentors for DOMESTIC-origin
+ * companies (an Australian startup does not need visa help — Floats feedback,
+ * where "Head of Community, Techvisa" surfaced for a Sydney startup). Reads the
+ * name/title/company/specialties text; paired with preferRelevant() so the
+ * demotion is floor-guarded (a thin mentor pool still renders).
+ */
+const IMMIGRATION_RE = /\b(visa|visas|immigration|relocation|global mobility|work permit|sponsorship|migrant)\b/i;
+export function isImmigrationMentor(row: Row): boolean {
+  const parts: string[] = [
+    typeof row?.name === "string" ? row.name : "",
+    typeof (row as any)?.title === "string" ? (row as any).title : "",
+    typeof (row as any)?.company === "string" ? (row as any).company : "",
+    typeof (row as any)?.subtitle === "string" ? (row as any).subtitle : "",
+    Array.isArray((row as any)?.specialties) ? (row as any).specialties.join(" ") : "",
+    Array.isArray((row as any)?.tags) ? (row as any).tags.join(" ") : "",
+  ];
+  return IMMIGRATION_RE.test(parts.join(" "));
+}
+
+/**
  * Did this ranked row earn a genuine industry / sells-to sector match (vs. surfacing
  * only via sector_agnostic or a location bonus)? Reads the explainable `match_reasons`
  * that withMatchMeta() attaches, so it works on decorated rows for surfaces that carry
