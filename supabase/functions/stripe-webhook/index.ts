@@ -213,6 +213,8 @@ Deno.serve(async (req: Request) => {
         });
         if (insertErr) logError("stripe-webhook", "Legacy-mode log insert failed", insertErr);
       }
+    }
+
     // Escalate a retriable failure to needs_attention once it has exhausted
     // MAX_PROCESS_ATTEMPTS, so it stops looping 500→retry forever (review #2).
     const attempts = claim.kind === "claimed" ? claim.attempts : 0;
