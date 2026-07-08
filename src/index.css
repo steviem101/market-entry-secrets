@@ -486,23 +486,49 @@
     border: 1px solid #ddd !important;
   }
 
-  /* Links show URL. Only external (http/https) anchors print their href —
-     internal anchors are now absolutized at render time (ReportMatchCard
-     swaps to an absolute <a> with the published origin in print). */
-  a[href^="http"]::after {
-    content: " (" attr(href) ")";
-    font-size: 9pt;
-    color: #666;
-    word-break: break-all;
+  /* Compact match cards: the on-screen card chrome (p-5 padding, h-8 buttons,
+     chip badges) printed ~7 pages of grid across a Scale report. Slim each
+     card to name + subtitle + slim chips + text-sized link lines. */
+  [data-report-section] .p-5 {
+    padding: 6pt 8pt !important;
+  }
+  [data-report-section] .p-5.space-y-3 > * + * {
+    margin-top: 3pt !important;
+  }
+  [data-report-section] .p-5 .text-sm {
+    font-size: 9pt !important;
+  }
+  [data-report-section] .p-5 button {
+    height: auto !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+    font-size: 9pt !important;
+    color: #333 !important;
+  }
+  [data-report-section] .p-5 .rounded-full {
+    padding: 0 4pt !important;
+    font-size: 7.5pt !important;
+  }
+  [data-report-section] .grid.gap-3 {
+    gap: 6pt !important;
   }
 
-  /* Don't show URL for in-page anchors, buttons, or citation badges */
-  a[href^="#"]::after,
-  button a::after,
-  a.no-print-url::after,
-  .inline-citation::after {
-    content: none;
+  /* Never strand the first/last lines of a paragraph alone across a page. */
+  .prose p,
+  .prose li {
+    orphans: 3;
+    widows: 3;
   }
+
+  /* Links print as hyperlinked words ONLY — no raw URL text. Browser
+     print-to-PDF preserves anchors as clickable link annotations (verified:
+     exported reports carry them), so the old a[href^="http"]::after rule that
+     appended " (https://…)" after every external link was pure noise: it
+     wrecked card layouts with wrapped URLs and added pages to the export.
+     Internal anchors are absolutized at render time (ReportMatchCard swaps to
+     an absolute <a> with the published origin in print) so they too survive
+     as working links. */
 
   /* Show inline citations as plain numbers in print */
   .inline-citation {

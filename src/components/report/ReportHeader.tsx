@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Share2, Calendar, Globe, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 import { ReportShareDialog } from './ReportShareDialog';
 import { TIER_LABELS } from './reportSectionConfig';
 
@@ -36,8 +37,29 @@ export const ReportHeader = ({
   readingTimeMinutes,
 }: ReportHeaderProps) => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const handlePrint = () => {
+    // window.print() is a silent no-op inside iframes (e.g. the Lovable
+    // preview shell) and many in-app webviews — the main mobile "Download PDF
+    // does nothing" failure. Escape to a real top-level tab (same URL keeps
+    // the session) and let the user print/save from there.
+    let embedded = false;
+    try {
+      embedded = window.self !== window.top;
+    } catch {
+      embedded = true; // cross-origin parent → definitely framed
+    }
+    if (embedded) {
+      const opened = window.open(window.location.href, '_blank', 'noopener');
+      toast({
+        title: opened ? 'Report opened in a new tab' : 'Pop-up blocked',
+        description: opened
+          ? "Use the browser's Print / Save as PDF from that tab."
+          : 'Open this report in your browser, then use Print / Save as PDF.',
+      });
+      return;
+    }
     window.print();
   };
 

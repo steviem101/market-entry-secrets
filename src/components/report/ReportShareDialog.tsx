@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, Check, Link2, Unlink, Loader2 } from 'lucide-react';
+import { Copy, Check, Link2, Unlink, Loader2, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { reportApi } from '@/lib/api/reportApi';
 
@@ -27,6 +27,7 @@ export const ReportShareDialog = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
   const [copied, setCopied] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const shareUrl = shareToken ? `${BASE_URL}/report/shared/${shareToken}` : null;
 
@@ -56,15 +57,58 @@ export const ReportShareDialog = ({
     }
   };
 
+  // The async clipboard API is blocked in in-app webviews, older iOS, and
+  // sandboxed iframes (e.g. the Lovable preview) — the main mobile "Share does
+  // nothing / Failed to copy" failure. Fall back to selecting the visible
+  // input and using the legacy copy command before giving up.
+  const legacyCopy = (): boolean => {
+    const el = inputRef.current;
+    if (!el) return false;
+    el.focus();
+    el.select();
+    el.setSelectionRange(0, el.value.length);
+    try {
+      return document.execCommand('copy');
+    } catch {
+      return false;
+    }
+  };
+
   const handleCopy = async () => {
     if (!shareUrl) return;
+    let ok = false;
     try {
       await navigator.clipboard.writeText(shareUrl);
+      ok = true;
+    } catch {
+      ok = legacyCopy();
+    }
+    if (ok) {
       setCopied(true);
       toast({ title: 'Copied!', description: 'Share link copied to clipboard.' });
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast({ title: 'Error', description: 'Failed to copy link.', variant: 'destructive' });
+    } else {
+      // Leave the URL selected in the input so a manual copy is one gesture away.
+      legacyCopy();
+      toast({
+        title: 'Copy blocked by this browser',
+        description: 'The link is selected above — copy it manually.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Native share sheet — the reliable path on mobile (works in webviews where
+  // both clipboard and window.print are blocked).
+  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+  const handleNativeShare = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.share({ title: 'Market Entry Report', url: shareUrl });
+    } catch (e) {
+      // AbortError = user closed the sheet; anything else, fall back to copy.
+      if ((e as DOMException)?.name !== 'AbortError') await handleCopy();
     }
   };
 
@@ -86,6 +130,7 @@ export const ReportShareDialog = ({
             <>
               <div className="flex items-center gap-2">
                 <Input
+                  ref={inputRef}
                   readOnly
                   value={shareUrl}
                   className="text-sm font-mono"
@@ -100,6 +145,12 @@ export const ReportShareDialog = ({
                   {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                 </Button>
               </div>
+              {canNativeShare && (
+                <Button onClick={handleNativeShare} className="w-full gap-2">
+                  <Share2 className="w-4 h-4" />
+                  Share…
+                </Button>
+              )}
               <p className="text-xs text-muted-foreground">
                 Anyone with this link can view the report sections that were available at your subscription tier when the report was generated.
               </p>
