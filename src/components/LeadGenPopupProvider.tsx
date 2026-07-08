@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useTimerTrigger } from "@/hooks/useTimerTrigger";
 import { REPORT_CTA_LABEL, REPORT_CTA_MICROCOPY } from "@/config/reportCta";
 import { useAuth } from "@/hooks/useAuth";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 
@@ -65,12 +65,12 @@ export const LeadGenPopupProvider = ({ children }: LeadGenPopupProviderProps) =>
             <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl mb-4">
               <Sparkles className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">
+            <DialogTitle className="text-xl font-bold text-white mb-2">
               Get Your Free Market Entry Report
-            </h3>
-            <p className="text-white/80 text-sm">
+            </DialogTitle>
+            <DialogDescription className="text-white/80 text-sm">
               Tailored insights for your Australian market entry
-            </p>
+            </DialogDescription>
           </div>
 
           {/* Benefits */}
