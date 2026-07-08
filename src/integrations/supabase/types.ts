@@ -522,6 +522,7 @@ export type Database = {
           anonymous_headline: string | null
           archetype: string | null
           associated_countries: string[] | null
+          avatar_url: string | null
           company: string | null
           contact: string | null
           created_at: string
@@ -533,6 +534,7 @@ export type Database = {
           is_active: boolean | null
           is_anonymous: boolean
           is_featured: boolean | null
+          linkedin_url: string | null
           location: string
           location_id: string | null
           market_corridors: string[] | null
@@ -554,6 +556,7 @@ export type Database = {
           anonymous_headline?: string | null
           archetype?: string | null
           associated_countries?: string[] | null
+          avatar_url?: string | null
           company?: string | null
           contact?: string | null
           created_at?: string
@@ -565,6 +568,7 @@ export type Database = {
           is_active?: boolean | null
           is_anonymous?: boolean
           is_featured?: boolean | null
+          linkedin_url?: string | null
           location: string
           location_id?: string | null
           market_corridors?: string[] | null
@@ -586,6 +590,7 @@ export type Database = {
           anonymous_headline?: string | null
           archetype?: string | null
           associated_countries?: string[] | null
+          avatar_url?: string | null
           company?: string | null
           contact?: string | null
           created_at?: string
@@ -597,6 +602,7 @@ export type Database = {
           is_active?: boolean | null
           is_anonymous?: boolean
           is_featured?: boolean | null
+          linkedin_url?: string | null
           location?: string
           location_id?: string | null
           market_corridors?: string[] | null
@@ -620,6 +626,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      contact_image_imports: {
+        Row: {
+          batch_id: string
+          company: string | null
+          content_hash: string | null
+          created_at: string
+          email: string | null
+          error: string | null
+          full_name: string | null
+          id: string
+          image_url: string | null
+          linkedin_url: string | null
+          linkedin_url_normalized: string | null
+          match_method: string | null
+          matched_record_id: string | null
+          matched_table: string | null
+          photo_source: string | null
+          raw_row: Json | null
+          source: string | null
+          status: string
+          storage_path: string | null
+          storage_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          company?: string | null
+          content_hash?: string | null
+          created_at?: string
+          email?: string | null
+          error?: string | null
+          full_name?: string | null
+          id?: string
+          image_url?: string | null
+          linkedin_url?: string | null
+          linkedin_url_normalized?: string | null
+          match_method?: string | null
+          matched_record_id?: string | null
+          matched_table?: string | null
+          photo_source?: string | null
+          raw_row?: Json | null
+          source?: string | null
+          status?: string
+          storage_path?: string | null
+          storage_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          company?: string | null
+          content_hash?: string | null
+          created_at?: string
+          email?: string | null
+          error?: string | null
+          full_name?: string | null
+          id?: string
+          image_url?: string | null
+          linkedin_url?: string | null
+          linkedin_url_normalized?: string | null
+          match_method?: string | null
+          matched_record_id?: string | null
+          matched_table?: string | null
+          photo_source?: string | null
+          raw_row?: Json | null
+          source?: string | null
+          status?: string
+          storage_path?: string | null
+          storage_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       content_bodies: {
         Row: {
@@ -2754,6 +2832,7 @@ export type Database = {
           sectors: string[] | null
           services: string[]
           slug: string
+          type: string[] | null
           updated_at: string
           website: string | null
           why_work_with_us: string | null
@@ -2778,6 +2857,7 @@ export type Database = {
           sectors?: string[] | null
           services?: string[]
           slug: string
+          type?: string[] | null
           updated_at?: string
           website?: string | null
           why_work_with_us?: string | null
@@ -2802,6 +2882,7 @@ export type Database = {
           sectors?: string[] | null
           services?: string[]
           slug?: string
+          type?: string[] | null
           updated_at?: string
           website?: string | null
           why_work_with_us?: string | null
@@ -2904,6 +2985,7 @@ export type Database = {
       investors: {
         Row: {
           application_url: string | null
+          avatar_url: string | null
           basic_info: string | null
           check_size_max: number | null
           check_size_min: number | null
@@ -2938,6 +3020,7 @@ export type Database = {
         }
         Insert: {
           application_url?: string | null
+          avatar_url?: string | null
           basic_info?: string | null
           check_size_max?: number | null
           check_size_min?: number | null
@@ -2972,6 +3055,7 @@ export type Database = {
         }
         Update: {
           application_url?: string | null
+          avatar_url?: string | null
           basic_info?: string | null
           check_size_max?: number | null
           check_size_min?: number | null
@@ -5039,6 +5123,7 @@ export type Database = {
         Row: {
           archetype: string | null
           associated_countries: string[] | null
+          avatar_url: string | null
           company: string | null
           created_at: string | null
           description: string | null
@@ -5065,6 +5150,7 @@ export type Database = {
         Insert: {
           archetype?: string | null
           associated_countries?: string[] | null
+          avatar_url?: never
           company?: never
           created_at?: string | null
           description?: never
@@ -5091,6 +5177,7 @@ export type Database = {
         Update: {
           archetype?: string | null
           associated_countries?: string[] | null
+          avatar_url?: never
           company?: never
           created_at?: string | null
           description?: never
