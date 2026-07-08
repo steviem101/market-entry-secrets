@@ -14,14 +14,14 @@ const STEPS: Step[] = [
     iconColor: "from-primary/15 to-primary/5 text-primary",
     title: "Tell us about your company",
     description:
-      "Answer a few questions about your industry, target region, and goals. Takes under 5 minutes — no credit card required.",
+      "Answer a few quick questions about your industry, target region, and goals. No credit card required.",
   },
   {
     icon: Cpu,
     iconColor: "from-primary/15 to-accent/5 text-primary",
     title: "AI builds your market entry plan",
     description:
-      "Our engine scrapes live data, analyses competitors, maps the market, and matches you with vetted providers — in minutes, not months.",
+      "Our engine scrapes live data, analyses competitors, maps the market, and matches you with vetted providers, all in minutes, not months.",
   },
   {
     icon: Users,
@@ -43,7 +43,7 @@ export const HowItWorksSection = () => {
               How it works
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              From first question to a ready-to-act plan in under 10 minutes
+              From a few quick questions to a ready-to-act plan
             </p>
           </div>
 

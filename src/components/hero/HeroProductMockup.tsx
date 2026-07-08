@@ -25,7 +25,7 @@ const ReportPreview = () => {
             Executive Summary
           </div>
           <div className="text-xs text-muted-foreground">
-            {scenario.companyName} &mdash; {scenario.industry}
+            {scenario.companyName} &middot; {scenario.industry}
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@ const ReportPreview = () => {
       <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
         <span>
-          Report generated &mdash; 12 sections
+          Report generated &middot; 12 sections
         </span>
       </div>
     </div>

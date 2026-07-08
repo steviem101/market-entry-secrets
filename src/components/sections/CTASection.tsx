@@ -9,13 +9,13 @@ export const CTASection = () => {
       <div className="relative container mx-auto px-4 text-center">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            <span className="text-primary">Ready to enter</span>
+            <span className="text-primary">Ready to grow</span>
             <br />
-            <span className="text-foreground">the Australian market?</span>
+            <span className="text-foreground">in the Australian market?</span>
           </h2>
           <p className="text-xl mb-10 text-muted-foreground leading-relaxed max-w-2xl mx-auto">
             Tell us about your company and get a tailored market entry report in
-            minutes — built from live market intelligence, vetted providers, and
+            minutes, built from live market intelligence, vetted providers, and
             mentors who have done it before.
           </p>
           <ReportCTAButton withMicrocopy />
