@@ -381,6 +381,21 @@ export function textMatchesAnyToken(haystackParts: Array<string | string[] | nul
   return tokens.some((t) => t && t.length >= 3 && hay.includes(t.toLowerCase()));
 }
 
+/**
+ * ICP tokens for the lead-list relevance gate: a purchasable lead list should
+ * match who the company SELLS TO. Prefer the declared end-buyer industries (the
+ * true ICP); fall back to the company's own sector as a proxy ONLY when no
+ * buyer signal was given. Paired with a STRICT filter (no floor-backfill) so an
+ * unmatched list is dropped, not padded in — the Floats report surfaced
+ * "Recently Funded Australian Startups" purely as count-filler. Returns [] only
+ * when neither signal exists (caller then shows nothing → the custom-list
+ * request box is the escape hatch).
+ */
+export function leadIcpTokens(endBuyerIndustries: string[], industrySector: string[]): string[] {
+  const buyer = industryTokens(endBuyerIndustries || []);
+  return buyer.length ? buyer : industryTokens(industrySector || []);
+}
+
 /** Lowercased word/slug tokens from human industry labels, for textMatchesAnyToken. */
 export function industryTokens(labels: string[]): string[] {
   const out = new Set<string>();
