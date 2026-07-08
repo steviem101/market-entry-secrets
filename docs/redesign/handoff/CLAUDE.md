@@ -1,7 +1,12 @@
 # CLAUDE.md — repo conventions for Claude Code
 
-> Drop this at the **root** of `steviem101/market-entry-secrets`. Claude Code loads it automatically
-> every session, so these conventions are always in context.
+> **SUPERSEDED (MES-115, 2026-07-07): historical handoff artefact — do NOT copy this file to the
+> repo root.** The maintained root `CLAUDE.md` already exists and covers current repo context;
+> intake v2 has since shipped as the default `/report-creator` flow. Kept for the redesign-specific
+> guardrails below.
+
+> ~~Drop this at the **root** of `steviem101/market-entry-secrets`.~~ Claude Code loads the root
+> file automatically every session, so those conventions are always in context.
 
 ## Active project: Intake v2 redesign (`/report-creator`)
 

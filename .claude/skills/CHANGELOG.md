@@ -3,6 +3,11 @@
 Log every skill gap, wrong rule, or contradiction you find here (newest first), so it can be
 fixed in a follow-up PR. Format: `- YYYY-MM-DD [skill-name] what was wrong/missing — found while <task>`.
 
+- 2026-07-07 [mes-codebase-conventions] `user_intake_forms` and `user_reports` ARE present in the
+  generated `src/integrations/supabase/types.ts` (L4675, L4777), so "tables missing from generated
+  types use the `(supabase as any)` cast" no longer describes why `reportApi.ts` casts — the cast
+  is legacy style there, not a necessity — found while auditing/rewriting root CLAUDE.md (MES-115).
+
 ## 2026-07-07 — Opus exam dry-run results + skill correction (MES-113 test plan)
 
 Ran the ticket's 4 Opus dry-run evaluation tasks against the merged library, graded each with the
