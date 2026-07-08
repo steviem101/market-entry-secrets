@@ -21,7 +21,8 @@ const PersonModal = ({ person, isOpen, onClose }: PersonModalProps) => {
   const { requestIntro } = useIntroRequest();
   if (!person) return null;
 
-  const displayName = person.isAnonymous ? person.title : person.name;
+  // Anonymous people: the view masks `name` to the alias (richer, safe label).
+  const displayName = person.name;
 
   // Placeholder images for person profile pictures
   const getPersonImage = (index: number) => {
@@ -58,12 +59,10 @@ const PersonModal = ({ person, isOpen, onClose }: PersonModalProps) => {
                 <DialogTitle className="text-2xl font-bold mb-2">
                   {displayName}
                 </DialogTitle>
-                {!person.isAnonymous && (
-                  <p className="text-primary font-medium text-lg mb-2">
-                    {person.title}
-                  </p>
-                )}
-                {person.company && (
+                <p className="text-primary font-medium text-lg mb-2">
+                  {person.title}
+                </p>
+                {!person.isAnonymous && person.company && (
                   <p className="text-muted-foreground mb-2">
                     {person.company}
                   </p>
