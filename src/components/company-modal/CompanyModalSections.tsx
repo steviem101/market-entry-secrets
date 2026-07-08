@@ -1,8 +1,8 @@
 
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Company } from "../CompanyCard";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { domainToWebsite } from "@/lib/logoUtils";
 
 interface CompanyModalSectionsProps {
@@ -10,14 +10,12 @@ interface CompanyModalSectionsProps {
   experienceTiles: any[];
   contactPersons: any[];
   getExperienceTileImage?: (index: number) => string;
-  getContactPersonImage: (index: number) => string;
 }
 
 export const CompanyModalSections = ({
   company,
   experienceTiles,
-  contactPersons,
-  getContactPersonImage
+  contactPersons
 }: CompanyModalSectionsProps) => {
   return (
     <div className="space-y-6">
@@ -75,14 +73,9 @@ export const CompanyModalSections = ({
         <section>
           <h3 className="text-lg font-semibold mb-3">Contact person(s)</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {contactPersons.map((person, index) => (
+            {contactPersons.map((person) => (
               <div key={person.id} className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {(person.name || '?').split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase() || '?'}
-                  </AvatarFallback>
-                </Avatar>
+                <ContactAvatar name={person.name} src={person.image} className="w-12 h-12" />
                 <div>
                   <div className="font-medium">{person.name}</div>
                   {person.role && (

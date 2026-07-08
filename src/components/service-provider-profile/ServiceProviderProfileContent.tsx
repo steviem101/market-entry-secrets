@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Company } from "@/components/CompanyCard";
-import { parseJsonArray, getContactPersonImage } from "@/components/company-card/CompanyCardHelpers";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { parseJsonArray } from "@/components/company-card/CompanyCardHelpers";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { ServiceProviderReviews } from "./ServiceProviderReviews";
 import { ServiceProviderSidebar } from "./ServiceProviderSidebar";
 import CompanyLogo from "@/components/shared/CompanyLogo";
@@ -127,14 +127,9 @@ export const ServiceProviderProfileContent = ({
             <section>
               <h2 className="text-2xl font-semibold mb-4">Contact Persons</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {contactPersons.map((person, index) => (
+                {contactPersons.map((person) => (
                   <div key={person.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                    <Avatar className="w-14 h-14">
-                      <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {(person.name || '').split(' ').filter(Boolean).map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <ContactAvatar name={person.name} src={person.image} className="w-14 h-14" />
                     <div>
                       <p className="font-medium">{person.name}</p>
                       {person.role && (

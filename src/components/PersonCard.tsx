@@ -2,9 +2,9 @@
 import { memo } from "react";
 import { User, MapPin, Calendar, Globe, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { domainToWebsite } from "@/lib/logoUtils";
 import { DirectoryCard } from "@/components/directory/DirectoryCard";
 import { CardCTA } from "@/components/directory/CardCTA";
@@ -42,40 +42,16 @@ interface PersonCardProps {
 
 const PersonCard = memo(({ person, onViewProfile }: PersonCardProps) => {
   const displayName = person.isAnonymous ? person.title : person.name;
-  const shouldBlurImage = person.isAnonymous;
-
-  // Placeholder images for person profile pictures
-  const getPersonImage = (index: number) => {
-    const images = [
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    ];
-    return images[index % images.length];
-  };
 
   return (
     <DirectoryCard className="min-w-0">
       <div className="flex items-start gap-4 mb-4">
-        <Avatar className="w-16 h-16 flex-shrink-0">
-          {person.isAnonymous ? (
-            <AvatarFallback className="bg-primary/10 text-primary text-lg">
-              <User className="w-8 h-8" />
-            </AvatarFallback>
-          ) : (
-            <>
-              <AvatarImage 
-                src={person.image || getPersonImage(parseInt(person.id) || 0)} 
-                alt={person.name}
-                className={shouldBlurImage ? "blur-sm" : ""}
-              />
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-              </AvatarFallback>
-            </>
-          )}
-        </Avatar>
+        <ContactAvatar
+          name={person.name}
+          src={person.isAnonymous ? undefined : person.image}
+          className="w-16 h-16 flex-shrink-0 text-lg"
+          fallback={person.isAnonymous ? <User className="w-8 h-8" /> : undefined}
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 min-w-0">
             <div className="flex-1 min-w-0">

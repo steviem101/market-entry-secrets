@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Globe, Mail, DollarSign, Target, Building2, Newspaper, ExternalLink, BookOpen } from "lucide-react";
 import InvestorCard from "../InvestorCard";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 
 type SourceEntry = { label: string; url: string };
 
@@ -42,6 +43,7 @@ interface InvestorContentProps {
     basic_info: string | null;
     why_work_with_us: string | null;
     portfolio_companies: string[] | null;
+    avatar_url: string | null;
     details: any;
   };
   relatedInvestors: any[];
@@ -278,6 +280,16 @@ export const InvestorContent = ({ investor, relatedInvestors }: InvestorContentP
                   >
                     {investor.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                   </a>
+                </div>
+              )}
+              {investor.contact_name && (
+                <div className="flex items-center gap-3 text-sm pt-1">
+                  <ContactAvatar
+                    name={investor.contact_name}
+                    src={investor.avatar_url}
+                    className="w-10 h-10 text-xs"
+                  />
+                  <span className="font-medium text-foreground">{investor.contact_name}</span>
                 </div>
               )}
               {investor.contact_email && (
