@@ -71,6 +71,12 @@ verify_jwt = true
 [functions.stripe-webhook]
 verify_jwt = false
 
+[functions.stripe-webhook-reconcile]
+# Replays unprocessed payment_webhook_logs rows + Slack-alerts stale ones (MES-39).
+# x-internal-secret == STRIPE_RECONCILE_SECRET (fallback EMAIL_INTERNAL_SECRET),
+# same pattern as process-email-queue. Must stay false for cron POSTs (no JWT).
+verify_jwt = false
+
 [functions.ai-chat]
 verify_jwt = true
 
