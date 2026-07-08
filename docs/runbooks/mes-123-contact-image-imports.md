@@ -66,10 +66,28 @@ A row with no `image_url` is stored `failed` (`no_image_url`).
 |-------|---------|--------|
 | `path` | — | CSV path in the `imports` bucket. Triggers ingest. |
 | `source` | `auto` | `lemlist` \| `phantombuster` \| `auto` — recorded as `photo_source = linkedin:<source>`. |
-| `dryRun` | `false` | Match + report only; no Storage upload, no record writes. |
+| `dryRun` | `false` | Match + report only; no Storage upload, no record writes. Also **probes a sample of image URLs** and reports expiry (403). |
 | `overwrite` | `false` | Replace records that already have a real avatar. Off = skip them. |
+| `applyNameMatches` | `false` | Apply rows held as `needs_review` for **name-only** matches (see gates below). Off = they stay held. |
+| `includeColdContacts` | `false` | Write **cold-scraped** surfaces (agency contacts, investors). Off = they stay held as `needs_review`. |
 | `batchSize` | `30` | Rows processed per invocation (max 50). |
 | `action` | auto | `ingest` \| `process` \| `ingest_and_process`. Defaults to ingest+process when `path` is set, else process. |
+
+### Two safety gates (rows are held, not written, by default)
+Matched rows are **not always auto-written** — two gates route risky matches to `needs_review`
+(the audit trail records the reason; nothing is written until you approve):
+1. **Name-only matches** (matched on name+organisation, with no LinkedIn/email key — the case for
+   mentors, provider-JSONB and innovation-JSONB in today's data) → held. Putting the wrong face on
+   a profile is this feature's worst failure, so these need a human. Review the held rows in
+   `contact_image_imports` (`status='needs_review'`, `error='name_only_review…'`), then re-run the
+   same batch with `applyNameMatches: true` to apply the ones you trust.
+2. **Cold-scraped surfaces** (`agency_contacts`, `investors` — people who never opted into MES) →
+   held. Publishing scraped headshots is a distinct privacy/ToS decision from participants
+   (mentors, listed provider reps). **Backfill participants first**; only after you've settled the
+   privacy posture and takedown mechanism, re-run with `includeColdContacts: true`.
+
+LinkedIn/email matches to participant surfaces auto-apply. A row matching both a participant and a
+cold surface writes the participant now and reports the cold target as gated.
 
 ## Matching rules (how a row finds its record)
 Precedence: **normalised LinkedIn URL → exact email → exact name + organisation.** LinkedIn URLs
@@ -79,8 +97,10 @@ several directories → it writes to **all** of them (fan-out). Two or more **di
 never fabricated. Anonymous mentors are excluded from matching (their photo is never published).
 
 Note: provider-JSONB, innovation-JSONB, and mentor records have no `linkedin_url`/`email` in the
-live data today, so those surfaces match on **name + company** only — verify those matches in the
-dry run before going live. Agency contacts and investors carry LinkedIn URLs and match cleanly.
+live data today, so those surfaces match on **name + company** only — and are therefore **held for
+review by default** (gate 1 above), not auto-written. Agency contacts and investors carry LinkedIn
+URLs and match cleanly, but are **cold-scraped and held by default** (gate 2). The safe first
+backfill — LinkedIn-matched participants — happens with no extra flags.
 
 ## Idempotency & re-runs
 - Ingest skips a `batch_id` that already has rows.

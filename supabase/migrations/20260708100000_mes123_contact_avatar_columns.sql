@@ -91,3 +91,17 @@ CREATE OR REPLACE VIEW public.community_members_public WITH (security_invoker = 
             ELSE avatar_url
         END AS avatar_url
    FROM public.community_members;
+
+-- Regression guard for the anonymity chokepoint (this view has now been re-created twice).
+-- Fails the migration on any future edit that drops avatar_url or unmasks it for anonymous
+-- members. Runs on every apply — preview branches and prod.
+DO $$
+DECLARE v text := pg_get_viewdef('public.community_members_public'::regclass, true);
+BEGIN
+  IF position('avatar_url' IN v) = 0 THEN
+    RAISE EXCEPTION 'community_members_public must expose avatar_url';
+  END IF;
+  IF v !~ 'WHEN is_anonymous THEN NULL::text[[:space:]]+ELSE avatar_url' THEN
+    RAISE EXCEPTION 'community_members_public.avatar_url must be masked to NULL for anonymous members';
+  END IF;
+END $$;

@@ -23,6 +23,7 @@ import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { normalizeLinkedInUrl, normalizeKey } from "./linkedin.ts";
 import { buildContactRows } from "./csv.ts";
 import { matchRow, type Candidate } from "./matching.ts";
+import { decideDisposition } from "./disposition.ts";
 
 const PREFIX = "import-contact-images";
 const AVATARS_BUCKET = "avatars";
@@ -33,6 +34,8 @@ const JPEG_QUALITY = 82;
 const DEFAULT_BATCH = 30;
 const MAX_BATCH = 50;
 const FETCH_TIMEOUT_MS = 15000;
+const URL_PROBE_SAMPLE = 5;
+
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -268,17 +271,29 @@ async function ingestCsv(
 
 // ─── process one batch ─────────────────────────────────────────────────────────
 
-async function processBatch(
-  supabase: any, opts: { batchId?: string; batchSize: number; dryRun: boolean; overwrite: boolean },
-): Promise<Record<string, number>> {
+interface ProcessOpts {
+  batchId?: string;
+  batchSize: number;
+  dryRun: boolean;
+  overwrite: boolean;
+  applyNameMatches: boolean;   // opt-in to apply name-only (no linkedin/email) matches
+  includeColdContacts: boolean; // opt-in to write cold-scraped surfaces (agency/investor)
+}
+
+async function processBatch(supabase: any, opts: ProcessOpts): Promise<Record<string, number>> {
   const candidates = await loadCandidates(supabase);
 
-  let q = supabase.from("contact_image_imports").select("*").eq("status", "pending").order("created_at").limit(opts.batchSize);
+  // Held rows (needs_review) are only re-processed when the matching approval flag is set.
+  const statuses = ["pending"];
+  if (opts.applyNameMatches || opts.includeColdContacts) statuses.push("needs_review");
+
+  let q = supabase.from("contact_image_imports").select("*").in("status", statuses).order("created_at").limit(opts.batchSize);
   if (opts.batchId) q = q.eq("batch_id", opts.batchId);
   const { data: pending, error } = await q;
   if (error) throw error;
 
-  const tally: Record<string, number> = { matched: 0, uploaded: 0, skipped: 0, failed: 0 };
+  const tally: Record<string, number> = { matched: 0, needs_review: 0, uploaded: 0, skipped: 0, failed: 0 };
+  const probeUrls: string[] = [];
 
   for (const row of pending ?? []) {
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -299,18 +314,37 @@ async function processBatch(
       patch.matched_table = result.targets.map((t) => t.table).join(",");
       patch.matched_record_id = result.targets.map((t) => `${t.table}:${t.recordId}`).join(",");
 
-      if (opts.dryRun) {
-        patch.status = "matched"; patch.error = null; tally.matched++;
+      // Safety gates: name-only matches and cold-scraped surfaces are held (needs_review), never
+      // auto-written, unless explicitly approved (applyNameMatches / includeColdContacts).
+      const disposition = decideDisposition(result, {
+        applyNameMatches: opts.applyNameMatches, includeColdContacts: opts.includeColdContacts,
+      });
+      if (disposition.action === "needs_review") {
+        patch.status = "needs_review"; patch.error = disposition.reason;
+        tally.needs_review++;
         await supabase.from("contact_image_imports").update(patch).eq("id", row.id);
+        if (row.image_url) probeUrls.push(row.image_url);
+        continue;
+      }
+      // `failed` is already handled above via result.status; this narrows the union to `write`.
+      if (disposition.action !== "write") continue;
+      const writable = disposition.targets;
+      const heldCold = disposition.heldCold;
+
+      if (opts.dryRun) {
+        patch.status = "matched";
+        patch.error = heldCold > 0 ? `${heldCold} cold target(s) gated` : null;
+        tally.matched++;
+        await supabase.from("contact_image_imports").update(patch).eq("id", row.id);
+        if (row.image_url) probeUrls.push(row.image_url);
         continue;
       }
 
-      // Live: fetch + process once, then fan out the write to every target.
+      // Live: fetch + process once, then fan out the write to every writable target.
       const img = await fetchAndProcess(row.image_url ?? "");
       let wrote = 0, skipped = 0;
-      for (const target of result.targets) {
-        const outcome0 = !opts.overwrite && hasRealAvatar(target.existingAvatar);
-        if (outcome0) { skipped++; continue; }
+      for (const target of writable) {
+        if (!opts.overwrite && hasRealAvatar(target.existingAvatar)) { skipped++; continue; }
         const path = storagePath(target.table, target.recordId, img.hash8);
         const { error: upErr } = await supabase.storage.from(AVATARS_BUCKET).upload(path, img.bytes, {
           contentType: "image/jpeg", upsert: true,
@@ -322,8 +356,9 @@ async function processBatch(
         else skipped++;
       }
 
-      if (wrote > 0) { patch.status = "uploaded"; patch.error = null; tally.uploaded++; }
-      else { patch.status = "skipped"; patch.error = "already had avatar (use overwrite)"; tally.skipped++; }
+      const note = heldCold > 0 ? ` (${heldCold} cold target(s) gated)` : "";
+      if (wrote > 0) { patch.status = "uploaded"; patch.error = note.trim() || null; tally.uploaded++; }
+      else { patch.status = "skipped"; patch.error = `already had avatar (use overwrite)${note}`; tally.skipped++; }
       await supabase.from("contact_image_imports").update(patch).eq("id", row.id);
     } catch (e) {
       patch.status = "failed";
@@ -333,6 +368,30 @@ async function processBatch(
       logError(PREFIX, `row ${row.id} failed`, e);
     }
   }
+
+  // Dry-run: probe a sample of image URLs so expiry (403) is caught BEFORE the live run, not
+  // silently on every row. LinkedIn CDN URLs die fast — this fails loudly with "re-export needed".
+  if (opts.dryRun && probeUrls.length > 0) {
+    const sample = probeUrls.slice(0, URL_PROBE_SAMPLE);
+    let ok = 0, expired = 0, other = 0;
+    for (const url of sample) {
+      try {
+        if (isPrivateOrReservedUrl(url)) { other++; continue; }
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+        const resp = await fetch(url, { signal: ctrl.signal, redirect: "follow", headers: { Range: "bytes=0-0" } });
+        clearTimeout(timer);
+        if (resp.status === 403) expired++;
+        else if (resp.ok || resp.status === 206) ok++;
+        else other++;
+      } catch { other++; }
+    }
+    tally.probe_checked = sample.length;
+    tally.probe_ok = ok;
+    tally.probe_expired = expired;
+    if (expired > 0) logError(PREFIX, `URL expiry probe: ${expired}/${sample.length} returned 403 — export is stale, re-export before the live run`, {});
+  }
+
   return tally;
 }
 
@@ -357,12 +416,14 @@ Deno.serve(async (req) => {
   const source: string = (body.source ?? "auto").toString().toLowerCase();
   const dryRun = body.dryRun === true;
   const overwrite = body.overwrite === true;
+  const applyNameMatches = body.applyNameMatches === true;
+  const includeColdContacts = body.includeColdContacts === true;
   const batchSize = Math.min(Math.max(Number(body.batchSize) || DEFAULT_BATCH, 1), MAX_BATCH);
   const path: string | undefined = body.path;
   // Derive a stable batchId from the file path when not provided (keeps re-invocations idempotent).
   const batchId: string | undefined = body.batchId ?? (path ? `csv:${path}` : undefined);
 
-  const summary: Record<string, unknown> = { action, source, dryRun, overwrite, batchId };
+  const summary: Record<string, unknown> = { action, source, dryRun, overwrite, applyNameMatches, includeColdContacts, batchId };
 
   try {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -374,15 +435,19 @@ Deno.serve(async (req) => {
     }
 
     if (action === "process" || action === "ingest_and_process") {
-      log(PREFIX, "process", { batchId, batchSize, dryRun, overwrite });
-      summary.processed = await processBatch(supabase, { batchId, batchSize, dryRun, overwrite });
+      log(PREFIX, "process", { batchId, batchSize, dryRun, overwrite, applyNameMatches, includeColdContacts });
+      summary.processed = await processBatch(supabase, { batchId, batchSize, dryRun, overwrite, applyNameMatches, includeColdContacts });
     }
 
-    // Remaining pending count so the caller knows whether to re-invoke.
-    let pq = supabase.from("contact_image_imports").select("id", { count: "exact", head: true }).eq("status", "pending");
-    if (batchId) pq = pq.eq("batch_id", batchId);
-    const { count: remaining } = await pq;
-    summary.remaining_pending = remaining ?? 0;
+    // Remaining counts so the caller knows whether to re-invoke and what is held for review.
+    const countByStatus = async (status: string) => {
+      let cq = supabase.from("contact_image_imports").select("id", { count: "exact", head: true }).eq("status", status);
+      if (batchId) cq = cq.eq("batch_id", batchId);
+      const { count } = await cq;
+      return count ?? 0;
+    };
+    summary.remaining_pending = await countByStatus("pending");
+    summary.needs_review = await countByStatus("needs_review");
 
     return new Response(JSON.stringify({ ok: true, ...summary }), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) {

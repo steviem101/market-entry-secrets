@@ -24,8 +24,11 @@ CREATE TABLE IF NOT EXISTS public.contact_image_imports (
   content_hash             text,
   storage_path             text,
   storage_url              text,                    -- permanent avatars-bucket URL written to the record
+  -- needs_review: held pending a human decision — name-only matches (no LinkedIn/email key) and
+  -- cold-scraped surfaces (agency/investor contacts) are NEVER auto-written; an admin re-runs with
+  -- an explicit approval flag to apply them.
   status                   text NOT NULL DEFAULT 'pending'
-                             CHECK (status IN ('pending','matched','uploaded','failed','skipped')),
+                             CHECK (status IN ('pending','matched','needs_review','uploaded','failed','skipped')),
   error                    text,
   created_at               timestamptz NOT NULL DEFAULT now(),
   updated_at               timestamptz NOT NULL DEFAULT now()
