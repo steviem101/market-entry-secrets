@@ -28,7 +28,7 @@ const SectorPage = () => {
   const { data: innovationEcosystem = [], isLoading: innovationLoading } = useSectorInnovationEcosystem(sectorSlug || '', sectorConfig?.keywords);
   const { data: investors = [], isLoading: investorsLoading } = useSectorInvestors(sectorSlug || '', sectorConfig?.keywords);
   const { data: tradeAgencies = [], isLoading: tradeLoading } = useSectorTradeAgencies(sectorSlug || '', sectorConfig?.keywords);
-  const { data: contentItems = [], isLoading: contentLoading } = useSectorContent(sectorSlug || '', sectorConfig?.content_keywords);
+  const { data: contentItems = [], isLoading: contentLoading } = useSectorContent(sectorSlug || '', sectorConfig?.content_keywords, sectorConfig?.canonical_sector_slugs);
 
   if (sectorLoading) {
     return (
