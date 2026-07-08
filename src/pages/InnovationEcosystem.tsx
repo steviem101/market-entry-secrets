@@ -48,11 +48,10 @@ const InnovationEcosystem = () => {
 
   // Data-driven, MULTI-VALUE Type tabs (MES-100 spin-off): an org's `type[]` can list
   // several roles, so it's counted under each tab. Curated order first, then any novel
-  // value appended so nothing is silently dropped (mirrors the Leads pattern). The cast
-  // is temporary until types.ts is regenerated post-merge with the new `type` column.
+  // value appended so nothing is silently dropped (mirrors the Leads pattern).
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const org of (organizations ?? []) as Array<{ type?: string[] | null }>) {
+    for (const org of organizations ?? []) {
       for (const t of org.type ?? []) counts[t] = (counts[t] ?? 0) + 1;
     }
     return counts;
