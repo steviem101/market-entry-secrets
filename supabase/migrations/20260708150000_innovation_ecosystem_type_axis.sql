@@ -16,9 +16,11 @@
 --   * Accelerator      <- services ∋ Accelerator | Pre-accelerator
 --   * Incubator        <- services ∋ Incubator
 --   * Coworking Space  <- services ∋ Co-working
---   * Research Institute <- NAME signal only (institute/university/lab/CSIRO/CRC/
---     research centre). Deliberately NOT the "Research" *service* — dozens of
---     associations list Research as a service without being an institute.
+--   * Research Institute <- NAME signal only (institute/university/laboratory/CSIRO/
+--     CRC/research centre). Deliberately NOT the "Research" *service* — dozens of
+--     associations list Research as a service without being an institute. Also NOT a
+--     bare "Lab(s)" token: that is common startup-hub branding (Tank Stream Labs,
+--     River City Labs, …) and mislabelled 7 hubs as research institutes.
 --   * Industry Body    <- services ∋ Policy Advocacy | Industry Association |
 --     Member Network, OR name ∋ association/council/alliance/federation/chamber.
 -- Rows matching no rule keep type = NULL (9 fuzzy edge cases: VC firms, a venture
@@ -38,10 +40,10 @@ set type = nullif(
     case when t.services && array['Accelerator','Pre-accelerator']::text[] then 'Accelerator' end,
     case when t.services && array['Incubator']::text[]                     then 'Incubator' end,
     case when t.services && array['Co-working']::text[]                    then 'Coworking Space' end,
-    case when t.name ~* 'institute|universit|laborator|research (centre|center)|csiro|\ycrc\y|\ylab(s)?\y'
+    case when t.name ~* 'institute|universit|laborator|research (centre|center)|csiro|\ycrc\y'
                                                                             then 'Research Institute' end,
     case when t.services && array['Policy Advocacy','Industry Association','Member Network']::text[]
-              or t.name ~* 'association|council|alliance|federation|\ychamber\y'
+              or t.name ~* '\yassociation\y|\ycouncil\y|\yalliance\y|\yfederation\y|\ychamber\y'
                                                                             then 'Industry Body' end
   ]::text[], null),
   '{}'::text[]
