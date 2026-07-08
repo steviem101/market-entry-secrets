@@ -172,7 +172,9 @@ const MentorProfile = () => {
             name: displayName,
             jobTitle: mentor.title,
             description: mentor.description,
-            ...(mentor.company ? { worksFor: { "@type": "Organization", name: mentor.company } } : {}),
+            ...(!mentor.is_anonymous && mentor.company
+              ? { worksFor: { "@type": "Organization", name: mentor.company } }
+              : {}),
             ...(mentor.location ? { address: { "@type": "PostalAddress", addressLocality: mentor.location } } : {}),
             ...(mentor.avatar_url || mentor.image ? { image: mentor.avatar_url || mentor.image } : {}),
             ...(mentor.linkedin_url ? { sameAs: [mentor.linkedin_url] } : {}),

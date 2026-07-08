@@ -135,8 +135,10 @@ const AdminMentors = () => {
       if (data?.error) throw new Error(data.error);
 
       await queryClient.invalidateQueries({ queryKey: ["admin-mentors"] });
-      // Public directory caches now hold the pre-toggle presentation.
+      // Public caches now hold the pre-toggle presentation. Prefix-match
+      // ["mentor", ...] too so an open profile tab (useMentorBySlug) refreshes.
       await queryClient.invalidateQueries({ queryKey: ["mentors"] });
+      await queryClient.invalidateQueries({ queryKey: ["mentor"] });
       await queryClient.invalidateQueries({ queryKey: ["community-members"] });
 
       toast({

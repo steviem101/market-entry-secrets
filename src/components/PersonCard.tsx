@@ -41,7 +41,9 @@ interface PersonCardProps {
 }
 
 const PersonCard = memo(({ person, onViewProfile }: PersonCardProps) => {
-  const displayName = person.isAnonymous ? person.title : person.name;
+  // For anonymous people the view masks `name` to the alias (the richer, safe
+  // label); real names only reach here for non-anonymous people.
+  const displayName = person.name;
   const shouldBlurImage = person.isAnonymous;
 
   // Placeholder images for person profile pictures
@@ -82,11 +84,10 @@ const PersonCard = memo(({ person, onViewProfile }: PersonCardProps) => {
               <h3 className="text-xl font-semibold text-foreground mb-1 truncate">
                 {displayName}
               </h3>
-              {!person.isAnonymous && (
-                <p className="text-primary font-medium text-sm mb-1 truncate">
-                  {person.title}
-                </p>
-              )}
+              {/* Headline is masked-safe for anonymous people too */}
+              <p className="text-primary font-medium text-sm mb-1 truncate">
+                {person.title}
+              </p>
               <div className="flex items-center text-muted-foreground text-sm min-w-0">
                 <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
                 <span className="truncate">{person.location}</span>
