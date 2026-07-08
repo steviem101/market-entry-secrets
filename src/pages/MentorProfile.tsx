@@ -10,6 +10,8 @@ import {
   Handshake,
   DollarSign,
   Languages,
+  Users,
+  EyeOff,
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { SEOHead } from "@/components/common/SEOHead";
@@ -30,6 +32,7 @@ import {
   countryLabel,
   corridorLabel,
   sectorTagLabel,
+  personaFitLabels,
 } from "@/lib/mentorDisplay";
 import {
   useMentorBySlug,
@@ -237,10 +240,16 @@ const MentorProfile = () => {
                       Featured
                     </Badge>
                   )}
+                  {mentor.is_anonymous && (
+                    <Badge variant="secondary" className="gap-1">
+                      <EyeOff className="w-3 h-3" />
+                      Anonymous
+                    </Badge>
+                  )}
                 </div>
-                {!mentor.is_anonymous && (
-                  <p className="text-primary font-medium text-lg">{mentor.title}</p>
-                )}
+                {/* Headline is masked-safe for anonymous mentors; company is
+                    "Undisclosed" for them, so only show it when identified. */}
+                <p className="text-primary font-medium text-lg">{mentor.title}</p>
                 {!mentor.is_anonymous && mentor.company && (
                   <p className="text-muted-foreground">{mentor.company}</p>
                 )}
@@ -407,6 +416,23 @@ const MentorProfile = () => {
                 <CardTitle className="text-lg">Quick Facts</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Who they help — persona_fit audience tags, safe for anon */}
+                {personaFitLabels(mentor.persona_fit).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" />
+                      Who they help
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {personaFitLabels(mentor.persona_fit).map((label) => (
+                        <Badge key={label} variant="outline" className="text-xs">
+                          {label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Origin — coarse geography, safe for anonymous mentors */}
                 {mentor.origin_country && countryLabel(mentor.origin_country) !== mentor.origin_country && (
                   <div>

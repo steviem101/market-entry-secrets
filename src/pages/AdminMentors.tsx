@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, RefreshCw, EyeOff } from "lucide-react";
+import { Search, RefreshCw, EyeOff, AlertTriangle, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { suggestAnonymousAlias, countryLabel } from "@/lib/mentorDisplay";
+import {
+  suggestAnonymousAlias,
+  suggestAnonymousBio,
+  countryLabel,
+  identityLeak,
+} from "@/lib/mentorDisplay";
 
 interface AdminMentorRow {
   id: string;
@@ -37,6 +42,8 @@ interface AdminMentorRow {
   archetype: string | null;
   origin_country: string | null;
   sector_tags: string[] | null;
+  specialties: string[] | null;
+  experience: string | null;
   is_active: boolean;
   is_anonymous: boolean;
   anonymous_alias: string | null;
@@ -63,13 +70,21 @@ const useAdminMentors = () =>
       const { data, error } = await supabase
         .from("community_members")
         .select(
-          "id, name, title, company, archetype, origin_country, sector_tags, is_active, is_anonymous, anonymous_alias, anonymous_headline, anonymous_company_label, anonymous_bio",
+          "id, name, title, company, archetype, origin_country, sector_tags, specialties, experience, is_active, is_anonymous, anonymous_alias, anonymous_headline, anonymous_company_label, anonymous_bio",
         )
         .order("name", { ascending: true });
       if (error) throw error;
       return (data || []) as AdminMentorRow[];
     },
   });
+
+const LeakWarning = ({ term }: { term: string | null }) =>
+  term ? (
+    <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+      <AlertTriangle className="w-3 h-3" />
+      Contains "{term}" — this could reveal the mentor's identity.
+    </p>
+  ) : null;
 
 const AdminMentors = () => {
   const { data: mentors = [], isLoading, refetch } = useAdminMentors();
@@ -153,8 +168,28 @@ const AdminMentors = () => {
     });
   };
 
+  // Live preview of exactly what the public will see. Mirrors the
+  // community_members_public view: blank bio → composed from structured fields.
+  const previewName =
+    draft.anonymous_alias.trim() || editing?.archetype || "Verified Expert";
+  const previewBio =
+    editing && !draft.anonymous_bio.trim()
+      ? suggestAnonymousBio(editing)
+      : draft.anonymous_bio.trim();
+
+  // Advisory guard: flag admin-authored copy that would re-expose identity.
+  const fieldLeak = (value: string): string | null =>
+    editing ? identityLeak(value, editing.name, editing.company) : null;
+  const leaks = {
+    anonymous_alias: fieldLeak(draft.anonymous_alias),
+    anonymous_headline: fieldLeak(draft.anonymous_headline),
+    anonymous_company_label: fieldLeak(draft.anonymous_company_label),
+    anonymous_bio: fieldLeak(draft.anonymous_bio),
+  };
+  const hasLeak = Object.values(leaks).some(Boolean);
+
   const saveAnonymize = async () => {
-    if (!editing) return;
+    if (!editing || hasLeak) return;
     await callToggle(editing, true, draft);
     setEditing(null);
   };
@@ -256,6 +291,15 @@ const AdminMentors = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              {/* Live preview of the public-facing card */}
+              <div className="rounded-lg border bg-muted/40 p-3">
+                <div className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                  <EyeOff className="w-3 h-3" /> What the public will see
+                </div>
+                <div className="font-semibold">{previewName}</div>
+                <p className="text-sm text-muted-foreground mt-1">{previewBio}</p>
+              </div>
+
               <div>
                 <Label htmlFor="anon-alias">Public alias (shown as their name)</Label>
                 <Input
@@ -264,6 +308,7 @@ const AdminMentors = () => {
                   onChange={(e) => setDraft((d) => ({ ...d, anonymous_alias: e.target.value }))}
                   placeholder="e.g. UK Fintech Founder"
                 />
+                <LeakWarning term={leaks.anonymous_alias} />
               </div>
               <div>
                 <Label htmlFor="anon-headline">Headline (replaces title)</Label>
@@ -273,6 +318,7 @@ const AdminMentors = () => {
                   onChange={(e) => setDraft((d) => ({ ...d, anonymous_headline: e.target.value }))}
                   placeholder="e.g. Fintech scale-up operator"
                 />
+                <LeakWarning term={leaks.anonymous_headline} />
               </div>
               <div>
                 <Label htmlFor="anon-company">Company label (replaces company)</Label>
@@ -284,25 +330,42 @@ const AdminMentors = () => {
                   }
                   placeholder='e.g. "ASX-listed fintech" (blank = "Undisclosed")'
                 />
+                <LeakWarning term={leaks.anonymous_company_label} />
               </div>
               <div>
-                <Label htmlFor="anon-bio">Anonymous bio</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="anon-bio">Anonymous bio</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs"
+                    onClick={() =>
+                      editing &&
+                      setDraft((d) => ({ ...d, anonymous_bio: suggestAnonymousBio(editing) }))
+                    }
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Use suggested
+                  </Button>
+                </div>
                 <Textarea
                   id="anon-bio"
                   value={draft.anonymous_bio}
                   onChange={(e) => setDraft((d) => ({ ...d, anonymous_bio: e.target.value }))}
-                  placeholder="Blank = auto-generated from archetype and sectors. Write 2-3 identity-free sentences for a richer profile."
+                  placeholder="Blank = auto-composed from seniority, sectors and specialties. Edit for a richer, identity-free profile."
                   rows={4}
                 />
+                <LeakWarning term={leaks.anonymous_bio} />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
                 Cancel
               </Button>
-              <Button onClick={saveAnonymize} disabled={saving}>
+              <Button onClick={saveAnonymize} disabled={saving || hasLeak}>
                 <EyeOff className="w-4 h-4 mr-2" />
-                {saving ? "Saving..." : "Anonymize"}
+                {saving ? "Saving..." : hasLeak ? "Resolve warnings to save" : "Anonymize"}
               </Button>
             </DialogFooter>
           </DialogContent>
