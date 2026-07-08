@@ -1,5 +1,10 @@
 -- MES-123 — Contact profile images (view, part 5): expose avatar_url through the mentor view.
 --
+-- Re-timestamped from 20260708140000 → 20260709120000: the original shared its version string
+-- with 20260708140000_mes110_drop_legacy_backup_columns.sql, so Supabase recorded version
+-- 20260708140000 as applied (from the mes110 file) and SILENTLY SKIPPED this one on prod —
+-- leaving avatar_url off the view. This unique, later timestamp re-applies it.
+--
 -- Ordered AFTER main's mentor-anonymization "richer view" (20260708120000). That migration
 -- recreates community_members_public with 24 columns; adding avatar_url earlier would make its
 -- CREATE OR REPLACE fail ("cannot drop columns from view"). So we take main's richer definition

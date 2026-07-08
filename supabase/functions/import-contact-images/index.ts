@@ -134,16 +134,18 @@ async function must(builder: any, what: string): Promise<any[]> {
 async function loadCandidates(supabase: any): Promise<Candidate[]> {
   const candidates: Candidate[] = [];
 
-  // Mentors — skip anonymous (their photo must never be published).
+  // Mentors — skip anonymous (their photo must never be published). community_members has no
+  // email column (contact info lives in `contact`, freeform), so mentors match on linkedin_url
+  // (once backfilled) or name+company only — email is intentionally null here.
   const mentors = await must(
-    supabase.from("community_members").select("id,name,company,email,linkedin_url,avatar_url,is_anonymous"),
+    supabase.from("community_members").select("id,name,company,linkedin_url,avatar_url,is_anonymous"),
     "community_members",
   );
   for (const m of mentors) {
     if (m.is_anonymous) continue;
     candidates.push({
       surface: "mentor", table: "community_members", recordId: m.id,
-      name: m.name, org: m.company ?? null, email: m.email ?? null,
+      name: m.name, org: m.company ?? null, email: null,
       linkedinNormalized: normalizeLinkedInUrl(m.linkedin_url), existingAvatar: m.avatar_url ?? null,
     });
   }
