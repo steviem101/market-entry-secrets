@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { NoIndex } from '@/components/common/NoIndex';
 import { ReportSection } from '@/components/report/ReportSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
+import { ExpandableCardGrid } from '@/components/report/ExpandableCardGrid';
 import { ReportSources } from '@/components/report/ReportSources';
 import { ReportBackToTop } from '@/components/report/ReportBackToTop';
 import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
@@ -148,11 +149,12 @@ const SharedReportViewInner = () => {
 
             const sectionMatches = section.matches || matches[sectionId] || [];
 
-            const renderCardGrid = (items: any[]) => (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {items.map((match: any, idx: number) => (
+            const renderCardGrid = (items: any[], groupLabel?: string) => (
+              <ExpandableCardGrid
+                items={items}
+                label={groupLabel?.toLowerCase() || 'matches'}
+                renderItem={(match: any) => (
                   <ReportMatchCard
-                    key={match.id || idx}
                     name={match.name}
                     subtitle={match.subtitle || match.category || match.location}
                     tags={match.tags || match.services?.slice(0, 3)}
@@ -161,8 +163,8 @@ const SharedReportViewInner = () => {
                     website={match.website}
                     source={match.source}
                   />
-                ))}
-              </div>
+                )}
+              />
             );
 
             // Mixed-type sections render one sub-headed grid per entity type (B9).
@@ -180,7 +182,7 @@ const SharedReportViewInner = () => {
                         </span>
                         <div className="flex-1 border-t border-border" />
                       </div>
-                      {renderCardGrid(group.items)}
+                      {renderCardGrid(group.items, group.label)}
                     </div>
                   ))}
                 </div>

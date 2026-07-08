@@ -13,7 +13,7 @@ import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
 import { metaLine, recordCountLabel } from "./cardFields.ts";
 import { buildCompetitorCards } from "./competitorCards.ts";
-import { renumberCitations } from "./citationRenumber.ts";
+import { renumberCitations, stripContextLabelCitations } from "./citationRenumber.ts";
 import { expandTargetRegions } from "./targetRegion.ts";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
@@ -2136,8 +2136,8 @@ async function generateReportInBackground(
     // "do NOT include citation markers" instruction in that case.
     const numCitations = marketResearch.citations.length;
     const citationInstruction = numCitations > 0
-      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you SHOULD include an inline citation marker using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
-      : `IMPORTANT — Inline citations: Do NOT include any numbered citation markers (e.g. [1], [2], [3]) anywhere in your response. There is no source list to cite for this report.`;
+      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you SHOULD include an inline citation marker using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Citations are NUMERIC ONLY: never write a bracketed text label such as [Cost of Business Data], [Cost Data], or [Company Profile] — facts drawn from unnumbered background context carry no bracket at all. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
+      : `IMPORTANT — Inline citations: Do NOT include any citation markers anywhere in your response — neither numbered ones (e.g. [1], [2], [3]) nor bracketed text labels (e.g. [Cost of Business Data]). There is no source list to cite for this report.`;
 
     // ── Research availability disclosure (P1-11) ─────────────────────────
     // Tell the model exactly which research streams produced data, so it
@@ -2157,10 +2157,15 @@ async function generateReportInBackground(
     const availabilityNote = `\n\nDATA AVAILABILITY for this report:\n${availabilityLines.join("\n")}\n\nFor any topic marked UNAVAILABLE: do NOT invent specific figures, program names, percentages, eligibility criteria, named clients, or named partners. Use general guidance (e.g. "review the relevant federal grant programs") rather than naming specifics you cannot verify from the provided data. NEVER invent client relationships, partnerships, or past customers that are not explicitly listed in the enriched company profile.`;
 
     // ── User priority directive (report_focus) ───────────────────────────
-    // The user's "what matters most" answer — previously captured and never used.
-    // Make every section lead with it where relevant.
+    // The user's "what matters most" answer. The original "lead with it"
+    // directive made EVERY section open with the same key-question framing —
+    // a CreditLogic report had five sections opening with the identical
+    // "To succeed in the Australian market, X must navigate…" sentence. The
+    // executive summary now answers the question head-on in a dedicated
+    // closing subsection (template change); other sections address it in
+    // the body with section-specific openings.
     const focusNote = reportFocus
-      ? `\n\nUSER'S STATED PRIORITY (what they most want from this report): "${reportFocus}". Treat this as the single most important outcome for the reader. Where this section can advance that priority, lead with it and make those recommendations concrete and specific to ${intake.company_name}. Do not force it where genuinely irrelevant.`
+      ? `\n\nUSER'S STATED PRIORITY (what they most want from this report): "${reportFocus}". Treat this as the single most important outcome for the reader. Where this section can materially advance that priority, address it concretely and specifically for ${intake.company_name} within the body of the section. Do NOT open the section by restating this priority or the overall market opportunity — the Executive Summary already answers it in a dedicated subsection; give this section its own opening that gets straight to its specific job. Do not force the priority where genuinely irrelevant.`
       : "";
 
     // ── Under-used inputs surfaced to EVERY section (challenges, revenue, headcount) ──
@@ -2180,6 +2185,16 @@ async function generateReportInBackground(
     // landscape extraction (keyMetrics) and injected into every section's system prompt.
     const metricsNote = keyMetrics.length
       ? `\n\nCANONICAL MARKET FIGURES (single source of truth for the whole report): ${keyMetrics.map((m) => `${m.label}: ${m.value}${m.context ? ` (${m.context})` : ""}`).join("; ")}. When you reference market size, value, growth rate, or similar metrics, use ONLY these exact figures — do NOT invent different numbers or let sections contradict one another. If a needed figure is not listed here, give qualitative guidance rather than a fabricated number.`
+      : "";
+    // Anti-repetition (CreditLogic review): the canonical figures rule stopped
+    // sections CONTRADICTING each other but left them all RESTATING the same
+    // market-size number — "US$11.51B" appeared 7 times across one report. The
+    // reader sees these figures in the Key Metrics panel and the Executive
+    // Summary; every other section should reach for them only when the point
+    // being made needs the number. Appended to every section except the
+    // executive summary (which legitimately states the opportunity size).
+    const metricsRepeatNote = keyMetrics.length
+      ? `\n\nThese canonical figures are already displayed to the reader in the Key Metrics panel and the Executive Summary. Do NOT re-quote market-size / market-value / CAGR figures in this section unless the specific point being made requires the number, and never open the section with them.`
       : "";
 
     // Phase C (RQ ref 7a000874): when the user's stated priority is an explicit home-vs-
@@ -2261,7 +2276,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote : ""}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
@@ -2317,7 +2332,13 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       // Sources footer are 1:1 (no more "[1][2][3][6][9]" against "Sources (19)").
       // Pure + no-op when nothing is cited; runs on both the unpolished and
       // polished builds so each stored snapshot is internally consistent.
-      const cited = renumberCitations(currentSections, sectionOrder, marketResearch.citations);
+      // stripContextLabelCitations first: removes "[Cost of Business Data]"-style
+      // pseudo-citations of named context variables before the numeric remap.
+      const cited = renumberCitations(
+        stripContextLabelCitations(currentSections),
+        sectionOrder,
+        marketResearch.citations,
+      );
       return {
       company_name: intake.company_name,
       sections: cited.sections,
