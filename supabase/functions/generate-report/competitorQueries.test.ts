@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildCompetitorQueries, domainOf, dedupeCompetitorResults } from "./competitorQueries.ts";
+import {
+  buildCompetitorQueries,
+  domainOf,
+  dedupeCompetitorResults,
+  isNonCompetitor,
+  dropNonCompetitors,
+} from "./competitorQueries.ts";
 
 test("buildCompetitorQueries: 3 angled queries from sector + company", () => {
   const q = buildCompetitorQueries({
@@ -23,6 +29,59 @@ test("buildCompetitorQueries: defaults region to Australia, caps at 3", () => {
 test("buildCompetitorQueries: no sector + no company → empty", () => {
   assert.deepEqual(buildCompetitorQueries({}), []);
   assert.deepEqual(buildCompetitorQueries({ industry_sector: [], company_name: "" }), []);
+});
+
+test("buildCompetitorQueries: known competitors anchor the category and win the cap", () => {
+  const q = buildCompetitorQueries({
+    industry_sector: ["FinTech", "Financial Services"],
+    target_regions: ["Sydney/NSW"],
+    company_name: "Infact",
+    known_competitors: [
+      { name: "Equifax", website: "https://equifax.com.au" },
+      { name: "Experian", website: "https://experian.com.au" },
+    ],
+  });
+  assert.equal(q.length, 3);
+  // The known-competitor angle is present AND first (wins the discovery cap).
+  assert.match(q[0], /companies like Equifax, Experian in Australia/i);
+  // Sector breadth is retained; the lowest-priority sector-vendors angle is dropped by the cap.
+  assert.ok(q.some((s) => /FinTech, Financial Services companies in Australia/i.test(s)));
+});
+
+test("buildCompetitorQueries: known competitors accepted as bare strings, capped at 3 names", () => {
+  const q = buildCompetitorQueries({
+    company_name: "X",
+    known_competitors: ["A", "", "  B ", "C", "D"],
+  });
+  assert.match(q[0], /companies like A, B, C in Australia Australia/i);
+  assert.ok(!/D/.test(q[0]));
+});
+
+test("buildCompetitorQueries: known competitors only (no sector/company) → single anchored query", () => {
+  const q = buildCompetitorQueries({ known_competitors: [{ name: "Equifax" }] });
+  assert.deepEqual(q, ["companies like Equifax in Australia Australia"]);
+});
+
+test("isNonCompetitor: fires on explicit self-disqualifying language only", () => {
+  assert.ok(isNonCompetitor("An AI employer branding platform. Not a technical competitor in credit data."));
+  assert.ok(isNonCompetitor("A service-based firm rather than a product-based real-time data bureau."));
+  assert.ok(isNonCompetitor("A software recruitment agency for fintechs."));
+  // Genuine competitors must NOT be dropped.
+  assert.ok(!isNonCompetitor("A real-time credit bureau competing directly on API latency."));
+  assert.ok(!isNonCompetitor("Provides credit scoring and identity verification to lenders."));
+  assert.ok(!isNonCompetitor(""));
+});
+
+test("dropNonCompetitors: filters discovered rows by combined description + key_info", () => {
+  const rows = [
+    { name: "Equifax", description: "Credit bureau", key_info: "Deeply integrated with AU banks" },
+    { name: "The Martec", description: "Employer branding platform", key_info: "Not a competitor in credit data" },
+    { name: "Cleveroad", description: "Software dev firm", key_info: "service-based firm rather than a product-based bureau" },
+    { name: "Experian", description: "Global credit bureau", key_info: "Experian Boost feature" },
+  ];
+  assert.deepEqual(dropNonCompetitors(rows).map((r) => r.name), ["Equifax", "Experian"]);
+  assert.deepEqual(dropNonCompetitors(null), []);
+  assert.deepEqual(dropNonCompetitors(undefined), []);
 });
 
 test("domainOf: strips scheme/www/case, tolerates bare host", () => {
