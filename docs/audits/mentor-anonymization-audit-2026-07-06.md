@@ -145,10 +145,51 @@ fields were rendered anywhere. Fixed in this ticket:
 - The admin dialog pre-fills a distinguishing alias, since archetype alone
   collides (47 "International Founder"s).
 
-## 8. Follow-ups (out of scope here)
+## 8. Richer anonymous presentation (follow-up PR)
+
+The first pass surfaced structured chips but the anonymous *narrative* stayed
+thin — a one-line "Senior X with experience across Y." and no seniority, because
+the view nulled `experience` outright. Reviewing the live toggled row (Aaron
+Birkby) showed the real gap: the mask correctly hides identity-revealing FREE
+TEXT (the real `description` names the firm twice; `experience_tiles` are
+company logos) but replaced it with almost nothing, while genuinely-safe signal
+(seniority, who-they-help) was thrown away or unrendered.
+
+Migration `20260708120000_mentor_anon_richer_public_view.sql` enriches only two
+masked-for-anonymous fields, using structured / sanitised data that cannot
+reveal identity (every other mask preserved byte-for-byte):
+
+- **`experience`** → a sanitised seniority phrase extracted with a strict regex
+  that captures only a `<n>+ years` token and nothing else (a number is not
+  identifying). Was: always NULL.
+- **`description`** (when no admin `anonymous_bio`) → composed from archetype +
+  sanitised seniority + sectors + specialties — all already public as chips.
+  e.g. "Senior Active Advisor with 20+ years of experience across Financial
+  Services. Specialises in Active Advisor, Fundraising / Investment,
+  Cross-border." Was: archetype + sectors only.
+
+**Safety rule this encodes:** free text (`experience`, real `description`,
+`experience_tiles`) is never auto-surfaced — it embeds employer/person names.
+Only structured fields + an admin-curated `anonymous_bio` reach the public.
+
+Frontend + admin changes in the same PR:
+- Heading now uses the masked **alias** (`name`), not the headline — the view
+  guarantees `name` is masked-safe for anonymous rows, and the alias is the
+  richer label. `mentorDisplayName` simplified to always return `name`.
+- Profile & card: an **"Anonymous"** badge, a **"Who they help"** block from
+  `persona_fit`, and the seniority line now render.
+- `/admin/mentors` dialog: a **live "what the public will see" preview**, a
+  **"Use suggested" bio** button (client twin of the view's composer), and
+  **inline identity-leak warnings** that block save if the alias/headline/
+  company/bio contains the mentor's real name or company (token-aware,
+  stopword-filtered). Advisory belt-and-braces — the view never emits these
+  free-text overrides unmasked, but admin-authored copy ships verbatim.
+
+## 9. Follow-ups (out of scope here)
 
 - **Flag the real mentors**: business decision — which mentors agreed to
   anonymous-only participation. Use `/admin/mentors` per mentor.
 - ~~Sitemap generation~~: resolved by MES-79 — the sitemap is now a DB-driven
   edge function reading the masked view, so anonymization propagates
   automatically.
+- ~~Anonymous narrative too thin~~: resolved above (§8).

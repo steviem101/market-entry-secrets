@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { MapPin, CheckCircle, Star, Globe, Clock } from "lucide-react";
+import { MapPin, CheckCircle, Star, Globe, Clock, EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import type { Mentor } from "@/hooks/useMentors";
@@ -92,7 +92,7 @@ const MentorCard = memo(({ mentor }: MentorCardProps) => {
         {/* Avatar with verified badge */}
         <div className="relative flex-shrink-0">
           <ContactAvatar
-            name={mentor.name}
+            name={displayName}
             src={mentor.is_anonymous ? undefined : mentor.avatar_url || mentor.image}
             className="w-16 h-16"
             fallback={
@@ -116,13 +116,18 @@ const MentorCard = memo(({ mentor }: MentorCardProps) => {
               <h3 className="text-lg font-semibold text-foreground mb-0.5 truncate">
                 {displayName}
               </h3>
-              {!mentor.is_anonymous && (
+              {!mentor.is_anonymous ? (
                 <p className="text-primary font-medium text-sm mb-0.5 truncate">
                   {mentor.title}
                   {mentor.company && (
                     <span className="text-muted-foreground font-normal"> at {mentor.company}</span>
                   )}
                 </p>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+                  <EyeOff className="w-3 h-3" />
+                  Anonymous mentor
+                </span>
               )}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="flex items-center text-muted-foreground text-sm">

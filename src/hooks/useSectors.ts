@@ -15,6 +15,7 @@ export interface SectorData {
   lead_keywords: string[];
   content_keywords: string[];
   industries: string[];
+  canonical_sector_slugs: string[] | null;
   featured: boolean;
   sort_order: number;
   created_at: string;
