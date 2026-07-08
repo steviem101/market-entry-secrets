@@ -113,3 +113,14 @@ test("stripContextLabelCitations: case-insensitive and repeated occurrences all 
   const out = stripContextLabelCitations(sections);
   assert.equal(out.s.content, "A b c d");
 });
+
+test("stripContextLabelCitations: label at line start never merges markdown lines (QA W1)", () => {
+  const sections = {
+    bullets: { content: "- point one\n[Cost Data] leads line two" },
+    list: { content: "- a [Cost Data]\n- b" },
+  };
+  const out = stripContextLabelCitations(sections);
+  // Newline preserved — the label is removed but the line boundary survives.
+  assert.equal(out.bullets.content, "- point one\n leads line two");
+  assert.equal(out.list.content, "- a\n- b");
+});

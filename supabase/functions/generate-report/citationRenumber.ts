@@ -37,8 +37,10 @@ const MARKER_RE = /\[(\d+)\]/g;
  * labels — a generic [text] pattern would eat markdown links and legitimate
  * bracketed prose.
  */
+// [ ]? (space only, never \s) — \s would match a newline and merge two
+// markdown lines when a pseudo-citation opens a line (QA audit W1).
 const CONTEXT_LABEL_RE =
-  /\s?\[(?:cost (?:of business )?data|cost of business|company profile|enriched company profile|market research(?: data)?|end buyer research)\]/gi;
+  /[ ]?\[(?:cost (?:of business )?data|cost of business|company profile|enriched company profile|market research(?: data)?|end buyer research)\]/gi;
 
 /** Remove known context-label pseudo-citations from section prose. Pure. */
 export function stripContextLabelCitations(
