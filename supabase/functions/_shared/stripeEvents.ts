@@ -22,8 +22,13 @@ export function normalizeTier(t: string | null | undefined): string {
   if (t === "concierge") return "enterprise";
   return t ?? "free";
 }
-function tierRank(t: string | null | undefined): number {
-  return TIER_RANK[normalizeTier(t)] ?? 0;
+// Returns the rank, or null when the tier is a non-empty value we don't
+// recognize (so callers can fail safe instead of treating it as rank 0 — see
+// the downgrade guard, MES-39 review #4).
+function tierRankOrNull(t: string | null | undefined): number | null {
+  if (!t) return null;
+  const rank = TIER_RANK[normalizeTier(t)];
+  return rank === undefined ? null : rank;
 }
 
 // After this many failed processing attempts a "retriable" failure is treated
@@ -31,8 +36,20 @@ function tierRank(t: string | null | undefined): number {
 export const MAX_PROCESS_ATTEMPTS = 5;
 
 export type ProcessOutcome =
-  | { ok: true; action: "tier_upgraded" | "lead_purchase_recorded" | "ignored" | "skipped_downgrade" }
+  | {
+      ok: true;
+      action: "tier_upgraded" | "lead_purchase_recorded" | "ignored" | "skipped_downgrade";
+      /** True when a confirmation email was actually dispatched this run, so the
+       *  caller can persist email_sent and avoid re-sending on replay (review #6). */
+      emailed?: boolean;
+    }
   | { ok: false; retriable: boolean; reason: string };
+
+export interface ProcessOpts {
+  /** Skip the confirmation email — set when the row already has email_sent=true
+   *  so a reprocess/reconcile replay doesn't send a duplicate (review #6). */
+  suppressConfirmationEmail?: boolean;
+}
 
 export interface StripeEventLike {
   id: string;
@@ -66,6 +83,7 @@ export interface ProcessDeps {
 export async function processStripeEvent(
   evt: StripeEventLike,
   deps: ProcessDeps,
+  opts: ProcessOpts = {},
 ): Promise<ProcessOutcome> {
   const log = deps.log ?? (() => {});
   const logError = deps.logError ?? (() => {});
@@ -79,6 +97,16 @@ export async function processStripeEvent(
   const tier: string | null = metadata.tier ?? null;
   const supabaseUserId: string | null = metadata.supabase_user_id ?? null;
 
+  // Foreign checkout (Stripe Payment Link, dashboard-created payment, non-app
+  // product): none of OUR metadata is present. Ignore benignly rather than
+  // paging a human — only OUR checkouts carry tier/supabase_user_id (review #10).
+  if (!tier && !supabaseUserId) {
+    log("Ignoring checkout with no app metadata (not created by this app)", { eventId: evt.id });
+    return { ok: true, action: "ignored" };
+  }
+
+  // Looks like our checkout (at least one of tier/user_id present) but is
+  // malformed — page a human; a retry can't fix missing/invalid metadata.
   if (!tier || !VALID_TIERS.includes(tier)) {
     return {
       ok: false,
@@ -140,13 +168,28 @@ export async function processStripeEvent(
     .maybeSingle();
   if (currentErr) {
     log("Could not read current tier before upsert (proceeding)", { error: currentErr.message ?? currentErr });
-  } else if (currentSub?.tier && tierRank(currentSub.tier) > tierRank(tier)) {
-    log("Skipping tier downgrade", {
-      supabaseUserId,
-      currentTier: currentSub.tier,
-      eventTier: tier,
-    });
-    return { ok: true, action: "skipped_downgrade" };
+  } else if (currentSub?.tier) {
+    const currentRank = tierRankOrNull(currentSub.tier);
+    // Fail safe: an unrecognized current tier (rank null — e.g. a newer paid
+    // tier added to the enum without updating TIER_RANK) must NOT be treated
+    // as rank 0 and silently overwritten. Skip and page via the log so it's
+    // caught, rather than downgrading a paying customer (review #4).
+    if (currentRank === null) {
+      logError("Unknown current subscription tier — skipping write to avoid a possible downgrade", {
+        supabaseUserId,
+        currentTier: currentSub.tier,
+        eventTier: tier,
+      });
+      return { ok: true, action: "skipped_downgrade" };
+    }
+    if (currentRank > (tierRankOrNull(tier) ?? 0)) {
+      log("Skipping tier downgrade", {
+        supabaseUserId,
+        currentTier: currentSub.tier,
+        eventTier: tier,
+      });
+      return { ok: true, action: "skipped_downgrade" };
+    }
   }
 
   const { error: upsertErr } = await deps.supabase
@@ -170,21 +213,19 @@ export async function processStripeEvent(
   }
   log("Upserted user_subscriptions", { supabaseUserId, tier });
 
-  // Keep report badges consistent with the new plan. Failing here fails the
-  // whole event: the replay is idempotent (same-tier upsert + same update),
-  // so it is safe for Stripe/reconciliation to run it again.
+  // Keep report badges consistent with the new plan. BEST-EFFORT: the tier is
+  // already applied (the upsert above is the entitlement of record), so a
+  // failure on this cosmetic display-only update must NOT fail the event —
+  // otherwise a transient error here blocks the confirmation email and pages a
+  // human for an already-charged-and-upgraded customer (review #1). Log and
+  // continue; the next successful event/replay reconciles the badge.
   const { error: reportsErr } = await deps.supabase
     .from("user_reports")
     .update({ tier_at_generation: tier })
     .eq("user_id", supabaseUserId);
 
   if (reportsErr) {
-    logError("Error updating user_reports tier_at_generation", reportsErr);
-    return {
-      ok: false,
-      retriable: true,
-      reason: `user_reports tier update failed: ${reportsErr.message ?? reportsErr}`,
-    };
+    logError("Error updating user_reports tier_at_generation (non-blocking)", reportsErr);
   }
 
   // Best-effort extras: never change the outcome.
@@ -201,9 +242,13 @@ export async function processStripeEvent(
     }
   }
 
+  // Confirmation email — suppressed when the caller says it was already sent
+  // (row.email_sent), so a reprocess/reconcile replay doesn't duplicate it
+  // (review #6). `emailed` is returned so the caller can persist email_sent.
+  let emailed = false;
   const userEmail: string | null =
     dataObj.customer_details?.email || dataObj.customer_email || null;
-  if (userEmail && deps.sendConfirmationEmail) {
+  if (userEmail && deps.sendConfirmationEmail && !opts.suppressConfirmationEmail) {
     try {
       await deps.sendConfirmationEmail({
         email: userEmail,
@@ -213,6 +258,7 @@ export async function processStripeEvent(
         currency,
         eventId: evt.id,
       });
+      emailed = true;
     } catch (emailErr) {
       log("Failed to send payment confirmation email (non-blocking)", {
         error: emailErr instanceof Error ? emailErr.message : String(emailErr),
@@ -220,7 +266,7 @@ export async function processStripeEvent(
     }
   }
 
-  return { ok: true, action: "tier_upgraded" };
+  return { ok: true, action: "tier_upgraded", emailed };
 }
 
 /** Map a process outcome to the payment_webhook_logs processing_status value. */

@@ -22,6 +22,7 @@ import Stripe from "https://esm.sh/stripe@12?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
 import {
+  isMissingColumnError,
   postPaymentsAlert,
   processStripeEvent,
   resolveStatus,
@@ -81,6 +82,7 @@ interface LogRow {
   processing_status: string;
   attempts: number | null;
   created_at: string;
+  email_sent: boolean | null;
 }
 
 Deno.serve(async (req: Request) => {
@@ -100,28 +102,59 @@ Deno.serve(async (req: Request) => {
 
     const { data: rows, error: fetchErr } = await supabaseAdmin
       .from("payment_webhook_logs")
-      .select("stripe_event_id, stripe_payload, parsed, event_type, processing_status, attempts, created_at")
+      .select("stripe_event_id, stripe_payload, parsed, event_type, processing_status, attempts, created_at, email_sent")
       .in("processing_status", ["received", "failed"])
       .lt("created_at", replayCutoff)
       .order("created_at", { ascending: true })
       .limit(BATCH_LIMIT);
 
-    if (fetchErr) throw fetchErr;
+    if (fetchErr) {
+      // Pre-migration: the processing-state columns don't exist yet. No-op
+      // cleanly instead of 500ing every run until a human applies the
+      // migration and schedules this (review #8).
+      if (isMissingColumnError(fetchErr)) {
+        log("stripe-webhook-reconcile", "State columns absent (migration not applied) — nothing to reconcile", {});
+        return new Response(JSON.stringify({ skipped: "migration_not_applied" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      throw fetchErr;
+    }
 
     let replayed = 0;
     let stillFailing = 0;
+    let escalatedNow = 0;
     for (const row of (rows ?? []) as LogRow[]) {
-      const eventType = row.event_type ??
-        ((row.parsed?.eventType as string | undefined) ?? "unknown");
+      const attempts = (row.attempts ?? 0) + 1;
+      const eventType = row.event_type ?? (row.parsed?.eventType as string | undefined) ?? null;
+
+      // Unresolvable event type: do NOT hand it to processStripeEvent, which
+      // would treat a non-'checkout.session.completed' type as 'ignored' and
+      // mark the row processed — silently dropping a possibly-real payment.
+      // Flag for a human instead (review #9).
+      if (!eventType) {
+        await supabaseAdmin
+          .from("payment_webhook_logs")
+          .update({ processing_status: "needs_attention", last_error: "unresolved event_type", attempts })
+          .eq("stripe_event_id", row.stripe_event_id);
+        stillFailing++;
+        escalatedNow++;
+        logError("stripe-webhook-reconcile", "Row has unresolvable event_type — needs_attention", {
+          eventId: row.stripe_event_id,
+        });
+        continue;
+      }
+
       const outcome = await processStripeEvent(
         { id: row.stripe_event_id, type: eventType, dataObj: row.stripe_payload ?? null },
         processDeps,
+        { suppressConfirmationEmail: row.email_sent ?? false },
       );
       // A retriable failure that has exhausted its retries flips to
       // needs_attention so it drops out of the replay set (review #2) — the
       // 'received'/'failed' query above no longer picks it up.
-      const attempts = (row.attempts ?? 0) + 1;
-      const { status } = resolveStatus(outcome, attempts);
+      const { status, escalated } = resolveStatus(outcome, attempts);
       const { error: markErr } = await supabaseAdmin
         .from("payment_webhook_logs")
         .update({
@@ -129,16 +162,30 @@ Deno.serve(async (req: Request) => {
           processed_at: outcome.ok ? new Date().toISOString() : null,
           last_error: outcome.ok ? null : outcome.reason,
           attempts,
+          ...(outcome.ok && outcome.emailed ? { email_sent: true } : {}),
         })
         .eq("stripe_event_id", row.stripe_event_id);
       if (markErr) logError("stripe-webhook-reconcile", "Failed to mark replayed row", markErr);
       if (outcome.ok) replayed++;
       else stillFailing++;
+      if (escalated) escalatedNow++;
       log("stripe-webhook-reconcile", "Replayed event", {
         eventId: row.stripe_event_id,
         eventType,
         outcome: status,
       });
+    }
+
+    // Alert immediately when this run escalated any row to needs_attention, so
+    // a human is paged now rather than waiting up to ALERT_AFTER_MINUTES for
+    // the stale-sweep below (review #3). Event ids are surfaced by the sweep;
+    // here we only signal that escalations happened this run.
+    if (escalatedNow > 0) {
+      await postPaymentsAlert(
+        `:rotating_light: stripe-webhook-reconcile: ${escalatedNow} payment webhook event(s) escalated to needs_attention this run (retries exhausted or unresolvable). Check payment_webhook_logs.`,
+        { botToken: SLACK_BOT_TOKEN, channel: PAYMENTS_ALERT_SLACK_CHANNEL },
+        (message, err) => logError("stripe-webhook-reconcile", message, err),
+      );
     }
 
     // Alert on anything old and still unresolved (replay-resistant failures
@@ -168,7 +215,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const summary = { replayed, still_failing: stillFailing, alerted: (stuck ?? []).length };
+    const summary = { replayed, still_failing: stillFailing, escalated: escalatedNow, alerted: (stuck ?? []).length };
     log("stripe-webhook-reconcile", "Run complete", summary);
     return new Response(JSON.stringify(summary), {
       status: 200,

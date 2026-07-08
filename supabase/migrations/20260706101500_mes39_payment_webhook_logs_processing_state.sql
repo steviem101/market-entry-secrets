@@ -20,7 +20,11 @@ ALTER TABLE public.payment_webhook_logs
   ADD COLUMN IF NOT EXISTS processing_status text NOT NULL DEFAULT 'received',
   ADD COLUMN IF NOT EXISTS attempts integer NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS processed_at timestamp with time zone,
-  ADD COLUMN IF NOT EXISTS last_error text;
+  ADD COLUMN IF NOT EXISTS last_error text,
+  -- Guards against duplicate confirmation emails: set once the confirmation
+  -- email is sent; a reprocess/reconcile replay reads it and suppresses the
+  -- resend (MES-39 review #6).
+  ADD COLUMN IF NOT EXISTS email_sent boolean NOT NULL DEFAULT false;
 
 ALTER TABLE public.payment_webhook_logs
   DROP CONSTRAINT IF EXISTS payment_webhook_logs_processing_status_check;
@@ -31,10 +35,13 @@ ALTER TABLE public.payment_webhook_logs
 -- Historical rows predate state tracking. They were only ever written under
 -- the old log-first flow after Stripe got its 200, and the reconcile loop
 -- must not replay months of history — mark them processed as of creation.
+-- Scoped to rows created before this migration's timestamp so a re-apply can
+-- never flip a genuinely in-flight 'received' row to processed (review A2).
 UPDATE public.payment_webhook_logs
    SET processing_status = 'processed',
        processed_at = COALESCE(processed_at, created_at)
- WHERE processing_status = 'received';
+ WHERE processing_status = 'received'
+   AND created_at < '2026-07-06T10:15:00Z';
 
 -- Backfill event_type from the parsed payload where available.
 UPDATE public.payment_webhook_logs

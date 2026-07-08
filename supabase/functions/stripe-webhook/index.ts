@@ -90,7 +90,7 @@ async function markLog(eventId: string, fields: Record<string, unknown>): Promis
 
 type Claim =
   | { kind: "duplicate" }
-  | { kind: "claimed"; attempts: number } // state row exists; attempts incl. this try
+  | { kind: "claimed"; attempts: number; emailSent: boolean } // state row exists; attempts incl. this try
   | { kind: "legacy" }; // state columns absent (migration not applied yet)
 
 async function claimEvent(
@@ -99,7 +99,7 @@ async function claimEvent(
 ): Promise<Claim> {
   const { data: existing, error: selectErr } = await supabaseAdmin
     .from("payment_webhook_logs")
-    .select("stripe_event_id, processing_status, attempts")
+    .select("stripe_event_id, processing_status, attempts, email_sent")
     .eq("stripe_event_id", event.id)
     .maybeSingle();
 
@@ -126,7 +126,7 @@ async function claimEvent(
     // reprocess instead of short-circuiting.
     const attempts = (existing.attempts ?? 0) + 1;
     await markLog(event.id, { attempts });
-    return { kind: "claimed", attempts };
+    return { kind: "claimed", attempts, emailSent: existing.email_sent ?? false };
   }
 
   const { error: insertErr } = await supabaseAdmin.from("payment_webhook_logs").insert({
@@ -147,7 +147,7 @@ async function claimEvent(
     }
     throw insertErr;
   }
-  return { kind: "claimed", attempts: 1 };
+  return { kind: "claimed", attempts: 1, emailSent: false };
 }
 
 Deno.serve(async (req: Request) => {
@@ -200,6 +200,7 @@ Deno.serve(async (req: Request) => {
     const outcome = await processStripeEvent(
       { id: event.id, type: event.type, dataObj },
       processDeps,
+      { suppressConfirmationEmail: claim.kind === "claimed" ? claim.emailSent : false },
     );
 
     if (claim.kind === "legacy") {
@@ -225,6 +226,9 @@ Deno.serve(async (req: Request) => {
         processing_status: escalated ? "needs_attention" : statusForOutcome(outcome),
         processed_at: outcome.ok ? new Date().toISOString() : null,
         last_error: outcome.ok ? null : outcome.reason,
+        // Latch email_sent once a confirmation email actually went out, so a
+        // later retry/reconcile replay suppresses the duplicate (review #6).
+        ...(outcome.ok && outcome.emailed ? { email_sent: true } : {}),
       });
     }
 

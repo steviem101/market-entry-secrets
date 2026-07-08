@@ -92,7 +92,7 @@ test("happy path: tier upsert + report badge update, marked 'processed'", async 
     checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }),
     { supabase },
   );
-  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded" });
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
   assert.equal(statusForOutcome(outcome), "processed");
   const tables = supabase.calls.map((c) => `${c.table}:${c.op}`);
   // downgrade-guard read, then upsert, then report-badge update
@@ -126,7 +126,7 @@ test("retry after transient failure succeeds (same event replayed)", async () =>
   // ...the redelivered event processes cleanly and exactly once applies the tier.
   const healthy = makeSupabaseStub();
   const second = await processStripeEvent(evt, { supabase: healthy });
-  assert.deepEqual(second, { ok: true, action: "tier_upgraded" });
+  assert.deepEqual(second, { ok: true, action: "tier_upgraded", emailed: false });
   assert.equal(
     healthy.calls.filter((c) => c.table === "user_subscriptions" && c.op === "upsert").length,
     1,
@@ -198,7 +198,7 @@ test("confirmation email failure never changes a successful outcome", async () =
       },
     },
   );
-  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded" });
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
 });
 
 // --- MES-39 review #1: never downgrade a paying customer -----------------------------
@@ -231,7 +231,7 @@ test("equal or higher new tier still applies (not a downgrade)", async () => {
     checkoutEvent({ tier: "scale", supabase_user_id: "user-1" }),
     { supabase },
   );
-  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded" });
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
   assert.ok(supabase.calls.some((c) => c.op === "upsert"));
 });
 
@@ -241,7 +241,7 @@ test("downgrade-guard read failure falls through to the upsert (upgrade not bloc
     checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }),
     { supabase },
   );
-  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded" });
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
   assert.ok(supabase.calls.some((c) => c.op === "upsert"));
 });
 
@@ -257,6 +257,77 @@ test("resolveStatus: retriable failure escalates to needs_attention at the cap",
   assert.deepEqual(resolveStatus(nonRetriable, 1), { status: "needs_attention", escalated: false });
   // success is never escalated
   assert.deepEqual(resolveStatus({ ok: true, action: "tier_upgraded" }, 99), { status: "processed", escalated: false });
+});
+
+// --- review #4: fail safe on an unrecognized current tier ----------------------------
+
+test("unknown current tier is NOT treated as rank 0 — write is skipped, not a downgrade", async () => {
+  const supabase = makeSupabaseStub({ currentTier: "pro" }); // 'pro' not in TIER_RANK
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "free", supabase_user_id: "user-1" }),
+    { supabase },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "skipped_downgrade" });
+  assert.ok(supabase.calls.every((c) => c.op !== "upsert"), "must not overwrite an unknown tier");
+});
+
+// --- review #1: report-badge update is best-effort, never fails the event ------------
+
+test("report-badge (user_reports) update failure does NOT fail the event", async () => {
+  const supabase = makeSupabaseStub({ reportsUpdateError: { message: "transient" } });
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }),
+    { supabase },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
+  assert.equal(statusForOutcome(outcome), "processed");
+});
+
+// --- review #10: foreign (non-app) checkout is ignored benignly, not paged -----------
+
+test("checkout with no app metadata is ignored (no page, no writes)", async () => {
+  const supabase = makeSupabaseStub();
+  const outcome = await processStripeEvent(
+    checkoutEvent({}), // no tier, no supabase_user_id (e.g. a Stripe Payment Link)
+    { supabase },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "ignored" });
+  assert.equal(supabase.calls.length, 0);
+});
+
+test("our-looking checkout (user_id present) but bad tier still pages", async () => {
+  const supabase = makeSupabaseStub();
+  const outcome = await processStripeEvent(
+    checkoutEvent({ supabase_user_id: "user-1" }), // no tier, but clearly ours
+    { supabase },
+  );
+  assert.equal(outcome.ok, false);
+  assert.ok(!outcome.ok && !outcome.retriable);
+});
+
+// --- review #6: confirmation email is idempotent via suppress flag -------------------
+
+test("confirmation email is sent once and reports emailed:true", async () => {
+  let sent = 0;
+  const supabase = makeSupabaseStub();
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }, { customer_details: { email: "b@x.com" } }),
+    { supabase, sendConfirmationEmail: async () => { sent++; } },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: true });
+  assert.equal(sent, 1);
+});
+
+test("suppressConfirmationEmail skips the resend on replay (emailed:false)", async () => {
+  let sent = 0;
+  const supabase = makeSupabaseStub();
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }, { customer_details: { email: "b@x.com" } }),
+    { supabase, sendConfirmationEmail: async () => { sent++; } },
+    { suppressConfirmationEmail: true },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
+  assert.equal(sent, 0, "no email on a suppressed replay");
 });
 
 test("isMissingColumnError recognises pre-migration schemas only", () => {
