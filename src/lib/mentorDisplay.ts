@@ -15,9 +15,13 @@ export interface MentorIdentity {
   is_anonymous: boolean;
 }
 
-/** Card/profile heading: anonymous mentors surface their masked headline. */
-export const mentorDisplayName = (m: MentorIdentity): string =>
-  m.is_anonymous ? m.title : m.name;
+/**
+ * Card/profile heading. For anonymous mentors the view already masks `name` to
+ * the admin alias (falling back to archetype / "Verified Expert"), so it is
+ * always the safe, most descriptive label — use it directly. Real names only
+ * ever reach here for non-anonymous mentors.
+ */
+export const mentorDisplayName = (m: MentorIdentity): string => m.name;
 
 /**
  * Avatar initials. Returns null for anonymous mentors — callers render a
@@ -114,3 +118,93 @@ export const suggestAnonymousAlias = (m: {
   if (sector) return `${sectorTagLabel(sector)} ${base}`;
   return base;
 };
+
+/**
+ * persona_fit codes → human "who they help" phrases. These are audience tags,
+ * not identity, so they are safe to show for anonymous mentors.
+ */
+const PERSONA_LABELS: Record<string, string> = {
+  international_entrant: "International companies entering ANZ",
+  local_startup: "Local startups scaling up",
+  functional_expert: "Teams needing functional expertise",
+  both: "International entrants & local startups",
+};
+
+export const personaFitLabel = (persona: string): string =>
+  PERSONA_LABELS[persona.trim().toLowerCase()] ??
+  persona.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+/** Distinct "who they help" labels for a mentor's persona_fit array. */
+export const personaFitLabels = (personaFit: string[] | null | undefined): string[] =>
+  Array.from(new Set((personaFit || []).map(personaFitLabel)));
+
+/**
+ * Extract a sanitised seniority phrase ("20+ years") from arbitrary experience
+ * text — digits + "years" only, never surrounding words that could name an
+ * employer. Mirrors the SQL regex in the community_members_public view so the
+ * admin dialog preview matches what the public will actually see. Returns null
+ * when no such token exists.
+ */
+export const seniorityPhrase = (experience: string | null | undefined): string | null => {
+  if (!experience) return null;
+  const m = experience.match(/[0-9]+\+?\s*years?/i);
+  return m ? m[0].replace(/\s+/g, " ").trim() : null;
+};
+
+/**
+ * Client-side twin of the view's composed anonymous bio, built ONLY from
+ * structured/public fields (archetype, sanitised seniority, sectors,
+ * specialties). Used to preview and pre-fill the admin dialog; the server view
+ * is the source of truth for what ships. Never consumes free text verbatim.
+ */
+export const suggestAnonymousBio = (m: {
+  archetype: string | null;
+  experience?: string | null;
+  sector_tags: string[] | null;
+  specialties: string[] | null;
+}): string => {
+  const years = seniorityPhrase(m.experience);
+  const sectors = (m.sector_tags || []).filter(Boolean);
+  const specialties = (m.specialties || []).filter(Boolean);
+  let bio = `Senior ${m.archetype || "operator"}`;
+  if (years) bio += ` with ${years} of experience`;
+  if (sectors.length) bio += ` across ${sectors.map(sectorTagLabel).join(", ")}`;
+  bio += ".";
+  if (specialties.length) bio += ` Specialises in ${specialties.join(", ")}.`;
+  return bio;
+};
+
+/**
+ * Guard for the admin dialog: flag anonymous copy that would defeat the mask by
+ * containing the mentor's real name or company. Returns the offending term, or
+ * null when the text is clean. Case-insensitive, token-aware (won't false-fire
+ * on short substrings). Advisory only — the server view never emits these
+ * free-text fields, but the admin-authored overrides go out verbatim.
+ */
+export const identityLeak = (
+  text: string,
+  realName: string | null | undefined,
+  realCompany: string | null | undefined,
+): string | null => {
+  const haystack = ` ${text.toLowerCase()} `;
+  const terms: string[] = [];
+  for (const source of [realName, realCompany]) {
+    if (!source) continue;
+    const full = source.trim().toLowerCase();
+    if (full.length >= 3) terms.push(full);
+    // Also catch each significant word (e.g. surname, distinctive company word).
+    for (const word of full.split(/\s+/)) {
+      if (word.length >= 4 && !STOPWORDS.has(word)) terms.push(word);
+    }
+  }
+  for (const term of terms) {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`(^|\\W)${escaped}(\\W|$)`).test(haystack)) return term;
+  }
+  return null;
+};
+
+const STOPWORDS = new Set([
+  "group", "global", "ventures", "capital", "partners", "advisory",
+  "consulting", "services", "company", "limited", "pty", "the", "and",
+]);
