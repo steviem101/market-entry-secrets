@@ -27,6 +27,7 @@ import {
   isMissingColumnError,
   postPaymentsAlert,
   processStripeEvent,
+  resolveStatus,
   statusForOutcome,
   type ProcessDeps,
 } from "../_shared/stripeEvents.ts";
@@ -89,7 +90,7 @@ async function markLog(eventId: string, fields: Record<string, unknown>): Promis
 
 type Claim =
   | { kind: "duplicate" }
-  | { kind: "claimed" } // state row exists with processing_status='received'/'failed'
+  | { kind: "claimed"; attempts: number } // state row exists; attempts incl. this try
   | { kind: "legacy" }; // state columns absent (migration not applied yet)
 
 async function claimEvent(
@@ -123,8 +124,9 @@ async function claimEvent(
     }
     // Unprocessed row: this is a Stripe retry (or a crashed first attempt) —
     // reprocess instead of short-circuiting.
-    await markLog(event.id, { attempts: (existing.attempts ?? 0) + 1 });
-    return { kind: "claimed" };
+    const attempts = (existing.attempts ?? 0) + 1;
+    await markLog(event.id, { attempts });
+    return { kind: "claimed", attempts };
   }
 
   const { error: insertErr } = await supabaseAdmin.from("payment_webhook_logs").insert({
@@ -145,7 +147,7 @@ async function claimEvent(
     }
     throw insertErr;
   }
-  return { kind: "claimed" };
+  return { kind: "claimed", attempts: 1 };
 }
 
 Deno.serve(async (req: Request) => {
@@ -211,16 +213,21 @@ Deno.serve(async (req: Request) => {
         });
         if (insertErr) logError("stripe-webhook", "Legacy-mode log insert failed", insertErr);
       }
-    } else {
+    // Escalate a retriable failure to needs_attention once it has exhausted
+    // MAX_PROCESS_ATTEMPTS, so it stops looping 500→retry forever (review #2).
+    const attempts = claim.kind === "claimed" ? claim.attempts : 0;
+    const { escalated } = resolveStatus(outcome, attempts);
+
+    if (claim.kind !== "legacy") {
       await markLog(event.id, {
-        processing_status: statusForOutcome(outcome),
+        processing_status: escalated ? "needs_attention" : statusForOutcome(outcome),
         processed_at: outcome.ok ? new Date().toISOString() : null,
         last_error: outcome.ok ? null : outcome.reason,
       });
     }
 
     if (!outcome.ok) {
-      if (outcome.retriable) {
+      if (outcome.retriable && !escalated) {
         logError("stripe-webhook", "Processing failed; returning 500 so Stripe retries", {
           eventId: event.id,
           reason: outcome.reason,
@@ -230,14 +237,20 @@ Deno.serve(async (req: Request) => {
           { status: 500, headers: jsonHeaders },
         );
       }
-      // Unfixable by retry (bad/missing metadata): keep the replayable log row,
-      // page a human, and 200 so Stripe stops hammering us. No PII in the alert.
-      logError("stripe-webhook", "Event needs attention (not retriable)", {
+      // needs_attention: either not-retriable (bad/missing metadata) or a
+      // retriable failure that exhausted its retries. Keep the replayable log
+      // row, page a human, and 200 so Stripe/reconcile stop hammering us.
+      // Alert text is static per class — never embed the raw DB error (review #6).
+      const reasonClass = outcome.retriable
+        ? `processing failed ${attempts}× (retries exhausted)`
+        : outcome.reason;
+      logError("stripe-webhook", "Event needs attention", {
         eventId: event.id,
         reason: outcome.reason,
+        attempts,
       });
       await alert(
-        `:rotating_light: stripe-webhook: event \`${event.id}\` (${event.type}) needs attention — ${outcome.reason}. Row kept in payment_webhook_logs for replay/manual fix.`,
+        `:rotating_light: stripe-webhook: event \`${event.id}\` (${event.type}) needs attention — ${reasonClass}. Row kept in payment_webhook_logs for replay/manual fix.`,
       );
       return new Response(
         JSON.stringify({ received: true, needs_attention: true }),

@@ -12,7 +12,9 @@ import assert from "node:assert/strict";
 import {
   isMissingColumnError,
   processStripeEvent,
+  resolveStatus,
   statusForOutcome,
+  MAX_PROCESS_ATTEMPTS,
 } from "./stripeEvents.ts";
 
 interface Call {
@@ -25,6 +27,9 @@ function makeSupabaseStub(opts: {
   subscriptionUpsertError?: { message: string } | null;
   reportsUpdateError?: { message: string } | null;
   leadUpsertError?: { message: string } | null;
+  // Current user_subscriptions.tier the downgrade-guard read returns (null = no row).
+  currentTier?: string | null;
+  currentTierError?: { message: string } | null;
 } = {}) {
   const calls: Call[] = [];
   return {
@@ -42,6 +47,19 @@ function makeSupabaseStub(opts: {
           calls.push({ table, op: "update", payload });
           return {
             eq: () => Promise.resolve({ error: opts.reportsUpdateError ?? null }),
+          };
+        },
+        // Downgrade-guard read: from('user_subscriptions').select('tier').eq().maybeSingle()
+        select(_cols: string) {
+          calls.push({ table, op: "select" });
+          return {
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: opts.currentTier !== undefined ? { tier: opts.currentTier } : null,
+                  error: opts.currentTierError ?? null,
+                }),
+            }),
           };
         },
       };
@@ -77,8 +95,14 @@ test("happy path: tier upsert + report badge update, marked 'processed'", async 
   assert.deepEqual(outcome, { ok: true, action: "tier_upgraded" });
   assert.equal(statusForOutcome(outcome), "processed");
   const tables = supabase.calls.map((c) => `${c.table}:${c.op}`);
-  assert.deepEqual(tables, ["user_subscriptions:upsert", "user_reports:update"]);
-  assert.equal((supabase.calls[0].payload as { tier: string }).tier, "growth");
+  // downgrade-guard read, then upsert, then report-badge update
+  assert.deepEqual(tables, [
+    "user_subscriptions:select",
+    "user_subscriptions:upsert",
+    "user_reports:update",
+  ]);
+  const upsertCall = supabase.calls.find((c) => c.op === "upsert")!;
+  assert.equal((upsertCall.payload as { tier: string }).tier, "growth");
 });
 
 test("subscription upsert failure is RETRIABLE -> 'failed' (Stripe retry reprocesses)", async () => {
@@ -104,7 +128,7 @@ test("retry after transient failure succeeds (same event replayed)", async () =>
   const second = await processStripeEvent(evt, { supabase: healthy });
   assert.deepEqual(second, { ok: true, action: "tier_upgraded" });
   assert.equal(
-    healthy.calls.filter((c) => c.table === "user_subscriptions").length,
+    healthy.calls.filter((c) => c.table === "user_subscriptions" && c.op === "upsert").length,
     1,
   );
 });
@@ -175,6 +199,64 @@ test("confirmation email failure never changes a successful outcome", async () =
     },
   );
   assert.deepEqual(outcome, { ok: true, action: "tier_upgraded" });
+});
+
+// --- MES-39 review #1: never downgrade a paying customer -----------------------------
+
+test("stale lower-tier event does NOT downgrade a higher current tier", async () => {
+  // User already holds 'scale'; a replayed 'growth' checkout must be a no-op.
+  const supabase = makeSupabaseStub({ currentTier: "scale" });
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }),
+    { supabase },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "skipped_downgrade" });
+  assert.equal(statusForOutcome(outcome), "processed");
+  // read happened, but NO upsert/update wrote the lower tier
+  assert.ok(supabase.calls.every((c) => c.op !== "upsert" && c.op !== "update"));
+});
+
+test("legacy tier aliases are normalized (concierge outranks scale)", async () => {
+  const supabase = makeSupabaseStub({ currentTier: "concierge" }); // == enterprise
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "scale", supabase_user_id: "user-1" }),
+    { supabase },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "skipped_downgrade" });
+});
+
+test("equal or higher new tier still applies (not a downgrade)", async () => {
+  const supabase = makeSupabaseStub({ currentTier: "growth" });
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "scale", supabase_user_id: "user-1" }),
+    { supabase },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded" });
+  assert.ok(supabase.calls.some((c) => c.op === "upsert"));
+});
+
+test("downgrade-guard read failure falls through to the upsert (upgrade not blocked)", async () => {
+  const supabase = makeSupabaseStub({ currentTierError: { message: "read timeout" } });
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }),
+    { supabase },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded" });
+  assert.ok(supabase.calls.some((c) => c.op === "upsert"));
+});
+
+// --- MES-39 review #2: retriable failures escalate after MAX_PROCESS_ATTEMPTS --------
+
+test("resolveStatus: retriable failure escalates to needs_attention at the cap", () => {
+  const retriable = { ok: false as const, retriable: true, reason: "db down" };
+  assert.deepEqual(resolveStatus(retriable, 1), { status: "failed", escalated: false });
+  assert.deepEqual(resolveStatus(retriable, MAX_PROCESS_ATTEMPTS - 1), { status: "failed", escalated: false });
+  assert.deepEqual(resolveStatus(retriable, MAX_PROCESS_ATTEMPTS), { status: "needs_attention", escalated: true });
+  // non-retriable is already terminal; attempts don't matter
+  const nonRetriable = { ok: false as const, retriable: false, reason: "bad metadata" };
+  assert.deepEqual(resolveStatus(nonRetriable, 1), { status: "needs_attention", escalated: false });
+  // success is never escalated
+  assert.deepEqual(resolveStatus({ ok: true, action: "tier_upgraded" }, 99), { status: "processed", escalated: false });
 });
 
 test("isMissingColumnError recognises pre-migration schemas only", () => {

@@ -13,8 +13,25 @@
 
 export const VALID_TIERS = ["free", "growth", "scale", "enterprise", "lead_purchase"];
 
+// Subscription tier ordering (legacy premium/concierge normalized in), used to
+// prevent a stale/replayed lower-tier event from DOWNGRADING a paying customer
+// who has since bought a higher tier (MES-39 review #1).
+export const TIER_RANK: Record<string, number> = { free: 0, growth: 1, scale: 2, enterprise: 3 };
+export function normalizeTier(t: string | null | undefined): string {
+  if (t === "premium") return "growth";
+  if (t === "concierge") return "enterprise";
+  return t ?? "free";
+}
+function tierRank(t: string | null | undefined): number {
+  return TIER_RANK[normalizeTier(t)] ?? 0;
+}
+
+// After this many failed processing attempts a "retriable" failure is treated
+// as permanent (needs_attention) instead of looping forever (MES-39 review #2).
+export const MAX_PROCESS_ATTEMPTS = 5;
+
 export type ProcessOutcome =
-  | { ok: true; action: "tier_upgraded" | "lead_purchase_recorded" | "ignored" }
+  | { ok: true; action: "tier_upgraded" | "lead_purchase_recorded" | "ignored" | "skipped_downgrade" }
   | { ok: false; retriable: boolean; reason: string };
 
 export interface StripeEventLike {
@@ -112,7 +129,26 @@ export async function processStripeEvent(
     return { ok: true, action: "lead_purchase_recorded" };
   }
 
-  // Subscription tier upgrade.
+  // Subscription tier upgrade. Never downgrade: a replayed/stale lower-tier
+  // event must not overwrite a customer who already holds a higher tier
+  // (MES-39 review #1). Best-effort — a read failure falls through to the
+  // upsert rather than blocking a legitimate upgrade.
+  const { data: currentSub, error: currentErr } = await deps.supabase
+    .from("user_subscriptions")
+    .select("tier")
+    .eq("user_id", supabaseUserId)
+    .maybeSingle();
+  if (currentErr) {
+    log("Could not read current tier before upsert (proceeding)", { error: currentErr.message ?? currentErr });
+  } else if (currentSub?.tier && tierRank(currentSub.tier) > tierRank(tier)) {
+    log("Skipping tier downgrade", {
+      supabaseUserId,
+      currentTier: currentSub.tier,
+      eventTier: tier,
+    });
+    return { ok: true, action: "skipped_downgrade" };
+  }
+
   const { error: upsertErr } = await deps.supabase
     .from("user_subscriptions")
     .upsert(
@@ -191,6 +227,23 @@ export async function processStripeEvent(
 export function statusForOutcome(outcome: ProcessOutcome): string {
   if (outcome.ok) return outcome.action === "ignored" ? "ignored" : "processed";
   return outcome.retriable ? "failed" : "needs_attention";
+}
+
+/**
+ * Terminal status accounting for retry exhaustion. A retriable failure that has
+ * already used MAX_PROCESS_ATTEMPTS is escalated to needs_attention so it stops
+ * being retried/replayed forever and instead pages a human (MES-39 review #2).
+ * `escalated` tells the caller to alert + return 200 instead of 500.
+ */
+export function resolveStatus(
+  outcome: ProcessOutcome,
+  attempts: number,
+): { status: string; escalated: boolean } {
+  const base = statusForOutcome(outcome);
+  if (base === "failed" && attempts >= MAX_PROCESS_ATTEMPTS) {
+    return { status: "needs_attention", escalated: true };
+  }
+  return { status: base, escalated: false };
 }
 
 /**

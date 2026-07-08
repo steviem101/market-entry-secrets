@@ -24,7 +24,7 @@ import { log, logError } from "../_shared/log.ts";
 import {
   postPaymentsAlert,
   processStripeEvent,
-  statusForOutcome,
+  resolveStatus,
   type ProcessDeps,
 } from "../_shared/stripeEvents.ts";
 
@@ -117,13 +117,18 @@ Deno.serve(async (req: Request) => {
         { id: row.stripe_event_id, type: eventType, dataObj: row.stripe_payload ?? null },
         processDeps,
       );
+      // A retriable failure that has exhausted its retries flips to
+      // needs_attention so it drops out of the replay set (review #2) — the
+      // 'received'/'failed' query above no longer picks it up.
+      const attempts = (row.attempts ?? 0) + 1;
+      const { status } = resolveStatus(outcome, attempts);
       const { error: markErr } = await supabaseAdmin
         .from("payment_webhook_logs")
         .update({
-          processing_status: statusForOutcome(outcome),
+          processing_status: status,
           processed_at: outcome.ok ? new Date().toISOString() : null,
           last_error: outcome.ok ? null : outcome.reason,
-          attempts: (row.attempts ?? 0) + 1,
+          attempts,
         })
         .eq("stripe_event_id", row.stripe_event_id);
       if (markErr) logError("stripe-webhook-reconcile", "Failed to mark replayed row", markErr);
@@ -132,7 +137,7 @@ Deno.serve(async (req: Request) => {
       log("stripe-webhook-reconcile", "Replayed event", {
         eventId: row.stripe_event_id,
         eventType,
-        outcome: statusForOutcome(outcome),
+        outcome: status,
       });
     }
 
@@ -141,7 +146,7 @@ Deno.serve(async (req: Request) => {
     const alertCutoff = new Date(Date.now() - ALERT_AFTER_MINUTES * 60_000).toISOString();
     const { data: stuck, error: stuckErr } = await supabaseAdmin
       .from("payment_webhook_logs")
-      .select("stripe_event_id, event_type, processing_status, created_at, last_error")
+      .select("stripe_event_id, event_type, processing_status, created_at")
       .in("processing_status", ["received", "failed", "needs_attention"])
       .lt("created_at", alertCutoff)
       .order("created_at", { ascending: true })
@@ -150,10 +155,11 @@ Deno.serve(async (req: Request) => {
     if (stuckErr) throw stuckErr;
 
     if ((stuck ?? []).length > 0) {
-      const lines = (stuck as Array<LogRow & { last_error?: string | null }>).map((r) =>
-        `• \`${r.stripe_event_id}\` (${r.event_type ?? "?"}) ${r.processing_status} since ${r.created_at}${
-          r.last_error ? ` — ${r.last_error}` : ""
-        }`
+      // Event id + status + age only. The raw last_error stays in the
+      // admin-only payment_webhook_logs table, never in Slack, so a future
+      // schema change can't leak a row value into the alert (review #6).
+      const lines = (stuck as Array<LogRow>).map((r) =>
+        `• \`${r.stripe_event_id}\` (${r.event_type ?? "?"}) ${r.processing_status} since ${r.created_at}`
       );
       await postPaymentsAlert(
         `:warning: stripe-webhook-reconcile: ${stuck!.length} payment webhook event(s) unprocessed for >${ALERT_AFTER_MINUTES}m:\n${lines.join("\n")}`,
