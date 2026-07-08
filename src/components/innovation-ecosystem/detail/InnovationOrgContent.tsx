@@ -1,13 +1,12 @@
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Globe, MapPin, Calendar, Users, Mail } from "lucide-react";
 import CompanyCard from "@/components/CompanyCard";
 import {
   parseJsonArray,
-  getContactPersonImage,
   getCompanyInitials
 } from "@/components/company-card/CompanyCardHelpers";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { domainToWebsite } from "@/lib/logoUtils";
 
 interface InnovationOrgContentProps {
@@ -101,12 +100,7 @@ export const InnovationOrgContent = ({ org, relatedOrgs }: InnovationOrgContentP
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {contactPersons.map((person: any, index: number) => (
                   <div key={person.id || index} className="flex items-center gap-4 bg-muted/50 rounded-lg p-4">
-                    <Avatar className="w-14 h-14">
-                      <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                        {person.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <ContactAvatar name={person.name} src={person.image} className="w-14 h-14" />
                     <div>
                       <div className="font-medium text-foreground">{person.name}</div>
                       {person.role && (

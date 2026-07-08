@@ -19,7 +19,7 @@ import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { MentorContactModal } from "@/components/mentors/MentorContactModal";
@@ -210,20 +210,18 @@ const MentorProfile = () => {
         {/* Profile header */}
         <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
           <div className="relative -mt-12 md:-mt-14">
-            <Avatar className="w-24 h-24 md:w-28 md:h-28 border-4 border-background shadow-lg">
-              {mentor.is_anonymous ? (
-                <AvatarFallback className="bg-primary/10 text-primary">
+            <ContactAvatar
+              name={displayName}
+              src={mentor.is_anonymous ? undefined : mentor.avatar_url || mentor.image}
+              className="w-24 h-24 md:w-28 md:h-28 border-4 border-background shadow-lg text-2xl md:text-3xl"
+              fallback={
+                mentor.is_anonymous ? (
                   <Globe className="w-10 h-10" />
-                </AvatarFallback>
-              ) : (
-                <>
-                  <AvatarImage src={mentor.avatar_url || mentor.image || undefined} alt={displayName} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-2xl md:text-3xl">
-                    {mentorInitials(mentor)}
-                  </AvatarFallback>
-                </>
-              )}
-            </Avatar>
+                ) : (
+                  <span>{mentorInitials(mentor)}</span>
+                )
+              }
+            />
             {mentor.is_verified && (
               <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
                 <CheckCircle className="w-6 h-6 text-primary fill-primary/10" />

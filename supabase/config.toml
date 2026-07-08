@@ -143,3 +143,9 @@ verify_jwt = false
 [functions.admin-mentor-anonymity]
 # Admin-only mentor anonymity toggle; requireAdmin() re-checks the role in-code.
 verify_jwt = true
+
+[functions.import-contact-images]
+# MES-123 admin-only contact-image import pipeline; requireAdmin() re-checks the role in-code.
+# Deployed manually (supabase functions deploy import-contact-images) — not in the
+# deploy-edge-functions.yml auto-deploy list.
+verify_jwt = true

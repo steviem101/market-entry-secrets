@@ -1,10 +1,10 @@
 import { memo } from "react";
 import { MapPin, CheckCircle, Star, Globe, Clock, EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import type { Mentor } from "@/hooks/useMentors";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import {
   mentorDisplayName,
   mentorInitials,
@@ -91,23 +91,18 @@ const MentorCard = memo(({ mentor }: MentorCardProps) => {
       <div className="flex items-start gap-4 mb-4">
         {/* Avatar with verified badge */}
         <div className="relative flex-shrink-0">
-          <Avatar className="w-16 h-16">
-            {mentor.is_anonymous ? (
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
+          <ContactAvatar
+            name={displayName}
+            src={mentor.is_anonymous ? undefined : mentor.avatar_url || mentor.image}
+            className="w-16 h-16"
+            fallback={
+              mentor.is_anonymous ? (
                 <Globe className="w-8 h-8" />
-              </AvatarFallback>
-            ) : (
-              <>
-                <AvatarImage
-                  src={mentor.avatar_url || mentor.image || undefined}
-                  alt={mentor.name}
-                />
-                <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                  {mentorInitials(mentor)}
-                </AvatarFallback>
-              </>
-            )}
-          </Avatar>
+              ) : (
+                <span className="text-lg">{mentorInitials(mentor)}</span>
+              )
+            }
+          />
           {mentor.is_verified && (
             <div className="absolute -bottom-1 -right-1 bg-white rounded-full">
               <CheckCircle className="w-5 h-5 text-primary fill-primary/10" />

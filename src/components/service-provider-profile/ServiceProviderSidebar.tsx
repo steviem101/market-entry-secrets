@@ -1,8 +1,8 @@
 import { Calendar, Users, Globe, MapPin, DollarSign, Briefcase, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Company } from "@/components/CompanyCard";
 import CompanyCard from "@/components/CompanyCard";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 
 interface Contact {
   id: string;
@@ -144,12 +144,7 @@ export const ServiceProviderSidebar = ({
           <div className="space-y-4">
             {contacts.map((contact) => (
               <div key={contact.id} className="flex items-center gap-3">
-                <Avatar className="w-10 h-10">
-                  {contact.avatar_url && <AvatarImage src={contact.avatar_url} alt={contact.full_name} />}
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                    {(contact.full_name || '').split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
+                <ContactAvatar name={contact.full_name} src={contact.avatar_url} className="w-10 h-10 text-xs" />
                 <div>
                   <p className="text-sm font-medium">{contact.full_name}</p>
                   {contact.role && (
