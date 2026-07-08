@@ -100,3 +100,13 @@ ownership, evidence citations, and a changelog — a `supabase/functions/CLAUDE.
 `edge-functions-and-cost-controls` and create a third source of truth to drift. `@file` imports
 were rejected for the same reason: they would inline skill content into every session's context,
 defeating the on-demand design. The root file stays within the ~250–400-line budget and links out.
+
+## 8. Second-pass additions (2026-07-07, post-review)
+
+Added after a closer sweep, all verified: root working-artefact dirs (`daily-backlogs/`,
+`reports/`, `data/`, `mentor_identification/`, `design_handoff_ireland_country_page/`) in §3; a
+cron-driven-functions note in §6 with **schedules explicitly marked unverified** (they live in
+pg_cron, not the repo); the `observability-logging-and-cost-attribution` skill pointer in §6;
+`public/llms.txt` in §13.4; and a lockfile gotcha (§14.9) — three lockfiles coexist
+(`package-lock.json`, `bun.lock`, `bun.lockb`) and which one Lovable's sync treats as authoritative
+is **unverifiable from the repo**, so it is documented as a caution, not a resolution.

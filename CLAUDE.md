@@ -72,6 +72,7 @@ market-intelligence platform helping companies enter the Australian/ANZ market.
 | `docs/` | Audits (`docs/audits/`), runbooks, `migrations.md`, `mes-knowledge-base-rag.md`, `prelaunch-audit.md`, redesign handoffs |
 | `.claude/skills/` | The skills library (§0) |
 | `scripts/` | One-off data import/enrichment scripts (Python/SQL/TS) — historical, not part of the build |
+| `daily-backlogs/`, `reports/`, `data/`, `mentor_identification/`, `design_handoff_ireland_country_page/` | Root-level working artefacts (backlogs, exports, handoff drafts) — historical, not part of the build |
 
 ## 4. Routes (`src/App.tsx` — the single routing file)
 
@@ -129,7 +130,12 @@ Shared modules: `_shared/http.ts` (`buildCorsHeaders` — allowlist is hardcoded
 there is **no** `ALLOWED_ORIGINS` secret), `_shared/log.ts`, `_shared/auth.ts` (`requireAdmin`),
 `_shared/email/` (code-rendered transactional email). `verify_jwt` per function is set in
 `supabase/config.toml`; functions with `verify_jwt = false` authenticate in-code. Conventions +
-cost caps: skill `edge-functions-and-cost-controls`.
+cost caps: skill `edge-functions-and-cost-controls`; structured logging / correlation IDs / per-run
+cost attribution: skill `observability-logging-and-cost-attribution`.
+
+**Cron-driven functions** (invoked by pg_cron via pg_net — **schedules live in the DB, unverified
+from the repo**): `embed-knowledge` (~2 min per its header), `kb-sync` (incremental),
+`process-email-queue`, `report-quality-loop`, `report-quality-rollup` (weekly).
 
 | Function | Purpose (auth if not JWT) |
 |----------|--------------------------|
@@ -277,8 +283,8 @@ Owned by skill `mes-ticket-workflow`; the invariants:
    state) → grid + `ListPagination`; pure filter logic in tested `src/lib/*Filters.ts` modules.
    `src/pages/Events.tsx` is the reference implementation.
 4. SEO per page: Helmet/`SEOHead` with title, description, canonical, JSON-LD. Crawler posture:
-   default-allow incl. AI crawlers; private routes noindexed — skill
-   `seo-rendering-indexing-and-programmatic-pages`.
+   default-allow incl. AI crawlers (`public/robots.txt`, `public/llms.txt`); private routes
+   noindexed — skill `seo-rendering-indexing-and-programmatic-pages`.
 5. Styling: HSL semantic tokens only (shadcn + `--mes-*` brand tokens); no hardcoded palette
    colors (one documented exception: `reportSectionConfig.ts` section accents).
 6. **Australian English** in all UI copy ("personalised", "organisation").
@@ -300,6 +306,9 @@ Owned by skill `mes-ticket-workflow`; the invariants:
    so past approved events persist in it).
 8. `docs/redesign/handoff/CLAUDE.md` is a historical intake-v2 handoff draft — never copy it over
    this file.
+9. Three lockfiles coexist at root (`package-lock.json`, `bun.lock`, `bun.lockb`); README and the
+   `npm test` script assume **npm**, but which lockfile the Lovable sync treats as authoritative is
+   unverified from the repo — don't casually regenerate lockfiles or switch package managers.
 
 ## 15. Key files & docs
 
