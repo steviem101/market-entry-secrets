@@ -51,7 +51,7 @@ const processDeps: ProcessDeps = {
     return { amount: pi.amount ?? null, currency: pi.currency ?? null };
   },
   sendConfirmationEmail: async ({ email, userId, tier, amount, currency, eventId }) => {
-    await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -69,6 +69,10 @@ const processDeps: ProcessDeps = {
         },
       }),
     });
+    // Throw on non-2xx so a failed send is not latched as email_sent (review B-Q5).
+    if (!resp.ok) {
+      throw new Error(`send-email returned ${resp.status}`);
+    }
   },
   log: (message, data) => log("stripe-webhook-reconcile", message, data),
   logError: (message, err) => logError("stripe-webhook-reconcile", message, err),

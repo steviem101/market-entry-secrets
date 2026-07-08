@@ -49,7 +49,7 @@ const processDeps: ProcessDeps = {
     return { amount: pi.amount ?? null, currency: pi.currency ?? null };
   },
   sendConfirmationEmail: async ({ email, userId, tier, amount, currency, eventId }) => {
-    await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -67,6 +67,12 @@ const processDeps: ProcessDeps = {
         },
       }),
     });
+    // fetch resolves on 4xx/5xx; throw so the caller records emailed=false and
+    // does NOT latch email_sent, leaving the confirmation to a later retry
+    // rather than marking it sent when send-email actually failed (review B-Q5).
+    if (!resp.ok) {
+      throw new Error(`send-email returned ${resp.status}`);
+    }
   },
   log: (message, data) => log("stripe-webhook", message, data),
   logError: (message, err) => logError("stripe-webhook", message, err),

@@ -32,16 +32,21 @@ ALTER TABLE public.payment_webhook_logs
   ADD CONSTRAINT payment_webhook_logs_processing_status_check
   CHECK (processing_status IN ('received', 'processed', 'failed', 'needs_attention', 'ignored'));
 
--- Historical rows predate state tracking. They were only ever written under
--- the old log-first flow after Stripe got its 200, and the reconcile loop
--- must not replay months of history — mark them processed as of creation.
--- Scoped to rows created before this migration's timestamp so a re-apply can
--- never flip a genuinely in-flight 'received' row to processed (review A2).
+-- Historical rows predate state tracking. Every row that exists when this
+-- migration applies was written by the OLD log-first flow, which inserted the
+-- row only AFTER processing succeeded — so all pre-existing rows are genuinely
+-- processed. Flip them all so the reconcile loop doesn't replay months of
+-- history (and re-send confirmation emails). This runs once at apply; migrations
+-- are not re-run, and the new webhook only starts writing genuine 'received'
+-- rows AFTER this migration is live, so there is no in-flight 'received' row to
+-- clobber here. (An earlier revision scoped this by a hardcoded timestamp, which
+-- left old-flow rows written between that literal and the real apply time stuck
+-- as 'received' — a concrete duplicate-email bug; hence the unconditional flip.)
 UPDATE public.payment_webhook_logs
    SET processing_status = 'processed',
-       processed_at = COALESCE(processed_at, created_at)
- WHERE processing_status = 'received'
-   AND created_at < '2026-07-06T10:15:00Z';
+       processed_at = COALESCE(processed_at, created_at),
+       email_sent = true
+ WHERE processing_status = 'received';
 
 -- Backfill event_type from the parsed payload where available.
 UPDATE public.payment_webhook_logs

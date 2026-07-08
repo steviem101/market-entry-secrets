@@ -97,16 +97,14 @@ export async function processStripeEvent(
   const tier: string | null = metadata.tier ?? null;
   const supabaseUserId: string | null = metadata.supabase_user_id ?? null;
 
-  // Foreign checkout (Stripe Payment Link, dashboard-created payment, non-app
-  // product): none of OUR metadata is present. Ignore benignly rather than
-  // paging a human — only OUR checkouts carry tier/supabase_user_id (review #10).
-  if (!tier && !supabaseUserId) {
-    log("Ignoring checkout with no app metadata (not created by this app)", { eventId: evt.id });
-    return { ok: true, action: "ignored" };
-  }
-
-  // Looks like our checkout (at least one of tier/user_id present) but is
-  // malformed — page a human; a retry can't fix missing/invalid metadata.
+  // Fail loud on missing/invalid metadata: this app creates checkouts ONLY via
+  // create-checkout, which always sets tier + supabase_user_id, so a checkout
+  // lacking them means either that path regressed or a foreign (non-app)
+  // checkout exists. Page a human rather than silently ignoring — a charged-but-
+  // never-upgraded customer with no signal is the failure MES-39 exists to catch.
+  // NOTE: if Stripe Payment Links / dashboard payments are ever introduced (they
+  // legitimately lack our metadata), filter them here by a positive marker
+  // (e.g. a dedicated metadata flag) instead of loosening this to a silent ignore.
   if (!tier || !VALID_TIERS.includes(tier)) {
     return {
       ok: false,
@@ -171,16 +169,22 @@ export async function processStripeEvent(
   } else if (currentSub?.tier) {
     const currentRank = tierRankOrNull(currentSub.tier);
     // Fail safe: an unrecognized current tier (rank null — e.g. a newer paid
-    // tier added to the enum without updating TIER_RANK) must NOT be treated
-    // as rank 0 and silently overwritten. Skip and page via the log so it's
-    // caught, rather than downgrading a paying customer (review #4).
+    // tier added to the enum without updating TIER_RANK) must NOT be treated as
+    // rank 0 and silently overwritten. We also can't tell if the event is an
+    // up- or down-grade, so DON'T write and page a human (needs_attention) —
+    // returning ok here would mark the row processed with no alert and could
+    // leave a paying customer un-upgraded (review #4 / delta A-2).
     if (currentRank === null) {
-      logError("Unknown current subscription tier — skipping write to avoid a possible downgrade", {
+      logError("Unknown current subscription tier — needs manual review", {
         supabaseUserId,
         currentTier: currentSub.tier,
         eventTier: tier,
       });
-      return { ok: true, action: "skipped_downgrade" };
+      return {
+        ok: false,
+        retriable: false,
+        reason: "unrecognized current subscription tier; not writing to avoid a possible downgrade",
+      };
     }
     if (currentRank > (tierRankOrNull(tier) ?? 0)) {
       log("Skipping tier downgrade", {
@@ -217,8 +221,10 @@ export async function processStripeEvent(
   // already applied (the upsert above is the entitlement of record), so a
   // failure on this cosmetic display-only update must NOT fail the event —
   // otherwise a transient error here blocks the confirmation email and pages a
-  // human for an already-charged-and-upgraded customer (review #1). Log and
-  // continue; the next successful event/replay reconciles the badge.
+  // human for an already-charged-and-upgraded customer (review #1). This is
+  // fire-and-forget: the row is still marked processed, so a persistently-
+  // failing badge write is NOT retried by reconcile and surfaces only in logs
+  // (acceptable — the badge is display-only, not the entitlement of record).
   const { error: reportsErr } = await deps.supabase
     .from("user_reports")
     .update({ tier_at_generation: tier })

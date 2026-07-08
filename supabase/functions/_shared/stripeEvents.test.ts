@@ -261,13 +261,15 @@ test("resolveStatus: retriable failure escalates to needs_attention at the cap",
 
 // --- review #4: fail safe on an unrecognized current tier ----------------------------
 
-test("unknown current tier is NOT treated as rank 0 — write is skipped, not a downgrade", async () => {
+test("unknown current tier is NOT treated as rank 0 — pages (needs_attention), no write", async () => {
   const supabase = makeSupabaseStub({ currentTier: "pro" }); // 'pro' not in TIER_RANK
   const outcome = await processStripeEvent(
     checkoutEvent({ tier: "free", supabase_user_id: "user-1" }),
     { supabase },
   );
-  assert.deepEqual(outcome, { ok: true, action: "skipped_downgrade" });
+  assert.equal(outcome.ok, false);
+  assert.ok(!outcome.ok && !outcome.retriable, "unresolvable state must page, not retry");
+  assert.equal(statusForOutcome(outcome), "needs_attention");
   assert.ok(supabase.calls.every((c) => c.op !== "upsert"), "must not overwrite an unknown tier");
 });
 
@@ -283,15 +285,17 @@ test("report-badge (user_reports) update failure does NOT fail the event", async
   assert.equal(statusForOutcome(outcome), "processed");
 });
 
-// --- review #10: foreign (non-app) checkout is ignored benignly, not paged -----------
+// --- review #10 / B-Q3: missing metadata fails loud (this app only uses create-checkout) --
 
-test("checkout with no app metadata is ignored (no page, no writes)", async () => {
+test("checkout with no app metadata pages (needs_attention), not a silent ignore", async () => {
   const supabase = makeSupabaseStub();
   const outcome = await processStripeEvent(
-    checkoutEvent({}), // no tier, no supabase_user_id (e.g. a Stripe Payment Link)
+    checkoutEvent({}), // no tier, no supabase_user_id (a total-metadata-loss regression)
     { supabase },
   );
-  assert.deepEqual(outcome, { ok: true, action: "ignored" });
+  assert.equal(outcome.ok, false);
+  assert.ok(!outcome.ok && !outcome.retriable);
+  assert.equal(statusForOutcome(outcome), "needs_attention");
   assert.equal(supabase.calls.length, 0);
 });
 
