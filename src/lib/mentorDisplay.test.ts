@@ -149,3 +149,15 @@ test("identityLeak flags the real name or company, passes clean copy", () => {
   // generic stopword from company name does NOT false-fire
   assert.equal(identityLeak("helps global startups", "Jane Doe", "Global Ventures"), null);
 });
+
+test("identityLeak welcomes country names, still catches the distinctive company word", () => {
+  // "Singapore" (from "Enterprise Singapore") is a welcomed origin, not a leak
+  assert.equal(
+    identityLeak("Singapore Trade & Government", "Aik Kanhalykham", "Enterprise Singapore"),
+    null,
+  );
+  // but the distinctive employer word is still caught
+  assert.ok(identityLeak("Enterprise advisor for govtech", "Aik Kanhalykham", "Enterprise Singapore"));
+  // multi-word country ("New Zealand") is welcomed too
+  assert.equal(identityLeak("New Zealand GovTech Advisor", "Jane Roe", "Callaghan New Zealand"), null);
+});
