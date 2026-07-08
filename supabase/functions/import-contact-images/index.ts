@@ -34,7 +34,39 @@ const JPEG_QUALITY = 82;
 const DEFAULT_BATCH = 30;
 const MAX_BATCH = 50;
 const FETCH_TIMEOUT_MS = 15000;
+const MAX_REDIRECTS = 3;
+const DEFAULT_MAX_RUN_MS = 90_000; // stop pulling new rows past this; remaining stay pending (resumable)
 const URL_PROBE_SAMPLE = 5;
+
+/**
+ * SSRF-safe fetch: follows redirects MANUALLY and re-validates every hop against the private/
+ * reserved-address guard, so a public URL that 30x-redirects to an internal host is still blocked.
+ * Each hop is independently timed out. Deno exposes the Location header in manual-redirect mode.
+ */
+async function safeFetch(rawUrl: string, init: RequestInit = {}): Promise<Response> {
+  let current = rawUrl;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    if (!current || isPrivateOrReservedUrl(current)) {
+      throw new Error("image_url missing or targets a private/reserved address");
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+    let resp: Response;
+    try {
+      resp = await fetch(current, { ...init, redirect: "manual", signal: ctrl.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (resp.status >= 300 && resp.status < 400) {
+      const loc = resp.headers.get("location");
+      if (!loc) return resp; // no Location — hand back the 3xx as-is
+      current = new URL(loc, current).toString(); // resolve relative → absolute, re-guard next loop
+      continue;
+    }
+    return resp;
+  }
+  throw new Error("too many redirects");
+}
 
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -56,19 +88,9 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
 
 interface ProcessedImage { bytes: Uint8Array; hash8: string; }
 
-/** Fetch (SSRF-guarded, timed out, size-capped), decode, square-crop, re-encode JPEG (EXIF-stripped). */
+/** Fetch (SSRF-guarded incl. redirects, timed out, size-capped), decode, square-crop, re-encode JPEG (EXIF-stripped). */
 async function fetchAndProcess(imageUrl: string): Promise<ProcessedImage> {
-  if (!imageUrl || isPrivateOrReservedUrl(imageUrl)) {
-    throw new Error("image_url missing or targets a private/reserved address");
-  }
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-  let resp: Response;
-  try {
-    resp = await fetch(imageUrl, { signal: ctrl.signal, redirect: "follow" });
-  } finally {
-    clearTimeout(timer);
-  }
+  const resp = await safeFetch(imageUrl);
   if (!resp.ok) throw new Error(`fetch failed: HTTP ${resp.status}${resp.status === 403 ? " (URL likely expired — re-export)" : ""}`);
   const ctype = resp.headers.get("content-type") ?? "";
   if (!ctype.startsWith("image/")) throw new Error(`not an image (content-type: ${ctype || "unknown"})`);
@@ -91,22 +113,33 @@ async function fetchAndProcess(imageUrl: string): Promise<ProcessedImage> {
   return { bytes, hash8 };
 }
 
-/** Storage path for a target. JSONB targets carry a "parentId:contactId" recordId. */
+/** Storage path for a target. JSONB targets carry a "parentId:contactId" recordId. The id
+ *  segment is sanitised to a safe charset (record ids are uuids / small ints, but this blocks
+ *  any path traversal from a malformed contact id). */
 function storagePath(table: string, recordId: string, hash8: string): string {
-  const idPart = recordId.replace(/:/g, "_");
+  const idPart = recordId.replace(/:/g, "_").replace(/[^a-zA-Z0-9_-]/g, "");
   return `${table}/${idPart}-${hash8}.jpg`;
 }
 
 // ─── candidate loading (all people surfaces, service role, base tables incl. PII) ──────────
 
+// Await a query builder and throw on error (a silently-empty candidate set would make every
+// row fail as no_match and mask the real cause — fail the batch loudly instead).
+async function must(builder: any, what: string): Promise<any[]> {
+  const { data, error } = await builder;
+  if (error) throw new Error(`load ${what} failed: ${error.message ?? error}`);
+  return data ?? [];
+}
+
 async function loadCandidates(supabase: any): Promise<Candidate[]> {
   const candidates: Candidate[] = [];
 
   // Mentors — skip anonymous (their photo must never be published).
-  const { data: mentors } = await supabase
-    .from("community_members")
-    .select("id,name,company,email,linkedin_url,avatar_url,is_anonymous");
-  for (const m of mentors ?? []) {
+  const mentors = await must(
+    supabase.from("community_members").select("id,name,company,email,linkedin_url,avatar_url,is_anonymous"),
+    "community_members",
+  );
+  for (const m of mentors) {
     if (m.is_anonymous) continue;
     candidates.push({
       surface: "mentor", table: "community_members", recordId: m.id,
@@ -116,14 +149,14 @@ async function loadCandidates(supabase: any): Promise<Candidate[]> {
   }
 
   // Agency name lookup (org context for agency + JSONB contacts).
-  const { data: agencies } = await supabase.from("trade_investment_agencies").select("id,name");
-  const agencyName = new Map<string, string>((agencies ?? []).map((a: any) => [a.id, a.name]));
+  const agencies = await must(supabase.from("trade_investment_agencies").select("id,name"), "trade_investment_agencies");
+  const agencyName = new Map<string, string>(agencies.map((a: any) => [a.id, a.name]));
 
-  const { data: agencyContacts } = await supabase
-    .from("agency_contacts")
-    .select("id,full_name,email,linkedin_url,avatar_url,agency_id")
-    .eq("is_archived", false);
-  for (const c of agencyContacts ?? []) {
+  const agencyContacts = await must(
+    supabase.from("agency_contacts").select("id,full_name,email,linkedin_url,avatar_url,agency_id").eq("is_archived", false),
+    "agency_contacts",
+  );
+  for (const c of agencyContacts) {
     candidates.push({
       surface: "agency_contact", table: "agency_contacts", recordId: c.id,
       name: c.full_name, org: agencyName.get(c.agency_id) ?? null, email: c.email ?? null,
@@ -132,13 +165,14 @@ async function loadCandidates(supabase: any): Promise<Candidate[]> {
   }
 
   // Provider name lookup + junction contacts (currently empty, supported for the future).
-  const { data: providers } = await supabase.from("service_providers").select("id,name,contact_persons");
-  const providerName = new Map<string, string>((providers ?? []).map((p: any) => [p.id, p.name]));
+  const providers = await must(supabase.from("service_providers").select("id,name,contact_persons"), "service_providers");
+  const providerName = new Map<string, string>(providers.map((p: any) => [p.id, p.name]));
 
-  const { data: spContacts } = await supabase
-    .from("service_provider_contacts")
-    .select("id,full_name,email,linkedin_url,avatar_url,service_provider_id");
-  for (const c of spContacts ?? []) {
+  const spContacts = await must(
+    supabase.from("service_provider_contacts").select("id,full_name,email,linkedin_url,avatar_url,service_provider_id"),
+    "service_provider_contacts",
+  );
+  for (const c of spContacts) {
     candidates.push({
       surface: "service_provider_contact", table: "service_provider_contacts", recordId: c.id,
       name: c.full_name, org: providerName.get(c.service_provider_id) ?? null, email: c.email ?? null,
@@ -147,7 +181,7 @@ async function loadCandidates(supabase: any): Promise<Candidate[]> {
   }
 
   // Provider JSONB contact_persons {id,name,role,image} — no linkedin/email → name+org matching only.
-  for (const p of providers ?? []) {
+  for (const p of providers) {
     for (const person of Array.isArray(p.contact_persons) ? p.contact_persons : []) {
       if (!person?.id || !person?.name) continue;
       candidates.push({
@@ -160,8 +194,8 @@ async function loadCandidates(supabase: any): Promise<Candidate[]> {
   }
 
   // Innovation ecosystem JSONB contact_persons — same shape.
-  const { data: ecosystems } = await supabase.from("innovation_ecosystem").select("id,name,contact_persons");
-  for (const e of ecosystems ?? []) {
+  const ecosystems = await must(supabase.from("innovation_ecosystem").select("id,name,contact_persons"), "innovation_ecosystem");
+  for (const e of ecosystems) {
     for (const person of Array.isArray(e.contact_persons) ? e.contact_persons : []) {
       if (!person?.id || !person?.name) continue;
       candidates.push({
@@ -174,10 +208,11 @@ async function loadCandidates(supabase: any): Promise<Candidate[]> {
   }
 
   // Investors — the contact person is contact_name; org context is the fund name.
-  const { data: investors } = await supabase
-    .from("investors")
-    .select("id,name,contact_name,contact_email,linkedin_url,avatar_url");
-  for (const inv of investors ?? []) {
+  const investors = await must(
+    supabase.from("investors").select("id,name,contact_name,contact_email,linkedin_url,avatar_url"),
+    "investors",
+  );
+  for (const inv of investors) {
     if (!inv.contact_name) continue;
     candidates.push({
       surface: "investor", table: "investors", recordId: inv.id,
@@ -294,8 +329,16 @@ async function processBatch(supabase: any, opts: ProcessOpts): Promise<Record<st
 
   const tally: Record<string, number> = { matched: 0, needs_review: 0, uploaded: 0, skipped: 0, failed: 0 };
   const probeUrls: string[] = [];
+  const startedAt = Date.now();
 
   for (const row of pending ?? []) {
+    // Wall-clock guard: stop pulling new rows before the function's execution limit. Unprocessed
+    // rows stay `pending`, so the caller just re-invokes to finish the batch (dry-run rows are
+    // cheap and never fetch, so only the live path can realistically approach this).
+    if (!opts.dryRun && Date.now() - startedAt > DEFAULT_MAX_RUN_MS) {
+      tally.stopped_early = 1;
+      break;
+    }
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     try {
       const result = matchRow(
@@ -376,11 +419,7 @@ async function processBatch(supabase: any, opts: ProcessOpts): Promise<Record<st
     let ok = 0, expired = 0, other = 0;
     for (const url of sample) {
       try {
-        if (isPrivateOrReservedUrl(url)) { other++; continue; }
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-        const resp = await fetch(url, { signal: ctrl.signal, redirect: "follow", headers: { Range: "bytes=0-0" } });
-        clearTimeout(timer);
+        const resp = await safeFetch(url, { headers: { Range: "bytes=0-0" } });
         if (resp.status === 403) expired++;
         else if (resp.ok || resp.status === 206) ok++;
         else other++;
