@@ -306,9 +306,10 @@ Owned by skill `mes-ticket-workflow`; the invariants:
    so past approved events persist in it).
 8. `docs/redesign/handoff/CLAUDE.md` is a historical intake-v2 handoff draft — never copy it over
    this file.
-9. Three lockfiles coexist at root (`package-lock.json`, `bun.lock`, `bun.lockb`); README and the
-   `npm test` script assume **npm**, but which lockfile the Lovable sync treats as authoritative is
-   unverified from the repo — don't casually regenerate lockfiles or switch package managers.
+9. Package managers: **Lovable's sandbox uses bun** (`bun install` / `bun add` / `bun run`), so
+   `bun.lock`/`bun.lockb` are its lockfiles; the project stays **npm-compatible for local dev**
+   (`package.json` + `package-lock.json`, which the README and the `npm test` script assume). Both
+   are intentional — don't delete a "duplicate" lockfile or switch managers to tidy up.
 
 ## 15. Key files & docs
 

@@ -107,6 +107,8 @@ Added after a closer sweep, all verified: root working-artefact dirs (`daily-bac
 `reports/`, `data/`, `mentor_identification/`, `design_handoff_ireland_country_page/`) in §3; a
 cron-driven-functions note in §6 with **schedules explicitly marked unverified** (they live in
 pg_cron, not the repo); the `observability-logging-and-cost-attribution` skill pointer in §6;
-`public/llms.txt` in §13.4; and a lockfile gotcha (§14.9) — three lockfiles coexist
-(`package-lock.json`, `bun.lock`, `bun.lockb`) and which one Lovable's sync treats as authoritative
-is **unverifiable from the repo**, so it is documented as a caution, not a resolution.
+`public/llms.txt` in §13.4; and a lockfile gotcha (§14.9). The lockfile question was resolved by
+the project owner (2026-07-07): Lovable's sandbox uses **bun** (`bun install`/`add`/`run`), so
+`bun.lock`/`bun.lockb` are its lockfiles, while the project stays **npm-compatible for local dev**
+(`package.json` + `package-lock.json`, which README and `npm test` assume). Both lockfiles are
+intentional — §14.9 now states this as fact rather than a caution.
