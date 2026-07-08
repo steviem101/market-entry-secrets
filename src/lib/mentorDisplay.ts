@@ -180,6 +180,11 @@ export const suggestAnonymousBio = (m: {
  * null when the text is clean. Case-insensitive, token-aware (won't false-fire
  * on short substrings). Advisory only — the server view never emits these
  * free-text fields, but the admin-authored overrides go out verbatim.
+ *
+ * Country/place names are deliberately NOT treated as leaks: a mentor's origin
+ * is a welcomed, non-identifying signal (e.g. "Singapore Trade & Government"),
+ * even when the country word also appears in their employer's name ("Enterprise
+ * Singapore"). Only the distinctive company/person tokens trip the guard.
  */
 export const identityLeak = (
   text: string,
@@ -191,10 +196,13 @@ export const identityLeak = (
   for (const source of [realName, realCompany]) {
     if (!source) continue;
     const full = source.trim().toLowerCase();
-    if (full.length >= 3) terms.push(full);
-    // Also catch each significant word (e.g. surname, distinctive company word).
+    if (full.length >= 3 && !COUNTRY_WORDS.has(full)) terms.push(full);
+    // Also catch each significant word (e.g. surname, distinctive company word),
+    // but never a country name — origin is welcomed, not identifying.
     for (const word of full.split(/\s+/)) {
-      if (word.length >= 4 && !STOPWORDS.has(word)) terms.push(word);
+      if (word.length >= 4 && !STOPWORDS.has(word) && !COUNTRY_WORDS.has(word)) {
+        terms.push(word);
+      }
     }
   }
   for (const term of terms) {
@@ -208,3 +216,13 @@ const STOPWORDS = new Set([
   "group", "global", "ventures", "capital", "partners", "advisory",
   "consulting", "services", "company", "limited", "pty", "the", "and",
 ]);
+
+// Country name tokens (from COUNTRY_LABELS keys + labels) that are welcomed in
+// anonymous aliases and must not trip identityLeak, even when they also appear
+// in an employer name. e.g. "singapore", "ireland", "new", "zealand", "hong".
+const COUNTRY_WORDS = new Set(
+  Object.entries(COUNTRY_LABELS).flatMap(([key, { label }]) => [
+    ...key.split("_"),
+    ...label.toLowerCase().split(/\s+/),
+  ]),
+);
