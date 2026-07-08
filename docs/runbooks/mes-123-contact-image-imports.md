@@ -19,9 +19,11 @@ the `avatars` Storage bucket, and written to the matched records. Re-runnable an
   `innovation_ecosystem.contact_persons` JSONB.
 
 ## One-time setup (per environment)
-1. Merge the four MES-123 migrations (`20260708100000`–`20260708100300`: they create the columns +
-   masked view, the `contact_image_imports` table, the `avatars` + `imports` buckets, and the
-   `needs_review` status + anonymity-mask assertion). Confirm the Supabase integration check is green.
+1. Merge the five MES-123 migrations (`20260708100000`/`100100`/`100200`/`100300` + `140000`: base
+   avatar columns, the `contact_image_imports` table, the `avatars` + `imports` buckets, the
+   `needs_review` status, and — ordered after the mentor-anonymization richer view at `120000` —
+   exposing `avatar_url` through `community_members_public` with the anonymity mask + assertion).
+   Confirm the Supabase integration check is green.
 2. Deploy the function: `supabase functions deploy import-contact-images`.
    (It is intentionally **not** in `.github/workflows/deploy-edge-functions.yml`.)
 
