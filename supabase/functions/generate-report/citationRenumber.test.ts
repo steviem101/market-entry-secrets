@@ -124,3 +124,40 @@ test("stripContextLabelCitations: label at line start never merges markdown line
   assert.equal(out.bullets.content, "- point one\n leads line two");
   assert.equal(out.list.content, "- a\n- b");
 });
+
+test("renumberCitations: key metrics count first and are rewritten with the same remap", () => {
+  const sections = { s: { content: "prose cites [9] then [4]" } };
+  const metrics = [
+    { label: "Market size [4]", value: "US$42.9B", context: "2024 estimate [4]" },
+    { label: "CAGR", value: "5.5%", context: "2024-2029 [12]" },
+  ];
+  const res = renumberCitations(sections, ["s"], cites19, metrics);
+  // Reader order: metrics render first → [4] becomes [1], [12] becomes [2];
+  // prose then introduces [9] as [3] and reuses [4] as [1].
+  assert.deepEqual(res.keyMetrics, [
+    { label: "Market size [1]", value: "US$42.9B", context: "2024 estimate [1]" },
+    { label: "CAGR", value: "5.5%", context: "2024-2029 [2]" },
+  ]);
+  assert.equal(res.sections.s.content, "prose cites [3] then [1]");
+  assert.deepEqual(res.citations, [cites19[3], cites19[11], cites19[8]]);
+  // A metric-only source (12) is RETAINED in the list even though no prose cites it.
+  assert.equal(res.remapped, 3);
+  // Input metrics not mutated.
+  assert.equal(metrics[0].label, "Market size [4]");
+});
+
+test("renumberCitations: metrics with out-of-range markers left untouched; no metrics arg → no keyMetrics key", () => {
+  const sections = { s: { content: "see [2]" } };
+  const metrics = [{ label: "Year", value: "[2024]", context: "growth since [2024]" }];
+  const res = renumberCitations(sections, ["s"], cites19, metrics);
+  assert.deepEqual(res.keyMetrics, metrics); // [2024] out of range → unchanged copies
+  const noMetrics = renumberCitations(sections, ["s"], cites19);
+  assert.ok(!("keyMetrics" in noMetrics));
+});
+
+test("renumberCitations: empty citations with metrics passes metrics through unchanged", () => {
+  const metrics = [{ label: "a [1]", value: "b", context: "c" }];
+  const res = renumberCitations({ s: { content: "x [1]" } }, ["s"], [], metrics);
+  assert.equal(res.remapped, 0);
+  assert.deepEqual(res.keyMetrics, metrics);
+});

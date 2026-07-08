@@ -2334,10 +2334,15 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       // polished builds so each stored snapshot is internally consistent.
       // stripContextLabelCitations first: removes "[Cost of Business Data]"-style
       // pseudo-citations of named context variables before the numeric remap.
+      // keyMetrics passed too: metric cards carry [N] markers from the same
+      // original source list and render ABOVE the sections — without renumbering
+      // them alongside, a metric's [4] points at the wrong row of the new
+      // Sources list (Infact report: metrics [4] vs prose [9] for one fact).
       const cited = renumberCitations(
         stripContextLabelCitations(currentSections),
         sectionOrder,
         marketResearch.citations,
+        keyMetrics,
       );
       return {
       company_name: intake.company_name,
@@ -2376,7 +2381,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // (fail-open, zero drops).
         match_rerank: matchRerankInfo,
         polish_applied: polishApplied,
-        key_metrics: keyMetrics,
+        // Renumbered alongside the sections so metric-card [N]s and the stored
+        // Sources list stay 1:1 (falls back to the originals when no citations).
+        key_metrics: cited.keyMetrics ?? keyMetrics,
         discovered_events_count: discoveredEvents.length,
         end_buyer_research_available: !!endBuyerProcurementResearch,
         bilateral_trade_available: !!marketResearch.bilateral_trade,
