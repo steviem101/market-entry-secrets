@@ -6,7 +6,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, industryTokens, leadIcpTokens, type MatchContext, type Scored } from "./matchScoring.ts";
+import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, industryTokens, leadIcpTokens, leadMatchesIcp, type MatchContext, type Scored } from "./matchScoring.ts";
 
 const CTX: MatchContext = {
   userSectors: ["technology-information-and-media", "construction", "professional-services"],
@@ -464,4 +464,27 @@ test("lead ICP gate: strict filter drops non-matching lists (no floor padding) â
   // the two the user flagged as useless are dropped, not padded in
   assert.ok(!names.includes("Recently Funded Australian Startups"));
   assert.ok(!names.includes("Australian Venture Capital & PE Firms"));
+});
+
+test("leadMatchesIcp: matches on sector/tags/title/short_description; empty tokens = pass-through", () => {
+  const tokens = leadIcpTokens([], ["Recruitment Technology"]);
+  assert.equal(leadMatchesIcp({ title: "Recruitment & HR Technology Buyers", sector: "HR Tech", tags: ["Recruitment"] }, tokens), true);
+  assert.equal(leadMatchesIcp({ title: "Recently Funded Australian Startups", sector: "Startups", tags: ["Funding"] }, tokens), false);
+  // no ICP signal â†’ don't gate (matches overlap path's `=== 0 || pass`)
+  assert.equal(leadMatchesIcp({ title: "Anything" }, []), true);
+});
+
+test("lead ICP union gate: drops an off-ICP list surfaced semantic-first, keeps ICP matches (P1-C.1)", () => {
+  const tokens = leadIcpTokens([], ["Recruitment Technology", "SaaS"]);
+  // simulate merged.lead_databases = semantic-first (ungated) + overlap backfill
+  const merged = [
+    { title: "Recently Funded Australian Startups", sector: "Startups", tags: ["Funding", "Venture-Backed"] }, // from semantic, off-ICP
+    { title: "Recruitment & HR Technology Buyers", sector: "HR Tech", tags: ["Recruitment"] },
+    { title: "Australian SaaS & Technology Companies TAM Map", sector: "SaaS", tags: ["Technology"] },
+  ];
+  const gated = merged.filter((l) => leadMatchesIcp(l, tokens));
+  assert.deepEqual(gated.map((l) => l.title), [
+    "Recruitment & HR Technology Buyers",
+    "Australian SaaS & Technology Companies TAM Map",
+  ]);
 });
