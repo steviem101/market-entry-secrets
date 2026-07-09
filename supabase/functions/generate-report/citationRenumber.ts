@@ -63,6 +63,8 @@ export interface KeyMetricLike {
   label: string;
   value: string;
   context: string;
+  /** Extra fields (e.g. `estimated`) pass through the renumber unchanged. */
+  [k: string]: unknown;
 }
 
 export interface RenumberResult {
@@ -148,6 +150,7 @@ export function renumberCitations(
 
   // 2b. Rewrite the metric cards with the same remap (copies, never mutate).
   const outMetrics = metrics?.map((km) => ({
+    ...km, // preserve extra fields (e.g. `estimated`)
     label: rewrite(km.label),
     value: rewrite(km.value),
     context: rewrite(km.context),

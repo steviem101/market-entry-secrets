@@ -14,3 +14,22 @@ export function humanizeMetricLabel(label: string): string {
   if (!s.includes("-")) return s; // single token, nothing to split
   return s.split("-").filter(Boolean).join(" ");
 }
+
+// Language that marks a metric as MODEL-DERIVED rather than a cited figure.
+// Deliberately excludes "projected"/"forecast" — those describe legitimate
+// sourced forecasts, not model estimates. A leading "~" on the value is also an
+// estimate tell.
+const ESTIMATE_RE =
+  /\b(estimate[ds]?|estimation|estimated|reasoned|proxy|derived|assum(?:e|ed|ing|ption)|indicative|approximate(?:ly)?|order[- ]of[- ]magnitude|ballpark|qualitative)\b/i;
+
+/**
+ * True when a key metric is a model-derived estimate rather than a cited figure
+ * (Floats feedback: the metrics panel showed "Reasoned estimate", "proxy share",
+ * "~AUD 80–120M (derived from …)", "(qualitative)" with the same authority + [N]
+ * citations as sourced numbers). The report surfaces this via an "Est." marker so
+ * readers don't mistake a derivation for hard data. Reads the value + context.
+ */
+export function isEstimatedMetric(value: string, context: string): boolean {
+  if ((value ?? "").trim().startsWith("~")) return true;
+  return ESTIMATE_RE.test(`${value ?? ""} ${context ?? ""}`);
+}
