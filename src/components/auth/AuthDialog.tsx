@@ -10,6 +10,15 @@ import { Eye, EyeOff, Mail, Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { setAuthReturnPath } from '@/lib/authReturnPath';
 
+const GoogleIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path fill="#4285F4" d="M23.52 12.273c0-.851-.076-1.67-.218-2.455H12v4.642h6.458a5.52 5.52 0 0 1-2.394 3.622v3.011h3.878c2.269-2.089 3.578-5.165 3.578-8.82z"/>
+    <path fill="#34A853" d="M12 24c3.24 0 5.956-1.075 7.942-2.907l-3.878-3.011c-1.075.72-2.45 1.145-4.064 1.145-3.125 0-5.771-2.111-6.715-4.947H1.276v3.109A11.995 11.995 0 0 0 12 24z"/>
+    <path fill="#FBBC05" d="M5.285 14.28A7.213 7.213 0 0 1 4.909 12c0-.791.136-1.56.376-2.28V6.611H1.276A11.995 11.995 0 0 0 0 12c0 1.936.464 3.769 1.276 5.389l4.009-3.109z"/>
+    <path fill="#EA4335" d="M12 4.773c1.762 0 3.344.605 4.587 1.794l3.442-3.442C17.951 1.19 15.235 0 12 0 7.31 0 3.253 2.69 1.276 6.611l4.009 3.109C6.229 6.884 8.875 4.773 12 4.773z"/>
+  </svg>
+);
+
 const MicrosoftIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -143,7 +152,7 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
 
           <div className="space-y-2.5">
             <Button variant="outline" className="h-11 w-full" onClick={() => handleSocialSignIn('google')} disabled={loading}>
-              <Mail className="mr-2 h-4 w-4" /> Continue with Google
+              <GoogleIcon className="mr-2 h-4 w-4" /> Continue with Google
             </Button>
             <Button variant="outline" className="h-11 w-full" onClick={() => handleSocialSignIn('azure')} disabled={loading}>
               <MicrosoftIcon className="mr-2 h-4 w-4" /> Continue with Microsoft
@@ -212,7 +221,7 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
                 onClick={() => handleSocialSignIn('google')}
                 disabled={loading}
               >
-                <Mail className="mr-2 h-4 w-4" />
+                <GoogleIcon className="mr-2 h-4 w-4" />
                 Continue with Google
               </Button>
               <Button
@@ -283,7 +292,7 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
                 onClick={() => handleSocialSignIn('google')}
                 disabled={loading}
               >
-                <Mail className="mr-2 h-4 w-4" />
+                <GoogleIcon className="mr-2 h-4 w-4" />
                 Continue with Google
               </Button>
               <Button
