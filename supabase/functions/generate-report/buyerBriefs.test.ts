@@ -45,13 +45,17 @@ test("buildBuyerBriefsNote: embeds data, titles, unverified advisory; empty when
     ],
     { titles: ["Head of Marketing"], org_type: "recruitment agency" },
     "Floats",
-    "cited research blob",
+    "cited research blob [1] with markers [12]",
   );
   assert.ok(note.includes("Your First Customers"));
+  // Perplexity's own [N] markers are stripped — they'd renumber against the wrong
+  // sources if the model copied them into prose (the [Cost Data] failure class).
+  assert.ok(note.includes("cited research blob  with markers"));
+  assert.ok(!/\[\d+\]/.test(note.split("ACCOUNT RESEARCH")[1].split("ACCOUNT DATA")[0]));
   assert.ok(note.includes("Head of Marketing"));
   assert.ok(note.includes("walter page")); // unverified advisory names it
   assert.ok(note.includes("do NOT guess"));
-  assert.ok(note.includes("cited research blob"));
+  assert.ok(note.includes("cited research blob"));  // content survives the strip
   assert.ok(note.includes("Bullhorn")); // account data embedded
   assert.equal(buildBuyerBriefsNote([], { titles: [], org_type: "" }, "X"), "");
   assert.equal(buildBuyerBriefsNote(null, { titles: [], org_type: "" }, "X"), "");
