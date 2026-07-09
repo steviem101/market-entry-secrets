@@ -129,9 +129,15 @@ export function buildBuyerBriefsNote(
   icp: ParsedIcp,
   companyName: string,
   accountResearch?: string,
+  totalChips?: number,
 ): string {
   const all = (buyers || []).filter((b) => clip(b?.name, 80));
   if (all.length === 0) return "";
+  // The scrape caps at 3 accounts while the form accepts 5 — say so rather than
+  // silently truncate (a reader who named 5 companies notices 2 missing).
+  const capNote = (totalChips ?? all.length) > all.length
+    ? ` The user named ${totalChips} accounts; the first ${all.length} are briefed here — add one line noting the remaining accounts are not covered in this report.`
+    : "";
   const verified = all.filter((b) => b?.unverified !== true);
   const unverified = all.filter((b) => b?.unverified === true);
   const data = verified.map((b) => ({
@@ -145,5 +151,5 @@ export function buildBuyerBriefsNote(
   // prose they'd renumber against the WRONG sources (the [Cost Data] failure class),
   // so strip them before embedding.
   const research = accountResearch ? clip(accountResearch, 3000).replace(/\[\d+\]/g, "") : "";
-  return `\n\nYOUR FIRST CUSTOMERS (this section): The user named ${all.length} specific target account(s) in their intake. Open the section with a "### Your First Customers" subsection covering EACH verified account below before the phased plan. Per account include: 1) who they are (from the data), 2) signals — recent news and any roles they are hiring for right now, 3) tech & tools context ONLY if evident in the data, otherwise write "No tech signals evident", 4) why they fit ${companyName}, 5) WHO TO APPROACH — recommend job titles${titles ? `, anchored on the user's stated target: ${titles}${icp.org_type ? ` at ${icp.org_type}` : ""}` : ""} (titles only — NEVER name or invent specific individuals), 6) a concrete opening angle grounded in the signals. Use ONLY the account data and research provided — never invent facts, tech stacks, or figures.${unverified.length ? ` The following account name(s) could not be confidently identified (no website given): ${unverified.map((b) => clip(b.name, 60)).join(", ")} — add one line advising the user to attach a website in their intake for a full brief; do NOT guess who they are.` : ""}${research ? `\n\nACCOUNT RESEARCH (background context — do NOT attach [N] citation markers to facts drawn from it):\n${research}` : ""}\n\nACCOUNT DATA:\n${JSON.stringify(data)}`;
+  return `\n\nYOUR FIRST CUSTOMERS (this section): The user named ${all.length} specific target account(s) in their intake.${capNote} Open the section with a "### Your First Customers" subsection covering EACH verified account below before the phased plan. Per account include: 1) who they are (from the data), 2) signals — recent news and any roles they are hiring for right now, 3) tech & tools context ONLY if evident in the data, otherwise write "No tech signals evident", 4) why they fit ${companyName}, 5) WHO TO APPROACH — recommend job titles${titles ? `, anchored on the user's stated target: ${titles}${icp.org_type ? ` at ${icp.org_type}` : ""}` : ""} (titles only — NEVER name or invent specific individuals), 6) a concrete opening angle grounded in the signals. Use ONLY the account data and research provided — never invent facts, tech stacks, or figures.${unverified.length ? ` The following account name(s) could not be confidently identified (no website given): ${unverified.map((b) => clip(b.name, 60)).join(", ")} — add one line advising the user to attach a website in their intake for a full brief; do NOT guess who they are.` : ""}${research ? `\n\nACCOUNT RESEARCH (background context — do NOT attach [N] citation markers to facts drawn from it):\n${research}` : ""}\n\nACCOUNT DATA:\n${JSON.stringify(data)}`;
 }

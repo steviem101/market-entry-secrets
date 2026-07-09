@@ -60,3 +60,16 @@ test("buildBuyerBriefsNote: embeds data, titles, unverified advisory; empty when
   assert.equal(buildBuyerBriefsNote([], { titles: [], org_type: "" }, "X"), "");
   assert.equal(buildBuyerBriefsNote(null, { titles: [], org_type: "" }, "X"), "");
 });
+
+test("buildBuyerBriefsNote: 5-chip intake with 3 briefed surfaces the cap honestly", () => {
+  const buyers = [
+    { name: "A", url: "https://a.com", description: "x", key_info: "" },
+    { name: "B", url: "https://b.com", description: "y", key_info: "" },
+    { name: "C", url: "https://c.com", description: "z", key_info: "" },
+  ];
+  const note = buildBuyerBriefsNote(buyers, { titles: [], org_type: "" }, "Floats", undefined, 5);
+  assert.ok(note.includes("named 5 accounts; the first 3 are briefed"));
+  // equal counts → no cap sentence
+  const noCap = buildBuyerBriefsNote(buyers, { titles: [], org_type: "" }, "Floats", undefined, 3);
+  assert.ok(!noCap.includes("are briefed here"));
+});

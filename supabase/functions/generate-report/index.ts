@@ -979,7 +979,10 @@ async function researchEndBuyerProcurement(intake: any): Promise<string> {
     const result = await callPerplexity(perplexityKey,
       `How do ${industryContext} in Australia procure ${industrySectorText} services?${targetContext} Key procurement channels, typical buying cycles, RFP processes, partnership models, preferred supplier criteria, and how international companies can become approved suppliers.`
     );
-    return result.content || "";
+    // This research's citations are NOT pooled into the report citation list, so
+    // Perplexity's own [N] markers would renumber against the wrong sources if the
+    // model copied them into prose — strip them (same guard as the account research).
+    return (result.content || "").replace(/\[\d+\]/g, "");
   } catch (e) {
     console.error("End buyer procurement research failed:", e);
     return "";
@@ -2422,6 +2425,7 @@ async function generateReportInBackground(
     const parsedIcp = parseIcpDescription(targetCustomerDescription);
     const buyerBriefsNote = buildBuyerBriefsNote(
       endBuyerScrapeResult || [], parsedIcp, intake.company_name, endBuyerAccountResearch,
+      (intake.end_buyers || []).length,
     );
     const buyerCards = buildBuyerCards(endBuyerScrapeResult || []);
 
