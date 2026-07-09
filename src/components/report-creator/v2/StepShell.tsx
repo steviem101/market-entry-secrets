@@ -18,7 +18,7 @@ const STEP_SUBS = (persona: ReportPersona) => {
   const copy = PERSONA_COPY[persona];
   return [
     copy.step1Sub,
-    'Pick what you want — each goal adds a section.',
+    'Pick what you want — each goal shapes your report.',
     'Who you sell to, and what to prioritise.',
     "Tweak anything inline, then we'll build it.",
   ];

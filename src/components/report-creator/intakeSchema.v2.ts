@@ -111,7 +111,7 @@ export const GOALS: readonly GoalDef[] = [
   { id: 'spaces', label: 'Find co-working & innovation hubs', category: 'ops', personas: ['startup'], service_tags: ['Co-working', 'Innovation Hub'], icon: 'building', unlocks: 'Co-working & Hubs' },
   { id: 'grants', label: 'Identify grants & government funding', category: 'capital', personas: ['international', 'startup'], service_tags: ['Grants', 'Government', 'Funding'], icon: 'landmark', unlocks: 'Grants & Funding' },
   { id: 'lead_lists_startup', label: 'Access lead lists & sales resources', category: 'capital', personas: ['startup'], service_tags: ['Lead Generation', 'Marketing', 'Sales'], icon: 'target', unlocks: 'Lead List' },
-  { id: 'founders', label: 'Connect with other founders', category: 'people', personas: ['startup'], service_tags: ['Networking', 'Community', 'Founder'], icon: 'users', unlocks: 'Founder Network' },
+  { id: 'founders', label: 'Connect with other founders', category: 'people', personas: ['startup'], service_tags: ['Networking', 'Community', 'Founder'], icon: 'users', unlocks: 'Mentor & Peer Matches' },
   { id: 'guides_startup', label: 'Read growth & scaling playbooks', category: 'knowledge', personas: ['startup'], service_tags: ['Market Research', 'Consulting'], icon: 'lightbulb', unlocks: 'Growth Playbooks' },
 ] as const;
 

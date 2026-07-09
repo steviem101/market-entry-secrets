@@ -112,7 +112,7 @@ export const GOAL_SECTION_MAP: Record<string, string[]> = {
   events: ["events_resources"],
   mentors_intl: ["mentor_recommendations"],
   lead_lists_intl: ["lead_list"],
-  compliance: ["action_plan"],
+  compliance: ["setup_compliance"],   // the report's dedicated regulatory/setup section
   // Startup
   investors: ["investor_recommendations"],
   accelerators: ["service_providers"],                 // innovation hubs surface within providers

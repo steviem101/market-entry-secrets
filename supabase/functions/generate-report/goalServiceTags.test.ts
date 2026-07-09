@@ -33,7 +33,7 @@ test("goalsToPrioritisedSections maps selected goals to the report sections they
   assert.deepEqual(goalsToPrioritisedSections({ goal_ids: null }), []);
   assert.deepEqual(goalsToPrioritisedSections({}), []);
   // every mapped section must be a real report_templates section
-  const valid = new Set(["executive_summary", "swot_analysis", "competitor_landscape", "service_providers", "mentor_recommendations", "events_resources", "action_plan", "lead_list", "investor_recommendations"]);
+  const valid = new Set(["executive_summary", "swot_analysis", "competitor_landscape", "service_providers", "mentor_recommendations", "events_resources", "action_plan", "setup_compliance", "lead_list", "investor_recommendations"]);
   for (const secs of Object.values(GOAL_SECTION_MAP)) for (const s of secs) assert.ok(valid.has(s), `unknown section: ${s}`);
 });
 
