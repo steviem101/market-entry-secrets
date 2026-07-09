@@ -91,7 +91,14 @@ export const useAuthState = () => {
                     email_type: 'welcome',
                     recipient_email: session.user.email,
                     user_id: session.user.id,
-                    data: { first_name: session.user.user_metadata?.first_name || 'there' },
+                    // OAuth providers send full_name, not first_name — greet
+                    // Google/Azure signups by their first token, not "there".
+                    data: {
+                      first_name:
+                        session.user.user_metadata?.first_name ||
+                        session.user.user_metadata?.full_name?.trim().split(/\s+/)[0] ||
+                        'there',
+                    },
                   },
                 }).catch(() => {}); // fire-and-forget
               }
