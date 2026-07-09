@@ -38,7 +38,11 @@ export const UserDropdown = () => {
   const [showProfile, setShowProfile] = useState(false);
   const navigate = useNavigate();
 
-  if (!user || !profile) return null;
+  // Signed-in users must always get the dropdown, even if the profile row is
+  // missing or failed to load — returning null here removed the entire header
+  // control (no avatar, no way to sign out). getDisplayName/getInitials already
+  // fall back to the email / '??' for a null profile.
+  if (!user) return null;
 
   const handleSignOut = async () => {
     await signOut();
@@ -54,7 +58,7 @@ export const UserDropdown = () => {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={profile.avatar_url} alt={getDisplayName(profile, user)} />
+              <AvatarImage src={profile?.avatar_url} alt={getDisplayName(profile, user)} />
               <AvatarFallback>{getInitials(profile)}</AvatarFallback>
             </Avatar>
           </Button>
