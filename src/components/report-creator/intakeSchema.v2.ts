@@ -100,18 +100,18 @@ export const GOALS: readonly GoalDef[] = [
   { id: 'market_research', label: 'Get market & industry research', category: 'knowledge', personas: ['international', 'startup'], service_tags: ['Market Research', 'Consulting', 'Data'], icon: 'search', unlocks: 'Market Research' },
   { id: 'associations', label: 'Find industry associations & chambers', category: 'people', personas: ['international'], service_tags: ['Industry Association', 'Chamber of Commerce'], icon: 'users', unlocks: 'Industry Bodies' },
   { id: 'events', label: 'Discover events & networking', category: 'people', personas: ['international', 'startup'], service_tags: ['Events', 'Networking'], icon: 'calendar', unlocks: 'Events & Networking' },
-  { id: 'mentors_intl', label: 'Find experienced mentors & advisors', category: 'people', personas: ['international'], service_tags: ['Mentorship', 'Advisory', 'Consulting'], icon: 'compass', unlocks: 'Mentor Matches' },
+  { id: 'mentors_intl', label: 'Find experienced mentors & advisors', category: 'people', personas: ['international'], service_tags: ['Mentorship', 'Advisory', 'Consulting', 'Active Advisor', 'International Founder', 'Cross-border'], icon: 'compass', unlocks: 'Mentor Matches' },
   { id: 'lead_lists_intl', label: 'Access qualified lead lists', category: 'capital', personas: ['international'], service_tags: ['Lead Generation', 'Market Research', 'Data'], icon: 'target', unlocks: 'Lead List' },
   { id: 'compliance', label: 'Understand regulatory & compliance', category: 'compliance', personas: ['international'], service_tags: ['Legal', 'Compliance', 'Regulatory'], icon: 'shield', unlocks: 'Regulatory Brief' },
   // Startup
   { id: 'investors', label: 'Find investors & VCs', category: 'capital', personas: ['startup'], service_tags: ['Investment', 'Venture Capital', 'Funding'], icon: 'coins', unlocks: 'Investor Matches' },
   { id: 'accelerators', label: 'Discover accelerators & incubators', category: 'capital', personas: ['startup'], service_tags: ['Accelerator', 'Incubator', 'Startup'], icon: 'rocket', unlocks: 'Accelerators' },
-  { id: 'mentors_startup', label: 'Connect with mentors & advisors', category: 'people', personas: ['startup'], service_tags: ['Mentorship', 'Advisory', 'Startup'], icon: 'compass', unlocks: 'Mentor Matches' },
+  { id: 'mentors_startup', label: 'Connect with mentors & advisors', category: 'people', personas: ['startup'], service_tags: ['Mentorship', 'Advisory', 'Startup', 'Active Advisor', 'Startup Advisor', 'Scaled Founder'], icon: 'compass', unlocks: 'Mentor Matches' },
   { id: 'growth_providers', label: 'Find growth-stage service providers', category: 'ops', personas: ['startup'], service_tags: ['Legal', 'Finance', 'HR', 'Accounting'], icon: 'briefcase', unlocks: 'Service Providers' },
   { id: 'spaces', label: 'Find co-working & innovation hubs', category: 'ops', personas: ['startup'], service_tags: ['Co-working', 'Innovation Hub'], icon: 'building', unlocks: 'Co-working & Hubs' },
   { id: 'grants', label: 'Identify grants & government funding', category: 'capital', personas: ['international', 'startup'], service_tags: ['Grants', 'Government', 'Funding'], icon: 'landmark', unlocks: 'Grants & Funding' },
   { id: 'lead_lists_startup', label: 'Access lead lists & sales resources', category: 'capital', personas: ['startup'], service_tags: ['Lead Generation', 'Marketing', 'Sales'], icon: 'target', unlocks: 'Lead List' },
-  { id: 'founders', label: 'Connect with other founders', category: 'people', personas: ['startup'], service_tags: ['Networking', 'Community', 'Founder'], icon: 'users', unlocks: 'Mentor & Peer Matches' },
+  { id: 'founders', label: 'Connect with other founders', category: 'people', personas: ['startup'], service_tags: ['Networking', 'Community', 'Founder', 'Scaled Founder', 'Startup Ecosystem'], icon: 'users', unlocks: 'Mentor & Peer Matches' },
   { id: 'guides_startup', label: 'Read growth & scaling playbooks', category: 'knowledge', personas: ['startup'], service_tags: ['Market Research', 'Consulting'], icon: 'lightbulb', unlocks: 'Growth Playbooks' },
 ] as const;
 

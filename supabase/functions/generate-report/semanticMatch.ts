@@ -107,8 +107,9 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
   trade_investment_agencies: {
     table: "trade_investment_agencies",
     // website_url/domain (URL fallback for the card link) + government_level/location_state
-    // (state-body region gate) mirror the overlap-path select in index.ts.
-    select: "id, name, slug, location, services, description, website, website_url, domain, tagline, target_company_origin, organisation_type, government_level, location_state, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic",
+    // (state-body region gate) + grants_available (grants-goal boost) mirror the
+    // overlap-path select in index.ts.
+    select: "id, name, slug, location, services, description, website, website_url, domain, tagline, target_company_origin, organisation_type, government_level, location_state, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic, grants_available",
     cap: 5,
     decorate: (a: any) => ({
       ...a,

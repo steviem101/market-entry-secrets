@@ -7,7 +7,7 @@ import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shared/scrapeCache.ts";
 import { selectKeyPages } from "./keyPageSelect.ts";
 import { buildCompetitorQueries, dedupeCompetitorResults, domainOf, dropNonCompetitors } from "./competitorQueries.ts";
-import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServiceTags.ts";
+import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits, goalSelectsGrants } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
@@ -1186,6 +1186,9 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     goal_ids: intake.goal_ids,
     services_needed: intake.services_needed,
   });
+  // Grants goal → structured boost on the agency surface (grants_available column;
+  // no grant tag vocabulary exists in any directory table).
+  const wantsGrantsGoal = goalSelectsGrants(intake);
 
   const locationPatterns = regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
 
@@ -1433,7 +1436,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
   // pool, filter to in-corridor rows, THEN rank into the 5 slots. The union-level
   // gate stays as the safety net for the semantic path.
   try {
-    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, website_url, domain, tagline, target_company_origin, organisation_type, government_level, location_state, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic").limit(300);
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, website_url, domain, tagline, target_company_origin, organisation_type, government_level, location_state, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic, grants_available").limit(300);
     taQuery = taQuery.or(buildOr({ service: "services" }));
     const { data: ta, error: taErr } = await taQuery;
     if (taErr) console.error("TIA query error:", taErr);
@@ -1444,7 +1447,21 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     // Irish founder — location_country "ireland") the scorer's structured +2 corridor
     // boost; agencies never passed it, so origin bodies lost the 5 slots to generic
     // AU industry groups despite being the most corridor-valuable row in the pool.
-    matches.trade_investment_agencies = rank(taInCorridor, { service: "services", persona: true, countryCol: "location_country" }, 5).map((a: any) => ({
+    //
+    // Grants goal (taxonomy ticket): there is NO grant service-tag vocabulary anywhere,
+    // so the "grants" goal was a dead lever on this surface. grants_available is the
+    // structured signal — when the user selected the grants goal, rank a wider slate
+    // and stable-partition grants-capable bodies first before taking the 5 slots
+    // (score order preserved within each half, never empties: non-grants bodies
+    // backfill the remaining slots).
+    let taRanked = rank(taInCorridor, { service: "services", persona: true, countryCol: "location_country" }, wantsGrantsGoal ? 10 : 5);
+    if (wantsGrantsGoal) {
+      const g = taRanked.filter((a: any) => a.grants_available === true);
+      const rest = taRanked.filter((a: any) => a.grants_available !== true);
+      if (g.length > 0) console.log(`grants goal: prioritising ${g.length} grants_available agencies`);
+      taRanked = [...g, ...rest].slice(0, 5);
+    }
+    matches.trade_investment_agencies = taRanked.map((a: any) => ({
       ...a, link: a.slug ? `/government-support/${a.slug}` : "/government-support", linkLabel: "View Organisation",
       subtitle: a.location, tags: (a.services || []).slice(0, 3),
       // URL lives in website_url/domain for many agencies; `website` is often NULL
@@ -1772,6 +1789,16 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
     if (merged.trade_investment_agencies.length !== before) {
       console.log(`state gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);
     }
+  }
+  // Grants goal (taxonomy ticket): order grants-capable bodies first at the union so
+  // the semantic path benefits too (the overlap path already widened its slate). Pure
+  // reorder — membership unchanged, section never empties. NB: recomputed here — the
+  // overlap path's wantsGrantsGoal is scoped to searchMatchesOverlap, not this function.
+  if (goalSelectsGrants(intake) && merged.trade_investment_agencies?.length) {
+    merged.trade_investment_agencies = [
+      ...merged.trade_investment_agencies.filter((r: any) => r.grants_available === true),
+      ...merged.trade_investment_agencies.filter((r: any) => r.grants_available !== true),
+    ];
   }
   // National chambers of commerce that are filed in the PROVIDER pools (no
   // jurisdiction column, so the agency gate above can't see them) are gated by
@@ -2557,6 +2584,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // verifiable per report. `applied:false` = the LLM reply failed to parse
         // (fail-open, zero drops).
         match_rerank: matchRerankInfo,
+        // Taxonomy telemetry: per selected goal, how many matched rows carry one of
+        // the goal's service tags. A goal that logs 0 across reports has dead tags
+        // (vocabulary drift) — observable here because a unit test cannot assert
+        // live-DB vocabulary.
+        goal_tag_hits: countGoalTagHits((intake as any).goal_ids, matches),
         polish_applied: polishApplied,
         // Renumbered alongside the sections so metric-card [N]s and the stored
         // Sources list stay 1:1 (falls back to the originals when no citations).
