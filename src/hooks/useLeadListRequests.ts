@@ -2,11 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-// lead_list_requests is NOT in the auto-generated types yet — use the established
-// (supabase as any) pattern (mirrors useLeadDatabases / reportApi). RLS scopes
-// reads to the owner (+ admin) and inserts to the owner, so no user_id filter is
-// needed on the query — the policy enforces it.
-const table = () => (supabase as any).from('lead_list_requests');
+// lead_list_requests is in the generated types (regenerated after the P1-D
+// migration), so the client is fully typed — no cast needed. RLS scopes reads to
+// the owner (+ admin) and inserts to the owner, so no user_id filter is needed on
+// the query — the policy enforces it.
+const table = () => supabase.from('lead_list_requests');
 
 export type LeadListRequestStatus = 'new' | 'in_progress' | 'delivered' | 'declined';
 

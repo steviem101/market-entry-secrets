@@ -3141,6 +3141,38 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_database_purchases: {
+        Row: {
+          id: string
+          lead_database_id: string
+          purchased_at: string | null
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          lead_database_id: string
+          purchased_at?: string | null
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          lead_database_id?: string
+          purchased_at?: string | null
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_database_purchases_lead_database_id_fkey"
+            columns: ["lead_database_id"]
+            isOneToOne: false
+            referencedRelation: "lead_databases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_database_records: {
         Row: {
           buying_signals: string[] | null
@@ -3304,6 +3336,57 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      lead_list_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          delivered_database_id: string | null
+          id: string
+          report_id: string | null
+          request_text: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          delivered_database_id?: string | null
+          id?: string
+          report_id?: string | null
+          request_text: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          delivered_database_id?: string | null
+          id?: string
+          report_id?: string | null
+          request_text?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_list_requests_delivered_database_id_fkey"
+            columns: ["delivered_database_id"]
+            isOneToOne: false
+            referencedRelation: "lead_databases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_list_requests_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lead_submissions: {
         Row: {
@@ -3956,23 +4039,41 @@ export type Database = {
       }
       payment_webhook_logs: {
         Row: {
+          attempts: number
           created_at: string | null
+          email_sent: boolean
+          event_type: string | null
           id: string
+          last_error: string | null
           parsed: Json | null
+          processed_at: string | null
+          processing_status: string
           stripe_event_id: string
           stripe_payload: Json
         }
         Insert: {
+          attempts?: number
           created_at?: string | null
+          email_sent?: boolean
+          event_type?: string | null
           id?: string
+          last_error?: string | null
           parsed?: Json | null
+          processed_at?: string | null
+          processing_status?: string
           stripe_event_id: string
           stripe_payload: Json
         }
         Update: {
+          attempts?: number
           created_at?: string | null
+          email_sent?: boolean
+          event_type?: string | null
           id?: string
+          last_error?: string | null
           parsed?: Json | null
+          processed_at?: string | null
+          processing_status?: string
           stripe_event_id?: string
           stripe_payload?: Json
         }
@@ -5118,6 +5219,60 @@ export type Database = {
           why_work_with_us: string | null
         }
         Relationships: []
+      }
+      agency_contacts_public: {
+        Row: {
+          agency_id: string | null
+          avatar_url: string | null
+          created_at: string | null
+          display_order: number | null
+          full_name: string | null
+          id: string | null
+          is_archived: boolean | null
+          is_primary: boolean | null
+          linkedin_url: string | null
+          title: string | null
+        }
+        Insert: {
+          agency_id?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          full_name?: string | null
+          id?: string | null
+          is_archived?: boolean | null
+          is_primary?: boolean | null
+          linkedin_url?: string | null
+          title?: string | null
+        }
+        Update: {
+          agency_id?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          full_name?: string | null
+          id?: string | null
+          is_archived?: boolean | null
+          is_primary?: boolean | null
+          linkedin_url?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_contacts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies_report_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_contacts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "trade_investment_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       community_members_public: {
         Row: {
