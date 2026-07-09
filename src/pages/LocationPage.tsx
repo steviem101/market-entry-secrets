@@ -9,6 +9,7 @@ import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { NoIndex } from "@/components/common/NoIndex";
 
 const LocationPage = () => {
   const { locationSlug } = useParams<{ locationSlug: string }>();
@@ -21,6 +22,7 @@ const LocationPage = () => {
   if (error || !location) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
+        <NoIndex />
         <h1 className="text-2xl font-bold mb-4">Location Not Found</h1>
         <p className="text-muted-foreground">The location you're looking for doesn't exist.</p>
       </div>

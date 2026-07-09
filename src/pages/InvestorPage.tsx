@@ -7,6 +7,7 @@ import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { InvestorHero } from "@/components/investors/detail/InvestorHero";
 import { InvestorContent } from "@/components/investors/detail/InvestorContent";
 import { useInvestorBySlug, useRelatedInvestors } from "@/hooks/useInvestors";
+import { NoIndex } from "@/components/common/NoIndex";
 
 const InvestorPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -25,6 +26,7 @@ const InvestorPage = () => {
   if (error || !investor) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
+        <NoIndex />
         <h1 className="text-2xl font-bold mb-4">Investor Not Found</h1>
         <p className="text-muted-foreground">
           The investor you're looking for doesn't exist or has been removed.
