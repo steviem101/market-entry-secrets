@@ -24,7 +24,7 @@ export function Step2Goals({ persona, form, set, onNext, onBack }: StepProps) {
       <ReportPreview form={form} variant="bar" />
 
       <div className="space-y-4">
-        <RcSectionLabel icon="target" tag="Required" hint="Select all that apply — each one adds a section to your report.">
+        <RcSectionLabel icon="target" tag="Required" hint="Select all that apply — each one shapes what your report focuses on.">
           What do you want from this report?
         </RcSectionLabel>
 

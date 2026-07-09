@@ -343,7 +343,11 @@ export function preferRelevant<T>(rows: T[], isRelevant: (r: T) => boolean, minK
  * specialties) or a provider card (name/tags/services/description); paired with
  * preferRelevant() so the demotion is floor-guarded (a thin pool still renders).
  */
-const IMMIGRATION_RE = /\b(visa|visas|immigration|relocation|global mobility|work permit|sponsorship|migrant)\b/i;
+// "sponsorship" alone is too broad on the provider surface (services/description can
+// say "event sponsorship"/"brand sponsorship") — scope it to the immigration sense
+// (employer/visa/work sponsorship). TechVisa still matches via "immigration" +
+// "employer sponsorship" (QA follow-up on the provider immigration filter).
+const IMMIGRATION_RE = /\b(visa|visas|immigration|relocation|global mobility|work permit|(?:employer|visa|work) sponsorship|migrant)\b/i;
 export function isImmigrationFocused(row: Row): boolean {
   const r = row as any;
   const parts: string[] = [
