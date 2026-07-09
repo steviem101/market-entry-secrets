@@ -135,13 +135,15 @@ cost attribution: skill `observability-logging-and-cost-attribution`.
 
 **Cron-driven functions** (invoked by pg_cron via pg_net — **schedules live in the DB, unverified
 from the repo**): `embed-knowledge` (~2 min per its header), `kb-sync` (incremental),
-`process-email-queue`, `report-quality-loop`, `report-quality-rollup` (weekly).
+`process-email-queue`, `report-quality-loop`, `report-quality-rollup` (weekly),
+`stripe-webhook-reconcile` (every 15 min — migration `20260710200000`).
 
 | Function | Purpose (auth if not JWT) |
 |----------|--------------------------|
 | `generate-report` | The whole report pipeline (§7) — in-code JWT + ownership, rate-limited |
 | `scrape-company` | Intake step-1 website prefill — SSRF-guarded + IP rate limit, no JWT |
-| `create-checkout` / `stripe-webhook` | Stripe one-time checkout / webhook (`checkout.session.completed` only; signature-verified) |
+| `create-checkout` / `stripe-webhook` | Stripe one-time checkout / webhook (`checkout.session.completed` only; signature-verified; received/processed state in `payment_webhook_logs` — MES-39) |
+| `stripe-webhook-reconcile` | Cron (every 15 min): replays unprocessed `payment_webhook_logs` rows + Slack-alerts stuck ones (`x-internal-secret` = `STRIPE_RECONCILE_SECRET`, Vault `stripe_reconcile_secret`) |
 | `sitemap` | Public DB-driven sitemap index (MES-79) — anon-key reads so RLS decides visibility; referenced from `public/robots.txt` |
 | `embed-knowledge` | Cron (every 2 min): embeds stale `mes_knowledge_base` rows via OpenAI (`x-internal-secret` from Vault) |
 | `knowledge-search` | Hybrid RAG search for agents/MCP → `match_knowledge()`; anonymous callers get `public` visibility only |
@@ -261,6 +263,7 @@ Owned by skill `mes-ticket-workflow`; the invariants:
 | Secret | Used by |
 |--------|---------|
 | `STRIPE_SECRET`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_GROWTH_PRICE_ID`, `STRIPE_SCALE_PRICE_ID` | Checkout + webhook |
+| `STRIPE_RECONCILE_SECRET` (also in Vault as `stripe_reconcile_secret` for the cron; falls back to `EMAIL_INTERNAL_SECRET`), `PAYMENTS_ALERT_SLACK_CHANNEL` (uses `SLACK_BOT_TOKEN`) | stripe-webhook-reconcile + payments Slack alerts (MES-39) |
 | `FIRECRAWL_API_KEY` (+ tuning: `FIRECRAWL_CACHE_ENABLED`, `FIRECRAWL_COMPETITOR_DEPTH`) | Scraping/search |
 | `PERPLEXITY_API_KEY` | Market research |
 | `LOVABLE_API_KEY` | Lovable AI Gateway (report sections) |
