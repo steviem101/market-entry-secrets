@@ -44,3 +44,27 @@ export function recordCountLabel(count: unknown): string | undefined {
   if (!Number.isFinite(n) || n <= 0) return undefined;
   return `${Math.round(n).toLocaleString("en-US")} records`;
 }
+
+/**
+ * Resolve a directory row's external website to a single https URL, or undefined.
+ * Prefers the canonical `website_url` column, then a legacy `website`, then builds
+ * one from `domain` (a bare host → https://host).
+ *
+ * Why (Floats feedback, P2-F): several trade/government agencies (AiGroup, Global
+ * Victoria) store their URL only in `website_url`/`domain` while `website` is NULL —
+ * but the report card reads `website`, so those cards rendered with no external link.
+ * Mirrors the `provider.website_url || provider.website` fallback already used for the
+ * competitor/end-buyer surfaces.
+ */
+export function resolveWebsite(
+  row: { website_url?: unknown; website?: unknown; domain?: unknown } | null | undefined,
+): string | undefined {
+  if (!row) return undefined;
+  const pick = (v: unknown): string | undefined => {
+    const s = typeof v === "string" ? v.trim() : "";
+    return s || undefined;
+  };
+  const url = pick(row.website_url) || pick(row.website) || pick(row.domain);
+  if (!url) return undefined;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}

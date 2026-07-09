@@ -11,11 +11,11 @@ import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServ
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
-import { metaLine, recordCountLabel } from "./cardFields.ts";
+import { metaLine, recordCountLabel, resolveWebsite } from "./cardFields.ts";
 import { buildCompetitorCards } from "./competitorCards.ts";
 import { renumberCitations, stripContextLabelCitations } from "./citationRenumber.ts";
 import { expandTargetRegions } from "./targetRegion.ts";
-import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch } from "./geoRelevance.ts";
+import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch, stateAgencyRegionMismatch } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
 import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
@@ -1433,7 +1433,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
   // pool, filter to in-corridor rows, THEN rank into the 5 slots. The union-level
   // gate stays as the safety net for the semantic path.
   try {
-    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, organisation_type, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic").limit(300);
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, website_url, domain, tagline, target_company_origin, organisation_type, government_level, location_state, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic").limit(300);
     taQuery = taQuery.or(buildOr({ service: "services" }));
     const { data: ta, error: taErr } = await taQuery;
     if (taErr) console.error("TIA query error:", taErr);
@@ -1447,6 +1447,9 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     matches.trade_investment_agencies = rank(taInCorridor, { service: "services", persona: true, countryCol: "location_country" }, 5).map((a: any) => ({
       ...a, link: a.slug ? `/government-support/${a.slug}` : "/government-support", linkLabel: "View Organisation",
       subtitle: a.location, tags: (a.services || []).slice(0, 3),
+      // URL lives in website_url/domain for many agencies; `website` is often NULL
+      // (Floats: AiGroup, Global Victoria rendered unlinked). Resolve the fallback.
+      website: resolveWebsite(a),
     }));
   } catch (e) { console.error("TIA search error:", e); }
 
@@ -1753,6 +1756,21 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
     );
     if (merged.trade_investment_agencies.length !== before) {
       console.log(`geo gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);
+    }
+  }
+  // State-body region gate (Floats feedback, P2-F): a STATE government body (Global
+  // Victoria, Invest Victoria) is only useful to a founder targeting THAT state, but the
+  // corridor gate keeps every domestic ANZ body for everyone. Drop a state body whose
+  // state ≠ any state named by the report's target regions. Silent for national targets
+  // (no specific state) and non-state bodies (federal/industry/bilateral stay). Hard
+  // filter: only wrong-state state bodies are removed, so the section stays populated.
+  if (merged.trade_investment_agencies?.length) {
+    const before = merged.trade_investment_agencies.length;
+    merged.trade_investment_agencies = merged.trade_investment_agencies.filter(
+      (r) => !stateAgencyRegionMismatch(r, geoTargetRegions),
+    );
+    if (merged.trade_investment_agencies.length !== before) {
+      console.log(`state gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);
     }
   }
   // National chambers of commerce that are filed in the PROVIDER pools (no
