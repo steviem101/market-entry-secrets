@@ -72,3 +72,4 @@ scripts/apply_verified_fixes.py
 scripts/startmate_import_blocks/
 supabase/migrations_archive/*enrich_angel_investors_batch_*.sql
 supabase/migrations_archive/*import_venture_debt_investors*.sql
+.claude/settings.local.json
