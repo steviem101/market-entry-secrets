@@ -334,22 +334,27 @@ export function preferRelevant<T>(rows: T[], isRelevant: (r: T) => boolean, minK
 }
 
 /**
- * True when a mentor's identity is dominated by immigration / visa / relocation /
- * global-mobility expertise. Used to demote such mentors for DOMESTIC-origin
- * companies (an Australian startup does not need visa help — Floats feedback,
- * where "Head of Community, Techvisa" surfaced for a Sydney startup). Reads the
- * name/title/company/specialties text; paired with preferRelevant() so the
- * demotion is floor-guarded (a thin mentor pool still renders).
+ * True when an entity's identity is dominated by immigration / visa / relocation /
+ * global-mobility expertise. Used to demote such rows for DOMESTIC-origin companies
+ * (an Australian startup needs neither a visa mentor nor an immigration service
+ * provider — Floats feedback: "Head of Community, Techvisa" as a mentor AND the
+ * "TechVisa" business-immigration provider both surfaced for a domestic startup).
+ * Reads every identity/tag field present on either a mentor row (name/title/company/
+ * specialties) or a provider card (name/tags/services/description); paired with
+ * preferRelevant() so the demotion is floor-guarded (a thin pool still renders).
  */
 const IMMIGRATION_RE = /\b(visa|visas|immigration|relocation|global mobility|work permit|sponsorship|migrant)\b/i;
-export function isImmigrationMentor(row: Row): boolean {
+export function isImmigrationFocused(row: Row): boolean {
+  const r = row as any;
   const parts: string[] = [
-    typeof row?.name === "string" ? row.name : "",
-    typeof (row as any)?.title === "string" ? (row as any).title : "",
-    typeof (row as any)?.company === "string" ? (row as any).company : "",
-    typeof (row as any)?.subtitle === "string" ? (row as any).subtitle : "",
-    Array.isArray((row as any)?.specialties) ? (row as any).specialties.join(" ") : "",
-    Array.isArray((row as any)?.tags) ? (row as any).tags.join(" ") : "",
+    typeof r?.name === "string" ? r.name : "",
+    typeof r?.title === "string" ? r.title : "",
+    typeof r?.company === "string" ? r.company : "",
+    typeof r?.subtitle === "string" ? r.subtitle : "",
+    typeof r?.description === "string" ? r.description : "",
+    Array.isArray(r?.specialties) ? r.specialties.join(" ") : "",
+    Array.isArray(r?.services) ? r.services.join(" ") : "",
+    Array.isArray(r?.tags) ? r.tags.join(" ") : "",
   ];
   return IMMIGRATION_RE.test(parts.join(" "));
 }

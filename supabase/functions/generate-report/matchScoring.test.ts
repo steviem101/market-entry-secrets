@@ -6,7 +6,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, industryTokens, leadIcpTokens, leadMatchesIcp, type MatchContext, type Scored } from "./matchScoring.ts";
+import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, textMatchesAnyToken, industryTokens, leadIcpTokens, leadMatchesIcp, type MatchContext, type Scored } from "./matchScoring.ts";
 
 const CTX: MatchContext = {
   userSectors: ["technology-information-and-media", "construction", "professional-services"],
@@ -412,14 +412,22 @@ test("horizontal-only rule: banking body demoted for construction co, kept for f
   assert.ok(forFintech.score > forConstruction.score);
 });
 
-test("isImmigrationMentor: flags visa/immigration-dominant mentors via any identity field", () => {
-  assert.equal(isImmigrationMentor({ name: "Zach Zocher", title: "Head of Community, Techvisa", specialties: ["Tech Visas & Immigration", "Cross-border"] } as any), true);
-  assert.equal(isImmigrationMentor({ name: "Jo", company: "Global Mobility Partners" } as any), true);
-  assert.equal(isImmigrationMentor({ name: "Dan Grindrod", title: "Co-Founder, LaunchPad", specialties: ["GTM & Tech Sales"] } as any), false);
-  assert.equal(isImmigrationMentor({ name: "" } as any), false);
+test("isImmigrationFocused: flags visa/immigration-dominant mentors via any identity field", () => {
+  assert.equal(isImmigrationFocused({ name: "Zach Zocher", title: "Head of Community, Techvisa", specialties: ["Tech Visas & Immigration", "Cross-border"] } as any), true);
+  assert.equal(isImmigrationFocused({ name: "Jo", company: "Global Mobility Partners" } as any), true);
+  assert.equal(isImmigrationFocused({ name: "Dan Grindrod", title: "Co-Founder, LaunchPad", specialties: ["GTM & Tech Sales"] } as any), false);
+  assert.equal(isImmigrationFocused({ name: "" } as any), false);
 });
 
-test("isImmigrationMentor + preferRelevant: domestic filter drops visa mentor but keeps a thin pool", () => {
+test("isImmigrationFocused: also flags an immigration service-provider card (name/services/tags)", () => {
+  // Provider card shape: TechVisa surfaced for a domestic Floats report.
+  assert.equal(isImmigrationFocused({ name: "TechVisa", services: ["Business Immigration", "Employer Sponsorship"], tags: ["Business Immigration"] } as any), true);
+  assert.equal(isImmigrationFocused({ name: "Standard Ledger", services: ["Bookkeeping", "CFO Services"], description: "Startup accounting firm" } as any), false);
+  // description-only immigration signal is caught too
+  assert.equal(isImmigrationFocused({ name: "Acme", services: ["Legal"], description: "Specialises in work permit and visa sponsorship" } as any), true);
+});
+
+test("isImmigrationFocused + preferRelevant: domestic filter drops visa mentor but keeps a thin pool", () => {
   const mentors = [
     { name: "Dan", specialties: ["GTM"] },
     { name: "Roby", specialties: ["Scaled Founder"] },
@@ -427,10 +435,10 @@ test("isImmigrationMentor + preferRelevant: domestic filter drops visa mentor bu
     { name: "Zach", title: "Techvisa", specialties: ["Visas & Immigration"] },
   ];
   // 3 non-visa >= floor 3 → visa mentor dropped
-  const filtered = preferRelevant(mentors, (m: any) => !isImmigrationMentor(m), 3);
+  const filtered = preferRelevant(mentors, (m: any) => !isImmigrationFocused(m), 3);
   assert.deepEqual(filtered.map((m: any) => m.name), ["Dan", "Roby", "Chris"]);
   // thin pool (only a visa mentor) → backfilled, never emptied
-  const thin = preferRelevant([{ name: "Zach", title: "Techvisa" }], (m: any) => !isImmigrationMentor(m), 3);
+  const thin = preferRelevant([{ name: "Zach", title: "Techvisa" }], (m: any) => !isImmigrationFocused(m), 3);
   assert.equal(thin.length, 1);
 });
 

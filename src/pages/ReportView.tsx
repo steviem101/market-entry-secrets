@@ -306,13 +306,16 @@ const ReportViewInner = () => {
                   );
                 };
 
-                // Lead-list section: offer a custom-list request (P1-D). Stronger
-                // empty-state prompt when the ICP gate left no lists; otherwise a
-                // quiet "need a different list?" box under the datasets.
+                // Lead-list section: offer a custom-list request (P1-D). When the
+                // ICP gate left no lists, the request box is the section's primary
+                // CTA — surface it right under the "no match" message (Floats2 review
+                // item 3), not buried below all the prose. When lists DID match, it's
+                // a quiet "need a different list?" box under the datasets.
+                const leadEmpty = sectionId === 'lead_list' && sectionMatches.length === 0;
                 const leadRequest =
                   sectionId === 'lead_list' ? (
                     <div className="mt-6">
-                      <LeadListRequestCard reportId={report.id} emptyState={sectionMatches.length === 0} />
+                      <LeadListRequestCard reportId={report.id} emptyState={leadEmpty} />
                     </div>
                   ) : null;
 
@@ -323,6 +326,7 @@ const ReportViewInner = () => {
                     title={SECTION_LABELS[sectionId]}
                     content={section.content || ''}
                     citations={perplexityCitations}
+                    hideMatchLabel={leadEmpty}
                   >
                     {renderMatchArea()}
                     {leadRequest}

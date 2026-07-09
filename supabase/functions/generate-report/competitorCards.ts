@@ -29,6 +29,17 @@ export interface CompetitorCard {
 
 const clip = (s: unknown, n: number): string => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 
+// De-dupe key: strip a trailing parenthetical ("Juicebox (formerly PeopleGPT)" →
+// "juicebox") so the extraction LLM emitting BOTH the bare and the parenthetical
+// form collapses to one card (Floats2 review N1). Whitespace/case-normalised.
+export function competitorDedupeKey(name: string): string {
+  return String(name ?? "")
+    .toLowerCase()
+    .replace(/\s*\([^)]*\)\s*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // Scrape-failure fallback strings from the competitor pipeline ("Website could not
 // be analysed." / "Could not extract competitor intelligence."). They're honest in
 // the raw data but read as a broken card when rendered as the subtitle (Novade
@@ -52,7 +63,7 @@ export function buildCompetitorCards(competitors: CompetitorLike[] | null | unde
   for (const c of competitors || []) {
     const name = clip(c?.name, 80);
     if (!name) continue;
-    const key = name.toLowerCase();
+    const key = competitorDedupeKey(name);
     if (seen.has(key)) continue;
     seen.add(key);
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildCompetitorCards } from "./competitorCards.ts";
+import { buildCompetitorCards, competitorDedupeKey } from "./competitorCards.ts";
 
 test("buildCompetitorCards: maps name/description/url into external cards", () => {
   const cards = buildCompetitorCards([
@@ -25,6 +25,22 @@ test("buildCompetitorCards: drops unnamed rows and dedupes by name", () => {
     { name: "acme", url: "https://acme.io" }, // dup (case-insensitive) → dropped
   ]);
   assert.deepEqual(cards.map((c) => c.name), ["Acme"]);
+});
+
+test("buildCompetitorCards: parenthetical-variant name collapses to one card (Floats2 N1)", () => {
+  const cards = buildCompetitorCards([
+    { name: "Juicebox", url: "https://juicebox.ai", description: "AI sourcing" },
+    { name: "Juicebox (formerly PeopleGPT)", url: "https://juicebox.ai", description: "AI sourcing engine" },
+  ]);
+  assert.deepEqual(cards.map((c) => c.name), ["Juicebox"]); // first wins, dup dropped
+});
+
+test("competitorDedupeKey: strips a trailing parenthetical + normalises case/space", () => {
+  assert.equal(competitorDedupeKey("Juicebox (formerly PeopleGPT)"), "juicebox");
+  assert.equal(competitorDedupeKey("Juicebox"), "juicebox");
+  assert.equal(competitorDedupeKey("  Loxo  "), "loxo");
+  // a parenthetical in the MIDDLE is not a suffix — left intact (distinct product)
+  assert.equal(competitorDedupeKey("Acme (US) Corp"), "acme (us) corp");
 });
 
 test("buildCompetitorCards: non-http url yields no link button", () => {

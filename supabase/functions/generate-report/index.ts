@@ -20,7 +20,7 @@ import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVe
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
 import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
@@ -1814,25 +1814,26 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   merged.community_members = dedupMentors;
   merged.investors = dedupInvestors;
 
-  // Persona/origin-aware mentor filter (Floats feedback): a DOMESTIC-origin
-  // company (Australian startup) does not need immigration/visa mentors, but the
-  // scorer surfaced "Head of Community, Techvisa" anyway. Demote (floor-guarded
-  // via preferRelevant, so a thin pool still renders) visa/immigration-dominant
-  // mentors — UNLESS the company is international, or explicitly asked for
-  // immigration / relocation / international-hiring help.
+  // Persona/origin-aware immigration filter (Floats feedback): a DOMESTIC-origin
+  // company (Australian startup) needs neither immigration/visa MENTORS nor
+  // immigration SERVICE PROVIDERS, but the scorer surfaced both "Head of Community,
+  // Techvisa" (mentor) and the "TechVisa" business-immigration provider anyway.
+  // Demote visa/immigration-dominant rows on both surfaces (floor-guarded via
+  // preferRelevant, so a thin pool still renders) — UNLESS the company is
+  // international, or explicitly asked for immigration / relocation /
+  // international-hiring help.
   if (!isInternationalOrigin(intake.country_of_origin)) {
     const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
       `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
     );
-    if (!wantsImmigration && (merged.community_members || []).length) {
-      const before = merged.community_members.length;
-      merged.community_members = preferRelevant(
-        merged.community_members,
-        (m: any) => !isImmigrationMentor(m),
-        3,
-      );
-      const dropped = before - merged.community_members.length;
-      if (dropped > 0) console.log(`mentor persona filter (domestic): demoted ${dropped} immigration mentor(s)`);
+    if (!wantsImmigration) {
+      for (const [tbl, floor] of [["community_members", 3], ["service_providers", 4]] as const) {
+        if (!(merged[tbl] || []).length) continue;
+        const before = merged[tbl].length;
+        merged[tbl] = preferRelevant(merged[tbl], (r: any) => !isImmigrationFocused(r), floor);
+        const dropped = before - merged[tbl].length;
+        if (dropped > 0) console.log(`immigration filter (domestic) ${tbl}: demoted ${dropped} row(s)`);
+      }
     }
   }
 
@@ -2337,12 +2338,30 @@ async function generateReportInBackground(
     const competitorDepthNote = (competitorResult.competitor_depth && competitorResult.competitors.length > 0)
       ? `\n\nCOMPETITOR COVERAGE (this section): The competitor data provided lists ${competitorResult.competitors.length} competitors. Cover EVERY one of them — do not trim, merge, or silently drop any to shorten the section. For EACH competitor, include a distinct labelled line "**Australian presence:**" describing their AU footprint using ONLY the provided data (local office/address, AU customers or case studies, a .com.au domain, AU pricing). If the provided data indicates none is evident, write "No Australian presence evident". Never guess, infer, or invent an Australian presence that is not in the data.`
       : "";
+    // Competitor prose links (Floats2 review item 1): the competitor JSON carries a
+    // "url" per competitor but the prompt never asked the model to link the names, so
+    // the reader got named rivals with no way to visit them (links lived only on the
+    // cards). Instruct hyperlinking the FIRST mention using ONLY the provided url —
+    // renders as a new-tab external link via CitationRenderer.
+    const competitorLinkNote = competitorResult.competitors.length > 0
+      ? `\n\nCOMPETITOR LINKS (this section): The competitor data includes a "url" field for many competitors. The FIRST time you name each competitor in the prose, hyperlink it in Markdown as [Competitor Name](url) using ONLY the exact url provided for that competitor in the data. If a competitor has no url in the data, leave its name as plain text — never invent, guess, or reuse another competitor's URL.`
+      : "";
 
     // Phase C (RQ refs 3f27c7ed / 340c7245): the providers list may include trade/government
     // agencies and innovation hubs/accelerators alongside private firms — make sure they're
     // covered in prose, not just listed as cards. Applied only to the providers section.
     const supportMixNote = hasAgencyOrInnovation
       ? `\n\nSUPPORT MIX: The matched providers for this report include government/trade agencies and/or innovation hubs & accelerators as well as private service providers. Group them by type (e.g. "Government & trade support", "Innovation & accelerators", "Private providers") and explain each one's specific role for ${intake.company_name} — do not omit the agencies or hubs.`
+      : "";
+
+    // Lead-list empty state (Floats2 review N3): when the ICP gate leaves NO matched
+    // lead datasets, the model previously free-ranged into naming specific investors /
+    // VCs / angel funds not in the directory and quoted uncited ecosystem figures —
+    // breaking grounding and duplicating the Investor section. Force a short, honest
+    // section: no invented recommendations, no uncited numbers, point at the request
+    // box (rendered directly below the section).
+    const leadEmptyNote = (matches.leads || []).length === 0
+      ? `\n\nNO MATCHED LEAD DATASETS (this section): The directory returned NO lead datasets matching this company's buyer profile. Keep this section SHORT and honest (2–4 sentences): state that no pre-built list matched their specific buyer profile and that they can request a custom list built for them (a request form appears directly below this section). Do NOT name or recommend specific investors, VCs, angel groups, accelerators, funds, or companies here — those are covered in other sections and naming un-provided ones is not grounded. Do NOT cite market-size, ecosystem-value, or funding figures that are not in the canonical figures list.`
       : "";
 
     // D2: emphasise (never hide) the sections the user's selected goals map to.
@@ -2424,7 +2443,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadEmptyNote : ""}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
