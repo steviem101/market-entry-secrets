@@ -31,6 +31,27 @@ curl -sI http://www.marketentrysecrets.com/pricing | grep -i '^location\|^HTTP'
 # expect: a single 301 hop to https://marketentrysecrets.com/pricing
 ```
 
+## Verified findings (2026-07-09, via GSC MCP + live checks)
+
+- **Still live:** `https://www.marketentrysecrets.com/` returns **302** → apex;
+  `http://` apex → https is correctly 301.
+- **Measured impact:** GSC URL inspection of `https://marketentrysecrets.com/` returns
+  *"Duplicate, Google chose different canonical than user"* — Google's canonical is the
+  **www** variant, overriding the apex canonicals declared in `src/lib/publishedOrigin.ts`.
+- **Who serves the 302:** Lovable's own Cloudflare-fronted infrastructure. The domain's
+  nameservers are `dns1/dns2.registrar-servers.com` (**Namecheap BasicDNS**) — there is
+  **no customer-controlled Cloudflare zone**, so the Cloudflare instructions below require
+  first moving DNS to a (free) Cloudflare account.
+- **Lovable config:** in Lovable → Settings → Domains, apex is primary (starred) and
+  `www` is a connected secondary; the UI exposes no redirect-type setting.
+- **Do NOT use Namecheap "URL Redirect Record"** for www: it can 301 but cannot serve a
+  valid cert for `https://www.…` — the exact URL Google currently holds as canonical.
+
+**Fix order:** (1) check the `⋮` menu on the www row in Lovable Domains for a redirect-type
+option; (2) ask Lovable support to make the www→primary redirect a 301; (3) otherwise move
+DNS to a free Cloudflare account (import records from Namecheap, switch nameservers, then
+apply the Redirect Rule below).
+
 ## How to set it (pick the one that matches the live setup)
 
 **If the domain is on Cloudflare (most likely — the audit saw Cloudflare in front):**
