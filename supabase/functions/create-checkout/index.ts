@@ -1,5 +1,5 @@
 // supabase/functions/create-checkout/index.ts
-import Stripe from "https://esm.sh/stripe@12?target=deno";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
@@ -14,7 +14,14 @@ const PRICE_IDS: Record<string, string> = {
   scale: Deno.env.get("STRIPE_SCALE_PRICE_ID")!,
 };
 
-const stripe = new Stripe(STRIPE_SECRET);
+// API version must be >= 2023-08-16: older versions reject checkout sessions
+// that a 100% promotion code reduces to $0 ("no-cost orders"), which is the
+// beta-tester flow (MES-140). stripe-node always sends its own pinned version
+// header, so the account's default version does not apply here.
+const stripe = new Stripe(STRIPE_SECRET, {
+  apiVersion: "2023-10-16",
+  httpClient: Stripe.createFetchHttpClient(),
+});
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 Deno.serve(async (req: Request) => {
