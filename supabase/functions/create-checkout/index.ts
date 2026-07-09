@@ -39,6 +39,16 @@ Deno.serve(async (req: Request) => {
     const directPriceId = typeof body.price_id === "string" ? body.price_id : null;
     let priceId = directPriceId || PRICE_IDS[tier];
 
+    // A lead-database purchase is a one-off product buy, NOT a subscription upgrade.
+    // It must NEVER carry a subscription `tier` into the webhook — otherwise a user
+    // could pay a (cheap) lead-DB price and have the webhook grant them a paid tier.
+    const isLeadPurchase = !!(directPriceId && extraMetadata.lead_database_id);
+
+    // Defence-in-depth: never let a client-supplied metadata.tier / supabase_user_id
+    // survive into the Stripe session (the verified values are set explicitly below).
+    delete (extraMetadata as Record<string, unknown>).tier;
+    delete (extraMetadata as Record<string, unknown>).supabase_user_id;
+
     // For direct price purchases, validate the price_id matches the lead database record
     if (directPriceId && extraMetadata.lead_database_id) {
       const { data: leadDb, error: leadErr } = await supabaseAdmin
@@ -197,8 +207,10 @@ Deno.serve(async (req: Request) => {
       customer: stripeCustomerId,
       metadata: {
         ...extraMetadata,
-        // Verified values MUST come after spread to prevent user-supplied overrides
-        tier: tier || "lead_purchase",
+        // Verified values MUST come after spread to prevent user-supplied overrides.
+        // Lead-database buys are forced to "lead_purchase" so the client-supplied
+        // body.tier can never be used to grant a subscription tier (AUD-005).
+        tier: isLeadPurchase ? "lead_purchase" : (tier || "lead_purchase"),
         supabase_user_id: supabaseUserId,
       },
       client_reference_id: supabaseUserId,
