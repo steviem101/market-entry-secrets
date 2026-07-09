@@ -1,6 +1,11 @@
 # MCP config (contains secrets)
 .mcp.json
 
+# Google Search Console MCP credentials (gsc server — see .mcp.json.example) — never commit
+client_secrets.json
+token.json
+.config/gsc-mcp/
+
 # Logs
 logs
 *.log
