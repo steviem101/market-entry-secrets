@@ -154,3 +154,13 @@ test("countGoalTagHits: safe on empty/unknown input", () => {
   assert.deepEqual(countGoalTagHits(["nonexistent_goal"], { x: [{ services: ["Tax"] }] }), {});
   assert.deepEqual(countGoalTagHits(["events"], {}), { events: 0 });
 });
+
+import { goalSelectsGrants } from "./goalServiceTags.ts";
+
+test("goalSelectsGrants: v2 goal_id + legacy label + negatives", () => {
+  assert.equal(goalSelectsGrants({ goal_ids: ["investors", "grants"] }), true);
+  assert.equal(goalSelectsGrants({ services_needed: ["Identify grant and government funding opportunities"] }), true);
+  assert.equal(goalSelectsGrants({ goal_ids: ["investors", "mentors_startup"] }), false);
+  assert.equal(goalSelectsGrants({}), false);
+  assert.equal(goalSelectsGrants({ goal_ids: null, services_needed: null }), false);
+});

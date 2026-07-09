@@ -7,7 +7,7 @@ import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shared/scrapeCache.ts";
 import { selectKeyPages } from "./keyPageSelect.ts";
 import { buildCompetitorQueries, dedupeCompetitorResults, domainOf, dropNonCompetitors } from "./competitorQueries.ts";
-import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits } from "./goalServiceTags.ts";
+import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits, goalSelectsGrants } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
@@ -1187,11 +1187,8 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     services_needed: intake.services_needed,
   });
   // Grants goal → structured boost on the agency surface (grants_available column;
-  // no grant tag vocabulary exists in any directory table). Legacy long-label kept
-  // for pre-v2 rows.
-  const wantsGrantsGoal =
-    (intake.goal_ids || []).includes("grants") ||
-    (intake.services_needed || []).includes("Identify grant and government funding opportunities");
+  // no grant tag vocabulary exists in any directory table).
+  const wantsGrantsGoal = goalSelectsGrants(intake);
 
   const locationPatterns = regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
 
@@ -1795,8 +1792,9 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   }
   // Grants goal (taxonomy ticket): order grants-capable bodies first at the union so
   // the semantic path benefits too (the overlap path already widened its slate). Pure
-  // reorder — membership unchanged, section never empties.
-  if (wantsGrantsGoal && merged.trade_investment_agencies?.length) {
+  // reorder — membership unchanged, section never empties. NB: recomputed here — the
+  // overlap path's wantsGrantsGoal is scoped to searchMatchesOverlap, not this function.
+  if (goalSelectsGrants(intake) && merged.trade_investment_agencies?.length) {
     merged.trade_investment_agencies = [
       ...merged.trade_investment_agencies.filter((r: any) => r.grants_available === true),
       ...merged.trade_investment_agencies.filter((r: any) => r.grants_available !== true),

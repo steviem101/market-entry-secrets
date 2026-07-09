@@ -155,6 +155,19 @@ export function goalsToPrioritisedSections(source: { goal_ids?: string[] | null 
 }
 
 /**
+ * Did the user select the "grants & government funding" goal? Used to boost
+ * grants_available agencies (no grant tag vocabulary exists to match on). Reads the
+ * v2 goal_id and the legacy long label. Pure — shared by both the overlap and union
+ * paths so the predicate can't drift between them.
+ */
+export function goalSelectsGrants(source: { goal_ids?: string[] | null; services_needed?: string[] | null }): boolean {
+  return (
+    (source.goal_ids ?? []).includes("grants") ||
+    (source.services_needed ?? []).includes("Identify grant and government funding opportunities")
+  );
+}
+
+/**
  * Telemetry: per selected goal, how many MATCHED rows carry at least one of the
  * goal's service tags (exact match, mirroring the `.cs.{}` semantics). Stored in
  * report_json.metadata.goal_tag_hits so vocabulary drift is OBSERVABLE from
