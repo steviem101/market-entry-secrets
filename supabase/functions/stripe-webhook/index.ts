@@ -25,6 +25,7 @@ import { log, logError } from "../_shared/log.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
 import {
   isMissingColumnError,
+  parseSessionSummary,
   postPaymentsAlert,
   processStripeEvent,
   resolveStatus,
@@ -184,14 +185,7 @@ Deno.serve(async (req: Request) => {
     log("stripe-webhook", "Received Stripe event", { eventId: event.id, type: event.type });
 
     const dataObj = (event.data && event.data.object) ? (event.data.object as any) : null;
-    const parsed = {
-      metadata: dataObj?.metadata ?? {},
-      clientReferenceId: dataObj?.client_reference_id ?? null,
-      paymentIntentId: dataObj?.payment_intent ? String(dataObj.payment_intent) : null,
-      amount: dataObj?.amount_total ?? null,
-      currency: dataObj?.amount_total ? dataObj?.currency ?? null : null,
-      eventType: event.type,
-    };
+    const parsed = parseSessionSummary(dataObj, event.type);
 
     const claim = await claimEvent(event, parsed);
 

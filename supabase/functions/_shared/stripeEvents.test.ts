@@ -11,6 +11,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   isMissingColumnError,
+  parseSessionSummary,
   processStripeEvent,
   resolveStatus,
   statusForOutcome,
@@ -332,6 +333,77 @@ test("suppressConfirmationEmail skips the resend on replay (emailed:false)", asy
   );
   assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
   assert.equal(sent, 0, "no email on a suppressed replay");
+});
+
+// --- MES-STRIPE-PROD: $0 promotion-code sessions (amount_total=0, payment_intent=null) --
+
+test("$0 promo session still grants the tier and never touches payment_intent", async () => {
+  let piLookups = 0;
+  const supabase = makeSupabaseStub();
+  const outcome = await processStripeEvent(
+    checkoutEvent(
+      { tier: "growth", supabase_user_id: "user-1" },
+      { amount_total: 0, payment_intent: null, currency: "aud" },
+    ),
+    {
+      supabase,
+      retrievePaymentIntent: async () => {
+        piLookups++;
+        return { amount: null, currency: null };
+      },
+    },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
+  const upsertCall = supabase.calls.find((c) => c.op === "upsert")!;
+  assert.equal((upsertCall.payload as { tier: string }).tier, "growth");
+  assert.equal(piLookups, 0, "null payment_intent must never be dereferenced/retrieved");
+});
+
+test("$0 promo session sends the confirmation email with amount 0 (not a crash)", async () => {
+  const sentWith: unknown[] = [];
+  const outcome = await processStripeEvent(
+    checkoutEvent(
+      { tier: "scale", supabase_user_id: "user-1" },
+      { amount_total: 0, payment_intent: null, currency: "aud", customer_details: { email: "beta@x.com" } },
+    ),
+    { supabase: makeSupabaseStub(), sendConfirmationEmail: async (args) => { sentWith.push(args); } },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: true });
+  assert.equal((sentWith[0] as { amount: number }).amount, 0);
+  assert.equal((sentWith[0] as { currency: string }).currency, "aud");
+});
+
+test("parseSessionSummary marks $0 grants and keeps currency at amount 0", () => {
+  const zero = parseSessionSummary(
+    {
+      id: "cs_1",
+      metadata: { tier: "growth", supabase_user_id: "u1" },
+      client_reference_id: "u1",
+      payment_intent: null,
+      amount_total: 0,
+      currency: "aud",
+      total_details: { amount_discount: 9900 },
+    },
+    "checkout.session.completed",
+  );
+  assert.equal(zero.zero_amount_grant, true);
+  assert.equal(zero.amount, 0);
+  assert.equal(zero.currency, "aud", "currency must be recorded even when amount_total is 0");
+  assert.equal(zero.paymentIntentId, null);
+  assert.equal(zero.amount_discount, 9900);
+
+  const paid = parseSessionSummary(
+    { payment_intent: "pi_123", amount_total: 9900, currency: "aud" },
+    "checkout.session.completed",
+  );
+  assert.equal(paid.zero_amount_grant, false);
+  assert.equal(paid.paymentIntentId, "pi_123");
+  assert.equal(paid.amount_discount, null);
+
+  const empty = parseSessionSummary(null, "checkout.session.completed");
+  assert.equal(empty.zero_amount_grant, false, "missing amount is unknown, not a $0 grant");
+  assert.equal(empty.amount, null);
+  assert.deepEqual(empty.metadata, {});
 });
 
 test("isMissingColumnError recognises pre-migration schemas only", () => {
