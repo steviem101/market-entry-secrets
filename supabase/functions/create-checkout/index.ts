@@ -205,6 +205,11 @@ Deno.serve(async (req: Request) => {
       mode: "payment",
       line_items: [{ price: priceId, quantity: 1 }],
       customer: stripeCustomerId,
+      // Beta testers redeem single-use 100% promotion codes on TIER checkouts
+      // only (MES-STRIPE-PROD). A 100% code produces a $0 session with no card
+      // prompt and payment_intent=null — the webhook grants the tier from
+      // metadata regardless of amount. Lead-database buys keep the box off.
+      allow_promotion_codes: !isLeadPurchase,
       metadata: {
         ...extraMetadata,
         // Verified values MUST come after spread to prevent user-supplied overrides.

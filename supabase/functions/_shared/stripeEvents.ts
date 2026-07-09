@@ -80,6 +80,33 @@ export interface ProcessDeps {
   logError?: (message: string, err?: unknown) => void;
 }
 
+/**
+ * Summary of a checkout session for the payment_webhook_logs.parsed column.
+ * A 100% promotion code produces amount_total = 0 and payment_intent = null
+ * (Stripe creates no PaymentIntent for $0 payment-mode sessions), which is a
+ * legitimate tier grant — `zero_amount_grant` makes those free grants
+ * auditable (MES-STRIPE-PROD), and currency is recorded even when the amount
+ * is 0 (`amount_total && …` would drop it).
+ */
+export function parseSessionSummary(
+  dataObj: Record<string, unknown> | null,
+  eventType: string,
+): Record<string, unknown> {
+  const obj = dataObj ?? {};
+  const amount = typeof obj.amount_total === "number" ? obj.amount_total : null;
+  const totalDetails = (obj.total_details ?? {}) as Record<string, unknown>;
+  return {
+    metadata: obj.metadata ?? {},
+    clientReferenceId: obj.client_reference_id ?? null,
+    paymentIntentId: obj.payment_intent ? String(obj.payment_intent) : null,
+    amount,
+    currency: obj.currency ?? null,
+    eventType,
+    zero_amount_grant: amount === 0,
+    amount_discount: totalDetails.amount_discount ?? null,
+  };
+}
+
 export async function processStripeEvent(
   evt: StripeEventLike,
   deps: ProcessDeps,
@@ -216,6 +243,11 @@ export async function processStripeEvent(
     };
   }
   log("Upserted user_subscriptions", { supabaseUserId, tier });
+  if (dataObj.amount_total === 0) {
+    // Promotional (100%-code) grant — loud in logs so free grants are easy to
+    // audit alongside the zero_amount_grant marker in payment_webhook_logs.
+    log("Tier granted at $0 (promotional checkout)", { supabaseUserId, tier });
+  }
 
   // Keep report badges consistent with the new plan. BEST-EFFORT: the tier is
   // already applied (the upsert above is the entitlement of record), so a
