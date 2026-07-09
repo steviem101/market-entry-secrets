@@ -18,7 +18,7 @@ import { expandTargetRegions } from "./targetRegion.ts";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
-import { humanizeMetricLabel } from "./metricLabel.ts";
+import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
@@ -1942,7 +1942,7 @@ async function generateReportInBackground(
     ]);
 
     // Extract key metrics from the landscape response instead of a separate Perplexity call
-    const keyMetrics: Array<{ label: string; value: string; context: string }> = [];
+    const keyMetrics: Array<{ label: string; value: string; context: string; estimated?: boolean }> = [];
     if (marketResearch.landscape) {
       const metricLines = marketResearch.landscape.match(/- METRIC: (.+?) \| (.+?) \| (.+)/g);
       if (metricLines) {
@@ -1953,7 +1953,15 @@ async function generateReportInBackground(
           // these as plain text). Leave [N] citation markers intact.
           if (m) {
             const clean = (s: string) => s.replace(/\*/g, "").trim();
-            keyMetrics.push({ label: humanizeMetricLabel(clean(m[1])), value: clean(m[2]), context: clean(m[3]) });
+            const value = clean(m[2]);
+            const context = clean(m[3]);
+            keyMetrics.push({
+              label: humanizeMetricLabel(clean(m[1])),
+              value,
+              context,
+              // Flag model-derived estimates so the panel marks them "Est." (P2-H).
+              estimated: isEstimatedMetric(value, context),
+            });
           }
         }
         // Remove the KEY METRICS section from landscape text to keep it clean

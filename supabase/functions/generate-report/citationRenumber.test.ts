@@ -161,3 +161,11 @@ test("renumberCitations: empty citations with metrics passes metrics through unc
   assert.equal(res.remapped, 0);
   assert.deepEqual(res.keyMetrics, metrics);
 });
+
+test("renumberCitations: extra metric fields (estimated) survive the renumber", () => {
+  const sections = { s: { content: "cite [9]" } };
+  const metrics = [{ label: "Market size [4]", value: "~US$42.9B", context: "derived [4]", estimated: true }];
+  const res = renumberCitations(sections, ["s"], cites19, metrics);
+  assert.equal(res.keyMetrics?.[0].estimated, true);
+  assert.equal(res.keyMetrics?.[0].value, "~US$42.9B");
+});
