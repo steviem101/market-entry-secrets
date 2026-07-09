@@ -20,6 +20,7 @@ import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVe
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
 import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
+import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
@@ -623,6 +624,12 @@ interface EndBuyerIntelligence {
   url: string;
   description: string;
   key_info: string;
+  /** Software/tools evident in the site content ("" when not evident — never guessed). */
+  tech_signals?: string;
+  /** Roles they appear to be hiring for right now ("" when not evident). */
+  hiring_signals?: string;
+  /** Name-only chip whose resolved domain failed the wrong-company gate. */
+  unverified?: boolean;
 }
 
 async function scrapeEndBuyers(
@@ -644,9 +651,18 @@ async function scrapeEndBuyers(
   const results = await Promise.allSettled(
     cappedBuyers.map(async (buyer) => {
       // Resolve a domain from the name when none was provided (P1.5).
-      const website = (buyer.website && buyer.website.trim())
+      const hadWebsite = !!(buyer.website && buyer.website.trim());
+      const website = hadWebsite
         ? buyer.website
         : await resolveDomainFromName(firecrawlKey, buyer.name, stats);
+      // Wrong-company gate (buyer-briefs v1): a name-only chip ("walter page") can
+      // resolve to an unrelated business — a confidently wrong brief is worse than
+      // none. User-supplied websites are trusted; resolved ones must share a
+      // distinctive name token with the host.
+      if (!hadWebsite && !nameMatchesDomain(buyer.name, website)) {
+        console.log(`end buyer "${buyer.name}": resolved domain failed name match — marked unverified`);
+        return { name: buyer.name, url: "", description: "", key_info: "", unverified: true };
+      }
       const markdown = website ? await firecrawlScrape(firecrawlKey, website, 8000, stats, cache) : null;
       if (!markdown || markdown.length < 50) {
         return { name: buyer.name, url: website, description: "Website could not be analysed.", key_info: "" };
@@ -658,7 +674,7 @@ async function scrapeEndBuyers(
           {
             role: "user",
             content: `Analyse this company "${buyer.name}" (${website}) as a POTENTIAL CUSTOMER for "${companyName}".
-Return a JSON object: {"name": "${buyer.name}", "url": "${website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them"}
+Return a JSON object: {"name": "${buyer.name}", "url": "${website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them", "tech_signals": "software/platforms/tools explicitly evident in the content (ATS, CRM, marketing stack); empty string if none evident — do NOT guess", "hiring_signals": "roles they appear to be actively hiring for per the content; empty string if none evident"}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -1972,6 +1988,7 @@ async function generateReportInBackground(
       competitorResult,
       endBuyerScrapeResult,
       endBuyerProcurementResearch,
+      endBuyerAccountResearch,
     ] = await Promise.all([
       firecrawlKey && intake.website_url
         ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary, firecrawlStats, firecrawlCache)
@@ -1985,6 +2002,17 @@ async function generateReportInBackground(
         ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name, firecrawlStats, firecrawlCache)
         : Promise.resolve([]),
       researchEndBuyerProcurement(intake),
+      // Buyer-briefs v1: ONE batched Perplexity pass across all named accounts —
+      // recent news + live hiring + known tech, cited. Single call regardless of
+      // chip count (cost cap); "" on failure/no chips (fail-open).
+      (async () => {
+        const chips = (intake.end_buyers || []).slice(0, 3);
+        const pk = Deno.env.get("PERPLEXITY_API_KEY");
+        if (!pk || chips.length === 0) return "";
+        const list = chips.map((b: any) => `${b.name}${b.website ? ` (${b.website})` : ""}`).join("; ");
+        const r = await callPerplexity(pk, `For EACH of these Australian-market companies: ${list} — give 1) notable news from the last 12 months, 2) whether they appear to be actively hiring and for what roles, 3) any known software/technology they use (ATS, CRM, marketing or delivery stack). Say "unknown" where you cannot find evidence — do not guess.`, { recency: "year" });
+        return r.ok ? r.content : "";
+      })(),
     ]);
 
     // Extract key metrics from the landscape response instead of a separate Perplexity call
@@ -2387,6 +2415,16 @@ async function generateReportInBackground(
     // breaking grounding and duplicating the Investor section. Force a short, honest
     // section: no invented recommendations, no uncited numbers, point at the request
     // box (rendered directly below the section).
+    // Buyer briefs v1 ("Your First Customers" — inside action_plan, no gating change):
+    // per-account briefs from the buyer scrape + batched account research, with the
+    // parsed ICP one-liner finally driving "who to approach" titles. Empty note when
+    // no chips were given.
+    const parsedIcp = parseIcpDescription(targetCustomerDescription);
+    const buyerBriefsNote = buildBuyerBriefsNote(
+      endBuyerScrapeResult || [], parsedIcp, intake.company_name, endBuyerAccountResearch,
+    );
+    const buyerCards = buildBuyerCards(endBuyerScrapeResult || []);
+
     const leadEmptyNote = (matches.leads || []).length === 0
       ? `\n\nNO MATCHED LEAD DATASETS (this section): The directory returned NO lead datasets matching this company's buyer profile. Keep this section SHORT and honest (2–4 sentences): state that no pre-built list matched their specific buyer profile and that they can request a custom list built for them (a request form appears directly below this section). Do NOT name or recommend specific investors, VCs, angel groups, accelerators, funds, or companies here — those are covered in other sections and naming un-provided ones is not grounded. Do NOT cite market-size, ecosystem-value, or funding figures that are not in the canonical figures list.`
       : "";
@@ -2470,7 +2508,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadEmptyNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadEmptyNote : ""}${tmpl.section_name === "action_plan" ? buyerBriefsNote : ""}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
@@ -2487,6 +2525,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             let sectionContent = content;
             if (tmpl.section_name === "competitor_landscape") {
               sectionMatches = buildCompetitorCards(competitorResult.competitors);
+            } else if (tmpl.section_name === "action_plan" && buyerCards.length > 0) {
+              // Buyer briefs v1: the named target accounts render as cards under the
+              // action plan, aligned with the "Your First Customers" subsection.
+              sectionMatches = buyerCards;
             } else if (tmpl.section_name === "executive_summary" && keyQuestionPicks.length > 0) {
               sectionMatches = keyQuestionPicks;
               sectionContent = `${content}\n\n**Who from your matches can help with this:**`;
@@ -2589,6 +2631,18 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // (vocabulary drift) — observable here because a unit test cannot assert
         // live-DB vocabulary.
         goal_tag_hits: countGoalTagHits((intake as any).goal_ids, matches),
+        // Buyer-briefs v1 observability: chips given vs briefed vs unverified, and
+        // whether the batched account research came back. A consistently-zero
+        // signals count = the tech/hiring extraction isn't finding evidence.
+        buyer_briefs: {
+          chips: (intake.end_buyers || []).length,
+          briefed: (endBuyerScrapeResult || []).filter((b: any) => !b.unverified).length,
+          unverified: (endBuyerScrapeResult || []).filter((b: any) => b.unverified).length,
+          with_tech: (endBuyerScrapeResult || []).filter((b: any) => (b.tech_signals || "").trim()).length,
+          with_hiring: (endBuyerScrapeResult || []).filter((b: any) => (b.hiring_signals || "").trim()).length,
+          account_research: !!endBuyerAccountResearch,
+          icp_titles: parsedIcp.titles,
+        },
         polish_applied: polishApplied,
         // Renumbered alongside the sections so metric-card [N]s and the stored
         // Sources list stay 1:1 (falls back to the originals when no citations).
