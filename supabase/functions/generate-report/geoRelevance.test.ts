@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch } from "./geoRelevance.ts";
+import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch, stateAgencyRegionMismatch } from "./geoRelevance.ts";
 
 test("geoOriginTerms: intl origin kept, AU/blank/short dropped, underscores normalised", () => {
   assert.deepEqual(geoOriginTerms("Ireland"), ["ireland"]);
@@ -174,4 +174,38 @@ test("chamberOriginMismatch: null/blank rows are a safe no-op", () => {
   assert.equal(chamberOriginMismatch(null, uk), false);
   assert.equal(chamberOriginMismatch({ name: "" }, uk), false);
   assert.equal(chamberOriginMismatch({}, uk), false);
+});
+
+// ── stateAgencyRegionMismatch (P2-F) ─────────────────────────────────────────
+// Target regions passed in are the expandTargetRegions() output.
+const globalVic = { name: "Global Victoria", organisation_type: "state_body", government_level: "state", location_state: "Victoria", jurisdiction: ["Victoria"] };
+const investNsw = { name: "Investment NSW", organisation_type: "state_body", government_level: "state", location_state: "NSW", jurisdiction: ["Australia"] };
+
+test("stateAgencyRegionMismatch: VIC state body dropped for an NSW/Sydney target (Floats)", () => {
+  assert.equal(stateAgencyRegionMismatch(globalVic, ["sydney", "new south wales", "nsw"]), true);
+  // city-only target still resolves to the state
+  assert.equal(stateAgencyRegionMismatch(globalVic, ["sydney"]), true);
+});
+
+test("stateAgencyRegionMismatch: state body KEPT when the target names its own state", () => {
+  assert.equal(stateAgencyRegionMismatch(globalVic, ["melbourne", "victoria"]), false);
+  assert.equal(stateAgencyRegionMismatch(investNsw, ["sydney"]), false);
+  // jurisdiction fallback when location_state is blank
+  assert.equal(stateAgencyRegionMismatch({ government_level: "state", location_state: null, jurisdiction: ["Victoria"] }, ["melbourne"]), false);
+});
+
+test("stateAgencyRegionMismatch: fail-open — national target, non-state body, unknown state", () => {
+  // national/"Australia" target → expandTargetRegions drops it → no specific state → keep all
+  assert.equal(stateAgencyRegionMismatch(globalVic, []), false);
+  // federal / industry / bilateral bodies are never gated by state
+  assert.equal(stateAgencyRegionMismatch({ organisation_type: "federal_agency", government_level: "federal", location_state: "ACT" }, ["sydney"]), false);
+  assert.equal(stateAgencyRegionMismatch({ organisation_type: "industry_association", government_level: "industry", location_state: "NSW" }, ["melbourne"]), false);
+  // state body whose state can't be determined → keep
+  assert.equal(stateAgencyRegionMismatch({ government_level: "state", location_state: null, jurisdiction: [] }, ["sydney"]), false);
+  assert.equal(stateAgencyRegionMismatch(null, ["sydney"]), false);
+});
+
+test("stateAgencyRegionMismatch: multi-state target keeps a body in any named state", () => {
+  assert.equal(stateAgencyRegionMismatch(globalVic, ["sydney", "melbourne", "victoria", "new south wales"]), false);
+  assert.equal(stateAgencyRegionMismatch(investNsw, ["melbourne", "victoria"]), true);
 });

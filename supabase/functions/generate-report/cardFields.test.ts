@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { metaLine, recordCountLabel } from "./cardFields.ts";
+import { metaLine, recordCountLabel, resolveWebsite } from "./cardFields.ts";
 
 test("metaLine: drops nullish/empty/placeholder parts, joins the rest", () => {
   assert.equal(metaLine(["Venture Capital", "Sydney"]), "Venture Capital · Sydney");
@@ -41,4 +41,25 @@ test("metaLine + recordCountLabel compose for the lead-database subtitle", () =>
   assert.equal(metaLine(["Australia", recordCountLabel(null)]), "Australia");
   // both missing → undefined (card hides the line)
   assert.equal(metaLine(["", recordCountLabel(null)]), undefined);
+});
+
+test("resolveWebsite: falls back website_url → website → domain; adds scheme to bare host", () => {
+  // AiGroup / Global Victoria: website NULL, URL in website_url — the P2-F bug.
+  assert.equal(resolveWebsite({ website: null, website_url: "https://www.aigroup.com.au", domain: "aigroup.com.au" }), "https://www.aigroup.com.au");
+  assert.equal(resolveWebsite({ website: null, website_url: "https://global.vic.gov.au" }), "https://global.vic.gov.au");
+  // legacy `website` still honoured when website_url absent
+  assert.equal(resolveWebsite({ website: "https://example.com" }), "https://example.com");
+  // only a bare domain → build an https URL
+  assert.equal(resolveWebsite({ domain: "aigroup.com.au" }), "https://aigroup.com.au");
+  // website_url wins over website + domain
+  assert.equal(resolveWebsite({ website_url: "https://a.com", website: "https://b.com", domain: "c.com" }), "https://a.com");
+});
+
+test("resolveWebsite: nothing usable → undefined; whitespace/blank ignored", () => {
+  assert.equal(resolveWebsite({ website: null, website_url: null, domain: null }), undefined);
+  assert.equal(resolveWebsite({ website: "   ", domain: "" }), undefined);
+  assert.equal(resolveWebsite(null), undefined);
+  assert.equal(resolveWebsite(undefined), undefined);
+  // http (not just https) is left as-is
+  assert.equal(resolveWebsite({ website_url: "http://legacy.example" }), "http://legacy.example");
 });

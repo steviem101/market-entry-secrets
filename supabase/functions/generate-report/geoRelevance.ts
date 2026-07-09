@@ -71,6 +71,8 @@ interface GeoRow {
   location_country?: unknown;
   country_iso2?: unknown;
   jurisdiction?: unknown;
+  location_state?: unknown;
+  government_level?: unknown;
 }
 type Row = GeoRow | null | undefined;
 
@@ -228,6 +230,82 @@ export function chamberOriginMismatch(row: Row, originTerms: string[]): boolean 
     originTerms.some((t) => t && (c.includes(t) || t.includes(c)))
   );
   return !matchesOrigin;
+}
+
+// ── State-body region gate (Floats feedback, P2-F) ───────────────────────────
+// A STATE government body (Global Victoria, Invest Victoria, Investment NSW) is a
+// Victorian/NSW entry-support agency — it's only useful to a founder targeting THAT
+// state. The corridor gate above keeps every domestic ANZ body for everyone, so a VIC
+// state body surfaced on a report targeting Sydney/NSW (Floats: NSW target, Global
+// Victoria shown). This gate drops a state body whose state ≠ any state named by the
+// report's target regions. It stays silent (keeps the row) when the report names no
+// specific AU state (a national/"Australia" target), when the row isn't a state body,
+// or when the row's own state can't be determined — fail-open, never over-filter.
+
+// Canonical AU state name ← abbreviation OR full name (normalised, spaces).
+const AU_STATE_CANON: Record<string, string> = {
+  nsw: "new south wales", "new south wales": "new south wales",
+  vic: "victoria", victoria: "victoria",
+  qld: "queensland", queensland: "queensland",
+  wa: "western australia", "western australia": "western australia",
+  sa: "south australia", "south australia": "south australia",
+  tas: "tasmania", tasmania: "tasmania",
+  act: "australian capital territory", "australian capital territory": "australian capital territory",
+  nt: "northern territory", "northern territory": "northern territory",
+};
+
+// Major AU city → its state, so a target of just "Sydney" (no state token) still
+// resolves to New South Wales and gates out a Victorian body.
+const AU_CITY_STATE: Record<string, string> = {
+  sydney: "new south wales", newcastle: "new south wales",
+  wollongong: "new south wales", parramatta: "new south wales",
+  melbourne: "victoria", geelong: "victoria",
+  brisbane: "queensland", "gold coast": "queensland", cairns: "queensland",
+  perth: "western australia",
+  adelaide: "south australia",
+  hobart: "tasmania",
+  canberra: "australian capital territory",
+  darwin: "northern territory",
+};
+
+/** The AU state a state body belongs to — from location_state, else a jurisdiction
+ *  entry that names a state — or null when it can't be determined. */
+function agencyState(row: NonNullable<Row>): string | null {
+  const ls = norm(row.location_state);
+  if (AU_STATE_CANON[ls]) return AU_STATE_CANON[ls];
+  const j = row.jurisdiction;
+  const arr = Array.isArray(j) ? j : j == null ? [] : [j];
+  for (const x of arr) {
+    const n = norm(x);
+    if (AU_STATE_CANON[n]) return AU_STATE_CANON[n];
+  }
+  return null;
+}
+
+/**
+ * Should this agency be dropped as a wrong-state state body? Returns false (keep — no
+ * opinion) for anything that is not a state body, a state body of unknown state, or a
+ * report that names no specific AU state. Returns true (DROP) only for a state body
+ * whose state is not among the states named by the report's target regions.
+ * @param targetRegions the expandTargetRegions() output (cities + full state names + codes)
+ */
+export function stateAgencyRegionMismatch(row: Row, targetRegions: string[]): boolean {
+  if (!row) return false;
+  const isStateBody =
+    norm(row.organisation_type) === "state body" || norm(row.government_level) === "state";
+  if (!isStateBody) return false;
+
+  const st = agencyState(row);
+  if (!st) return false; // unknown state — fail-open
+
+  const targetStates = new Set<string>();
+  for (const t of targetRegions || []) {
+    const n = norm(t);
+    if (AU_STATE_CANON[n]) targetStates.add(AU_STATE_CANON[n]);
+    else if (AU_CITY_STATE[n]) targetStates.add(AU_CITY_STATE[n]);
+  }
+  if (targetStates.size === 0) return false; // no specific state targeted — keep all
+  return !targetStates.has(st);
 }
 
 export function isAgencyInCorridor(row: Row, originTerms: string[]): boolean {
