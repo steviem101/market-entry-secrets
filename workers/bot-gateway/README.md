@@ -76,10 +76,12 @@ Then re-run the checklist against `https://marketentrysecrets.com` and run the
 ## Costs & monitoring
 
 Prerender Starter: $49/mo after the 30-day trial, 25k renders included —
-~1,450 URLs at a 7-day cache ≈ 6–10k renders/mo. Watch the render count in the
-Prerender dashboard during the trial; if it's far above the estimate, check
-for cache misses on parameterised URLs (the Worker passes `?…` through — add
-param stripping if a crawler hammers unique query strings).
+~1,450 URLs at a 7-day cache ≈ 6–10k renders/mo. The Worker renders by
+**pathname only** (query strings and trailing slashes are normalized away), so
+each page has exactly one cacheable render and spoofed-bot `?x=1..N` spam
+cannot burn the quota. Watch the render count in the Prerender dashboard
+during the trial anyway; a big overshoot would mean a bot hammering many
+distinct real paths.
 
 ## Follow-ups (not in this Worker)
 

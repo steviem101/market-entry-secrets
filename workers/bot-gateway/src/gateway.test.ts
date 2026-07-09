@@ -8,6 +8,8 @@ import {
   isBotRequest,
   isStaticAsset,
   isPrivatePath,
+  normalizePathname,
+  prerenderTarget,
   wwwRedirectTarget,
   shouldPrerender,
 } from "./gateway.ts";
@@ -76,6 +78,46 @@ test("wwwRedirectTarget: single-hop 301 preserving path+query", () => {
     "https://marketentrysecrets.com/pricing?ref=x",
   );
   assert.equal(wwwRedirectTarget(new URL("https://marketentrysecrets.com/pricing")), null);
+});
+
+test("normalizePathname: strips trailing slashes, keeps root", () => {
+  assert.equal(normalizePathname("/my-reports/"), "/my-reports");
+  assert.equal(normalizePathname("/events///"), "/events");
+  assert.equal(normalizePathname("/"), "/");
+  assert.equal(normalizePathname("//"), "/");
+});
+
+test("isPrivatePath: trailing slash cannot bypass the gate (QA W2)", () => {
+  assert.equal(isPrivatePath("/my-reports/"), true);
+  assert.equal(isPrivatePath("/report/shared/some-token/"), true);
+  assert.equal(isPrivatePath("/admin/submissions/"), true);
+  assert.equal(isPrivatePath("/service-providers/"), false); // public stays public
+});
+
+test("prerenderTarget: pathname only — query can never reach the renderer (QA W1)", () => {
+  assert.equal(
+    prerenderTarget("marketentrysecrets.com", "/pricing"),
+    "https://service.prerender.io/https://marketentrysecrets.com/pricing",
+  );
+  // trailing slash normalizes to the canonical page → one cacheable render
+  assert.equal(
+    prerenderTarget("marketentrysecrets.com", "/pricing/"),
+    "https://service.prerender.io/https://marketentrysecrets.com/pricing",
+  );
+  // signature takes no query string at all — assert the shape stays clean
+  assert.equal(prerenderTarget("x.com", "/a").includes("?"), false);
+});
+
+test("shouldPrerender: trailing-slash private path is NOT rendered (QA W2)", () => {
+  assert.equal(
+    shouldPrerender({
+      method: "GET",
+      userAgent: "Mozilla/5.0 (compatible; Googlebot/2.1)",
+      pathname: "/my-reports/",
+      renderingEnabled: true,
+    }),
+    false,
+  );
 });
 
 test("shouldPrerender: full gate", () => {

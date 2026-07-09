@@ -58,17 +58,30 @@ export const isStaticAsset = (pathname: string): boolean => {
 };
 
 /**
+ * Trailing slashes are canonical-equivalent (the app 301s them client-side),
+ * so classification must treat "/my-reports/" as "/my-reports" — otherwise a
+ * trailing slash would bypass the private-path gate (QA finding W2).
+ */
+export const normalizePathname = (pathname: string): string => {
+  const stripped = pathname.replace(/\/+$/, "");
+  return stripped === "" ? "/" : stripped;
+};
+
+/**
  * Private paths per src/config/privateRoutes.ts (the MES-81 source of truth,
  * imported — not copied — so the Worker can't drift from the app/_headers).
  * These are never prerendered and get X-Robots-Tag: noindex stamped on the
  * response, which Lovable's origin cannot do (verified 2026-07-06).
+ * Normalizes internally so no caller can forget the trailing-slash case.
  */
-export const isPrivatePath = (pathname: string): boolean =>
-  PRIVATE_ROUTE_HEADER_PATHS.some((pattern) =>
+export const isPrivatePath = (rawPathname: string): boolean => {
+  const pathname = normalizePathname(rawPathname);
+  return PRIVATE_ROUTE_HEADER_PATHS.some((pattern) =>
     pattern.endsWith("/*")
       ? pathname.startsWith(pattern.slice(0, -1)) // "/report/*" → "/report/" prefix
       : pathname === pattern,
   );
+};
 
 /**
  * Single-hop www→apex 301 target (closes the MES-80 runbook item at the
@@ -82,6 +95,16 @@ export const wwwRedirectTarget = (url: URL): string | null => {
 /** Prerender only makes sense for idempotent page fetches. */
 export const isRenderableMethod = (method: string): boolean =>
   method === "GET" || method === "HEAD";
+
+/**
+ * The Prerender fetch URL for a page. Takes ONLY the pathname — never the
+ * query string — so each page has exactly one cacheable render. Passing the
+ * query through would let a spoofed bot UA burn the render quota with
+ * ?x=1..N cache misses (QA finding W1), and canonical pages are query-free
+ * anyway (the MES-80 canonical policy).
+ */
+export const prerenderTarget = (originHost: string, rawPathname: string): string =>
+  `https://service.prerender.io/https://${originHost}${normalizePathname(rawPathname)}`;
 
 /**
  * The full go/no-go decision for prerendering one request.

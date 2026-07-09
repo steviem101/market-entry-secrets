@@ -17,7 +17,12 @@
 // exactly what crawlers see. Kill switch: see README (route removal is
 // instant; RENDERING_ENABLED=false keeps the HTTP fixes but stops rendering).
 
-import { isPrivatePath, shouldPrerender, wwwRedirectTarget } from "./gateway.ts";
+import {
+  isPrivatePath,
+  prerenderTarget,
+  shouldPrerender,
+  wwwRedirectTarget,
+} from "./gateway.ts";
 
 interface Env {
   /** Prerender.io token — set via `wrangler secret put PRERENDER_TOKEN`. */
@@ -75,8 +80,9 @@ export default {
     });
     if (wantsRender && env.PRERENDER_TOKEN) {
       try {
-        const target = `https://service.prerender.io/https://${originHost}${url.pathname}${url.search}`;
-        const rendered = await fetch(target, {
+        // Pathname only — the query string never reaches the renderer (one
+        // cacheable render per page; quota can't be burned via ?x=1..N spam).
+        const rendered = await fetch(prerenderTarget(originHost, url.pathname), {
           headers: {
             "X-Prerender-Token": env.PRERENDER_TOKEN,
             "User-Agent": request.headers.get("user-agent") ?? "",
