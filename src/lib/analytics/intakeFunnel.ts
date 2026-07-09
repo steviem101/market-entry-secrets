@@ -18,6 +18,7 @@ export type IntakeEventType =
   | 'website_prefill_shown'
   | 'website_prefill_accepted'
   | 'website_prefill_rejected'
+  | 'website_prefill_from_email'
   | 'auth_modal_shown'
   | 'auth_completed'
   | 'generate_clicked'
