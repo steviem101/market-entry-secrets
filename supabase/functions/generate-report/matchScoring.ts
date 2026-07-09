@@ -396,6 +396,25 @@ export function leadIcpTokens(endBuyerIndustries: string[], industrySector: stri
   return buyer.length ? buyer : industryTokens(industrySector || []);
 }
 
+/**
+ * True when a lead_databases row matches the ICP tokens (its sector/tags/title/
+ * short_description contain any token). The single predicate for the lead ICP
+ * gate — applied on BOTH the array-overlap path AND at the post-merge union, so
+ * the semantic path (lead_databases is embedded, and is merged semantic-first)
+ * can't reintroduce off-ICP lists the overlap gate dropped. Empty tokens → true
+ * (no ICP signal → don't gate; matches the overlap path's `=== 0 || pass`).
+ */
+export function leadMatchesIcp(
+  row: { sector?: unknown; tags?: unknown; title?: unknown; short_description?: unknown },
+  icpTokens: string[],
+): boolean {
+  if (!icpTokens || icpTokens.length === 0) return true;
+  return textMatchesAnyToken(
+    [row?.sector as string, row?.tags as string[], row?.title as string, row?.short_description as string],
+    icpTokens,
+  );
+}
+
 /** Lowercased word/slug tokens from human industry labels, for textMatchesAnyToken. */
 export function industryTokens(labels: string[]): string[] {
   const out = new Set<string>();

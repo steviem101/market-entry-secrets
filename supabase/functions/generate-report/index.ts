@@ -20,7 +20,7 @@ import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVe
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
 import { humanizeMetricLabel } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, leadIcpTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
@@ -1400,11 +1400,8 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     // Floats' report purely as filler. If nothing matches, the section is
     // intentionally empty (the custom-list request box is the escape hatch).
     const icpTokens = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []);
-    const leadIsRelevant = (l: any): boolean =>
-      icpTokens.length === 0 ||
-      textMatchesAnyToken([l.sector, l.tags, l.title, l.short_description], icpTokens);
     const rankedLeads = rank(ld, { applySellsTo: true }, 12);
-    const gatedLeads = rankedLeads.filter(leadIsRelevant).slice(0, 5);
+    const gatedLeads = rankedLeads.filter((l: any) => leadMatchesIcp(l, icpTokens)).slice(0, 5);
     matches.lead_databases = gatedLeads.map((l: any) => ({
       ...l, name: l.title, price: l.price_aud,
       link: l.slug ? `/leads/${l.slug}` : "/leads", linkLabel: "View Dataset",
@@ -1707,6 +1704,23 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
     }
   }
+  // ── Lead-list ICP gate at the UNION (P1-C follow-up) ────────────────────
+  // The overlap path gates its own leads, but lead_databases is ALSO embedded in
+  // the KB and is merged semantic-first — so an off-ICP list surfaced by the
+  // preferred semantic path would otherwise reach the report un-gated (the
+  // overlap gate only ever touched the backfill slot). Re-apply the SAME strict
+  // ICP filter here, at the union, so BOTH paths are covered. Strict (no floor):
+  // an off-ICP list is dropped, not padded — the custom-list request box is the
+  // escape hatch. Empty ICP tokens → leadMatchesIcp returns true → no-op.
+  if (merged.lead_databases?.length) {
+    const leadIcp = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []);
+    const before = merged.lead_databases.length;
+    merged.lead_databases = merged.lead_databases.filter((l: any) => leadMatchesIcp(l, leadIcp));
+    if (merged.lead_databases.length !== before) {
+      console.log(`lead ICP union gate: ${before} → ${merged.lead_databases.length}`);
+    }
+  }
+
   // ── Geography / origin gate (Stage 7 bugs B3 & B4) ──────────────────────
   // The scorer only ADDS a +1 location nudge; it never excludes, so a wrong-market
   // row (a New-York firm on an AU report; a UK/Canadian agency for an Irish founder)
