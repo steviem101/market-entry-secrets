@@ -32,6 +32,9 @@ on:
       - "supabase/functions/sitemap/**"
       - "supabase/functions/generate-plan/**"
       - "supabase/functions/admin-mentor-anonymity/**"
+      - "supabase/functions/create-checkout/**"
+      - "supabase/functions/stripe-webhook/**"
+      - "supabase/functions/stripe-webhook-reconcile/**"
       - "supabase/functions/_shared/**"
       - ".github/workflows/deploy-edge-functions.yml"
 
@@ -67,3 +70,17 @@ jobs:
 
       - name: Deploy admin-mentor-anonymity
         run: supabase functions deploy admin-mentor-anonymity --project-ref "$PROJECT_REF"
+
+      # Payment path (MES-140): these were previously deployed by hand, which
+      # left PR #370 merged-but-not-live. Secrets (sandbox vs live Stripe keys)
+      # are runtime config on the project, so deploying code never flips the
+      # Stripe account — the cutover remains the 4-secret swap in
+      # docs/runbooks/stripe-live-cutover.md §2.
+      - name: Deploy create-checkout
+        run: supabase functions deploy create-checkout --project-ref "$PROJECT_REF"
+
+      - name: Deploy stripe-webhook
+        run: supabase functions deploy stripe-webhook --project-ref "$PROJECT_REF"
+
+      - name: Deploy stripe-webhook-reconcile
+        run: supabase functions deploy stripe-webhook-reconcile --project-ref "$PROJECT_REF"
