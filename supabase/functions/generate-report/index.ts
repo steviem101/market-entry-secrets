@@ -20,7 +20,7 @@ import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVe
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
 import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
@@ -1814,25 +1814,26 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   merged.community_members = dedupMentors;
   merged.investors = dedupInvestors;
 
-  // Persona/origin-aware mentor filter (Floats feedback): a DOMESTIC-origin
-  // company (Australian startup) does not need immigration/visa mentors, but the
-  // scorer surfaced "Head of Community, Techvisa" anyway. Demote (floor-guarded
-  // via preferRelevant, so a thin pool still renders) visa/immigration-dominant
-  // mentors — UNLESS the company is international, or explicitly asked for
-  // immigration / relocation / international-hiring help.
+  // Persona/origin-aware immigration filter (Floats feedback): a DOMESTIC-origin
+  // company (Australian startup) needs neither immigration/visa MENTORS nor
+  // immigration SERVICE PROVIDERS, but the scorer surfaced both "Head of Community,
+  // Techvisa" (mentor) and the "TechVisa" business-immigration provider anyway.
+  // Demote visa/immigration-dominant rows on both surfaces (floor-guarded via
+  // preferRelevant, so a thin pool still renders) — UNLESS the company is
+  // international, or explicitly asked for immigration / relocation /
+  // international-hiring help.
   if (!isInternationalOrigin(intake.country_of_origin)) {
     const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
       `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
     );
-    if (!wantsImmigration && (merged.community_members || []).length) {
-      const before = merged.community_members.length;
-      merged.community_members = preferRelevant(
-        merged.community_members,
-        (m: any) => !isImmigrationMentor(m),
-        3,
-      );
-      const dropped = before - merged.community_members.length;
-      if (dropped > 0) console.log(`mentor persona filter (domestic): demoted ${dropped} immigration mentor(s)`);
+    if (!wantsImmigration) {
+      for (const [tbl, floor] of [["community_members", 3], ["service_providers", 4]] as const) {
+        if (!(merged[tbl] || []).length) continue;
+        const before = merged[tbl].length;
+        merged[tbl] = preferRelevant(merged[tbl], (r: any) => !isImmigrationFocused(r), floor);
+        const dropped = before - merged[tbl].length;
+        if (dropped > 0) console.log(`immigration filter (domestic) ${tbl}: demoted ${dropped} row(s)`);
+      }
     }
   }
 
