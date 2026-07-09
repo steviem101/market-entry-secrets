@@ -9,6 +9,7 @@ import { ReportGatedSection } from '@/components/report/ReportGatedSection';
 import { ReportRegenerateSection } from '@/components/report/ReportRegenerateSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
 import { ExpandableCardGrid } from '@/components/report/ExpandableCardGrid';
+import { LeadListRequestCard } from '@/components/report/LeadListRequestCard';
 import { ReportFeedback } from '@/components/report/ReportFeedback';
 import { ReportSources } from '@/components/report/ReportSources';
 import { ReportBackToTop } from '@/components/report/ReportBackToTop';
@@ -305,6 +306,16 @@ const ReportViewInner = () => {
                   );
                 };
 
+                // Lead-list section: offer a custom-list request (P1-D). Stronger
+                // empty-state prompt when the ICP gate left no lists; otherwise a
+                // quiet "need a different list?" box under the datasets.
+                const leadRequest =
+                  sectionId === 'lead_list' ? (
+                    <div className="mt-6">
+                      <LeadListRequestCard reportId={report.id} emptyState={sectionMatches.length === 0} />
+                    </div>
+                  ) : null;
+
                 return (
                   <ReportSection
                     key={sectionId}
@@ -314,6 +325,7 @@ const ReportViewInner = () => {
                     citations={perplexityCitations}
                   >
                     {renderMatchArea()}
+                    {leadRequest}
                   </ReportSection>
                 );
               })}
