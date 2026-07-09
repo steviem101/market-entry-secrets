@@ -36,6 +36,44 @@ minimum_password_length = 8
 # (auth_otp_long_expiry fires above 3600s — MES-33o).
 otp_expiry = 3600
 
+# ---------------------------------------------------------------------------
+# Branded auth-email templates (MES-33c). GoTrue renders these static HTML
+# files itself — they cannot use the TS `_shared/email/` system, so the brand
+# (blue-led theme, logo, 600px card, dark-mode) is inlined to match it. Go
+# template placeholders ({{ .ConfirmationURL }}, {{ .Token }}, {{ .Email }},
+# {{ .NewEmail }}) are substituted by GoTrue at send time.
+#
+# content_path is resolved from the project root (where the CLI runs).
+#
+# IMPORTANT: like site_url / redirect URLs above, the hosted dashboard is NOT
+# auto-synced from this file. After merge, apply via `supabase config push`
+# (or paste each file into Authentication → Email Templates) so production
+# stops sending the bare Supabase defaults. Keep the two in lockstep.
+# ---------------------------------------------------------------------------
+[auth.email.template.confirmation]
+subject = "Confirm your email · Market Entry Secrets"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your sign-in link · Market Entry Secrets"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your password · Market Entry Secrets"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.invite]
+subject = "You're invited to Market Entry Secrets"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new email · Market Entry Secrets"
+content_path = "./supabase/templates/email_change.html"
+
+[auth.email.template.reauthentication]
+subject = "Your verification code · Market Entry Secrets"
+content_path = "./supabase/templates/reauthentication.html"
+
 [functions.create-checkout]
 verify_jwt = true
 
