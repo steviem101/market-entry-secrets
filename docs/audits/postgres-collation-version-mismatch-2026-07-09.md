@@ -3,8 +3,9 @@
 - **Project:** MES Platform — Supabase ref `xhziwveaiuhzdoutpgrh` (production)
 - **Date:** 2026-07-09
 - **Branch:** `claude/mes-postgres-collation-mismatch-hfev8j` (harness-assigned; no MES-<id> yet)
-- **Stage:** Audit → Plan. **No changes executed.** Remediation is locking/DB-level and therefore
-  approval-gated (§11) — this document is for Stephen's approval before anything runs.
+- **Stage:** Audit → Plan → **Executed (partial)**. Root-cause investigation, then — with Stephen's
+  approval of "Option A" — the `postgres` database was refreshed. See **§0 Execution log & outcome**
+  for exactly what ran, what was deliberately not run, and why.
 
 ---
 
@@ -29,6 +30,56 @@
 - **Advisor "3 CRITICAL":** the three `ERROR`-level findings are `security_definer_view` on
   `agency_contacts_public`, `community_members_public`, `investors_public`. Recommend a **separate
   security ticket** (details in §5).
+
+---
+
+## 0. Execution log & outcome (2026-07-09, ~19:20 UTC)
+
+**What was run (in order):**
+
+1. **`ALTER DATABASE postgres REFRESH COLLATION VERSION;`** — succeeded. `postgres.datcollversion`
+   is now `153.121` == actual; `mismatch=false`. Verified in `pg_database` and in Unified Logs:
+   connections after the refresh no longer emit `database "postgres" has a collation version
+   mismatch`. **This resolves the overwhelming majority of the ~8,594 warnings/24h and the
+   depressed "success rate."**
+2. Cleanup of two aborted reindex attempts (see below) — all transient indexes removed; **0 invalid
+   indexes** remain.
+3. Temporary session config (`maintenance_work_mem`) set and then **reset** — no config drift left
+   behind (verified: no MES-added `pg_db_role_setting` entries; the only DB-level setting present is
+   Supabase's own pre-existing `app.settings.jwt_exp`).
+
+**What was deliberately NOT run, and why:**
+
+- **The precautionary REINDEX was not performed.** This is a *micro* ICU bump (153.120→153.121, same
+  Unicode/UCA version) with **0 invalid indexes**, so `en-US` ordering is effectively unchanged and
+  a reindex mitigates a near-zero-probability event. Two attempts at a bulk concurrent reindex each
+  proved disproportionate and self-defeating (details below), so the reindex was judged not worth
+  the production churn. `REFRESH` — the change that actually fixes the operational noise — was done
+  instead. Refreshing without reindexing is safe *specifically because* the ordering did not change.
+- **Two aborted reindex attempts left transient `_ccnew` indexes, which were cleaned up.**
+  `REINDEX DATABASE CONCURRENTLY` and `REINDEX SCHEMA CONCURRENTLY public` both insisted on also
+  rebuilding the large **non-collation** vector indexes (42 MB HNSW `mes_kb_embedding_idx`, 13 MB
+  ivfflat on `ii_content`/`ii_published_archive`). These hit `maintenance_work_mem` (default 32 MB),
+  and when memory was raised to 256 MB, the parallel build exhausted the container's `/dev/shm`.
+  Each failure left invalid `_ccnew` transient indexes (14 then 9, all on internal `ii_*`/KB tables);
+  **all were dropped**, and the *original* indexes stayed valid throughout (concurrent reindex never
+  drops the old index until the new one validates), so **nothing was ever degraded** and RAG/KB
+  reads were unaffected.
+
+**Managed-role limits discovered (things this repo's `postgres` role cannot do):**
+
+The Supabase `postgres` role is **not a superuser** and does not own `auth`/`storage` (owned by
+`supabase_auth_admin`/`supabase_storage_admin`) or `template1` (owned by `supabase_admin`).
+Therefore, from this project's SQL access it is **not possible** to:
+
+- `REFRESH COLLATION VERSION` on `template1` → **`template1` still warns** (a small residual: it is
+  only touched by internal maintenance connections, far less frequent than the `postgres` warnings
+  that are now gone). Needs Supabase support or a `supabase_admin`-level action.
+- Reindex `auth`/`storage` indexes → left as-is (low risk given the micro bump).
+
+**Net outcome:** the production warning flood and low "success rate" are resolved for `postgres`.
+Residual `template1` warnings and any belt-and-braces reindex of `auth`/`storage` require
+Supabase-managed roles and are recommended as follow-ups (§4.1) — optional given the micro bump.
 
 ---
 
@@ -222,6 +273,18 @@ residual doubt.
 2. **Maintenance window:** not strictly required (CONCURRENTLY is non-blocking on a 311 MB DB), but a
    low-traffic slot is prudent. Approve running ad-hoc vs scheduling.
 3. **Who runs it:** manual SQL-editor execution by an approver (not via automated migration).
+
+### 4.1 Residual follow-ups (require Supabase-managed roles — optional given micro bump)
+
+- **`template1` collation refresh** — `ALTER DATABASE template1 REFRESH COLLATION VERSION;` must be
+  run by `supabase_admin`/superuser (Supabase support or the platform). Until then, low-frequency
+  `template1` collation warnings persist. Cosmetic; no data impact.
+- **`auth` / `storage` reindex** — if full belt-and-braces is wanted, these schemas' collation
+  btree indexes (≈39 indexes, ~470 kB) must be reindexed under `supabase_auth_admin` /
+  `supabase_storage_admin`. Near-zero need for a micro bump.
+- **Optional `public` reindex** — if desired for completeness, reindex only the collation-sensitive
+  **btree** indexes (never the vector/GIN ones — that was the failure source), non-blocking, in a
+  low-traffic window. Skip `mes_knowledge_base`, `ii_content`, `ii_published_archive` vector indexes.
 
 ---
 
