@@ -6,7 +6,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, industryTokens, type MatchContext, type Scored } from "./matchScoring.ts";
+import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, industryTokens, leadIcpTokens, type MatchContext, type Scored } from "./matchScoring.ts";
 
 const CTX: MatchContext = {
   userSectors: ["technology-information-and-media", "construction", "professional-services"],
@@ -432,4 +432,36 @@ test("isImmigrationMentor + preferRelevant: domestic filter drops visa mentor bu
   // thin pool (only a visa mentor) → backfilled, never emptied
   const thin = preferRelevant([{ name: "Zach", title: "Techvisa" }], (m: any) => !isImmigrationMentor(m), 3);
   assert.equal(thin.length, 1);
+});
+
+test("leadIcpTokens: prefers end-buyer ICP; falls back to own sector only when no buyer signal", () => {
+  // buyer signal present → own sector ignored (gate on who they SELL TO)
+  assert.deepEqual(
+    leadIcpTokens(["Hospitals and Health Care"], ["Recruitment Technology"]).sort(),
+    industryTokens(["Hospitals and Health Care"]).sort(),
+  );
+  // no buyer signal → fall back to own sector (Floats: empty end-buyers)
+  assert.deepEqual(
+    leadIcpTokens([], ["Recruitment Technology", "SaaS"]).sort(),
+    industryTokens(["Recruitment Technology", "SaaS"]).sort(),
+  );
+  // neither → empty (caller shows nothing; request box is the escape hatch)
+  assert.deepEqual(leadIcpTokens([], []), []);
+});
+
+test("lead ICP gate: strict filter drops non-matching lists (no floor padding) — Floats case", () => {
+  const tokens = leadIcpTokens([], ["Recruitment Technology", "Artificial Intelligence", "SaaS"]);
+  const catalog = [
+    { title: "Recruitment & HR Technology Buyers", sector: "HR Tech", tags: ["Recruitment", "Talent"] },
+    { title: "Australian SaaS & Technology Companies TAM Map", sector: "SaaS", tags: ["Technology", "TAM"] },
+    { title: "Recently Funded Australian Startups", sector: "Startups", tags: ["Funding", "Venture-Backed"] },
+    { title: "Australian Venture Capital & PE Firms", sector: "Investors", tags: ["Venture Capital", "Private Equity"] },
+  ];
+  const kept = catalog.filter((l) => textMatchesAnyToken([l.sector, l.tags, l.title, l.short_description], tokens));
+  const names = kept.map((l) => l.title);
+  assert.ok(names.includes("Recruitment & HR Technology Buyers"));
+  assert.ok(names.includes("Australian SaaS & Technology Companies TAM Map"));
+  // the two the user flagged as useless are dropped, not padded in
+  assert.ok(!names.includes("Recently Funded Australian Startups"));
+  assert.ok(!names.includes("Australian Venture Capital & PE Firms"));
 });

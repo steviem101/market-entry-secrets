@@ -20,7 +20,7 @@ import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVe
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
 import { humanizeMetricLabel } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, industryTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationMentor, textMatchesAnyToken, leadIcpTokens, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
@@ -1389,20 +1389,22 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
       .limit(100);
     const { data: ld, error: ldErr } = await ldQuery;
     if (ldErr) console.error("Lead databases query error:", ldErr);
-    // Relevance gate (report-quality loop ref b29b88c1): lead_databases carry a `sector`
-    // string + `tags[]` (NOT sector_tags), so the sector scorer is blind to them and
-    // ranking is essentially location-only. Prefer datasets whose sector/tags/text match
-    // the buyer's end-buyer industries (or the company's own industry), with the same
-    // never-empty fallback. No industries supplied → tokens empty → every lead passes.
-    const leadIndustryTokens = industryTokens([
-      ...(intake.end_buyer_industries || []),
-      ...(intake.industry_sector || []),
-    ]);
+    // ICP gate (RQ ref b29b88c1; tightened per Floats feedback, RQ "lead-list
+    // matching must filter by end-buyer industry / ICP"): lead_databases carry a
+    // `sector` string + `tags[]` (NOT sector_tags), so the sector scorer is blind
+    // to them. A purchasable list should match who the company SELLS TO — gate on
+    // the declared end-buyer ICP first, own sector only as a fallback proxy
+    // (leadIcpTokens). CRITICAL CHANGE: this is now a STRICT filter, not a
+    // preferRelevant floor — an unmatched list is DROPPED, never padded in to hit
+    // a count. The old floor backfilled "Recently Funded Australian Startups" into
+    // Floats' report purely as filler. If nothing matches, the section is
+    // intentionally empty (the custom-list request box is the escape hatch).
+    const icpTokens = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []);
     const leadIsRelevant = (l: any): boolean =>
-      leadIndustryTokens.length === 0 ||
-      textMatchesAnyToken([l.sector, l.tags, l.title, l.short_description], leadIndustryTokens);
+      icpTokens.length === 0 ||
+      textMatchesAnyToken([l.sector, l.tags, l.title, l.short_description], icpTokens);
     const rankedLeads = rank(ld, { applySellsTo: true }, 12);
-    const gatedLeads = preferRelevant(rankedLeads, leadIsRelevant, 5).slice(0, 5);
+    const gatedLeads = rankedLeads.filter(leadIsRelevant).slice(0, 5);
     matches.lead_databases = gatedLeads.map((l: any) => ({
       ...l, name: l.title, price: l.price_aud,
       link: l.slug ? `/leads/${l.slug}` : "/leads", linkLabel: "View Dataset",
