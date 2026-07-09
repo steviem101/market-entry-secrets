@@ -10,9 +10,18 @@ test("humanizeMetricLabel: de-hyphenates machine slugs", () => {
 
 test("humanizeMetricLabel: leaves human labels and their internal hyphens alone", () => {
   assert.equal(humanizeMetricLabel("Embedded finance market (Australia)"), "Embedded finance market (Australia)");
-  assert.equal(humanizeMetricLabel("AI-enabled recruitment spend"), "AI-enabled recruitment spend"); // has a space → untouched
+  assert.equal(humanizeMetricLabel("AI-enabled recruitment spend"), "AI-enabled recruitment spend"); // 2-segment, lowercase 2nd → untouched
+  assert.equal(humanizeMetricLabel("Trans-Tasman expansion cost"), "Trans-Tasman expansion cost"); // 2-segment → untouched
+  assert.equal(humanizeMetricLabel("Average cost-per-hire (Australia)"), "Average cost-per-hire (Australia)"); // lowercase connectors → untouched
   assert.equal(humanizeMetricLabel("CAGR"), "CAGR");
   assert.equal(humanizeMetricLabel(""), "");
+});
+
+test("humanizeMetricLabel: de-hyphenates a Title-Case slug fragment embedded in a spaced label (Floats2)", () => {
+  assert.equal(humanizeMetricLabel("Online-Recruitment-Services market size (Australia)"), "Online Recruitment Services market size (Australia)");
+  assert.equal(humanizeMetricLabel("Implied Online-Recruitment-Services market size (VIC)"), "Implied Online Recruitment Services market size (VIC)");
+  // only the slug fragment is touched; the rest of the label is preserved verbatim
+  assert.equal(humanizeMetricLabel("Number of Active-Tech-Firms in 2026"), "Number of Active Tech Firms in 2026");
 });
 
 import { isEstimatedMetric } from "./metricLabel.ts";

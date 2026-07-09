@@ -8,11 +8,22 @@
  * space) are left untouched, and genuine hyphenation inside a spaced label
  * ("AI-enabled recruitment") is preserved.
  */
+// A hyphen-joined run of 3+ Title-Case words ("Online-Recruitment-Services") is a
+// machine-slug fragment even when embedded in an otherwise-human label — the
+// whole-label check below only catches labels with NO spaces at all (Floats2
+// review: "Online-Recruitment-Services market size" slipped through). Requiring
+// 3+ segments that are ALL capitalised leaves legitimate hyphenation intact:
+// "AI-enabled" (2 segments), "Trans-Tasman" (2 segments), "cost-per-hire" /
+// "order-of-magnitude" (lowercase connectors).
+const TITLE_SLUG_RE = /\b[A-Z][a-z0-9]*(?:-[A-Z][a-z0-9]*){2,}\b/g;
+
 export function humanizeMetricLabel(label: string): string {
   const s = (label ?? "").replace(/\s+/g, " ").trim();
-  if (!s || s.includes(" ")) return s; // already human-readable (has spaces)
-  if (!s.includes("-")) return s; // single token, nothing to split
-  return s.split("-").filter(Boolean).join(" ");
+  if (!s) return s;
+  // Whole label is a single hyphen slug ("ANZ-cloud-deployment-share") → split all.
+  if (!s.includes(" ")) return s.includes("-") ? s.split("-").filter(Boolean).join(" ") : s;
+  // Otherwise de-hyphenate only Title-Case slug fragments embedded in prose.
+  return s.replace(TITLE_SLUG_RE, (m) => m.split("-").join(" "));
 }
 
 // Language that marks a metric as MODEL-DERIVED rather than a cited figure.
