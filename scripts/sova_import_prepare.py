@@ -65,6 +65,41 @@ STATE_TO_LOCATION = {
 
 PLATFORM_HOST_FLAG = "source URL is a platform/social page, not an org website"
 
+# Per-row overrides from the 2026-07-10 human recheck of the Community bucket
+# against existing innovation_ecosystem type usage (type is a multi-value array;
+# precincts = Incubator + Coworking Space, peak bodies = Industry Body, gov
+# programs = empty type like Landing Pad / Going Global). Keyed by Sova Name.
+IE_TYPE_OVERRIDES = {
+    "Australian Network on Disability": ["Industry Body"],
+    "NT Indigenous Business Network": ["Industry Body"],
+    "Pride in Diversity": ["Industry Body"],
+    "StartupWA": ["Industry Body"],
+    "Startup Tasmania": ["Industry Body"],
+    "Supply Nation": ["Industry Body"],
+    "Victorian CleanTech Cluster": ["Industry Body"],
+    "Game Plus": ["Coworking Space"],
+    "Little Tokyo Two": ["Coworking Space"],
+    "Cremorne Digital Hub": ["Incubator", "Coworking Space"],
+    "Lot Fourteen": ["Incubator", "Coworking Space"],
+    "Tech Central": ["Incubator", "Coworking Space"],
+    "Switch Start Scale": ["Accelerator"],
+    "Self-Employment Assistance": [],
+    "TAFE NSW Women in Business Program": [],
+}
+ROUTE_OVERRIDES = {
+    # software engineering company mis-tagged as Community by Sova
+    "EverestEngineering": ("service_providers", "medium",
+                           ["Sova tagged Community but this is a software dev firm"]),
+}
+SKIP_OVERRIDES = {
+    "SXSW Sydney": "discontinued (no 2026 edition) — do not import",
+    "StartCon": "inactive since 2019 — do not import",
+}
+FESTIVAL_ROWS = {
+    "Growth Summit", "Intersekt Festival", "SOUTHSTART", "Spark Festival",
+    "Startup 2 Scaleup Summit (S2S)", "West Tech Fest",
+}
+
 # Sova industry spellings -> sector_vocabulary raw_value (verified 2026-07-10)
 INDUSTRY_ALIASES = {
     "tech": "technology",
@@ -187,11 +222,22 @@ def main() -> None:
     reclassified = {"AgriFutures Funding"}
 
     proposals: dict[str, list[dict]] = {t: [] for t in taken_slugs}
+    skips = []
     for row in missing:
         if row["Name"] in reclassified:
             continue
-        table, conf, flags = route(row)
-        flags = list(flags)
+        if row["Name"] in SKIP_OVERRIDES:
+            skips.append({**row, "skip_reason": SKIP_OVERRIDES[row["Name"]]})
+            continue
+        if row["Name"] in ROUTE_OVERRIDES:
+            table, conf, flags = ROUTE_OVERRIDES[row["Name"]]
+            flags = list(flags)
+        else:
+            table, conf, flags = route(row)
+            flags = list(flags)
+        if row["Name"] in FESTIVAL_ROWS:
+            conf = "medium"
+            flags.append("recurring festival/conference — consider the events directory or skip")
 
         host = parse_host(row["Source URL"])
         website = row["Source URL"].strip()
@@ -238,11 +284,17 @@ def main() -> None:
             prop["proposed_investor_type"] = itype
             prop["proposed_country"] = "Australia"
         elif table == "innovation_ecosystem":
-            ie_type, tflags = ie_type_for(row["Type"])
-            flags.extend(tflags)
-            if ie_type == "Community":
+            if row["Name"] in IE_TYPE_OVERRIDES:
+                ie_types = IE_TYPE_OVERRIDES[row["Name"]]
+                if not ie_types:
+                    flags.append("gov program — empty type per Landing Pad convention")
+            else:
+                ie_type, tflags = ie_type_for(row["Type"])
+                flags.extend(tflags)
+                ie_types = [ie_type]
+            if "Community" in ie_types:
                 flags.append("introduces NEW innovation_ecosystem type value 'Community' (product decision)")
-            prop["proposed_type"] = ie_type
+            prop["proposed_type"] = "; ".join(ie_types)
             prop["proposed_founded"] = ""
             prop["proposed_employees"] = ""
         elif table == "trade_investment_agencies":
@@ -289,7 +341,12 @@ def main() -> None:
         })
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    summary = {}
+    if skips:
+        with (OUT_DIR / "proposed-skips.csv").open("w", newline="") as fh:
+            writer = csv.DictWriter(fh, fieldnames=list(skips[0].keys()), extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(skips)
+    summary = {"skips": len(skips)}
     for table, rows in proposals.items():
         if not rows:
             continue
