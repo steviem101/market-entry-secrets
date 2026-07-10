@@ -2512,7 +2512,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadEmptyNote : ""}${tmpl.section_name === "action_plan" ? buyerBriefsNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
@@ -2529,9 +2529,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             let sectionContent = content;
             if (tmpl.section_name === "competitor_landscape") {
               sectionMatches = buildCompetitorCards(competitorResult.competitors);
-            } else if (tmpl.section_name === "action_plan" && buyerCards.length > 0) {
-              // Buyer briefs v1: the named target accounts render as cards under the
-              // action plan, aligned with the "Your First Customers" subsection.
+            } else if (tmpl.section_name === "first_customers") {
+              // v2: the named target accounts render as cards under the dedicated
+              // Your First Customers section (empty when no chips were given).
               sectionMatches = buyerCards;
             } else if (tmpl.section_name === "executive_summary" && keyQuestionPicks.length > 0) {
               sectionMatches = keyQuestionPicks;

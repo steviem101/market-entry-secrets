@@ -1,5 +1,5 @@
 /**
- * "Your First Customers" target-account briefs (v1 — rendered inside action_plan).
+ * "Your First Customers" target-account briefs (v2 — dedicated growth-tier section).
  *
  * Pure module — NO Deno globals, NO I/O — importable by the edge function AND
  * unit-tested under Node (`node --test`), like competitorCards.ts / matchScoring.ts.
@@ -119,10 +119,9 @@ export function buildBuyerCards(buyers: BuyerLike[] | null | undefined, cap = 5)
 }
 
 /**
- * System-prompt note for the action_plan section instructing the "Your First
- * Customers" subsection. Embeds the per-buyer data + batched account research and
- * the grounding rules; empty string when there are no chips (note pattern —
- * no report_templates migration needed for v1).
+ * System-prompt note for the first_customers section: embeds the per-buyer data +
+ * batched account research and the grounding rules. Empty string when there are no
+ * chips (the section template then writes a short invite instead).
  */
 export function buildBuyerBriefsNote(
   buyers: BuyerLike[] | null | undefined,
@@ -151,5 +150,5 @@ export function buildBuyerBriefsNote(
   // prose they'd renumber against the WRONG sources (the [Cost Data] failure class),
   // so strip them before embedding.
   const research = accountResearch ? clip(accountResearch, 3000).replace(/\[\d+\]/g, "") : "";
-  return `\n\nYOUR FIRST CUSTOMERS (this section): The user named ${all.length} specific target account(s) in their intake.${capNote} Open the section with a "### Your First Customers" subsection covering EACH verified account below before the phased plan. Per account include: 1) who they are (from the data), 2) signals — recent news and any roles they are hiring for right now, 3) tech & tools context ONLY if evident in the data, otherwise write "No tech signals evident", 4) why they fit ${companyName}, 5) WHO TO APPROACH — recommend job titles${titles ? `, anchored on the user's stated target: ${titles}${icp.org_type ? ` at ${icp.org_type}` : ""}` : ""} (titles only — NEVER name or invent specific individuals), 6) a concrete opening angle grounded in the signals. Use ONLY the account data and research provided — never invent facts, tech stacks, or figures.${unverified.length ? ` The following account name(s) could not be confidently identified (no website given): ${unverified.map((b) => clip(b.name, 60)).join(", ")} — add one line advising the user to attach a website in their intake for a full brief; do NOT guess who they are.` : ""}${research ? `\n\nACCOUNT RESEARCH (background context — do NOT attach [N] citation markers to facts drawn from it):\n${research}` : ""}\n\nACCOUNT DATA:\n${JSON.stringify(data)}`;
+  return `\n\nYOUR FIRST CUSTOMERS (this section): The user named ${all.length} specific target account(s) in their intake.${capNote} This IS the "Your First Customers" section — cover EACH verified account below as its own "### <Account Name>" subsection. Per account include: 1) who they are (from the data), 2) signals — recent news and any roles they are hiring for right now (name the SPECIFIC roles from the data, e.g. "hiring 3 recruiters and a Head of Delivery"), 3) tech & tools context — name the SPECIFIC platforms/tools from the data and how ${companyName} fits alongside them; if none are evident write "No tech signals evident", 4) why they fit ${companyName}, 5) WHO TO APPROACH — recommend job titles${titles ? `, anchored on the user's stated target: ${titles}${icp.org_type ? ` at ${icp.org_type}` : ""}` : ""} (titles only — NEVER name or invent specific individuals), 6) a concrete opening angle grounded in the signals. Use ONLY the account data and research provided — never invent facts, tech stacks, or figures.${unverified.length ? ` The following account name(s) could not be confidently identified (no website given): ${unverified.map((b) => clip(b.name, 60)).join(", ")} — add one line advising the user to attach a website in their intake for a full brief; do NOT guess who they are.` : ""}${research ? `\n\nACCOUNT RESEARCH (background context — do NOT attach [N] citation markers to facts drawn from it):\n${research}` : ""}\n\nACCOUNT DATA:\n${JSON.stringify(data)}`;
 }

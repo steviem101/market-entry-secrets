@@ -28,11 +28,12 @@ export const TIER_REQUIREMENTS: Record<string, string> = {
   competitor_landscape: "growth",
   mentor_recommendations: "growth",
   investor_recommendations: "growth",
+  first_customers: "growth",
   lead_list: "scale",
 };
 
 export const SECTION_ORDER = [
-  "executive_summary", "swot_analysis", "competitor_landscape", "service_providers",
+  "executive_summary", "swot_analysis", "competitor_landscape", "first_customers", "service_providers",
   "mentor_recommendations", "investor_recommendations", "events_resources", "action_plan",
   "setup_compliance", "lead_list",
 ];
