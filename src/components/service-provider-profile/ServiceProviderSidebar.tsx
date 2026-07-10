@@ -8,8 +8,8 @@ interface Contact {
   id: string;
   full_name: string;
   role: string | null;
-  email: string | null;
-  phone: string | null;
+  // email/phone intentionally omitted — sourced from the PII-safe
+  // service_provider_contacts_public view (AUD-020).
   linkedin_url: string | null;
   avatar_url: string | null;
   is_primary: boolean;
