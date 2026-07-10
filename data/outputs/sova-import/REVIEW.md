@@ -84,6 +84,31 @@ and `source = sova_directory_2026-07`. Rows are sorted confidence-first.
 - **trade_investment_agencies**: `state_body`/`state` when the host is a
   state-gov domain, else `federal_agency`/`federal`; `is_government_funded=true`.
 
+## Sector-specialist pass (2026-07-10)
+
+86 of 155 rows carry no `sector_tags` (`sector_agnostic = true`). A manual pass
+confirmed this is **correct for the vast majority** — they are genuinely
+horizontal: startup communities, festivals, government grant portals, and
+demographic-focused programs (women / LGBTQ+ / Indigenous / veteran / youth /
+disability / refugee — a *founder* attribute, not a sector). This matches the
+live MES convention exactly: startup-serving law/accounting/R&D/PR firms
+(Deloitte, KPMG, LegalVision, LUNA, Radium, Treadstone) are all agnostic today.
+
+Only **7 rows** are genuine sector specialists whose *own* business sits in a
+sector, and were tagged (flagged `sector inferred from description`):
+
+| Row | sector_tags | display |
+|-----|-------------|---------|
+| Foundr, Startup Daily, Startup News, Overnight Success | `technology-information-and-media` | Media |
+| Equity Mates Media | `technology-information-and-media`, `financial-services` | Media |
+| EverestEngineering | `technology-information-and-media` | Technology |
+| Game Plus (game-dev hub) | `entertainment-providers`, `technology-information-and-media` | Gaming |
+
+Deliberately **not** tagged (kept agnostic, matching live convention): the
+startup law firms (Allied Legal, Biztech, Sprintlaw, UX Law, Lawpath, Arnotts,
+Spruson & Ferguson…), R&D/accounting advisors (Swanson Reed, BlueRock), and
+mentoring networks — they serve founders across all sectors.
+
 ## Decisions needed from the reviewer
 
 1. **NEW `innovation_ecosystem.type` value "Community"** — 22 rows introduce

@@ -134,6 +134,25 @@ DISPLAY_LABELS = {
 }
 
 
+# Genuine sector specialists whose Sova Industries field was blank but whose OWN
+# business sits in a clear sector (manual pass, 2026-07-10). Deliberately narrow:
+# per live convention, startup-serving law/accounting/R&D/PR firms stay agnostic
+# (Deloitte, KPMG, LegalVision, LUNA, Radium, Treadstone are all agnostic), so
+# only orgs that ARE a media/software/gaming business are tagged here.
+SECTOR_OVERRIDES = {
+    # startup/business media companies -> media slug
+    "Foundr": (["technology-information-and-media"], ["Media"]),
+    "Startup Daily": (["technology-information-and-media"], ["Media"]),
+    "Startup News": (["technology-information-and-media"], ["Media"]),
+    "Overnight Success": (["technology-information-and-media"], ["Media"]),
+    "Equity Mates Media": (["technology-information-and-media", "financial-services"], ["Media"]),
+    # software engineering firm
+    "EverestEngineering": (["technology-information-and-media"], ["Technology"]),
+    # game-developer community/hub
+    "Game Plus": (["entertainment-providers", "technology-information-and-media"], ["Gaming"]),
+}
+
+
 def display_labels(industries: str) -> list[str]:
     out = []
     for term in [t.strip() for t in (industries or "").replace(",", ";").split(";") if t.strip()]:
@@ -292,6 +311,12 @@ def main() -> None:
 
         sector_slugs, agnostic, sector_flags = map_sectors(row["Industries"], vocab)
         flags.extend(sector_flags)
+        override_display = None
+        if row["Name"] in SECTOR_OVERRIDES:
+            sector_slugs, override_display = SECTOR_OVERRIDES[row["Name"]]
+            agnostic = False
+            flags = [f for f in flags if "sector_agnostic" not in f and "not in sector_vocabulary" not in f]
+            flags.append("sector inferred from description (Sova Industries was blank)")
 
         slug = base_slug = slugify(row["Name"])
         n = 2
@@ -318,7 +343,7 @@ def main() -> None:
             conf = min(conf, iconf, key=["low", "medium", "high"].index)
             prop["proposed_investor_type"] = itype
             prop["proposed_country"] = "Australia"
-            prop["proposed_sector_focus"] = "; ".join(display_labels(row["Industries"]))
+            prop["proposed_sector_focus"] = "; ".join(override_display or display_labels(row["Industries"]))
         elif table == "innovation_ecosystem":
             if row["Name"] in IE_TYPE_OVERRIDES:
                 ie_types = IE_TYPE_OVERRIDES[row["Name"]]
@@ -331,7 +356,7 @@ def main() -> None:
             if "Community" in ie_types:
                 flags.append("introduces NEW innovation_ecosystem type value 'Community' (product decision)")
             prop["proposed_type"] = "; ".join(ie_types)
-            prop["proposed_sectors"] = "; ".join(display_labels(row["Industries"]))
+            prop["proposed_sectors"] = "; ".join(override_display or display_labels(row["Industries"]))
             prop["proposed_founded"] = ""
             prop["proposed_employees"] = ""
         elif table == "trade_investment_agencies":
