@@ -9,6 +9,7 @@ import {
   Database,
   Landmark,
   ClipboardCheck,
+  Handshake,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -83,6 +84,12 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
     accentBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
     matchLabel: 'Lead Data Sources',
   },
+  first_customers: {
+    icon: Handshake,
+    accentColor: 'border-t-rose-500',
+    accentBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+    matchLabel: 'Target Accounts',
+  },
 };
 
 export const SECTION_LABELS: Record<string, string> = {
@@ -96,10 +103,11 @@ export const SECTION_LABELS: Record<string, string> = {
   action_plan: 'Action Plan & Timeline',
   setup_compliance: 'Setup & Compliance Guide',
   lead_list: 'Lead List',
+  first_customers: 'Your First Customers',
 };
 
 export const SECTION_ORDER = [
-  'executive_summary', 'swot_analysis', 'competitor_landscape', 'service_providers',
+  'executive_summary', 'swot_analysis', 'competitor_landscape', 'first_customers', 'service_providers',
   'mentor_recommendations', 'investor_recommendations', 'events_resources', 'action_plan',
   'setup_compliance', 'lead_list',
 ];
@@ -110,6 +118,7 @@ export const TIER_REQUIREMENTS: Record<string, string> = {
   competitor_landscape: 'growth',
   mentor_recommendations: 'growth',
   investor_recommendations: 'growth',
+  first_customers: 'growth',
   lead_list: 'scale',
 };
 
