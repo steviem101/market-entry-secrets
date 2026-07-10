@@ -22,7 +22,7 @@ const LocationPage = () => {
   if (error || !location) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
-        <NoIndex />
+        <NoIndex notFound />
         <h1 className="text-2xl font-bold mb-4">Location Not Found</h1>
         <p className="text-muted-foreground">The location you're looking for doesn't exist.</p>
       </div>

@@ -24,7 +24,7 @@ const AgencyDetailPage = () => {
   if (error || !agency) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
-        <NoIndex />
+        <NoIndex notFound />
         <h1 className="text-2xl font-bold mb-4">Organisation Not Found</h1>
         <p className="text-muted-foreground">
           The organisation you're looking for doesn't exist or has been removed.

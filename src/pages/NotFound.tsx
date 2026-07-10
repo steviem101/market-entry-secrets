@@ -15,11 +15,10 @@ const NotFound = () => {
 
   return (
     <>
-      {/* Not-found pages must never be indexed (MES-81 / SEO-05). Until SEO-07
-          rendering lands, the response is still HTTP 200 (SPA shell); the
-          noindex directive keeps these soft-404s out of the index in the
-          meantime, and SEO-07 will make unknown slugs return a real 404. */}
-      <NoIndex />
+      {/* Not-found pages must never be indexed (MES-81 / SEO-05). notFound
+          additionally marks this a real 404 for prerendered crawls (MES-83);
+          un-rendered crawls still get a noindexed 200 shell. */}
+      <NoIndex notFound />
       <Helmet>
         <title>Page not found | Market Entry Secrets</title>
       </Helmet>

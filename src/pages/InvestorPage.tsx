@@ -26,7 +26,7 @@ const InvestorPage = () => {
   if (error || !investor) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
-        <NoIndex />
+        <NoIndex notFound />
         <h1 className="text-2xl font-bold mb-4">Investor Not Found</h1>
         <p className="text-muted-foreground">
           The investor you're looking for doesn't exist or has been removed.

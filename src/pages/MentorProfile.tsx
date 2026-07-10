@@ -116,7 +116,7 @@ const MentorProfile = () => {
   if (error || !mentor) {
     return (
       <>
-        <NoIndex />
+        <NoIndex notFound />
         <Helmet>
           <title>Mentor Not Found | Market Entry Secrets</title>
         </Helmet>
