@@ -8,13 +8,13 @@ compatibility_date = "2026-06-01"
 # the staging Worker proxy the real site instead of recursing).
 workers_dev = true
 
-# PRODUCTION ROUTE — uncomment ONLY after the staging checklist in README.md
-# passes. Attaching this route is the go-live moment; removing it in the
-# Cloudflare dashboard is the instant kill switch.
-# routes = [
-#   { pattern = "marketentrysecrets.com/*", zone_name = "marketentrysecrets.com" },
-#   { pattern = "www.marketentrysecrets.com/*", zone_name = "marketentrysecrets.com" },
-# ]
+# PRODUCTION ROUTES — live since 2026-07-10 (staging checklist passed on
+# https://mes-bot-gateway.mes-stevie.workers.dev). Removing these routes in
+# the Cloudflare dashboard is the instant kill switch (see README.md).
+routes = [
+  { pattern = "marketentrysecrets.com/*", zone_name = "marketentrysecrets.com" },
+  { pattern = "www.marketentrysecrets.com/*", zone_name = "marketentrysecrets.com" },
+]
 
 [vars]
 # Kill switch for the rendering branch only — the www-301 / sitemap proxy /
