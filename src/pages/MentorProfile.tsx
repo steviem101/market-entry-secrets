@@ -13,6 +13,7 @@ import {
   Users,
   EyeOff,
 } from "lucide-react";
+import { NoIndex } from "@/components/common/NoIndex";
 import { Helmet } from "react-helmet-async";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
@@ -115,6 +116,7 @@ const MentorProfile = () => {
   if (error || !mentor) {
     return (
       <>
+        <NoIndex />
         <Helmet>
           <title>Mentor Not Found | Market Entry Secrets</title>
         </Helmet>

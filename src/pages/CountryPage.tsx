@@ -31,6 +31,7 @@ import { CountryLeadCapture } from "@/components/countries/CountryLeadCapture";
 import { buildCountryJsonLd } from "@/components/countries/CountryStructuredData";
 import { publishedOrigin } from "@/lib/publishedOrigin";
 import { getCountryCode } from "@/lib/countryCodes";
+import { NoIndex } from "@/components/common/NoIndex";
 
 // Per-slug SEO overrides — keep bespoke copy data-driven rather than branching in JSX.
 const SEO_OVERRIDES: Record<string, { title: string; description: (c: { name: string; key_industries?: string[] }) => string }> = {
@@ -68,6 +69,7 @@ const CountryPage = () => {
   if (error || !country) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
+        <NoIndex />
         <h1 className="text-2xl font-bold mb-4">Country Not Found</h1>
         <p className="text-muted-foreground">
           The country you are looking for does not exist.

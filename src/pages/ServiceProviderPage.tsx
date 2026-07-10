@@ -12,6 +12,7 @@ import {
   useServiceProviderReviews,
   useServiceProviderContacts,
 } from "@/hooks/useServiceProviders";
+import { NoIndex } from "@/components/common/NoIndex";
 
 const ServiceProviderPage = () => {
   const { providerSlug } = useParams<{ providerSlug: string }>();
@@ -33,6 +34,7 @@ const ServiceProviderPage = () => {
   if (error || !provider) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
+        <NoIndex />
         <h1 className="text-2xl font-bold mb-4">Service Provider Not Found</h1>
         <p className="text-muted-foreground">
           The service provider you're looking for doesn't exist or has been removed.
