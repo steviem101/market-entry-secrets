@@ -1,7 +1,8 @@
 # MES bot-gateway Worker (MES-83 Phase 2 — Prerender trial)
 
-Cloudflare Worker that serves **prerendered HTML to crawlers** and leaves every
-human request untouched. It is also the site's consolidated HTTP layer, fixing
+Cloudflare Worker that serves **prerendered HTML to crawlers** and proxies
+every human request to the Lovable upstream untouched. It is the site's
+**front door**: all `marketentrysecrets.com` traffic flows through it, fixing
 in one place what the Lovable origin cannot do (verified 2026-07-06):
 
 | Concern | What the Worker does |
@@ -14,6 +15,30 @@ in one place what the Lovable origin cannot do (verified 2026-07-06):
 **Safety invariant:** the renderer browses anonymously — no cookies, tokens, or
 auth are forwarded — so RLS decides exactly what crawlers see (cloaking-safe by
 construction). Private paths are never prerendered.
+
+## Architecture — why the Worker must be the front door (2026-07-10)
+
+Lovable's custom-domain edge runs on **Cloudflare for SaaS**. While the domain
+is connected in Lovable's project settings, Lovable holds an active *custom
+hostname* claim in **their** Cloudflare account, and Cloudflare's hostname
+priority hands all traffic for it to Lovable's configuration — the MES zone's
+Workers, routes, and rules are silently skipped (verified live 2026-07-10:
+routes attached + records proxied, Worker never executed; also documented in
+Prerender's guide, https://prerender.io/blog/troubleshooting-lovable-cloudflare-integration/).
+
+Therefore:
+
+- The custom domain is **removed from Lovable's settings**; Lovable serves the
+  app only at `market-entry-secrets.lovable.app` (`ORIGIN_HOST`).
+- This Worker serves `marketentrysecrets.com` (`PUBLIC_HOST`) on the zone
+  routes and proxies page traffic to the upstream (`redirect: "manual"` so an
+  upstream redirect can never recurse through the Worker).
+- Prerender renders pages on `PUBLIC_HOST` — its renderer re-enters the Worker,
+  where the loop guard (UA contains "prerender") sends it to the upstream — so
+  snapshots carry real canonical URLs.
+- **Do NOT re-add the custom domain in Lovable** while the Worker routes are
+  attached: the claim would instantly bypass the Worker again (harmless but
+  confusing) — it is also the deliberate full-rollback lever below.
 
 ## Prerequisites (owner)
 
@@ -48,19 +73,30 @@ curl -s $W/sitemap.xml | head -2       # <sitemapindex …
 # 5. Parity spot-check: rendered title/canonical match what a browser shows.
 ```
 
-### Go live
+### Go live (order matters)
 
-Uncomment the `routes` block in `wrangler.toml` → `npx wrangler deploy`.
-Then re-run the checklist against `https://marketentrysecrets.com` and run the
-**kill-switch drill** below once, so rollback is proven, not theoretical.
+1. Deploy this Worker config (routes + lovable.app upstream) — inert while
+   Lovable still holds the custom-hostname claim.
+2. Lovable project → Settings → Domains → **remove `marketentrysecrets.com`**
+   (and www if listed). The claim releases and traffic flips to the Worker.
+3. Zone checks: SSL/TLS mode **Full (strict)**; Rocket Loader, Signed
+   Exchanges, and Bot Fight Mode **off** (Bot Fight Mode would challenge the
+   crawlers and renderer this Worker exists to serve).
+4. Re-run the checklist against `https://marketentrysecrets.com` and run the
+   **kill-switch drill** below once, so rollback is proven, not theoretical.
 
-## Kill switch / rollback (spike §7)
+## Kill switch / rollback (spike §7 — revised for front-door architecture)
 
-1. **Instant:** Cloudflare dashboard → Workers Routes → delete the
-   `marketentrysecrets.com/*` route. All traffic flows directly to Lovable
-   exactly as before; no deploy, no DNS, no cache drain.
-2. **Rendering-only:** set `RENDERING_ENABLED = "false"` in `wrangler.toml` →
-   `npx wrangler deploy`. Keeps the 301/sitemap/header fixes, stops rendering.
+⚠️ The Worker is **load-bearing**: deleting its route takes the site down (the
+public domain would have no origin). Rollback levers, least → most drastic:
+
+1. **Rendering-only:** set `RENDERING_ENABLED = "false"` in `wrangler.toml` →
+   `npx wrangler deploy`. Keeps the 301/sitemap/header fixes and the upstream
+   proxy, stops all Prerender traffic.
+2. **Full rollback to pre-Worker serving:** re-add `marketentrysecrets.com`
+   in Lovable project settings → Lovable's custom-hostname claim re-takes the
+   hostname at Cloudflare's edge (bypassing the Worker), exactly as before
+   2026-07-10. Then optionally delete the Worker routes.
 3. **Vendor exit:** Prerender is reached only through this Worker — swapping
    to Cloudflare Browser Rendering later is a Worker-only change.
 

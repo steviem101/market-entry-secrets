@@ -20,7 +20,11 @@ routes = [
 # Kill switch for the rendering branch only — the www-301 / sitemap proxy /
 # X-Robots-Tag fixes keep working when this is "false".
 RENDERING_ENABLED = "true"
-ORIGIN_HOST = "marketentrysecrets.com"
+# Upstream = the Lovable project host. The public domain must be RELEASED in
+# Lovable's settings (Lovable's Cloudflare-for-SaaS custom-hostname claim
+# takes priority over this zone's Workers — see README "Architecture").
+ORIGIN_HOST = "market-entry-secrets.lovable.app"
+PUBLIC_HOST = "marketentrysecrets.com"
 SITEMAP_FUNCTION_URL = "https://xhziwveaiuhzdoutpgrh.supabase.co/functions/v1/sitemap"
 
 # SECRET (never in this file): the Prerender.io token.

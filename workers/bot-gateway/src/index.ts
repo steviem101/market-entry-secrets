@@ -32,14 +32,25 @@ interface Env {
   /** The DB-driven sitemap (MES-79). */
   SITEMAP_FUNCTION_URL?: string;
   /**
-   * Canonical origin host. On the production route this equals the request
-   * host; on a workers.dev staging URL it makes passthrough + rendering test
-   * against the real site instead of recursing into the Worker.
+   * Upstream host the Worker proxies page traffic to — the Lovable project
+   * host, NOT the public domain. Lovable's custom-domain edge runs on
+   * Cloudflare for SaaS, and an active custom-hostname claim there takes
+   * priority over this zone's Workers; the public domain must be released
+   * from Lovable's settings and served by this Worker with Lovable as a
+   * plain upstream (see README).
    */
   ORIGIN_HOST?: string;
+  /**
+   * Public hostname crawlers should see. Prerender renders pages on THIS
+   * host (its renderer comes back through the Worker with its own UA, which
+   * the loop guard sends to the upstream), so snapshots carry the real
+   * canonical URLs instead of the lovable.app upstream.
+   */
+  PUBLIC_HOST?: string;
 }
 
-const DEFAULT_ORIGIN_HOST = "marketentrysecrets.com";
+const DEFAULT_ORIGIN_HOST = "market-entry-secrets.lovable.app";
+const DEFAULT_PUBLIC_HOST = "marketentrysecrets.com";
 const DEFAULT_SITEMAP_URL =
   "https://xhziwveaiuhzdoutpgrh.supabase.co/functions/v1/sitemap";
 const PRERENDER_TIMEOUT_MS = 10_000;
@@ -58,6 +69,7 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const originHost = env.ORIGIN_HOST || DEFAULT_ORIGIN_HOST;
+    const publicHost = env.PUBLIC_HOST || DEFAULT_PUBLIC_HOST;
 
     // 1. Single-hop www → apex 301, preserving path + query.
     const redirect = wwwRedirectTarget(url);
@@ -82,7 +94,10 @@ export default {
       try {
         // Pathname only — the query string never reaches the renderer (one
         // cacheable render per page; quota can't be burned via ?x=1..N spam).
-        const rendered = await fetch(prerenderTarget(originHost, url.pathname), {
+        // Rendered on the PUBLIC host: the renderer's own request re-enters
+        // this Worker, where the loop guard routes it to the upstream, so
+        // snapshots carry real canonical URLs, not lovable.app ones.
+        const rendered = await fetch(prerenderTarget(publicHost, url.pathname), {
           headers: {
             "X-Prerender-Token": env.PRERENDER_TOKEN,
             "User-Agent": request.headers.get("user-agent") ?? "",
@@ -99,16 +114,20 @@ export default {
       }
     }
 
-    // 4. Origin passthrough. On the production zone route the request host IS
-    //    the origin host, so fetch(request) reaches Lovable; on workers.dev
-    //    staging we rewrite to the real origin to avoid recursion.
-    const originResp =
-      url.hostname === originHost
-        ? await fetch(request)
-        : await fetch(`https://${originHost}${url.pathname}${url.search}`, {
-            method: request.method,
-            headers: request.headers,
-          });
+    // 4. Upstream passthrough — the Worker is the front door for the public
+    //    domain, so every non-rendered request is rewritten to the Lovable
+    //    project host. redirect:"manual" passes any upstream redirect to the
+    //    client untouched instead of chasing it back into this zone (a 302 to
+    //    the public domain would otherwise recurse through the Worker).
+    const originResp = await fetch(
+      `https://${originHost}${url.pathname}${url.search}`,
+      {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        redirect: "manual",
+      },
+    );
 
     // 5. Private paths get the header Lovable can't serve (MES-81 gap).
     return isPrivatePath(url.pathname)
