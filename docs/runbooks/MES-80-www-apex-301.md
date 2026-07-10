@@ -1,8 +1,17 @@
 # MES-80 — www → apex 301 (DNS / hosting setting, not in-repo)
 
 **Ticket:** MES-80 / SEO-04
-**Status:** Requires a one-time change in the Lovable/Cloudflare dashboard — it
-cannot be fixed from this repo (no server config in a Lovable SPA deploy).
+**Status:** ✅ **RESOLVED 2026-07-10.** DNS was migrated from Namecheap BasicDNS to
+Cloudflare and a Redirect Rule now issues a permanent 301 from `www` → apex. Verified
+live: `https://www.marketentrysecrets.com/` and `/pricing?ref=test` both return
+`HTTP/2 301` to the apex with path **and** query preserved; `http://www.` is a single
+301 hop; the apex serves 200. Google canonical re-evaluation follows on the next crawl
+(re-inspect the homepage in GSC ~1–2 weeks out to confirm the canonical flips to the apex).
+Original problem and the paths considered are retained below for reference.
+
+Minor optional follow-up: confirm Cloudflare → SSL/TLS → Edge Certificates →
+**Always Use HTTPS** is On, so bare `http://` apex also 301s to https (HSTS already
+covers real browsers).
 
 ## Problem (from the MES-76 audit)
 
