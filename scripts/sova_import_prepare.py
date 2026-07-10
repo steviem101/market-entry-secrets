@@ -112,6 +112,33 @@ SKIP_OVERRIDES = {
 NAME_OVERRIDES = {
     "Fearless Innovator Grant": "FoundHer Grant Program",
 }
+
+# Live-URL check (2026-07-10) found these orgs are ACTIVE but their Sova URL is
+# dead (org moved domain). Corrected to the verified current URL via web search
+# so we never ship a broken link. Not stale entities — just stale URLs.
+URL_OVERRIDES = {
+    "Intersekt Festival": "https://www.intersektfestival.com/",
+    "Spark Festival": "https://sparkfestival.co/",
+    "Her Tech Circle": "https://www.hertechcircle.org/",
+    "Victorian CleanTech Cluster": "https://www.victoriancleantech.org.au/",
+    "Mentor Walks": "https://www.mentorwalks.org/",
+    "TEC (The Executive Connection)": "https://www.tec.net.au/",
+    "Little Tokyo Two": "https://www.littletokyotwo.com/",
+    "Young Change Agents": "https://youngchangeagents.com/",
+    "Biztech Lawyers": "https://www.biztechlawyers.com/",
+    "EverestEngineering": "https://www.everest.engineering/",
+    "Thrive Refugee Enterprise": "https://www.thriverefugeeenterprise.org.au/",
+    "NT Indigenous Business Network": "https://www.ntibn.com.au/",
+    "Entrepreneurs' Organisation (EO) Australia": "https://www.eoaustralia.org/",
+    "Flinders NVI": "https://www.flinders.edu.au/new-venture-institute",
+    "Founders Factory Nature Tech": "https://foundersfactory.com/western-australia-government-nature-tech-accelerator/",
+    "D10x Accelerator": "https://dtb.solutions/",
+}
+
+# Rows to force to needs-review with a note (not skipped, but not auto-import).
+REVIEW_FLAGS = {
+    "Luna Legal": "likely duplicate of existing MES 'LUNA Startup Studio' (weareluna.co) — verify before import",
+}
 # Recurring festivals/conferences -> events table (per review, 2026-07-10).
 # type/category use existing events vocabulary; city/typical_month only where
 # the Sova description states them (grounding rule — nothing invented).
@@ -312,7 +339,11 @@ def main() -> None:
 
         host = parse_host(row["Source URL"])
         website = row["Source URL"].strip()
-        if host and registrable_domain(host) in ("getsova.com.au",):
+        if row["Name"] in URL_OVERRIDES:
+            website = URL_OVERRIDES[row["Name"]]
+            host = parse_host(website)
+            flags.append("URL corrected — Sova link was dead; org confirmed live (web check 2026-07-10)")
+        elif host and registrable_domain(host) in ("getsova.com.au",):
             website = ""
             flags.append("no canonical website — Source URL points back to the Sova directory")
         elif host and registrable_domain(host) in (
@@ -416,9 +447,11 @@ def main() -> None:
             prop["proposed_founded"] = ""
             prop["proposed_employees"] = ""
 
+        if row["Name"] in REVIEW_FLAGS:
+            flags.append(REVIEW_FLAGS[row["Name"]])
         if conf == "low":
             action = "review"
-        elif any("review" in f or "NEW" in f or "decision" in f for f in flags):
+        elif any("review" in f or "NEW" in f or "decision" in f or "duplicate" in f for f in flags):
             action = "review"
         else:
             action = "import"

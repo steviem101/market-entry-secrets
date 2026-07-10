@@ -98,6 +98,32 @@ and `source = sova_directory_2026-07`. Rows are sorted confidence-first.
 - **trade_investment_agencies**: `state_body`/`state` when the host is a
   state-gov domain, else `federal_agency`/`federal`; `is_government_funded=true`.
 
+## Freshness / live-URL check (2026-07-10)
+
+Per the "nothing stale gets uploaded" requirement, every proposed row's website
+was liveness-checked (HTTP) and cross-verified by web search where the HTTP
+check was inconclusive. Findings:
+
+- **No import row is a closed organisation.** The only closed/inactive entries
+  were already caught and skipped (SXSW Sydney + Pitch, StartCon + Pitch, NSW
+  MVP Ventures — all Sova `Status=Inactive`).
+- **16 rows were live orgs with a dead Sova URL** (they had moved domains).
+  Corrected to the verified current URL — not skipped — so no dead link ships.
+  Examples: Intersekt (`intersektfintech.com`→`intersektfestival.com`), Spark
+  Festival (`.com.au`→`.co`), Her Tech Circle (`.com.au`→`.org`), Mentor Walks
+  (`.com.au`→`.org`), TEC (`.com.au`→`tec.net.au`), EverestEngineering
+  (`.com.au`→`everest.engineering`), NT Indigenous Business Network
+  (`ntibn.org.au`→`.com.au`), EO Australia, Flinders NVI, Founders Factory
+  Nature Tech, etc. Flagged `URL corrected` in each row.
+- **Luna Legal → needs review**: almost certainly a duplicate of the existing
+  MES `LUNA Startup Studio` (weareluna.co). Held out of auto-import.
+- Remaining rows returned HTTP 200/403 (live; 403 = bot-protection) or are
+  government/corporate domains the sandbox proxy can't reach but are certainly
+  live (bhp.com, health.gov.au, defence.gov.au, rda.gov.au…).
+
+Caveat: the Sova export is a 2026-07-09 snapshot; this check confirms orgs are
+live *now* but a re-check at apply time is cheap insurance.
+
 ## Sector-specialist pass (2026-07-10)
 
 86 of 155 rows carry no `sector_tags` (`sector_agnostic = true`). A manual pass
