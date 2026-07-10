@@ -198,8 +198,10 @@ export const useServiceProviderContacts = (providerId: string) => {
   return useQuery({
     queryKey: ["service-provider-contacts", providerId],
     queryFn: async () => {
+      // Read the PII-safe masked view (no email/phone) — the base
+      // service_provider_contacts table is admin-only (AUD-020 / MES-56 pattern).
       const { data, error } = await (supabase as any)
-        .from("service_provider_contacts")
+        .from("service_provider_contacts_public")
         .select("*")
         .eq("service_provider_id", providerId)
         .order("sort_order");
@@ -207,11 +209,9 @@ export const useServiceProviderContacts = (providerId: string) => {
       if (error) throw error;
       return (data || []) as Array<{
         id: string;
-        provider_id: string;
+        service_provider_id: string;
         full_name: string;
         role: string | null;
-        email: string | null;
-        phone: string | null;
         linkedin_url: string | null;
         avatar_url: string | null;
         is_primary: boolean;
