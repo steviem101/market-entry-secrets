@@ -48,23 +48,35 @@
    behind (verified: no MES-added `pg_db_role_setting` entries; the only DB-level setting present is
    Supabase's own pre-existing `app.settings.jwt_exp`).
 
-**What was deliberately NOT run, and why:**
+4. **All 121 public collation-sensitive btree text indexes were rebuilt** (second pass, same day,
+   after a critical re-review). Method: batched **plain `REINDEX INDEX`** (not CONCURRENTLY) with
+   `SET lock_timeout='2s'` as a stall guard, in 3 transactions — appropriate because every target
+   index is tiny (5.1 MB total, largest 656 kB), plain REINDEX is transactional (a failure rolls
+   back cleanly instead of leaving `_ccnew` litter), and each index's exclusive lock lasts
+   milliseconds. All batches completed in seconds with zero lock timeouts. Verified after: 0 invalid
+   indexes, and all 95 `service_providers` slugs round-trip through index lookups.
 
-- **The precautionary REINDEX was not performed.** This is a *micro* ICU bump (153.120→153.121, same
-  Unicode/UCA version) with **0 invalid indexes**, so `en-US` ordering is effectively unchanged and
-  a reindex mitigates a near-zero-probability event. Two attempts at a bulk concurrent reindex each
-  proved disproportionate and self-defeating (details below), so the reindex was judged not worth
-  the production churn. `REFRESH` — the change that actually fixes the operational noise — was done
-  instead. Refreshing without reindexing is safe *specifically because* the ordering did not change.
-- **Two aborted reindex attempts left transient `_ccnew` indexes, which were cleaned up.**
-  `REINDEX DATABASE CONCURRENTLY` and `REINDEX SCHEMA CONCURRENTLY public` both insisted on also
-  rebuilding the large **non-collation** vector indexes (42 MB HNSW `mes_kb_embedding_idx`, 13 MB
-  ivfflat on `ii_content`/`ii_published_archive`). These hit `maintenance_work_mem` (default 32 MB),
-  and when memory was raised to 256 MB, the parallel build exhausted the container's `/dev/shm`.
-  Each failure left invalid `_ccnew` transient indexes (14 then 9, all on internal `ii_*`/KB tables);
-  **all were dropped**, and the *original* indexes stayed valid throughout (concurrent reindex never
-  drops the old index until the new one validates), so **nothing was ever degraded** and RAG/KB
-  reads were unaffected.
+**Risk-analysis correction (from the re-review):** an earlier draft claimed the worst case of a
+stale collation was "wrong sort order only." That was **incorrect**: a btree navigates by the
+collation's ordering even for `=` probes, so a stale index can *miss existing rows* on equality
+lookups (e.g. a directory slug lookup 404ing on a row that exists). The mitigating fact is that
+MES's lookup-critical text keys (slugs, emails, tokens, dedup keys) are ASCII, whose ordering is
+stable across ICU micro versions — so real-world probability remained very low. The public reindex
+above closes the gap regardless; `auth`/`storage` remain unrebuildable from this role but their
+lookup keys are ASCII (tokens/emails), making the residual risk negligible.
+
+**Reindex attempt history (kept for the record):**
+
+- **Two earlier bulk concurrent attempts failed and were cleaned up.** `REINDEX DATABASE/SCHEMA
+  CONCURRENTLY` also rebuilds the large non-collation **vector** indexes, which is what broke:
+  the 42 MB HNSW `mes_kb_embedding_idx` and 13 MB ivfflat indexes hit `maintenance_work_mem`
+  (default 32 MB), and when memory was raised to 256 MB, the parallel build exhausted the
+  container's `/dev/shm`. Each failure left invalid `_ccnew` transient indexes (14 then 9, all on
+  internal `ii_*`/KB tables); **all were dropped**, and the *original* indexes stayed valid
+  throughout (concurrent reindex never drops the old index until the new one validates), so
+  **nothing was ever degraded** and RAG/KB reads were unaffected. Lesson recorded: scope reindexes
+  to the collation-sensitive **btree** subset explicitly; never point a bulk concurrent reindex at
+  a schema containing large vector/GIN indexes on a memory-constrained instance.
 
 **Managed-role limits discovered (things this repo's `postgres` role cannot do):**
 
@@ -77,9 +89,11 @@ Therefore, from this project's SQL access it is **not possible** to:
   that are now gone). Needs Supabase support or a `supabase_admin`-level action.
 - Reindex `auth`/`storage` indexes → left as-is (low risk given the micro bump).
 
-**Net outcome:** the production warning flood and low "success rate" are resolved for `postgres`.
-Residual `template1` warnings and any belt-and-braces reindex of `auth`/`storage` require
-Supabase-managed roles and are recommended as follow-ups (§4.1) — optional given the micro bump.
+**Net outcome:** the warning flood / "success rate" issue is resolved, and every collation-sensitive
+btree index in `public` has been rebuilt against the current ICU version — Option A is complete for
+everything reachable from the project role. Residuals (all requiring Supabase-managed roles, all
+low-value): `template1` refresh (cosmetic warnings only) and `auth`/`storage` reindex (ASCII lookup
+keys → negligible risk). See §4.1.
 
 ---
 
@@ -282,9 +296,8 @@ residual doubt.
 - **`auth` / `storage` reindex** — if full belt-and-braces is wanted, these schemas' collation
   btree indexes (≈39 indexes, ~470 kB) must be reindexed under `supabase_auth_admin` /
   `supabase_storage_admin`. Near-zero need for a micro bump.
-- **Optional `public` reindex** — if desired for completeness, reindex only the collation-sensitive
-  **btree** indexes (never the vector/GIN ones — that was the failure source), non-blocking, in a
-  low-traffic window. Skip `mes_knowledge_base`, `ii_content`, `ii_published_archive` vector indexes.
+- ~~Optional `public` reindex~~ — **DONE** (2026-07-09 second pass): all 121 collation-sensitive
+  btree text indexes rebuilt via batched plain `REINDEX` with `lock_timeout` guard; verified clean.
 
 ---
 
