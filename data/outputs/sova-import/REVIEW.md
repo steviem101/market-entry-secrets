@@ -12,13 +12,19 @@ proposed skips**).
 
 | File | Rows | import | review | high | medium | low |
 |------|-----:|-------:|-------:|-----:|-------:|----:|
-| `proposed-investors.csv` | 51 | 38 | 13 | 31 | 19 | 1 |
+| `proposed-investors.csv` | 47 | 35 | 12 | 29 | 18 | 0 |
 | `proposed-innovation_ecosystem.csv` | 51 | 29 | 22 | 51 | 0 | 0 |
 | `proposed-service_providers.csv` | 32 | 12 | 20 | 22 | 1 | 9 |
 | `proposed-trade_investment_agencies.csv` | 15 | 15 | 0 | 15 | 0 | 0 |
 | `proposed-events.csv` | 6 | 6 | 0 | 6 | 0 | 0 |
-| `proposed-skips.csv` | 2 | — | — | | | |
-| **Total** | **157** | **100** | **55** | | | |
+| `proposed-skips.csv` | 6 | — | — | | | |
+| **Total** | **157** | **97** | **54** | | | |
+
+**Skips (6):** SXSW Sydney + StartCon (discontinued/inactive); Earlypay,
+ScotPac, Wayflyer, Grapple (commercial debt/invoice/revenue-based lenders —
+not equity investors, out of scope for the investors directory). Kept despite
+being loan-related: Coralus (0% community capital for women founders) and the
+Tasmania Business Growth Loan Scheme (government funding program).
 
 ### Community-bucket recheck (2026-07-10, per Stephen's review)
 

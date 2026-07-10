@@ -94,6 +94,12 @@ ROUTE_OVERRIDES = {
 SKIP_OVERRIDES = {
     "SXSW Sydney": "discontinued (no 2026 edition) — do not import",
     "StartCon": "inactive since 2019 — do not import",
+    # Commercial debt / invoice / revenue-based lenders — not equity investors,
+    # out of scope for the investors directory (per review 2026-07-10).
+    "Earlypay": "commercial lender (invoice + equipment finance) — not an equity investor",
+    "ScotPac": "commercial SME lender (invoice/trade/asset finance) — not an equity investor",
+    "Wayflyer": "revenue-based financing lender — not an equity investor",
+    "Grapple": "invoice-finance lender — not an equity investor",
 }
 # Recurring festivals/conferences -> events table (per review, 2026-07-10).
 # type/category use existing events vocabulary; city/typical_month only where
