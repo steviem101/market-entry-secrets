@@ -76,9 +76,49 @@ government programs** — categories MES has no dedicated directory for
   write. Sector/type mapping to the canonical taxonomy is deferred to that
   ticket (out of scope here per MES-146).
 
+## Second pass — loose fuzzy re-check of the missing list (2026-07-10)
+
+Per review feedback, `scripts/sova_gap_analysis_pass2.py` re-checked all 158
+missing rows at a much looser bar (0.60 vs 0.72, generic tokens like
+"program/grant/fund/NSW" stripped before comparing), routed by category to
+where those records live on MES: grants → `investors_public`; communities/
+associations → `innovation_ecosystem` + `trade_investment_agencies` (the
+`/government-support` directory — confirmed as the "country trade org"
+database, already covered in pass 1); experts → `community_members_public`
+(mentors, including a scan of mentor bios for org mentions) +
+`service_providers`.
+
+Results: **53 rows got a loose candidate** (`second-pass-candidates.csv`,
+sorted by score, top-3 candidates each) and **105 rows have no candidate at
+all** (`missing-confirmed.csv`). A 0.45 trial threshold matched 148/158 rows
+and was pure noise, so 0.60 is the shipped floor.
+
+Manual review of everything ≥ 0.60 found essentially **one real near-miss**:
+
+- **AgriFutures Funding → Agrifutures Australia RD&E Investment**
+  (`investors_public`, 0.80) — same parent org, program-vs-org granularity.
+- Borderline, same-ecosystem-but-probably-distinct: *Western Sydney Launchpad*
+  vs *Western Sydney Start up Hub* (0.71); *Defence Industry Development
+  Grants* vs *AIDN / Founders Defence 10x* (related sector, different org).
+- Everything else in the file is coincidental word overlap ("Startup Victoria
+  → LUNA Startup Studio", "Pozible → ProChile") — kept only so the review is
+  auditable.
+- Mentor-bio scan produced **zero** hits: the 22 missing "Expert" rows are
+  law/advisory firms and startup media (Sprintlaw, Lawpath, BlueRock, Startup
+  Daily…), not people, and none are mentors in MES.
+- Keyword hand-check of well-known missing names (ARENA, Westpac Businesses of
+  Tomorrow, Mentor Walks, TEC, Startup Victoria, Foundr, Her Tech Circle,
+  Cremorne Digital Hub, Inspiring Rare Birds, Intersekt…) against every MES
+  name confirmed none exist under a variant name.
+
+**Conclusion: the pass-1 missing list holds up.** Net one row (AgriFutures
+Funding) should be treated as needs-review rather than missing; the other 157
+are genuine gaps.
+
 ## Reproduce
 
 ```sh
 python3 scripts/sova_gap_analysis.py --fetch --snapshot-dir /tmp/mes-snapshot
 python3 scripts/sova_gap_analysis.py --snapshot-dir /tmp/mes-snapshot
+python3 scripts/sova_gap_analysis_pass2.py --snapshot-dir /tmp/mes-snapshot
 ```
