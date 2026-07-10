@@ -109,12 +109,38 @@ FESTIVAL_EVENTS = {
 }
 
 # Sova industry spellings -> sector_vocabulary raw_value (verified 2026-07-10)
+# Drives sector_tags (the CANONICAL slugs used for array-overlap filtering).
 INDUSTRY_ALIASES = {
     "tech": "technology",
     "agtech": "agritech",
     "retail": "retail & e-commerce",
     "biotech": "healthtech",  # nearest vocab entry; flagged below
 }
+
+# Sova industry spellings -> existing display-chip labels (verified against live
+# investors.sector_focus / innovation_ecosystem.sectors, 2026-07-10). These are
+# human-readable chips only, NOT matching keys — sector_tags does the filtering.
+DISPLAY_LABELS = {
+    "tech": "Technology",
+    "cleantech": "CleanTech",
+    "healthtech": "HealthTech",
+    "agtech": "AgTech",
+    "fintech": "FinTech",
+    "deeptech": "Deep Tech",
+    "defence": "Defence & Space",
+    "ai": "AI & Data",
+    "retail": "Retail",
+    "biotech": "Biotechnology",
+}
+
+
+def display_labels(industries: str) -> list[str]:
+    out = []
+    for term in [t.strip() for t in (industries or "").replace(",", ";").split(";") if t.strip()]:
+        label = DISPLAY_LABELS.get(term.lower(), term)
+        if label not in out:
+            out.append(label)
+    return out
 
 
 def slugify(name: str) -> str:
@@ -292,6 +318,7 @@ def main() -> None:
             conf = min(conf, iconf, key=["low", "medium", "high"].index)
             prop["proposed_investor_type"] = itype
             prop["proposed_country"] = "Australia"
+            prop["proposed_sector_focus"] = "; ".join(display_labels(row["Industries"]))
         elif table == "innovation_ecosystem":
             if row["Name"] in IE_TYPE_OVERRIDES:
                 ie_types = IE_TYPE_OVERRIDES[row["Name"]]
@@ -304,6 +331,7 @@ def main() -> None:
             if "Community" in ie_types:
                 flags.append("introduces NEW innovation_ecosystem type value 'Community' (product decision)")
             prop["proposed_type"] = "; ".join(ie_types)
+            prop["proposed_sectors"] = "; ".join(display_labels(row["Industries"]))
             prop["proposed_founded"] = ""
             prop["proposed_employees"] = ""
         elif table == "trade_investment_agencies":

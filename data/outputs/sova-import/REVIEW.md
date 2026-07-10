@@ -63,10 +63,19 @@ and `source = sova_directory_2026-07`. Rows are sorted confidence-first.
   "Melbourne, VIC") + `location_id` from the `locations` table by state name.
   `National` → "Australia" with **no `location_id`** (no national row exists);
   `TAS` likewise (no Tasmania row). Both flagged.
-- **Sector tags**: Sova `Industries` → `sector_vocabulary.raw_value` →
-  `sector_slugs[]`, with verified aliases Tech→technology, AgTech→agritech,
+- **Sector tags (matching key)**: Sova `Industries` → `sector_vocabulary.raw_value`
+  → `sector_slugs[]`, with verified aliases Tech→technology, AgTech→agritech,
   Retail→retail & e-commerce, BioTech→healthtech (flagged). Empty industries →
-  `sector_agnostic = true`.
+  `sector_agnostic = true`. These are the ~20 canonical LinkedIn sector slugs
+  used for array-overlap filtering (`.cs.{}`) — every proposed value is a member
+  of the live `linkedin_industries` sector set (verified: 9 distinct slugs, all
+  canonical). The raw Sova strings are NOT written to any column; they remain
+  only as provenance in the CSV.
+- **Display chips**: `proposed_sector_focus` (investors) / `proposed_sectors`
+  (innovation_ecosystem) carry human-readable labels (HealthTech, Deep Tech,
+  Defence & Space…) mapped to the existing live display vocabularies. These are
+  display-only chips, not matching keys — so filtering still runs off
+  `sector_tags`. Added so imported cards show sector chips like existing rows.
 - **founded/employees** (NOT NULL columns): empty string, matching the
   existing convention for unknown values.
 - **investor_type**: Grant/Scholarship/Government→`grant`,
