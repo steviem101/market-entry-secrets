@@ -95,9 +95,17 @@ SKIP_OVERRIDES = {
     "SXSW Sydney": "discontinued (no 2026 edition) — do not import",
     "StartCon": "inactive since 2019 — do not import",
 }
-FESTIVAL_ROWS = {
-    "Growth Summit", "Intersekt Festival", "SOUTHSTART", "Spark Festival",
-    "Startup 2 Scaleup Summit (S2S)", "West Tech Fest",
+# Recurring festivals/conferences -> events table (per review, 2026-07-10).
+# type/category use existing events vocabulary; city/typical_month only where
+# the Sova description states them (grounding rule — nothing invented).
+FESTIVAL_EVENTS = {
+    "Growth Summit": {"type": "Summit", "category": "Founders & Startups", "city": ""},
+    "Intersekt Festival": {"type": "Festival + Conference", "category": "FinTech", "city": "Melbourne"},
+    "SOUTHSTART": {"type": "Festival + Conference", "category": "Founders & Startups", "city": "Adelaide"},
+    "Spark Festival": {"type": "Festival + Conference", "category": "Founders & Startups", "city": "Sydney"},
+    "Startup 2 Scaleup Summit (S2S)": {"type": "Summit", "category": "Founders & Startups", "city": "Sydney"},
+    "West Tech Fest": {"type": "Festival + Conference", "category": "Technology",
+                       "city": "Perth", "typical_month": "December"},
 }
 
 # Sova industry spellings -> sector_vocabulary raw_value (verified 2026-07-10)
@@ -125,6 +133,7 @@ def load_lookups(snapshot_dir: Path):
         "innovation_ecosystem": {r.get("slug") for r in json.load((snapshot_dir / "slugs_ie.json").open())},
         "service_providers": {r.get("slug") for r in json.load((snapshot_dir / "slugs_sp.json").open())},
         "trade_investment_agencies": {r.get("slug") for r in json.load((snapshot_dir / "slugs_tia.json").open())},
+        "events": {r.get("slug") for r in json.load((snapshot_dir / "slugs_events.json").open())},
     }
     return loc_by_name, vocab, taken
 
@@ -235,9 +244,9 @@ def main() -> None:
         else:
             table, conf, flags = route(row)
             flags = list(flags)
-        if row["Name"] in FESTIVAL_ROWS:
-            conf = "medium"
-            flags.append("recurring festival/conference — consider the events directory or skip")
+        if row["Name"] in FESTIVAL_EVENTS:
+            table, conf = "events", "high"
+            flags.append("recurring festival routed to events table (needs event_date before approval)")
 
         host = parse_host(row["Source URL"])
         website = row["Source URL"].strip()
@@ -305,6 +314,17 @@ def main() -> None:
             prop["proposed_is_government_funded"] = "true"
             prop["proposed_founded"] = ""
             prop["proposed_employees"] = ""
+        elif table == "events":
+            ev = FESTIVAL_EVENTS[row["Name"]]
+            if ev.get("city"):
+                prop["proposed_location"] = ev["city"]
+            prop["proposed_type"] = ev["type"]
+            prop["proposed_category"] = ev["category"]
+            prop["proposed_city"] = ev.get("city", "")
+            prop["proposed_state_region"] = row["State"]
+            prop["proposed_typical_month"] = ev.get("typical_month", "")
+            prop["proposed_frequency"] = "Annual"
+            prop["proposed_status"] = "needs_review"
         elif table == "service_providers":
             text = f"{row['Name']} {row['Description']}".lower()
             if re.search(r"\blegal\b|\blaw(yers?| firm)?\b|solicitor", text):

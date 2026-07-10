@@ -13,11 +13,12 @@ proposed skips**).
 | File | Rows | import | review | high | medium | low |
 |------|-----:|-------:|-------:|-----:|-------:|----:|
 | `proposed-investors.csv` | 51 | 38 | 13 | 31 | 19 | 1 |
-| `proposed-innovation_ecosystem.csv` | 57 | 29 | 28 | 51 | 6 | 0 |
+| `proposed-innovation_ecosystem.csv` | 51 | 29 | 22 | 51 | 0 | 0 |
 | `proposed-service_providers.csv` | 32 | 12 | 20 | 22 | 1 | 9 |
 | `proposed-trade_investment_agencies.csv` | 15 | 15 | 0 | 15 | 0 | 0 |
+| `proposed-events.csv` | 6 | 6 | 0 | 6 | 0 | 0 |
 | `proposed-skips.csv` | 2 | — | — | | | |
-| **Total** | **157** | **94** | **61** | | | |
+| **Total** | **157** | **100** | **55** | | | |
 
 ### Community-bucket recheck (2026-07-10, per Stephen's review)
 
@@ -40,11 +41,15 @@ them — encoded as explicit `IE_TYPE_OVERRIDES`/`ROUTE_OVERRIDES`/
 - **Re-routed to service_providers (1)**: EverestEngineering (software dev
   firm mis-tagged by Sova)
 - **Proposed skips (2)**: SXSW Sydney (discontinued), StartCon (inactive)
-- **Festivals flagged (6, kept as Community pending decision)**: Growth
-  Summit, Intersekt Festival, SOUTHSTART, Spark Festival, Startup 2 Scaleup
-  Summit, West Tech Fest — recurring events; decide events-directory vs skip.
+- **Festivals → events table (6, decided 2026-07-10)**: Growth Summit,
+  Intersekt Festival, SOUTHSTART, Spark Festival, Startup 2 Scaleup Summit,
+  West Tech Fest — proposed as recurring conference entries
+  (`proposed-events.csv`): existing type vocabulary (Summit / Festival +
+  Conference), category from description, `frequency=Annual`, no `event_date`
+  (null is an existing pattern; nothing invented — only West Tech Fest states
+  a month), `status=needs_review` until real dates are confirmed.
 
-That leaves **28 rows** genuinely needing the new "Community" type value.
+That leaves **22 rows** genuinely needing the new "Community" type value.
 
 Each row carries: all original Sova columns (provenance), the proposed MES
 fields (`proposed_*`), `confidence`, `validation_flags`, `proposed_action`,
@@ -72,12 +77,12 @@ and `source = sova_directory_2026-07`. Rows are sorted confidence-first.
 
 ## Decisions needed from the reviewer
 
-1. **NEW `innovation_ecosystem.type` value "Community"** — 28 rows introduce
+1. **NEW `innovation_ecosystem.type` value "Community"** — 22 rows introduce
    it after the recheck above (existing values: Accelerator, Coworking Space,
    Incubator, Industry Body, Research Institute). This is the product decision
    flagged in the ticket: approve the new type value, or nominate a different
    home for founder communities. Directory filters that enumerate types may
-   need a follow-up UI check. Related: the 6 flagged festivals.
+   need a follow-up UI check.
 2. **13 investor rows flagged** — competitions/university funds mapped to
    `grant`, corporates to `vc`, one Finance row to `venture_debt`.
 3. **9 low-confidence service_providers** — startup media (Startup Daily,
