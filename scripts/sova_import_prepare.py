@@ -100,6 +100,17 @@ SKIP_OVERRIDES = {
     "ScotPac": "commercial SME lender (invoice/trade/asset finance) — not an equity investor",
     "Wayflyer": "revenue-based financing lender — not an equity investor",
     "Grapple": "invoice-finance lender — not an equity investor",
+    # No longer running (Sova Status=Inactive) — pitch-competition siblings of
+    # the already-skipped SXSW Sydney / StartCon rows, plus a paused NSW program.
+    "SXSW Sydney Pitch": "discontinued with SXSW Sydney (Sova Status=Inactive)",
+    "StartCon - Pitch for $1 Million": "inactive since 2019 (Sova Status=Inactive)",
+    "NSW MVP Ventures Program": "Sova Status=Inactive — verify before any future import",
+}
+
+# Programs that are still running but under a new name (rebrands). Import under
+# the current name; description already explains the change.
+NAME_OVERRIDES = {
+    "Fearless Innovator Grant": "FoundHer Grant Program",
 }
 # Recurring festivals/conferences -> events table (per review, 2026-07-10).
 # type/category use existing events vocabulary; city/typical_month only where
@@ -324,7 +335,11 @@ def main() -> None:
             flags = [f for f in flags if "sector_agnostic" not in f and "not in sector_vocabulary" not in f]
             flags.append("sector inferred from description (Sova Industries was blank)")
 
-        slug = base_slug = slugify(row["Name"])
+        disp_name = row["Name"]
+        if row["Name"] in NAME_OVERRIDES:
+            disp_name = NAME_OVERRIDES[row["Name"]]
+            flags.append(f"renamed from '{row['Name']}' — rebranded, still active")
+        slug = base_slug = slugify(disp_name)
         n = 2
         while slug in taken_slugs[table]:
             slug = f"{base_slug}-{n}"
@@ -334,7 +349,7 @@ def main() -> None:
             flags.append("empty description — target column is NOT NULL")
 
         prop = {
-            "proposed_name": row["Name"],
+            "proposed_name": disp_name,
             "proposed_slug": slug,
             "proposed_description": row["Description"].strip(),
             "proposed_website": website,

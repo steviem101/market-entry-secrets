@@ -12,19 +12,27 @@ proposed skips**).
 
 | File | Rows | import | review | high | medium | low |
 |------|-----:|-------:|-------:|-----:|-------:|----:|
-| `proposed-investors.csv` | 47 | 35 | 12 | 29 | 18 | 0 |
+| `proposed-investors.csv` | 44 | 34 | 10 | 28 | 16 | 0 |
 | `proposed-innovation_ecosystem.csv` | 51 | 29 | 22 | 51 | 0 | 0 |
 | `proposed-service_providers.csv` | 32 | 12 | 20 | 22 | 1 | 9 |
 | `proposed-trade_investment_agencies.csv` | 15 | 15 | 0 | 15 | 0 | 0 |
 | `proposed-events.csv` | 6 | 6 | 0 | 6 | 0 | 0 |
-| `proposed-skips.csv` | 6 | — | — | | | |
-| **Total** | **157** | **97** | **54** | | | |
+| `proposed-skips.csv` | 9 | — | — | | | |
+| **Total** | **157** | **96** | **52** | | | |
 
-**Skips (6):** SXSW Sydney + StartCon (discontinued/inactive); Earlypay,
-ScotPac, Wayflyer, Grapple (commercial debt/invoice/revenue-based lenders —
-not equity investors, out of scope for the investors directory). Kept despite
-being loan-related: Coralus (0% community capital for women founders) and the
-Tasmania Business Growth Loan Scheme (government funding program).
+**Skips (9):**
+- *Closed / no longer running:* SXSW Sydney + SXSW Sydney Pitch (discontinued),
+  StartCon + StartCon Pitch (inactive since 2019), NSW MVP Ventures Program
+  (Sova `Status=Inactive` — worth re-verifying before any future import).
+- *Not equity investors:* Earlypay, ScotPac, Wayflyer, Grapple (commercial
+  debt / invoice / revenue-based lenders).
+
+**Renamed (still active):** Fearless Innovator Grant → **FoundHer Grant
+Program** (rebranded 2026) — imported under the current name.
+
+**Kept despite being loan-related:** Coralus (0% community capital for women
+founders) and the Tasmania Business Growth Loan Scheme (government funding
+program).
 
 ### Community-bucket recheck (2026-07-10, per Stephen's review)
 
