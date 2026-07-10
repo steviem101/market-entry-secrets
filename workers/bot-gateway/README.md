@@ -121,9 +121,8 @@ distinct real paths.
 
 ## Follow-ups (not in this Worker)
 
-- **Real 404s for unknown slugs:** add
-  `<meta name="prerender-status-code" content="404">` to the app's not-found
-  branches (pairs with PR #372) so Prerender returns true 404s instead of a
-  noindexed 200. Until then, soft-404s stay noindexed via #372.
+- ~~Real 404s for unknown slugs~~ — DONE: `<NoIndex notFound />` emits
+  `<meta name="prerender-status-code" content="404">` on every not-found
+  branch, so Prerender returns true 404s to crawlers once rendering is on.
 - v2 cache invalidation (Supabase → Prerender recache API) only if stale
   snapshots prove to matter during the trial.

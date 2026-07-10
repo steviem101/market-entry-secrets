@@ -96,7 +96,7 @@ const CaseStudyDetail = () => {
           <div className="bg-muted/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
             <Globe className="h-7 w-7 text-muted-foreground" />
           </div>
-          <NoIndex />
+          <NoIndex notFound />
           <h2 className="text-2xl font-bold mb-3">Case Study Not Found</h2>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             The case study you're looking for doesn't exist or has been removed.

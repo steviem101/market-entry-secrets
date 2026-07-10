@@ -88,7 +88,7 @@ const ContentDetail = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
-          <NoIndex />
+          <NoIndex notFound />
           <h2 className="text-2xl font-bold mb-4">Content Not Found</h2>
           <p className="text-muted-foreground mb-6">
             The content you're looking for doesn't exist or has been removed.
