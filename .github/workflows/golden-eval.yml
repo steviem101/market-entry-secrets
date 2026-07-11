@@ -20,13 +20,25 @@ on:
         description: "Comma-separated golden_ids (empty = all)"
         required: false
         default: ""
+  # PRs run a cheap 2-golden SMOKE subset (see the run step); the full set runs on
+  # manual dispatch and nightly. Keeps report-pipeline PRs from burning the whole
+  # set (and brushing the 5-reports/60min limit) on every push.
+  #
+  # Deliberately NOT triggered by `eval/**` or this workflow file: with EVAL_* now
+  # pointing at PROD, a PR that modified the runner or this YAML would otherwise run
+  # attacker-controlled code with the prod service-role key in env (same-repo PRs
+  # DO receive Actions secrets) and could exfiltrate it. Runner/workflow changes are
+  # validated on manual dispatch + the nightly run instead; the report-pipeline PRs
+  # below still smoke-test with the trusted, committed runner.
   pull_request:
     paths:
       - "supabase/functions/generate-report/**"
       - "supabase/functions/_shared/**"
       - "supabase/migrations/*report_template*"
-      - "eval/**"
-      - ".github/workflows/golden-eval.yml"
+  # Nightly full run (~02:00 AEST). The eval user is rate-limit-exempt via
+  # EVAL_BYPASS_USER_ID so the whole set completes in one pass.
+  schedule:
+    - cron: "0 16 * * *"
 
 concurrency:
   group: golden-eval-${{ github.ref }}
@@ -35,7 +47,9 @@ concurrency:
 jobs:
   golden-eval:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # Full set runs sequentially at up to ~12 min/golden; 150 holds ~10-12 goldens.
+    # Beyond that, shard eval users / parallelise rather than only raising this.
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
@@ -55,14 +69,21 @@ jobs:
           # above in scope that is a GitHub Actions script-injection / secret-
           # exfiltration vector.
           GOLDENS_INPUT: ${{ github.event.inputs.goldens }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           ARGS=""
-          if [ -n "$GOLDENS_INPUT" ]; then
+          INPUT="$GOLDENS_INPUT"
+          # On PRs (no explicit dispatch input) run a cheap 2-golden smoke subset;
+          # manual dispatch without an input and the nightly schedule run the full set.
+          if [ "$EVENT_NAME" = "pull_request" ] && [ -z "$INPUT" ]; then
+            INPUT="floats-au-startup,infact-uk-fintech"
+          fi
+          if [ -n "$INPUT" ]; then
             # Defence in depth: reject anything outside the golden-id charset.
-            case "$GOLDENS_INPUT" in
+            case "$INPUT" in
               *[!a-zA-Z0-9,_-]*) echo "Invalid goldens input" >&2; exit 1 ;;
             esac
-            ARGS="--goldens=$GOLDENS_INPUT"
+            ARGS="--goldens=$INPUT"
           fi
           # --no-lock: the root deno.lock pins esm.sh hashes for other tooling
           # and drifts as esm.sh re-resolves unpinned deps — the runner is not

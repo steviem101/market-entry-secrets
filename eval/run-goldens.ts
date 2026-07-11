@@ -9,8 +9,15 @@
 // Usage:
 //   deno run --allow-net --allow-env --allow-read --allow-write eval/run-goldens.ts [--update-baseline] [--goldens id1,id2]
 //
+// The runner SELF-CLEANS: each golden's intake (and, by FK cascade, its report)
+// is deleted after judging, so a run leaves zero residue in the target env. That
+// makes pointing at prod acceptable — it's the only env with real directory data
+// to match against — with one caveat: EVAL_SERVICE_ROLE_KEY would then be the prod
+// service-role key living in CI (see eval/README.md). Set EVAL_KEEP_ROWS=1 to keep
+// rows when debugging.
+//
 // Required env (see eval/README.md):
-//   EVAL_SUPABASE_URL        target project URL (use a PREVIEW/staging env, never prod)
+//   EVAL_SUPABASE_URL        target project URL (prod is fine — the runner cleans up after itself)
 //   EVAL_SUPABASE_ANON_KEY   anon key of the target env
 //   EVAL_SERVICE_ROLE_KEY    service-role key of the target env (report_json read + eval_runs write)
 //   EVAL_USER_EMAIL/PASSWORD dedicated eval user in the target env (owns the intakes)
@@ -43,12 +50,17 @@ const JUDGE_TIMEOUT_MS = 120_000;
 const JUDGE_MODEL = Deno.env.get("EVAL_JUDGE_MODEL") || "claude-sonnet-4-6";
 
 function requiredEnv(name: string): string | null {
-  const v = Deno.env.get(name);
-  return v && v.trim() ? v : null;
+  // Trim: GitHub Actions secrets frequently keep a trailing newline from a
+  // copy-paste, and a stray "\n"/space on the URL or a key breaks the request
+  // path ("Invalid path specified in request URL" on sign-in) or the apikey.
+  const v = Deno.env.get(name)?.trim();
+  return v ? v : null;
 }
 
 const env = {
-  url: requiredEnv("EVAL_SUPABASE_URL"),
+  // Also strip a trailing slash so a URL saved as ".../supabase.co/" doesn't
+  // produce a double-slash auth path that Supabase rejects.
+  url: requiredEnv("EVAL_SUPABASE_URL")?.replace(/\/+$/, "") ?? null,
   anonKey: requiredEnv("EVAL_SUPABASE_ANON_KEY"),
   serviceKey: requiredEnv("EVAL_SERVICE_ROLE_KEY"),
   email: requiredEnv("EVAL_USER_EMAIL"),
@@ -185,6 +197,14 @@ async function main() {
   const allRegressions: Regression[] = [];
   const newBaseline: BaselineFile = { rubric_version: RUBRIC_VERSION, judge_model: JUDGE_MODEL, goldens: { ...(baseline?.goldens ?? {}) } };
   let judgeFailures = 0;
+  // Rate-limited goldens are a SKIP, not a failure: generate-report caps a user at
+  // 5 reports/60min, so a burst (or a run before EVAL_BYPASS_USER_ID is live in the
+  // target env) must not red-fail the gate — it just means reduced coverage this run.
+  let rateLimited = 0;
+  // Goldens actually generated AND judged. If this stays 0 (everything skipped)
+  // the gate evaluated NOTHING — it must not report "passed", or a green run with
+  // zero coverage would let a real regression merge undetected.
+  let judged = 0;
 
   for (const golden of goldens) {
     console.log(`\n── ${golden.golden_id} ──`);
@@ -201,92 +221,137 @@ async function main() {
       continue;
     }
 
-    // 2. Kick off generation.
-    const genResp = await fetch(`${env.url}/functions/v1/generate-report`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${auth.session.access_token}`,
-      },
-      body: JSON.stringify({ intake_form_id: intakeRow.id }),
-    });
-    const genJson = await genResp.json().catch(() => ({}));
-    if (!genResp.ok || !genJson.report_id) {
-      console.error(`  generate-report failed: ${genResp.status} ${JSON.stringify(genJson)}`);
-      judgeFailures++;
-      continue;
-    }
-    const reportId = genJson.report_id as string;
-    console.log(`  report ${reportId} processing…`);
+    // Everything after the intake exists runs inside try/finally so the cleanup
+    // ALWAYS fires (success, early-continue, or throw) — the eval leaves ZERO
+    // residue in the target env, which is what makes pointing EVAL_* at prod safe.
+    // Deleting the intake CASCADEs to its user_reports row (FK ON DELETE CASCADE);
+    // the eval_runs telemetry row survives because its report_id FK is ON DELETE
+    // SET NULL. `report.completed`/`report.quality`/`report.requested` rows in
+    // activity_events have NO FK, so the cascade misses them — the finally deletes
+    // them explicitly. Set EVAL_KEEP_ROWS=1 to retain rows when debugging.
+    // `reportId` and `reportStillProcessing` are hoisted so the finally can see them.
+    let reportId: string | null = null;
+    let reportStillProcessing = false;
+    try {
+      // 2. Kick off generation.
+      const genResp = await fetch(`${env.url}/functions/v1/generate-report`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.session.access_token}`,
+        },
+        body: JSON.stringify({ intake_form_id: intakeRow.id }),
+      });
+      const genJson = await genResp.json().catch(() => ({}));
+      if (genResp.status === 429) {
+        // Rate limited — skip, don't fail. (No report row was created; the finally
+        // still cleans up the intake + its report.requested activity event.)
+        console.warn(`  SKIP: rate-limited (429) — ${JSON.stringify(genJson)}`);
+        rateLimited++;
+        continue;
+      }
+      if (!genResp.ok || !genJson.report_id) {
+        console.error(`  generate-report failed: ${genResp.status} ${JSON.stringify(genJson)}`);
+        judgeFailures++;
+        continue;
+      }
+      reportId = genJson.report_id as string;
+      console.log(`  report ${reportId} processing…`);
 
-    // 3. Poll to completion.
-    const deadline = Date.now() + POLL_TIMEOUT_MS;
-    let status = "processing";
-    while (Date.now() < deadline) {
-      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
-      const { data } = await service.from("user_reports").select("status").eq("id", reportId).single();
-      status = data?.status ?? status;
-      if (status === "completed" || status === "failed") break;
-    }
-    if (status !== "completed") {
-      console.error(`  report did not complete (status=${status})`);
-      judgeFailures++;
-      continue;
-    }
+      // 3. Poll to completion.
+      const deadline = Date.now() + POLL_TIMEOUT_MS;
+      let status = "processing";
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+        const { data } = await service.from("user_reports").select("status").eq("id", reportId).single();
+        status = data?.status ?? status;
+        if (status === "completed" || status === "failed") break;
+      }
+      if (status !== "completed") {
+        console.error(`  report did not complete (status=${status})`);
+        // If it's still "processing", the background worker is STILL generating it
+        // — deleting the intake now would cascade-delete the report out from under
+        // it (wasted spend, orphaned writes). Leave it for the stuck-report reaper.
+        if (status === "processing") reportStillProcessing = true;
+        judgeFailures++;
+        continue;
+      }
 
-    // 4. Read the full report (service role — evaluates ALL sections regardless of tier).
-    const { data: reportRow } = await service
-      .from("user_reports")
-      .select("report_json")
-      .eq("id", reportId)
-      .single();
-    const reportJson = reportRow?.report_json as Record<string, any> | undefined;
-    const sectionsObj = (reportJson?.sections ?? {}) as Record<string, { content?: string }>;
-    const sectionList = Object.entries(sectionsObj)
-      .filter(([, v]) => (v?.content || "").trim())
-      .map(([name, v]) => ({ name, content: String(v.content) }));
-    if (sectionList.length === 0) {
-      console.error("  completed report has no section content");
-      judgeFailures++;
-      continue;
-    }
-    const verification = reportJson?.metadata?.verification ?? null;
-    if (verification) {
-      console.log(`  verifier: ${JSON.stringify(verification.totals ?? {})}`);
-    }
+      // 4. Read the full report (service role — evaluates ALL sections regardless of tier).
+      const { data: reportRow } = await service
+        .from("user_reports")
+        .select("report_json")
+        .eq("id", reportId)
+        .single();
+      const reportJson = reportRow?.report_json as Record<string, any> | undefined;
+      const sectionsObj = (reportJson?.sections ?? {}) as Record<string, { content?: string }>;
+      const sectionList = Object.entries(sectionsObj)
+        .filter(([, v]) => (v?.content || "").trim())
+        .map(([name, v]) => ({ name, content: String(v.content) }));
+      if (sectionList.length === 0) {
+        console.error("  completed report has no section content");
+        judgeFailures++;
+        continue;
+      }
+      const verification = reportJson?.metadata?.verification ?? null;
+      if (verification) {
+        console.log(`  verifier: ${JSON.stringify(verification.totals ?? {})}`);
+      }
 
-    // 5. Judge (one retry on parse failure).
-    let scores: Record<string, SectionScores> | null = null;
-    for (let attempt = 1; attempt <= 2 && !scores; attempt++) {
-      const raw = await callJudge(buildJudgePrompt(golden, sectionList));
-      scores = raw ? parseJudgeResponse(raw, sectionList.map((s) => s.name)) : null;
-      if (!scores) console.warn(`  judge attempt ${attempt} failed validation`);
+      // 5. Judge (one retry on parse failure).
+      let scores: Record<string, SectionScores> | null = null;
+      for (let attempt = 1; attempt <= 2 && !scores; attempt++) {
+        const raw = await callJudge(buildJudgePrompt(golden, sectionList));
+        scores = raw ? parseJudgeResponse(raw, sectionList.map((s) => s.name)) : null;
+        if (!scores) console.warn(`  judge attempt ${attempt} failed validation`);
+      }
+      if (!scores) {
+        judgeFailures++;
+        continue;
+      }
+
+      const summary = summarizeScores(scores);
+      console.log(`  overall ${summary.overall} — ${JSON.stringify(summary.per_section)}`);
+
+      // 6. Persist telemetry (best-effort). report_id is retained here but the
+      // report row itself is deleted in the finally — the FK nulls it, the scores
+      // and verification totals live on in eval_runs.
+      const { error: evalErr } = await service.from("eval_runs").insert({
+        run_label: runLabel,
+        golden_id: golden.golden_id,
+        report_id: reportId,
+        judge_model: JUDGE_MODEL,
+        rubric_version: RUBRIC_VERSION,
+        sections: scores,
+        overall: summary.overall,
+        verification,
+        baseline: updateBaseline,
+      });
+      if (evalErr) console.error("  eval_runs insert failed (continuing):", evalErr.message);
+
+      // 7. Gate vs baseline / collect new baseline.
+      allRegressions.push(...compareToBaseline(golden.golden_id, scores, baseline));
+      newBaseline.goldens[golden.golden_id] = scores;
+      judged++;
+    } finally {
+      // Self-cleanup: remove the intake (cascade → its report/claims/artifacts) and
+      // the activity_events it emitted (no FK, so the cascade misses them). Skipped
+      // when the report is still generating — deleting it mid-flight is the F1 bug.
+      // Best-effort — a failed delete is logged, never fatal, never masks the result.
+      if (reportStillProcessing) {
+        console.warn("  left rows in place (report still processing at timeout) — the reaper will reap it");
+      } else if (Deno.env.get("EVAL_KEEP_ROWS") !== "1") {
+        const { error: delErr } = await service.from("user_intake_forms").delete().eq("id", intakeRow.id);
+        if (delErr) console.error(`  cleanup: intake delete failed (leaves residue): ${delErr.message}`);
+        // object_id is the report uuid (report.completed/report.quality) or the
+        // intake uuid (report.requested) — both unique, so this only touches this
+        // golden's events.
+        const objectIds = [intakeRow.id, reportId].filter(Boolean) as string[];
+        const { error: aeErr } = await service.from("activity_events").delete().in("object_id", objectIds);
+        if (aeErr) console.error(`  cleanup: activity_events delete failed: ${aeErr.message}`);
+        if (!delErr && !aeErr) console.log("  cleaned up eval intake + report + activity events");
+      }
     }
-    if (!scores) {
-      judgeFailures++;
-      continue;
-    }
-
-    const summary = summarizeScores(scores);
-    console.log(`  overall ${summary.overall} — ${JSON.stringify(summary.per_section)}`);
-
-    // 6. Persist telemetry (best-effort).
-    const { error: evalErr } = await service.from("eval_runs").insert({
-      run_label: runLabel,
-      golden_id: golden.golden_id,
-      report_id: reportId,
-      judge_model: JUDGE_MODEL,
-      rubric_version: RUBRIC_VERSION,
-      sections: scores,
-      overall: summary.overall,
-      verification,
-      baseline: updateBaseline,
-    });
-    if (evalErr) console.error("  eval_runs insert failed (continuing):", evalErr.message);
-
-    // 7. Gate vs baseline / collect new baseline.
-    allRegressions.push(...compareToBaseline(golden.golden_id, scores, baseline));
-    newBaseline.goldens[golden.golden_id] = scores;
   }
 
   if (updateBaseline) {
@@ -295,6 +360,9 @@ async function main() {
   }
 
   console.log("\n── Result ──");
+  if (rateLimited > 0) {
+    console.warn(`${rateLimited} golden(s) skipped (rate-limited) — not counted as failures.`);
+  }
   if (judgeFailures > 0) {
     console.error(`${judgeFailures} golden(s) failed to generate or judge.`);
   }
@@ -305,7 +373,14 @@ async function main() {
     }
   }
   if (allRegressions.length > 0 || judgeFailures > 0) Deno.exit(1);
-  console.log("Golden eval passed.");
+  // Zero goldens judged (every one skipped/rate-limited) means the gate evaluated
+  // nothing — don't claim "passed". Still exit 0 so a transient rate-limit burst
+  // doesn't red-block merges, but say plainly that coverage was zero.
+  if (judged === 0) {
+    console.warn("Golden eval INCONCLUSIVE — 0 golden(s) judged (all skipped). Gate evaluated nothing.");
+  } else {
+    console.log(`Golden eval passed (${judged} golden(s) judged, ${rateLimited} skipped).`);
+  }
 }
 
 await main();
