@@ -149,6 +149,28 @@ startup law firms (Allied Legal, Biztech, Sprintlaw, UX Law, Lawpath, Arnotts,
 Spruson & Ferguson…), R&D/accounting advisors (Swanson Reed, BlueRock), and
 mentoring networks — they serve founders across all sectors.
 
+## Reviewer sign-off applied (2026-07-10, REVIEW-QUEUE.csv)
+
+- **9 dropped** (added to `proposed-skips.csv`, total skips now 18): Sova
+  (self-referential), Australian Startup VC Directory, the four government
+  grants-finders (VIC/NSW/QLD/TAS), NSW Innovation Ecosystem Navigator,
+  Pitchberry, RSL DefenceCare.
+- **5 media/news orgs ring-fenced** to `ring-fenced-media.csv` for a **separate
+  future build** — a "Media" database in the MES Resources area (MES-148, see
+  below). Held OUT of this Sova import: Equity Mates Media, Foundr, Overnight
+  Success, Startup Daily, Startup News.
+- **Luna Legal → imported** (reviewer: "add, not duplicate" — distinct from
+  LUNA Startup Studio).
+- Service tags refined: Appomate/EverestEngineering → Software Development,
+  Spruson & Ferguson → IP & Legal.
+
+**Only open decision left:** approve the new `innovation_ecosystem.type` value
+**"Community"** (22 rows still `review`). Everything else is `import`.
+
+Final import set (excl. the 22 pending Community): investors 44,
+innovation_ecosystem 29, service_providers 18, trade_investment_agencies 15,
+events 6 = **112 rows**; **134** if Community is approved. Skips 18, media 5.
+
 ## Decisions needed from the reviewer
 
 1. **NEW `innovation_ecosystem.type` value "Community"** — 22 rows introduce

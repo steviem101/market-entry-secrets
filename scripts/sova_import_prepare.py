@@ -135,10 +135,30 @@ URL_OVERRIDES = {
     "D10x Accelerator": "https://dtb.solutions/",
 }
 
-# Rows to force to needs-review with a note (not skipped, but not auto-import).
-REVIEW_FLAGS = {
-    "Luna Legal": "likely duplicate of existing MES 'LUNA Startup Studio' (weareluna.co) — verify before import",
+# Reviewer decisions (2026-07-10, REVIEW-QUEUE.csv sign-off).
+# Dropped outright — not a fit for any MES directory.
+REVIEWER_DROPS = {
+    "Sova": "reviewer: the Sova directory itself (self-referential)",
+    "Australian Startup VC Directory": "reviewer: drop (a directory/tool, not a provider)",
+    "Business Victoria Grants Finder": "reviewer: drop (government grants-finder tool)",
+    "NSW Grants and Funding Finder": "reviewer: drop (government grants-finder tool)",
+    "NSW Innovation Ecosystem Navigator": "reviewer: drop (government directory tool)",
+    "Queensland Government Grants Finder": "reviewer: drop (government grants-finder tool)",
+    "Service Tasmania Business Grants Finder": "reviewer: drop (government grants-finder tool)",
+    "Pitchberry": "reviewer: drop (tool)",
+    "RSL DefenceCare": "reviewer: drop (veteran welfare charity, not a startup service)",
 }
+
+# Ring-fenced for a SEPARATE future build: a "Media" database in the MES
+# Resources area (startup media / news / publishers). Held out of the Sova
+# import; written to ring-fenced-media.csv for the follow-up ticket (MES-148).
+MEDIA_RINGFENCE = {
+    "Equity Mates Media", "Foundr", "Overnight Success", "Startup Daily", "Startup News",
+}
+
+# Rows to force to needs-review with a note (not skipped, but not auto-import).
+# (Luna Legal cleared by reviewer: "add, not duplicate" — imports normally.)
+REVIEW_FLAGS = {}
 # Recurring festivals/conferences -> events table (per review, 2026-07-10).
 # type/category use existing events vocabulary; city/typical_month only where
 # the Sova description states them (grounding rule — nothing invented).
@@ -320,12 +340,15 @@ def main() -> None:
     reclassified = {"AgriFutures Funding"}
 
     proposals: dict[str, list[dict]] = {t: [] for t in taken_slugs}
-    skips = []
+    skips, media = [], []
     for row in missing:
         if row["Name"] in reclassified:
             continue
         if row["Name"] in SKIP_OVERRIDES:
             skips.append({**row, "skip_reason": SKIP_OVERRIDES[row["Name"]]})
+            continue
+        if row["Name"] in REVIEWER_DROPS:
+            skips.append({**row, "skip_reason": REVIEWER_DROPS[row["Name"]]})
             continue
         if row["Name"] in ROUTE_OVERRIDES:
             table, conf, flags = ROUTE_OVERRIDES[row["Name"]]
@@ -432,30 +455,32 @@ def main() -> None:
             prop["proposed_status"] = "needs_review"
         elif table == "service_providers":
             text = f"{row['Name']} {row['Description']}".lower()
-            if re.search(r"\blegal\b|\blaw(yers?| firm)?\b|solicitor", text):
+            if re.search(r"\bpatent|trademark|intellectual property|\bip \b|\bip strateg", text):
+                services = ["IP & Legal"]
+            elif re.search(r"\blegal\b|\blaw(yers?| firm)?\b|solicitor", text):
                 services = ["Legal Services"]
+            elif re.search(r"app develop|mobile app|software (develop|engineer|consult)|ui/ux|mvp build", text):
+                services = ["Software Development"]
             elif re.search(r"account|tax|r&d|grant consult", text):
                 services = ["Accounting & Tax"]
-            elif re.search(r"media|news|podcast|magazine|publication", text):
-                services, _ = ["Media & Content"], flags.append("startup media outlet — review directory fit")
             elif re.search(r"mentor|coach", text):
                 services = ["Mentoring & Advisory"]
             else:
                 services = ["Advisory"]
-                flags.append("generic 'Advisory' services tag — refine in review")
             prop["proposed_services"] = "; ".join(services)
             prop["proposed_founded"] = ""
             prop["proposed_employees"] = ""
 
         if row["Name"] in REVIEW_FLAGS:
             flags.append(REVIEW_FLAGS[row["Name"]])
-        if conf == "low":
-            action = "review"
-        elif any("review" in f or "NEW" in f or "decision" in f or "duplicate" in f for f in flags):
+        # Human review is complete (REVIEW-QUEUE sign-off). The only remaining
+        # open decision is approving the NEW innovation_ecosystem "Community"
+        # type value — those rows stay 'review' until the reviewer confirms.
+        if any("introduces NEW innovation_ecosystem type" in f for f in flags):
             action = "review"
         else:
             action = "import"
-        proposals[table].append({
+        record = {
             **{c: row.get(c, "") for c in ("Name", "Category", "Type", "State", "Amount",
                                            "Timing / Deadline", "Status", "Industries",
                                            "Founder tags", "Description", "Source URL",
@@ -465,7 +490,11 @@ def main() -> None:
             "validation_flags": " | ".join(flags),
             "proposed_action": action,
             "source": SOURCE_TAG,
-        })
+        }
+        if row["Name"] in MEDIA_RINGFENCE:
+            media.append(record)  # held for the separate Media build (MES-148)
+        else:
+            proposals[table].append(record)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     if skips:
@@ -473,7 +502,13 @@ def main() -> None:
             writer = csv.DictWriter(fh, fieldnames=list(skips[0].keys()), extrasaction="ignore")
             writer.writeheader()
             writer.writerows(skips)
-    summary = {"skips": len(skips)}
+    if media:
+        media.sort(key=lambda r: r["Name"])
+        with (OUT_DIR / "ring-fenced-media.csv").open("w", newline="") as fh:
+            writer = csv.DictWriter(fh, fieldnames=list(media[0].keys()), extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(media)
+    summary = {"skips": len(skips), "ring_fenced_media": len(media)}
     for table, rows in proposals.items():
         if not rows:
             continue
