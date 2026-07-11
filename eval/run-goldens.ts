@@ -197,6 +197,10 @@ async function main() {
   const allRegressions: Regression[] = [];
   const newBaseline: BaselineFile = { rubric_version: RUBRIC_VERSION, judge_model: JUDGE_MODEL, goldens: { ...(baseline?.goldens ?? {}) } };
   let judgeFailures = 0;
+  // Rate-limited goldens are a SKIP, not a failure: generate-report caps a user at
+  // 5 reports/60min, so a burst (or a run before EVAL_BYPASS_USER_ID is live in the
+  // target env) must not red-fail the gate — it just means reduced coverage this run.
+  let rateLimited = 0;
 
   for (const golden of goldens) {
     console.log(`\n── ${golden.golden_id} ──`);
@@ -231,6 +235,12 @@ async function main() {
         body: JSON.stringify({ intake_form_id: intakeRow.id }),
       });
       const genJson = await genResp.json().catch(() => ({}));
+      if (genResp.status === 429) {
+        // Rate limited — skip, don't fail. (The finally still cleans up the intake.)
+        console.warn(`  SKIP: rate-limited (429) — ${JSON.stringify(genJson)}`);
+        rateLimited++;
+        continue;
+      }
       if (!genResp.ok || !genJson.report_id) {
         console.error(`  generate-report failed: ${genResp.status} ${JSON.stringify(genJson)}`);
         judgeFailures++;
@@ -327,6 +337,9 @@ async function main() {
   }
 
   console.log("\n── Result ──");
+  if (rateLimited > 0) {
+    console.warn(`${rateLimited} golden(s) skipped (rate-limited) — not counted as failures.`);
+  }
   if (judgeFailures > 0) {
     console.error(`${judgeFailures} golden(s) failed to generate or judge.`);
   }
