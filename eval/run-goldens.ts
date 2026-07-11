@@ -50,12 +50,17 @@ const JUDGE_TIMEOUT_MS = 120_000;
 const JUDGE_MODEL = Deno.env.get("EVAL_JUDGE_MODEL") || "claude-sonnet-4-6";
 
 function requiredEnv(name: string): string | null {
-  const v = Deno.env.get(name);
-  return v && v.trim() ? v : null;
+  // Trim: GitHub Actions secrets frequently keep a trailing newline from a
+  // copy-paste, and a stray "\n"/space on the URL or a key breaks the request
+  // path ("Invalid path specified in request URL" on sign-in) or the apikey.
+  const v = Deno.env.get(name)?.trim();
+  return v ? v : null;
 }
 
 const env = {
-  url: requiredEnv("EVAL_SUPABASE_URL"),
+  // Also strip a trailing slash so a URL saved as ".../supabase.co/" doesn't
+  // produce a double-slash auth path that Supabase rejects.
+  url: requiredEnv("EVAL_SUPABASE_URL")?.replace(/\/+$/, "") ?? null,
   anonKey: requiredEnv("EVAL_SUPABASE_ANON_KEY"),
   serviceKey: requiredEnv("EVAL_SERVICE_ROLE_KEY"),
   email: requiredEnv("EVAL_USER_EMAIL"),
