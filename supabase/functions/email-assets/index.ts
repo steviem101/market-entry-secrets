@@ -14,9 +14,11 @@ export {}; // mark as an ES module (it uses only a dynamic import otherwise)
 const SOURCE_URL = "https://marketentrysecrets.com/favicon.png";
 const TARGET_WIDTH = 440; // displays at ~220px (2x for retina)
 
-let cached: Uint8Array | null = null;
+// Explicitly ArrayBuffer-backed: TS 5.7+ types Response's BodyInit over
+// ArrayBuffer, rejecting the default Uint8Array<ArrayBufferLike>.
+let cached: Uint8Array<ArrayBuffer> | null = null;
 
-async function getLogoBytes(): Promise<Uint8Array> {
+async function getLogoBytes(): Promise<Uint8Array<ArrayBuffer>> {
   if (cached) return cached;
   const res = await fetch(SOURCE_URL);
   if (!res.ok) throw new Error(`source fetch failed: ${res.status}`);
@@ -33,7 +35,9 @@ async function getLogoBytes(): Promise<Uint8Array> {
     const flattened = new Image(img.width, img.height);
     flattened.fill(0xffffffff);
     flattened.composite(img, 0, 0);
-    cached = await flattened.encode(9); // PNG, max compression
+    // Copy: imagescript's encode() is typed over ArrayBufferLike; the fresh
+    // Uint8Array is ArrayBuffer-backed (and it's a one-off per warm instance).
+    cached = new Uint8Array(await flattened.encode(9)); // PNG, max compression
   } catch (_err) {
     cached = original; // full-res fallback; still the correct logo
   }
