@@ -27,6 +27,13 @@ def q(v: str) -> str:
     return "'" + str(v).replace("'", "''") + "'"
 
 
+def qs(v: str) -> str:
+    """Quote a SQL string literal, emitting '' (not NULL) for empty — for
+    NOT NULL text columns whose 'unknown' convention is an empty string
+    (founded/employees on ecosystem/provider/agency tables)."""
+    return "'" + str(v or "").replace("'", "''") + "'"
+
+
 def arr(items) -> str:
     """Postgres text[] literal from a '; '-joined string or list."""
     if isinstance(items, str):
@@ -94,7 +101,7 @@ def main() -> None:
                "type", "sectors", "sector_tags", "sector_agnostic"]
     out.append(block("innovation_ecosystem", ie_cols, lambda r: ", ".join([
         q(r["proposed_name"]), q(r["proposed_description"]), q(r["proposed_location"]),
-        q(r.get("proposed_founded", "")), q(r.get("proposed_employees", "")),
+        qs(r.get("proposed_founded", "")), qs(r.get("proposed_employees", "")),
         q(r["proposed_website"]), q(r["proposed_slug"]),
         arr(r.get("proposed_type", "")), arr(r.get("proposed_sectors", "")),
         arr(r["proposed_sector_tags"]), bool_lit(r),
@@ -106,7 +113,7 @@ def main() -> None:
                "website", "slug", "sector_tags", "sector_agnostic"]
     out.append(block("service_providers", sp_cols, lambda r: ", ".join([
         q(r["proposed_name"]), q(r["proposed_description"]), q(r["proposed_location"]),
-        q(r.get("proposed_founded", "")), q(r.get("proposed_employees", "")),
+        qs(r.get("proposed_founded", "")), qs(r.get("proposed_employees", "")),
         arr(r.get("proposed_services", "Advisory")), q(r["proposed_website"]),
         q(r["proposed_slug"]), arr(r["proposed_sector_tags"]), bool_lit(r),
     ]), sp))
@@ -118,7 +125,7 @@ def main() -> None:
                 "is_government_funded", "sector_tags", "sector_agnostic"]
     out.append(block("trade_investment_agencies", tia_cols, lambda r: ", ".join([
         q(r["proposed_name"]), q(r["proposed_description"]), q(r["proposed_location"]),
-        q(r.get("proposed_founded", "")), q(r.get("proposed_employees", "")),
+        qs(r.get("proposed_founded", "")), qs(r.get("proposed_employees", "")),
         arr("Government & Industry Support"), q(r["proposed_website"]), q(r["proposed_website"]),
         q(r["proposed_slug"]), q(r.get("proposed_organisation_type", "")),
         q(r.get("proposed_government_level", "")),
