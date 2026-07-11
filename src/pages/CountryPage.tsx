@@ -1,20 +1,7 @@
 import { useParams } from "react-router-dom";
-import { useCountryBySlug } from "@/hooks/useCountries";
-import { useCountryPageContent } from "@/hooks/useCountryPageContent";
-import { useCountryTradeMetrics } from "@/hooks/useCountryTradeMetrics";
-import { useCountryCaseStudies } from "@/hooks/useCountryCaseStudies";
-import { useCountryPlaybook } from "@/hooks/useCountryPlaybook";
-import { useCountryFunding } from "@/hooks/useCountryFunding";
-import { useCountryFAQs } from "@/hooks/useCountryFAQs";
-import { useCountryAgencies } from "@/hooks/useCountryAgencies";
-import { useCountryInvestors } from "@/hooks/useCountryInvestors";
-import { useCountryCities } from "@/hooks/useCountryCities";
-import { useCountryServiceProviders } from "@/hooks/useCountryServiceProviders";
-import { useCountryEvents } from "@/hooks/useCountryEvents";
-import { useCountryCommunityMembers } from "@/hooks/useCountryCommunityMembers";
+import { useCountryPage } from "@/hooks/useCountryPage";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
-import { FreemiumGate } from "@/components/FreemiumGate";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { CountryHero } from "@/components/countries/CountryHero";
 import { CountryStickyBar } from "@/components/countries/CountryStickyBar";
@@ -42,31 +29,17 @@ const SEO_OVERRIDES: Record<string, { title: string; description: (c: { name: st
   },
 };
 
+// Country pages are the top-of-funnel SEO surface: they render ungated for
+// anonymous visitors. Depth actions (mentor intros, lead lists, reports)
+// keep their own gating.
 const CountryPage = () => {
   const { countrySlug } = useParams<{ countrySlug: string }>();
   const slug = countrySlug || "";
-  const { data: country, isLoading, error } = useCountryBySlug(slug);
-
-  const countryId = country?.id;
-  const countryName = country?.name || "";
-
-  const { data: pageContent } = useCountryPageContent(countryId);
-  const { data: tradeMetrics = [] } = useCountryTradeMetrics(countryId);
-  const { data: caseStudies = [] } = useCountryCaseStudies(countryId);
-  const { data: playbook = [] } = useCountryPlaybook(countryId);
-  const { data: funding = { origin: [], destination: [] } } = useCountryFunding(countryId);
-  const { data: faqs = [] } = useCountryFAQs(countryId);
-
-  const { data: agencies = [] } = useCountryAgencies(countryName, country?.keywords);
-  const { data: investors = [] } = useCountryInvestors(countryName, country?.keywords);
-  const { data: cities = [] } = useCountryCities(pageContent?.featured_city_slugs);
-  const { data: serviceProviders = [] } = useCountryServiceProviders(slug, country?.service_keywords);
-  const { data: events = [] } = useCountryEvents(slug, country?.event_keywords);
-  const { data: mentors = [] } = useCountryCommunityMembers(slug, country?.name, country?.keywords);
+  const { data: bundle, isLoading, error } = useCountryPage(slug);
 
   if (isLoading) return <PageSkeleton />;
 
-  if (error || !country) {
+  if (error || !bundle?.country) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <NoIndex notFound />
@@ -77,6 +50,25 @@ const CountryPage = () => {
       </div>
     );
   }
+
+  const {
+    country,
+    page_content: pageContent,
+    trade_metrics: tradeMetrics,
+    case_studies: caseStudies,
+    playbook,
+    funding,
+    faqs,
+    mentors,
+    agencies,
+    service_providers: serviceProviders,
+    investors,
+    events,
+    cities,
+  } = bundle;
+
+  const fundingOrigin = funding.filter((f) => f.side === "origin");
+  const fundingDestination = funding.filter((f) => f.side === "destination");
 
   const countryCode = getCountryCode(slug);
   const baseUrl = publishedOrigin();
@@ -116,86 +108,80 @@ const CountryPage = () => {
         jsonLd={jsonLd}
       />
 
-      <FreemiumGate
-        contentType="countries"
-        itemId={country.id}
-        contentTitle={country.name}
-        contentDescription={`Resources for ${country.name} companies entering the Australian market`}
-      >
-        <CountryStickyBar
-          countryName={country.name}
-          countryCode={countryCode ?? ""}
-          primaryCtaHref={`/report-creator?source=country-${country.slug}`}
+      <CountryStickyBar
+        countryName={country.name}
+        countryCode={countryCode ?? ""}
+        primaryCtaHref={`/report-creator?source=country-${country.slug}`}
+      />
+
+      <main className="pt-4">
+        <EntityBreadcrumb
+          segments={[
+            { label: "Countries", href: "/countries" },
+            { label: country.name },
+          ]}
         />
 
-        <main className="pt-4">
-          <EntityBreadcrumb
-            segments={[
-              { label: "Countries", href: "/countries" },
-              { label: country.name },
-            ]}
-          />
+        <CountryHero
+          countryName={country.name}
+          countryCode={countryCode ?? ""}
+          countrySlug={country.slug}
+          content={pageContent}
+          fallbackHeadline={country.hero_title}
+          fallbackSubhead={country.hero_description}
+        />
 
-          <CountryHero
-            countryName={country.name}
-            countryCode={countryCode ?? ""}
-            countrySlug={country.slug}
-            content={pageContent}
-            fallbackHeadline={country.hero_title}
-            fallbackSubhead={country.hero_description}
-          />
+        <CountryTradeSnapshot metrics={tradeMetrics} countryName={country.name} />
 
-          <CountryTradeSnapshot metrics={tradeMetrics} countryName={country.name} />
+        <CountryWhyItWorks
+          countryName={country.name}
+          bullets={pageContent?.narrative_bullets || []}
+          differentiators={pageContent?.differentiators || []}
+          pullQuote={pageContent?.pull_quote}
+          pullQuoteAttr={pageContent?.pull_quote_attr}
+        />
 
-          <CountryWhyItWorks
-            countryName={country.name}
-            bullets={pageContent?.narrative_bullets || []}
-            differentiators={pageContent?.differentiators || []}
-            pullQuote={pageContent?.pull_quote}
-            pullQuoteAttr={pageContent?.pull_quote_attr}
-          />
+        <CountryCaseStudies countryName={country.name} caseStudies={caseStudies} />
 
-          <CountryCaseStudies countryName={country.name} caseStudies={caseStudies} />
+        <CountryEcosystemTabs
+          countryName={country.name}
+          countrySlug={country.slug}
+          agencies={agencies}
+          mentors={mentors}
+          services={serviceProviders}
+          investors={investors}
+        />
 
-          <CountryEcosystemTabs
-            countryName={country.name}
-            agencies={agencies}
-            mentors={mentors}
-            services={serviceProviders}
-            investors={investors}
-          />
+        <CountryPlaybook
+          countryName={country.name}
+          countrySlug={country.slug}
+          stages={playbook}
+        />
 
-          <CountryPlaybook
-            countryName={country.name}
-            countrySlug={country.slug}
-            stages={playbook}
-          />
+        <CountryFundingPathways
+          countryName={country.name}
+          countrySlug={country.slug}
+          countryCode={countryCode ?? ""}
+          origin={fundingOrigin}
+          destination={fundingDestination}
+        />
 
-          <CountryFundingPathways
-            countryName={country.name}
-            countrySlug={country.slug}
-            countryCode={countryCode ?? ""}
-            origin={funding.origin}
-            destination={funding.destination}
-          />
+        <CountryEvents countryName={country.name} events={events} />
 
-          <CountryEvents countryName={country.name} events={events} />
+        <CountryCities cities={cities} />
 
-          <CountryCities cities={cities} />
+        <CountryFAQ
+          countryName={country.name}
+          countrySlug={country.slug}
+          faqs={faqs}
+        />
 
-          <CountryFAQ
-            countryName={country.name}
-            countrySlug={country.slug}
-            faqs={faqs}
-          />
-
-          <CountryLeadCapture
-            countryName={country.name}
-            countrySlug={country.slug}
-            trustCompanies={pageContent?.hero_trust_companies}
-          />
-        </main>
-      </FreemiumGate>
+        <CountryLeadCapture
+          countryName={country.name}
+          countrySlug={country.slug}
+          trustCompanies={pageContent?.hero_trust_companies}
+        />
+      </main>
     </>
   );
 };

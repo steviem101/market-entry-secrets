@@ -13,6 +13,7 @@ interface InvestorCardProps {
     stage_focus?: string[] | null;
     check_size_min?: number | null;
     check_size_max?: number | null;
+    blurb?: string | null;
   };
 }
 
@@ -48,10 +49,16 @@ export const InvestorCard = ({ investor }: InvestorCardProps) => {
       {cheque && (
         <div className="mt-1 text-[13px] text-mes-ink-soft tabular-nums">Cheque {cheque}</div>
       )}
-      {investor.description && (
-        <p className="mt-3 text-[14px] leading-relaxed text-mes-ink-soft line-clamp-3">
-          {investor.description}
+      {investor.blurb ? (
+        <p className="mt-3 text-[13.5px] leading-relaxed text-mes-ink-soft border-l-2 border-mes-blue-light pl-3">
+          {investor.blurb}
         </p>
+      ) : (
+        investor.description && (
+          <p className="mt-3 text-[14px] leading-relaxed text-mes-ink-soft line-clamp-3">
+            {investor.description}
+          </p>
+        )
       )}
       <div className="mt-auto pt-4">
         <CardCTA

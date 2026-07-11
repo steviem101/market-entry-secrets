@@ -12,6 +12,7 @@ interface MentorCardProps {
     photo?: string | null;
     archetype?: string | null;
     sector?: string | null;
+    blurb?: string | null;
   };
 }
 
@@ -39,6 +40,11 @@ export const MentorCard = ({ mentor }: MentorCardProps) => {
         <div className="mt-3 inline-flex self-start px-2 py-0.5 rounded-full border border-mes-blue-light bg-mes-blue-light/40 text-mes-teal-dark text-[11px] font-medium uppercase tracking-wider">
           {mentor.sector}
         </div>
+      )}
+      {mentor.blurb && (
+        <p className="mt-3 text-[13.5px] leading-relaxed text-mes-ink-soft border-l-2 border-mes-blue-light pl-3">
+          {mentor.blurb}
+        </p>
       )}
       {mentor.specialties && mentor.specialties.length > 0 && (
         <ul className="mt-4 flex flex-wrap gap-1.5">

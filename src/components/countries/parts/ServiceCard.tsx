@@ -12,6 +12,7 @@ interface ServiceCardProps {
     logo?: string | null;
     slug?: string | null;
     type?: string | null;
+    blurb?: string | null;
   };
 }
 
@@ -27,8 +28,14 @@ export const ServiceCard = ({ provider }: ServiceCardProps) => {
           </span>
         )}
       </div>
-      {provider.description && (
-        <p className="mt-3 text-[14px] leading-relaxed text-mes-ink-soft">{provider.description}</p>
+      {provider.blurb ? (
+        <p className="mt-3 text-[13.5px] leading-relaxed text-mes-ink-soft border-l-2 border-mes-blue-light pl-3">
+          {provider.blurb}
+        </p>
+      ) : (
+        provider.description && (
+          <p className="mt-3 text-[14px] leading-relaxed text-mes-ink-soft">{provider.description}</p>
+        )
       )}
       <div className="mt-auto pt-4">
         <CardCTA

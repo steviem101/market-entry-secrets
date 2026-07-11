@@ -1,4 +1,7 @@
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { AgencyCard } from "./parts/AgencyCard";
 import { MentorCard } from "./parts/MentorCard";
 import { ServiceCard } from "./parts/ServiceCard";
@@ -6,16 +9,23 @@ import { InvestorCard } from "./parts/InvestorCard";
 
 interface CountryEcosystemTabsProps {
   countryName: string;
+  countrySlug: string;
   agencies: any[];
   mentors: any[];
   services: any[];
   investors: any[];
 }
 
-const EMPTY_HINT = "No matches yet. Try generating a report for personalised recommendations.";
+const EMPTY_COPY: Record<string, (country: string) => string> = {
+  agencies: (c) => `We're mapping the agencies that support ${c} companies entering Australia.`,
+  mentors: (c) => `We're vetting mentors who've made the ${c} to Australia move themselves.`,
+  services: (c) => `We're curating service providers with real ${c} entrant experience.`,
+  investors: (c) => `We're mapping investors who back ${c}-founded companies in ANZ.`,
+};
 
 export const CountryEcosystemTabs = ({
   countryName,
+  countrySlug,
   agencies,
   mentors,
   services,
@@ -63,14 +73,21 @@ export const CountryEcosystemTabs = ({
 
           {panels.map((p) => (
             <TabsContent key={p.value} value={p.value} className="mt-8">
-              {p.value === "mentors" && p.items.length === 0 && (
-                <div className="mb-6 border border-mes-warning/40 bg-mes-warning/10 rounded-lg p-4 text-[13.5px] text-mes-ink-soft">
-                  <span className="font-semibold text-mes-ink">Coming soon.</span> The {countryName} mentor
-                  network goes live in Q3 2026. Request an intro and we will route you to the closest fit today.
-                </div>
-              )}
               {p.items.length === 0 ? (
-                <p className="text-[14px] text-mes-ink-muted">{EMPTY_HINT}</p>
+                <div className="border border-mes-border bg-mes-bg rounded-xl p-6 max-w-2xl">
+                  <p className="text-[15px] font-semibold text-mes-ink">
+                    {EMPTY_COPY[p.value]?.(countryName)}
+                  </p>
+                  <p className="mt-2 text-[14px] leading-relaxed text-mes-ink-soft">
+                    Request an intro and we will route you to the closest fit today.
+                  </p>
+                  <Button asChild variant="link" className="mt-3 p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
+                    <Link to={`/contact?topic=country-intro&country=${countrySlug}&section=${p.value}`}>
+                      Request an intro
+                      <ArrowRight className="ml-1 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {p.value === "agencies" && p.items.map((a) => <AgencyCard key={a.id} agency={a} />)}
