@@ -1,5 +1,6 @@
 import { DirectoryCard } from "@/components/directory/DirectoryCard";
 import { CardCTA } from "@/components/directory/CardCTA";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface AgencyCardProps {
   agency: {
@@ -15,22 +16,16 @@ interface AgencyCardProps {
   };
 }
 
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
 export const AgencyCard = ({ agency }: AgencyCardProps) => {
   return (
     <DirectoryCard compact>
       <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-lg bg-mes-blue-light/40 border border-mes-blue-light text-mes-teal-dark flex items-center justify-center font-semibold tracking-wider text-[13px]">
-          {initials(agency.name)}
-        </div>
+        <CompanyLogo
+          existingLogoUrl={agency.logo}
+          companyName={agency.name}
+          className="bg-white border border-mes-border"
+          fallbackClassName="bg-mes-blue-light/40 text-mes-teal-dark font-semibold tracking-wider text-[13px]"
+        />
         <div className="min-w-0">
           <h3 className="text-[16px] font-semibold text-mes-ink leading-snug">{agency.name}</h3>
           {agency.role && (

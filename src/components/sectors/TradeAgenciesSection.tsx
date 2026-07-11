@@ -16,6 +16,7 @@ const TradeAgenciesSection = ({ tradeAgencies }: TradeAgenciesSectionProps) => {
   return (
     <ListingPageGate contentType="trade_investment_agencies">
       <SectorSection
+        kicker="Government support"
         title="Government & Industry Support"
         viewAllLink="/government-support"
         viewAllText="View All Organisations"

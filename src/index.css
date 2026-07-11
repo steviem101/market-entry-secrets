@@ -46,18 +46,25 @@
     --sidebar-border: 210 15% 90%;
     --sidebar-ring: 200 85% 55%;
 
-    /* MES brand tokens (country page) — aligned to the app palette: primary hue ~200, neutrals ~210/220 */
-    --mes-teal: 200 85% 55%;
+    /* MES brand tokens (editorial register: country/sector/location landing
+       pages). Where an app semantic token exists, mes-* is an ALIAS of it so
+       the two palettes can never drift; update the parent token instead of
+       redefining these. Only values with no semantic equivalent stay
+       standalone and get .dark overrides below. Caveat: --mes-ink doubles as
+       an inverted band background (trade snapshot, lead-capture tier 2);
+       if a user-facing dark theme ever ships, split that role into its own
+       surface token first. */
+    --mes-teal: var(--primary);
     --mes-teal-dark: 200 80% 45%;
     --mes-blue-light: 200 75% 88%;
-    --mes-ink: 220 25% 12%;
+    --mes-ink: var(--foreground);
     --mes-ink-soft: 220 13% 30%;
-    --mes-ink-muted: 220 10% 45%;
+    --mes-ink-muted: var(--muted-foreground);
     --mes-success: 159 79% 39%;
     --mes-warning: 38 92% 50%;
-    --mes-border: 210 15% 92%;
-    --mes-bg: 210 15% 96%;
-    --mes-card: 0 0% 100%;
+    --mes-border: var(--border);
+    --mes-bg: var(--muted);
+    --mes-card: var(--card);
 
     /* Report Creator v2 tokens — aliased to the app's main design system so the
        wizard inherits the same brand colours, neutrals, and surfaces as every
@@ -112,6 +119,14 @@
     --sidebar-accent-foreground: 210 15% 92%;
     --sidebar-border: 220 20% 18%;
     --sidebar-ring: 200 85% 60%;
+
+    /* Standalone mes-* tokens (the aliased ones inherit dark values through
+       their parent semantic tokens automatically). */
+    --mes-teal-dark: 200 80% 60%;
+    --mes-blue-light: 200 45% 28%;
+    --mes-ink-soft: 210 13% 78%;
+    --mes-success: 159 65% 45%;
+    --mes-warning: 38 92% 55%;
   }
 }
 

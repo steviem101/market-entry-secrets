@@ -32,7 +32,8 @@ const ServiceProvidersSection = ({ serviceProviders }: ServiceProvidersSectionPr
   return (
     <ListingPageGate contentType="service_providers">
       <SectorSection
-      title="Specialized Service Providers"
+      kicker="Service providers"
+      title="Specialised Service Providers"
       viewAllLink="/service-providers"
       viewAllText="View All Providers"
       isEmpty={false}

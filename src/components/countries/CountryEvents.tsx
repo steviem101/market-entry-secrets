@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SectionHeading } from "@/components/common/SectionHeading";
 
 interface EventLike {
   id: string;
@@ -38,17 +39,12 @@ export const CountryEvents = ({ countryName, events }: CountryEventsProps) => {
   return (
     <section className="border-b border-mes-border bg-mes-bg">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
-        <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
-            07 / Events
-          </div>
-          <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
-            Where {countryName} founders show up in Australia
-          </h2>
-          <p className="mt-3 text-[16px] leading-relaxed text-mes-ink-soft">
-            Trade missions, chamber dinners, sector forums. Curated, not the firehose.
-          </p>
-        </div>
+        <SectionHeading
+          className="mb-10"
+          kicker="07 / Events"
+          title={`Where ${countryName} founders show up in Australia`}
+          subhead="Trade missions, chamber dinners, sector forums. Curated, not the firehose."
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {events.slice(0, 8).map((e) => (

@@ -2,6 +2,10 @@ import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { badgeVariants } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { SectionHeading } from "@/components/common/SectionHeading";
 import type { CountryCaseStudy } from "@/lib/countryPageContent";
 
 interface CountryCaseStudiesProps {
@@ -32,53 +36,49 @@ export const CountryCaseStudies = ({ countryName, caseStudies }: CountryCaseStud
     <section id="case-studies" className="border-b border-mes-border bg-mes-bg">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
-          <div className="max-w-2xl">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
-              03 / Case studies
-            </div>
-            <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
-              {countryName} founders who landed Australia
-            </h2>
-            <p className="mt-3 text-[16px] leading-relaxed text-mes-ink-soft">
-              {caseStudies.length} companies, {caseStudies.length} different shapes of entry. Filter by
-              sector to see who looks like you.
-            </p>
-          </div>
+          <SectionHeading
+            className="max-w-2xl"
+            kicker="03 / Case studies"
+            title={`${countryName} founders who landed Australia`}
+            subhead={`${caseStudies.length} companies, ${caseStudies.length} different shapes of entry. Filter by sector to see who looks like you.`}
+          />
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
               onClick={scrollPrev}
               aria-label="Previous case study"
-              className="w-10 h-10 rounded-full border border-mes-border bg-mes-card hover:border-mes-ink flex items-center justify-center text-mes-ink-soft hover:text-mes-ink"
             >
               <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
               onClick={scrollNext}
               aria-label="Next case study"
-              className="w-10 h-10 rounded-full border border-mes-border bg-mes-card hover:border-mes-ink flex items-center justify-center text-mes-ink-soft hover:text-mes-ink"
             >
               <ChevronRight className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-8">
-          {sectors.map((s) => {
-            const active = s === activeSector;
-            return (
-              <button
-                key={s}
-                onClick={() => setActiveSector(s)}
-                className={`text-[12px] font-medium uppercase tracking-wider px-3 py-1.5 rounded-full border transition-colors ${
-                  active
-                    ? "bg-mes-ink text-white border-mes-ink"
-                    : "bg-mes-card text-mes-ink-soft border-mes-border hover:border-mes-ink"
-                }`}
-              >
-                {s}
-              </button>
-            );
-          })}
+          {sectors.map((s) => (
+            <button
+              key={s}
+              type="button"
+              aria-pressed={s === activeSector}
+              onClick={() => setActiveSector(s)}
+              className={cn(
+                badgeVariants({ variant: s === activeSector ? "default" : "outline" }),
+                "cursor-pointer uppercase tracking-wider px-3 py-1.5",
+              )}
+            >
+              {s}
+            </button>
+          ))}
         </div>
 
         <div ref={emblaRef} className="overflow-hidden">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SectionHeading } from "@/components/common/SectionHeading";
 import type { CountryPlaybookStage } from "@/lib/countryPageContent";
 
 interface CountryPlaybookProps {
@@ -19,17 +20,12 @@ export const CountryPlaybook = ({ countryName, countrySlug, stages }: CountryPla
   return (
     <section id="playbook" className="border-b border-mes-border bg-mes-bg">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
-        <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
-            05 / The playbook
-          </div>
-          <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
-            Six stages from validation to scale
-          </h2>
-          <p className="mt-3 text-[16px] leading-relaxed text-mes-ink-soft">
-            The sequence {countryName} founders run from first AU buyer call to APAC hub.
-          </p>
-        </div>
+        <SectionHeading
+          className="mb-10"
+          kicker="05 / The playbook"
+          title="Six stages from validation to scale"
+          subhead={`The sequence ${countryName} founders run from first AU buyer call to APAC hub.`}
+        />
 
         <div className="grid grid-cols-12 gap-8">
           <aside className="hidden md:block md:col-span-3">

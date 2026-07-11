@@ -74,7 +74,7 @@ const AustralianFlag = () => (
 );
 
 // CA and KR intentionally have no renderer (maple leaf and taegeuk don't
-// simplify well) — they fall back to the Globe glyph below.
+// simplify well) - they fall back to the Globe glyph below.
 const FLAGS: Record<string, () => JSX.Element> = {
   IE: IrishFlag,
   GB: UnionJack,

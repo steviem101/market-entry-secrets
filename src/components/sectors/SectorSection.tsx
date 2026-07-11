@@ -1,30 +1,36 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ReactNode } from "react";
+import { SectionHeading } from "@/components/common/SectionHeading";
 
 interface SectorSectionProps {
   title: string;
   viewAllLink: string;
   viewAllText: string;
   children: ReactNode;
+  kicker?: string;
+  subhead?: string;
   isEmpty?: boolean;
 }
 
-const SectorSection = ({ 
-  title, 
-  viewAllLink, 
-  viewAllText, 
-  children, 
-  isEmpty = false 
+// Landing-page section wrapper (sectors + locations). Uses the shared MES
+// editorial header register so these pages match the country pages.
+const SectorSection = ({
+  title,
+  viewAllLink,
+  viewAllText,
+  children,
+  kicker,
+  subhead,
+  isEmpty = false,
 }: SectorSectionProps) => {
   if (isEmpty) return null;
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">{title}</h2>
-        <Link to={viewAllLink}>
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+        <SectionHeading kicker={kicker} title={title} subhead={subhead} />
+        <Link to={viewAllLink} className="shrink-0">
           <Button variant="outline">{viewAllText}</Button>
         </Link>
       </div>

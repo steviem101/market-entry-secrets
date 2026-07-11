@@ -29,6 +29,7 @@ const LeadsSection = ({ leads }: LeadsSectionProps) => {
     <ListingPageGate contentType="leads">
       <>
         <SectorSection
+          kicker="Market data"
           title="Available Market Data"
           viewAllLink="/leads"
           viewAllText="View All Leads"
