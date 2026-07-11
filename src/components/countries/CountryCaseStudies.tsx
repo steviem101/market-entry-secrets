@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import type { CountryCaseStudy } from "@/lib/countryPageContent";
 
 interface CountryCaseStudiesProps {
@@ -40,7 +40,8 @@ export const CountryCaseStudies = ({ countryName, caseStudies }: CountryCaseStud
               {countryName} founders who landed Australia
             </h2>
             <p className="mt-3 text-[16px] leading-relaxed text-mes-ink-soft">
-              Eleven companies, eleven different shapes of entry. Filter by sector to see who looks like you.
+              {caseStudies.length} companies, {caseStudies.length} different shapes of entry. Filter by
+              sector to see who looks like you.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -82,37 +83,48 @@ export const CountryCaseStudies = ({ countryName, caseStudies }: CountryCaseStud
 
         <div ref={emblaRef} className="overflow-hidden">
           <div className="flex gap-4">
-            {filtered.map((c) => (
-              <article
-                key={c.id}
-                className="flex-[0_0_85%] sm:flex-[0_0_60%] md:flex-[0_0_40%] lg:flex-[0_0_32%] bg-mes-card border border-mes-border rounded-xl p-5"
-              >
-                <div
-                  className="w-14 h-14 rounded-lg flex items-center justify-center text-white font-semibold tracking-wider"
-                  style={{ background: c.logo_color ?? "hsl(var(--mes-ink))" }}
-                  aria-hidden
-                >
-                  {c.wordmark || c.company_name.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <h3 className="text-[18px] font-semibold text-mes-ink">{c.company_name}</h3>
-                  <span className="text-[11px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full border border-mes-blue-light bg-mes-blue-light/40 text-mes-teal-dark">
-                    {c.sector}
-                  </span>
-                </div>
-                <p className="mt-3 text-[14px] leading-relaxed text-mes-ink-soft">{c.outcome}</p>
-                {c.content_item_slug && (
-                  <div className="mt-5">
-                    <Button asChild variant="link" className="p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
-                      <a href={`/case-studies/${c.content_item_slug}`}>
-                        Read the {c.company_name} playbook
-                        <ArrowRight className="ml-1 h-4 w-4" />
-                      </a>
-                    </Button>
+            {filtered.map((c) => {
+              const body = (
+                <>
+                  <div
+                    className="w-14 h-14 rounded-lg flex items-center justify-center text-white font-semibold tracking-wider"
+                    style={{ background: c.logo_color ?? "hsl(var(--mes-ink))" }}
+                    aria-hidden
+                  >
+                    {c.wordmark || c.company_name.slice(0, 2).toUpperCase()}
                   </div>
-                )}
-              </article>
-            ))}
+                  <div className="mt-4 flex items-center gap-2">
+                    <h3 className="text-[18px] font-semibold text-mes-ink">{c.company_name}</h3>
+                    <span className="text-[11px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full border border-mes-blue-light bg-mes-blue-light/40 text-mes-teal-dark">
+                      {c.sector}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-[14px] leading-relaxed text-mes-ink-soft">{c.outcome}</p>
+                </>
+              );
+              const cardClass =
+                "flex-[0_0_85%] sm:flex-[0_0_60%] md:flex-[0_0_40%] lg:flex-[0_0_32%] bg-mes-card border border-mes-border rounded-xl p-5 flex flex-col";
+
+              // Whole card is the click target when a written playbook exists;
+              // companies without one render as plain cards by design.
+              return c.content_item_slug ? (
+                <Link
+                  key={c.id}
+                  to={`/case-studies/${c.content_item_slug}`}
+                  className={`${cardClass} group transition-all duration-200 hover:border-mes-ink hover:shadow-md`}
+                >
+                  {body}
+                  <span className="mt-auto pt-5 inline-flex items-center text-[14px] font-medium text-mes-teal-dark group-hover:text-mes-ink">
+                    Read the {c.company_name} playbook
+                    <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              ) : (
+                <article key={c.id} className={cardClass}>
+                  {body}
+                </article>
+              );
+            })}
           </div>
         </div>
       </div>
