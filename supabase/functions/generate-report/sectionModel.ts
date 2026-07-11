@@ -1,0 +1,43 @@
+// MES-148 Phase 2a — per-section model routing (pure logic, node --test).
+//
+// Each report_templates row may carry an optional `model` override. The section
+// writer resolves the model as: row override → env default → hardcoded flash.
+// Default behaviour is unchanged (null column + no env => today's Gemini flash),
+// so this is the config lever the money-section A/B needs, not a behaviour change.
+//
+// The AI gateway is the transport (a config flip, not an architecture change —
+// MES-148 Phase 2). Only set a section's model to one the gateway actually
+// serves, and validate the change through the golden harness before promoting.
+
+/** The pipeline's historical section-writer model. */
+export const FLASH_MODEL = "google/gemini-3-flash-preview";
+
+/** Resolve the model for one section.
+ *  @param rowModel   report_templates.model (null/blank when unset)
+ *  @param envDefault SECTION_MODEL_DEFAULT env (blank when unset)
+ *  Row override wins; then a global env default; then flash. Whitespace-only
+ *  values are treated as unset so a stray "" in config can't blank the model. */
+export function resolveSectionModel(
+  rowModel: string | null | undefined,
+  envDefault: string | null | undefined,
+): string {
+  const row = (rowModel ?? "").trim();
+  if (row) return row;
+  const env = (envDefault ?? "").trim();
+  if (env) return env;
+  return FLASH_MODEL;
+}
+
+/** Per-section model map for telemetry (report_json.metadata.section_models),
+ *  so an A/B is observable per report without re-deriving the config. */
+export function sectionModelMap(
+  templates: Array<{ section_name: string; model?: string | null }>,
+  envDefault: string | null | undefined,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const t of templates || []) {
+    if (!t?.section_name) continue;
+    out[t.section_name] = resolveSectionModel(t.model, envDefault);
+  }
+  return out;
+}
