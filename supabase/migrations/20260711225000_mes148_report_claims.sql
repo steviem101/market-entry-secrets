@@ -40,6 +40,11 @@ alter table public.report_claims enable row level security;
 revoke all on table public.report_claims from anon, authenticated;
 grant select on table public.report_claims to authenticated;
 
+-- drop-if-exists so the migration is safe to re-run (this file was renamed from
+-- 20260711220000 to avoid a version collision with a same-timestamp migration
+-- that landed on main; the preview branch replays the renamed file over an
+-- already-migrated DB, and CREATE POLICY is not idempotent on its own).
+drop policy if exists "Owners and admins can read report claims" on public.report_claims;
 create policy "Owners and admins can read report claims"
   on public.report_claims
   for select
