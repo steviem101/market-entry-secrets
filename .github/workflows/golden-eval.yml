@@ -55,4 +55,7 @@ jobs:
           if [ -n "${{ github.event.inputs.goldens || '' }}" ]; then
             ARGS="--goldens ${{ github.event.inputs.goldens }}"
           fi
-          deno run --allow-net --allow-env --allow-read --allow-write eval/run-goldens.ts $ARGS
+          # --no-lock: the root deno.lock pins esm.sh hashes for other tooling
+          # and drifts as esm.sh re-resolves unpinned deps — the runner is not
+          # bound by it.
+          deno run --no-lock --allow-net --allow-env --allow-read --allow-write eval/run-goldens.ts $ARGS
