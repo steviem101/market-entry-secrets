@@ -147,6 +147,10 @@ REVIEWER_DROPS = {
     "Service Tasmania Business Grants Finder": "reviewer: drop (government grants-finder tool)",
     "Pitchberry": "reviewer: drop (tool)",
     "RSL DefenceCare": "reviewer: drop (veteran welfare charity, not a startup service)",
+    # No confident canonical URL found (web check 2026-07-10) — ambiguous/weak entries.
+    "DEI Australia": "reviewer: drop (no verifiable website / distinct org)",
+    "LGBTQ+ Founders Network": "reviewer: drop (no verifiable website / distinct org)",
+    "Regional Accelerator Network": "reviewer: drop (no verifiable website / distinct org)",
 }
 
 # Ring-fenced for a SEPARATE future build: a "Media" database in the MES
