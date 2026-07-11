@@ -78,3 +78,11 @@ scripts/startmate_import_blocks/
 supabase/migrations_archive/*enrich_angel_investors_batch_*.sql
 supabase/migrations_archive/*import_venture_debt_investors*.sql
 .claude/settings.local.json
+
+# Phase 2 ii_* migration working files (local only — contain email content/PII + embeddings)
+/ii_schema.sql
+/ii_data.sql
+/ii_data_parts/
+/_ii_dump.sql
+/_ii_load.sql
+/data_ii_*.sql
