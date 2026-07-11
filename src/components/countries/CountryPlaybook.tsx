@@ -39,7 +39,7 @@ export const CountryPlaybook = ({ countryName, countrySlug, stages }: CountryPla
                       onClick={() => setActive(value)}
                       className={`w-full text-left rounded-lg border px-3 py-3 flex items-center gap-3 transition-colors ${
                         isActive
-                          ? "bg-mes-ink text-white border-mes-ink"
+                          ? "bg-mes-ink-surface text-white border-mes-ink-surface"
                           : "bg-mes-card border-mes-border text-mes-ink-soft hover:border-mes-ink"
                       }`}
                     >
@@ -109,7 +109,7 @@ export const CountryPlaybook = ({ countryName, countrySlug, stages }: CountryPla
                         ))}
                       </ol>
                       <div className="mt-6 flex flex-wrap items-center gap-3">
-                        <Button asChild className="bg-mes-ink hover:bg-black text-white">
+                        <Button asChild className="bg-mes-ink-surface hover:bg-black text-white">
                           <a href={`/report-creator?source=country-${countrySlug}&focus=${value}`}>
                             Open the {s.title.toLowerCase()} checklist
                             <ArrowRight className="ml-2 h-4 w-4" />

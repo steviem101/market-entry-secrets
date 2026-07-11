@@ -50,7 +50,7 @@ export const CountryWhyItWorks = ({
           <aside className="md:col-span-5">
             <div className="md:sticky md:top-32 space-y-6">
               {pullQuote && (
-                <figure className="bg-mes-ink text-white rounded-xl p-6">
+                <figure className="bg-mes-ink-surface text-white rounded-xl p-6">
                   <blockquote className="text-[18px] leading-snug font-semibold">
                     &ldquo;{pullQuote}&rdquo;
                   </blockquote>

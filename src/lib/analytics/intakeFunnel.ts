@@ -79,8 +79,13 @@ export function trackIntakeEvent(type: IntakeEventType, opts: TrackOptions = {})
       intake_form_id: opts.intake_form_id ?? null,
       user_id: opts.user_id ?? null,
     };
-    // Fire-and-forget; swallow any error (analytics must never break the flow).
-    void client.from('intake_form_events').insert(row);
+    // Fire-and-forget, but the insert MUST be `.then`ed: supabase-js query
+    // builders are lazy thenables, so a bare `void insert(...)` never issues
+    // the HTTP request. Swallow any error (analytics must never break the flow).
+    void client.from('intake_form_events').insert(row).then(
+      () => {},
+      () => {},
+    );
   } catch {
     /* ignore */
   }

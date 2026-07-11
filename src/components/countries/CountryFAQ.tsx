@@ -37,7 +37,7 @@ export const CountryFAQ = ({ countryName, countrySlug, faqs }: CountryFAQProps) 
         <div className="grid grid-cols-12 gap-8">
           <aside className="hidden md:block md:col-span-4">
             <div className="md:sticky md:top-32 space-y-4">
-              <div className="bg-mes-ink text-white rounded-xl p-6">
+              <div className="bg-mes-ink-surface text-white rounded-xl p-6">
                 <div className="text-[11px] uppercase tracking-wider text-white/60 mb-2">
                   Ask a question
                 </div>

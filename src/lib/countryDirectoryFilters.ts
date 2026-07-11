@@ -6,6 +6,7 @@ export interface CountryDirectoryLike {
   name: string;
   description: string;
   featured: boolean;
+  sort_order: number | null;
   key_industries: string[];
   trade_relationship_strength: string | null;
   case_study_count: number;
@@ -27,6 +28,18 @@ export interface CountryDirectoryFilters {
 export const countryDensity = (c: CountryDirectoryLike): number =>
   c.case_study_count + c.mentor_count + c.agency_count + c.investor_count + c.provider_count;
 
+const byDensityThenName = (a: CountryDirectoryLike, b: CountryDirectoryLike): number =>
+  countryDensity(b) - countryDensity(a) || a.name.localeCompare(b.name);
+
+// Admin-curated order wins in featured mode; NULL sort_order sinks to the
+// bottom so unset countries fall through to the density/name tiebreak.
+const bySortOrder = (a: CountryDirectoryLike, b: CountryDirectoryLike): number => {
+  const av = a.sort_order ?? Number.POSITIVE_INFINITY;
+  const bv = b.sort_order ?? Number.POSITIVE_INFINITY;
+  if (av === bv) return 0; // both unset (or equal) -> avoid Infinity - Infinity = NaN
+  return av - bv;
+};
+
 export function filterAndSortCountries<T extends CountryDirectoryLike>(
   countries: T[],
   { search, strength, sector, sort }: CountryDirectoryFilters,
@@ -46,11 +59,11 @@ export function filterAndSortCountries<T extends CountryDirectoryLike>(
 
   return [...filtered].sort((a, b) => {
     if (sort === "alphabetical") return a.name.localeCompare(b.name);
-    if (sort === "density")
-      return countryDensity(b) - countryDensity(a) || a.name.localeCompare(b.name);
-    // "featured": featured first, then data density, then name
+    if (sort === "density") return byDensityThenName(a, b);
+    // "featured": featured first, then the admin-curated sort_order, then
+    // data density, then name.
     if (a.featured !== b.featured) return a.featured ? -1 : 1;
-    return countryDensity(b) - countryDensity(a) || a.name.localeCompare(b.name);
+    return bySortOrder(a, b) || byDensityThenName(a, b);
   });
 }
 

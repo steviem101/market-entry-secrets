@@ -66,10 +66,10 @@ export const CountryFundingPathways = ({
             <InstrumentList items={origin} />
           </div>
 
-          <div className="rounded-xl p-6 text-white border border-mes-ink"
+          <div className="rounded-xl p-6 text-white border border-mes-ink-surface"
             style={{
               background:
-                "linear-gradient(135deg, hsl(var(--mes-ink)) 0%, hsl(var(--mes-teal-dark)) 100%)",
+                "linear-gradient(135deg, hsl(var(--mes-ink-surface)) 0%, hsl(var(--mes-teal-dark)) 100%)",
             }}
           >
             <div className="flex items-center gap-3 mb-5">
@@ -102,7 +102,7 @@ export const CountryFundingPathways = ({
           </div>
         </div>
 
-        <div className="mt-8 bg-mes-ink text-white rounded-xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="mt-8 bg-mes-ink-surface text-white rounded-xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-white/60">
               Worked example
