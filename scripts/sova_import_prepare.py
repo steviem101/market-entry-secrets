@@ -151,6 +151,9 @@ REVIEWER_DROPS = {
     "DEI Australia": "reviewer: drop (no verifiable website / distinct org)",
     "LGBTQ+ Founders Network": "reviewer: drop (no verifiable website / distinct org)",
     "Regional Accelerator Network": "reviewer: drop (no verifiable website / distinct org)",
+    # Deep-verify of grant/competition rounds (2026-07-10):
+    "Westpac Businesses of Tomorrow": "discontinued — ran 2016-2019, replaced by Westpac Female Founder Awards",
+    "LIFTWOMEN": "internal duplicate of 'LiftWomen' (same org, liftwomen.com)",
 }
 
 # Ring-fenced for a SEPARATE future build: a "Media" database in the MES

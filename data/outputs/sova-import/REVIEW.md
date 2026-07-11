@@ -177,9 +177,34 @@ import row now has a verified live website (0 linkless).**
 
 Pre-flight verification (2026-07-10): 0 domain collisions and 0 name
 collisions vs 993 live MES records (incl. the 16 corrected URLs); 0 NOT-NULL
-violations; all enum-like values match live data (incl. the new Community
-type). 25 rows are grants/competitions where "org active" is verified but
-"current round open" is not individually checked.
+violations; all enum-like values match live data (incl. the new Community type).
+
+### Deep-verify of the 25 grant/competition rounds (2026-07-10)
+
+Each was web-checked for current 2026 status. **22 confirmed actively open**
+(ARENA, MRFF, Defence DIDG, FoundHer, both QLD female-founder funds, Brisbane
+LMWB grant, NSW CTI Round 2, NSW Agriculture I&G, NT BIP, Tasmania loan,
+Cartier, ABA100, Australian Technologies Competition, InnovationAus Awards,
+Croc Pitch, Smart50, Startup World Cup, TiE Women, …). **3 problems caught:**
+
+- **Westpac Businesses of Tomorrow → DROPPED** — discontinued (ran 2016-2019;
+  Westpac replaced it with the Female Founder Awards).
+- **LIFTWOMEN → DROPPED** — internal duplicate of "LiftWomen" (same org,
+  liftwomen.com; Sova listed it twice as both Grant and Competition).
+- **3 still need a call** (below): One Roof competition, NT Business Innovation
+  Support, Tasmania Business Growth Programs.
+
+Import now **129** (investors 42). Skips 23, media 5.
+
+### Open judgement calls from deep-verify
+1. **One Roof Unstoppable Founder Competition** — the org (One Roof) is active
+   but its real site is `weareoneroof.com` (proposal has `oneroof.com.au`), and
+   a 2026 "Unstoppable Founder Competition" could not be confirmed running.
+   Rec: drop, or reframe to the One Roof community with the corrected URL.
+2. **NT Business Innovation Support** — likely overlaps "Business Innovation
+   Program NT" (both business.nt.gov.au). Rec: drop as duplicate/too-generic.
+3. **Tasmania Business Growth Programs** — a vague "suite of programs"; likely
+   overlaps the Tasmania Business Growth Loan Scheme. Rec: drop as too-generic.
 
 ## Decisions needed from the reviewer
 
