@@ -3315,10 +3315,13 @@ Deno.serve(async (req) => {
     // otherwise 429. Env-gated to a single user id (EVAL_BYPASS_USER_ID) — unset
     // in normal operation, so real users are never affected. Only skips the abuse
     // cap; auth + intake-ownership checks above still apply.
-    const evalBypassUserId = Deno.env.get("EVAL_BYPASS_USER_ID");
+    // .trim(): a Supabase secret pasted with a trailing newline/space would make
+    // the strict === fail, silently disabling the bypass (the eval user would then
+    // 429 mid-run). Same guard the eval runner applies to its env.
+    const evalBypassUserId = Deno.env.get("EVAL_BYPASS_USER_ID")?.trim();
     const isEvalUser = !!evalBypassUserId && user.id === evalBypassUserId;
     if (isEvalUser) {
-      console.log("Rate limit bypassed for eval user", { user_id: user.id });
+      console.log("Rate limit bypassed for eval user");
     } else {
       const rateLimitError = await checkRateLimit(user.id, "generate-report", 5, 60);
       if (rateLimitError) {
