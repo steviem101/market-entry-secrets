@@ -1,6 +1,13 @@
 -- MES-147: seed the missing Sova directory entries into MES directories.
 -- Source: data/outputs/sova-import/ (reviewer-approved 2026-07-10).
 -- Idempotent: ON CONFLICT (slug) DO NOTHING — safe to replay on preview branches.
+--
+-- Renumbered 20260711120000 -> 20260711130000: the original timestamp collided
+-- with mes111_service_provider_contacts_lockdown and only one row per version
+-- can exist in supabase_migrations.schema_migrations (the lockdown was the one
+-- recorded). The data itself is live in prod; because every block is ON
+-- CONFLICT DO NOTHING, re-applying under the new version is a no-op that
+-- simply heals the ledger.
 -- 121 rows: investors 38, innovation_ecosystem 48, service_providers 18, trade_investment_agencies 15, events 2.
 -- Additive only; no updates to existing rows; provenance carried in source columns.
 

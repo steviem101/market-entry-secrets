@@ -1,7 +1,7 @@
 # CLAUDE.md — Market Entry Secrets
 
 > Root context file for Claude Code — auto-loaded every session.
-> **Last reviewed: 2026-07-07 (MES-115** — gap report: [`docs/audits/mes-115-claude-md-gap-report.md`](docs/audits/mes-115-claude-md-gap-report.md)**).**
+> **Last reviewed: 2026-07-11 (country pages v2** — prior full review 2026-07-07 MES-115, gap report: [`docs/audits/mes-115-claude-md-gap-report.md`](docs/audits/mes-115-claude-md-gap-report.md)**).**
 > Maintenance: this file owns **orientation, invariants, and pointers** only. Deep procedures live
 > in [`.claude/skills/`](.claude/skills/README.md); evidence and audit artefacts live in [`docs/`](docs/).
 > Keep it ≤400 lines, verify every claim against the repo before editing, and update the date above.
@@ -98,14 +98,17 @@ market-intelligence platform helping companies enter the Australian/ANZ market.
 - **Directories (public read):** `service_providers`, `community_members` (mentors — PII behind
   the public view; anonymity managed via `/admin/mentors`), `events`, `leads`,
   `lead_databases`/`lead_database_records`, `investors`, `innovation_ecosystem`,
-  `trade_investment_agencies`, `country_trade_organizations`, `case_studies`.
+  `trade_investment_agencies`, `case_studies` (`country_trade_organizations` was dropped
+  2026-05-09 — trade orgs live in `trade_investment_agencies`).
 - **Taxonomy:** `locations`, `countries`, `industry_sectors` (each with `keywords[]` arrays used
   for matching), plus the **canonical sector reference layer** (MES-110, migrations
   `20260707141000`/`20260707190000`) standardising sector tags across tables.
 - **Content:** `content_items` → `content_sections` → `content_bodies`; `content_categories`,
   `content_company_profiles`, `content_founders`; country-page blocks (`country_page_content`,
   `country_trade_metrics`, `country_case_studies`, `country_playbook_stages`,
-  `country_funding_instruments`, `country_faqs`).
+  `country_funding_instruments`, `country_faqs`) plus `country_entity_links` (curated corridor
+  links: mentors/agencies/providers/investors/events per country, approved-only public reads;
+  the page loads via the `get_country_page(slug)` RPC, the listing via `get_country_directory()`).
 - **Users/auth:** `profiles` (id = auth.users.id, stripe_customer_id, onboarding columns),
   `user_roles` (`admin`|`moderator`|`user`), `user_subscriptions` (tier; **service-role-write
   only** — SEC-01), `bookmarks`, `user_usage` (freemium counter), `mentor_contact_requests`.
@@ -203,8 +206,9 @@ Summary of the verified shape (it differs from older docs):
   The frontend polls after the Stripe redirect (webhook may lag) — skills
   `stripe-payments-and-webhooks`, `post-payment-activation-and-entitlements-ux`.
 - **Freemium:** anonymous users get 3 free directory views (localStorage + `user_usage`,
-  `ListingPageGate`/`FreemiumGate` + `PaywallModal`); signed-in users bypass. Lead-gen popup
-  after 15s for anonymous users.
+  `ListingPageGate`/`FreemiumGate` + `PaywallModal`); signed-in users bypass. Country pages
+  (`/countries/*`) are deliberately ungated — they are the top-of-funnel SEO surface; gating
+  applies to depth actions only. Lead-gen popup after 15s for anonymous users.
 
 ## 9. Security invariants
 
