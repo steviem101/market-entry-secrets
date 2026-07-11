@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useCountryDirectory, CountryDirectoryEntry } from "@/hooks/useCountryDirectory";
-import { Badge } from "@/components/ui/badge";
+import { badgeVariants } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -87,27 +88,29 @@ const CountriesDirectorySection = ({ searchQuery }: CountriesDirectorySectionPro
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div className="flex flex-wrap items-center gap-2">
             {strengths.map((s) => (
-              <Badge
+              <button
                 key={s}
-                variant={strength === s ? "default" : "outline"}
-                className="cursor-pointer select-none"
+                type="button"
+                aria-pressed={strength === s}
+                className={cn(badgeVariants({ variant: strength === s ? "default" : "outline" }), "cursor-pointer")}
                 onClick={() => setStrength(strength === s ? null : s)}
               >
                 {s}
-              </Badge>
+              </button>
             ))}
             {strengths.length > 0 && sectors.length > 0 && (
               <span className="mx-1 text-muted-foreground">·</span>
             )}
             {sectors.map((s) => (
-              <Badge
+              <button
                 key={s}
-                variant={sector === s ? "default" : "outline"}
-                className="cursor-pointer select-none"
+                type="button"
+                aria-pressed={sector === s}
+                className={cn(badgeVariants({ variant: sector === s ? "default" : "outline" }), "cursor-pointer")}
                 onClick={() => setSector(sector === s ? null : s)}
               >
                 {s}
-              </Badge>
+              </button>
             ))}
           </div>
 
