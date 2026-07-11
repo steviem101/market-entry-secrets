@@ -109,25 +109,18 @@ export interface CountryPageBundle {
   link_totals: CountryLinkTotals;
 }
 
-// The RPC is not in the generated Supabase types yet, so cast the client
-// through `unknown` to a minimal typed surface (avoids `any`), matching the
-// intake funnel pattern.
-interface MinimalRpcClient {
-  rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
-}
-
 // Single round trip for the whole country page. The get_country_page RPC
 // returns NULL for unknown slugs, ranked ecosystem links (approved only,
-// top 6 per type), and all editorial blocks.
+// top 6 per type), and all editorial blocks. The RPC returns Json in the
+// generated types; the bundle shape is asserted here.
 export const useCountryPage = (slug: string) => {
   return useQuery({
     queryKey: ["country-page", slug],
     queryFn: async (): Promise<CountryPageBundle | null> => {
-      const client = supabase as unknown as MinimalRpcClient;
-      const { data, error } = await client.rpc("get_country_page", { page_slug: slug });
+      const { data, error } = await supabase.rpc("get_country_page", { page_slug: slug });
 
       if (error) throw error;
-      return (data as CountryPageBundle) ?? null;
+      return (data as unknown as CountryPageBundle) ?? null;
     },
     enabled: !!slug,
     staleTime: 30 * 60 * 1000,
