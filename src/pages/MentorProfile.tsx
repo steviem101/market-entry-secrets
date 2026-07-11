@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, Link, Navigate } from "react-router-dom";
 import {
   MapPin,
   Globe,
@@ -10,32 +10,36 @@ import {
   Handshake,
   DollarSign,
   Languages,
+  Users,
+  EyeOff,
 } from "lucide-react";
+import { NoIndex } from "@/components/common/NoIndex";
 import { Helmet } from "react-helmet-async";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { MentorContactModal } from "@/components/mentors/MentorContactModal";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import { domainToWebsite } from "@/lib/logoUtils";
 import {
+  mentorDisplayName,
+  mentorInitials,
+  mentorLocationLabel,
+  countryLabel,
+  corridorLabel,
+  sectorTagLabel,
+  personaFitLabels,
+} from "@/lib/mentorDisplay";
+import {
   useMentorBySlug,
   useMentorExperience,
   useMentorTestimonials,
 } from "@/hooks/useMentors";
-
-const getInitials = (name: string) =>
-  name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
 const AvailabilityBadge = ({ availability }: { availability: string | null }) => {
   if (!availability) return null;
@@ -71,6 +75,7 @@ const MentorProfile = () => {
     categorySlug: string;
     mentorSlug: string;
   }>();
+  const { search, hash } = useLocation();
   const { data: mentor, isLoading, error } = useMentorBySlug(categorySlug, mentorSlug);
   const { data: experiences = [] } = useMentorExperience(mentor?.id);
   const { data: testimonials = [] } = useMentorTestimonials(mentor?.id);
@@ -89,7 +94,7 @@ const MentorProfile = () => {
       : experienceTiles.map((t, i) => ({
           id: t.id || String(i),
           company_name: t.name,
-          company_logo_url: t.logo || null,
+          company_logo_url: t.logo && t.logo !== "/placeholder.svg" ? t.logo : null,
           // Derive a website from the tile's logo.dev domain so CompanyLogo renders
           // the brand logo (monogram fallback when no domain).
           company_website: domainToWebsite(t.domain),
@@ -111,6 +116,7 @@ const MentorProfile = () => {
   if (error || !mentor) {
     return (
       <>
+        <NoIndex notFound />
         <Helmet>
           <title>Mentor Not Found | Market Entry Secrets</title>
         </Helmet>
@@ -129,9 +135,19 @@ const MentorProfile = () => {
     );
   }
 
+  // Legacy UUID URLs (useMentorBySlug falls back to an id lookup) and any
+  // stale category segment redirect to the canonical slug URL (MES-80 / SEO-04)
+  // so Google holds one URL per mentor.
+  const canonicalCategory = mentor.category_slug || "experts";
+  if (mentor.slug && (mentorSlug !== mentor.slug || categorySlug !== canonicalCategory)) {
+    return <Navigate to={`/mentors/${canonicalCategory}/${mentor.slug}${search}${hash}`} replace />;
+  }
+
+  const displayName = mentorDisplayName(mentor);
+
   const metaTitle =
     mentor.meta_title ||
-    `${mentor.name} | ${mentor.title} | Market Entry Secrets`;
+    `${displayName} | ${mentor.title} | Market Entry Secrets`;
   const metaDescription =
     mentor.meta_description ||
     mentor.tagline ||
@@ -142,7 +158,7 @@ const MentorProfile = () => {
     ...(mentor.category_slug
       ? [{ label: mentor.category_slug.replace(/-/g, " "), href: `/mentors/${mentor.category_slug}` }]
       : []),
-    { label: mentor.name },
+    { label: displayName },
   ];
 
   return (
@@ -155,10 +171,12 @@ const MentorProfile = () => {
         jsonLd={{
           type: "Person",
           data: {
-            name: mentor.name,
+            name: displayName,
             jobTitle: mentor.title,
             description: mentor.description,
-            ...(mentor.company ? { worksFor: { "@type": "Organization", name: mentor.company } } : {}),
+            ...(!mentor.is_anonymous && mentor.company
+              ? { worksFor: { "@type": "Organization", name: mentor.company } }
+              : {}),
             ...(mentor.location ? { address: { "@type": "PostalAddress", addressLocality: mentor.location } } : {}),
             ...(mentor.avatar_url || mentor.image ? { image: mentor.avatar_url || mentor.image } : {}),
             ...(mentor.linkedin_url ? { sameAs: [mentor.linkedin_url] } : {}),
@@ -170,7 +188,7 @@ const MentorProfile = () => {
       <FreemiumGate
         contentType="mentors"
         itemId={mentor.id}
-        contentTitle={mentor.name}
+        contentTitle={displayName}
         contentDescription={mentor.tagline || mentor.description}
       >
 
@@ -194,12 +212,18 @@ const MentorProfile = () => {
         {/* Profile header */}
         <div className="flex flex-col md:flex-row gap-6 items-start mb-8">
           <div className="relative -mt-12 md:-mt-14">
-            <Avatar className="w-24 h-24 md:w-28 md:h-28 border-4 border-background shadow-lg">
-              <AvatarImage src={mentor.avatar_url || mentor.image || undefined} alt={mentor.name} />
-              <AvatarFallback className="bg-primary/10 text-primary text-2xl md:text-3xl">
-                {getInitials(mentor.name)}
-              </AvatarFallback>
-            </Avatar>
+            <ContactAvatar
+              name={displayName}
+              src={mentor.is_anonymous ? undefined : mentor.avatar_url || mentor.image}
+              className="w-24 h-24 md:w-28 md:h-28 border-4 border-background shadow-lg text-2xl md:text-3xl"
+              fallback={
+                mentor.is_anonymous ? (
+                  <Globe className="w-10 h-10" />
+                ) : (
+                  <span>{mentorInitials(mentor)}</span>
+                )
+              }
+            />
             {mentor.is_verified && (
               <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
                 <CheckCircle className="w-6 h-6 text-primary fill-primary/10" />
@@ -211,16 +235,24 @@ const MentorProfile = () => {
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">{mentor.name}</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">{displayName}</h1>
                   {mentor.is_featured && (
                     <Badge className="bg-amber-500 hover:bg-amber-500 text-white">
                       <Star className="w-3 h-3 mr-1 fill-current" />
                       Featured
                     </Badge>
                   )}
+                  {mentor.is_anonymous && (
+                    <Badge variant="secondary" className="gap-1">
+                      <EyeOff className="w-3 h-3" />
+                      Anonymous
+                    </Badge>
+                  )}
                 </div>
+                {/* Headline is masked-safe for anonymous mentors; company is
+                    "Undisclosed" for them, so only show it when identified. */}
                 <p className="text-primary font-medium text-lg">{mentor.title}</p>
-                {mentor.company && (
+                {!mentor.is_anonymous && mentor.company && (
                   <p className="text-muted-foreground">{mentor.company}</p>
                 )}
                 <div className="flex items-center gap-4 mt-2 flex-wrap">
@@ -228,7 +260,7 @@ const MentorProfile = () => {
                     <MapPin className="w-4 h-4 mr-1" />
                     {mentor.location_city && mentor.location_state
                       ? `${mentor.location_city}, ${mentor.location_state}`
-                      : mentor.location}
+                      : mentorLocationLabel(mentor)}
                   </span>
                   <AvailabilityBadge availability={mentor.availability} />
                 </div>
@@ -241,7 +273,7 @@ const MentorProfile = () => {
                 <BookmarkButton
                   contentType="community_member"
                   contentId={mentor.id}
-                  title={mentor.name}
+                  title={displayName}
                   description={mentor.description}
                   metadata={{
                     title: mentor.title,
@@ -254,7 +286,7 @@ const MentorProfile = () => {
                 />
                 <Button onClick={() => setShowContact(true)}>
                   <Handshake className="w-4 h-4 mr-2" />
-                  Get Warm Intro
+                  Get warm intro
                 </Button>
               </div>
             </div>
@@ -287,19 +319,24 @@ const MentorProfile = () => {
               </section>
             )}
 
-            {/* Experience */}
-            <section>
-              <h2 className="text-xl font-semibold mb-3">Experience</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {mentor.experience}
-              </p>
-              {mentor.years_experience && (
-                <div className="flex items-center gap-2 mt-3 text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  <span>{mentor.years_experience}+ years of experience</span>
-                </div>
-              )}
-            </section>
+            {/* Experience — hidden entirely when the view withholds it
+                (anonymous mentors) or it was never populated. */}
+            {(mentor.experience || mentor.years_experience) && (
+              <section>
+                <h2 className="text-xl font-semibold mb-3">Experience</h2>
+                {mentor.experience && (
+                  <p className="text-muted-foreground leading-relaxed">
+                    {mentor.experience}
+                  </p>
+                )}
+                {mentor.years_experience && (
+                  <div className="flex items-center gap-2 mt-3 text-muted-foreground">
+                    <Clock className="w-4 h-4" />
+                    <span>{mentor.years_experience}+ years of experience</span>
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* Experience with */}
             {allExperiences.length > 0 && (
@@ -317,9 +354,8 @@ const MentorProfile = () => {
                           existingLogoUrl={exp.company_logo_url}
                           companyName={exp.company_name}
                           size="lg"
-                          className="w-14 h-14 rounded-lg border bg-white mb-2"
+                          className="rounded-lg border bg-white mb-2"
                           fallbackClassName="bg-white text-primary"
-                          imgClassName="object-contain p-1"
                         />
                         <span className="text-sm text-center font-medium">
                           {exp.company_name}
@@ -382,6 +418,64 @@ const MentorProfile = () => {
                 <CardTitle className="text-lg">Quick Facts</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Who they help — persona_fit audience tags, safe for anon */}
+                {personaFitLabels(mentor.persona_fit).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" />
+                      Who they help
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {personaFitLabels(mentor.persona_fit).map((label) => (
+                        <Badge key={label} variant="outline" className="text-xs">
+                          {label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Origin — coarse geography, safe for anonymous mentors */}
+                {mentor.origin_country && countryLabel(mentor.origin_country) !== mentor.origin_country && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1.5">From</h4>
+                    <Badge variant="outline" className="text-xs">
+                      {countryLabel(mentor.origin_country)}
+                    </Badge>
+                  </div>
+                )}
+
+                {/* Market corridors, e.g. 🇬🇧 UK → 🇦🇺 Australia */}
+                {mentor.market_corridors && mentor.market_corridors.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1.5">Market Corridors</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {mentor.market_corridors.map((c) => {
+                        const label = corridorLabel(c);
+                        return label ? (
+                          <Badge key={c} variant="outline" className="text-xs">
+                            {label}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sector tags survive anonymization */}
+                {mentor.sector_tags && mentor.sector_tags.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1.5">Sectors</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {mentor.sector_tags.map((s) => (
+                        <Badge key={s} variant="secondary" className="text-xs">
+                          {sectorTagLabel(s)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Markets */}
                 {mentor.markets_served && mentor.markets_served.length > 0 && (
                   <div>
@@ -495,12 +589,12 @@ const MentorProfile = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Interested in connecting with {mentor.name}? Request a warm
+                  Interested in connecting with {displayName}? Request a warm
                   intro and we'll facilitate the connection.
                 </p>
                 <Button className="w-full" onClick={() => setShowContact(true)}>
                   <Handshake className="w-4 h-4 mr-2" />
-                  Request Warm Intro
+                  Get warm intro
                 </Button>
               </CardContent>
             </Card>

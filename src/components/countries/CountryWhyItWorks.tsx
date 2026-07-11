@@ -1,3 +1,4 @@
+import { SectionHeading } from "@/components/common/SectionHeading";
 import type { NarrativeBullet, DifferentiatorBullet } from "@/lib/countryPageContent";
 
 interface CountryWhyItWorksProps {
@@ -21,17 +22,13 @@ export const CountryWhyItWorks = ({
     <section className="border-b border-mes-border bg-mes-card">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
         <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
-            02 / Why it works
-          </div>
-          <h2
-            className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink"
-            style={{ textWrap: "balance" } as React.CSSProperties}
-          >
-            Australia is the most underrated second market for {countryName} founders.
-          </h2>
+          <SectionHeading
+            kicker="02 / Why it works"
+            title={`Australia is the most underrated second market for ${countryName} founders.`}
+          />
           <p className="mt-4 text-[16px] md:text-[17px] leading-relaxed text-mes-ink-soft max-w-2xl">
-            Common law, English-speaking, fast procurement, and a dense Irish diaspora. Here is why {countryName} maps onto ANZ better than the UK or US do.
+            Common law, English-speaking, fast procurement, and a dense diaspora network. Here is
+            why {countryName} founders map onto ANZ so cleanly.
           </p>
         </div>
 
@@ -53,7 +50,7 @@ export const CountryWhyItWorks = ({
           <aside className="md:col-span-5">
             <div className="md:sticky md:top-32 space-y-6">
               {pullQuote && (
-                <figure className="bg-mes-ink text-white rounded-xl p-6">
+                <figure className="bg-mes-ink-surface text-white rounded-xl p-6">
                   <blockquote className="text-[18px] leading-snug font-semibold">
                     &ldquo;{pullQuote}&rdquo;
                   </blockquote>

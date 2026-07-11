@@ -1,26 +1,25 @@
 import { memo } from "react";
-import { MapPin, Handshake, CheckCircle, Star, Globe, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MapPin, CheckCircle, Star, Globe, Clock, EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { useNavigate } from "react-router-dom";
 import type { Mentor } from "@/hooks/useMentors";
 import CompanyLogo from "@/components/shared/CompanyLogo";
-import { domainToWebsite } from "@/lib/logoUtils";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
+import {
+  mentorDisplayName,
+  mentorInitials,
+  mentorLocationLabel,
+  corridorLabel,
+  sectorTagLabel,
+} from "@/lib/mentorDisplay";
+import { DirectoryCard } from "@/components/directory/DirectoryCard";
+import { CardCTA } from "@/components/directory/CardCTA";
 
 interface MentorCardProps {
   mentor: Mentor;
-  onContact: (mentor: Mentor) => void;
+  /** @deprecated warm intro now routes through the shared IntroRequestProvider. */
+  onContact?: (mentor: Mentor) => void;
 }
-
-const getInitials = (name: string) =>
-  name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
 const AvailabilityBadge = ({ availability }: { availability: string | null }) => {
   if (!availability) return null;
@@ -56,20 +55,19 @@ const ExperienceTileItem = ({ tile }: { tile: { id?: string; name: string; logo?
     <div className="flex-shrink-0" title={tile.name}>
       <CompanyLogo
         existingLogoUrl={tile.logo && tile.logo !== "/placeholder.svg" ? tile.logo : undefined}
-        websiteUrl={domainToWebsite(tile.domain)}
+        domain={tile.domain}
         companyName={tile.name}
-        size="sm"
-        className="w-10 h-10 rounded-lg border bg-white"
+        size="md"
+        className="rounded-lg border bg-white"
         fallbackClassName="bg-white text-primary"
-        imgClassName="object-contain p-0.5"
+        imgClassName="object-contain p-1"
       />
     </div>
   );
 };
 
-const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
-  const navigate = useNavigate();
-  const displayName = mentor.is_anonymous ? mentor.title : mentor.name;
+const MentorCard = memo(({ mentor }: MentorCardProps) => {
+  const displayName = mentorDisplayName(mentor);
   const profileUrl = `/mentors/${mentor.category_slug || "experts"}/${mentor.slug || mentor.id}`;
 
   const experienceTiles = mentor.experience_tiles
@@ -79,7 +77,7 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
     : [];
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative min-w-0">
+    <DirectoryCard className="relative min-w-0">
       {/* Featured ribbon */}
       {mentor.is_featured && (
         <div className="absolute top-3 left-3">
@@ -93,23 +91,18 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
       <div className="flex items-start gap-4 mb-4">
         {/* Avatar with verified badge */}
         <div className="relative flex-shrink-0">
-          <Avatar className="w-16 h-16">
-            {mentor.is_anonymous ? (
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
+          <ContactAvatar
+            name={displayName}
+            src={mentor.is_anonymous ? undefined : mentor.avatar_url || mentor.image}
+            className="w-16 h-16"
+            fallback={
+              mentor.is_anonymous ? (
                 <Globe className="w-8 h-8" />
-              </AvatarFallback>
-            ) : (
-              <>
-                <AvatarImage
-                  src={mentor.avatar_url || mentor.image || undefined}
-                  alt={mentor.name}
-                />
-                <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                  {getInitials(mentor.name)}
-                </AvatarFallback>
-              </>
-            )}
-          </Avatar>
+              ) : (
+                <span className="text-lg">{mentorInitials(mentor)}</span>
+              )
+            }
+          />
           {mentor.is_verified && (
             <div className="absolute -bottom-1 -right-1 bg-white rounded-full">
               <CheckCircle className="w-5 h-5 text-primary fill-primary/10" />
@@ -123,20 +116,25 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
               <h3 className="text-lg font-semibold text-foreground mb-0.5 truncate">
                 {displayName}
               </h3>
-              {!mentor.is_anonymous && (
+              {!mentor.is_anonymous ? (
                 <p className="text-primary font-medium text-sm mb-0.5 truncate">
                   {mentor.title}
                   {mentor.company && (
                     <span className="text-muted-foreground font-normal"> at {mentor.company}</span>
                   )}
                 </p>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+                  <EyeOff className="w-3 h-3" />
+                  Anonymous mentor
+                </span>
               )}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="flex items-center text-muted-foreground text-sm">
                   <MapPin className="w-3.5 h-3.5 mr-1" />
                   {mentor.location_city && mentor.location_state
                     ? `${mentor.location_city}, ${mentor.location_state}`
-                    : mentor.location}
+                    : mentorLocationLabel(mentor)}
                 </span>
                 <AvailabilityBadge availability={mentor.availability} />
               </div>
@@ -171,7 +169,8 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
           : mentor.description}
       </p>
 
-      {/* Specialties */}
+      {/* Specialties — for anonymous mentors, pad with sector tags so the
+          masked card still communicates what they're strong in */}
       <div className="flex flex-wrap gap-1.5 mb-3">
         {mentor.specialties.slice(0, 3).map((specialty) => (
           <Badge key={specialty} variant="secondary" className="text-xs">
@@ -183,7 +182,30 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
             +{mentor.specialties.length - 3} more
           </Badge>
         )}
+        {mentor.is_anonymous &&
+          mentor.specialties.length < 3 &&
+          (mentor.sector_tags || [])
+            .slice(0, 3 - mentor.specialties.length)
+            .map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {sectorTagLabel(tag)}
+              </Badge>
+            ))}
       </div>
+
+      {/* Market corridors, e.g. 🇬🇧 UK → 🇦🇺 Australia */}
+      {mentor.market_corridors && mentor.market_corridors.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {mentor.market_corridors.slice(0, 2).map((c) => {
+            const label = corridorLabel(c);
+            return label ? (
+              <span key={c} className="inline-flex items-center text-xs bg-muted px-1.5 py-0.5 rounded">
+                {label}
+              </span>
+            ) : null;
+          })}
+        </div>
+      )}
 
       {/* Markets served */}
       {mentor.markets_served && mentor.markets_served.length > 0 && (
@@ -194,16 +216,17 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
         </div>
       )}
 
-      {/* Experience with - text fallback, no grey boxes */}
-      {experienceTiles.length > 0 && (
+      {/* Experience with — hidden for anonymous mentors (logos are identifying).
+          The public view already masks tiles server-side; this is belt-and-braces. */}
+      {!mentor.is_anonymous && experienceTiles.length > 0 && (
         <div className="mb-3">
           <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Experience with:</h4>
-          <div className="flex gap-1.5 overflow-x-auto">
+          <div className="flex flex-wrap gap-1.5">
             {experienceTiles.slice(0, 4).map((tile, index) => (
               <ExperienceTileItem key={tile.id || index} tile={tile} />
             ))}
             {experienceTiles.length > 4 && (
-              <div className="flex-shrink-0 w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+              <div className="flex-shrink-0 w-10 h-10 bg-muted border rounded-lg flex items-center justify-center">
                 <span className="text-xs text-muted-foreground">+{experienceTiles.length - 4}</span>
               </div>
             )}
@@ -228,25 +251,12 @@ const MentorCard = memo(({ mentor, onContact }: MentorCardProps) => {
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(profileUrl)}
-          className="flex-1"
-        >
-          View Profile
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => onContact(mentor)}
-          className="flex-1"
-        >
-          <Handshake className="w-4 h-4 mr-1" />
-          Get Warm Intro
-        </Button>
-      </div>
-    </div>
+      <CardCTA
+        entity="mentor"
+        target={{ entity: "mentor", id: mentor.id, name: displayName }}
+        secondaryHref={profileUrl}
+      />
+    </DirectoryCard>
   );
 });
 

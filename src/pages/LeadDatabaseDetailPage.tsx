@@ -10,6 +10,7 @@ import { LeadPreviewModal } from "@/components/leads/LeadPreviewModal";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useLeadDatabaseBySlug, useRelatedLeadDatabases } from "@/hooks/useLeadDatabases";
 import { useLeadCheckout } from "@/hooks/useLeadCheckout";
+import { NoIndex } from "@/components/common/NoIndex";
 
 const LeadDatabaseDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -61,6 +62,7 @@ const LeadDatabaseDetailPage = () => {
   if (error || !db) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
+        <NoIndex notFound />
         <h1 className="text-2xl font-bold mb-4">Database Not Found</h1>
         <p className="text-muted-foreground">
           The lead database you're looking for doesn't exist or has been removed.

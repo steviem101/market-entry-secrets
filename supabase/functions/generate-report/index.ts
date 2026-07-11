@@ -4,20 +4,84 @@ import { log } from "../_shared/log.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
-import { expandGoalsToServiceTags, goalsToPrioritisedSections } from "./goalServiceTags.ts";
+import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shared/scrapeCache.ts";
+import { selectKeyPages } from "./keyPageSelect.ts";
+import { buildCompetitorQueries, dedupeCompetitorResults, domainOf, dropNonCompetitors } from "./competitorQueries.ts";
+import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits, goalSelectsGrants } from "./goalServiceTags.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
-import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { metaLine, recordCountLabel, resolveWebsite } from "./cardFields.ts";
+import { buildCompetitorCards } from "./competitorCards.ts";
+import { renumberCitations, stripContextLabelCitations } from "./citationRenumber.ts";
+import { expandTargetRegions } from "./targetRegion.ts";
+import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch, stateAgencyRegionMismatch } from "./geoRelevance.ts";
+import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
+import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
+import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
+import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
+import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
+import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
+
+// Per-report Firecrawl plumbing health + op accounting (Stage 1 audit P1/P2).
+// Mirrors the perplexity_health pattern: a total outage (expired/over-quota key
+// → every call 401/429) is otherwise indistinguishable from "no data found".
+// `ops` doubles as the per-report Firecrawl call count for cost visibility.
+// A fresh object is created per report and threaded explicitly through the
+// wrappers — NO module-level mutable state, so concurrent background tasks in
+// the same isolate can't corrupt each other's counts. SSRF-blocked URLs make no
+// API call and are deliberately NOT counted as ops.
+interface FirecrawlStats {
+  ops: number;
+  succeeded: number;
+  scrape: { attempted: number; ok: number };
+  map: { attempted: number; ok: number };
+  search: { attempted: number; ok: number };
+  statuses: number[];
+  // Scrape-cache accounting (P1). cache_hits avoid an API call (so they do NOT
+  // count toward ops); cache_misses are the scrapes that fell through to a live
+  // fetch. hits / (hits + misses) is the per-report cache hit rate / savings.
+  cache_hits: number;
+  cache_misses: number;
+}
+
+function createFirecrawlStats(): FirecrawlStats {
+  return {
+    ops: 0, succeeded: 0,
+    scrape: { attempted: 0, ok: 0 },
+    map: { attempted: 0, ok: 0 },
+    search: { attempted: 0, ok: 0 },
+    statuses: [],
+    cache_hits: 0,
+    cache_misses: 0,
+  };
+}
+
+/** Record one Firecrawl API call outcome. status 0 = network error/timeout.
+ *  `ok` is HTTP-200-level success (content emptiness is tracked separately). */
+function recordFirecrawl(
+  stats: FirecrawlStats | undefined,
+  kind: "scrape" | "map" | "search",
+  status: number,
+  ok: boolean,
+): void {
+  if (!stats) return;
+  stats.ops++;
+  stats[kind].attempted++;
+  stats.statuses.push(status);
+  if (ok) { stats.succeeded++; stats[kind].ok++; }
+}
 
 /** Scrape a single URL with a timeout. Returns markdown or null. */
 async function firecrawlScrape(
   apiKey: string,
   url: string,
-  timeoutMs = 10000
+  timeoutMs = 10000,
+  stats?: FirecrawlStats,
+  cache?: ScrapeCache,
 ): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -30,6 +94,18 @@ async function firecrawlScrape(
 
     if (isPrivateOrReservedUrl(formattedUrl)) return null;
 
+    // Cache read (P1) — checked AFTER the SSRF guard so a private URL is never
+    // served or stored. A hit (positive or negative, within TTL) avoids the API
+    // call entirely, so it does NOT go through recordFirecrawl/ops.
+    const cacheKey = cache ? normaliseScrapeKey(formattedUrl) : "";
+    if (cache) {
+      const hit = await cache.get(cacheKey);
+      if (hit) {
+        if (stats) stats.cache_hits++;
+        return hit.content;
+      }
+    }
+
     const resp = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -37,12 +113,22 @@ async function firecrawlScrape(
       signal: controller.signal,
     });
 
-    if (!resp.ok) return null;
+    recordFirecrawl(stats, "scrape", resp.status, resp.ok);
+    if (!resp.ok) {
+      if (cache) { if (stats) stats.cache_misses++; await cache.set(cacheKey, { content: null, ok: false, status: resp.status }); }
+      return null;
+    }
 
     const data = await resp.json();
     const md = data.data?.markdown || data.markdown || null;
-    return md ? sanitizeScrapedContent(md) : null;
+    const content = md ? sanitizeScrapedContent(md) : null;
+    if (cache) {
+      if (stats) stats.cache_misses++;
+      await cache.set(cacheKey, { content, ok: !!content, status: resp.status });
+    }
+    return content;
   } catch {
+    recordFirecrawl(stats, "scrape", 0, false);
     return null;
   } finally {
     clearTimeout(timer);
@@ -53,7 +139,8 @@ async function firecrawlScrape(
 async function firecrawlMap(
   apiKey: string,
   url: string,
-  timeoutMs = 5000
+  timeoutMs = 5000,
+  stats?: FirecrawlStats,
 ): Promise<string[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -73,11 +160,13 @@ async function firecrawlMap(
       signal: controller.signal,
     });
 
+    recordFirecrawl(stats, "map", resp.status, resp.ok);
     if (!resp.ok) return [];
 
     const data = await resp.json();
     return data.links || [];
   } catch {
+    recordFirecrawl(stats, "map", 0, false);
     return [];
   } finally {
     clearTimeout(timer);
@@ -89,7 +178,8 @@ async function firecrawlSearch(
   apiKey: string,
   query: string,
   limit = 5,
-  timeoutMs = 15000
+  timeoutMs = 15000,
+  stats?: FirecrawlStats,
 ): Promise<Array<{ url: string; title: string; description: string; markdown: string }>> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -108,6 +198,7 @@ async function firecrawlSearch(
       signal: controller.signal,
     });
 
+    recordFirecrawl(stats, "search", resp.status, resp.ok);
     if (!resp.ok) return [];
 
     const data = await resp.json();
@@ -118,6 +209,7 @@ async function firecrawlSearch(
       markdown: sanitizeScrapedContent((r.markdown || ""), 1500),
     }));
   } catch {
+    recordFirecrawl(stats, "search", 0, false);
     return [];
   } finally {
     clearTimeout(timer);
@@ -129,28 +221,33 @@ async function firecrawlSearch(
  * Used when a competitor / end buyer was added by name without a website (the
  * v2 CompanyPicker leaves website blank for the backend to resolve). Fail-soft.
  */
-async function resolveDomainFromName(apiKey: string, name: string): Promise<string> {
+async function resolveDomainFromName(apiKey: string, name: string, stats?: FirecrawlStats): Promise<string> {
   if (!apiKey || !name.trim()) return "";
   try {
-    const results = await firecrawlSearch(apiKey, `${name} official website`, 1, 8000);
+    const results = await firecrawlSearch(apiKey, `${name} official website`, 1, 8000, stats);
     const url = results[0]?.url || "";
     if (!url) return "";
-    return new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
+    const host = new URL(url.startsWith("http") ? url : `https://${url}`).hostname.replace(/^www\./, "");
+    // Defence-in-depth (P3): the URL came from an attacker-influenceable search
+    // result, so never return a private/reserved host. firecrawlScrape also
+    // guards before fetching, but dropping it here avoids a doomed scrape and
+    // keeps a bogus internal host (e.g. 169.254.169.254) out of the report's
+    // competitor/buyer url field.
+    if (!host || isPrivateOrReservedUrl(`https://${host}`)) return "";
+    // Return a full https:// URL, not a bare host. Consumers scrape it (firecrawl
+    // handles either) but ALSO store it as the competitor/buyer `url`, and the
+    // card builder's httpUrl() only renders links that start with http(s) — a
+    // bare "sourcewhale.com" produced a competitor card with no "Visit site"
+    // link (Floats report). domainOf() still normalises it for dedupe.
+    return `https://${host}`;
   } catch {
     return "";
   }
 }
 
 // ── Enhancement 3: Deep company scrape (map + multi-page) ─────────────
-
-const KEY_PAGE_PATTERNS = [
-  /about/i, /product/i, /service/i, /solution/i,
-  /team/i, /case.?stud/i, /client/i, /partner/i,
-];
-
-function isKeyPage(url: string): boolean {
-  return KEY_PAGE_PATTERNS.some((p) => p.test(url));
-}
+// Key-page selection lives in keyPageSelect.ts (pure + unit-tested): it ranks
+// mapped URLs so customer/case-study/pricing pages win over generic ones.
 
 interface EnrichedCompanyProfile {
   summary: string;
@@ -162,13 +259,32 @@ interface EnrichedCompanyProfile {
   unique_selling_points: string[];
 }
 
+// Plumbing visibility for the deep company scrape. The metadata flag was
+// previously `firecrawl_deep_scrape: !!companyProfile`, but companyProfile is
+// the (truthy) fallback object even when the scrape returned nothing — so a
+// site that yielded 50 chars and fell back still read as a successful scrape.
+// These diagnostics make the metadata reflect what actually happened: whether
+// the scrape produced usable content (scrape_ok), how many URLs map found, how
+// many key pages were scraped, the content size, and whether we fell back.
+interface CompanyScrapeDiagnostics {
+  attempted: boolean;
+  scrape_ok: boolean;
+  homepage_ok: boolean;
+  map_urls: number;
+  key_pages_scraped: number;
+  content_chars: number;
+  used_fallback: boolean;
+}
+
 async function enrichCompanyDeep(
   firecrawlKey: string,
   lovableKey: string,
   websiteUrl: string,
   companyName: string,
-  fallbackSummary: string
-): Promise<{ profile: EnrichedCompanyProfile; enrichedSummary: string }> {
+  fallbackSummary: string,
+  stats?: FirecrawlStats,
+  cache?: ScrapeCache,
+): Promise<{ profile: EnrichedCompanyProfile; enrichedSummary: string; diagnostics: CompanyScrapeDiagnostics }> {
   const defaultProfile: EnrichedCompanyProfile = {
     summary: fallbackSummary,
     industry: "",
@@ -178,20 +294,43 @@ async function enrichCompanyDeep(
     team_size_indicators: "",
     unique_selling_points: [],
   };
+  const diagnostics: CompanyScrapeDiagnostics = {
+    attempted: true,
+    scrape_ok: false,
+    homepage_ok: false,
+    map_urls: 0,
+    key_pages_scraped: 0,
+    content_chars: 0,
+    used_fallback: true,
+  };
 
   try {
-    const [allUrls, homepageMarkdown] = await Promise.all([
-      firecrawlMap(firecrawlKey, websiteUrl),
-      firecrawlScrape(firecrawlKey, websiteUrl),
+    const [allUrls, homepageFirstTry] = await Promise.all([
+      firecrawlMap(firecrawlKey, websiteUrl, 5000, stats),
+      firecrawlScrape(firecrawlKey, websiteUrl, 10000, stats, cache),
     ]);
 
+    // Retry the homepage once on failure — it grounds the entire profile, and
+    // telemetry showed ~13% of Firecrawl ops time out (status 0). A timeout is
+    // NOT cached, so this is a genuine second attempt (with a longer budget); a
+    // 200-with-no-content IS cached, so the retry is just a cache hit (no extra
+    // API call). Only the homepage retries — key pages stay best-effort.
+    let homepageMarkdown = homepageFirstTry;
+    if (!homepageMarkdown) {
+      homepageMarkdown = await firecrawlScrape(firecrawlKey, websiteUrl, 15000, stats, cache);
+    }
+
+    diagnostics.map_urls = allUrls.length;
+    diagnostics.homepage_ok = !!homepageMarkdown;
     console.log(`Map found ${allUrls.length} URLs on ${websiteUrl}`);
 
-    const keyPages = allUrls.filter(isKeyPage).slice(0, 2);
+    // Prioritised selection (keyPageSelect.ts): customer/case-study/pricing pages
+    // first, then products/about. Up to 3 (was a flat "first 2 that matched").
+    const keyPages = selectKeyPages(allUrls, 3);
     console.log(`Scraping ${keyPages.length} key pages:`, keyPages);
 
     const additionalScrapes = await Promise.allSettled(
-      keyPages.map((url) => firecrawlScrape(firecrawlKey, url))
+      keyPages.map((url) => firecrawlScrape(firecrawlKey, url, 10000, stats, cache))
     );
 
     const allContent: string[] = [];
@@ -199,15 +338,23 @@ async function enrichCompanyDeep(
     for (const result of additionalScrapes) {
       if (result.status === "fulfilled" && result.value) {
         allContent.push(result.value);
+        diagnostics.key_pages_scraped++;
       }
     }
 
-    const combinedContent = allContent.join("\n\n---\n\n").slice(0, 2000);
+    // Budget raised 2000 → 4000: feed the extractor more of the (now better-
+    // chosen) pages so named clients / positioning aren't truncated away. Each
+    // page is still individually capped upstream by sanitizeScrapedContent.
+    const combinedContent = allContent.join("\n\n---\n\n").slice(0, 4000);
+    diagnostics.content_chars = combinedContent.length;
 
     if (combinedContent.length < 100) {
       console.log("Insufficient website content for deep analysis");
-      return { profile: defaultProfile, enrichedSummary: fallbackSummary };
+      return { profile: defaultProfile, enrichedSummary: fallbackSummary, diagnostics };
     }
+    // Usable content was extracted; the profile below is real, not a fallback.
+    diagnostics.scrape_ok = true;
+    diagnostics.used_fallback = false;
 
     const enrichResp = await callAI(lovableKey, [
       { role: "system", content: "You are an analyst extracting verifiable facts from a company's own website. Return only valid JSON, no markdown fences. Be conservative — when in doubt, omit." },
@@ -246,10 +393,14 @@ ${combinedContent}`,
     return {
       profile,
       enrichedSummary: profile.summary || fallbackSummary,
+      diagnostics,
     };
   } catch (e) {
     console.error("Deep company enrichment failed (continuing):", e);
-    return { profile: defaultProfile, enrichedSummary: fallbackSummary };
+    // Scrape may have succeeded but AI extraction/parse failed — we still return
+    // the fallback profile, so flag it as a fallback regardless of scrape_ok.
+    diagnostics.used_fallback = true;
+    return { profile: defaultProfile, enrichedSummary: fallbackSummary, diagnostics };
   }
 }
 
@@ -257,7 +408,9 @@ ${combinedContent}`,
 
 async function enrichMatchedProviders(
   firecrawlKey: string,
-  providers: any[]
+  providers: any[],
+  stats?: FirecrawlStats,
+  cache?: ScrapeCache,
 ): Promise<any[]> {
   if (!firecrawlKey || providers.length === 0) return providers;
 
@@ -269,7 +422,7 @@ async function enrichMatchedProviders(
     if (!providerUrl) return provider;
 
     try {
-      const markdown = await firecrawlScrape(firecrawlKey, providerUrl, 10000);
+      const markdown = await firecrawlScrape(firecrawlKey, providerUrl, 10000, stats, cache);
       if (markdown && markdown.length > 50) {
         return {
           ...provider,
@@ -300,26 +453,44 @@ interface CompetitorData {
   url: string;
   description: string;
   key_info: string;
+  // Populated only under FIRECRAWL_COMPETITOR_DEPTH: the competitor's Australian
+  // footprint (local office / AU case studies / .com.au / "no AU presence found"),
+  // the single most decision-useful fact for a market-entry competitive read.
+  au_presence?: string;
 }
 
 async function scrapeKnownCompetitors(
   firecrawlKey: string,
   lovableKey: string,
   knownCompetitors: Array<{ name: string; website: string }>,
-  companyName: string
+  companyName: string,
+  stats?: FirecrawlStats,
+  cache?: ScrapeCache,
+  deep = false,
 ): Promise<CompetitorData[]> {
   if (!firecrawlKey || knownCompetitors.length === 0) return [];
 
-  console.log(`Scraping ${knownCompetitors.length} user-provided competitors...`);
+  // Cap at 5 to bound Firecrawl cost: each known competitor triggers 1 scrape
+  // (+1 search to resolve a domain when no website was given). Without this the
+  // loop is unbounded — a user pasting 30 competitors would fire ~60 Firecrawl
+  // ops on a single report. Mirrors the end-buyer cap (3). Log what we drop so
+  // the truncation isn't silent.
+  const MAX_KNOWN_COMPETITORS = 5;
+  const cappedCompetitors = knownCompetitors.slice(0, MAX_KNOWN_COMPETITORS);
+  if (knownCompetitors.length > MAX_KNOWN_COMPETITORS) {
+    console.log(`Capping known competitors: scraping ${MAX_KNOWN_COMPETITORS} of ${knownCompetitors.length} provided`);
+  }
+
+  console.log(`Scraping ${cappedCompetitors.length} user-provided competitors...`);
   const startTime = Date.now();
 
   const results = await Promise.allSettled(
-    knownCompetitors.map(async (comp) => {
+    cappedCompetitors.map(async (comp) => {
       // Resolve a domain from the name when none was provided (P1.5).
       const website = (comp.website && comp.website.trim())
         ? comp.website
-        : await resolveDomainFromName(firecrawlKey, comp.name);
-      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 10000) : null;
+        : await resolveDomainFromName(firecrawlKey, comp.name, stats);
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 10000, stats, cache) : null;
       if (!markdown || markdown.length < 50) {
         return { name: comp.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
@@ -330,7 +501,7 @@ async function scrapeKnownCompetitors(
           {
             role: "user",
             content: `Analyze this website content for "${comp.name}" (${website}), a competitor of "${companyName}".
-Return a JSON object: {"name": "${comp.name}", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"}
+Return a JSON object: {"name": "<the company's OFFICIAL name as written on their site, correctly capitalised — e.g. 'SourceWhale' not 'source whale'; fall back to '${comp.name}' only if the site doesn't state it>", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"${deep ? `, "au_presence": "their Australian footprint from the site ONLY — local office/address, AU case studies or customers, .com.au domain, AU pricing. If none is evident, say 'No Australian presence evident on their site'. Do NOT guess."` : ""}}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -355,44 +526,61 @@ ${markdown.slice(0, 2000)}`,
 async function searchCompetitors(
   firecrawlKey: string,
   lovableKey: string,
-  intake: any
-): Promise<{ competitors: CompetitorData[]; raw_results: any[] }> {
-  const empty = { competitors: [], raw_results: [] };
+  intake: any,
+  stats?: FirecrawlStats,
+  cache?: ScrapeCache,
+): Promise<{ competitors: CompetitorData[]; raw_results: any[]; competitor_depth: boolean }> {
+  // FIRECRAWL_COMPETITOR_DEPTH (default off): OFF runs the single legacy query
+  // and keeps the top 3 (unchanged behaviour); ON runs 2-3 angled queries
+  // (buildCompetitorQueries), keeps the top 5 deduped by domain, and the
+  // extraction adds an Australian-presence signal per competitor. Hoisted out of
+  // the try so it's returned on every path — buildReportJson persists it to
+  // report_json.metadata.competitor_depth so the flag state is verifiable from
+  // telemetry (au_presence itself isn't persisted / logs carry no console output).
+  const deep = !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH");
+  const empty = { competitors: [], raw_results: [], competitor_depth: deep };
   if (!firecrawlKey) return empty;
 
   try {
     const knownCompetitors = intake.known_competitors || [];
     const targetRegions = (intake.target_regions || []).join(", ") || "Australia";
     const industrySectorText = (intake.industry_sector || []).join(", ");
-    const query = `${industrySectorText} companies in Australia ${targetRegions} competitors`;
 
-    console.log(`Searching competitors: "${query}" (parallel with known competitor scraping)`);
+    const queries = deep
+      ? buildCompetitorQueries(intake)
+      : [`${industrySectorText} companies in Australia ${targetRegions} competitors`];
+    const discoveredCap = deep ? 5 : 3;
 
-    // Run known competitor scraping AND web search in parallel
-    const [knownResults, results] = await Promise.all([
-      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name),
-      firecrawlSearch(firecrawlKey, query, 5),
+    console.log(`Searching competitors (deep=${deep}, ${queries.length} query/ies): ${JSON.stringify(queries)}`);
+
+    // Known-competitor scrape + all discovery searches, in parallel.
+    const [knownResults, ...searchSets] = await Promise.all([
+      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name, stats, cache, deep),
+      ...queries.map((q) => firecrawlSearch(firecrawlKey, q, 5, 15000, stats)),
     ]);
 
-    const userDomain = new URL(
-      intake.website_url.startsWith("http") ? intake.website_url : `https://${intake.website_url}`
-    ).hostname.replace("www.", "");
+    let userDomain = "";
+    try {
+      userDomain = new URL(intake.website_url.startsWith("http") ? intake.website_url : `https://${intake.website_url}`)
+        .hostname.replace(/^www\./, "").toLowerCase();
+    } catch { /* leave blank */ }
+    const knownDomains = (knownCompetitors as Array<{ website: string }>).map((c) => domainOf(c.website || ""));
 
-    const knownDomains = new Set(
-      knownCompetitors.map((c: { website: string }) => {
-        try { return new URL(c.website.startsWith("http") ? c.website : `https://${c.website}`).hostname.replace("www.", ""); }
-        catch { return ""; }
-      }).filter(Boolean)
-    );
+    // Combine all queries' results, exclude the user's own + known-competitor
+    // domains, dedupe by domain, and cap. (domainOf/dedupe are pure + unit-tested.)
+    const filtered = dedupeCompetitorResults(searchSets.flat(), [userDomain, ...knownDomains], discoveredCap);
 
-    const filtered = results.filter((r) => {
-      try {
-        const resultDomain = new URL(r.url).hostname.replace("www.", "");
-        return resultDomain !== userDomain && !knownDomains.has(resultDomain);
-      } catch {
-        return true;
-      }
-    }).slice(0, 3);
+    // Relevance anchor for the extraction LLM: prefer the user's declared
+    // competitors (they define the true product niche by example — "compete with
+    // Equifax, Experian" → credit bureaus, not the FinTech ecosystem at large);
+    // fall back to the broad sector text only when none were provided.
+    const knownNamesForAnchor = (knownCompetitors as Array<{ name?: string }>)
+      .map((c) => (c?.name || "").trim())
+      .filter(Boolean)
+      .slice(0, 3);
+    const nicheAnchor = knownNamesForAnchor.length
+      ? `companies that directly compete with ${knownNamesForAnchor.join(", ")}`
+      : `${industrySectorText} product/service vendors`;
 
     let searchCompetitorsList: CompetitorData[] = [];
     if (filtered.length > 0) {
@@ -400,9 +588,9 @@ async function searchCompetitors(
         { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
         {
           role: "user",
-          content: `Analyze these search results about ${industrySectorText} companies in Australia. For each, extract competitor intelligence relevant to ${intake.company_name}.
+          content: `Analyze these search results to find DIRECT competitors of ${intake.company_name} — ${nicheAnchor} in Australia. A direct competitor offers a comparable product or service that a buyer would weigh as an alternative to ${intake.company_name} — NOT merely another company in the same broad sector.
 
-Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"}]
+Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"${deep ? `, "au_presence": "their Australian footprint if evident in the result (local office, AU customers/case studies, .com.au). If not evident, 'No Australian presence evident'. Do NOT guess."` : ""}}]${deep ? `\nStrict inclusion: ONLY direct product/service competitors. EXCLUDE service agencies, software-development shops, recruiters, employer-branding/talent platforms, ecosystem/community organisations, regulators, directories, news sites, and ${intake.company_name} itself. If a result is not a direct competitor, omit it — do not include it and then note that it is not a competitor.` : ""}
 
 Search results:
 ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.title}\nContent: ${r.markdown}`).join("\n\n")}`,
@@ -413,10 +601,16 @@ ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.tit
       searchCompetitorsList = JSON.parse(cleanedResp) as CompetitorData[];
     }
 
-    const allCompetitors = [...knownResults, ...searchCompetitorsList];
+    // Suppress discovered rows whose own extracted text self-disqualifies as a
+    // competitor (dev shops, recruiters, employer-branding — the extraction LLM
+    // sometimes surfaces then labels these "not a competitor"). Known competitors
+    // are user-declared and trusted, so they are never filtered.
+    const discovered = dropNonCompetitors(searchCompetitorsList);
+    const suppressed = searchCompetitorsList.length - discovered.length;
+    const allCompetitors = [...knownResults, ...discovered];
 
-    console.log(`Total competitors: ${allCompetitors.length} (${knownResults.length} known + ${searchCompetitorsList.length} discovered)`);
-    return { competitors: allCompetitors, raw_results: filtered };
+    console.log(`Total competitors: ${allCompetitors.length} (${knownResults.length} known + ${discovered.length} discovered${suppressed ? `, ${suppressed} non-competitor(s) suppressed` : ""}; deep=${deep})`);
+    return { competitors: allCompetitors, raw_results: filtered, competitor_depth: deep };
   } catch (e) {
     console.error("Competitor search failed (continuing):", e);
     return empty;
@@ -430,13 +624,21 @@ interface EndBuyerIntelligence {
   url: string;
   description: string;
   key_info: string;
+  /** Software/tools evident in the site content ("" when not evident — never guessed). */
+  tech_signals?: string;
+  /** Roles they appear to be hiring for right now ("" when not evident). */
+  hiring_signals?: string;
+  /** Name-only chip whose resolved domain failed the wrong-company gate. */
+  unverified?: boolean;
 }
 
 async function scrapeEndBuyers(
   firecrawlKey: string,
   lovableKey: string,
   endBuyers: Array<{ name: string; website: string }>,
-  companyName: string
+  companyName: string,
+  stats?: FirecrawlStats,
+  cache?: ScrapeCache,
 ): Promise<EndBuyerIntelligence[]> {
   if (!firecrawlKey || endBuyers.length === 0) return [];
 
@@ -449,10 +651,19 @@ async function scrapeEndBuyers(
   const results = await Promise.allSettled(
     cappedBuyers.map(async (buyer) => {
       // Resolve a domain from the name when none was provided (P1.5).
-      const website = (buyer.website && buyer.website.trim())
+      const hadWebsite = !!(buyer.website && buyer.website.trim());
+      const website = hadWebsite
         ? buyer.website
-        : await resolveDomainFromName(firecrawlKey, buyer.name);
-      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 8000) : null;
+        : await resolveDomainFromName(firecrawlKey, buyer.name, stats);
+      // Wrong-company gate (buyer-briefs v1): a name-only chip ("walter page") can
+      // resolve to an unrelated business — a confidently wrong brief is worse than
+      // none. User-supplied websites are trusted; resolved ones must share a
+      // distinctive name token with the host.
+      if (!hadWebsite && !nameMatchesDomain(buyer.name, website)) {
+        console.log(`end buyer "${buyer.name}": resolved domain failed name match — marked unverified`);
+        return { name: buyer.name, url: "", description: "", key_info: "", unverified: true };
+      }
+      const markdown = website ? await firecrawlScrape(firecrawlKey, website, 8000, stats, cache) : null;
       if (!markdown || markdown.length < 50) {
         return { name: buyer.name, url: website, description: "Website could not be analysed.", key_info: "" };
       }
@@ -463,7 +674,7 @@ async function scrapeEndBuyers(
           {
             role: "user",
             content: `Analyse this company "${buyer.name}" (${website}) as a POTENTIAL CUSTOMER for "${companyName}".
-Return a JSON object: {"name": "${buyer.name}", "url": "${website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them"}
+Return a JSON object: {"name": "${buyer.name}", "url": "${website}", "description": "what this company does and their market position in 1-2 sentences", "key_info": "what they buy/procure, how they select suppliers, partnership programs, supplier requirements, procurement processes, and any opportunities for ${companyName} to sell to them", "tech_signals": "software/platforms/tools explicitly evident in the content (ATS, CRM, marketing stack); empty string if none evident — do NOT guess", "hiring_signals": "roles they appear to be actively hiring for per the content; empty string if none evident"}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -697,19 +908,24 @@ interface DiscoveredEvent {
 async function discoverExternalEvents(
   firecrawlKey: string,
   lovableKey: string,
-  intake: any
+  intake: any,
+  stats?: FirecrawlStats,
 ): Promise<DiscoveredEvent[]> {
   if (!firecrawlKey) return [];
 
   const industrySectorText = (intake.industry_sector || []).join(", ");
   const targetRegionsText = (intake.target_regions || []).join(", ") || "Australia";
-  const query = `${industrySectorText} conference trade show expo Australia ${targetRegionsText} 2025 2026`;
+  // Derive the search years from the report's timezone (Australia/Sydney) rather
+  // than hardcoding "2025 2026", which silently rots — by 2027 it would steer the
+  // search at stale years. Current + next year keeps upcoming events in scope.
+  const currentYear = Number(todayIsoForReportTimezone().slice(0, 4));
+  const query = `${industrySectorText} conference trade show expo Australia ${targetRegionsText} ${currentYear} ${currentYear + 1}`;
 
   console.log(`Discovering external events: "${query}"`);
   const startTime = Date.now();
 
   try {
-    const results = await firecrawlSearch(firecrawlKey, query, 5);
+    const results = await firecrawlSearch(firecrawlKey, query, 5, 15000, stats);
     if (results.length === 0) return [];
 
     const aiResp = await callAI(lovableKey, [
@@ -763,7 +979,10 @@ async function researchEndBuyerProcurement(intake: any): Promise<string> {
     const result = await callPerplexity(perplexityKey,
       `How do ${industryContext} in Australia procure ${industrySectorText} services?${targetContext} Key procurement channels, typical buying cycles, RFP processes, partnership models, preferred supplier criteria, and how international companies can become approved suppliers.`
     );
-    return result.content || "";
+    // This research's citations are NOT pooled into the report citation list, so
+    // Perplexity's own [N] markers would renumber against the wrong sources if the
+    // model copied them into prose — strip them (same guard as the account research).
+    return (result.content || "").replace(/\[\d+\]/g, "");
   } catch (e) {
     console.error("End buyer procurement research failed:", e);
     return "";
@@ -917,9 +1136,12 @@ const sanitizeFilterValue = (v: string): string =>
 // near-duplicate Melbourne pitch nights that this PR fixed in the overlap
 // path. Pure functions, no I/O.
 
+// Expand target_regions into complete, includes()-safe location tokens (B13):
+// "Sydney/NSW" → ["sydney","new south wales","nsw"] (state half no longer dropped),
+// nation-wide words ("National"/"Australia") → no token (no specific city to prefer).
 const deriveLocationPatterns = (intake: any): string[] =>
-  ((intake?.target_regions as string[] | undefined) || [])
-    .map((r: string) => sanitizeFilterValue((r || "").split("/")[0]))
+  expandTargetRegions((intake?.target_regions as string[] | undefined) || [])
+    .map((r: string) => sanitizeFilterValue(r))
     .filter(Boolean);
 
 const normalizeEventKeyPart = (s: string): string =>
@@ -983,6 +1205,9 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     goal_ids: intake.goal_ids,
     services_needed: intake.services_needed,
   });
+  // Grants goal → structured boost on the agency surface (grants_available column;
+  // no grant tag vocabulary exists in any directory table).
+  const wantsGrantsGoal = goalSelectsGrants(intake);
 
   const locationPatterns = regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
 
@@ -1122,7 +1347,12 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     // semantic path so the two paths agree on event surfacing. applySellsTo:true —
     // events are a buyer-facing surface, so the buyer-industry signal counts here.
     const ranked = rank(ev || [], { applySellsTo: true }, 12);
-    let eventResults = regionFilterAndDedupeEvents(ranked, locationPatterns, 5);
+    // Relevance gate (report-quality loop ref d6a6ce3d): prefer events with a genuine
+    // industry / sells-to sector match over sector-agnostic ones (e.g. a fitness or
+    // accounting expo surfacing for a cyber company), but never empty the section —
+    // keep at least 6 candidates so the region filter + dedupe below still have a pool.
+    const gatedEvents = preferRelevant(ranked, hasSectorRelevance, 6);
+    let eventResults = regionFilterAndDedupeEvents(gatedEvents, locationPatterns, 5);
 
     // Fallback when the strict filter returned nothing: take the soonest
     // future events in the target region (still date-bounded — no more
@@ -1143,7 +1373,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
 
     matches.events = eventResults.map((e: any) => ({
       ...e, name: e.title, link: e.slug ? `/events/${e.slug}` : "/events", linkLabel: "View Event",
-      subtitle: `${e.date} · ${e.location}`, tags: [e.category, e.type].filter(Boolean),
+      subtitle: metaLine([e.date, e.location]), tags: [e.category, e.type].filter(Boolean),
     }));
   } catch (e) { console.error("Events search error:", e); }
 
@@ -1181,10 +1411,23 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
       .limit(100);
     const { data: ld, error: ldErr } = await ldQuery;
     if (ldErr) console.error("Lead databases query error:", ldErr);
-    matches.lead_databases = rank(ld, { applySellsTo: true }, 5).map((l: any) => ({
+    // ICP gate (RQ ref b29b88c1; tightened per Floats feedback, RQ "lead-list
+    // matching must filter by end-buyer industry / ICP"): lead_databases carry a
+    // `sector` string + `tags[]` (NOT sector_tags), so the sector scorer is blind
+    // to them. A purchasable list should match who the company SELLS TO — gate on
+    // the declared end-buyer ICP first, own sector only as a fallback proxy
+    // (leadIcpTokens). CRITICAL CHANGE: this is now a STRICT filter, not a
+    // preferRelevant floor — an unmatched list is DROPPED, never padded in to hit
+    // a count. The old floor backfilled "Recently Funded Australian Startups" into
+    // Floats' report purely as filler. If nothing matches, the section is
+    // intentionally empty (the custom-list request box is the escape hatch).
+    const icpTokens = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []);
+    const rankedLeads = rank(ld, { applySellsTo: true }, 12);
+    const gatedLeads = rankedLeads.filter((l: any) => leadMatchesIcp(l, icpTokens)).slice(0, 5);
+    matches.lead_databases = gatedLeads.map((l: any) => ({
       ...l, name: l.title, price: l.price_aud,
       link: l.slug ? `/leads/${l.slug}` : "/leads", linkLabel: "View Dataset",
-      subtitle: `${l.location ?? ""} · ${l.record_count ?? "?"} records`,
+      subtitle: metaLine([l.location, recordCountLabel(l.record_count)]),
       tags: (l.tags || []).slice(0, 3),
     }));
   } catch (e) { console.error("Lead databases search error:", e); }
@@ -1201,15 +1444,48 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     }));
   } catch (e) { console.error("IE search error:", e); }
 
-  // Trade & investment agencies — sector + country corridor + location (+ agnostic)
+  // Trade & investment agencies — sector + country corridor + location (+ agnostic).
+  // Corridor-gate the CANDIDATES before the rank cap (gate-before-cap). The Daon
+  // report (Irish founder, 7 Jul 2026) stored trade_investment_agencies: 0 even
+  // though 22 of the 134 rows pass the corridor gate for Ireland (Enterprise
+  // Ireland, Irish Australian Chamber, Austrade, Investment NSW): the fetch took
+  // an ARBITRARY 40 rows (no .order()), rank capped to 5, and the union-level gate
+  // then dropped all 5 — an empty "Government & Trade" surface despite a healthy
+  // directory. Fetch the whole small table (134 rows) so ordering can't starve the
+  // pool, filter to in-corridor rows, THEN rank into the 5 slots. The union-level
+  // gate stays as the safety net for the semantic path.
   try {
-    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, tagline, target_company_origin, sector_tags, sector_agnostic").limit(CAND);
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, website_url, domain, tagline, target_company_origin, organisation_type, government_level, location_state, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic, grants_available").limit(300);
     taQuery = taQuery.or(buildOr({ service: "services" }));
     const { data: ta, error: taErr } = await taQuery;
     if (taErr) console.error("TIA query error:", taErr);
-    matches.trade_investment_agencies = rank(ta, { service: "services", persona: true }, 5).map((a: any) => ({
+    const taOriginTerms = geoOriginTerms(intake.country_of_origin);
+    const taInCorridor = (ta || []).filter((r: any) => isAgencyInCorridor(r, taOriginTerms));
+    console.log(`TIA corridor pre-filter: ${(ta || []).length} candidates → ${taInCorridor.length} in corridor`);
+    // countryCol gives the founder's ORIGIN trade body (Enterprise Ireland for an
+    // Irish founder — location_country "ireland") the scorer's structured +2 corridor
+    // boost; agencies never passed it, so origin bodies lost the 5 slots to generic
+    // AU industry groups despite being the most corridor-valuable row in the pool.
+    //
+    // Grants goal (taxonomy ticket): there is NO grant service-tag vocabulary anywhere,
+    // so the "grants" goal was a dead lever on this surface. grants_available is the
+    // structured signal — when the user selected the grants goal, rank a wider slate
+    // and stable-partition grants-capable bodies first before taking the 5 slots
+    // (score order preserved within each half, never empties: non-grants bodies
+    // backfill the remaining slots).
+    let taRanked = rank(taInCorridor, { service: "services", persona: true, countryCol: "location_country" }, wantsGrantsGoal ? 10 : 5);
+    if (wantsGrantsGoal) {
+      const g = taRanked.filter((a: any) => a.grants_available === true);
+      const rest = taRanked.filter((a: any) => a.grants_available !== true);
+      if (g.length > 0) console.log(`grants goal: prioritising ${g.length} grants_available agencies`);
+      taRanked = [...g, ...rest].slice(0, 5);
+    }
+    matches.trade_investment_agencies = taRanked.map((a: any) => ({
       ...a, link: a.slug ? `/government-support/${a.slug}` : "/government-support", linkLabel: "View Organisation",
       subtitle: a.location, tags: (a.services || []).slice(0, 3),
+      // URL lives in website_url/domain for many agencies; `website` is often NULL
+      // (Floats: AiGroup, Global Victoria rendered unlinked). Resolve the fallback.
+      website: resolveWebsite(a),
     }));
   } catch (e) { console.error("TIA search error:", e); }
 
@@ -1223,7 +1499,7 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
     if (invErr) console.error("Investors query error:", invErr);
     matches.investors = rank(inv, { countryCol: "country" }, 8).map((i: any) => ({
       ...i, link: i.slug ? `/investors/${i.slug}` : "/investors", linkLabel: "View Investor",
-      subtitle: `${i.investor_type} · ${i.location}`,
+      subtitle: metaLine([i.investor_type, i.location]),
       tags: (i.stage_focus || []).slice(0, 3),
     }));
   } catch (e) { console.error("Investors search error:", e); }
@@ -1467,6 +1743,146 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
     }
   }
+  // ── Lead-list ICP gate at the UNION (P1-C follow-up) ────────────────────
+  // The overlap path gates its own leads, but lead_databases is ALSO embedded in
+  // the KB and is merged semantic-first — so an off-ICP list surfaced by the
+  // preferred semantic path would otherwise reach the report un-gated (the
+  // overlap gate only ever touched the backfill slot). Re-apply the SAME strict
+  // ICP filter here, at the union, so BOTH paths are covered. Strict (no floor):
+  // an off-ICP list is dropped, not padded — the custom-list request box is the
+  // escape hatch. Empty ICP tokens → leadMatchesIcp returns true → no-op.
+  if (merged.lead_databases?.length) {
+    const leadIcp = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []);
+    const before = merged.lead_databases.length;
+    merged.lead_databases = merged.lead_databases.filter((l: any) => leadMatchesIcp(l, leadIcp));
+    if (merged.lead_databases.length !== before) {
+      console.log(`lead ICP union gate: ${before} → ${merged.lead_databases.length}`);
+    }
+  }
+
+  // ── Geography / origin gate (Stage 7 bugs B3 & B4) ──────────────────────
+  // The scorer only ADDS a +1 location nudge; it never excludes, so a wrong-market
+  // row (a New-York firm on an AU report; a UK/Canadian agency for an Irish founder)
+  // could still win a slot as backfill. Drop out-of-scope rows here — at the union,
+  // so it covers BOTH the overlap and semantic paths — while never emptying a section
+  // (preferRelevant backfills weak rows only when too few in-scope rows exist).
+  // Providers + innovation hubs: geography is free-text `location`. Gate via the
+  // ANZ/target matcher, backfilling (preferRelevant) so a thin directory never
+  // empties the section — a clearly-foreign location (a New-York firm) drops.
+  const geoTargetRegions = deriveLocationPatterns(intake);
+  const geoMatcher = buildGeoMatcher({ targetRegions: geoTargetRegions });
+  const GEO_MIN_KEEP = 3;
+  for (const tbl of ["service_providers", "innovation_ecosystem"]) {
+    if (merged[tbl]?.length) {
+      const before = merged[tbl].length;
+      merged[tbl] = preferRelevant(merged[tbl], (r) => isGeoRelevant(r, geoMatcher), GEO_MIN_KEEP);
+      if (merged[tbl].length !== before) console.log(`geo gate ${tbl}: ${before} → ${merged[tbl].length}`);
+    }
+  }
+  // Trade/government agencies: nearly all are foreign missions PHYSICALLY in Australia,
+  // so a text match is useless — use the structured corridor gate (organisation_type +
+  // represented country). HARD filter (no backfill): re-adding foreign missions to hit a
+  // minimum would just reintroduce B4, and the providers section stays populated from
+  // service_providers + innovation regardless.
+  const agencyOriginTerms = geoOriginTerms(intake.country_of_origin);
+  if (merged.trade_investment_agencies?.length) {
+    const before = merged.trade_investment_agencies.length;
+    merged.trade_investment_agencies = merged.trade_investment_agencies.filter(
+      (r) => isAgencyInCorridor(r, agencyOriginTerms),
+    );
+    if (merged.trade_investment_agencies.length !== before) {
+      console.log(`geo gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);
+    }
+  }
+  // State-body region gate (Floats feedback, P2-F): a STATE government body (Global
+  // Victoria, Invest Victoria) is only useful to a founder targeting THAT state, but the
+  // corridor gate keeps every domestic ANZ body for everyone. Drop a state body whose
+  // state ≠ any state named by the report's target regions. Silent for national targets
+  // (no specific state) and non-state bodies (federal/industry/bilateral stay). Hard
+  // filter: only wrong-state state bodies are removed, so the section stays populated.
+  if (merged.trade_investment_agencies?.length) {
+    const before = merged.trade_investment_agencies.length;
+    merged.trade_investment_agencies = merged.trade_investment_agencies.filter(
+      (r) => !stateAgencyRegionMismatch(r, geoTargetRegions),
+    );
+    if (merged.trade_investment_agencies.length !== before) {
+      console.log(`state gate trade_investment_agencies: ${before} → ${merged.trade_investment_agencies.length}`);
+    }
+  }
+  // Grants goal (taxonomy ticket): order grants-capable bodies first at the union so
+  // the semantic path benefits too (the overlap path already widened its slate). Pure
+  // reorder — membership unchanged, section never empties. NB: recomputed here — the
+  // overlap path's wantsGrantsGoal is scoped to searchMatchesOverlap, not this function.
+  if (goalSelectsGrants(intake) && merged.trade_investment_agencies?.length) {
+    merged.trade_investment_agencies = [
+      ...merged.trade_investment_agencies.filter((r: any) => r.grants_available === true),
+      ...merged.trade_investment_agencies.filter((r: any) => r.grants_available !== true),
+    ];
+  }
+  // National chambers of commerce that are filed in the PROVIDER pools (no
+  // jurisdiction column, so the agency gate above can't see them) are gated by
+  // the foreign demonym in their NAME — keep the corridor chamber (Australian
+  // British Chamber for a UK founder), drop the wrong one (AmCham/US). Hard filter:
+  // a wrong-corridor chamber is pure noise and the section stays full from the many
+  // non-chamber providers. (Stage 7 bug B8.)
+  for (const tbl of ["service_providers", "innovation_ecosystem"]) {
+    if (merged[tbl]?.length) {
+      const before = merged[tbl].length;
+      merged[tbl] = merged[tbl].filter((r) => !chamberOriginMismatch(r, agencyOriginTerms));
+      if (merged[tbl].length !== before) console.log(`chamber gate ${tbl}: ${before} → ${merged[tbl].length}`);
+    }
+  }
+
+  // ── Cross-section dedupe (Stage 7 bug B10) ──────────────────────────────
+  // An entity in the providers section (service_providers + agencies + innovation)
+  // or the mentors section must not ALSO surface as a card in a later section — e.g.
+  // "Stone & Chalk" (innovation hub AND investor) or "Aaron Birkby" (mentor AND
+  // investor). getMatchesForSection still dedupes WITHIN the providers section
+  // (dedupeByKey); this prunes the later sections' source arrays by section priority:
+  // providers > mentors > investors. First section to claim an entity keeps it.
+  const entityKey = (r: { name?: unknown; title?: unknown; company_name?: unknown }) =>
+    String(r?.name || r?.title || r?.company_name || "").toLowerCase().trim();
+  const providerPool = [
+    ...(merged.service_providers || []),
+    ...(merged.trade_investment_agencies || []),
+    ...(merged.innovation_ecosystem || []),
+  ];
+  const [, dedupMentors, dedupInvestors] = pruneAcrossGroups(
+    [providerPool, merged.community_members || [], merged.investors || []],
+    entityKey,
+  );
+  if ((merged.community_members || []).length !== dedupMentors.length) {
+    console.log(`cross-section dedupe mentors: ${(merged.community_members || []).length} → ${dedupMentors.length}`);
+  }
+  if ((merged.investors || []).length !== dedupInvestors.length) {
+    console.log(`cross-section dedupe investors: ${(merged.investors || []).length} → ${dedupInvestors.length}`);
+  }
+  merged.community_members = dedupMentors;
+  merged.investors = dedupInvestors;
+
+  // Persona/origin-aware immigration filter (Floats feedback): a DOMESTIC-origin
+  // company (Australian startup) needs neither immigration/visa MENTORS nor
+  // immigration SERVICE PROVIDERS, but the scorer surfaced both "Head of Community,
+  // Techvisa" (mentor) and the "TechVisa" business-immigration provider anyway.
+  // Demote visa/immigration-dominant rows on both surfaces (floor-guarded via
+  // preferRelevant, so a thin pool still renders) — UNLESS the company is
+  // international, or explicitly asked for immigration / relocation /
+  // international-hiring help.
+  if (!isInternationalOrigin(intake.country_of_origin)) {
+    const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
+      `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
+    );
+    if (!wantsImmigration) {
+      for (const [tbl, floor] of [["community_members", 3], ["service_providers", 4]] as const) {
+        if (!(merged[tbl] || []).length) continue;
+        const before = merged[tbl].length;
+        merged[tbl] = preferRelevant(merged[tbl], (r: any) => !isImmigrationFocused(r), floor);
+        const dropped = before - merged[tbl].length;
+        if (dropped > 0) console.log(`immigration filter (domestic) ${tbl}: demoted ${dropped} row(s)`);
+      }
+    }
+  }
+
   // lead_databases is the real catalog; expose it under the report's existing
   // `leads` variable so report_templates needs no change.
   if (merged.lead_databases) { merged.leads = merged.lead_databases; delete merged.lead_databases; }
@@ -1488,14 +1904,22 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
     // must not be double-counted by the utilization metric). First occurrence wins, so
     // the service_providers pool (the primary) keeps the entry. Per-pool caps upstream
     // (10 / 5 / 5) already bound the total.
+    // `card_group` tags each card with its entity kind so the frontend renders
+    // one sub-headed grid per type instead of a single mixed grid (Stage 5 B9).
     case "service_providers": return dedupeByKey([
-      ...(matches.service_providers || []),
-      ...(matches.trade_investment_agencies || []),
-      ...(matches.innovation_ecosystem || []),
+      ...(matches.service_providers || []).map((r: any) => ({ ...r, card_group: "providers" })),
+      ...(matches.trade_investment_agencies || []).map((r: any) => ({ ...r, card_group: "agencies" })),
+      ...(matches.innovation_ecosystem || []).map((r: any) => ({ ...r, card_group: "innovation" })),
     ], (r: any) => (r?.name || r?.title || r?.company_name || "").toString().toLowerCase().trim());
     case "mentor_recommendations": return matches.community_members || [];
-    case "events_resources": return [...(matches.events || []), ...(matches.content_items || [])];
-    case "lead_list": return [...(matches.leads || []), ...(matches.lemlist_contacts || [])];
+    case "events_resources": return [
+      ...(matches.events || []).map((r: any) => ({ ...r, card_group: "events" })),
+      ...(matches.content_items || []).map((r: any) => ({ ...r, card_group: "resources" })),
+    ];
+    case "lead_list": return [
+      ...(matches.leads || []).map((r: any) => ({ ...r, card_group: "leads" })),
+      ...(matches.lemlist_contacts || []).map((r: any) => ({ ...r, card_group: "contacts" })),
+    ];
     case "investor_recommendations": return matches.investors || [];
     case "competitor_landscape": return [];
     default: return [];
@@ -1539,13 +1963,23 @@ async function generateReportInBackground(
 
     console.log("Starting optimised parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + providers enrichment + competitors + end buyers...");
 
+    // One stats collector per report, threaded through every Firecrawl wrapper
+    // so the metadata can report plumbing health + total op count (P1/P2).
+    const firecrawlStats = createFirecrawlStats();
+    // Cross-report scrape cache (P1) — undefined unless FIRECRAWL_CACHE_ENABLED is
+    // set, in which case repeated scrapes (esp. matched providers) hit the cache
+    // instead of re-burning Firecrawl credits every report.
+    const firecrawlCache = buildScrapeCache(supabase);
+
     // Wrap DB matching + provider enrichment into a single parallel task
     const matchesAndEnrichTask = async () => {
       const rawMatches = await searchMatches(supabase, intake);
       // Enrich providers in parallel (was previously sequential after the main block)
       rawMatches.service_providers = await enrichMatchedProviders(
         firecrawlKey,
-        rawMatches.service_providers || []
+        rawMatches.service_providers || [],
+        firecrawlStats,
+        firecrawlCache,
       );
       return rawMatches;
     };
@@ -1557,23 +1991,35 @@ async function generateReportInBackground(
       competitorResult,
       endBuyerScrapeResult,
       endBuyerProcurementResearch,
+      endBuyerAccountResearch,
     ] = await Promise.all([
       firecrawlKey && intake.website_url
-        ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary)
-        : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary }),
+        ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary, firecrawlStats, firecrawlCache)
+        : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary, diagnostics: null }),
       runMarketResearch(intake, persona),
       matchesAndEnrichTask(),
       firecrawlKey
-        ? searchCompetitors(firecrawlKey, lovableKey, intake)
-        : Promise.resolve({ competitors: [], raw_results: [] }),
+        ? searchCompetitors(firecrawlKey, lovableKey, intake, firecrawlStats, firecrawlCache)
+        : Promise.resolve({ competitors: [], raw_results: [], competitor_depth: !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH") }),
       firecrawlKey && (intake.end_buyers || []).length > 0
-        ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name)
+        ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name, firecrawlStats, firecrawlCache)
         : Promise.resolve([]),
       researchEndBuyerProcurement(intake),
+      // Buyer-briefs v1: ONE batched Perplexity pass across all named accounts —
+      // recent news + live hiring + known tech, cited. Single call regardless of
+      // chip count (cost cap); "" on failure/no chips (fail-open).
+      (async () => {
+        const chips = (intake.end_buyers || []).slice(0, 3);
+        const pk = Deno.env.get("PERPLEXITY_API_KEY");
+        if (!pk || chips.length === 0) return "";
+        const list = chips.map((b: any) => `${b.name}${b.website ? ` (${b.website})` : ""}`).join("; ");
+        const r = await callPerplexity(pk, `For EACH of these Australian-market companies: ${list} — give 1) notable news from the last 12 months, 2) whether they appear to be actively hiring and for what roles, 3) any known software/technology they use (ATS, CRM, marketing or delivery stack). Say "unknown" where you cannot find evidence — do not guess.`, { recency: "year" });
+        return r.ok ? r.content : "";
+      })(),
     ]);
 
     // Extract key metrics from the landscape response instead of a separate Perplexity call
-    const keyMetrics: Array<{ label: string; value: string; context: string }> = [];
+    const keyMetrics: Array<{ label: string; value: string; context: string; estimated?: boolean }> = [];
     if (marketResearch.landscape) {
       const metricLines = marketResearch.landscape.match(/- METRIC: (.+?) \| (.+?) \| (.+)/g);
       if (metricLines) {
@@ -1584,7 +2030,15 @@ async function generateReportInBackground(
           // these as plain text). Leave [N] citation markers intact.
           if (m) {
             const clean = (s: string) => s.replace(/\*/g, "").trim();
-            keyMetrics.push({ label: clean(m[1]), value: clean(m[2]), context: clean(m[3]) });
+            const value = clean(m[2]);
+            const context = clean(m[3]);
+            keyMetrics.push({
+              label: humanizeMetricLabel(clean(m[1])),
+              value,
+              context,
+              // Flag model-derived estimates so the panel marks them "Est." (P2-H).
+              estimated: isEstimatedMetric(value, context),
+            });
           }
         }
         // Remove the KEY METRICS section from landscape text to keep it clean
@@ -1595,6 +2049,56 @@ async function generateReportInBackground(
 
     const enrichedSummary = companyEnrichResult.enrichedSummary;
     const companyProfile = companyEnrichResult.profile;
+    const companyScrapeDiag = companyEnrichResult.diagnostics;
+
+    // Competitor recall backfill (Floats feedback): discovery can come up thin
+    // (Floats got 1 competitor) while the market-research prose already fetched
+    // openly names real rivals. When we're below target, mine that prose for
+    // named competitors and verify each through the known-competitor scrape
+    // (resolve domain + read the live site) — only companies that actually
+    // resolve and yield content are added, so nothing unverified enters the
+    // report. Reuses fetched research → no extra Perplexity spend. Best-effort.
+    try {
+      if (firecrawlKey && (competitorResult.competitors?.length || 0) < BACKFILL_TARGET) {
+        const researchText = `${marketResearch.landscape || ""}\n\n${marketResearch.news || ""}`.trim().slice(0, 6000);
+        if (researchText.length > 100) {
+          const existingNames = [
+            ...competitorResult.competitors.map((c: any) => c?.name),
+            intake.company_name,
+          ].filter(Boolean) as string[];
+          const mentionText = await callAI(lovableKey, [
+            { role: "system", content: "You extract competitor company names from analyst notes. Return only valid JSON, no markdown fences." },
+            { role: "user", content: buildMentionPrompt(intake.company_name, (intake.industry_sector || []).join(" / "), researchText, existingNames) },
+          ], "google/gemini-3-flash-preview", { temperature: 0.1 });
+          const names = parseMentions(mentionText, existingNames);
+          if (names.length > 0) {
+            const scraped = await scrapeKnownCompetitors(
+              firecrawlKey, lovableKey,
+              names.map((n) => ({ name: n, website: "" })),
+              intake.company_name, firecrawlStats, firecrawlCache, !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH"),
+            );
+            const existingDomains = new Set(
+              competitorResult.competitors.map((c: any) => domainOf(c?.url || "")).filter(Boolean),
+            );
+            const existingNameSet = new Set(existingNames.map((n) => n.toLowerCase()));
+            const isVerified = (c: any) =>
+              c?.url && !/could not be analysed|could not extract/i.test(String(c?.description || ""));
+            let added = 0;
+            for (const c of scraped) {
+              if (!isVerified(c)) continue; // unresolved / unscrapeable mined name → drop, never surface unverified
+              const dom = domainOf(c.url || "");
+              if (dom && existingDomains.has(dom)) continue;
+              if (existingNameSet.has(String(c.name || "").toLowerCase())) continue;
+              competitorResult.competitors.push(c);
+              if (dom) existingDomains.add(dom);
+              existingNameSet.add(String(c.name || "").toLowerCase());
+              added++;
+            }
+            console.log(`competitor backfill: mined ${names.length} name(s) from research, added ${added} verified`);
+          }
+        }
+      }
+    } catch (e) { console.error("competitor backfill failed (continuing):", e); }
 
     if (companyProfile) {
       await supabase.from("user_intake_forms")
@@ -1607,7 +2111,7 @@ async function generateReportInBackground(
     const internalEventCount = (matches.events || []).length;
     if (firecrawlKey && internalEventCount < 3) {
       console.log(`Only ${internalEventCount} internal events found — discovering external events...`);
-      discoveredEvents = await discoverExternalEvents(firecrawlKey, lovableKey, intake);
+      discoveredEvents = await discoverExternalEvents(firecrawlKey, lovableKey, intake, firecrawlStats);
     } else {
       console.log(`${internalEventCount} internal events found — skipping external event discovery`);
     }
@@ -1616,7 +2120,7 @@ async function generateReportInBackground(
     if (discoveredEvents.length > 0) {
       const discoveredEventMatches = discoveredEvents.map((e) => ({
         name: e.name,
-        subtitle: `${e.date} · ${e.location}`,
+        subtitle: metaLine([e.date, e.location]),
         tags: ["Web Discovery"],
         link: e.url,
         linkLabel: "View Event",
@@ -1625,6 +2129,45 @@ async function generateReportInBackground(
       }));
       matches.events = [...(matches.events || []), ...discoveredEventMatches];
     }
+
+    // ── LLM relevance curation (MATCH_RERANK_ENABLED, default off) ───────────
+    // Selection so far is embeddings-recall + a deterministic scorer + rule gates —
+    // no model ever asks "is this entity actually useful for THIS company?". The
+    // 20-sector taxonomy is coarse, so plausible-but-wrong picks pass (an insurtech
+    // association / Asia-gateway hub for an Irish credit-decisioning fintech; a
+    // "Legal Technology Buyers" lead list). Hand the whole selected slate + the
+    // enriched company profile to ONE cheap Gemini call and drop what an analyst would
+    // cut. Drop-only, floor-guarded, and fail-open (see matchRerank.ts) so it can
+    // never empty a section or add/reorder — worst case it's a no-op.
+    let matchRerankInfo: { applied: boolean; dropped: Record<string, number>; dropped_count: number } | null = null;
+    if (Deno.env.get("MATCH_RERANK_ENABLED")) {
+      try {
+        const rerankItems = buildRerankItems(matches);
+        if (rerankItems.length > 0) {
+          const rerankContext = [
+            `${intake.company_name || "The company"} — ${(intake.industry_sector || []).join(" / ") || "sector not specified"}`,
+            `from ${intake.country_of_origin || "unknown origin"}`,
+            `entering ${(intake.target_regions || []).join(", ") || "Australia"}`,
+            (intake.end_buyer_industries || []).length ? `sells to: ${(intake.end_buyer_industries || []).join(", ")}` : "",
+            enrichedSummary ? `Profile: ${String(enrichedSummary).slice(0, 600)}` : "",
+          ].filter(Boolean).join(". ");
+          const aiText = await callAI(lovableKey, [
+            { role: "system", content: "You are a meticulous market-entry analyst. Return only valid JSON, no markdown fences." },
+            { role: "user", content: buildRerankPrompt(rerankContext, rerankItems) },
+          ], "google/gemini-3-flash-preview", { temperature: 0.1 });
+          const verdicts = parseRerankVerdicts(aiText, rerankItems.length);
+          const result = applyRerankVerdicts(matches, rerankItems, verdicts);
+          for (const [tbl, arr] of Object.entries(result.matches)) matches[tbl] = arr;
+          matchRerankInfo = { applied: verdicts.parsed, dropped: result.droppedByTable, dropped_count: result.droppedNames.length };
+          if (result.droppedNames.length > 0) {
+            console.log(`match rerank dropped ${result.droppedNames.length}: ${JSON.stringify(result.droppedByTable)}`);
+          }
+        }
+      } catch (e) { console.error("match rerank failed (continuing):", e); }
+    }
+
+    // All Firecrawl work for this report is done — log plumbing health + op count.
+    console.log(`Firecrawl health: ${firecrawlStats.succeeded}/${firecrawlStats.ops} OK (scrape ${firecrawlStats.scrape.ok}/${firecrawlStats.scrape.attempted}, map ${firecrawlStats.map.ok}/${firecrawlStats.map.attempted}, search ${firecrawlStats.search.ok}/${firecrawlStats.search.attempted}); cache ${firecrawlStats.cache_hits} hit / ${firecrawlStats.cache_misses} miss; statuses [${firecrawlStats.statuses.join(",")}]`);
 
     // 3. Get user subscription tier
     let userTier = "free";
@@ -1699,6 +2242,15 @@ async function generateReportInBackground(
       }
     } catch (e) { console.error("Country corridor fetch error:", e); }
 
+    // Phase C (RQ refs 3f27c7ed / 340c7245): the providers section already renders trade/
+    // government agencies + innovation hubs as cards (getMatchesForSection union), but the
+    // PROSE variable only saw matches.service_providers, so those entries read as "surfaced
+    // but unused". Feed the same deduped union into the providers prompt so they're actually
+    // written about. Built once and reused for the summary.
+    const providerUnion = getMatchesForSection("service_providers", matches);
+    const hasAgencyOrInnovation =
+      (matches.trade_investment_agencies || []).length > 0 || (matches.innovation_ecosystem || []).length > 0;
+
     const variables: Record<string, string> = {
       persona,
       company_name: intake.company_name,
@@ -1718,14 +2270,15 @@ async function generateReportInBackground(
       employee_count: intake.employee_count || "Not specified",
       enriched_summary: enrichedSummary,
       enriched_company_profile: companyProfile ? JSON.stringify(companyProfile) : "No enriched data available.",
-      matched_providers_json: JSON.stringify(matches.service_providers || []),
+      matched_providers_json: JSON.stringify(providerUnion),
       matched_mentors_json: JSON.stringify(matches.community_members || []),
       matched_events_json: JSON.stringify(matches.events || []),
       matched_content_json: JSON.stringify(matches.content_items || []),
       matched_leads_json: JSON.stringify(matches.leads || []),
       country_profile_json: countryProfile ? JSON.stringify(countryProfile) : "",
       matched_country_faqs_json: JSON.stringify(countryFaqs),
-      matched_providers_summary: (matches.service_providers || []).map((p: any) => p.name).join(", ") || "None found",
+      key_metrics_json: JSON.stringify(keyMetrics),
+      matched_providers_summary: providerUnion.map((p: any) => p.name).join(", ") || "None found",
       matched_lemlist_contacts_json: JSON.stringify(matches.lemlist_contacts || []),
       matched_investors_json: JSON.stringify(matches.investors || []),
       matched_trade_investment_agencies_json: JSON.stringify(matches.trade_investment_agencies || []),
@@ -1734,8 +2287,10 @@ async function generateReportInBackground(
       known_competitors_json: JSON.stringify(intake.known_competitors || []),
       end_buyer_industries: (intake.end_buyer_industries || []).join(", ") || "Not specified",
       end_buyers_json: JSON.stringify(intake.end_buyers || []),
+      // Scraped per-buyer intelligence — now consumed by the action_plan template
+      // (migration 20260628210000). Previously this was also duplicated into
+      // end_buyers_analysis_json, which no template read; that dead duplicate is removed.
       end_buyers_scraped_json: JSON.stringify(endBuyerScrapeResult || []),
-      end_buyers_analysis_json: JSON.stringify(endBuyerScrapeResult || []),
       end_buyer_research: endBuyerProcurementResearch || "No end buyer procurement data available.",
       market_research_landscape: marketResearch.landscape || "No market research data available.",
       market_research_regulatory: marketResearch.regulatory || "No regulatory research data available.",
@@ -1761,8 +2316,8 @@ async function generateReportInBackground(
     // "do NOT include citation markers" instruction in that case.
     const numCitations = marketResearch.citations.length;
     const citationInstruction = numCitations > 0
-      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you SHOULD include an inline citation marker using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
-      : `IMPORTANT — Inline citations: Do NOT include any numbered citation markers (e.g. [1], [2], [3]) anywhere in your response. There is no source list to cite for this report.`;
+      ? `IMPORTANT — Inline citations: When you reference data, statistics, market figures, regulatory requirements, or factual claims that come from the provided market research, you SHOULD include an inline citation marker using the format [N] where N is an integer from 1 to ${numCitations} (inclusive). These are the ONLY valid source numbers — do NOT invent or use any other number. Citations are NUMERIC ONLY: never write a bracketed text label such as [Cost of Business Data], [Cost Data], or [Company Profile] — facts drawn from unnumbered background context carry no bracket at all. Place the citation immediately after the relevant claim. For example: "The Australian AI market is projected to reach USD 8.48 billion by 2030 [3]."`
+      : `IMPORTANT — Inline citations: Do NOT include any citation markers anywhere in your response — neither numbered ones (e.g. [1], [2], [3]) nor bracketed text labels (e.g. [Cost of Business Data]). There is no source list to cite for this report.`;
 
     // ── Research availability disclosure (P1-11) ─────────────────────────
     // Tell the model exactly which research streams produced data, so it
@@ -1782,10 +2337,15 @@ async function generateReportInBackground(
     const availabilityNote = `\n\nDATA AVAILABILITY for this report:\n${availabilityLines.join("\n")}\n\nFor any topic marked UNAVAILABLE: do NOT invent specific figures, program names, percentages, eligibility criteria, named clients, or named partners. Use general guidance (e.g. "review the relevant federal grant programs") rather than naming specifics you cannot verify from the provided data. NEVER invent client relationships, partnerships, or past customers that are not explicitly listed in the enriched company profile.`;
 
     // ── User priority directive (report_focus) ───────────────────────────
-    // The user's "what matters most" answer — previously captured and never used.
-    // Make every section lead with it where relevant.
+    // The user's "what matters most" answer. The original "lead with it"
+    // directive made EVERY section open with the same key-question framing —
+    // a CreditLogic report had five sections opening with the identical
+    // "To succeed in the Australian market, X must navigate…" sentence. The
+    // executive summary now answers the question head-on in a dedicated
+    // closing subsection (template change); other sections address it in
+    // the body with section-specific openings.
     const focusNote = reportFocus
-      ? `\n\nUSER'S STATED PRIORITY (what they most want from this report): "${reportFocus}". Treat this as the single most important outcome for the reader. Where this section can advance that priority, lead with it and make those recommendations concrete and specific to ${intake.company_name}. Do not force it where genuinely irrelevant.`
+      ? `\n\nUSER'S STATED PRIORITY (what they most want from this report): "${reportFocus}". Treat this as the single most important outcome for the reader. Where this section can materially advance that priority, address it concretely and specifically for ${intake.company_name} within the body of the section. Do NOT open the section by restating this priority or the overall market opportunity — the Executive Summary already answers it in a dedicated subsection; give this section its own opening that gets straight to its specific job. Do not force the priority where genuinely irrelevant.`
       : "";
 
     // ── Under-used inputs surfaced to EVERY section (challenges, revenue, headcount) ──
@@ -1800,8 +2360,108 @@ async function generateReportInBackground(
     const challengesText = (intake.key_challenges || "").trim();
     const companyContextNote = `\n\nCOMPANY CONTEXT (weave in where relevant to this section): ${contextBits}.${challengesText ? ` Stated challenges to address: ${challengesText}.` : ""}`;
 
+    // Phase C (RQ ref fb82483e): one canonical set of market metrics for the whole report,
+    // so sections can't cite contradicting market-size / value figures. Pulled from the single
+    // landscape extraction (keyMetrics) and injected into every section's system prompt.
+    const metricsNote = keyMetrics.length
+      ? `\n\nCANONICAL MARKET FIGURES (single source of truth for the whole report): ${keyMetrics.map((m) => `${m.label}: ${m.value}${m.context ? ` (${m.context})` : ""}`).join("; ")}. When you reference market size, value, growth rate, or similar metrics, use ONLY these exact figures — do NOT invent different numbers or let sections contradict one another. If a needed figure is not listed here, give qualitative guidance rather than a fabricated number.`
+      : "";
+    // Anti-repetition (CreditLogic review): the canonical figures rule stopped
+    // sections CONTRADICTING each other but left them all RESTATING the same
+    // market-size number — "US$11.51B" appeared 7 times across one report. The
+    // reader sees these figures in the Key Metrics panel and the Executive
+    // Summary; every other section should reach for them only when the point
+    // being made needs the number. Appended to every section except the
+    // executive summary (which legitimately states the opportunity size).
+    const metricsRepeatNote = keyMetrics.length
+      ? `\n\nThese canonical figures are already displayed to the reader in the Key Metrics panel and the Executive Summary. Do NOT re-quote market-size / market-value / CAGR figures in this section unless the specific point being made requires the number, and never open the section with them.`
+      : "";
+
+    // Phase C (RQ ref 7a000874): when the user's stated priority is an explicit home-vs-
+    // Australia comparison, instruct sections (esp. SWOT + action plan) to contrast the two
+    // markets using the provided research rather than describing Australia in isolation.
+    const wantsComparison = /\b(compare|comparison|versus|vs\.?|benchmark|home market|against)\b/i.test(reportFocus);
+    const comparisonNote = wantsComparison
+      ? `\n\nHOME-MARKET COMPARISON: The user explicitly wants a comparison between their home market (${intake.country_of_origin}) and Australia. Where relevant — especially in the SWOT analysis and action plan — explicitly contrast home-market vs Australian conditions (regulatory, cost of doing business, procurement / go-to-market, and competitive intensity), grounded in the provided market research and bilateral-trade data. Do not invent home-market figures you cannot support.`
+      : "";
+
+    // Competitor-depth surfacing (only when FIRECRAWL_COMPETITOR_DEPTH ran, so the
+    // au_presence signal actually exists in the data). Deep mode discovers up to 5
+    // competitors and extracts a per-competitor Australian-footprint signal, but the
+    // section prompt didn't require surfacing all of them or the AU signal — so the
+    // polish pass was trimming to ~3 and burying au_presence in prose (Floats report:
+    // 5 found, 3 shown, no explicit AU line). Force full coverage + a labelled AU line
+    // per competitor, grounded strictly in the provided data (no guessing). Applied
+    // only to competitor_landscape via the section guard on systemContent below.
+    const competitorDepthNote = (competitorResult.competitor_depth && competitorResult.competitors.length > 0)
+      ? `\n\nCOMPETITOR COVERAGE (this section): The competitor data provided lists ${competitorResult.competitors.length} competitors. Cover EVERY one of them — do not trim, merge, or silently drop any to shorten the section. For EACH competitor, include a distinct labelled line "**Australian presence:**" describing their AU footprint using ONLY the provided data (local office/address, AU customers or case studies, a .com.au domain, AU pricing). If the provided data indicates none is evident, write "No Australian presence evident". Never guess, infer, or invent an Australian presence that is not in the data.`
+      : "";
+    // Competitor prose links (Floats2 review item 1): the competitor JSON carries a
+    // "url" per competitor but the prompt never asked the model to link the names, so
+    // the reader got named rivals with no way to visit them (links lived only on the
+    // cards). Instruct hyperlinking the FIRST mention using ONLY the provided url —
+    // renders as a new-tab external link via CitationRenderer.
+    const competitorLinkNote = competitorResult.competitors.length > 0
+      ? `\n\nCOMPETITOR LINKS (this section): The competitor data includes a "url" field for many competitors. The FIRST time you name each competitor in the prose, hyperlink it in Markdown as [Competitor Name](url) using ONLY the exact url provided for that competitor in the data. If a competitor has no url in the data, leave its name as plain text — never invent, guess, or reuse another competitor's URL.`
+      : "";
+
+    // Phase C (RQ refs 3f27c7ed / 340c7245): the providers list may include trade/government
+    // agencies and innovation hubs/accelerators alongside private firms — make sure they're
+    // covered in prose, not just listed as cards. Applied only to the providers section.
+    const supportMixNote = hasAgencyOrInnovation
+      ? `\n\nSUPPORT MIX: The matched providers for this report include government/trade agencies and/or innovation hubs & accelerators as well as private service providers. Group them by type (e.g. "Government & trade support", "Innovation & accelerators", "Private providers") and explain each one's specific role for ${intake.company_name} — do not omit the agencies or hubs.`
+      : "";
+
+    // Lead-list empty state (Floats2 review N3): when the ICP gate leaves NO matched
+    // lead datasets, the model previously free-ranged into naming specific investors /
+    // VCs / angel funds not in the directory and quoted uncited ecosystem figures —
+    // breaking grounding and duplicating the Investor section. Force a short, honest
+    // section: no invented recommendations, no uncited numbers, point at the request
+    // box (rendered directly below the section).
+    // Buyer briefs v1 ("Your First Customers" — inside action_plan, no gating change):
+    // per-account briefs from the buyer scrape + batched account research, with the
+    // parsed ICP one-liner finally driving "who to approach" titles. Empty note when
+    // no chips were given.
+    const parsedIcp = parseIcpDescription(targetCustomerDescription);
+    const buyerBriefsNote = buildBuyerBriefsNote(
+      endBuyerScrapeResult || [], parsedIcp, intake.company_name, endBuyerAccountResearch,
+      (intake.end_buyers || []).length,
+    );
+    const buyerCards = buildBuyerCards(endBuyerScrapeResult || []);
+
+    const leadEmptyNote = (matches.leads || []).length === 0
+      ? `\n\nNO MATCHED LEAD DATASETS (this section): The directory returned NO lead datasets matching this company's buyer profile. Keep this section SHORT and honest (2–4 sentences): state that no pre-built list matched their specific buyer profile and that they can request a custom list built for them (a request form appears directly below this section). Do NOT name or recommend specific investors, VCs, angel groups, accelerators, funds, or companies here — those are covered in other sections and naming un-provided ones is not grounded. Do NOT cite market-size, ecosystem-value, or funding figures that are not in the canonical figures list.`
+      : "";
+
     // D2: emphasise (never hide) the sections the user's selected goals map to.
     const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
+
+    // Key-question "who can help" picks (Floats feedback): pick up to 2 entities
+    // FROM THE ALREADY-MATCHED SLATE most able to help with the user's stated
+    // priority, rendered as cards under the exec-summary answer. Grounded (picks
+    // are matched rows only) and fail-open (no focus / no picks → renders as
+    // before). Computed once here; the exec-summary section attaches the cards.
+    let keyQuestionPicks: PickCard[] = [];
+    if (reportFocus) {
+      try {
+        const candidates = buildPickCandidates(matches);
+        if (candidates.length > 0) {
+          const pickContext = [
+            `${intake.company_name || "The company"} — ${(intake.industry_sector || []).join(" / ") || "sector not specified"}`,
+            `${intake.company_stage || "stage n/a"}, from ${intake.country_of_origin || "unknown"}, entering ${(intake.target_regions || []).join(", ") || "Australia"}`,
+            enrichedSummary ? `Profile: ${String(enrichedSummary).slice(0, 400)}` : "",
+          ].filter(Boolean).join(". ");
+          const aiText = await callAI(lovableKey, [
+            { role: "system", content: "You are a sharp market-entry advisor. Return only valid JSON, no markdown fences." },
+            { role: "user", content: buildPicksPrompt(reportFocus, pickContext, candidates) },
+          ], "google/gemini-3-flash-preview", { temperature: 0.2 });
+          keyQuestionPicks = buildPickCards(matches, parsePicks(aiText, candidates));
+          if (keyQuestionPicks.length > 0) {
+            console.log(`key-question picks: ${keyQuestionPicks.length} (${keyQuestionPicks.map((p) => p.name).join(", ")})`);
+          }
+        }
+      } catch (e) { console.error("key-question picks failed (continuing):", e); }
+    }
 
     // Phase 5: practitioner signal from the synced LinkedIn corpus (synthesis-only).
     // Computed once and injected into every section's system prompt under a strict
@@ -1852,19 +2512,40 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
               { role: "user", content: prompt },
             ], "google/gemini-3-flash-preview", { temperature: 0.4 });
 
+            // competitor_landscape has no directory pool — its prose names the
+            // scraped competitors, so render THOSE as cards (B7) instead of the
+            // empty getMatchesForSection default, keeping prose and cards aligned.
+            // executive_summary likewise has no pool, but when the user gave a key
+            // question we attach up to 2 grounded "who can help" picks under the
+            // answer (Floats feedback) with a short lead-in line above them.
+            let sectionMatches: any[];
+            let sectionContent = content;
+            if (tmpl.section_name === "competitor_landscape") {
+              sectionMatches = buildCompetitorCards(competitorResult.competitors);
+            } else if (tmpl.section_name === "first_customers") {
+              // v2: the named target accounts render as cards under the dedicated
+              // Your First Customers section (empty when no chips were given).
+              sectionMatches = buyerCards;
+            } else if (tmpl.section_name === "executive_summary" && keyQuestionPicks.length > 0) {
+              sectionMatches = keyQuestionPicks;
+              sectionContent = `${content}\n\n**Who from your matches can help with this:**`;
+            } else {
+              sectionMatches = getMatchesForSection(tmpl.section_name, matches);
+            }
+
             return {
               name: tmpl.section_name,
               data: {
-                content,
+                content: sectionContent,
                 visible: willBeVisible,
-                matches: getMatchesForSection(tmpl.section_name, matches),
+                matches: sectionMatches,
               },
             };
           } catch (e) {
@@ -1895,9 +2576,27 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
     const sectionOrder = templates ? templates.map((t: any) => t.section_name) : Object.keys(sections);
 
-    const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => ({
+    const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => {
+      // Citation integrity (B11/B15): renumber inline [N] markers to a contiguous
+      // 1..M and store only the actually-cited sources, so inline indices and the
+      // Sources footer are 1:1 (no more "[1][2][3][6][9]" against "Sources (19)").
+      // Pure + no-op when nothing is cited; runs on both the unpolished and
+      // polished builds so each stored snapshot is internally consistent.
+      // stripContextLabelCitations first: removes "[Cost of Business Data]"-style
+      // pseudo-citations of named context variables before the numeric remap.
+      // keyMetrics passed too: metric cards carry [N] markers from the same
+      // original source list and render ABOVE the sections — without renumbering
+      // them alongside, a metric's [4] points at the wrong row of the new
+      // Sources list (Infact report: metrics [4] vs prose [9] for one fact).
+      const cited = renumberCitations(
+        stripContextLabelCitations(currentSections),
+        sectionOrder,
+        marketResearch.citations,
+        keyMetrics,
+      );
+      return {
       company_name: intake.company_name,
-      sections: currentSections,
+      sections: cited.sections,
       matches,
       metadata: {
         tables_searched: Object.keys(matches),
@@ -1905,19 +2604,61 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         generation_time_ms: Date.now() - startTime,
         perplexity_used: marketResearch.used,
         perplexity_health: marketResearch.health,
-        perplexity_citations: marketResearch.citations,
-        firecrawl_deep_scrape: !!companyProfile,
+        perplexity_citations: cited.citations,
+        // Accurate now: true only when the scrape produced usable content, not
+        // merely when Firecrawl was attempted (the fallback profile is truthy).
+        // Distinguishes a real scrape from a key/quota failure or a no-content site.
+        firecrawl_deep_scrape: companyScrapeDiag?.scrape_ok ?? false,
+        // Granular breakdown for diagnosing scrape quality (map URLs, key pages,
+        // content size, fallback). null when Firecrawl wasn't attempted.
+        firecrawl_deep_scrape_detail: companyScrapeDiag,
+        // Plumbing health + per-report op/credit accounting across ALL Firecrawl
+        // calls (company scrape, provider enrichment, competitors, end buyers,
+        // events). Mirrors perplexity_health: succeeded:0 with a non-empty
+        // statuses array = the API is rejecting us (key/quota), not "no data".
+        // `ops` is the total Firecrawl call count for cost visibility.
+        firecrawl_health: firecrawlStats,
         firecrawl_providers_enriched: (matches.service_providers || []).filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
+        // Whether the FIRECRAWL_COMPETITOR_DEPTH flag was ON for this report
+        // (multi-angle discovery + au_presence signal). Persisted so the flag
+        // state is verifiable from telemetry — the count above alone can't
+        // distinguish a deep run from a lucky legacy run.
+        competitor_depth: competitorResult.competitor_depth ?? false,
+        // LLM relevance curation (MATCH_RERANK_ENABLED): null when the flag is off,
+        // else { applied, dropped: {table: n}, dropped_count } so the effect is
+        // verifiable per report. `applied:false` = the LLM reply failed to parse
+        // (fail-open, zero drops).
+        match_rerank: matchRerankInfo,
+        // Taxonomy telemetry: per selected goal, how many matched rows carry one of
+        // the goal's service tags. A goal that logs 0 across reports has dead tags
+        // (vocabulary drift) — observable here because a unit test cannot assert
+        // live-DB vocabulary.
+        goal_tag_hits: countGoalTagHits((intake as any).goal_ids, matches),
+        // Buyer-briefs v1 observability: chips given vs briefed vs unverified, and
+        // whether the batched account research came back. A consistently-zero
+        // signals count = the tech/hiring extraction isn't finding evidence.
+        buyer_briefs: {
+          chips: (intake.end_buyers || []).length,
+          briefed: (endBuyerScrapeResult || []).filter((b: any) => !b.unverified).length,
+          unverified: (endBuyerScrapeResult || []).filter((b: any) => b.unverified).length,
+          with_tech: (endBuyerScrapeResult || []).filter((b: any) => (b.tech_signals || "").trim()).length,
+          with_hiring: (endBuyerScrapeResult || []).filter((b: any) => (b.hiring_signals || "").trim()).length,
+          account_research: !!endBuyerAccountResearch,
+          icp_titles: parsedIcp.titles,
+        },
         polish_applied: polishApplied,
-        key_metrics: keyMetrics,
+        // Renumbered alongside the sections so metric-card [N]s and the stored
+        // Sources list stay 1:1 (falls back to the originals when no citations).
+        key_metrics: cited.keyMetrics ?? keyMetrics,
         discovered_events_count: discoveredEvents.length,
         end_buyer_research_available: !!endBuyerProcurementResearch,
         bilateral_trade_available: !!marketResearch.bilateral_trade,
         cost_of_business_available: !!marketResearch.cost_of_business,
         grants_available: !!marketResearch.grants,
       },
-    });
+      };
+    };
 
     // Save immediately with unpolished content — report is now viewable.
     // This protects against worker death between generation and polish: the
@@ -1935,6 +2676,23 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       .eq("id", reportId);
 
     if (reportErr) throw reportErr;
+
+    // Best-effort: mirror key metadata into queryable columns (migration
+    // 20260628210003). Deliberately a SEPARATE update from the critical save
+    // above so a missing column (deploy lag) or write error can never fail report
+    // generation — the report is already durably stored at this point.
+    try {
+      await supabase.from("user_reports").update({
+        generation_time_ms: Date.now() - startTime,
+        total_matches: Object.values(matches).reduce((sum: number, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
+        firecrawl_ops: firecrawlStats.ops,
+        firecrawl_scrape_ok: companyScrapeDiag?.scrape_ok ?? false,
+        perplexity_ok: marketResearch.health.succeeded > 0,
+        polish_applied: false,
+      }).eq("id", reportId);
+    } catch (e) {
+      console.warn("user_reports metadata columns update skipped:", e instanceof Error ? e.message : e);
+    }
 
     await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intakeFormId);
 
@@ -1986,6 +2744,14 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         .from("user_reports")
         .update({ report_json: polishedReportJson })
         .eq("id", reportId);
+
+      // Best-effort: keep the queryable polish_applied column in sync (separate
+      // from the report_json write above so a missing column never loses polish).
+      try {
+        await supabase.from("user_reports").update({ polish_applied: true }).eq("id", reportId);
+      } catch (e) {
+        console.warn("user_reports polish_applied column update skipped:", e instanceof Error ? e.message : e);
+      }
 
       polishApplied = true;
       console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);

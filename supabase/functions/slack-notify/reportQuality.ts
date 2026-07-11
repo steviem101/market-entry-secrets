@@ -2,7 +2,7 @@
 // Deterministic layers (utilization, presentation) + an LLM "substance" judge via the Lovable
 // AI Gateway (Gemini). Substance is computed once per report and cached on the report_quality row.
 
-const REPORT_BASE_URL = "https://market-entry-secrets.lovable.app/report";
+const REPORT_BASE_URL = "https://marketentrysecrets.com/report";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const AI_MODEL = "google/gemini-3-flash-preview";
 
@@ -228,7 +228,7 @@ export function computeReportTelemetry(report: any, intake: any) {
   const sources = {
     company_scrape: !!meta.firecrawl_deep_scrape, providers_enriched: meta.firecrawl_providers_enriched ?? 0,
     competitors_found: meta.firecrawl_competitors_found ?? 0, perplexity_used: !!meta.perplexity_used,
-    perplexity_health: meta.perplexity_health ?? null,
+    perplexity_health: meta.perplexity_health ?? null, firecrawl_health: meta.firecrawl_health ?? null,
     citations, key_metrics: keyMetrics, discovered_events: meta.discovered_events_count ?? 0,
     polish_applied: !!meta.polish_applied, bilateral_trade: !!meta.bilateral_trade_available,
     cost_of_business: !!meta.cost_of_business_available, grants: !!meta.grants_available,
@@ -287,8 +287,15 @@ function buildReportQualityCard(t: any, intake: any, sub: { score: number; rubri
   const ppxDetail = h
     ? `${h.succeeded}/${h.attempted} calls OK${h.succeeded === 0 && h.attempted > 0 ? ` · statuses [${(h.statuses || []).join(",")}]` : ""}`
     : (s.perplexity_used ? "ran" : "not used");
+  // Firecrawl health (added by generate-report instrumentation). Absent on older
+  // reports; when present, surface total call success + ops, and the status codes
+  // when every call failed (key/quota outage), mirroring the Perplexity line.
+  const fh = s.firecrawl_health;
+  const fcDetail = fh
+    ? ` · ${fh.succeeded}/${fh.ops} calls OK${fh.succeeded === 0 && fh.ops > 0 ? ` · statuses [${(fh.statuses || []).join(",")}]` : ""}`
+    : "";
   const plumbingLines = [
-    `${s.company_scrape ? "✅" : "❌"} Firecrawl — scrape ${s.company_scrape ? "ok" : "FAILED"} · ${s.providers_enriched} providers · ${s.competitors_found} competitors`,
+    `${s.company_scrape ? "✅" : "❌"} Firecrawl — scrape ${s.company_scrape ? "ok" : "FAILED"} · ${s.providers_enriched} providers · ${s.competitors_found} competitors${fcDetail}`,
     `${ppxOk ? "✅" : "❌"} Perplexity — ${ppxDetail} · ${s.citations} citations · ${s.key_metrics} key metrics`,
     `${t.failed_sections.length === 0 ? "✅" : "⚠️"} Gemini — ${t.visible_with_content}/${t.sections_visible} sections${t.failed_sections.length ? ` (failed: ${t.failed_sections.join(", ")})` : ""} · polish ${s.polish_applied ? "applied" : "skipped"}`,
   ].join("\n");

@@ -3,33 +3,26 @@ import { X, MapPin, Globe, Handshake, Mail, Building } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Person } from "./PersonCard";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
+import { useIntroRequest } from "@/components/directory/IntroRequestProvider";
 
 interface PersonModalProps {
   person: Person | null;
   isOpen: boolean;
   onClose: () => void;
-  onContact: (person: Person) => void;
+  /** @deprecated warm intro now routes through the shared IntroRequestProvider. */
+  onContact?: (person: Person) => void;
 }
 
-const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) => {
+const PersonModal = ({ person, isOpen, onClose }: PersonModalProps) => {
+  const { requestIntro } = useIntroRequest();
   if (!person) return null;
 
-  const displayName = person.isAnonymous ? person.title : person.name;
-
-  // Placeholder images for person profile pictures
-  const getPersonImage = (index: number) => {
-    const images = [
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    ];
-    return images[index % images.length];
-  };
+  // Anonymous people: the view masks `name` to the alias (richer, safe label).
+  const displayName = person.name;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -37,30 +30,20 @@ const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) =
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4 flex-1">
-              <Avatar className="w-20 h-20 flex-shrink-0">
-                {person.isAnonymous ? (
-                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                    <Building className="w-10 h-10" />
-                  </AvatarFallback>
-                ) : (
-                  <>
-                    <AvatarImage src={person.image || getPersonImage(parseInt(person.id) || 0)} alt={person.name} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                      {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                    </AvatarFallback>
-                  </>
-                )}
-              </Avatar>
+              <ContactAvatar
+                name={person.name}
+                src={person.isAnonymous ? undefined : person.image}
+                className="w-20 h-20 flex-shrink-0 text-xl"
+                fallback={person.isAnonymous ? <Building className="w-10 h-10" /> : undefined}
+              />
               <div className="flex-1">
                 <DialogTitle className="text-2xl font-bold mb-2">
                   {displayName}
                 </DialogTitle>
-                {!person.isAnonymous && (
-                  <p className="text-primary font-medium text-lg mb-2">
-                    {person.title}
-                  </p>
-                )}
-                {person.company && (
+                <p className="text-primary font-medium text-lg mb-2">
+                  {person.title}
+                </p>
+                {!person.isAnonymous && person.company && (
                   <p className="text-muted-foreground mb-2">
                     {person.company}
                   </p>
@@ -146,9 +129,12 @@ const PersonModal = ({ person, isOpen, onClose, onContact }: PersonModalProps) =
                 </a>
               </Button>
             )}
-            <Button onClick={() => onContact(person)} className="flex-1">
+            <Button
+              onClick={() => requestIntro({ entity: "mentor", id: person.id, name: displayName })}
+              className="flex-1"
+            >
               <Handshake className="w-4 h-4 mr-2" />
-              Get Warm Intro
+              Get warm intro
             </Button>
           </div>
         </div>

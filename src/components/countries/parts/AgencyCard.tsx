@@ -1,5 +1,6 @@
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DirectoryCard } from "@/components/directory/DirectoryCard";
+import { CardCTA } from "@/components/directory/CardCTA";
+import CompanyLogo from "@/components/shared/CompanyLogo";
 
 interface AgencyCardProps {
   agency: {
@@ -11,25 +12,20 @@ interface AgencyCardProps {
     role?: string | null;
     logo?: string | null;
     slug?: string | null;
+    blurb?: string | null;
   };
 }
 
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
 export const AgencyCard = ({ agency }: AgencyCardProps) => {
   return (
-    <article className="bg-mes-card border border-mes-border rounded-xl p-5 flex flex-col">
+    <DirectoryCard compact>
       <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-lg bg-mes-blue-light/40 border border-mes-blue-light text-mes-teal-dark flex items-center justify-center font-semibold tracking-wider text-[13px]">
-          {initials(agency.name)}
-        </div>
+        <CompanyLogo
+          existingLogoUrl={agency.logo}
+          companyName={agency.name}
+          className="bg-white border border-mes-border"
+          fallbackClassName="bg-mes-blue-light/40 text-mes-teal-dark font-semibold tracking-wider text-[13px]"
+        />
         <div className="min-w-0">
           <h3 className="text-[16px] font-semibold text-mes-ink leading-snug">{agency.name}</h3>
           {agency.role && (
@@ -39,17 +35,22 @@ export const AgencyCard = ({ agency }: AgencyCardProps) => {
           )}
         </div>
       </div>
-      {agency.description && (
-        <p className="mt-4 text-[14px] leading-relaxed text-mes-ink-soft">{agency.description}</p>
+      {agency.blurb ? (
+        <p className="mt-4 text-[13.5px] leading-relaxed text-mes-ink-soft border-l-2 border-mes-blue-light pl-3">
+          {agency.blurb}
+        </p>
+      ) : (
+        agency.description && (
+          <p className="mt-4 text-[14px] leading-relaxed text-mes-ink-soft">{agency.description}</p>
+        )
       )}
       <div className="mt-auto pt-4">
-        <Button asChild variant="link" className="p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
-          <a href={agency.slug ? `/government-support/${agency.slug}` : "#"}>
-            View {agency.name} profile
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </a>
-        </Button>
+        <CardCTA
+          entity="agency"
+          target={{ entity: "agency", id: agency.id, name: agency.name }}
+          secondaryHref={agency.slug ? `/government-support/${agency.slug}` : undefined}
+        />
       </div>
-    </article>
+    </DirectoryCard>
   );
 };

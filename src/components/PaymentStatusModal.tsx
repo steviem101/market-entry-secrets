@@ -8,9 +8,10 @@ interface PaymentStatusModalProps {
   onClose: () => void;
   status: 'success' | 'cancel';
   sessionId?: string;
+  successActionLabel?: string;
 }
 
-export const PaymentStatusModal = ({ isOpen, onClose, status, sessionId }: PaymentStatusModalProps) => {
+export const PaymentStatusModal = ({ isOpen, onClose, status, sessionId, successActionLabel = 'Get Started' }: PaymentStatusModalProps) => {
   const isSuccess = status === 'success';
   const navigate = useNavigate();
 
@@ -52,7 +53,7 @@ export const PaymentStatusModal = ({ isOpen, onClose, status, sessionId }: Payme
 
         <div className="flex flex-col gap-2 mt-6">
           <Button onClick={onClose} className="w-full">
-            {isSuccess ? 'Get Started' : 'Close'}
+            {isSuccess ? successActionLabel : 'Close'}
           </Button>
           {!isSuccess && (
             <Button variant="outline" onClick={() => { onClose(); navigate('/pricing'); }} className="w-full">

@@ -13,6 +13,7 @@ const InnovationEcosystemSection = ({ innovationEcosystem }: InnovationEcosystem
   return (
     <ListingPageGate contentType="innovation_ecosystem">
       <SectorSection
+        kicker="Innovation"
         title="Innovation Ecosystem Partners"
         viewAllLink="/innovation-ecosystem"
         viewAllText="View All Partners"
@@ -20,6 +21,7 @@ const InnovationEcosystemSection = ({ innovationEcosystem }: InnovationEcosystem
       >
         {innovationEcosystem.slice(0, 6).map((entity) => (
           <CompanyCard
+            entity="innovation_hub"
             key={entity.id}
             company={{
               id: entity.id,

@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { Globe, MapPin, Calendar, Users, Mail, Phone, Linkedin, Shield, Award, ExternalLink } from "lucide-react";
 import CompanyCard from "@/components/CompanyCard";
 import { parseJsonArray } from "@/components/company-card/CompanyCardHelpers";
@@ -184,15 +184,11 @@ export const AgencyContent = ({ agency, relatedAgencies, categoryName }: AgencyC
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {allContacts.map((person: any, index: number) => (
                   <div key={person.id || index} className="flex items-center gap-4 bg-muted/50 rounded-lg p-4">
-                    <Avatar className="w-14 h-14">
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                        {(person.full_name || person.name || '')
-                          .split(' ')
-                          .map((n: string) => n[0])
-                          .join('')
-                          .toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <ContactAvatar
+                      name={person.full_name || person.name}
+                      src={person.avatar_url || person.image}
+                      className="w-14 h-14"
+                    />
                     <div>
                       <div className="font-medium text-foreground">{person.full_name || person.name}</div>
                       {(person.title || person.role) && (
@@ -365,6 +361,7 @@ export const AgencyContent = ({ agency, relatedAgencies, categoryName }: AgencyC
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {relatedAgencies.map((related: any) => (
               <CompanyCard
+                entity="agency"
                 key={related.id}
                 company={{
                   id: related.id,

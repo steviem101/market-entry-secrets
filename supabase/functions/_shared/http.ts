@@ -2,9 +2,9 @@
 
 const ALLOWED_ORIGINS = [
   Deno.env.get("FRONTEND_URL"),
-  "https://market-entry-secrets.lovable.app",
   "https://marketentrysecrets.com",
   "https://www.marketentrysecrets.com",
+  "https://market-entry-secrets.lovable.app",
 ].filter(Boolean) as string[];
 
 function isAllowedOrigin(origin: string): boolean {
@@ -26,7 +26,7 @@ export function buildCorsHeaders(req: Request): Record<string, string> {
   const allowedOrigin = isAllowedOrigin(origin)
     ? origin
     : origin === ""
-      ? ALLOWED_ORIGINS[0] || "https://market-entry-secrets.lovable.app"
+      ? ALLOWED_ORIGINS[0] || "https://marketentrysecrets.com"
       : "null";
 
   return {

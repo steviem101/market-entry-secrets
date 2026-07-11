@@ -1,0 +1,86 @@
+# Auto-deploy the report-pipeline edge functions to production on push to main.
+#
+# Why: the Supabase↔GitHub integration auto-applies MIGRATIONS to prod on merge,
+# but it does NOT deploy edge functions to prod — so generate-report / scrape-company
+# have had to be deployed by hand (`supabase functions deploy …`) after every merge,
+# which twice shipped stale code from an out-of-date local checkout. This closes
+# that gap: merging a change to these functions deploys them automatically.
+#
+# One-time setup required: add a repo secret SUPABASE_ACCESS_TOKEN
+#   (GitHub → Settings → Secrets and variables → Actions → New repository secret).
+#   Generate the token at https://supabase.com/dashboard/account/tokens.
+# The project ref (xhziwveaiuhzdoutpgrh) is not a secret — it's public and already
+# throughout the repo/CLAUDE.md.
+#
+# verify_jwt and other per-function settings come from supabase/config.toml, which
+# the CLI reads on deploy — so the in-code auth (generate-report JWT+ownership,
+# scrape-company rate-limit) is preserved.
+#
+# Scope: only the functions this pipeline actively changes (generate-report,
+# scrape-company, sitemap). To add another, append a `supabase functions deploy
+# <name> …` line below. To deploy ALL functions instead, replace the lines with a
+# single `supabase functions deploy`.
+
+name: Deploy Edge Functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/generate-report/**"
+      - "supabase/functions/scrape-company/**"
+      - "supabase/functions/sitemap/**"
+      - "supabase/functions/generate-plan/**"
+      - "supabase/functions/admin-mentor-anonymity/**"
+      - "supabase/functions/create-checkout/**"
+      - "supabase/functions/stripe-webhook/**"
+      - "supabase/functions/stripe-webhook-reconcile/**"
+      - "supabase/functions/_shared/**"
+      - ".github/workflows/deploy-edge-functions.yml"
+
+# Never run two deploys concurrently; a newer push supersedes an in-flight one.
+concurrency:
+  group: deploy-edge-functions
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: xhziwveaiuhzdoutpgrh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy generate-report
+        run: supabase functions deploy generate-report --project-ref "$PROJECT_REF"
+
+      - name: Deploy scrape-company
+        run: supabase functions deploy scrape-company --project-ref "$PROJECT_REF"
+
+      - name: Deploy sitemap
+        run: supabase functions deploy sitemap --project-ref "$PROJECT_REF"
+
+      - name: Deploy generate-plan
+        run: supabase functions deploy generate-plan --project-ref "$PROJECT_REF"
+
+      - name: Deploy admin-mentor-anonymity
+        run: supabase functions deploy admin-mentor-anonymity --project-ref "$PROJECT_REF"
+
+      # Payment path (MES-140): these were previously deployed by hand, which
+      # left PR #370 merged-but-not-live. Secrets (sandbox vs live Stripe keys)
+      # are runtime config on the project, so deploying code never flips the
+      # Stripe account — the cutover remains the 4-secret swap in
+      # docs/runbooks/stripe-live-cutover.md §2.
+      - name: Deploy create-checkout
+        run: supabase functions deploy create-checkout --project-ref "$PROJECT_REF"
+
+      - name: Deploy stripe-webhook
+        run: supabase functions deploy stripe-webhook --project-ref "$PROJECT_REF"
+
+      - name: Deploy stripe-webhook-reconcile
+        run: supabase functions deploy stripe-webhook-reconcile --project-ref "$PROJECT_REF"

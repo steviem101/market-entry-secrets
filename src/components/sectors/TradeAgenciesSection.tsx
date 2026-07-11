@@ -16,6 +16,7 @@ const TradeAgenciesSection = ({ tradeAgencies }: TradeAgenciesSectionProps) => {
   return (
     <ListingPageGate contentType="trade_investment_agencies">
       <SectorSection
+        kicker="Government support"
         title="Government & Industry Support"
         viewAllLink="/government-support"
         viewAllText="View All Organisations"
@@ -23,6 +24,7 @@ const TradeAgenciesSection = ({ tradeAgencies }: TradeAgenciesSectionProps) => {
       >
         {tradeAgencies.slice(0, 6).map((agency) => (
           <CompanyCard
+            entity="agency"
             key={agency.id}
             company={{
               id: agency.id,

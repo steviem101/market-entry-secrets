@@ -1,5 +1,5 @@
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DirectoryCard } from "@/components/directory/DirectoryCard";
+import { CardCTA } from "@/components/directory/CardCTA";
 
 interface InvestorCardProps {
   investor: {
@@ -13,6 +13,7 @@ interface InvestorCardProps {
     stage_focus?: string[] | null;
     check_size_min?: number | null;
     check_size_max?: number | null;
+    blurb?: string | null;
   };
 }
 
@@ -31,7 +32,7 @@ const formatCheque = (min: number | null | undefined, max: number | null | undef
 export const InvestorCard = ({ investor }: InvestorCardProps) => {
   const cheque = formatCheque(investor.check_size_min, investor.check_size_max);
   return (
-    <article className="bg-mes-card border border-mes-border rounded-xl p-5 flex flex-col">
+    <DirectoryCard compact>
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-[16px] font-semibold text-mes-ink leading-snug">{investor.name}</h3>
         {investor.investor_type && (
@@ -48,19 +49,24 @@ export const InvestorCard = ({ investor }: InvestorCardProps) => {
       {cheque && (
         <div className="mt-1 text-[13px] text-mes-ink-soft tabular-nums">Cheque {cheque}</div>
       )}
-      {investor.description && (
-        <p className="mt-3 text-[14px] leading-relaxed text-mes-ink-soft line-clamp-3">
-          {investor.description}
+      {investor.blurb ? (
+        <p className="mt-3 text-[13.5px] leading-relaxed text-mes-ink-soft border-l-2 border-mes-blue-light pl-3">
+          {investor.blurb}
         </p>
+      ) : (
+        investor.description && (
+          <p className="mt-3 text-[14px] leading-relaxed text-mes-ink-soft line-clamp-3">
+            {investor.description}
+          </p>
+        )
       )}
       <div className="mt-auto pt-4">
-        <Button asChild variant="link" className="p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
-          <a href={investor.slug ? `/investors/${investor.slug}` : "/investors"}>
-            See {investor.name} portfolio
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </a>
-        </Button>
+        <CardCTA
+          entity="investor"
+          target={{ entity: "investor", id: investor.id, name: investor.name }}
+          secondaryHref={investor.slug ? `/investors/${investor.slug}` : "/investors"}
+        />
       </div>
-    </article>
+    </DirectoryCard>
   );
 };

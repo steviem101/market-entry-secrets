@@ -1,7 +1,9 @@
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { NoIndex } from '@/components/common/NoIndex';
 import { ReportSection } from '@/components/report/ReportSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
+import { ExpandableCardGrid } from '@/components/report/ExpandableCardGrid';
 import { ReportSources } from '@/components/report/ReportSources';
 import { ReportBackToTop } from '@/components/report/ReportBackToTop';
 import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
@@ -11,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Eye, Calendar, Clock } from 'lucide-react';
-import { splitEventsAndResources } from '@/lib/reportEventsSplit';
+import { groupSectionCards } from '@/lib/reportCardGroups';
 import { format } from 'date-fns';
 import {
   SECTION_LABELS,
@@ -19,7 +21,7 @@ import {
   estimateReadingTime,
 } from '@/components/report/reportSectionConfig';
 
-const SharedReportView = () => {
+const SharedReportViewInner = () => {
   const { shareToken } = useParams<{ shareToken: string }>();
   const { data: report, isLoading, error } = useSharedReport(shareToken);
 
@@ -89,7 +91,7 @@ const SharedReportView = () => {
               <span className="sr-only sm:hidden">Shared Report</span>
             </Badge>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">{companyName}</h1>
+              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">Market Entry Report: {companyName}</h1>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="w-3 h-3 flex-shrink-0" />
@@ -147,16 +149,12 @@ const SharedReportView = () => {
 
             const sectionMatches = section.matches || matches[sectionId] || [];
 
-            // events_resources mixes events with content (case studies/guides);
-            // split them so case studies don't render under the "Events" header.
-            const isEventsSection = sectionId === 'events_resources';
-            const eventsSplit = isEventsSection ? splitEventsAndResources(sectionMatches) : null;
-
-            const renderCardGrid = (items: any[]) => (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {items.map((match: any, idx: number) => (
+            const renderCardGrid = (items: any[], groupLabel?: string) => (
+              <ExpandableCardGrid
+                items={items}
+                label={groupLabel?.toLowerCase() || 'matches'}
+                renderItem={(match: any) => (
                   <ReportMatchCard
-                    key={match.id || idx}
                     name={match.name}
                     subtitle={match.subtitle || match.category || match.location}
                     tags={match.tags || match.services?.slice(0, 3)}
@@ -165,9 +163,31 @@ const SharedReportView = () => {
                     website={match.website}
                     source={match.source}
                   />
-                ))}
-              </div>
+                )}
+              />
             );
+
+            // Mixed-type sections render one sub-headed grid per entity type (B9).
+            const cardGroups = groupSectionCards(sectionId, sectionMatches);
+            const renderMatchArea = () => {
+              if (sectionMatches.length === 0) return null;
+              if (!cardGroups || cardGroups.length <= 1) return renderCardGrid(sectionMatches);
+              return (
+                <div className="space-y-6">
+                  {cardGroups.map((group) => (
+                    <div key={group.key}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                          {group.label}
+                        </span>
+                        <div className="flex-1 border-t border-border" />
+                      </div>
+                      {renderCardGrid(group.items, group.label)}
+                    </div>
+                  ))}
+                </div>
+              );
+            };
 
             return (
               <ReportSection
@@ -177,24 +197,7 @@ const SharedReportView = () => {
                 content={section.content || ''}
                 citations={perplexityCitations}
               >
-                {isEventsSection && eventsSplit ? (
-                  <>
-                    {eventsSplit.events.length > 0 && renderCardGrid(eventsSplit.events)}
-                    {eventsSplit.resources.length > 0 && (
-                      <div className="pt-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                            Case Studies &amp; Resources
-                          </span>
-                          <div className="flex-1 border-t border-border" />
-                        </div>
-                        {renderCardGrid(eventsSplit.resources)}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  sectionMatches.length > 0 && renderCardGrid(sectionMatches)
-                )}
+                {renderMatchArea()}
               </ReportSection>
             );
           })}
@@ -227,5 +230,15 @@ const SharedReportView = () => {
     </>
   );
 };
+
+// Shared report URLs are private-by-obscurity documents — NoIndex wraps every
+// state (loading, the invalid-token not-found, and the rendered report) so a
+// crawler can never index one regardless of which branch it hits (MES-81).
+const SharedReportView = () => (
+  <>
+    <NoIndex />
+    <SharedReportViewInner />
+  </>
+);
 
 export default SharedReportView;

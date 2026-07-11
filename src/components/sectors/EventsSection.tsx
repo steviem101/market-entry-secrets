@@ -13,6 +13,7 @@ const EventsSection = ({ events, onViewEventDetails }: EventsSectionProps) => {
   return (
     <ListingPageGate contentType="events">
       <SectorSection
+        kicker="Events"
         title="Upcoming Industry Events"
         viewAllLink="/events"
         viewAllText="View All Events"

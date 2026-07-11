@@ -76,37 +76,15 @@ export const useSubscription = () => {
     }
   }, [user, queryClient]);
 
-  const isPremium = () => {
-    return subscription?.tier === 'growth' || subscription?.tier === 'scale' || subscription?.tier === 'enterprise';
-  };
-
-  const isScale = () => {
-    return subscription?.tier === 'scale' || subscription?.tier === 'enterprise';
-  };
-
-  const isEnterprise = () => {
-    return subscription?.tier === 'enterprise';
-  };
-
-  const canAccessFeature = (feature: 'basic' | 'premium' | 'scale' | 'enterprise') => {
-    if (!subscription) return feature === 'basic';
-
-    const tierHierarchy = ['free', 'growth', 'scale', 'enterprise'];
-    const currentTierIndex = tierHierarchy.indexOf(subscription.tier);
-    const requiredTierIndex = tierHierarchy.indexOf(feature === 'basic' ? 'free' : feature);
-
-    if (currentTierIndex === -1 || requiredTierIndex === -1) return false;
-
-    return currentTierIndex >= requiredTierIndex;
-  };
+  // Note: isPremium/isScale/isEnterprise and canAccessFeature were removed here
+  // (AUD-039) — they had zero call sites and canAccessFeature('premium') was
+  // buggy (the tier hierarchy uses 'growth', so 'premium' resolved to index -1
+  // and always denied). Tier checks go through userTierMeetsRequirement /
+  // TIER_REQUIREMENTS in reportSectionConfig.ts instead.
 
   return {
     subscription,
     loading,
-    isPremium,
-    isScale,
-    isEnterprise,
-    canAccessFeature,
     refetch,
   };
 };

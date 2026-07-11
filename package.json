@@ -9,10 +9,12 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node --test \"supabase/functions/**/*.test.ts\" \"src/**/*.test.ts\""
+    "test": "node --test \"supabase/functions/**/*.test.ts\" \"src/**/*.test.ts\" \"scripts/**/*.test.ts\" \"workers/**/*.test.ts\"",
+    "docs:check": "node scripts/doc-freshness/run.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@lovable.dev/mcp-js": "^0.20.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",

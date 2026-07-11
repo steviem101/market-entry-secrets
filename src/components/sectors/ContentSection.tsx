@@ -13,6 +13,7 @@ const ContentSection = ({ contentItems }: ContentSectionProps) => {
   return (
     <ListingPageGate contentType="content">
       <SectorSection
+        kicker="Insights"
         title="Industry Insights & Analysis"
         viewAllLink="/content"
         viewAllText="View All Content"

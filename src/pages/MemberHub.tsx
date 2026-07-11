@@ -26,7 +26,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ProfileDialog } from "@/components/auth/ProfileDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks } from "@/hooks/useBookmarks";
-import { useMyReports } from "@/hooks/useReport";
+import { useMyMentorMatches, useMyReports } from "@/hooks/useReport";
+import { useMyLeadListRequests } from "@/hooks/useLeadListRequests";
 import { getInitials, getDisplayName } from "@/lib/profileUtils";
 import { format } from "date-fns";
 
@@ -40,21 +41,13 @@ const MemberHub = () => {
     fetchBookmarks();
   }, [fetchBookmarks]);
 
-  const completedReports = reports?.filter((r: any) => r.status === 'completed') || [];
   const reportsCount = reports?.length || 0;
 
-  // Extract mentor recommendations from completed reports
-  const mentorConnections = completedReports.reduce((acc: any[], report: any) => {
-    const mentors = report.report_json?.matches?.mentor_recommendations;
-    if (Array.isArray(mentors)) {
-      mentors.forEach((mentor: any) => {
-        if (!acc.find((m) => m.name === mentor.name)) {
-          acc.push({ ...mentor, reportId: report.id, reportName: report.user_intake_forms?.company_name });
-        }
-      });
-    }
-    return acc;
-  }, []);
+  // Mentor recommendations come via the tier-gated RPC per completed report;
+  // the my-reports list no longer carries report_json (MES-38).
+  const { data: mentorMatches } = useMyMentorMatches();
+  const mentorConnections: any[] = mentorMatches || [];
+  const { data: leadListRequests } = useMyLeadListRequests();
 
   const hubSections = [
     {
@@ -273,6 +266,45 @@ const MemberHub = () => {
               );
             })}
           </div>
+
+          {/* Requested lists (P1-D): custom lead-list requests + delivery status */}
+          {leadListRequests && leadListRequests.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Requested lists</h2>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {leadListRequests.map((req) => {
+                  const delivered = req.status === 'delivered' && req.delivered_database_id;
+                  const statusLabel: Record<string, string> = {
+                    new: 'Received', in_progress: 'In progress', delivered: 'Delivered', declined: 'Not available',
+                  };
+                  return (
+                    <Card key={req.id}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <Badge variant={delivered ? 'default' : 'secondary'} className="text-xs">
+                            {statusLabel[req.status] || req.status}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(req.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <CardDescription className="line-clamp-3 mt-2">{req.request_text}</CardDescription>
+                      </CardHeader>
+                      {delivered && (
+                        <CardContent>
+                          <Button size="sm" variant="outline" asChild>
+                            <Link to={`/leads/${req.delivered_database_id}`}>
+                              View your list <ArrowRight className="w-4 h-4 ml-1" />
+                            </Link>
+                          </Button>
+                        </CardContent>
+                      )}
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Recent Reports Section */}
           {recentReports.length > 0 && (

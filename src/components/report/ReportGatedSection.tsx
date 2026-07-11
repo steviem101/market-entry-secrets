@@ -6,18 +6,13 @@ import { useCheckout } from '@/hooks/useCheckout';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 import { tierDisplayPrice } from '@/lib/tierPricing';
+import { TIER_LABELS } from './reportSectionConfig';
 
 interface ReportGatedSectionProps {
   id: string;
   title: string;
   requiredTier: string;
 }
-
-const tierLabels: Record<string, string> = {
-  growth: 'Growth',
-  scale: 'Scale',
-  enterprise: 'Enterprise',
-};
 
 export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSectionProps) => {
   const { startCheckout, loading, isAuthenticated } = useCheckout();
@@ -67,7 +62,7 @@ export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSecti
                 <Lock className="w-7 h-7 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Upgrade to {tierLabels[requiredTier] || requiredTier}
+                Unlock with {TIER_LABELS[requiredTier] || requiredTier}
               </h3>
               <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
                 Unlock the {title} section and get deeper insights for your market entry strategy.

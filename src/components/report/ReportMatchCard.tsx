@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Lock, Globe, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { publishedOrigin } from '@/lib/publishedOrigin';
+import { tierDisplayName } from '@/components/directory/cardCtaConfig';
+import { classifyLinkedIn } from '@/lib/linkedinLabel';
 
 interface ReportMatchCardProps {
   name: string;
@@ -13,6 +15,7 @@ interface ReportMatchCardProps {
   linkLabel?: string;
   blurred?: boolean;
   upgradeCta?: string;
+  requiredTier?: string;
   website?: string;
   source?: string; // "web" for externally discovered matches
 }
@@ -47,12 +50,6 @@ const humanizeSubtitle = (s?: string): string | undefined => {
   return s;
 };
 
-// LinkedIn URLs are stored in the website column but the card hard-coded
-// "Website" — relabel + use the right icon when the URL is a LinkedIn
-// profile so users aren't misled.
-const isLinkedInUrl = (url: string): boolean =>
-  /(?:^|\/\/(?:www\.)?)linkedin\.com\//.test(url || '');
-
 // Print/PDF needs absolute internal links so they don't break when the
 // page is exported (window.print's a[href^="/"] resolves relative to the
 // report URL and the print stylesheet hides the URL annotation entirely,
@@ -74,12 +71,14 @@ export const ReportMatchCard = ({
   subtitle,
   tags,
   link,
-  linkLabel = 'View Profile',
+  linkLabel = 'View profile',
   blurred,
   upgradeCta,
+  requiredTier,
   website,
   source,
 }: ReportMatchCardProps) => {
+  const gatedLabel = upgradeCta || `Unlock with ${tierDisplayName(requiredTier || 'growth')}`;
   if (blurred) {
     return (
       <Card className="relative overflow-hidden border-border/50">
@@ -91,7 +90,7 @@ export const ReportMatchCard = ({
           <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
             <div className="text-center">
               <Lock className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">{upgradeCta || 'Upgrade to unlock'}</p>
+              <p className="text-xs text-muted-foreground">{gatedLabel}</p>
             </div>
           </div>
         </CardContent>
@@ -101,8 +100,12 @@ export const ReportMatchCard = ({
 
   const isWebSource = source === 'web';
   const displaySubtitle = humanizeSubtitle(subtitle);
-  const websiteIsLinkedIn = website ? isLinkedInUrl(website) : false;
-  const websiteLabel = websiteIsLinkedIn ? 'LinkedIn' : 'Website';
+  // Classify the website/LinkedIn slot so the label is honest about what it
+  // points to — a personal "LinkedIn Profile" vs an org "LinkedIn Page" vs a
+  // plain "Website" — instead of a flat "LinkedIn" that mislabels the wrong type.
+  const websiteInfo = classifyLinkedIn(website);
+  const websiteIsLinkedIn = websiteInfo.isLinkedIn;
+  const websiteLabel = websiteInfo.label;
 
   return (
     <Card className="border-border/50 border-l-[3px] border-l-primary/30 hover:border-l-primary/60 hover:shadow-sm transition-all">

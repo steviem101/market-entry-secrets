@@ -1,9 +1,9 @@
 
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Company } from "@/components/CompanyCard";
-import { parseJsonArray, getContactPersonImage } from "./CompanyCardHelpers";
+import { parseJsonArray } from "./CompanyCardHelpers";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { domainToWebsite } from "@/lib/logoUtils";
 
 interface CompanyCardContentProps {
@@ -104,13 +104,13 @@ const CompanyCardContent = ({ company }: CompanyCardContentProps) => {
         <div className="mb-4">
           <h4 className="text-sm font-medium text-muted-foreground mb-2">Contact person(s):</h4>
           <div className="flex gap-2">
-            {contactPersons.slice(0, 3).map((person, index) => (
-              <Avatar key={person.id} className="w-10 h-10">
-                <AvatarImage src={person.image || getContactPersonImage(index)} alt={person.name} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  {(person.name || '').split(' ').filter(Boolean).map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
+            {contactPersons.slice(0, 3).map((person) => (
+              <ContactAvatar
+                key={person.id}
+                name={person.name}
+                src={person.image}
+                className="w-10 h-10 text-xs"
+              />
             ))}
             {contactPersons.length > 3 && (
               <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">

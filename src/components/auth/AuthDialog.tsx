@@ -10,6 +10,21 @@ import { Eye, EyeOff, Mail, Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { setAuthReturnPath } from '@/lib/authReturnPath';
 
+const GoogleIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path fill="#4285F4" d="M23.52 12.273c0-.851-.076-1.67-.218-2.455H12v4.642h6.458a5.52 5.52 0 0 1-2.394 3.622v3.011h3.878c2.269-2.089 3.578-5.165 3.578-8.82z"/>
+    <path fill="#34A853" d="M12 24c3.24 0 5.956-1.075 7.942-2.907l-3.878-3.011c-1.075.72-2.45 1.145-4.064 1.145-3.125 0-5.771-2.111-6.715-4.947H1.276v3.109A11.995 11.995 0 0 0 12 24z"/>
+    <path fill="#FBBC05" d="M5.285 14.28A7.213 7.213 0 0 1 4.909 12c0-.791.136-1.56.376-2.28V6.611H1.276A11.995 11.995 0 0 0 0 12c0 1.936.464 3.769 1.276 5.389l4.009-3.109z"/>
+    <path fill="#EA4335" d="M12 4.773c1.762 0 3.344.605 4.587 1.794l3.442-3.442C17.951 1.19 15.235 0 12 0 7.31 0 3.253 2.69 1.276 6.611l4.009 3.109C6.229 6.884 8.875 4.773 12 4.773z"/>
+  </svg>
+);
+
+const LinkedInIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#0A66C2" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/>
+  </svg>
+);
+
 const MicrosoftIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -31,8 +46,9 @@ interface AuthDialogProps {
   reassurance?: { title: string; subtitle: string };
   /**
    * Path to navigate to after OAuth / magic-link auth completes via
-   * /auth/callback. Defaults to '/'. Must be a same-origin path beginning with
-   * '/' (rejected otherwise — open-redirect safe).
+   * /auth/callback. Defaults to the page the user is on (pathname + search)
+   * so sign-in never dumps them on '/'. Must be a same-origin path beginning
+   * with '/' (rejected otherwise — open-redirect safe).
    */
   returnTo?: string;
 }
@@ -70,6 +86,9 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    // The confirm-signup email link also lands on /auth/callback — return the
+    // user to the page they signed up from, not '/'.
+    setAuthReturnPath(resolveReturnTo());
     const { error } = await signUpWithEmail(email, password, {
       first_name: firstName,
       last_name: lastName,
@@ -89,19 +108,26 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
     setResetEmail('');
   };
 
+  // Explicit returnTo wins; otherwise return to the page the dialog was
+  // opened on. Resolved at click time so it reflects the live location.
+  const resolveReturnTo = () =>
+    returnTo ?? (typeof window !== 'undefined'
+      ? window.location.pathname + window.location.search
+      : undefined);
+
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     // Persist the desired post-auth destination so /auth/callback can navigate
     // back to the calling page (e.g. /report-creator?v2=1) instead of '/'.
-    setAuthReturnPath(returnTo);
+    setAuthReturnPath(resolveReturnTo());
     const result = await signInWithMagicLink(magicLinkEmail);
     if (!result.error) {
       setMagicLinkSent(true);
     }
   };
 
-  const handleSocialSignIn = async (provider: 'google' | 'azure') => {
-    setAuthReturnPath(returnTo);
+  const handleSocialSignIn = async (provider: 'google' | 'azure' | 'linkedin_oidc') => {
+    setAuthReturnPath(resolveReturnTo());
     await signInWithProvider(provider);
   };
 
@@ -131,8 +157,11 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
           </div>
 
           <div className="space-y-2.5">
+            <Button variant="outline" className="h-11 w-full" onClick={() => handleSocialSignIn('linkedin_oidc')} disabled={loading}>
+              <LinkedInIcon className="mr-2 h-4 w-4" /> Continue with LinkedIn
+            </Button>
             <Button variant="outline" className="h-11 w-full" onClick={() => handleSocialSignIn('google')} disabled={loading}>
-              <Mail className="mr-2 h-4 w-4" /> Continue with Google
+              <GoogleIcon className="mr-2 h-4 w-4" /> Continue with Google
             </Button>
             <Button variant="outline" className="h-11 w-full" onClick={() => handleSocialSignIn('azure')} disabled={loading}>
               <MicrosoftIcon className="mr-2 h-4 w-4" /> Continue with Microsoft
@@ -198,10 +227,19 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
               <Button
                 variant="outline"
                 className="w-full"
+                onClick={() => handleSocialSignIn('linkedin_oidc')}
+                disabled={loading}
+              >
+                <LinkedInIcon className="mr-2 h-4 w-4" />
+                Continue with LinkedIn
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => handleSocialSignIn('google')}
                 disabled={loading}
               >
-                <Mail className="mr-2 h-4 w-4" />
+                <GoogleIcon className="mr-2 h-4 w-4" />
                 Continue with Google
               </Button>
               <Button
@@ -269,10 +307,19 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
               <Button
                 variant="outline"
                 className="w-full"
+                onClick={() => handleSocialSignIn('linkedin_oidc')}
+                disabled={loading}
+              >
+                <LinkedInIcon className="mr-2 h-4 w-4" />
+                Continue with LinkedIn
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => handleSocialSignIn('google')}
                 disabled={loading}
               >
-                <Mail className="mr-2 h-4 w-4" />
+                <GoogleIcon className="mr-2 h-4 w-4" />
                 Continue with Google
               </Button>
               <Button
@@ -337,8 +384,9 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin', reassura
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password"
+                    placeholder="Create a password (min 8 characters)"
                     required
+                    minLength={8}
                   />
                   <Button
                     type="button"

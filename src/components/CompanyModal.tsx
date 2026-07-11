@@ -42,17 +42,6 @@ const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps
     return images[index % images.length];
   };
 
-  // Placeholder images for contact persons
-  const getContactPersonImage = (index: number) => {
-    const images = [
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    ];
-    return images[index % images.length];
-  };
-
   // Use the correct property names from the database with proper parsing
   const experienceTiles = parseJsonArray(company.experience_tiles || company.experienceTiles || []);
   const contactPersons = parseJsonArray(company.contact_persons || company.contactPersons || []);
@@ -69,7 +58,6 @@ const CompanyModal = ({ company, isOpen, onClose, onContact }: CompanyModalProps
           experienceTiles={experienceTiles}
           contactPersons={contactPersons}
           getExperienceTileImage={getExperienceTileImage}
-          getContactPersonImage={getContactPersonImage}
         />
 
         <CompanyModalDetails company={company} />

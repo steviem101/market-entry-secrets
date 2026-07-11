@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { trackCountryEvent } from "@/lib/analytics/countryFunnel";
+import { SectionHeading } from "@/components/common/SectionHeading";
 
 interface CountryLeadCaptureProps {
   countryName: string;
@@ -37,20 +39,18 @@ export const CountryLeadCapture = ({
       return;
     }
     setSubmitted(true);
+    trackCountryEvent(countrySlug, "lead_capture_submit", { section: "digest" });
     toast.success("You are in. Watch your inbox.");
   };
 
   return (
     <section className="border-b border-mes-border bg-mes-bg">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
-        <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
-            10 / Get started
-          </div>
-          <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
-            Three ways {countryName} founders work with us
-          </h2>
-        </div>
+        <SectionHeading
+          className="mb-10"
+          kicker="10 / Get started"
+          title={`Three ways ${countryName} founders work with us`}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <article className="bg-mes-card border border-mes-border rounded-xl p-6 flex flex-col">
@@ -78,7 +78,7 @@ export const CountryLeadCapture = ({
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="bg-mes-ink hover:bg-black text-white"
+                  className="bg-mes-ink-surface hover:bg-black text-white"
                 >
                   <Mail className="h-4 w-4" />
                 </Button>
@@ -86,7 +86,7 @@ export const CountryLeadCapture = ({
             )}
           </article>
 
-          <article className="bg-mes-ink text-white rounded-xl p-6 flex flex-col relative">
+          <article className="bg-mes-ink-surface text-white rounded-xl p-6 flex flex-col relative">
             <span className="absolute -top-2 right-5 text-[10.5px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-mes-blue-light text-mes-teal-dark">
               Most popular
             </span>
@@ -98,7 +98,12 @@ export const CountryLeadCapture = ({
               Generate a customised {countryName} to Australia market entry report. Matched partners, grants, ICP.
             </p>
             <Button asChild className="mt-5 bg-mes-teal hover:bg-mes-teal-dark text-white">
-              <Link to={`/report-creator?source=country-${countrySlug}`}>
+              <Link
+                to={`/report-creator?source=country-${countrySlug}`}
+                onClick={() =>
+                  trackCountryEvent(countrySlug, "report_creator_click", { section: "lead_capture" })
+                }
+              >
                 Generate my report
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -113,7 +118,7 @@ export const CountryLeadCapture = ({
             <p className="mt-2 text-[14px] text-mes-ink-soft">
               90-minute working session with the MES team and a {countryName} corridor operator.
             </p>
-            <Button asChild variant="outline" className="mt-5 border-mes-ink text-mes-ink hover:bg-mes-ink hover:text-white">
+            <Button asChild variant="outline" className="mt-5 border-mes-ink text-mes-ink hover:bg-mes-ink-surface hover:text-white">
               <Link to={`/contact?topic=${countrySlug}-call`}>
                 <Phone className="mr-2 h-4 w-4" />
                 Book a call

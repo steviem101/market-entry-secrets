@@ -6,7 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { LeadGenPopupProvider } from "@/components/LeadGenPopupProvider";
+import { IntroRequestProvider } from "@/components/directory/IntroRequestProvider";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { TrailingSlashRedirect } from "@/components/TrailingSlashRedirect";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PersonaProvider } from "@/contexts/PersonaContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -44,6 +46,7 @@ const AgencyDetailPage = React.lazy(() => import("./pages/AgencyDetailPage"));
 const CaseStudies = React.lazy(() => import("./pages/CaseStudies"));
 const CaseStudyDetail = React.lazy(() => import("./pages/CaseStudyDetail"));
 const FAQ = React.lazy(() => import("./pages/FAQ"));
+const MarketEntryQuestions = React.lazy(() => import("./pages/MarketEntryQuestions"));
 const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
 const PartnerWithUs = React.lazy(() => import("./pages/PartnerWithUs"));
@@ -58,6 +61,7 @@ const SharedReportView = React.lazy(() => import("./pages/SharedReportView"));
 const MyReports = React.lazy(() => import("./pages/MyReports"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const AdminSubmissions = React.lazy(() => import("./pages/AdminSubmissions"));
+const AdminMentors = React.lazy(() => import("./pages/AdminMentors"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -85,6 +89,8 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <ScrollToTop />
+              <TrailingSlashRedirect />
+              <IntroRequestProvider>
               <ErrorBoundary>
               <Layout>
               <Suspense fallback={<PageLoader />}>
@@ -120,6 +126,7 @@ const App = () => (
                   <Route path="/case-studies" element={<CaseStudies />} />
                   <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
                   <Route path="/faq" element={<FAQ />} />
+                  <Route path="/market-entry-questions" element={<MarketEntryQuestions />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/partner" element={<PartnerWithUs />} />
@@ -135,12 +142,14 @@ const App = () => (
                   <Route path="/my-reports" element={<MyReports />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/admin/submissions" element={<AdminSubmissions />} />
+                  <Route path="/admin/mentors" element={<AdminMentors />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
               </Layout>
               </ErrorBoundary>
+              </IntroRequestProvider>
             </BrowserRouter>
           </LeadGenPopupProvider>
           </PersonaProvider>

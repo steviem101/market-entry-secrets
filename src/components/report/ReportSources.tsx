@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ExternalLink, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { onCitationClick } from '@/lib/reportCitationBus';
 
 interface ReportSourcesProps {
   citations: string[];
@@ -17,6 +18,22 @@ function extractDomain(url: string): string {
 
 export const ReportSources = ({ citations }: ReportSourcesProps) => {
   const [open, setOpen] = useState(false);
+
+  // Open on inline-citation click, then scroll/highlight the target once the
+  // collapsible content has mounted (two rAFs to clear the open transition). B11.
+  useEffect(() => {
+    return onCitationClick((number) => {
+      setOpen(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const el = document.getElementById(`source-${number}`);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.history.replaceState(null, '', `#source-${number}`);
+        el.classList.add('citation-highlight');
+        setTimeout(() => el.classList.remove('citation-highlight'), 2000);
+      }));
+    });
+  }, []);
 
   if (!citations || citations.length === 0) return null;
 

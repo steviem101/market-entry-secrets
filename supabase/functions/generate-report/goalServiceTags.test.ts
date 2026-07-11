@@ -33,7 +33,7 @@ test("goalsToPrioritisedSections maps selected goals to the report sections they
   assert.deepEqual(goalsToPrioritisedSections({ goal_ids: null }), []);
   assert.deepEqual(goalsToPrioritisedSections({}), []);
   // every mapped section must be a real report_templates section
-  const valid = new Set(["executive_summary", "swot_analysis", "competitor_landscape", "service_providers", "mentor_recommendations", "events_resources", "action_plan", "lead_list", "investor_recommendations"]);
+  const valid = new Set(["executive_summary", "swot_analysis", "competitor_landscape", "service_providers", "mentor_recommendations", "events_resources", "action_plan", "setup_compliance", "lead_list", "investor_recommendations"]);
   for (const secs of Object.values(GOAL_SECTION_MAP)) for (const s of secs) assert.ok(valid.has(s), `unknown section: ${s}`);
 });
 
@@ -108,4 +108,59 @@ test("legacy label map stays a subset of the id map's tags (consistency)", () =>
       assert.ok(idTags.has(t), `legacy tag "${t}" missing from the id-keyed map`);
     }
   }
+});
+
+import { countGoalTagHits } from "./goalServiceTags.ts";
+
+test("mentor goals carry REAL community_members specialty vocabulary (prod snapshot 2026-07-09)", () => {
+  // The mentors table's specialties use archetype terms, not "Mentorship"/"Advisory".
+  // These terms were verified against prod: Active Advisor ×22, Scaled Founder ×15,
+  // International Founder ×47, Cross-border ×47. If the vocabulary shifts, the
+  // goal_tag_hits telemetry (report_json.metadata) will show it — update BOTH.
+  assert.ok(GOAL_SERVICE_TAGS_BY_ID.mentors_startup.includes("Active Advisor"));
+  assert.ok(GOAL_SERVICE_TAGS_BY_ID.mentors_startup.includes("Scaled Founder"));
+  assert.ok(GOAL_SERVICE_TAGS_BY_ID.mentors_intl.includes("International Founder"));
+  assert.ok(GOAL_SERVICE_TAGS_BY_ID.mentors_intl.includes("Cross-border"));
+  assert.ok(GOAL_SERVICE_TAGS_BY_ID.founders.includes("Scaled Founder"));
+});
+
+test("countGoalTagHits: counts matched rows carrying a goal's tags across pools", () => {
+  const pools = {
+    community_members: [
+      { name: "A", specialties: ["Active Advisor", "Fintech Founder"] },
+      { name: "B", specialties: ["Trade & Government"] },
+      { name: "C", specialties: ["Scaled Founder"] },
+    ],
+    service_providers: [
+      { name: "D", services: ["Tax", "Consulting"] },
+    ],
+    trade_investment_agencies: [
+      { name: "E", services: ["Networking"] },
+    ],
+  };
+  const hits = countGoalTagHits(["mentors_startup", "founders", "grants", "events"], pools);
+  // mentors_startup: A (Active Advisor) + C (Scaled Founder) = 2
+  assert.equal(hits.mentors_startup, 2);
+  // founders: C (Scaled Founder) + E (Networking — also a founders tag) = 2
+  assert.equal(hits.founders, 2);
+  // grants: no Grants/Government/Funding tags anywhere = 0 (the observable dead-tag signal)
+  assert.equal(hits.grants, 0);
+  // events: E (Networking) = 1
+  assert.equal(hits.events, 1);
+});
+
+test("countGoalTagHits: safe on empty/unknown input", () => {
+  assert.deepEqual(countGoalTagHits(null, {}), {});
+  assert.deepEqual(countGoalTagHits(["nonexistent_goal"], { x: [{ services: ["Tax"] }] }), {});
+  assert.deepEqual(countGoalTagHits(["events"], {}), { events: 0 });
+});
+
+import { goalSelectsGrants } from "./goalServiceTags.ts";
+
+test("goalSelectsGrants: v2 goal_id + legacy label + negatives", () => {
+  assert.equal(goalSelectsGrants({ goal_ids: ["investors", "grants"] }), true);
+  assert.equal(goalSelectsGrants({ services_needed: ["Identify grant and government funding opportunities"] }), true);
+  assert.equal(goalSelectsGrants({ goal_ids: ["investors", "mentors_startup"] }), false);
+  assert.equal(goalSelectsGrants({}), false);
+  assert.equal(goalSelectsGrants({ goal_ids: null, services_needed: null }), false);
 });

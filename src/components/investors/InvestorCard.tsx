@@ -2,9 +2,10 @@ import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, MapPin, ArrowRight } from "lucide-react";
+import { Globe, MapPin } from "lucide-react";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { CardCTA } from "@/components/directory/CardCTA";
 
 interface InvestorCardProps {
   investor: {
@@ -122,32 +123,31 @@ const InvestorCard = memo(({ investor }: InvestorCardProps) => {
       </div>
 
       {/* Footer */}
-      <div className="px-5 pb-4 pt-2 border-t border-border/50 flex items-center gap-2">
-        <Button size="sm" asChild className="flex-1">
-          <Link to={`/investors/${investor.slug || investor.id}`}>
-            View Profile
-            <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-          </Link>
-        </Button>
-        {investor.website && (
-          <Button variant="outline" size="sm" asChild className="flex-1">
-            <a href={investor.website} target="_blank" rel="noopener noreferrer">
-              <Globe className="w-3.5 h-3.5 mr-1.5" />
-              Website
-            </a>
-          </Button>
-        )}
-        <BookmarkButton
-          contentType="investor"
-          contentId={investor.id}
-          title={investor.name}
-          description={investor.description}
-          metadata={{
-            investor_type: investor.investor_type,
-            location: investor.location,
-          }}
-          size="sm"
-          variant="outline"
+      <div className="px-5 pb-4 pt-2 border-t border-border/50">
+        <CardCTA
+          entity="investor"
+          target={{ entity: "investor", id: investor.id, name: investor.name }}
+          secondaryHref={`/investors/${investor.slug || investor.id}`}
+          extra={
+            <>
+              {investor.website && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={investor.website} target="_blank" rel="noopener noreferrer" aria-label="Investor website">
+                    <Globe className="w-3.5 h-3.5" />
+                  </a>
+                </Button>
+              )}
+              <BookmarkButton
+                contentType="investor"
+                contentId={investor.id}
+                title={investor.name}
+                description={investor.description}
+                metadata={{ investor_type: investor.investor_type, location: investor.location }}
+                size="sm"
+                variant="outline"
+              />
+            </>
+          }
         />
       </div>
     </div>

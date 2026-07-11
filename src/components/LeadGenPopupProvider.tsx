@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { useTimerTrigger } from "@/hooks/useTimerTrigger";
+import { REPORT_CTA_LABEL, REPORT_CTA_MICROCOPY } from "@/config/reportCta";
 import { useAuth } from "@/hooks/useAuth";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 
@@ -23,7 +24,7 @@ export const LeadGenPopupProvider = ({ children }: LeadGenPopupProviderProps) =>
   // Don't start timer while auth is still loading (user appears null
   // during the async getSession() call) or when returning from Stripe.
   const { triggered } = useTimerTrigger({
-    delay: 15000, // 15 seconds
+    delay: 30000, // 30 seconds — give visitors time to read the hero first
     enabled: !user && !loading && !isStripeReturn()
   });
 
@@ -64,12 +65,12 @@ export const LeadGenPopupProvider = ({ children }: LeadGenPopupProviderProps) =>
             <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl mb-4">
               <Sparkles className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">
+            <DialogTitle className="text-xl font-bold text-white mb-2">
               Get Your Free Market Entry Report
-            </h3>
-            <p className="text-white/80 text-sm">
+            </DialogTitle>
+            <DialogDescription className="text-white/80 text-sm">
               Tailored insights for your Australian market entry
-            </p>
+            </DialogDescription>
           </div>
 
           {/* Benefits */}
@@ -89,12 +90,12 @@ export const LeadGenPopupProvider = ({ children }: LeadGenPopupProviderProps) =>
               className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white py-3 text-base rounded-xl group"
               size="lg"
             >
-              Create Your Free Report
+              {REPORT_CTA_LABEL}
               <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
             </Button>
 
             <p className="text-xs text-muted-foreground text-center">
-              No credit card required. Takes under 5 minutes.
+              {REPORT_CTA_MICROCOPY}
             </p>
           </div>
         </DialogContent>

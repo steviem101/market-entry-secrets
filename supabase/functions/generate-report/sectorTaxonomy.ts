@@ -66,13 +66,13 @@ for (const [sector, groups] of Object.entries(LINKEDIN_TAXONOMY)) {
 // matched "analytics"). Multi-word phrases use boundary on each end only.
 const SECTOR_KEYWORD_ALIASES: Array<[RegExp, string[]]> = [
   [/\b(?:fintech|financial technology|digital payments|insurtech|regtech|wealthtech)\b/, ['financial-services', 'technology-information-and-media']],
-  [/\b(?:cybersec(?:urity)?|cyber security|infosec|information security|digital identity|identity & access|iam)\b/, ['technology-information-and-media', 'professional-services']],
+  [/\b(?:cyber|cybersec(?:urity)?|cyber security|infosec|information security|digital identity|identity & access|iam)\b/, ['technology-information-and-media', 'professional-services']],
   [/\b(?:saas|software development|software engineering|enterprise software|developer tools)\b/, ['technology-information-and-media']],
   [/\b(?:ai|artificial intelligence|machine learning|ml|computer vision|video analytics|deep learning|llm|generative ai)\b/, ['technology-information-and-media']],
   [/\b(?:data|big data|analytics|data infrastructure|data platform|business intelligence)\b/, ['technology-information-and-media', 'professional-services']],
   [/\b(?:cloud|cloud computing|devops|platform engineering)\b/, ['technology-information-and-media']],
   [/\b(?:blockchain|crypto|web3|defi|nft)\b/, ['financial-services', 'technology-information-and-media']],
-  [/\b(?:biotech|pharma|medtech|medical device|life sciences|clinical|therapeutics)\b/, ['hospitals-and-health-care', 'manufacturing']],
+  [/\b(?:biotech\w*|pharma\w*|medtech|medical devices?|life sciences|clinical|therapeutics)\b/, ['hospitals-and-health-care', 'manufacturing']],
   // Deliberately NOT matching bare \bhealth\b — that catches phrases like
   // "Workplace Health and Safety" which is a construction/professional-services
   // domain, not healthcare. Require explicit healthcare-domain words.
@@ -88,13 +88,35 @@ const SECTOR_KEYWORD_ALIASES: Array<[RegExp, string[]]> = [
   [/\b(?:manufactur\w*|industrial|machinery|automation|robotics)\b/, ['manufacturing']],
   [/\b(?:logistics|supply chain|warehousing|shipping|freight|maritime)\b/, ['transportation-logistics-supply-chain-and-storage']],
   [/\b(?:retail|ecommerce|e-commerce|d2c|dtc)\b/, ['retail']],
-  [/\b(?:hospitality|tourism|travel|food (?:&|and) beverage|f&b|restaurant)\b/, ['accommodation-and-food-services']],
+  [/\b(?:hospitality|tourism|travel|food (?:&|and) beverage|f&b|restaurants?)\b/, ['accommodation-and-food-services']],
   [/\b(?:media|entertainment|gaming|streaming|publishing)\b/, ['entertainment-providers', 'technology-information-and-media']],
   [/\b(?:telecom|telecommunications|5g|networking)\b/, ['technology-information-and-media']],
   [/\b(?:automotive|electric vehicle|ev|mobility)\b/, ['transportation-logistics-supply-chain-and-storage', 'manufacturing']],
-  [/\b(?:consult\w*|advisory|advisor|advisors|professional services|accounting|tax|legal)\b/, ['professional-services']],
+  [/\b(?:consult\w*|advisory|advisor|advisors|professional services|accounting|tax|legal|law)\b/, ['professional-services']],
   [/\b(?:government|public sector|defence|defense|aerospace)\b/, ['government-administration']],
   [/\b(?:non[- ]?profit|ngo|charity)\b/, ['consumer-services']],
+  // MES-110: values observed in live intake data that previously resolved to
+  // NOTHING (see docs/audits/mes-110-sector-taxonomy-audit.md §6.1-6.2) — bare
+  // sector names, plurals the earlier boundaries missed, and common free-text.
+  [/\b(?:financial services|finance|banking)\b/, ['financial-services']],
+  [/\bsoftware\b/, ['technology-information-and-media']],
+  [/\b(?:recruit\w*|staffing|talent acquisition|human resources|hr tech)\b/, ['administrative-and-support-services']],
+  [/\b(?:biometrics?|identity management|identity verification)\b/, ['technology-information-and-media', 'professional-services']],
+  [/\bmarket research\b/, ['professional-services']],
+  [/\b(?:credit bureau|lending)\b/, ['financial-services']],
+  [/\bdecision intelligence\b/, ['technology-information-and-media']],
+  [/\beducation\b/, ['education']],
+  [/\bagricultur\w*\b/, ['farming-ranching-forestry']],
+  [/\barchitecture\b/, ['professional-services']],
+  // MES-110 step 5: the remaining live-intake values that still resolved to
+  // NOTHING after step 1. Slugs align with legacy_industry_mapping.linkedin_sector
+  // so the matcher and the crosswalk agree. "banking" (added above) also covers
+  // "Investment Banking"; "cyber" folded into the cybersecurity alias; "law" into
+  // the professional-services alias; "restaurant" widened to the plural. Left
+  // deliberately unresolved (horizontal business functions, not industries):
+  // "Project Management", "Customer Experience", "Field Management".
+  [/\b(?:apparel|fashion)\b/, ['manufacturing']],
+  [/\b(?:real estate|realty)\b/, ['real-estate-and-equipment-rental-services']],
 ];
 
 /**

@@ -1,0 +1,280 @@
+surface,raw_value,row_count,merged_value,linkedin_code,linkedin_description,confidence,note
+lead_databases.sector,Cross-Industry,23,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+lead_databases.sector,"Technology, Information and Media",11,Technology,96,Information Technology and Services,medium,LinkedIn v2 umbrella label; nearest v1 entry
+lead_databases.sector,Financial Services,5,Financial Services,43,Financial Services,high,
+lead_databases.sector,Business Consulting and Services,2,Professional Services,11,Management Consulting,medium,FLAG: no exact Professional Services entry in 147; 11 Management Consulting nearest
+lead_databases.sector,Government Administration,2,Government,75,Government Administration,high,
+lead_databases.sector,Retail,2,Retail,27,Retail,high,
+lead_databases.sector,Accommodation and Food Services,1,Hospitality,31,Hospitality,medium,v2 umbrella spans hospitality and food service; 34 Food & Beverages also plausible
+lead_databases.sector,Banking,1,Banking,41,Banking,high,
+lead_databases.sector,Construction,1,Construction,48,Construction,high,
+lead_databases.sector,Defense & Space,1,Defence,1,Defense & Space,high,
+lead_databases.sector,Education,1,Education,69,Education Management,medium,generic education mapped to 69; 132 E-Learning reserved for EdTech
+lead_databases.sector,Entertainment Providers,1,Entertainment,28,Entertainment,high,
+lead_databases.sector,"Farming, Ranching, Forestry",1,Agriculture,63,Farming,medium,v2 umbrella also spans 64 Ranching and 61 Paper & Forest Products
+lead_databases.sector,Hospitals and Health Care,1,Healthcare,14,Hospital & Health Care,high,
+lead_databases.sector,Insurance,1,Insurance,42,Insurance,high,
+lead_databases.sector,Manufacturing,1,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry in 147 table; 135 is nearest catch-all
+lead_databases.sector,Mining & Metals,1,Mining & Metals,56,Mining & Metals,high,
+lead_databases.sector,Non-profit Organizations,1,Non-Profit,100,Non-Profit Organization Management,high,
+lead_databases.sector,Online and Mail Order Retail,1,E-commerce,27,Retail,medium,e-commerce; 6 Internet also plausible
+lead_databases.sector,Pharmaceutical Manufacturing,1,Pharmaceuticals,15,Pharmaceuticals,high,
+lead_databases.sector,Real Estate,1,Real Estate,44,Real Estate,high,
+lead_databases.sector,Telecommunications,1,Telecommunications,8,Telecommunications,high,
+lead_databases.sector,"Transportation, Logistics, Supply Chain and Storage",1,Logistics,116,Logistics and Supply Chain,high,
+lead_databases.sector,Utilities,1,Utilities,59,Utilities,high,
+lead_databases.sector,Venture Capital and Private Equity,1,Venture Capital,106,Venture Capital & Private Equity,high,
+lead_databases.sector,Wholesale,1,Wholesale,133,Wholesale,high,
+leads.industry,Construction,1,Construction,48,Construction,high,
+leads.industry,Financial Services,1,Financial Services,43,Financial Services,high,
+leads.industry,Financial Technology,1,FinTech,43,Financial Services,high,
+leads.industry,Healthcare Technology,1,HealthTech,14,Hospital & Health Care,medium,healthtech product side; 4 Computer Software also plausible
+leads.industry,Professional Services,1,Professional Services,11,Management Consulting,medium,FLAG: no exact Professional Services entry in 147; 11 Management Consulting nearest
+leads.industry,Retail & E-commerce,1,E-commerce,27,Retail,medium,e-commerce; 6 Internet also plausible
+leads.industry,Technology,1,Technology,96,Information Technology and Services,medium,generic technology label
+leads.category,banking,1,Banking,41,Banking,high,
+leads.category,Construction,1,Construction,48,Construction,high,
+leads.category,cybersecurity,1,Cybersecurity,118,Computer & Network Security,high,
+leads.category,ecommerce,1,E-commerce,27,Retail,medium,e-commerce; 6 Internet also plausible
+leads.category,fintech,1,FinTech,43,Financial Services,high,
+leads.category,forensic,1,Forensics,121,Security and Investigations,low,ambiguous category label; assumed forensic investigation services
+leads.category,healthcare,1,Healthcare,14,Hospital & Health Care,high,
+lead_submissions.sector,FinTech,1,FinTech,43,Financial Services,high,
+lead_submissions.sector,MedTech,1,MedTech,17,Medical Devices,high,
+innovation_ecosystem.sectors,Sector Agnostic,44,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+innovation_ecosystem.sectors,Cleantech,16,CleanTech,144,Renewables & Environment,high,
+innovation_ecosystem.sectors,Deep Tech,14,Deep Tech,96,Information Technology and Services,low,no deep-tech entry in 147; cross-domain frontier tech (hardware/bio/space) so fit is weak
+innovation_ecosystem.sectors,Healthtech,14,HealthTech,14,Hospital & Health Care,high,
+innovation_ecosystem.sectors,AI,12,AI,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+innovation_ecosystem.sectors,Agritech,10,AgTech,63,Farming,high,
+innovation_ecosystem.sectors,Space,6,Space,1,Defense & Space,high,
+innovation_ecosystem.sectors,Fintech,5,FinTech,43,Financial Services,high,
+innovation_ecosystem.sectors,Foodtech,5,FoodTech,23,Food Production,medium,foodtech leans production over food service (34)
+innovation_ecosystem.sectors,Cybersecurity,4,Cybersecurity,118,Computer & Network Security,high,
+innovation_ecosystem.sectors,Defence,4,Defence,1,Defense & Space,high,
+innovation_ecosystem.sectors,Edtech,4,EdTech,132,E-Learning,medium,edtech mapped to 132; generic Education mapped to 69
+innovation_ecosystem.sectors,Manufacturing,3,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry in 147 table; 135 is nearest catch-all
+innovation_ecosystem.sectors,Insurtech,2,InsurTech,42,Insurance,high,
+innovation_ecosystem.sectors,IoT,2,IoT,8,Telecommunications,medium,IoT judged to connectivity; 4 Computer Software / 3 Computer Hardware also plausible
+innovation_ecosystem.sectors,Mining,2,Mining & Metals,56,Mining & Metals,high,
+innovation_ecosystem.sectors,Property,2,Real Estate,44,Real Estate,high,
+innovation_ecosystem.sectors,RegTech,2,RegTech,4,Computer Software,low,regulatory-compliance software; 43 Financial Services also plausible
+innovation_ecosystem.sectors,Smart Cities,2,Smart Cities,51,Civil Engineering,low,per audit convention Smart Cities to 51; weak fit
+innovation_ecosystem.sectors,Agtech,1,AgTech,63,Farming,high,
+innovation_ecosystem.sectors,Biotech,1,Biotechnology,12,Biotechnology,high,
+innovation_ecosystem.sectors,Black and Women of Colour,1,Audience Focus,,,high,UNMAPPABLE:audience
+innovation_ecosystem.sectors,climate,1,CleanTech,144,Renewables & Environment,medium,theme judged mappable to 144 per audit convention
+innovation_ecosystem.sectors,Clinical Entrepreneurs,1,Audience Focus,,,high,UNMAPPABLE:audience
+innovation_ecosystem.sectors,Deeptech,1,Deep Tech,96,Information Technology and Services,low,no deep-tech entry in 147; cross-domain frontier tech so fit is weak
+innovation_ecosystem.sectors,defence,1,Defence,1,Defense & Space,high,
+innovation_ecosystem.sectors,health,1,Healthcare,14,Hospital & Health Care,medium,lowercase generic health label
+innovation_ecosystem.sectors,"health, disability and wellbeing",1,Theme,,,medium,UNMAPPABLE:theme; 124 Health Wellness and Fitness partially fits but value is a program theme
+innovation_ecosystem.sectors,Healthcare,1,Healthcare,14,Hospital & Health Care,high,
+innovation_ecosystem.sectors,Ocean health,1,Theme,,,high,UNMAPPABLE:theme
+innovation_ecosystem.sectors,sector agnostic,1,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+innovation_ecosystem.sectors,social entrepreneurs,1,Audience Focus,,,high,UNMAPPABLE:audience
+innovation_ecosystem.sectors,Web3,1,Web3,43,Financial Services,low,per audit convention Web3 to 43 (crypto/DeFi); weak fit
+innovation_ecosystem.sectors,women,1,Audience Focus,,,high,UNMAPPABLE:audience
+innovation_ecosystem.sectors,Women and non-binary founders,1,Audience Focus,,,high,UNMAPPABLE:audience
+trade_investment_agencies.sectors_supported,Sector Agnostic,112,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+trade_investment_agencies.sectors_supported,Manufacturing,26,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry in 147 table; 135 is nearest catch-all
+trade_investment_agencies.sectors_supported,Financial Services,23,Financial Services,43,Financial Services,high,
+trade_investment_agencies.sectors_supported,Mining,22,Mining & Metals,56,Mining & Metals,high,
+trade_investment_agencies.sectors_supported,Foodtech,20,FoodTech,23,Food Production,medium,foodtech leans production over food service (34)
+trade_investment_agencies.sectors_supported,Cleantech,17,CleanTech,144,Renewables & Environment,high,
+trade_investment_agencies.sectors_supported,Edtech,13,EdTech,132,E-Learning,medium,edtech mapped to 132; generic Education mapped to 69
+trade_investment_agencies.sectors_supported,Healthtech,13,HealthTech,14,Hospital & Health Care,high,
+trade_investment_agencies.sectors_supported,Agritech,11,AgTech,63,Farming,high,
+trade_investment_agencies.sectors_supported,Defence,11,Defence,1,Defense & Space,high,
+trade_investment_agencies.sectors_supported,Construction,10,Construction,48,Construction,high,
+trade_investment_agencies.sectors_supported,Deep Tech,9,Deep Tech,96,Information Technology and Services,low,no deep-tech entry in 147; cross-domain frontier tech so fit is weak
+trade_investment_agencies.sectors_supported,Fintech,8,FinTech,43,Financial Services,high,
+trade_investment_agencies.sectors_supported,Tourism,7,Tourism,30,"Leisure, Travel & Tourism",high,
+trade_investment_agencies.sectors_supported,Creative Industries,5,Creative Industries,99,Design,low,broad creative sector; 35 Motion Pictures and Film also plausible
+trade_investment_agencies.sectors_supported,technology,5,Technology,96,Information Technology and Services,medium,generic technology label
+trade_investment_agencies.sectors_supported,all,4,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+trade_investment_agencies.sectors_supported,manufacturing,3,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry in 147 table; 135 is nearest catch-all
+trade_investment_agencies.sectors_supported,Space,3,Space,1,Defense & Space,high,
+trade_investment_agencies.sectors_supported,agritech,2,AgTech,63,Farming,high,
+trade_investment_agencies.sectors_supported,fintech,2,FinTech,43,Financial Services,high,
+trade_investment_agencies.sectors_supported,professional_services,2,Professional Services,11,Management Consulting,medium,FLAG: no exact Professional Services entry in 147; 11 Management Consulting nearest
+trade_investment_agencies.sectors_supported,construction,1,Construction,48,Construction,high,
+trade_investment_agencies.sectors_supported,deeptech,1,Deep Tech,96,Information Technology and Services,low,no deep-tech entry in 147; cross-domain frontier tech so fit is weak
+trade_investment_agencies.sectors_supported,defence,1,Defence,1,Defense & Space,high,
+trade_investment_agencies.sectors_supported,energy,1,Energy,57,Oil & Energy,medium,generic energy; renewables (144) ambiguity
+trade_investment_agencies.sectors_supported,healthtech,1,HealthTech,14,Hospital & Health Care,high,
+trade_investment_agencies.sectors_supported,resources,1,Mining & Metals,56,Mining & Metals,medium,resources judged to Mining & Metals per audit convention; could span 57 Oil & Energy
+trade_investment_agencies.sectors_supported,tourism,1,Tourism,30,"Leisure, Travel & Tourism",high,
+trade_investment_agencies.sectors_supported,transport,1,Logistics,116,Logistics and Supply Chain,medium,per anchor Transport to 116; 92 Transportation/Trucking/Railroad also plausible
+user_intake_forms.industry_sector,Data Infrastructure and Analytics,20,Data & Analytics,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.industry_sector,Artificial Intelligence,18,AI,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.industry_sector,Architecture and Planning,15,Architecture & Planning,50,Architecture & Planning,high,
+user_intake_forms.industry_sector,Capital Markets,9,Capital Markets,129,Capital Markets,high,
+user_intake_forms.industry_sector,Credit Intermediation,6,Credit Intermediation,41,Banking,medium,lending activity; 43 Financial Services also plausible
+user_intake_forms.industry_sector,Software as a Service,6,SaaS,4,Computer Software,high,
+user_intake_forms.industry_sector,Software Development,6,Software Development,4,Computer Software,high,
+user_intake_forms.industry_sector,FinTech,5,FinTech,43,Financial Services,high,
+user_intake_forms.industry_sector,SaaS,5,SaaS,4,Computer Software,high,
+user_intake_forms.industry_sector,Building Construction,4,Construction,48,Construction,high,
+user_intake_forms.industry_sector,Cybersecurity,4,Cybersecurity,118,Computer & Network Security,high,
+user_intake_forms.industry_sector,Fintech,4,FinTech,43,Financial Services,high,
+user_intake_forms.industry_sector,Recruitment Technology,4,Staffing & Recruiting,104,Staffing and Recruiting,medium,recruiting-vertical tech judged to 104 over 137 Human Resources
+user_intake_forms.industry_sector,Staffing and Recruiting,4,Staffing & Recruiting,104,Staffing and Recruiting,high,
+user_intake_forms.industry_sector,Credit Bureau,3,Credit Bureau,43,Financial Services,medium,credit information provider; 84 Information Services also plausible
+user_intake_forms.industry_sector,Hospitality Technology,3,Hospitality,31,Hospitality,medium,hospitality-vertical software; 4 Computer Software also plausible
+user_intake_forms.industry_sector,Security and Investigations,3,Security & Investigations,121,Security and Investigations,high,
+user_intake_forms.industry_sector,Video Analytics,3,Computer Vision,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.industry_sector,Accounting,2,Accounting,47,Accounting,high,
+user_intake_forms.industry_sector,Biometrics,2,Digital Identity,118,Computer & Network Security,medium,identity/security cluster
+user_intake_forms.industry_sector,Business Consulting and Services,2,Professional Services,11,Management Consulting,medium,FLAG: no exact Professional Services entry in 147; 11 Management Consulting nearest
+user_intake_forms.industry_sector,Construction Technology,2,ConstructionTech,48,Construction,medium,construction-vertical tech; 4 Computer Software also plausible
+user_intake_forms.industry_sector,Data Analytics,2,Data & Analytics,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.industry_sector,Decision Intelligence,2,Data & Analytics,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.industry_sector,Digital Identity,2,Digital Identity,118,Computer & Network Security,medium,identity/security cluster
+user_intake_forms.industry_sector,Financial Services,2,Financial Services,43,Financial Services,high,
+user_intake_forms.industry_sector,Hospitality,2,Hospitality,31,Hospitality,high,
+user_intake_forms.industry_sector,IT Services and IT Consulting,2,IT Services,96,Information Technology and Services,high,
+user_intake_forms.industry_sector,Machinery Manufacturing,2,Machinery,55,Machinery,high,
+user_intake_forms.industry_sector,Market Research,2,Market Research,97,Market Research,high,
+user_intake_forms.industry_sector,Occupational Health and Safety,2,Workplace Safety,78,Public Safety,low,weak fit; no workplace-safety entry in 147 (86 Environmental Services also considered)
+user_intake_forms.industry_sector,"Appliances, Electrical, and Electronics Manufacturing",1,Electronics Manufacturing,112,Electrical/Electronic Manufacturing,high,
+user_intake_forms.industry_sector,Automation Software,1,Software,4,Computer Software,high,
+user_intake_forms.industry_sector,Banking Software,1,Software,4,Computer Software,medium,banking-vertical software; 41 Banking also plausible
+user_intake_forms.industry_sector,Computer Vision,1,Computer Vision,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.industry_sector,Construction Tech,1,ConstructionTech,48,Construction,medium,construction-vertical tech; 4 Computer Software also plausible
+user_intake_forms.industry_sector,Customer Experience,1,Product Descriptor,,,medium,UNMAPPABLE:product-descriptor; not clearly a software product category
+user_intake_forms.industry_sector,Cyber Security,1,Cybersecurity,118,Computer & Network Security,high,
+user_intake_forms.industry_sector,Data Infrastructure,1,Data & Analytics,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.industry_sector,E-commerce,1,E-commerce,27,Retail,medium,e-commerce; 6 Internet also plausible
+user_intake_forms.industry_sector,Enterprise Software,1,Software,4,Computer Software,high,
+user_intake_forms.industry_sector,Field Management,1,Product Descriptor,,,medium,UNMAPPABLE:product-descriptor; not clearly a software product category
+user_intake_forms.industry_sector,Food Tech,1,FoodTech,23,Food Production,medium,foodtech leans production over food service (34)
+user_intake_forms.industry_sector,Fundraising,1,Fund-Raising,101,Fund-Raising,high,
+user_intake_forms.industry_sector,HR Tech,1,Human Resources,137,Human Resources,medium,HR-vertical tech judged to 137 over 104 Staffing and Recruiting
+user_intake_forms.industry_sector,Human Resources,1,Human Resources,137,Human Resources,high,
+user_intake_forms.industry_sector,Identity Management,1,Digital Identity,118,Computer & Network Security,medium,identity/security cluster
+user_intake_forms.industry_sector,Identity Verification,1,Digital Identity,118,Computer & Network Security,medium,identity/security cluster
+user_intake_forms.industry_sector,Industrial Maintenance,1,Industrial Services,135,Mechanical or Industrial Engineering,low,equipment maintenance services; 122 Facilities Services also considered
+user_intake_forms.industry_sector,Industrial Safety,1,Workplace Safety,78,Public Safety,low,weak fit; no workplace-safety entry in 147 (86 Environmental Services also considered)
+user_intake_forms.industry_sector,InsurTech,1,InsurTech,42,Insurance,high,
+user_intake_forms.industry_sector,Logistics,1,Logistics,116,Logistics and Supply Chain,high,
+user_intake_forms.industry_sector,Medical Equipment Manufacturing,1,MedTech,17,Medical Devices,high,
+user_intake_forms.industry_sector,Predictive Analytics,1,Data & Analytics,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.industry_sector,Project Management,1,Product Descriptor,,,medium,UNMAPPABLE:product-descriptor; not clearly a software product category
+user_intake_forms.industry_sector,Real Estate,1,Real Estate,44,Real Estate,high,
+user_intake_forms.industry_sector,Services for Renewable Energy,1,CleanTech,144,Renewables & Environment,high,
+user_intake_forms.industry_sector,Software,1,Software,4,Computer Software,high,
+user_intake_forms.industry_sector,Workplace Health and Safety,1,Workplace Safety,78,Public Safety,low,weak fit; no workplace-safety entry in 147 (86 Environmental Services also considered)
+user_intake_forms.end_buyer_industries,Banking,26,Banking,41,Banking,high,
+user_intake_forms.end_buyer_industries,Financial Services,23,Financial Services,43,Financial Services,high,
+user_intake_forms.end_buyer_industries,banking,16,Banking,41,Banking,high,
+user_intake_forms.end_buyer_industries,finance,10,Financial Services,43,Financial Services,medium,generic lowercase label
+user_intake_forms.end_buyer_industries,Investment Banking,9,Investment Banking,45,Investment Banking,high,
+user_intake_forms.end_buyer_industries,Telecommunications,8,Telecommunications,8,Telecommunications,high,
+user_intake_forms.end_buyer_industries,Building Construction,7,Construction,48,Construction,high,
+user_intake_forms.end_buyer_industries,Construction,6,Construction,48,Construction,high,
+user_intake_forms.end_buyer_industries,Hospitality,6,Hospitality,31,Hospitality,high,
+user_intake_forms.end_buyer_industries,Mining & Metals,4,Mining & Metals,56,Mining & Metals,high,
+user_intake_forms.end_buyer_industries,Staffing & Recruiting,4,Staffing & Recruiting,104,Staffing and Recruiting,high,
+user_intake_forms.end_buyer_industries,Staffing and Recruiting,4,Staffing & Recruiting,104,Staffing and Recruiting,high,
+user_intake_forms.end_buyer_industries,Software Development,3,Software Development,4,Computer Software,high,
+user_intake_forms.end_buyer_industries,Accounting,2,Accounting,47,Accounting,high,
+user_intake_forms.end_buyer_industries,financial services,2,Financial Services,43,Financial Services,high,
+user_intake_forms.end_buyer_industries,Food and Beverage Retail,2,Food & Beverage Retail,22,Supermarkets,medium,food retail; 27 Retail also plausible
+user_intake_forms.end_buyer_industries,lending,2,Banking,41,Banking,medium,lending activity; 43 Financial Services also plausible
+user_intake_forms.end_buyer_industries,Online and Mail Order Retail,2,E-commerce,27,Retail,medium,e-commerce; 6 Internet also plausible
+user_intake_forms.end_buyer_industries,Retail Apparel and Fashion,2,Apparel & Fashion,19,Apparel & Fashion,high,
+user_intake_forms.end_buyer_industries,"Retail Appliances, Electrical, and Electronic Equipment",2,Electronics Retail,27,Retail,medium,electronics retail; 24 Consumer Electronics also plausible
+user_intake_forms.end_buyer_industries,Wholesale Food and Beverage,2,Food & Beverage Wholesale,133,Wholesale,medium,food/bev wholesale; 34 Food & Beverages also plausible
+user_intake_forms.end_buyer_industries,AI,1,AI,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.end_buyer_industries,Apparel & Fashion,1,Apparel & Fashion,19,Apparel & Fashion,high,
+user_intake_forms.end_buyer_industries,Architecture & Planning,1,Architecture & Planning,50,Architecture & Planning,high,
+user_intake_forms.end_buyer_industries,Capital Markets,1,Capital Markets,129,Capital Markets,high,
+user_intake_forms.end_buyer_industries,Commercial Real Estate,1,Commercial Real Estate,128,Commercial Real Estate,high,
+user_intake_forms.end_buyer_industries,Credit Intermediation,1,Credit Intermediation,41,Banking,medium,lending activity; 43 Financial Services also plausible
+user_intake_forms.end_buyer_industries,cyber,1,Cybersecurity,118,Computer & Network Security,medium,abbreviated label assumed cybersecurity
+user_intake_forms.end_buyer_industries,Data Infrastructure & Analytics,1,Data & Analytics,4,Computer Software,medium,AI/analytics cluster mapped consistently to 4 Computer Software; 84 Information Services is the alternative
+user_intake_forms.end_buyer_industries,Defense & Space,1,Defence,1,Defense & Space,high,
+user_intake_forms.end_buyer_industries,Electrical & Electronic Manufacturing,1,Electronics Manufacturing,112,Electrical/Electronic Manufacturing,high,
+user_intake_forms.end_buyer_industries,Food and Beverage Services,1,Food & Beverage,34,Food & Beverages,high,
+user_intake_forms.end_buyer_industries,Law Practice,1,Legal,9,Law Practice,high,
+user_intake_forms.end_buyer_industries,Legal Services,1,Legal,10,Legal Services,high,
+user_intake_forms.end_buyer_industries,logistics,1,Logistics,116,Logistics and Supply Chain,high,
+user_intake_forms.end_buyer_industries,Machinery,1,Machinery,55,Machinery,high,
+user_intake_forms.end_buyer_industries,Management Consulting,1,Professional Services,11,Management Consulting,high,
+user_intake_forms.end_buyer_industries,Mechanical or Industrial Engineering,1,Industrial Engineering,135,Mechanical or Industrial Engineering,high,
+user_intake_forms.end_buyer_industries,Mining,1,Mining & Metals,56,Mining & Metals,high,
+user_intake_forms.end_buyer_industries,Restaurants,1,Restaurants,32,Restaurants,high,
+user_intake_forms.end_buyer_industries,Retail Health and Personal Care Products,1,Health & Personal Care Retail,27,Retail,medium,health/personal-care retail; 18 Cosmetics also considered
+locations.key_industries,Technology,18,Technology,96,Information Technology and Services,medium,generic technology label
+locations.key_industries,Tourism,12,Tourism,30,"Leisure, Travel & Tourism",high,
+locations.key_industries,Agriculture,10,Agriculture,63,Farming,high,
+locations.key_industries,Education,10,Education,69,Education Management,medium,generic education mapped to 69; 132 E-Learning reserved for EdTech
+locations.key_industries,Defence,8,Defence,1,Defense & Space,high,
+locations.key_industries,Manufacturing,6,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry in 147 table; 135 is nearest catch-all
+locations.key_industries,Renewable Energy,6,CleanTech,144,Renewables & Environment,high,
+locations.key_industries,Healthcare,5,Healthcare,14,Hospital & Health Care,high,
+locations.key_industries,Space,5,Space,1,Defense & Space,high,
+locations.key_industries,Film & Creative,4,Film & Creative,35,Motion Pictures and Film,medium,judged film-led; 99 Design also plausible
+locations.key_industries,Financial Services,4,Financial Services,43,Financial Services,high,
+locations.key_industries,Food & Beverage,4,Food & Beverage,23,Food Production,medium,regional key industry judged production over food service (34)
+locations.key_industries,Government,4,Government,75,Government Administration,high,
+locations.key_industries,Mining,4,Mining & Metals,56,Mining & Metals,high,
+locations.key_industries,Creative Industries,3,Creative Industries,99,Design,low,broad creative sector; 35 Motion Pictures and Film also plausible
+locations.key_industries,Health & Medical,3,Healthcare,14,Hospital & Health Care,medium,spans 13 Medical Practice
+locations.key_industries,Professional Services,3,Professional Services,11,Management Consulting,medium,FLAG: no exact Professional Services entry in 147; 11 Management Consulting nearest
+locations.key_industries,Agritech,2,AgTech,63,Farming,high,
+locations.key_industries,Cyber Security,2,Cybersecurity,118,Computer & Network Security,high,
+locations.key_industries,Engineering,2,Engineering,135,Mechanical or Industrial Engineering,medium,generic engineering label
+locations.key_industries,Marine,2,Maritime,95,Maritime,medium,generic marine label
+locations.key_industries,Mining & Resources,2,Mining & Metals,56,Mining & Metals,high,
+locations.key_industries,Oil & Gas,2,Oil & Gas,57,Oil & Energy,high,
+locations.key_industries,Aerospace,1,Aerospace,52,Aviation & Aerospace,high,
+locations.key_industries,Aviation,1,Aerospace,52,Aviation & Aerospace,medium,per anchor Aviation to 52; 94 Airlines/Aviation also plausible
+locations.key_industries,Creative,1,Creative Industries,99,Design,low,broad creative sector; 35 Motion Pictures and Film also plausible
+locations.key_industries,Dairy,1,Dairy,65,Dairy,high,
+locations.key_industries,Dairy Processing,1,Dairy,65,Dairy,high,
+locations.key_industries,Energy,1,Energy,57,Oil & Energy,medium,generic energy; renewables (144) ambiguity
+locations.key_industries,Film & Post-production,1,Film & Creative,35,Motion Pictures and Film,high,
+locations.key_industries,Marine Science,1,Marine Science,70,Research,low,ocean research; 95 Maritime also considered
+locations.key_industries,Media,1,Media,126,Media Production,medium,judged production-led regional industry; 113 Online Media also plausible
+locations.key_industries,Mining Services,1,Mining & Metals,56,Mining & Metals,high,
+locations.key_industries,Real Estate,1,Real Estate,44,Real Estate,high,
+locations.key_industries,Wine & Agriculture,1,Wine & Food,142,Wine and Spirits,medium,per anchor; spans 63 Farming
+locations.key_industries,Wine & Food,1,Wine & Food,142,Wine and Spirits,medium,per anchor; spans 34 Food & Beverages
+countries.key_industries,Technology,8,Technology,96,Information Technology and Services,medium,generic technology label
+countries.key_industries,Financial Services,6,Financial Services,43,Financial Services,high,
+countries.key_industries,Manufacturing,4,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry in 147 table; 135 is nearest catch-all
+countries.key_industries,Energy,3,Energy,57,Oil & Energy,medium,generic energy; renewables (144) ambiguity
+countries.key_industries,Agriculture,2,Agriculture,63,Farming,high,
+countries.key_industries,Automotive,2,Automotive,53,Automotive,high,
+countries.key_industries,Mining,2,Mining & Metals,56,Mining & Metals,high,
+countries.key_industries,Aerospace & Defence,1,Aerospace,52,Aviation & Aerospace,medium,combined label; spans 1 Defense & Space
+countries.key_industries,Clean Energy,1,CleanTech,144,Renewables & Environment,high,
+countries.key_industries,Electronics,1,Electronics Manufacturing,112,Electrical/Electronic Manufacturing,medium,generic electronics; 24 Consumer Electronics also plausible
+countries.key_industries,Energy & Resources,1,Energy,57,Oil & Energy,low,combined label; spans 56 Mining & Metals
+countries.key_industries,Healthcare,1,Healthcare,14,Hospital & Health Care,high,
+countries.key_industries,Infrastructure,1,Infrastructure,51,Civil Engineering,medium,per audit convention Infrastructure to 51
+countries.key_industries,Logistics,1,Logistics,116,Logistics and Supply Chain,high,
+countries.key_industries,Luxury & Consumer,1,Luxury & Consumer,143,Luxury Goods & Jewelry,medium,combined label; spans 25 Consumer Goods
+countries.key_industries,Pharmaceuticals,1,Pharmaceuticals,15,Pharmaceuticals,high,
+countries.key_industries,Professional Services,1,Professional Services,11,Management Consulting,medium,FLAG: no exact Professional Services entry in 147; 11 Management Consulting nearest
+countries.key_industries,Retail,1,Retail,27,Retail,high,
+countries.key_industries,Steel & Metals,1,Mining & Metals,56,Mining & Metals,medium,no steel entry in 147; metals side of 56
+countries.key_industries,Trade,1,Trade,134,Import and Export,low,generic trade; 141 International Trade and Development also plausible
+industry_sectors.industries,Banking,1,Banking,41,Banking,high,
+industry_sectors.industries,Biotechnology,1,Biotechnology,12,Biotechnology,high,
+industry_sectors.industries,Connectivity,1,Telecommunications,8,Telecommunications,medium,connectivity judged to telecom
+industry_sectors.industries,Digital Health,1,HealthTech,14,Hospital & Health Care,high,
+industry_sectors.industries,Financial Services,1,Financial Services,43,Financial Services,high,
+industry_sectors.industries,FinTech,1,FinTech,43,Financial Services,high,
+industry_sectors.industries,Healthcare,1,Healthcare,14,Hospital & Health Care,high,
+industry_sectors.industries,Infrastructure,1,Infrastructure,51,Civil Engineering,medium,per audit convention Infrastructure to 51
+industry_sectors.industries,Insurance,1,Insurance,42,Insurance,high,
+industry_sectors.industries,Investment,1,Venture Capital,106,Venture Capital & Private Equity,medium,per anchor Investment to 106; 46 Investment Management also plausible
+industry_sectors.industries,IoT,1,IoT,8,Telecommunications,medium,IoT judged to connectivity; 4 Computer Software / 3 Computer Hardware also plausible
+industry_sectors.industries,Medical Technology,1,MedTech,17,Medical Devices,high,
+industry_sectors.industries,Pharmaceuticals,1,Pharmaceuticals,15,Pharmaceuticals,high,
+industry_sectors.industries,Technology,1,Technology,96,Information Technology and Services,medium,generic technology label
+industry_sectors.industries,Telecommunications,1,Telecommunications,8,Telecommunications,high,
+lead_database_records.sector,(all 325 rows NULL),0,,,,high,Column exists but is entirely unpopulated

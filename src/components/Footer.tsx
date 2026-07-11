@@ -25,6 +25,7 @@ export const Footer = () => {
     { label: "Locations", href: "/locations" },
     { label: "Case Studies", href: "/case-studies" },
     { label: "Government Support", href: "/government-support" },
+    { label: "Market Entry Q&A", href: "/market-entry-questions" },
     { label: "FAQ", href: "/faq" }
   ];
 
@@ -52,7 +53,7 @@ export const Footer = () => {
             </Link>
             
             <p className="text-muted-foreground mb-4 leading-relaxed">
-              Your comprehensive platform for dominating the Australian market.
+              The intelligence and execution platform for winning in the Australian and New Zealand market.
             </p>
             
             {/* Contact Info */}

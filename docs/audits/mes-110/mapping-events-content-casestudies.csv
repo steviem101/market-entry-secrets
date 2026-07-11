@@ -1,0 +1,285 @@
+surface,raw_value,row_count,merged_value,linkedin_code,linkedin_description,confidence,note
+events.sector,Founders & Startups,56,Startups & Founders,,,high,UNMAPPABLE:event-theme — audience theme not an industry
+events.sector,AI & Data,16,AI & Data,4,Computer Software,medium,84 Information Services alternative
+events.sector,Technology & Innovation,15,Technology,96,Information Technology and Services,medium,part theme part industry
+events.sector,Professional Services,9,Professional Services,11,Management Consulting,medium,FLAG: no exact Professional Services entry in 147
+events.sector,Business Consulting and Services,5,Professional Services,11,Management Consulting,high,Post-migration V2 group value
+events.sector,Marketing & Growth,4,Marketing,80,Marketing and Advertising,high,
+events.sector,Human Resources,4,Human Resources,137,Human Resources,high,
+events.sector,Mining & Resources,4,Mining & Metals,56,Mining & Metals,high,
+events.sector,Investing & Capital,4,Venture Capital,106,Venture Capital & Private Equity,medium,part event-theme
+events.sector,Workplace Safety,3,Workplace Safety,78,Public Safety,low,No workplace-safety entry in 147
+events.sector,Fintech & Financial Services,3,FinTech,43,Financial Services,high,
+events.sector,Logistics & Supply Chain,3,Logistics,116,Logistics and Supply Chain,high,
+events.sector,CRM & Enterprise Technology,2,Software,4,Computer Software,high,
+events.sector,Accounting & Finance,2,Accounting,47,Accounting,high,
+events.sector,Construction & Design,2,Construction,48,Construction,high,
+events.sector,Utilities,2,Utilities,59,Utilities,high,Post-migration V2 value
+events.sector,Mining & Critical Minerals,2,Mining & Metals,56,Mining & Metals,high,
+events.sector,Food & Beverage Manufacturing,2,Food Production,23,Food Production,high,
+events.sector,Superannuation & Financial Services,2,Investment Management,46,Investment Management,high,Superannuation = pension funds
+events.sector,Venture Capital & Investment,2,Venture Capital,106,Venture Capital & Private Equity,high,
+events.sector,Aged Care,2,Aged Care,14,Hospital & Health Care,medium,
+events.sector,Insurance & Reinsurance,1,Insurance,42,Insurance,high,
+events.sector,Pharmacy,1,Pharmacy,15,Pharmaceuticals,medium,27 Retail secondary
+events.sector,Accounting Technology,1,Accounting,47,Accounting,high,
+events.sector,Quantum Computing & Deep Tech,1,Deep Tech,96,Information Technology and Services,low,No deep-tech entry in 147
+events.sector,Software Development,1,Software Development,4,Computer Software,high,
+events.sector,Retail & eCommerce,1,E-commerce,27,Retail,high,6 Internet secondary
+events.sector,Legal Technology,1,LegalTech,10,Legal Services,high,
+events.sector,Health & MedTech,1,HealthTech,14,Hospital & Health Care,high,17 Medical Devices secondary
+events.sector,Construction,1,Construction,48,Construction,high,
+events.sector,Financial Services,1,Financial Services,43,Financial Services,high,
+events.sector,Small Business,1,SME,,,high,UNMAPPABLE:event-theme
+events.sector,SaaS & Tech Startups,1,SaaS,4,Computer Software,high,
+events.sector,Urban Development & Smart Cities,1,Smart Cities,51,Civil Engineering,low,MES-extension candidate
+events.sector,Property & Valuation,1,Real Estate,44,Real Estate,high,
+events.sector,Events & Business Tourism,1,Events & Tourism,110,Events Services,medium,30 secondary
+events.sector,Property & Real Estate,1,Real Estate,44,Real Estate,high,
+events.sector,Corporate Governance,1,Governance,,,high,UNMAPPABLE:business-function
+events.sector,Procurement & Supply Chain,1,Logistics,116,Logistics and Supply Chain,medium,
+events.sector,"Data, Analytics & AI",1,AI & Data,4,Computer Software,medium,Same cluster as 'AI & Data'
+events.sector,Digital Health,1,HealthTech,14,Hospital & Health Care,high,
+events.sector,Cloud Computing & AI,1,AI & Data,4,Computer Software,high,
+events.sector,Food & Beverage,1,Food & Beverage,34,Food & Beverages,high,
+events.sector,Manufacturing & Automation,1,Industrial Automation,147,Industrial Automation,high,
+events.sector,Marketing & Media,1,Marketing,80,Marketing and Advertising,high,
+events.sector,Energy & Renewables,1,CleanTech,144,Renewables & Environment,high,
+events.sector,Startups & Venture Capital,1,Venture Capital,106,Venture Capital & Private Equity,medium,part event-theme
+events.sector,Aerospace & Defence,1,Defence,1,Defense & Space,high,52 secondary
+events.sector,Agriculture & Agribusiness,1,Agriculture,63,Farming,high,
+events.sector,Freight & Logistics,1,Logistics,116,Logistics and Supply Chain,high,
+events.sector,Health IT & Digital Health,1,HealthTech,14,Hospital & Health Care,high,
+events.sector,Startups & Innovation,1,Startups & Founders,,,high,UNMAPPABLE:event-theme
+events.sector,Manufacturing & Engineering,1,Manufacturing,135,Mechanical or Industrial Engineering,medium,
+events.sector,Natural & Health Products,1,Consumer Goods,25,Consumer Goods,low,124 secondary
+events.sector,Government Technology,1,GovTech,75,Government Administration,high,
+events.sector,Mortgage & Finance,1,Banking,41,Banking,high,
+events.sector,Small Business & Entrepreneurship,1,SME,,,high,UNMAPPABLE:event-theme
+events.sector,Startups & Scaleups,1,Startups & Founders,,,high,UNMAPPABLE:event-theme
+events.sector,Education Technology,1,EdTech,132,E-Learning,high,
+events.sector,Information Technology,1,Technology,96,Information Technology and Services,high,
+events.sector,"Technology, Information and Media",1,Technology,96,Information Technology and Services,low,Post-migration V2 sector value
+events.sector,Mining Technology,1,Mining & Metals,56,Mining & Metals,high,
+events.sector,Manufacturing & Industry,1,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry
+events.sector,Residential Property & Build-to-Rent,1,Real Estate,44,Real Estate,high,
+events.sector,Agriculture & Farming,1,Agriculture,63,Farming,high,
+events.sector,Manufacturing,1,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry
+events.sector,Hospitals and Health Care,1,Healthcare,14,Hospital & Health Care,high,Post-migration V2 sector value
+events.sector,Online and Mail Order Retail,1,E-commerce,27,Retail,medium,Post-migration V2 group value
+events.sector,Mental Health & Healthcare,1,Mental Health,139,Mental Health Care,high,
+events.sector,Digital Marketing,1,Marketing,80,Marketing and Advertising,high,
+events.sector,Water & Utilities,1,Utilities,59,Utilities,high,
+events.sector,Deep Tech & Innovation,1,Deep Tech,96,Information Technology and Services,low,No deep-tech entry in 147
+events.sector,Retirement Living & Property,1,Real Estate,44,Real Estate,medium,14 secondary
+events.sector,Defence & Maritime,1,Defence,1,Defense & Space,high,95 Maritime secondary
+events.sector,Foodservice & Hospitality,1,Hospitality,31,Hospitality,high,
+events.category,Founders & Startups,60,Startups & Founders,,,high,UNMAPPABLE:event-theme
+events.category,Technology & Innovation,16,Technology,96,Information Technology and Services,medium,
+events.category,AI & Data,15,AI & Data,4,Computer Software,medium,
+events.category,Professional Services,9,Professional Services,11,Management Consulting,medium,FLAG: no exact entry
+events.category,Human Resources,4,Human Resources,137,Human Resources,high,
+events.category,Marketing & Growth,4,Marketing,80,Marketing and Advertising,high,
+events.category,Investing & Capital,4,Venture Capital,106,Venture Capital & Private Equity,medium,
+events.category,Mining & Resources,4,Mining & Metals,56,Mining & Metals,high,
+events.category,Workplace Safety,3,Workplace Safety,78,Public Safety,low,
+events.category,Fintech & Financial Services,3,FinTech,43,Financial Services,high,
+events.category,Logistics & Supply Chain,3,Logistics,116,Logistics and Supply Chain,high,
+events.category,Superannuation & Financial Services,2,Investment Management,46,Investment Management,high,
+events.category,Mining & Critical Minerals,2,Mining & Metals,56,Mining & Metals,high,
+events.category,Accounting & Finance,2,Accounting,47,Accounting,high,
+events.category,Aged Care,2,Aged Care,14,Hospital & Health Care,medium,
+events.category,Construction & Design,2,Construction,48,Construction,high,
+events.category,Venture Capital & Investment,2,Venture Capital,106,Venture Capital & Private Equity,high,
+events.category,CRM & Enterprise Technology,2,Software,4,Computer Software,high,
+events.category,Food & Beverage Manufacturing,2,Food Production,23,Food Production,high,
+events.category,Construction,1,Construction,48,Construction,high,
+events.category,Manufacturing,1,Manufacturing,135,Mechanical or Industrial Engineering,low,FLAG: no generic Manufacturing entry
+events.category,Corporate Governance,1,Governance,,,high,UNMAPPABLE:business-function
+events.category,Information Technology,1,Technology,96,Information Technology and Services,high,
+events.category,Retail & eCommerce,1,E-commerce,27,Retail,high,
+events.category,Residential Property & Build-to-Rent,1,Real Estate,44,Real Estate,high,
+events.category,Property & Valuation,1,Real Estate,44,Real Estate,high,
+events.category,Insurance & Reinsurance,1,Insurance,42,Insurance,high,
+events.category,"Data, Analytics & AI",1,AI & Data,4,Computer Software,medium,
+events.category,Defence & Maritime,1,Defence,1,Defense & Space,high,
+events.category,Health IT & Digital Health,1,HealthTech,14,Hospital & Health Care,high,
+events.category,Mortgage & Finance,1,Banking,41,Banking,high,
+events.category,Small Business & Entrepreneurship,1,SME,,,high,UNMAPPABLE:event-theme
+events.category,Digital Marketing,1,Marketing,80,Marketing and Advertising,high,
+events.category,Healthcare,1,Healthcare,14,Hospital & Health Care,high,
+events.category,Education Technology,1,EdTech,132,E-Learning,high,
+events.category,Mental Health & Healthcare,1,Mental Health,139,Mental Health Care,high,
+events.category,Finance,1,Financial Services,43,Financial Services,high,
+events.category,Energy & Renewables,1,CleanTech,144,Renewables & Environment,high,
+events.category,Mining Technology,1,Mining & Metals,56,Mining & Metals,high,
+events.category,Agribusiness,1,Agriculture,63,Farming,high,
+events.category,Manufacturing & Industry,1,Manufacturing,135,Mechanical or Industrial Engineering,low,
+events.category,Agriculture & Agribusiness,1,Agriculture,63,Farming,high,
+events.category,Government Technology,1,GovTech,75,Government Administration,high,
+events.category,Startups & Venture Capital,1,Venture Capital,106,Venture Capital & Private Equity,medium,
+events.category,SaaS & Tech Startups,1,SaaS,4,Computer Software,high,
+events.category,Pharmacy,1,Pharmacy,15,Pharmaceuticals,medium,
+events.category,Startups & Scaleups,1,Startups & Founders,,,high,UNMAPPABLE:event-theme
+events.category,Mining,1,Mining & Metals,56,Mining & Metals,high,
+events.category,Small Business,1,SME,,,high,UNMAPPABLE:event-theme
+events.category,Technology,1,Technology,96,Information Technology and Services,medium,
+events.category,Events & Business Tourism,1,Events & Tourism,110,Events Services,medium,
+events.category,Legal Technology,1,LegalTech,10,Legal Services,high,
+events.category,Deep Tech & Innovation,1,Deep Tech,96,Information Technology and Services,low,
+events.category,Water & Utilities,1,Utilities,59,Utilities,high,
+events.category,Retail,1,Retail,27,Retail,high,
+events.category,Food & Beverage,1,Food & Beverage,34,Food & Beverages,high,
+events.category,Property & Real Estate,1,Real Estate,44,Real Estate,high,
+events.category,Manufacturing & Engineering,1,Manufacturing,135,Mechanical or Industrial Engineering,medium,
+events.category,Manufacturing & Automation,1,Industrial Automation,147,Industrial Automation,high,
+events.category,Natural & Health Products,1,Consumer Goods,25,Consumer Goods,low,
+events.category,Digital Health,1,HealthTech,14,Hospital & Health Care,high,
+events.category,Foodservice & Hospitality,1,Hospitality,31,Hospitality,high,
+events.category,Health & MedTech,1,HealthTech,14,Hospital & Health Care,high,
+events.category,Procurement & Supply Chain,1,Logistics,116,Logistics and Supply Chain,medium,
+events.category,Accounting Technology,1,Accounting,47,Accounting,high,
+events.category,Retirement Living & Property,1,Real Estate,44,Real Estate,medium,
+events.category,Marketing & Media,1,Marketing,80,Marketing and Advertising,high,
+events.category,Cybersecurity,1,Cybersecurity,118,Computer & Network Security,high,
+events.category,Urban Development & Smart Cities,1,Smart Cities,51,Civil Engineering,low,
+events.category,Software Development,1,Software Development,4,Computer Software,high,
+events.category,Energy,1,Energy,57,Oil & Energy,medium,144 secondary
+events.category,Aerospace & Defence,1,Defence,1,Defense & Space,high,
+events.category,Startups & Innovation,1,Startups & Founders,,,high,UNMAPPABLE:event-theme
+events.category,Fitness,1,Fitness,124,"Health, Wellness and Fitness",high,
+events.category,Cloud Computing & AI,1,AI & Data,4,Computer Software,high,
+events.category,Marketing,1,Marketing,80,Marketing and Advertising,high,
+events.category,Logistics,1,Logistics,116,Logistics and Supply Chain,high,
+events.category,Freight & Logistics,1,Logistics,116,Logistics and Supply Chain,high,
+events.category,Agriculture & Farming,1,Agriculture,63,Farming,high,
+events.category,Quantum Computing & Deep Tech,1,Deep Tech,96,Information Technology and Services,low,
+country_case_studies.sector,Cybersecurity,4,Cybersecurity,118,Computer & Network Security,high,
+country_case_studies.sector,Fintech,4,FinTech,43,Financial Services,high,
+country_case_studies.sector,RegTech,4,RegTech,4,Computer Software,low,43 secondary
+country_case_studies.sector,HealthTech,3,HealthTech,14,Hospital & Health Care,high,
+country_case_studies.sector,Fintech / Payments,2,FinTech,43,Financial Services,high,
+country_case_studies.sector,InsurTech,2,InsurTech,42,Insurance,high,
+country_case_studies.sector,Cloud Data Platform,1,Software,4,Computer Software,high,
+country_case_studies.sector,Video Communications / UCaaS,1,Software,4,Computer Software,high,
+country_case_studies.sector,HR & Finance SaaS,1,SaaS,4,Computer Software,high,
+country_case_studies.sector,Digital Customer Experience / BPO,1,Outsourcing,123,Outsourcing/Offshoring,high,
+country_case_studies.sector,Core Banking,1,Software,4,Computer Software,medium,41 secondary
+country_case_studies.sector,Fraud / AI,1,Cybersecurity,118,Computer & Network Security,medium,4 secondary
+country_case_studies.sector,Legal Technology / SaaS,1,LegalTech,10,Legal Services,medium,4 secondary
+country_case_studies.sector,PropTech,1,PropTech,44,Real Estate,high,
+country_case_studies.sector,Marketing & CRM SaaS,1,SaaS,4,Computer Software,high,80 secondary
+country_case_studies.sector,Conversational AI / CX Automation,1,AI & Data,4,Computer Software,high,
+country_case_studies.sector,Identity & Access Management,1,Cybersecurity,118,Computer & Network Security,high,
+country_case_studies.sector,E-commerce Platform / SaaS,1,SaaS,4,Computer Software,high,27 secondary
+country_case_studies.sector,Automotive & Retail Software,1,Software,4,Computer Software,high,
+country_case_studies.sector,Recommerce Marketplace,1,Marketplace,6,Internet,medium,
+country_case_studies.sector,B2B Payments Infrastructure,1,FinTech,43,Financial Services,high,
+country_case_studies.sector,Cloud Monitoring / Observability,1,Software,4,Computer Software,high,
+country_case_studies.sector,AI Search / Enterprise SaaS,1,SaaS,4,Computer Software,high,
+country_case_studies.sector,Identity,1,Cybersecurity,118,Computer & Network Security,medium,
+country_case_studies.sector,Mobile Security,1,Cybersecurity,118,Computer & Network Security,high,
+country_case_studies.sector,CRM / Cloud Software,1,Software,4,Computer Software,high,
+country_case_studies.sector,Vertical Market Software,1,Software,4,Computer Software,high,
+country_case_studies.sector,Retail & Hospitality POS / SaaS,1,SaaS,4,Computer Software,high,
+country_case_studies.sector,Cloud Communications / CPaaS,1,Software,4,Computer Software,high,
+country_case_studies.sector,Payments,1,FinTech,43,Financial Services,high,
+country_case_studies.sector,Gaming Payments,1,FinTech,43,Financial Services,medium,109 secondary
+country_case_studies.sector,Enterprise Information Management / Software,1,Software,4,Computer Software,high,
+country_case_studies.sector,Gaming Hardware / DTC,1,Gaming Hardware,24,Consumer Electronics,medium,109 secondary
+country_case_studies.sector,Enterprise SaaS / IP Analytics,1,SaaS,4,Computer Software,high,
+country_case_studies.sector,Social Media Management / SaaS,1,SaaS,4,Computer Software,high,
+country_case_studies.sector,Consumer Fintech / Cashback,1,FinTech,43,Financial Services,high,
+country_case_studies.sector,Cloud / DevOps,1,Software,4,Computer Software,high,
+country_case_studies.sector,Enterprise SaaS / ITSM,1,SaaS,4,Computer Software,high,
+country_case_studies.sector,Gaming Hardware,1,Gaming Hardware,24,Consumer Electronics,medium,
+country_case_studies.sector,Digital Publishing / Consumer Platform,1,Digital Media,113,Online Media,medium,82 secondary
+country_case_studies.sector,Data & AI,1,AI & Data,4,Computer Software,medium,
+country_case_studies.sector,Payments / Fintech,1,FinTech,43,Financial Services,high,
+country_case_studies.sector,Transport / Mobility,1,Mobility,116,Logistics and Supply Chain,medium,92 secondary
+country_case_studies.sector,EdTech,1,EdTech,132,E-Learning,high,
+country_case_studies.sector,AccountingTech,1,Accounting,47,Accounting,high,
+country_case_studies.sector,E-commerce,1,E-commerce,27,Retail,medium,6 secondary
+content_company_profiles.industry,Fintech,6,FinTech,43,Financial Services,high,
+content_company_profiles.industry,Construction Tech,3,ConstructionTech,48,Construction,medium,
+content_company_profiles.industry,Cybersecurity,3,Cybersecurity,118,Computer & Network Security,high,
+content_company_profiles.industry,Fashion Retail,3,Apparel Retail,19,Apparel & Fashion,high,
+content_company_profiles.industry,Fintech / BNPL,3,FinTech,43,Financial Services,high,
+content_company_profiles.industry,Automation,2,Software,4,Computer Software,medium,147 secondary
+content_company_profiles.industry,Financial Technology,2,FinTech,43,Financial Services,high,
+content_company_profiles.industry,Food Delivery / Marketplace,2,Marketplace,6,Internet,medium,34 secondary
+content_company_profiles.industry,QSR / Food,2,Restaurants,32,Restaurants,high,
+content_company_profiles.industry,RegTech,2,RegTech,4,Computer Software,low,43 secondary
+content_company_profiles.industry,Technology,2,Technology,96,Information Technology and Services,medium,
+content_company_profiles.industry,AI Safety and Enterprise AI Platform,1,AI & Data,4,Computer Software,high,
+content_company_profiles.industry,Artificial Intelligence Platform,1,AI & Data,4,Computer Software,high,
+content_company_profiles.industry,CI/CD Developer Tools,1,Software,4,Computer Software,high,
+content_company_profiles.industry,Cloud Accounting Software,1,Software,4,Computer Software,high,47 secondary
+content_company_profiles.industry,Cloud Communications Platform,1,Software,4,Computer Software,high,
+content_company_profiles.industry,Cloud Computing and AI Infrastructure,1,AI & Data,4,Computer Software,high,
+content_company_profiles.industry,Cloud CRM and Enterprise AI Platform,1,Software,4,Computer Software,high,
+content_company_profiles.industry,Cloud Data Platform and AI,1,AI & Data,4,Computer Software,high,
+content_company_profiles.industry,Cloud IT Service Management and Enterprise Automation,1,Software,4,Computer Software,high,
+content_company_profiles.industry,Cloud Services,1,Software,4,Computer Software,high,
+content_company_profiles.industry,Consumer Fintech,1,FinTech,43,Financial Services,high,
+content_company_profiles.industry,Consumer Hardware / Gaming,1,Gaming Hardware,24,Consumer Electronics,medium,
+content_company_profiles.industry,Consumer Tech / Fitness,1,Fitness,124,"Health, Wellness and Fitness",medium,
+content_company_profiles.industry,"Corporate learning marketplace, EdTech",1,EdTech,132,E-Learning,high,
+content_company_profiles.industry,Creative Digital Marketplace,1,Marketplace,6,Internet,medium,
+content_company_profiles.industry,Cultivated meat (deep tech biotech),1,Biotechnology,12,Biotechnology,medium,23 secondary
+content_company_profiles.industry,"Data Analytics, AI, and National Security",1,AI & Data,4,Computer Software,medium,1 secondary
+content_company_profiles.industry,Data and AI Analytics Platform,1,AI & Data,4,Computer Software,high,
+content_company_profiles.industry,Department Store Retail,1,Retail,27,Retail,high,
+content_company_profiles.industry,Design & Visual Communication Platform,1,Software,4,Computer Software,high,99 secondary
+content_company_profiles.industry,Digital Agreement and Contract Management,1,Software,4,Computer Software,high,
+content_company_profiles.industry,"Digital health, telehealth, direct-to-consumer virtual clinics",1,HealthTech,14,Hospital & Health Care,high,
+content_company_profiles.industry,Digital Identity & Biometrics,1,Cybersecurity,118,Computer & Network Security,high,
+content_company_profiles.industry,Digital Distribution / Gaming,1,Gaming,109,Computer Games,medium,
+content_company_profiles.industry,E-commerce / Marketplace,1,E-commerce,27,Retail,medium,6 secondary
+content_company_profiles.industry,E-commerce and Retail Technology,1,E-commerce,27,Retail,medium,
+content_company_profiles.industry,"E-commerce technology, transaction moment optimization",1,E-commerce,27,Retail,medium,
+content_company_profiles.industry,Edtech,1,EdTech,132,E-Learning,high,
+content_company_profiles.industry,EdTech / Career Training (tech sales bootcamps),1,EdTech,132,E-Learning,high,
+content_company_profiles.industry,Electric Vehicles and Clean Energy,1,CleanTech,144,Renewables & Environment,medium,53 secondary
+content_company_profiles.industry,Employee Experience / HR Tech,1,HR Tech,137,Human Resources,high,
+content_company_profiles.industry,Enterprise Automation and AI,1,AI & Data,4,Computer Software,high,
+content_company_profiles.industry,Enterprise Software,1,Software,4,Computer Software,high,
+content_company_profiles.industry,Event Ticketing Platform (Social Enterprise),1,Events Tech,110,Events Services,medium,
+content_company_profiles.industry,F&B / Retail,1,Food & Beverage,34,Food & Beverages,medium,27 secondary
+content_company_profiles.industry,Fintech / Crypto Derivatives,1,FinTech,43,Financial Services,high,
+content_company_profiles.industry,Fintech / Neobank,1,FinTech,43,Financial Services,high,41 secondary
+content_company_profiles.industry,Fintech Infrastructure,1,FinTech,43,Financial Services,high,
+content_company_profiles.industry,Green Energy Fintech,1,FinTech,43,Financial Services,medium,144 secondary
+content_company_profiles.industry,Healthcare AI,1,HealthTech,14,Hospital & Health Care,high,
+content_company_profiles.industry,Healthcare AI - Medical Imaging,1,HealthTech,14,Hospital & Health Care,high,17 secondary
+content_company_profiles.industry,Healthtech,1,HealthTech,14,Hospital & Health Care,high,
+content_company_profiles.industry,Home Improvement / Retail,1,Retail,27,Retail,high,49 secondary
+content_company_profiles.industry,Hotel Technology SaaS,1,SaaS,4,Computer Software,medium,31 secondary
+content_company_profiles.industry,"HR, Payroll & Hiring SaaS",1,HR Tech,137,Human Resources,high,4 secondary
+content_company_profiles.industry,Identity Verification,1,Cybersecurity,118,Computer & Network Security,high,
+content_company_profiles.industry,Insurance Software,1,InsurTech,42,Insurance,high,4 secondary
+content_company_profiles.industry,Insurtech,1,InsurTech,42,Insurance,high,
+content_company_profiles.industry,InsurTech,1,InsurTech,42,Insurance,high,Casing duplicate of Insurtech in same column
+content_company_profiles.industry,Marketplace,1,Marketplace,6,Internet,medium,
+content_company_profiles.industry,Marketplace / Deals,1,Marketplace,6,Internet,medium,
+content_company_profiles.industry,Marketplace / Tickets,1,Marketplace,6,Internet,medium,110 secondary
+content_company_profiles.industry,Media & Entertainment,1,Media & Entertainment,28,Entertainment,high,
+content_company_profiles.industry,Mobility / Car Sharing,1,Mobility,92,Transportation/Trucking/Railroad,medium,
+content_company_profiles.industry,Mobility & Transport,1,Mobility,92,Transportation/Trucking/Railroad,medium,
+content_company_profiles.industry,Online marketplace for local services and gig economy,1,Marketplace,6,Internet,medium,
+content_company_profiles.industry,PropTech,1,PropTech,44,Real Estate,high,
+content_company_profiles.industry,Proptech / Coworking,1,PropTech,44,Real Estate,high,
+content_company_profiles.industry,Rapid Grocery Delivery,1,E-commerce,27,Retail,medium,22 secondary
+content_company_profiles.industry,RegTech / Client Lifecycle Management,1,RegTech,4,Computer Software,low,43 secondary
+content_company_profiles.industry,Revenue-Based Financing / E-Commerce Growth Capital,1,FinTech,43,Financial Services,medium,
+content_company_profiles.industry,Rideshare,1,Mobility,92,Transportation/Trucking/Railroad,medium,
+content_company_profiles.industry,Semiconductors (Wi-Fi HaLow chips for IoT),1,Semiconductors,7,Semiconductors,high,
+content_company_profiles.industry,Social Media Tools / Creator Economy,1,Software,4,Computer Software,medium,6 secondary
+content_company_profiles.industry,Software Development Platform and AI-Powered Developer Tools,1,Software,4,Computer Software,high,
+content_company_profiles.industry,Supermarket / Retail,1,Supermarkets,22,Supermarkets,high,
+content_company_profiles.industry,Technology / Sharing Economy Platform,1,Marketplace,6,Internet,medium,
+content_company_profiles.industry,Unified Communications and AI-First Collaboration Platform,1,Software,4,Computer Software,high,
+content_company_profiles.industry,"Web3 gaming infrastructure, Layer 2 blockchain, NFT platform",1,Web3,43,Financial Services,low,109 secondary
+content_company_profiles.industry,Workflow Automation / Security Automation,1,Software,4,Computer Software,medium,118 secondary
+content_company_profiles.industry,Workforce Management SaaS,1,SaaS,4,Computer Software,high,137 secondary
+content_company_profiles.industry,Workplace Safety & Operations SaaS,1,SaaS,4,Computer Software,medium,78 secondary

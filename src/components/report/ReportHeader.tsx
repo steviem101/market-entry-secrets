@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Share2, Calendar, Globe, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 import { ReportShareDialog } from './ReportShareDialog';
+import { TIER_LABELS } from './reportSectionConfig';
 
 interface ReportHeaderProps {
   companyName: string;
@@ -16,13 +18,6 @@ interface ReportHeaderProps {
   onShareTokenChange: (token: string | null) => void;
   readingTimeMinutes?: number;
 }
-
-const tierLabels: Record<string, string> = {
-  free: 'Free',
-  growth: 'Growth',
-  scale: 'Scale',
-  enterprise: 'Enterprise',
-};
 
 const tierColors: Record<string, string> = {
   free: 'bg-muted text-muted-foreground',
@@ -42,8 +37,29 @@ export const ReportHeader = ({
   readingTimeMinutes,
 }: ReportHeaderProps) => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const handlePrint = () => {
+    // window.print() is a silent no-op inside iframes (e.g. the Lovable
+    // preview shell) and many in-app webviews — the main mobile "Download PDF
+    // does nothing" failure. Escape to a real top-level tab (same URL keeps
+    // the session) and let the user print/save from there.
+    let embedded = false;
+    try {
+      embedded = window.self !== window.top;
+    } catch {
+      embedded = true; // cross-origin parent → definitely framed
+    }
+    if (embedded) {
+      const opened = window.open(window.location.href, '_blank', 'noopener');
+      toast({
+        title: opened ? 'Report opened in a new tab' : 'Pop-up blocked',
+        description: opened
+          ? "Use the browser's Print / Save as PDF from that tab."
+          : 'Open this report in your browser, then use Print / Save as PDF.',
+      });
+      return;
+    }
     window.print();
   };
 
@@ -59,14 +75,14 @@ export const ReportHeader = ({
               </Button>
             </Link>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">{companyName}</h1>
+              <h1 className="text-base sm:text-lg font-bold text-foreground truncate">Market Entry Report: {companyName}</h1>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="w-3 h-3 flex-shrink-0" />
                   {format(new Date(generatedAt), 'MMM d, yyyy')}
                 </span>
                 <Badge variant="outline" className={`text-xs ${tierColors[tier] || ''}`}>
-                  {tierLabels[tier] || tier}
+                  {TIER_LABELS[tier] || tier}
                 </Badge>
                 {perplexityUsed && (
                   <Badge variant="secondary" className="text-xs gap-1">
@@ -99,9 +115,9 @@ export const ReportHeader = ({
       {/* Print-only header */}
       <div className="hidden print:block px-8 pt-8 pb-4 border-b border-border">
         <p className="text-xs text-muted-foreground mb-1">Market Entry Secrets</p>
-        <h1 className="text-2xl font-bold text-foreground">{companyName}</h1>
+        <h1 className="text-2xl font-bold text-foreground">Market Entry Report: {companyName}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Market Entry Report • {format(new Date(generatedAt), 'MMMM d, yyyy')} • {tierLabels[tier] || tier} Plan
+          Market Entry Report • {format(new Date(generatedAt), 'MMMM d, yyyy')} • {TIER_LABELS[tier] || tier} Plan
         </p>
       </div>
 

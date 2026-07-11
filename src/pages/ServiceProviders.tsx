@@ -1,70 +1,148 @@
-
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 import { ServiceProvidersHero } from "@/components/service-providers/ServiceProvidersHero";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
-import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
-import { ServiceProvidersAdvancedFilters } from "@/components/service-providers/ServiceProvidersAdvancedFilters";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
+import { DirectoryFilterBar, type FilterOption, type SelectFilterConfig } from "@/components/common/DirectoryFilterBar";
 import { ListPagination } from "@/components/common/ListPagination";
 import { UsageBanner } from "@/components/UsageBanner";
-import { mapServicesToSectors, getStandardTypes } from "@/utils/sectorMapping";
-import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
-import { usePersona } from "@/contexts/PersonaContext";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { mapServicesToSectors } from "@/utils/sectorMapping";
+import { type PersonaFilterValue } from "@/components/PersonaFilter";
+import { useServiceProviderCategories } from "@/hooks/useServiceProviders";
+import { useDirectoryFilters, type UseDirectoryFiltersResult } from "@/hooks/useDirectoryFilters";
+import { useContextPersonaSeed } from "@/hooks/useContextPersonaSeed";
+import type { FilterSpec } from "@/lib/directoryFilters";
 
 const PAGE_SIZE = 12;
 
-const ServiceProviders = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { persona } = usePersona();
-  const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
-    (searchParams.get("persona") as PersonaFilterValue) ?? (persona as PersonaFilterValue) ?? 'all'
+const SP_FILTER_SPEC: FilterSpec = {
+  search: { param: "search", default: "" },
+  category: { param: "category", default: "all" },
+  location: { param: "location", default: "all" },
+  sector: { param: "sector", default: "all" },
+  verified: { param: "verified", default: "false" },
+  persona: { param: "persona", default: "all" },
+  sort: { param: "sort", default: "featured", presentation: true },
+};
+
+const SORT_OPTIONS: FilterOption[] = [
+  { value: "featured", label: "Featured first" },
+  { value: "name", label: "A-Z" },
+  { value: "views", label: "Most viewed" },
+];
+
+interface Category { slug: string; name: string }
+
+// Inner component so option/tab derivations that depend only on `companies`
+// can be memoised (hooks aren't available inside the data-provider render prop).
+const ServiceProvidersContent = ({
+  companies,
+  filteredCompanies,
+  totalCompanies,
+  uniqueLocations,
+  uniqueLocationValues,
+  totalServices,
+  categories,
+  filterState,
+}: {
+  companies: any[];
+  filteredCompanies: any[];
+  totalCompanies: number;
+  uniqueLocations: number;
+  uniqueLocationValues: string[];
+  totalServices: number;
+  categories: Category[];
+  filterState: UseDirectoryFiltersResult;
+}) => {
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } = filterState;
+  const verifiedOnly = filters.verified === "true";
+
+  const sectors = useMemo(
+    () => Array.from(new Set(companies.flatMap((c) => mapServicesToSectors(c.services || [])))).sort(),
+    [companies]
   );
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
-  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
-  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
-  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
-  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get("category") ?? "all");
-  const [verifiedOnly, setVerifiedOnly] = useState(searchParams.get("verified") === "true");
-  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") ?? "featured");
-  const [showFilters, setShowFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
 
-  useEffect(() => {
-    const p = new URLSearchParams();
-    if (searchTerm) p.set("search", searchTerm);
-    if (selectedLocation !== "all") p.set("location", selectedLocation);
-    if (selectedType !== "all") p.set("type", selectedType);
-    if (selectedSector !== "all") p.set("sector", selectedSector);
-    if (selectedCategory !== "all") p.set("category", selectedCategory);
-    if (verifiedOnly) p.set("verified", "true");
-    if (sortBy !== "featured") p.set("sort", sortBy);
-    if (personaFilterValue !== "all") p.set("persona", personaFilterValue);
-    if (currentPage > 1) p.set("page", String(currentPage));
-    setSearchParams(p, { replace: true });
-  }, [searchTerm, selectedLocation, selectedType, selectedSector, selectedCategory, verifiedOnly, sortBy, personaFilterValue, currentPage, setSearchParams]);
+  const categoryTabs: FilterOption[] = useMemo(() => {
+    const counts: Record<string, number> = {};
+    companies.forEach((c) => {
+      const slug = c.category_slug;
+      if (slug) counts[slug] = (counts[slug] || 0) + 1;
+    });
+    return [
+      { value: "all", label: "All", count: companies.length },
+      ...categories.map((c) => ({ value: c.slug, label: c.name, count: counts[c.slug] ?? 0 })),
+    ];
+  }, [companies, categories]);
 
-  const handleLocationChange = (location: string) => {
-    setSelectedLocation(location);
-    setCurrentPage(1);
-  };
+  const selects: SelectFilterConfig[] = useMemo(() => [
+    { key: "location", allLabel: "All Locations", options: uniqueLocationValues.map((l) => ({ value: l, label: l })) },
+    { key: "sector", allLabel: "All Sectors", options: sectors.map((s) => ({ value: s, label: s })) },
+  ], [uniqueLocationValues, sectors]);
 
-  const handleClearFilters = () => {
-    setSearchTerm("");
-    setSelectedLocation("all");
-    setSelectedType("all");
-    setSelectedSector("all");
-    setSelectedCategory("all");
-    setVerifiedOnly(false);
-    setSortBy("featured");
-    setCurrentPage(1);
-  };
+  const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
+  // Clamp an out-of-range page to the last page for display (derived, no
+  // setState-during-render / URL write-back) so it shows results, not a blank grid.
+  const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
+  const paginatedCompanies = filteredCompanies.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
-  const handleSearchChange = (term: string) => {
-    setSearchTerm(term);
-    setCurrentPage(1);
-  };
+  return (
+    <>
+      <ServiceProvidersHero
+        totalCompanies={totalCompanies}
+        uniqueLocations={uniqueLocations}
+        totalServices={totalServices}
+      />
+
+      <DirectoryFilterBar
+        filters={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        hasActiveFilters={hasActiveFilters}
+        noun="service providers"
+        shownCount={paginatedCompanies.length}
+        totalCount={filteredCompanies.length}
+        tabs={{ key: "category", options: categoryTabs }}
+        search={{ key: "search", placeholder: "Search service providers..." }}
+        selects={selects}
+        sort={{ key: "sort", options: SORT_OPTIONS }}
+        audience={{ key: "persona" }}
+      >
+        <div className="flex items-center gap-2">
+          <Switch
+            id="verified-only"
+            checked={verifiedOnly}
+            onCheckedChange={(v) => setFilter("verified", v ? "true" : "false")}
+          />
+          <Label htmlFor="verified-only" className="text-sm text-muted-foreground cursor-pointer">
+            Verified only
+          </Label>
+        </div>
+      </DirectoryFilterBar>
+
+      <div className="container mx-auto px-4 py-8">
+        <UsageBanner />
+        <h2 className="sr-only">Service provider results</h2>
+
+        <ServiceProvidersList companies={paginatedCompanies} />
+
+        <ListPagination
+          currentPage={clampedPage}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
+      </div>
+    </>
+  );
+};
+
+const ServiceProviders = () => {
+  const filterState = useDirectoryFilters(SP_FILTER_SPEC);
+  const { filters } = filterState;
+  useContextPersonaSeed(filterState.setFilter);
+  const { data: categories = [] } = useServiceProviderCategories();
 
   return (
     <>
@@ -79,8 +157,8 @@ const ServiceProviders = () => {
           property="og:description"
           content="Connect with verified service providers for your market entry into Australia and New Zealand."
         />
-        <meta property="og:url" content={`${window.location.origin}/service-providers`} />
-        <link rel="canonical" href={`${window.location.origin}/service-providers`} />
+        <meta property="og:url" content={`${publishedOrigin()}/service-providers`} />
+        <link rel="canonical" href={`${publishedOrigin()}/service-providers`} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -88,100 +166,34 @@ const ServiceProviders = () => {
             name: "Service Providers Directory",
             description:
               "Directory of vetted service providers specializing in market entry to Australia and New Zealand.",
-            url: `${window.location.origin}/service-providers`,
+            url: `${publishedOrigin()}/service-providers`,
           })}
         </script>
       </Helmet>
 
       <ServiceProvidersDataProvider
-        selectedLocations={selectedLocation === "all" ? [] : [selectedLocation]}
-        searchTerm={searchTerm}
-        selectedType={selectedType}
-        selectedSector={selectedSector}
-        selectedCategory={selectedCategory}
-        verifiedOnly={verifiedOnly}
-        sortBy={sortBy}
-        personaFilter={personaFilterValue}
+        selectedLocations={filters.location === "all" ? [] : [filters.location]}
+        searchTerm={filters.search}
+        selectedType="all"
+        selectedSector={filters.sector}
+        selectedCategory={filters.category}
+        verifiedOnly={filters.verified === "true"}
+        sortBy={filters.sort}
+        personaFilter={filters.persona as PersonaFilterValue}
       >
-        {({ companies, loading, filteredCompanies, uniqueTypes, uniqueSectors, totalCompanies, uniqueLocations, uniqueLocationValues, totalServices }) => {
-          const hasActiveFilters = selectedLocation !== "all" || selectedType !== "all" || selectedSector !== "all" || searchTerm !== "" || selectedCategory !== "all" || verifiedOnly;
-          const types = getStandardTypes.serviceProviders;
-          const sectors = Array.from(new Set(companies.flatMap(company => mapServicesToSectors(company.services || [])))).sort();
-          const allServices = Array.from(new Set(companies.flatMap(company => company.services || []))).sort();
-
-          const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
-          const clampedPage = Math.max(1, Math.min(currentPage, totalPages || 1));
-          if (clampedPage !== currentPage) {
-            setTimeout(() => setCurrentPage(clampedPage), 0);
-          }
-          const paginatedCompanies = filteredCompanies.slice(
-            (clampedPage - 1) * PAGE_SIZE,
-            clampedPage * PAGE_SIZE
-          );
-
-          return (
-            <>
-              <ServiceProvidersHero
-                totalCompanies={totalCompanies}
-                uniqueLocations={uniqueLocations}
-                totalServices={totalServices}
-              />
-
-              <StandardDirectoryFilters
-                searchTerm={searchTerm}
-                onSearchChange={handleSearchChange}
-                selectedLocation={selectedLocation}
-                onLocationChange={handleLocationChange}
-                selectedType={selectedType}
-                onTypeChange={(t) => { setSelectedType(t); setCurrentPage(1); }}
-                selectedSector={selectedSector}
-                onSectorChange={(s) => { setSelectedSector(s); setCurrentPage(1); }}
-                showFilters={showFilters}
-                onToggleFilters={() => setShowFilters(!showFilters)}
-                onClearFilters={handleClearFilters}
-                hasActiveFilters={hasActiveFilters}
-                locations={uniqueLocationValues}
-                types={types}
-                sectors={sectors}
-                searchPlaceholder="Search service providers..."
-              >
-                <ServiceProvidersAdvancedFilters
-                  selectedCategory={selectedCategory}
-                  onCategoryChange={(c) => { setSelectedCategory(c); setCurrentPage(1); }}
-                  verifiedOnly={verifiedOnly}
-                  onVerifiedChange={(v) => { setVerifiedOnly(v); setCurrentPage(1); }}
-                  sortBy={sortBy}
-                  onSortChange={(s) => { setSortBy(s); setCurrentPage(1); }}
-                  services={allServices}
-                  onServiceClick={(s) => { setSearchTerm(s); setCurrentPage(1); }}
-                />
-              </StandardDirectoryFilters>
-
-              <div className="container mx-auto px-4 py-8">
-                <UsageBanner />
-
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                  <PersonaFilter value={personaFilterValue} onChange={(v) => { setPersonaFilterValue(v); setCurrentPage(1); }} />
-                  <p className="text-muted-foreground text-sm">
-                    Showing {paginatedCompanies.length} of {filteredCompanies.length} service providers
-                  </p>
-                </div>
-
-                <ServiceProvidersList
-                  companies={paginatedCompanies}
-                />
-
-                <ListPagination
-                  currentPage={clampedPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            </>
-          );
-        }}
+        {({ companies, filteredCompanies, totalCompanies, uniqueLocations, uniqueLocationValues, totalServices }) => (
+          <ServiceProvidersContent
+            companies={companies}
+            filteredCompanies={filteredCompanies}
+            totalCompanies={totalCompanies}
+            uniqueLocations={uniqueLocations}
+            uniqueLocationValues={uniqueLocationValues}
+            totalServices={totalServices}
+            categories={categories}
+            filterState={filterState}
+          />
+        )}
       </ServiceProvidersDataProvider>
-
     </>
   );
 };

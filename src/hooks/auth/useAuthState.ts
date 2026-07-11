@@ -5,6 +5,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from './types';
 import { fetchUserData } from './userDataService';
 
+// "Genuine first signup" heuristic: the account was created within the last
+// 24 hours. Wide enough to survive a delayed email confirmation, narrow
+// enough that established users never trigger the welcome path on login.
+const NEW_ACCOUNT_WINDOW_MS = 24 * 60 * 60 * 1000;
+const isNewAccount = (createdAt: string | undefined): boolean => {
+  if (!createdAt) return false;
+  const created = Date.parse(createdAt);
+  return Number.isFinite(created) && Date.now() - created < NEW_ACCOUNT_WINDOW_MS;
+};
+
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfileState] = useState<UserProfile | null>(null);
@@ -61,18 +71,37 @@ export const useAuthState = () => {
             });
             if (!cancelled) setLoading(false);
 
-            // Fire welcome email on both SIGNED_UP and SIGNED_IN because
-            // SIGNED_UP doesn't always fire (e.g. OAuth). The send-email
-            // function deduplicates via idempotency_key = "welcome:{userId}".
-            if ((_event as string) === 'SIGNED_UP' || _event === 'SIGNED_IN') {
-              supabase.functions.invoke('send-email', {
-                body: {
-                  email_type: 'welcome',
-                  recipient_email: session.user.email,
-                  user_id: session.user.id,
-                  data: { first_name: session.user.user_metadata?.first_name || 'there' },
-                },
-              }).catch(() => {}); // fire-and-forget
+            // Welcome email: supabase-js v2 emits no SIGNED_UP event, so this
+            // has to hang off SIGNED_IN — but only for genuine first signups.
+            // Two client-side gates keep it off the every-login hot path:
+            //   1. account age < 24h (covers signup→confirm/OAuth delay)
+            //   2. per-user localStorage marker (once per browser)
+            // The send-email function's idempotency_key = "welcome:{userId}"
+            // remains the cross-device guard — a duplicate can never send.
+            if (_event === 'SIGNED_IN' && isNewAccount(session.user.created_at)) {
+              const sentKey = `mes_welcome_sent_${userId}`;
+              let alreadySent = false;
+              try {
+                alreadySent = !!localStorage.getItem(sentKey);
+                if (!alreadySent) localStorage.setItem(sentKey, '1');
+              } catch { /* storage unavailable — rely on server idempotency */ }
+              if (!alreadySent) {
+                supabase.functions.invoke('send-email', {
+                  body: {
+                    email_type: 'welcome',
+                    recipient_email: session.user.email,
+                    user_id: session.user.id,
+                    // OAuth providers send full_name, not first_name — greet
+                    // Google/Azure signups by their first token, not "there".
+                    data: {
+                      first_name:
+                        session.user.user_metadata?.first_name ||
+                        session.user.user_metadata?.full_name?.trim().split(/\s+/)[0] ||
+                        'there',
+                    },
+                  },
+                }).catch(() => {}); // fire-and-forget
+              }
             }
           });
           return; // Don't set loading false yet — microtask will do it after fetch

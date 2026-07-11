@@ -1,10 +1,11 @@
 import { PricingCard } from "@/components/pricing/PricingCard";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useCheckout } from "@/hooks/useCheckout";
+import { setPendingCheckout, consumePendingCheckout } from "@/lib/pendingCheckout";
 import { useSectionPersona } from "@/hooks/useSectionPersona";
 import { PERSONA_CONTENT } from "@/config/personaContent";
 import { Clock, DollarSign, ArrowRight } from "lucide-react";
@@ -17,6 +18,20 @@ export const PricingSection = () => {
   const persona = useSectionPersona();
   const content = PERSONA_CONTENT[persona].pricing;
   const pricingTiers = content.tiers;
+
+  // Auto-resume a checkout that was interrupted by auth. Covers both
+  // same-page sign-in (email/password closes the dialog, user state updates)
+  // and OAuth / magic-link (full round-trip back here via /auth/callback with
+  // returnTo — the pending tier survives in localStorage).
+  useEffect(() => {
+    if (!user) return;
+    const pendingTier = consumePendingCheckout();
+    if (pendingTier) {
+      setShowAuthDialog(false);
+      void startCheckout({ tier: pendingTier, returnUrl: window.location.pathname });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleSelectTier = async (tierId: string) => {
     switch (tierId) {
@@ -36,6 +51,7 @@ export const PricingSection = () => {
           returnUrl: window.location.pathname,
         });
         if (result?.needsAuth) {
+          setPendingCheckout(tierId as 'growth' | 'scale');
           setShowAuthDialog(true);
         }
         break;
@@ -101,6 +117,7 @@ export const PricingSection = () => {
         open={showAuthDialog}
         onOpenChange={setShowAuthDialog}
         defaultTab="signup"
+        returnTo={typeof window !== 'undefined' ? window.location.pathname : '/pricing'}
       />
     </section>
   );

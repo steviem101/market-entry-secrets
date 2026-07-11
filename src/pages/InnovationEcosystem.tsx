@@ -1,62 +1,78 @@
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { InnovationEcosystemHero } from "@/components/innovation-ecosystem/InnovationEcosystemHero";
-import InnovationEcosystemFilters from "@/components/innovation-ecosystem/InnovationEcosystemFilters";
 import InnovationEcosystemResults from "@/components/innovation-ecosystem/InnovationEcosystemResults";
+import { DirectoryFilterBar, type FilterOption, type SelectFilterConfig } from "@/components/common/DirectoryFilterBar";
 import { ListPagination } from "@/components/common/ListPagination";
 import { UsageBanner } from "@/components/UsageBanner";
+import { getStandardTypes } from "@/utils/sectorMapping";
 import { useInnovationEcosystem } from "@/hooks/useInnovationEcosystem";
+import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
+import type { FilterSpec } from "@/lib/directoryFilters";
+import { filterOrganisations } from "@/lib/innovationFilters";
 
 const PAGE_SIZE = 12;
 
+const INNOVATION_FILTER_SPEC: FilterSpec = {
+  search: { param: "search", default: "" },
+  type: { param: "type", default: "all" },
+  location: { param: "location", default: "all" },
+  service: { param: "service", default: "all" },
+};
+
 const InnovationEcosystem = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
-  const [selectedLocation, setSelectedLocation] = useState<string>(searchParams.get("location") ?? "all");
-  const [selectedService, setSelectedService] = useState<string>(searchParams.get("service") ?? "all");
-  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
-  useEffect(() => {
-    const p = new URLSearchParams();
-    if (searchTerm) p.set("search", searchTerm);
-    if (selectedLocation !== "all") p.set("location", selectedLocation);
-    if (selectedService !== "all") p.set("service", selectedService);
-    if (currentPage > 1) p.set("page", String(currentPage));
-    setSearchParams(p, { replace: true });
-  }, [searchTerm, selectedLocation, selectedService, currentPage, setSearchParams]);
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(INNOVATION_FILTER_SPEC);
 
   const { data: organizations, isLoading, error } = useInnovationEcosystem();
 
-  const filteredOrganizations = organizations?.filter(org => {
-    const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         org.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         org.services?.some((service: string) => service.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesLocation = selectedLocation === "all" || org.location.toLowerCase().includes(selectedLocation.toLowerCase());
-    const matchesService = selectedService === "all" || org.services?.some((s: string) => s.toLowerCase() === selectedService.toLowerCase());
-    return matchesSearch && matchesLocation && matchesService;
-  }) || [];
-
-  const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
-  const clampedPage = Math.max(1, Math.min(currentPage, totalPages || 1));
-  useEffect(() => {
-    if (clampedPage !== currentPage) {
-      setCurrentPage(clampedPage);
-    }
-  }, [clampedPage, currentPage]);
-  const paginatedOrganizations = filteredOrganizations.slice(
-    (clampedPage - 1) * PAGE_SIZE,
-    clampedPage * PAGE_SIZE
+  const filteredOrganizations = useMemo(
+    () => (organizations ? filterOrganisations(organizations, filters) : []),
+    [organizations, filters]
   );
 
-  const uniqueLocations = [...new Set(organizations?.map(org => org.location) || [])].sort();
-  const uniqueServices = [...new Set(organizations?.flatMap(org => org.services || []) || [])].sort();
+  const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
+  // Clamp an out-of-range ?page= (bookmarked deep page, or a result set that
+  // shrank) to the last page so it shows results instead of a blank grid.
+  const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
+  const paginatedOrganizations = filteredOrganizations.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
-  const clearAllFilters = () => {
-    setSearchTerm("");
-    setSelectedLocation("all");
-    setSelectedService("all");
-    setCurrentPage(1);
-  };
+  const uniqueLocations = useMemo(
+    () => [...new Set((organizations ?? []).map((org) => org.location).filter(Boolean))].sort() as string[],
+    [organizations]
+  );
+  const uniqueServices = useMemo(
+    () => [...new Set((organizations ?? []).flatMap((org) => org.services || []))].sort() as string[],
+    [organizations]
+  );
+
+  // Data-driven, MULTI-VALUE Type tabs (MES-100 spin-off): an org's `type[]` can list
+  // several roles, so it's counted under each tab. Curated order first, then any novel
+  // value appended so nothing is silently dropped (mirrors the Leads pattern).
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const org of organizations ?? []) {
+      for (const t of org.type ?? []) counts[t] = (counts[t] ?? 0) + 1;
+    }
+    return counts;
+  }, [organizations]);
+  const typeValues = useMemo(() => {
+    const known = getStandardTypes.innovationEcosystem;
+    const inData = Object.keys(typeCounts);
+    return [
+      ...known.filter((t) => inData.includes(t)),
+      ...inData.filter((t) => !known.includes(t)).sort(),
+    ];
+  }, [typeCounts]);
+  const typeTabs: FilterOption[] = [
+    { value: "all", label: "All", count: organizations?.length ?? 0 },
+    ...typeValues.map((t) => ({ value: t, label: t, count: typeCounts[t] ?? 0 })),
+  ];
+
+  const selects: SelectFilterConfig[] = [
+    { key: "location", allLabel: "All Locations", options: uniqueLocations.map((l) => ({ value: l, label: l })) },
+    { key: "service", allLabel: "All Services", options: uniqueServices.map((s) => ({ value: s, label: s })) },
+  ];
 
   if (error) {
     return (
@@ -89,35 +105,33 @@ const InnovationEcosystem = () => {
         locationCount={uniqueLocations.length}
       />
 
+      <DirectoryFilterBar
+        filters={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        hasActiveFilters={hasActiveFilters}
+        noun="organisations"
+        shownCount={paginatedOrganizations.length}
+        totalCount={filteredOrganizations.length}
+        tabs={{ key: "type", options: typeTabs }}
+        search={{ key: "search", placeholder: "Search organizations, services, or locations..." }}
+        selects={selects}
+      />
+
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
-
-        <InnovationEcosystemFilters
-          searchTerm={searchTerm}
-          setSearchTerm={(v: string) => { setSearchTerm(v); setCurrentPage(1); }}
-          selectedLocation={selectedLocation}
-          setSelectedLocation={(v: string) => { setSelectedLocation(v); setCurrentPage(1); }}
-          selectedService={selectedService}
-          setSelectedService={(v: string) => { setSelectedService(v); setCurrentPage(1); }}
-          uniqueLocations={uniqueLocations}
-          uniqueServices={uniqueServices}
-        />
-
-        <p className="text-muted-foreground text-sm mb-4">
-          Showing {paginatedOrganizations.length} of {filteredOrganizations.length} organisations
-        </p>
 
         <InnovationEcosystemResults
           filteredOrganizations={paginatedOrganizations}
           totalFilteredCount={filteredOrganizations.length}
           isLoading={isLoading}
-          onClearFilters={clearAllFilters}
+          onClearFilters={clearAll}
         />
 
         <ListPagination
           currentPage={clampedPage}
           totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          onPageChange={setPage}
         />
       </div>
     </>

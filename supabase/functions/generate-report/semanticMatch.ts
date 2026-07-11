@@ -13,6 +13,7 @@
  */
 
 import { expandGoalsToServiceTags } from "./goalServiceTags.ts";
+import { metaLine, recordCountLabel, resolveWebsite } from "./cardFields.ts";
 
 export interface SemanticTypeConfig {
   /** source table to hydrate full rows from */
@@ -74,7 +75,7 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
       name: e.title,
       link: e.slug ? `/events/${e.slug}` : "/events",
       linkLabel: "View Event",
-      subtitle: `${e.date} · ${e.location}`,
+      subtitle: metaLine([e.date, e.location]),
       tags: [e.category, e.type].filter(Boolean),
     }),
   },
@@ -105,7 +106,10 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
   },
   trade_investment_agencies: {
     table: "trade_investment_agencies",
-    select: "id, name, slug, location, services, description, website, tagline, target_company_origin, sector_tags, sector_agnostic",
+    // website_url/domain (URL fallback for the card link) + government_level/location_state
+    // (state-body region gate) + grants_available (grants-goal boost) mirror the
+    // overlap-path select in index.ts.
+    select: "id, name, slug, location, services, description, website, website_url, domain, tagline, target_company_origin, organisation_type, government_level, location_state, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic, grants_available",
     cap: 5,
     decorate: (a: any) => ({
       ...a,
@@ -113,6 +117,7 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
       linkLabel: "View Organisation",
       subtitle: a.location,
       tags: (a.services || []).slice(0, 3),
+      website: resolveWebsite(a),
     }),
   },
   investors: {
@@ -123,7 +128,7 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
       ...i,
       link: i.slug ? `/investors/${i.slug}` : "/investors",
       linkLabel: "View Investor",
-      subtitle: `${i.investor_type} · ${i.location}`,
+      subtitle: metaLine([i.investor_type, i.location]),
       tags: (i.stage_focus || []).slice(0, 3),
     }),
   },
@@ -145,7 +150,7 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
       price: l.price_aud,
       link: l.slug ? `/leads/${l.slug}` : "/leads",
       linkLabel: "View Dataset",
-      subtitle: `${l.location ?? ""} · ${l.record_count ?? "?"} records`,
+      subtitle: metaLine([l.location, recordCountLabel(l.record_count)]),
       tags: (l.tags || []).slice(0, 3),
     }),
   },

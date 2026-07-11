@@ -1,31 +1,60 @@
 # Market Entry Secrets
 
-> AI-powered market entry intelligence platform helping international companies enter the Australian and New Zealand markets. Connects companies with vetted service providers, mentors, events, leads, and AI-generated market entry reports.
+> AI-powered market entry intelligence platform helping international companies enter the Australian and New Zealand (ANZ) markets. Connects companies with vetted service providers, mentors, events, investor and lead data, and AI-generated market entry reports.
 
-Market Entry Secrets is a B2B SaaS directory that pairs a vetted ecosystem of Australian/ANZ service providers, mentors, and trade agencies with on-demand AI market entry reports. Reports are generated from Firecrawl scrapes, Perplexity research, and Gemini synthesis, then enriched with live directory matches.
+Market Entry Secrets is a B2B SaaS directory and research platform for companies expanding into Australia and New Zealand. It pairs a vetted ecosystem of ANZ service providers, mentors, investors, innovation hubs, and government trade agencies with on-demand, AI-generated market entry reports and a growing library of guides and real-world case studies. All URLs below are public.
 
-## Pages
+## Directories
 
-- [Home](/): Overview of the platform and how it works.
-- [Report Creator](/report-creator): 3-step intake wizard that generates a custom AI market entry report.
-- [Pricing](/pricing): Subscription tiers (Free, Growth, Scale, Enterprise).
-- [Service Providers](/service-providers): Directory of vetted ANZ market entry service providers.
-- [Mentors](/mentors): Directory of expert mentors with Australian market experience.
-- [Events](/events): Upcoming Australian industry conferences and summits.
-- [Leads](/leads): B2B lead datasets for the Australian market.
-- [Content](/content): Market entry guides and articles.
-- [Case Studies](/case-studies): Real-world ANZ market entry case studies.
-- [Innovation Ecosystem](/innovation-ecosystem): Australian innovation hubs, accelerators, and incubators.
-- [Trade & Investment Agencies](/trade-investment-agencies): Government trade and investment bodies.
-- [Locations](/locations): Australian cities and regions for market entry.
-- [Countries](/countries): Source-country guides for companies entering ANZ.
-- [Sectors](/sectors): Industry-specific market entry insights.
+- [Service Providers](https://marketentrysecrets.com/service-providers): Vetted ANZ market entry service providers (legal, accounting, immigration, marketing, and more).
+- [Mentors](https://marketentrysecrets.com/mentors): Expert mentors with hands-on Australian and New Zealand market experience.
+- [Events](https://marketentrysecrets.com/events): Australian and New Zealand industry conferences, summits, and networking events.
+- [Investors](https://marketentrysecrets.com/investors): Directory of ANZ investors and venture capital firms.
+- [Leads](https://marketentrysecrets.com/leads): B2B lead datasets for the Australian market.
+- [Innovation Ecosystem](https://marketentrysecrets.com/innovation-ecosystem): Australian innovation hubs, accelerators, and incubators.
+- [Government Support](https://marketentrysecrets.com/government-support): Government trade and investment agencies supporting market entry.
+
+## Guides & content
+
+- [Content Hub](https://marketentrysecrets.com/content): Market entry guides and articles.
+- [Case Studies](https://marketentrysecrets.com/case-studies): Real-world ANZ market entry case studies.
+- [Market Entry Questions](https://marketentrysecrets.com/market-entry-questions): Answers to common questions about entering the Australian market.
+
+### Featured guides
+
+- [Market Entry Services in Australia: The Complete 2026 Guide](https://marketentrysecrets.com/content/market-entry-services-australia-guide)
+- [The Irish Tech Founder's Guide to ANZ Expansion](https://marketentrysecrets.com/content/irish-tech-founders-guide-anz-expansion)
+- [Understanding Australian Tax Obligations for Foreign Companies](https://marketentrysecrets.com/content/australian-tax-obligations-guide)
+- [Go-to-Market for Australian Startups: Finding Your First 100 Customers](https://marketentrysecrets.com/content/au-startup-go-to-market-first-customers)
+- [Protecting Your IP from Day One: Trademarks, Patents & Confidentiality](https://marketentrysecrets.com/content/au-startup-ip-trademarks-patents)
+- [Hiring Your First Employees: PAYG, Super & Fair Work Essentials](https://marketentrysecrets.com/content/au-first-employees-payg-super-fairwork)
+
+### Featured case studies
+
+- [How GitHub Entered the Australian Market](https://marketentrysecrets.com/case-studies/github-australia-market-entry)
+- [How OpenAI Entered the Australian Market](https://marketentrysecrets.com/case-studies/openai-australia-market-entry)
+- [How ServiceNow Entered the Australian Market](https://marketentrysecrets.com/case-studies/servicenow-australia-market-entry)
+- [How Anthropic Entered the Australian Market](https://marketentrysecrets.com/case-studies/anthropic-australia-market-entry)
+- [How Go1 Scaled to a $2 Billion Corporate Learning Unicorn](https://marketentrysecrets.com/case-studies/go1-australia-startup)
+- [How Fenergo Won Four of Australia's Biggest Banks](https://marketentrysecrets.com/case-studies/fenergo-anz-market-entry)
+
+## Taxonomy
+
+- [Locations](https://marketentrysecrets.com/locations): Australian cities and regions for market entry.
+- [Countries](https://marketentrysecrets.com/countries): Source-country corridors for companies entering ANZ.
+- [Sectors](https://marketentrysecrets.com/sectors): Industry-specific market entry insights.
+
+## Product
+
+- [Home](https://marketentrysecrets.com/): Overview of the platform and how it works.
+- [Report Creator](https://marketentrysecrets.com/report-creator): Intake wizard that generates a custom AI market entry report.
+- [Pricing](https://marketentrysecrets.com/pricing): Plan tiers (Free, Growth, Scale, Enterprise).
 
 ## Optional
 
-- [About](/about): Company background and mission.
-- [FAQ](/faq): Frequently asked questions.
-- [Contact](/contact): Get in touch.
-- [Partner with Us](/partner): Apply to list as a service provider or mentor.
-- [Privacy Policy](/privacy): Privacy policy.
-- [Terms of Service](/terms): Terms of service.
+- [About](https://marketentrysecrets.com/about): Company background and mission.
+- [FAQ](https://marketentrysecrets.com/faq): Frequently asked questions.
+- [Contact](https://marketentrysecrets.com/contact): Get in touch.
+- [Partner with Us](https://marketentrysecrets.com/partner): Apply to list as a service provider or mentor.
+- [Privacy Policy](https://marketentrysecrets.com/privacy): Privacy policy.
+- [Terms of Service](https://marketentrysecrets.com/terms): Terms of service.

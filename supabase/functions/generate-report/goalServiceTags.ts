@@ -16,6 +16,25 @@
  */
 
 // Keyed by stable goal_id (what the v2 form writes to the goal_ids column).
+//
+// Vocabulary reconciliation (MES ticket "Reconcile intake goal-tags", 2026-07-09):
+// the tags feed EXACT-match `.cs.{}` arms + the scorer's service-overlap boost, so a
+// tag that exists in no directory row is a dead lever. The mentor goals' original
+// tags ("Mentorship"/"Advisory") appear in ZERO community_members.specialties rows —
+// that column's real vocabulary is archetypes ("Active Advisor" ×22, "Scaled
+// Founder" ×15, "International Founder" ×47, "Cross-border" ×47, "Startup
+// Advisor"/"Startup Ecosystem" ×2, prod snapshot 2026-07-09). Mentor-facing goals now
+// carry those REAL terms so they influence mentor candidate fetch + ranking. The old
+// generic tags are kept for the scorer's cross-table breadth (harmless when unmatched).
+//
+// Deliberately-semantic-only goals (no vocabulary exists — do NOT invent tags):
+//   • grants — no grant-tagged rows anywhere; handled structurally via
+//     trade_investment_agencies.grants_available (see the union-level boost in
+//     index.ts) + the Perplexity grants research every report already runs.
+//   • lead_lists_* — lead_databases matching is semantic + ICP-gated (leadMatchesIcp);
+//     these tags only feed the scorer breadth.
+//   • founders — no peer-founder data source; the goal's real mechanisms are the
+//     mentor/events section emphasis + the "Scaled Founder" specialty term below.
 export const GOAL_SERVICE_TAGS_BY_ID: Record<string, string[]> = {
   // International
   find_providers: ["Legal", "Tax", "HR", "Accounting", "Finance", "Immigration"],
@@ -25,18 +44,18 @@ export const GOAL_SERVICE_TAGS_BY_ID: Record<string, string[]> = {
   market_research: ["Market Research", "Consulting", "Data"],
   associations: ["Industry Association", "Chamber of Commerce"],
   events: ["Events", "Networking"],
-  mentors_intl: ["Mentorship", "Advisory", "Consulting"],
+  mentors_intl: ["Mentorship", "Advisory", "Consulting", "Active Advisor", "International Founder", "Cross-border"],
   lead_lists_intl: ["Lead Generation", "Market Research", "Data"],
   compliance: ["Legal", "Compliance", "Regulatory"],
   // Startup
   investors: ["Investment", "Venture Capital", "Funding"],
   accelerators: ["Accelerator", "Incubator", "Startup"],
-  mentors_startup: ["Mentorship", "Advisory", "Startup"],
+  mentors_startup: ["Mentorship", "Advisory", "Startup", "Active Advisor", "Startup Advisor", "Scaled Founder"],
   growth_providers: ["Legal", "Finance", "HR", "Accounting"],
   spaces: ["Co-working", "Innovation Hub"],
   grants: ["Grants", "Government", "Funding"],
   lead_lists_startup: ["Lead Generation", "Marketing", "Sales"],
-  founders: ["Networking", "Community", "Founder"],
+  founders: ["Networking", "Community", "Founder", "Scaled Founder", "Startup Ecosystem"],
   guides_startup: ["Market Research", "Consulting"],
 };
 
@@ -112,7 +131,7 @@ export const GOAL_SECTION_MAP: Record<string, string[]> = {
   events: ["events_resources"],
   mentors_intl: ["mentor_recommendations"],
   lead_lists_intl: ["lead_list"],
-  compliance: ["action_plan"],
+  compliance: ["setup_compliance"],   // the report's dedicated regulatory/setup section
   // Startup
   investors: ["investor_recommendations"],
   accelerators: ["service_providers"],                 // innovation hubs surface within providers
@@ -133,4 +152,47 @@ export function goalsToPrioritisedSections(source: { goal_ids?: string[] | null 
     for (const sec of GOAL_SECTION_MAP[id] ?? []) out.add(sec);
   }
   return [...out];
+}
+
+/**
+ * Did the user select the "grants & government funding" goal? Used to boost
+ * grants_available agencies (no grant tag vocabulary exists to match on). Reads the
+ * v2 goal_id and the legacy long label. Pure — shared by both the overlap and union
+ * paths so the predicate can't drift between them.
+ */
+export function goalSelectsGrants(source: { goal_ids?: string[] | null; services_needed?: string[] | null }): boolean {
+  return (
+    (source.goal_ids ?? []).includes("grants") ||
+    (source.services_needed ?? []).includes("Identify grant and government funding opportunities")
+  );
+}
+
+/**
+ * Telemetry: per selected goal, how many MATCHED rows carry at least one of the
+ * goal's service tags (exact match, mirroring the `.cs.{}` semantics). Stored in
+ * report_json.metadata.goal_tag_hits so vocabulary drift is OBSERVABLE from
+ * report_quality — a goal that keeps logging 0 across reports has dead tags (a
+ * unit test cannot assert live-DB vocabulary, so telemetry is the honest guard).
+ * Reads the tag-ish array fields present on matched/decorated rows.
+ */
+export function countGoalTagHits(
+  goalIds: string[] | null | undefined,
+  pools: Record<string, Array<Record<string, unknown>>>,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  const rows = Object.values(pools || {}).flat().filter(Boolean);
+  const rowTerms: Array<Set<string>> = rows.map((r) => {
+    const terms = new Set<string>();
+    for (const key of ["services", "specialties", "tags", "sector_tags"]) {
+      const v = (r as Record<string, unknown>)[key];
+      if (Array.isArray(v)) for (const t of v) if (typeof t === "string") terms.add(t);
+    }
+    return terms;
+  });
+  for (const id of goalIds ?? []) {
+    const tags = GOAL_SERVICE_TAGS_BY_ID[id];
+    if (!tags) continue;
+    out[id] = rowTerms.filter((terms) => tags.some((t) => terms.has(t))).length;
+  }
+  return out;
 }

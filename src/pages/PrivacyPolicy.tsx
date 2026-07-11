@@ -1,10 +1,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SEOHead } from "@/components/common/SEOHead";
 
 const PrivacyPolicy = () => {
   return (
     <>
-      
+      <SEOHead
+        title="Privacy Policy | Market Entry Secrets"
+        description="How Market Entry Secrets collects, uses, and safeguards your personal and company data across our directory, AI report platform, and communications."
+        canonicalPath="/privacy"
+      />
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-foreground mb-8 text-center">Privacy Policy</h1>

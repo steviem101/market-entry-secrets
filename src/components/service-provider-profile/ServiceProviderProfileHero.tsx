@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { Company } from "@/components/CompanyCard";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { useIntroRequest } from "@/components/directory/IntroRequestProvider";
 
 interface ServiceProviderProfileHeroProps {
   provider: Company;
@@ -12,6 +13,7 @@ interface ServiceProviderProfileHeroProps {
 export const ServiceProviderProfileHero = ({ provider }: ServiceProviderProfileHeroProps) => {
   const logoSrc = provider.logo_url || provider.logo;
   const websiteUrl = provider.website_url || provider.website;
+  const { requestIntro } = useIntroRequest();
 
   return (
     <section className="relative">
@@ -21,7 +23,7 @@ export const ServiceProviderProfileHero = ({ provider }: ServiceProviderProfileH
           <img
             loading="lazy"
             src={provider.cover_image_url}
-            alt={`${provider.name} cover`}
+            alt={`${provider.name} cover image`}
             className="w-full h-full object-cover"
           />
         )}
@@ -93,14 +95,10 @@ export const ServiceProviderProfileHero = ({ provider }: ServiceProviderProfileH
 
             {/* CTA buttons */}
             <div className="flex flex-wrap gap-3 mt-6">
-              {(provider.contact_email || provider.contact) && (
-                <Button asChild>
-                  <a href={`mailto:${provider.contact_email || provider.contact}`}>
-                    <Handshake className="w-4 h-4 mr-2" />
-                    Get Warm Intro
-                  </a>
-                </Button>
-              )}
+              <Button onClick={() => requestIntro({ entity: "service_provider", id: provider.id, name: provider.name })}>
+                <Handshake className="w-4 h-4 mr-2" />
+                Get warm intro
+              </Button>
               {provider.contact_phone && (
                 <Button variant="outline" asChild>
                   <a href={`tel:${provider.contact_phone}`}>

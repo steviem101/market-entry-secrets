@@ -63,6 +63,19 @@ export const useAuthService = () => {
       });
 
       if (error) {
+        // Don't confirm whether an email is registered (account enumeration).
+        // Show the same neutral guidance an unknown email would get; the
+        // dialog stays open so an existing user can switch to Sign In.
+        const alreadyRegistered =
+          (error as { code?: string }).code === 'user_already_exists' ||
+          /already (been )?registered|already exists/i.test(error.message);
+        if (alreadyRegistered) {
+          toast({
+            title: "Check your email",
+            description: "If this email isn't already registered, you'll receive a confirmation link shortly. Already have an account? Sign in instead.",
+          });
+          return { error };
+        }
         toast({
           title: "Sign Up Error",
           description: error.message,
@@ -152,9 +165,18 @@ export const useAuthService = () => {
     if (!user) return { error: 'No user logged in' };
 
     try {
+      // Never let the client write server-managed columns. `stripe_customer_id`
+      // is set only by create-checkout (service role); the DB also enforces this
+      // via the SEC-05 trigger, but stripping here avoids surfacing that error to
+      // legitimate users and keeps the write payload to user-editable fields.
+      const safeUpdates = { ...updates } as Record<string, unknown>;
+      for (const k of ['id', 'stripe_customer_id', 'created_at', 'updated_at']) {
+        delete safeUpdates[k];
+      }
+
       const { data, error } = await supabase
         .from('profiles')
-        .upsert({ id: user.id, ...updates })
+        .upsert({ id: user.id, ...safeUpdates })
         .select()
         .single();
 

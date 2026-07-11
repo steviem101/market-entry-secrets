@@ -8,6 +8,8 @@ import { ReportSection } from '@/components/report/ReportSection';
 import { ReportGatedSection } from '@/components/report/ReportGatedSection';
 import { ReportRegenerateSection } from '@/components/report/ReportRegenerateSection';
 import { ReportMatchCard } from '@/components/report/ReportMatchCard';
+import { ExpandableCardGrid } from '@/components/report/ExpandableCardGrid';
+import { LeadListRequestCard } from '@/components/report/LeadListRequestCard';
 import { ReportFeedback } from '@/components/report/ReportFeedback';
 import { ReportSources } from '@/components/report/ReportSources';
 import { ReportBackToTop } from '@/components/report/ReportBackToTop';
@@ -18,7 +20,9 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Skeleton } from '@/components/ui/skeleton';
-import { splitEventsAndResources } from '@/lib/reportEventsSplit';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import { groupSectionCards } from '@/lib/reportCardGroups';
 import {
   SECTION_LABELS,
   SECTION_ORDER,
@@ -40,6 +44,11 @@ const ReportViewInner = () => {
     () => new URLSearchParams(window.location.search).get('stripe_status') === 'success'
   );
 
+  // Post-payment unlock progress: 'polling' while we wait for the Stripe
+  // webhook to land, 'timeout' when the window elapses (manual refresh
+  // offered), 'unlocked' once the tier flips.
+  const [unlockState, setUnlockState] = useState<'idle' | 'polling' | 'timeout' | 'unlocked'>('idle');
+
   // Handle Stripe checkout return — poll for subscription update
   // because the webhook may not have processed yet when Stripe redirects.
   // Intentionally uses empty deps: runs once on mount using initial URL params.
@@ -53,17 +62,25 @@ const ReportViewInner = () => {
 
     if (initialStatus === 'success') {
       toast.success('Payment successful! Unlocking your premium sections...');
+      setUnlockState('polling');
 
       // Poll for subscription update — webhook may take a few seconds.
-      // Compare against 'free' (default tier before purchase).
+      // Compare against 'free' (default tier before purchase). ~30s window:
+      // 15 attempts x 2s covers slow webhook delivery.
       let attempts = 0;
       let cancelled = false;
       const poll = async () => {
         if (cancelled) return;
         const newTier = await refetchSubscription();
         attempts++;
-        if (!cancelled && attempts < 8 && newTier === 'free') {
+        if (cancelled) return;
+        if (newTier && newTier !== 'free') {
+          setUnlockState('unlocked');
+          toast.success('Your premium sections are unlocked.');
+        } else if (attempts < 15) {
           timerId = window.setTimeout(poll, 2000);
+        } else {
+          setUnlockState('timeout');
         }
       };
       // Start polling after a brief delay to give the webhook time
@@ -78,6 +95,17 @@ const ReportViewInner = () => {
       toast.info('Checkout was cancelled. You can upgrade anytime.');
     }
   }, []);
+
+  // Manual "refresh access" for when the webhook outlasts the polling window.
+  const handleRefreshAccess = async () => {
+    const newTier = await refetchSubscription();
+    if (newTier && newTier !== 'free') {
+      setUnlockState('unlocked');
+      toast.success('Access refreshed — your premium sections are unlocked.');
+    } else {
+      toast.info('Payment is still processing. Give it a few more seconds and try again.');
+    }
+  };
 
   // Wait for auth to settle before showing report (especially after Stripe redirect)
   if (isLoading || (authLoading && cameFromStripe)) {
@@ -172,6 +200,26 @@ const ReportViewInner = () => {
 
             {/* Main content */}
             <div className="flex-1 max-w-3xl space-y-8">
+              {unlockState === 'polling' && (
+                <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+                  <div className="h-4 w-4 shrink-0 animate-spin rounded-full border-b-2 border-primary" />
+                  <p className="text-sm text-foreground">
+                    Payment received — still unlocking your premium sections. This usually takes a few seconds.
+                  </p>
+                </div>
+              )}
+              {unlockState === 'timeout' && (
+                <div className="flex flex-col gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-foreground">
+                    Your payment went through, but access is taking longer than usual to activate.
+                  </p>
+                  <Button variant="outline" size="sm" className="shrink-0" onClick={handleRefreshAccess}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Refresh access
+                  </Button>
+                </div>
+              )}
+
               {/* Key Metrics stat cards — only for new reports with metrics */}
               <ReportKeyMetrics metrics={keyMetrics} />
 
@@ -213,17 +261,12 @@ const ReportViewInner = () => {
                 // Case 4: Section is unlocked with content → render normally
                 const sectionMatches = section.matches || matches[sectionId] || [];
 
-                // For events_resources the matches array mixes events with
-                // content items (case studies, guides). Split so case studies
-                // don't render under "Upcoming Events" with a raw subtitle.
-                const isEventsSection = sectionId === 'events_resources';
-                const eventsSplit = isEventsSection ? splitEventsAndResources(sectionMatches) : null;
-
-                const renderCardGrid = (items: any[]) => (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {items.map((match: any, idx: number) => (
+                const renderCardGrid = (items: any[], groupLabel?: string) => (
+                  <ExpandableCardGrid
+                    items={items}
+                    label={groupLabel?.toLowerCase() || 'matches'}
+                    renderItem={(match: any) => (
                       <ReportMatchCard
-                        key={match.id || idx}
                         name={match.name}
                         subtitle={match.subtitle || match.category || match.location}
                         tags={match.tags || match.services?.slice(0, 3)}
@@ -231,12 +274,50 @@ const ReportViewInner = () => {
                         linkLabel={match.linkLabel}
                         blurred={match.blurred}
                         upgradeCta={match.upgrade_cta}
+                        requiredTier={requiredTier || undefined}
                         website={match.website}
                         source={match.source}
                       />
-                    ))}
-                  </div>
+                    )}
+                  />
                 );
+
+                // Sections that mix entity types (service providers + agencies +
+                // hubs; events + resources; datasets + contacts) render one
+                // sub-headed grid per type instead of a single jumbled grid (B9).
+                const cardGroups = groupSectionCards(sectionId, sectionMatches);
+                const renderMatchArea = () => {
+                  if (sectionMatches.length === 0) return null;
+                  if (!cardGroups || cardGroups.length <= 1) return renderCardGrid(sectionMatches);
+                  return (
+                    <div className="space-y-6">
+                      {cardGroups.map((group) => (
+                        <div key={group.key}>
+                          <div className="flex items-center gap-3 mb-4">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                              {group.label}
+                            </span>
+                            <div className="flex-1 border-t border-border" />
+                          </div>
+                          {renderCardGrid(group.items, group.label)}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                };
+
+                // Lead-list section: offer a custom-list request (P1-D). When the
+                // ICP gate left no lists, the request box is the section's primary
+                // CTA — surface it right under the "no match" message (Floats2 review
+                // item 3), not buried below all the prose. When lists DID match, it's
+                // a quiet "need a different list?" box under the datasets.
+                const leadEmpty = sectionId === 'lead_list' && sectionMatches.length === 0;
+                const leadRequest =
+                  sectionId === 'lead_list' ? (
+                    <div className="mt-6">
+                      <LeadListRequestCard reportId={report.id} emptyState={leadEmpty} />
+                    </div>
+                  ) : null;
 
                 return (
                   <ReportSection
@@ -245,25 +326,10 @@ const ReportViewInner = () => {
                     title={SECTION_LABELS[sectionId]}
                     content={section.content || ''}
                     citations={perplexityCitations}
+                    hideMatchLabel={leadEmpty}
                   >
-                    {isEventsSection && eventsSplit ? (
-                      <>
-                        {eventsSplit.events.length > 0 && renderCardGrid(eventsSplit.events)}
-                        {eventsSplit.resources.length > 0 && (
-                          <div className="pt-4">
-                            <div className="flex items-center gap-3 mb-4">
-                              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                                Case Studies &amp; Resources
-                              </span>
-                              <div className="flex-1 border-t border-border" />
-                            </div>
-                            {renderCardGrid(eventsSplit.resources)}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      sectionMatches.length > 0 && renderCardGrid(sectionMatches)
-                    )}
+                    {renderMatchArea()}
+                    {leadRequest}
                   </ReportSection>
                 );
               })}

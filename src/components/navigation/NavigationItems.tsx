@@ -39,7 +39,7 @@ export const directoryNavItems: NavItem[] = [
 // Explore navigation items (was "Popular")
 export const exploreNavItems: NavItem[] = [
   { label: "By Location", href: "/locations", icon: MapPin, description: "Australian cities & regions" },
-  { label: "By Country", href: "/countries", icon: Globe, description: "Source country market guides" },
+  { label: "By Country", href: "/countries", icon: Globe, description: "Country market guides" },
   { label: "By Sector", href: "/sectors", icon: Building2, description: "Industry-specific intelligence" },
 ];
 
@@ -51,7 +51,7 @@ export const coreNavItems: NavItem[] = [
 
 // Resources navigation items (was "Content")
 export const resourcesNavItems: NavItem[] = [
-  { label: "Market Entry Guides", href: "/content", icon: FileText, description: "Step-by-step entry playbooks" },
+  { label: "Market Entry Guides", href: "/content", icon: FileText, description: "Step-by-step playbooks for ANZ" },
   { label: "Case Studies", href: "/case-studies", icon: BookOpen, description: "Real company success stories" },
 ];
 

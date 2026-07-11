@@ -7,12 +7,14 @@ interface CountryStickyBarProps {
   countryName: string;
   countryCode: string;
   primaryCtaHref: string;
+  onPrimaryClick?: () => void;
 }
 
 export const CountryStickyBar = ({
   countryName,
   countryCode,
   primaryCtaHref,
+  onPrimaryClick,
 }: CountryStickyBarProps) => {
   const [visible, setVisible] = useState(false);
 
@@ -44,7 +46,7 @@ export const CountryStickyBar = ({
             </nav>
           </div>
           <Button asChild size="sm" className="bg-mes-teal hover:bg-mes-teal-dark text-white">
-            <Link to={primaryCtaHref}>Generate my report</Link>
+            <Link to={primaryCtaHref} onClick={onPrimaryClick}>Generate my report</Link>
           </Button>
         </div>
       </div>

@@ -4,6 +4,8 @@ interface KeyMetric {
   label: string;
   value: string;
   context: string;
+  /** Model-derived estimate (not a cited figure) — rendered with an "Est." marker. */
+  estimated?: boolean;
 }
 
 interface ReportKeyMetricsProps {
@@ -12,6 +14,8 @@ interface ReportKeyMetricsProps {
 
 export const ReportKeyMetrics = ({ metrics }: ReportKeyMetricsProps) => {
   if (!metrics || metrics.length === 0) return null;
+
+  const anyEstimated = metrics.slice(0, 6).some((m) => m.estimated);
 
   return (
     <div className="mb-8">
@@ -26,11 +30,26 @@ export const ReportKeyMetrics = ({ metrics }: ReportKeyMetricsProps) => {
             className="rounded-xl border border-border bg-card p-4 text-center space-y-1 hover:shadow-sm transition-shadow"
           >
             <p className="text-xl sm:text-2xl font-bold text-primary leading-tight break-words">{metric.value}</p>
-            <p className="text-sm font-medium text-foreground">{metric.label}</p>
+            <p className="text-sm font-medium text-foreground">
+              {metric.label}
+              {metric.estimated && (
+                <span
+                  title="Model-derived estimate, not a sourced figure"
+                  className="ml-1 align-middle rounded bg-muted px-1 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+                >
+                  Est.
+                </span>
+              )}
+            </p>
             <p className="text-xs text-muted-foreground">{metric.context}</p>
           </div>
         ))}
       </div>
+      {anyEstimated && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          <span className="font-semibold uppercase tracking-wide">Est.</span> = model-derived estimate from the available research, not a directly sourced figure.
+        </p>
+      )}
     </div>
   );
 };

@@ -24,7 +24,8 @@ export const useTestimonials = () => {
         .from('testimonials')
         .select('*')
         .eq('is_featured', true)
-        .order('sort_order', { ascending: true });
+        .order('sort_order', { ascending: true })
+        .limit(3);
 
       if (error) {
         throw error;

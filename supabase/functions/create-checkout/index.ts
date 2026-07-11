@@ -1,5 +1,5 @@
 // supabase/functions/create-checkout/index.ts
-import Stripe from "https://esm.sh/stripe@12?target=deno";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { log, logError } from "../_shared/log.ts";
 import { buildCorsHeaders } from "../_shared/http.ts";
@@ -14,7 +14,14 @@ const PRICE_IDS: Record<string, string> = {
   scale: Deno.env.get("STRIPE_SCALE_PRICE_ID")!,
 };
 
-const stripe = new Stripe(STRIPE_SECRET);
+// API version must be >= 2023-08-16: older versions reject checkout sessions
+// that a 100% promotion code reduces to $0 ("no-cost orders"), which is the
+// beta-tester flow (MES-140). stripe-node always sends its own pinned version
+// header, so the account's default version does not apply here.
+const stripe = new Stripe(STRIPE_SECRET, {
+  apiVersion: "2023-10-16",
+  httpClient: Stripe.createFetchHttpClient(),
+});
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 Deno.serve(async (req: Request) => {
@@ -39,6 +46,16 @@ Deno.serve(async (req: Request) => {
     const directPriceId = typeof body.price_id === "string" ? body.price_id : null;
     let priceId = directPriceId || PRICE_IDS[tier];
 
+    // A lead-database purchase is a one-off product buy, NOT a subscription upgrade.
+    // It must NEVER carry a subscription `tier` into the webhook — otherwise a user
+    // could pay a (cheap) lead-DB price and have the webhook grant them a paid tier.
+    const isLeadPurchase = !!(directPriceId && extraMetadata.lead_database_id);
+
+    // Defence-in-depth: never let a client-supplied metadata.tier / supabase_user_id
+    // survive into the Stripe session (the verified values are set explicitly below).
+    delete (extraMetadata as Record<string, unknown>).tier;
+    delete (extraMetadata as Record<string, unknown>).supabase_user_id;
+
     // For direct price purchases, validate the price_id matches the lead database record
     if (directPriceId && extraMetadata.lead_database_id) {
       const { data: leadDb, error: leadErr } = await supabaseAdmin
@@ -57,6 +74,19 @@ Deno.serve(async (req: Request) => {
         });
       }
       priceId = leadDb.stripe_price_id;
+    }
+
+    // Guard: if a direct price_id was supplied for a tier upgrade (no lead_database_id),
+    // it MUST match the server-side price for the requested tier. Prevents a user from
+    // paying a cheaper tier's price while metadata grants them a higher tier.
+    if (directPriceId && !extraMetadata.lead_database_id) {
+      if (!PRICE_IDS[tier] || directPriceId !== PRICE_IDS[tier]) {
+        logError("create-checkout", "price_id/tier mismatch", { tier });
+        return new Response(JSON.stringify({ error: "Invalid price for tier" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     if (!priceId) {
@@ -182,10 +212,17 @@ Deno.serve(async (req: Request) => {
       mode: "payment",
       line_items: [{ price: priceId, quantity: 1 }],
       customer: stripeCustomerId,
+      // Beta testers redeem single-use 100% promotion codes on TIER checkouts
+      // only (MES-STRIPE-PROD). A 100% code produces a $0 session with no card
+      // prompt and payment_intent=null — the webhook grants the tier from
+      // metadata regardless of amount. Lead-database buys keep the box off.
+      allow_promotion_codes: !isLeadPurchase,
       metadata: {
         ...extraMetadata,
-        // Verified values MUST come after spread to prevent user-supplied overrides
-        tier: tier || "lead_purchase",
+        // Verified values MUST come after spread to prevent user-supplied overrides.
+        // Lead-database buys are forced to "lead_purchase" so the client-supplied
+        // body.tier can never be used to grant a subscription tier (AUD-005).
+        tier: isLeadPurchase ? "lead_purchase" : (tier || "lead_purchase"),
         supabase_user_id: supabaseUserId,
       },
       client_reference_id: supabaseUserId,

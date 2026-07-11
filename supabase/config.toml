@@ -1,5 +1,79 @@
 project_id = "xhziwveaiuhzdoutpgrh"
 
+# ---------------------------------------------------------------------------
+# Auth configuration — version-controlled source of truth (MES-33j).
+#
+# These values mirror what the production dashboard MUST be set to (MES-33a /
+# MES-33n / MES-33o runbook). The CLI applies this block to local dev and
+# `supabase config push`; the hosted dashboard is NOT auto-synced on merge —
+# after changing values here, apply them in the dashboard (or `config push`)
+# and keep the two in lockstep so auth redirects can never silently drift back
+# to a Lovable preview origin again.
+# ---------------------------------------------------------------------------
+[auth]
+enabled = true
+# Fallback destination for auth emails / OAuth returns when the requested
+# redirect is not on the allow-list. Must be the customer domain, never a
+# *.lovable.app preview (root cause of magic links opening Lovable, audit §5).
+site_url = "https://marketentrysecrets.com"
+# Exact-match allow-list for emailRedirectTo / redirectTo values used by the
+# app: /auth/callback (OAuth, magic link, confirm signup) and /reset-password
+# (recovery). Keep explicit — no broad wildcards.
+additional_redirect_urls = [
+  "https://marketentrysecrets.com/auth/callback",
+  "https://marketentrysecrets.com/reset-password",
+  "https://www.marketentrysecrets.com/auth/callback",
+  "https://www.marketentrysecrets.com/reset-password",
+  # Lovable preview origin — keep only while previews are used for QA.
+  "https://market-entry-secrets.lovable.app/auth/callback",
+  "https://market-entry-secrets.lovable.app/reset-password",
+]
+# Match the client-side minimum (AuthDialog signup + ResetPassword, MES-33n).
+minimum_password_length = 8
+
+[auth.email]
+# Magic-link / email-OTP lifetime: 1 hour, the advisor lint threshold
+# (auth_otp_long_expiry fires above 3600s — MES-33o).
+otp_expiry = 3600
+
+# ---------------------------------------------------------------------------
+# Branded auth-email templates (MES-33c). GoTrue renders these static HTML
+# files itself — they cannot use the TS `_shared/email/` system, so the brand
+# (blue-led theme, logo, 600px card, dark-mode) is inlined to match it. Go
+# template placeholders ({{ .ConfirmationURL }}, {{ .Token }}, {{ .Email }},
+# {{ .NewEmail }}) are substituted by GoTrue at send time.
+#
+# content_path is resolved from the project root (where the CLI runs).
+#
+# IMPORTANT: like site_url / redirect URLs above, the hosted dashboard is NOT
+# auto-synced from this file. After merge, apply via `supabase config push`
+# (or paste each file into Authentication → Email Templates) so production
+# stops sending the bare Supabase defaults. Keep the two in lockstep.
+# ---------------------------------------------------------------------------
+[auth.email.template.confirmation]
+subject = "Confirm your email · Market Entry Secrets"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your sign-in link · Market Entry Secrets"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your password · Market Entry Secrets"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.invite]
+subject = "You're invited to Market Entry Secrets"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new email · Market Entry Secrets"
+content_path = "./supabase/templates/email_change.html"
+
+[auth.email.template.reauthentication]
+subject = "Your verification code · Market Entry Secrets"
+content_path = "./supabase/templates/reauthentication.html"
+
 [functions.create-checkout]
 verify_jwt = true
 
@@ -33,6 +107,12 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.stripe-webhook]
+verify_jwt = false
+
+[functions.stripe-webhook-reconcile]
+# Replays unprocessed payment_webhook_logs rows + Slack-alerts stale ones (MES-39).
+# x-internal-secret == STRIPE_RECONCILE_SECRET (fallback EMAIL_INTERNAL_SECRET),
+# same pattern as process-email-queue. Must stay false for cron POSTs (no JWT).
 verify_jwt = false
 
 [functions.ai-chat]
@@ -77,8 +157,39 @@ verify_jwt = false
 # gateway rejects the cron POST before the function runs.
 verify_jwt = false
 
+[functions.report-quality-loop]
+# Cron-invoked, propose-only report-quality review loop; authenticated in-code by
+# x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET (same pattern as report-quality-rollup).
+# Must stay false or the gateway rejects the cron POST (no JWT) before the function runs.
+# Disabled by default — self-gates on activity_event_routing 'report.quality.loop'.
+verify_jwt = false
+
+[functions.rq-slack-actions]
+# Slack interactivity receiver for the report-quality review queue (Accept/Reject
+# buttons on #report-quality digests). Authenticated in-code by Slack request signing
+# (SLACK_SIGNING_SECRET) — Slack sends no JWT, so this must stay false or the gateway
+# rejects the interaction POST before the function runs.
+verify_jwt = false
+
 [functions.kb-sync]
 # Cron-invoked (kb-sync-incremental) + one-off backfill; authenticated in-code by
 # x-internal-secret == KB_SYNC_SECRET (same pattern as process-email-queue). Must
 # stay false or the gateway rejects the cron POST (no JWT) before the function runs.
 verify_jwt = false
+
+[functions.sitemap]
+# Public DB-driven sitemap (MES-79 / SEO-03). Must be fetchable by search-engine
+# crawlers (Googlebot, Bingbot) with no auth header at all, so verify_jwt = false —
+# with true, the API gateway would reject the crawler's anonymous GET before the
+# function runs. Reads with the anon key only, so RLS decides visibility.
+verify_jwt = false
+
+[functions.admin-mentor-anonymity]
+# Admin-only mentor anonymity toggle; requireAdmin() re-checks the role in-code.
+verify_jwt = true
+
+[functions.import-contact-images]
+# MES-123 admin-only contact-image import pipeline; requireAdmin() re-checks the role in-code.
+# Deployed manually (supabase functions deploy import-contact-images) — not in the
+# deploy-edge-functions.yml auto-deploy list.
+verify_jwt = true

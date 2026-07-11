@@ -23,6 +23,7 @@ import { Step2Goals } from '@/components/report-creator/v2/Step2Goals';
 import { Step3Details } from '@/components/report-creator/v2/Step3Details';
 import { ReviewScreen } from '@/components/report-creator/v2/ReviewScreen';
 import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
+import { corporateWebsiteFromEmail } from '@/lib/corporateDomain';
 
 type Screen = 'persona' | 'company' | 'goals' | 'details' | 'review';
 const UI_KEY = 'mes_intake_v2_ui';
@@ -121,6 +122,25 @@ const ReportCreatorV2 = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Prefill the company website from a signed-in user's corporate email domain
+  // (e.g. jane@acmecorp.com → acmecorp.com), so Step 1 — and the scrape-company
+  // enrichment it triggers — starts pre-populated. Only fills when the field is
+  // still empty, so it never clobbers a restored draft or anything the user
+  // typed; free-mail domains (gmail/outlook/…) yield null and are skipped.
+  // Runs after the mount draft-restore above; the empty-guard makes ordering
+  // irrelevant. Ref-guarded so it fires at most once per mount.
+  const websitePrefilled = useRef(false);
+  useEffect(() => {
+    if (websitePrefilled.current || !user?.email) return;
+    if ((form.getValues('website_url') || '').trim()) return;
+    const domain = corporateWebsiteFromEmail(user.email);
+    if (!domain) return;
+    websitePrefilled.current = true;
+    form.setValue('website_url', domain, { shouldDirty: true });
+    trackIntakeEvent('website_prefill_from_email', { persona, user_id: user.id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Persist the draft on any field change (idiomatic RHF subscription — avoids
   // a localStorage write on every render).
@@ -294,7 +314,7 @@ const ReportCreatorV2 = () => {
         <meta name="description" content="Get your personalised AI-powered market entry report." />
       </Helmet>
 
-      <div className="min-h-screen bg-rc-canvas font-rc">
+      <div className="bg-background">
         {screen === 'persona' ? (
           <div className="px-4 py-12 sm:px-6">
             <PersonaScreen onPick={pickPersona} />

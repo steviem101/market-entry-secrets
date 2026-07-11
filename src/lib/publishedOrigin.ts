@@ -11,7 +11,7 @@
  * ReportMatchCard) picks it up automatically.
  */
 
-const CANONICAL_ORIGIN = 'https://market-entry-secrets.lovable.app';
+const CANONICAL_ORIGIN = 'https://marketentrysecrets.com';
 
 /**
  * Returns the host this app is "really" served from for the purpose of
@@ -30,6 +30,6 @@ export const publishedOrigin = (): string => {
   const isPreview =
     host === 'localhost' ||
     host === '127.0.0.1' ||
-    host.endsWith('.lovable.app') && host !== 'market-entry-secrets.lovable.app';
+    host.endsWith('.lovable.app');
   return isPreview ? CANONICAL_ORIGIN : window.location.origin;
 };

@@ -24,6 +24,7 @@
 
 import { overlapCount } from "./sectorTaxonomy.ts";
 import { normalizeCountry } from "./countryNormalize.ts";
+import { countServiceMatches } from "./serviceMatch.ts";
 
 // deno-lint-ignore no-explicit-any
 type Row = any;
@@ -76,29 +77,97 @@ function diminishing(matches: number, base: number, step: number): number {
 const SPECIALIST_BONUS = 2;
 const AGNOSTIC_NUDGE = 0.25;  // small — "eligible for everyone" != "relevant"
 
+// A row that claims a large share of the 20-sector taxonomy isn't a genuine
+// specialist in any of them — it's "matches everyone" noise (Stage 7 bug B8: a
+// marketing association tagged across 8 sectors surfaced for an HR-fintech). The
+// directory bears this out — genuine rows average ~3 tags, so 5+ is generalist
+// territory. Lowered 6→5 after a live report (Infact, a credit fintech) surfaced
+// the Australian Agritech Association at score 8.0: 5 tags — its defining vertical
+// is farming/agritech, but it ALSO carries financial-services + professional-services
+// + technology, so it "industry match ×3"-ed the fintech purely on broad umbrella
+// tags and, sitting one under the old threshold of 6, still won the specialist bonus.
+// Blast radius of 5 (measured): +14 innovation hubs / +38 investors / +2 agencies
+// newly treated as broad (service_providers carry no tags — unaffected). For these a
+// sector overlap is weak evidence of focus, so score it as flat "broad overlap" (a
+// single unit, no breadth accumulation) and deny the specialist bonus — focused
+// matches then rank above it. On the providers/innovation/investor surfaces this is
+// ranking-only: the row is not dropped (a thin section still backfills it), so a
+// genuinely-relevant broad row still appears, just lower. NOTE: the events surface
+// additionally gates on hasSectorRelevance via preferRelevant() — a demoted row now
+// reads as "broad overlap" (not "industry match"), so when ≥minKeep focused events
+// exist a demoted event can be excluded, not merely reranked. That's aligned with
+// preferRelevant's purpose (shed weak/broad matches when focused ones exist) and
+// backfill still guarantees the section fills, but it IS a drop on that surface.
+const OVERTAG_THRESHOLD = 5;
+
+// Horizontal catch-all sectors. Nearly every SaaS / consulting / tech company maps
+// into these, so an overlap that consists ONLY of them says "generically business/
+// tech adjacent" — not "same vertical". (Novade report, 7 Jul 2026: the Space
+// Industry Association and the Information Security Association out-specialist-ed
+// construction advisories for a construction-tech SaaS purely via technology +
+// professional-services; the taxonomy has no space/infosec/construction-tech
+// vertical, so re-tagging can't fix it — the signal itself is weak.)
+//
+// The demotion needs BOTH conditions, or it over-fires:
+//   (a) the row's overlap with the user is exclusively horizontal, AND
+//   (b) the row carries at least one vertical tag that does NOT match the user —
+//       positive evidence its real focus is a DIFFERENT vertical (SIAA's education/
+//       government tags; a banking body's financial-services for a non-fintech).
+// Without (b), a row tagged only [technology] — a genuinely tech-focused mentor —
+// would be demoted for a tech company, which is exactly backwards. Such a row has
+// no foreign vertical, so it keeps its specialist standing. Vertical-inclusive
+// matches (BlueChilli's construction tag for Novade) are untouched by (a).
+// Demoted rows score like over-tagged ones: flat broad unit, no specialist bonus.
+const HORIZONTAL_SECTORS = new Set<string>([
+  "technology-information-and-media",
+  "professional-services",
+  "administrative-and-support-services",
+]);
+
 export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
   const tags: string[] = row.sector_tags || [];
   const reasons: string[] = [];
   let s = 0;
 
-  const ownMatches = overlapCount(tags, ctx.userSectors);
+  // Over-tagged (but not explicitly agnostic) → treat a match as broad, not specialist.
+  const overTagged = !row.sector_agnostic && tags.length >= OVERTAG_THRESHOLD;
+
+  const userSet = new Set(ctx.userSectors);
+  const matchedOwn = tags.filter((t) => userSet.has(t));
+  const ownMatches = matchedOwn.length;
+  // (a) overlap is exclusively horizontal; (b) the row has a foreign vertical.
+  const horizontalOnly = !row.sector_agnostic && ownMatches > 0 &&
+    matchedOwn.every((t) => HORIZONTAL_SECTORS.has(t)) &&
+    tags.some((t) => !HORIZONTAL_SECTORS.has(t) && !userSet.has(t));
+
   if (ownMatches > 0) {
-    const add = diminishing(ownMatches, 3, 1);
+    const broadOnly = overTagged || horizontalOnly;
+    const add = broadOnly ? 1 : diminishing(ownMatches, 3, 1);
     s += add;
-    reasons.push(`industry match ×${ownMatches} (+${add})`);
+    reasons.push(overTagged
+      ? `broad sector overlap ×${ownMatches} (+${add})`
+      : horizontalOnly
+        ? `horizontal-only overlap ×${ownMatches} (+${add})`
+        : `industry match ×${ownMatches} (+${add})`);
   }
 
   if (opts.applySellsTo) {
     const sellMatches = overlapCount(tags, ctx.sellsToSectors);
     if (sellMatches > 0) {
-      const add = diminishing(sellMatches, 2, 1);
+      const add = overTagged ? 1 : diminishing(sellMatches, 2, 1);
       s += add;
-      reasons.push(`sells-to sector ×${sellMatches} (+${add})`);
+      reasons.push(overTagged
+        ? `broad sells-to overlap ×${sellMatches} (+${add})`
+        : `sells-to sector ×${sellMatches} (+${add})`);
     }
   }
 
   if (opts.service) {
-    const k = overlapCount(row[opts.service] || [], ctx.serviceTags);
+    // Token overlap, not exact string equality: the row's services/specialties are
+    // free text ("Deal Advisory & Infrastructure"), the goal tags are canonical
+    // ("Advisory") — exact-contains only rewarded rows that happened to use the
+    // bare canonical word, one driver of the same-slate problem. See serviceMatch.ts.
+    const k = countServiceMatches(row[opts.service] || [], ctx.serviceTags);
     if (k > 0) {
       const add = Math.min(k, 2) * 2; // cap service/skill fit so it can't run away
       s += add;
@@ -106,15 +175,26 @@ export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
     }
   }
 
+  // Target-region match (B13): the row's location names the report's specific target
+  // city/region (e.g. Sydney/NSW). Worth +2 — a meaningful prioritisation of the
+  // target market, roughly one service-fit unit — so a same-region provider clusters
+  // with (not below) an out-of-region one that happens to match one more service.
+  // It never DROPS an out-of-region AU row (the geo gate already keeps all in-market
+  // providers); it only reorders. `locationPatterns` are the specific target regions
+  // only (nation-wide words are excluded upstream), so this is a target signal, not a
+  // generic "is in Australia" one.
   const loc = (row.location || "").toLowerCase();
   if (ctx.locationPatterns.some((l) => l && loc.includes(l.toLowerCase()))) {
-    s += 1;
-    reasons.push("location (+1)");
+    s += 2;
+    reasons.push("target region (+2)");
   }
 
-  // Specialist: a sector-SPECIFIC row that matches the user's own industry. This is
-  // the genuine domain expert the breadth-driven scorer used to bury under generalists.
-  const specialist = !row.sector_agnostic && ownMatches > 0;
+  // Specialist: a sector-SPECIFIC (not agnostic, not over-tagged) row that matches the
+  // user's own industry — the genuine domain expert the breadth-driven scorer used to
+  // bury under generalists. An over-tagged row claims too many sectors to count as
+  // focused; a horizontal-only overlap is focused on the WRONG vertical (see
+  // HORIZONTAL_SECTORS above), so it doesn't count either.
+  const specialist = !row.sector_agnostic && !overTagged && !horizontalOnly && ownMatches > 0;
   if (specialist) {
     s += SPECIALIST_BONUS;
     reasons.push(`industry specialist (+${SPECIALIST_BONUS})`);
@@ -236,6 +316,128 @@ export function withMatchMeta(s: Scored): Row {
   return { ...s.row, match_score: s.score, match_reasons: s.reasons };
 }
 
+/**
+ * Relevance gate (report-quality loop, refs d6a6ce3d / b29b88c1).
+ *
+ * Keep every row that `isRelevant`, but NEVER empty a section: if fewer than
+ * `minKeep` rows are relevant, backfill with the (already-ranked) non-relevant rows
+ * up to `minKeep`. So when a healthy set of genuinely on-target rows exists the weak
+ * ones (sector-agnostic / location-only matches like a fitness expo for a cyber
+ * company) drop out; when the directory is thin the old behaviour is preserved.
+ * Pure + order-preserving (input must already be best-first).
+ */
+export function preferRelevant<T>(rows: T[], isRelevant: (r: T) => boolean, minKeep: number): T[] {
+  const rel: T[] = [], weak: T[] = [];
+  for (const r of rows || []) (isRelevant(r) ? rel : weak).push(r);
+  if (rel.length >= minKeep) return rel;
+  return [...rel, ...weak.slice(0, Math.max(0, minKeep - rel.length))];
+}
+
+/**
+ * True when an entity's identity is dominated by immigration / visa / relocation /
+ * global-mobility expertise. Used to demote such rows for DOMESTIC-origin companies
+ * (an Australian startup needs neither a visa mentor nor an immigration service
+ * provider — Floats feedback: "Head of Community, Techvisa" as a mentor AND the
+ * "TechVisa" business-immigration provider both surfaced for a domestic startup).
+ * Reads every identity/tag field present on either a mentor row (name/title/company/
+ * specialties) or a provider card (name/tags/services/description); paired with
+ * preferRelevant() so the demotion is floor-guarded (a thin pool still renders).
+ */
+// "sponsorship" alone is too broad on the provider surface (services/description can
+// say "event sponsorship"/"brand sponsorship") — scope it to the immigration sense
+// (employer/visa/work sponsorship). TechVisa still matches via "immigration" +
+// "employer sponsorship" (QA follow-up on the provider immigration filter).
+const IMMIGRATION_RE = /\b(visa|visas|immigration|relocation|global mobility|work permit|(?:employer|visa|work) sponsorship|migrant)\b/i;
+export function isImmigrationFocused(row: Row): boolean {
+  const r = row as any;
+  const parts: string[] = [
+    typeof r?.name === "string" ? r.name : "",
+    typeof r?.title === "string" ? r.title : "",
+    typeof r?.company === "string" ? r.company : "",
+    typeof r?.subtitle === "string" ? r.subtitle : "",
+    typeof r?.description === "string" ? r.description : "",
+    Array.isArray(r?.specialties) ? r.specialties.join(" ") : "",
+    Array.isArray(r?.services) ? r.services.join(" ") : "",
+    Array.isArray(r?.tags) ? r.tags.join(" ") : "",
+  ];
+  return IMMIGRATION_RE.test(parts.join(" "));
+}
+
+/**
+ * Did this ranked row earn a genuine industry / sells-to sector match (vs. surfacing
+ * only via sector_agnostic or a location bonus)? Reads the explainable `match_reasons`
+ * that withMatchMeta() attaches, so it works on decorated rows for surfaces that carry
+ * sector_tags (events, content).
+ */
+export function hasSectorRelevance(row: Row): boolean {
+  const reasons: string[] = row?.match_reasons || [];
+  return reasons.some((r) => r.startsWith("industry match") || r.startsWith("sells-to sector"));
+}
+
+/**
+ * Free-text relevance for surfaces WITHOUT sector_tags (lead_databases carry a `sector`
+ * string + `tags[]` instead, so scoreRow is blind to their industry). True when any of
+ * the row's text fields contains any of the supplied industry tokens. Case-insensitive,
+ * token must be >= 3 chars to avoid spurious substring hits.
+ */
+export function textMatchesAnyToken(haystackParts: Array<string | string[] | null | undefined>, tokens: string[]): boolean {
+  const hay = haystackParts
+    .flatMap((p) => (Array.isArray(p) ? p : [p]))
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (!hay) return false;
+  return tokens.some((t) => t && t.length >= 3 && hay.includes(t.toLowerCase()));
+}
+
+/**
+ * ICP tokens for the lead-list relevance gate: a purchasable lead list should
+ * match who the company SELLS TO. Prefer the declared end-buyer industries (the
+ * true ICP); fall back to the company's own sector as a proxy ONLY when no
+ * buyer signal was given. Paired with a STRICT filter (no floor-backfill) so an
+ * unmatched list is dropped, not padded in — the Floats report surfaced
+ * "Recently Funded Australian Startups" purely as count-filler. Returns [] only
+ * when neither signal exists (caller then shows nothing → the custom-list
+ * request box is the escape hatch).
+ */
+export function leadIcpTokens(endBuyerIndustries: string[], industrySector: string[]): string[] {
+  const buyer = industryTokens(endBuyerIndustries || []);
+  return buyer.length ? buyer : industryTokens(industrySector || []);
+}
+
+/**
+ * True when a lead_databases row matches the ICP tokens (its sector/tags/title/
+ * short_description contain any token). The single predicate for the lead ICP
+ * gate — applied on BOTH the array-overlap path AND at the post-merge union, so
+ * the semantic path (lead_databases is embedded, and is merged semantic-first)
+ * can't reintroduce off-ICP lists the overlap gate dropped. Empty tokens → true
+ * (no ICP signal → don't gate; matches the overlap path's `=== 0 || pass`).
+ */
+export function leadMatchesIcp(
+  row: { sector?: unknown; tags?: unknown; title?: unknown; short_description?: unknown },
+  icpTokens: string[],
+): boolean {
+  if (!icpTokens || icpTokens.length === 0) return true;
+  return textMatchesAnyToken(
+    [row?.sector as string, row?.tags as string[], row?.title as string, row?.short_description as string],
+    icpTokens,
+  );
+}
+
+/** Lowercased word/slug tokens from human industry labels, for textMatchesAnyToken. */
+export function industryTokens(labels: string[]): string[] {
+  const out = new Set<string>();
+  for (const label of labels || []) {
+    const l = (label || "").trim().toLowerCase();
+    if (l.length >= 3) out.add(l);
+    for (const w of l.split(/[\s/&,]+/)) {
+      // skip noise words that would match almost anything
+      if (w.length >= 4 && !["and", "the", "services", "industry", "other"].includes(w)) out.add(w);
+    }
+  }
+  return [...out];
+}
+
 /** Canonical person-name key for de-duping near-identical mentors ("Sarah Chen" / "Dr. Sarah Chen"). */
 export function normalizePersonName(name: string): string {
   return (name || "")
@@ -263,6 +465,37 @@ export function dedupeByKey<T>(rows: T[], keyOf: (r: T) => string): T[] {
     out.push(r);
   }
   return out;
+}
+
+/**
+ * Cross-SECTION de-dupe (Stage 7 bug B10). `dedupeByKey` collapses duplicates WITHIN a
+ * single section; this collapses them ACROSS sections. Given `groups` ordered by section
+ * priority (highest first), it removes from each group any row whose key already appeared
+ * in an earlier (higher-priority) group, so the same entity renders in exactly one section.
+ *
+ * Why it's needed: an accelerator like "Stone & Chalk" lives in innovation_ecosystem AND
+ * investors; a person like "Aaron Birkby" is both a mentor and an investor. Without this,
+ * they render as cards in two different sections of the same report. First (highest-priority)
+ * section keeps the entity. Within-group order is preserved; empty-keyed rows are never
+ * collapsed. Pure; returns new arrays (no mutation).
+ */
+export function pruneAcrossGroups<T>(groups: T[][], keyOf: (r: T) => string): T[][] {
+  const seen = new Set<string>();
+  return (groups || []).map((group) => {
+    const kept: T[] = [];
+    for (const r of group || []) {
+      const k = keyOf(r);
+      if (k && seen.has(k)) continue; // claimed by a higher-priority section
+      kept.push(r);
+    }
+    // Claim this group's keys only AFTER filtering, so an intra-group duplicate isn't
+    // dropped here (that's dedupeByKey's job on the section's own combined pool).
+    for (const r of kept) {
+      const k = keyOf(r);
+      if (k) seen.add(k);
+    }
+    return kept;
+  });
 }
 
 /**

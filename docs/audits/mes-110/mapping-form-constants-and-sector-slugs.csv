@@ -1,0 +1,62 @@
+surface,raw_value,row_count,merged_value,linkedin_code,linkedin_description,confidence,note
+rcData.ts TOP_INDUSTRIES,Architecture & Planning,,Architecture and Planning,50,Architecture & Planning,high,"MISMATCH: not equal to canonical group 'Architecture and Planning'; silently dropped by report matcher (no alias regex matches)"
+rcData.ts TOP_INDUSTRIES,Data Infrastructure & Analytics,,Data Infrastructure and Analytics,84,Information Services,medium,"MISMATCH: '&' variant of canonical group; rescued by 'data'/'analytics' alias regex"
+rcData.ts TOP_INDUSTRIES,Capital Markets,,Capital Markets,129,Capital Markets,high,Exact canonical group hit
+rcData.ts TOP_INDUSTRIES,Credit Intermediation,,Credit Intermediation,41,Banking,high,Exact canonical group hit
+rcData.ts TOP_INDUSTRIES,Software Development,,Software Development,4,Computer Software,high,Exact canonical group hit
+rcData.ts TOP_INDUSTRIES,IT Services & Consulting,,IT Services and IT Consulting,96,Information Technology and Services,high,"MISMATCH: canonical is 'IT Services and IT Consulting'; rescued only by 'consult*' alias → professional-services (loses tech sector)"
+rcData.ts TOP_INDUSTRIES,Financial Services,,Financial Services,43,Financial Services,high,"MISMATCH: sector name not a group; silently dropped by report matcher (no alias matches bare 'financial services')"
+rcData.ts TOP_INDUSTRIES,Biotechnology Research,,Biotechnology,12,Biotechnology,high,"MISMATCH: not a canonical group; silently dropped ('\bbiotech\b' does not match inside 'biotechnology')"
+rcData.ts TOP_INDUSTRIES,Medical Devices,,Medical Devices,17,Medical Devices,high,"MISMATCH: canonical group is 'Medical Equipment Manufacturing'; silently dropped ('medical device' alias fails on plural 'devices')"
+rcData.ts TOP_INDUSTRIES,Renewables & Environment,,Renewables & Environment,144,Renewables & Environment,high,"MISMATCH: not a canonical group; rescued by 'renewables?' alias"
+rcData.ts MORE_INDUSTRIES,Advertising Services,,Advertising Services,80,Marketing and Advertising,high,Exact canonical group hit
+rcData.ts MORE_INDUSTRIES,Manufacturing,,Manufacturing,135,Mechanical or Industrial Engineering,low,"Sector name not a group; rescued by 'manufactur*' alias; no generic Manufacturing entry in 147 table — flag"
+rcData.ts MORE_INDUSTRIES,Retail,,Retail,27,Retail,high,Sector name not a group; rescued by 'retail' alias
+rcData.ts MORE_INDUSTRIES,Logistics & Supply Chain,,Logistics and Supply Chain,116,Logistics and Supply Chain,high,Not a canonical group; rescued by 'logistics'/'supply chain' alias
+rcData.ts MORE_INDUSTRIES,Education,,Education,69,Education Management,high,"MISMATCH: sector name not a group; silently dropped (no alias matches bare 'education')"
+rcData.ts MORE_INDUSTRIES,Hospitality,,Hospitality,31,Hospitality,high,Exact canonical group hit
+rcData.ts MORE_INDUSTRIES,Real Estate,,Real Estate,44,Real Estate,high,Exact canonical group hit
+rcData.ts MORE_INDUSTRIES,Telecommunications,,Telecommunications,8,Telecommunications,high,Exact canonical group hit
+rcData.ts MORE_INDUSTRIES,Agriculture,,Agriculture,63,Farming,high,"MISMATCH: canonical group is 'Farming'; silently dropped (agritech alias needs 'agriculture technology', not bare 'agriculture')"
+rcData.ts MORE_INDUSTRIES,Legal Services,,Legal Services,10,Legal Services,high,Exact canonical group hit
+rcData.ts MORE_INDUSTRIES,Pharmaceuticals,,Pharmaceuticals,15,Pharmaceuticals,high,"MISMATCH: not a canonical group; silently dropped ('\bpharma\b' does not match inside 'pharmaceuticals')"
+rcData.ts MORE_INDUSTRIES,Insurance,,Insurance,42,Insurance,high,Exact canonical group hit
+rcData.ts MORE_INDUSTRIES,Construction,,Construction,48,Construction,high,Sector name not a group; rescued by 'construction' alias
+rcData.ts MORE_INDUSTRIES,Media & Entertainment,,Media and Entertainment,28,Entertainment,medium,Not a canonical group; rescued by 'media'/'entertainment' alias
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Technology,,Technology,96,Information Technology and Services,medium,lead_databases display meta; broad umbrella — no single 147 entry
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Healthcare,,Healthcare,14,Hospital & Health Care,high,
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Finance,,Financial Services,43,Financial Services,high,
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Manufacturing,,Manufacturing,135,Mechanical or Industrial Engineering,low,No generic Manufacturing entry in 147 table — flag
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Education,,Education,69,Education Management,high,
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Government,,Government Administration,75,Government Administration,high,
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Retail,,Retail,27,Retail,high,
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Agriculture,,Agriculture,63,Farming,high,
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Energy,,Energy,57,Oil & Energy,medium,144 Renewables & Environment secondary
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Tourism,,Tourism,30,"Leisure, Travel & Tourism",high,
+sectorTaxonomy.ts SECTOR_SLUG_MAP,Other,,Sector Agnostic,,,high,UNMAPPABLE:agnostic
+config/sectors.ts SECTOR_MAPPINGS,fintech,,FinTech,43,Financial Services,high,Legacy 3-sector config for /sectors pages
+config/sectors.ts SECTOR_MAPPINGS,medtech,,MedTech,17,Medical Devices,high,Legacy 3-sector config for /sectors pages
+config/sectors.ts SECTOR_MAPPINGS,telecoms,,Telecommunications,8,Telecommunications,high,Legacy 3-sector config for /sectors pages
+industry_sectors table,FinTech,1,FinTech,43,Financial Services,high,Sector landing page row (slug fintech)
+industry_sectors table,MedTech,1,MedTech,17,Medical Devices,high,Sector landing page row (slug medtech)
+industry_sectors table,Telecoms,1,Telecommunications,8,Telecommunications,high,Sector landing page row (slug telecoms)
+sector_tags slug (V2 sector),accommodation-and-food-services,,Accommodation and Food Services,31,Hospitality,medium,34 Food & Beverages secondary
+sector_tags slug (V2 sector),administrative-and-support-services,,Administrative and Support Services,122,Facilities Services,low,Heterogeneous V2 umbrella; no 147 equivalent — needs group-level split
+sector_tags slug (V2 sector),construction,,Construction,48,Construction,high,
+sector_tags slug (V2 sector),consumer-services,,Consumer Services,91,Consumer Services,high,
+sector_tags slug (V2 sector),education,,Education,69,Education Management,high,
+sector_tags slug (V2 sector),entertainment-providers,,Entertainment Providers,28,Entertainment,high,
+sector_tags slug (V2 sector),farming-ranching-forestry,,"Farming, Ranching, Forestry",63,Farming,high,64 Ranching / 66 Fishery secondary
+sector_tags slug (V2 sector),financial-services,,Financial Services,43,Financial Services,high,
+sector_tags slug (V2 sector),government-administration,,Government Administration,75,Government Administration,high,
+sector_tags slug (V2 sector),holding-companies,,Holding Companies,46,Investment Management,low,No 147 equivalent — flag
+sector_tags slug (V2 sector),hospitals-and-health-care,,Hospitals and Health Care,14,Hospital & Health Care,high,
+sector_tags slug (V2 sector),manufacturing,,Manufacturing,135,Mechanical or Industrial Engineering,low,No generic Manufacturing entry in 147 — needs group-level split
+sector_tags slug (V2 sector),oil-gas-and-mining,,"Oil, Gas, and Mining",57,Oil & Energy,medium,56 Mining & Metals secondary
+sector_tags slug (V2 sector),professional-services,,Professional Services,11,Management Consulting,low,Heterogeneous V2 umbrella; no 147 equivalent — needs group-level split
+sector_tags slug (V2 sector),real-estate-and-equipment-rental-services,,Real Estate and Equipment Rental Services,44,Real Estate,high,
+sector_tags slug (V2 sector),retail,,Retail,27,Retail,high,
+sector_tags slug (V2 sector),technology-information-and-media,,"Technology, Information and Media",96,Information Technology and Services,low,Heterogeneous V2 umbrella (software/internet/media/telecom); no 147 equivalent — needs group-level split
+sector_tags slug (V2 sector),transportation-logistics-supply-chain-and-storage,,"Transportation, Logistics, Supply Chain and Storage",116,Logistics and Supply Chain,medium,92 Transportation/Trucking/Railroad secondary
+sector_tags slug (V2 sector),utilities,,Utilities,59,Utilities,high,
+sector_tags slug (V2 sector),wholesale,,Wholesale,133,Wholesale,high,

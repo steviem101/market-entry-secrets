@@ -1,6 +1,11 @@
 # MCP config (contains secrets)
 .mcp.json
 
+# Google Search Console MCP credentials (gsc server — see .mcp.json.example) — never commit
+client_secrets.json
+token.json
+.config/gsc-mcp/
+
 # Logs
 logs
 *.log
@@ -57,6 +62,22 @@ scripts/__pycache__/
 australian_angel_investors_*.csv
 Accelerators.csv
 data/private/
+
+# MES-57: purged PII-bearing ingestion/source data — block re-adds.
+# Source data lives outside version control; see docs/security/MES-57-pii-purge-runbook.md.
+mentor_identification/mes_mentor_candidates*
+mentor_identification/enrichments*
+mentor_identification/upload_payload.json
+mentor_identification/upload_preview.csv
+mentor_identification/dedup_sets.json
+mentor_identification/insert_batch_*.sql
+scripts/import_investors.sql
+scripts/fix_csv.py
+scripts/apply_verified_fixes.py
+scripts/startmate_import_blocks/
+supabase/migrations_archive/*enrich_angel_investors_batch_*.sql
+supabase/migrations_archive/*import_venture_debt_investors*.sql
+.claude/settings.local.json
 
 # Phase 2 ii_* migration working files (local only — contain email content/PII + embeddings)
 /ii_schema.sql

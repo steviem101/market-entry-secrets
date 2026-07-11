@@ -1,0 +1,53 @@
+# Doc-freshness loop (MES-124) — scheduled drift check for the durable context
+# docs (root CLAUDE.md + .claude/skills/*) against repo ground truth.
+#
+# Why a GitHub Action (not an edge function): this job reads the REPO
+# (CLAUDE.md, supabase/functions/, src/App.tsx, migrations, skills), which a
+# Supabase edge function has no filesystem access to. A scheduled workflow has
+# the repo checked out natively and needs no GitHub API token.
+#
+# It is ADVISORY and READ-ONLY: it never edits docs, never fails a build, and is
+# NOT a merge gate. Findings print to the job summary and (if the secret is set)
+# post to Slack. The Accept/Reject review queue (doc_freshness_proposals) is a
+# separate, approval-gated follow-up.
+#
+# One-time setup (optional): add a repo secret SLACK_DOC_FRESHNESS_WEBHOOK
+#   (a Slack incoming-webhook URL) to receive the weekly digest in Slack.
+#   Without it, the job still runs and reports to the Actions job summary.
+
+name: Doc Freshness
+
+on:
+  schedule:
+    - cron: "0 8 * * 1" # Mondays 08:00 UTC
+  workflow_dispatch: {}
+
+# Never run two at once; a newer run supersedes an in-flight one.
+concurrency:
+  group: doc-freshness
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # Don't run on forks — the schedule and secret only make sense on the origin.
+    if: github.repository == 'steviem101/market-entry-secrets'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the skill-freshness check can read git commit dates.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Zero runtime dependencies — the checker uses only Node built-ins and
+      # Node 22's native TypeScript type-stripping, so no `npm install` needed.
+      - name: Run doc-freshness checks
+        env:
+          SLACK_DOC_FRESHNESS_WEBHOOK: ${{ secrets.SLACK_DOC_FRESHNESS_WEBHOOK }}
+        run: node scripts/doc-freshness/run.ts | tee "$GITHUB_STEP_SUMMARY"

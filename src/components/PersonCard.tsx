@@ -1,12 +1,13 @@
 
 import { memo } from "react";
-import { User, MapPin, Calendar, Globe, Handshake, Briefcase } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { User, MapPin, Calendar, Globe, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import CompanyLogo from "@/components/shared/CompanyLogo";
+import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { domainToWebsite } from "@/lib/logoUtils";
+import { DirectoryCard } from "@/components/directory/DirectoryCard";
+import { CardCTA } from "@/components/directory/CardCTA";
 
 export interface ExperienceTile {
   id: string;
@@ -35,56 +36,34 @@ export interface Person {
 interface PersonCardProps {
   person: Person;
   onViewProfile: (person: Person) => void;
-  onContact: (person: Person) => void;
+  /** @deprecated warm intro now routes through the shared IntroRequestProvider. */
+  onContact?: (person: Person) => void;
 }
 
-const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) => {
-  const displayName = person.isAnonymous ? person.title : person.name;
-  const shouldBlurImage = person.isAnonymous;
-
-  // Placeholder images for person profile pictures
-  const getPersonImage = (index: number) => {
-    const images = [
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    ];
-    return images[index % images.length];
-  };
+const PersonCard = memo(({ person, onViewProfile }: PersonCardProps) => {
+  // For anonymous people the view masks `name` to the alias (the richer, safe
+  // label); real names only reach here for non-anonymous people.
+  const displayName = person.name;
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 min-w-0">
+    <DirectoryCard className="min-w-0">
       <div className="flex items-start gap-4 mb-4">
-        <Avatar className="w-16 h-16 flex-shrink-0">
-          {person.isAnonymous ? (
-            <AvatarFallback className="bg-primary/10 text-primary text-lg">
-              <User className="w-8 h-8" />
-            </AvatarFallback>
-          ) : (
-            <>
-              <AvatarImage 
-                src={person.image || getPersonImage(parseInt(person.id) || 0)} 
-                alt={person.name}
-                className={shouldBlurImage ? "blur-sm" : ""}
-              />
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                {person.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-              </AvatarFallback>
-            </>
-          )}
-        </Avatar>
+        <ContactAvatar
+          name={person.name}
+          src={person.isAnonymous ? undefined : person.image}
+          className="w-16 h-16 flex-shrink-0 text-lg"
+          fallback={person.isAnonymous ? <User className="w-8 h-8" /> : undefined}
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 min-w-0">
             <div className="flex-1 min-w-0">
               <h3 className="text-xl font-semibold text-foreground mb-1 truncate">
                 {displayName}
               </h3>
-              {!person.isAnonymous && (
-                <p className="text-primary font-medium text-sm mb-1 truncate">
-                  {person.title}
-                </p>
-              )}
+              {/* Headline is masked-safe for anonymous people too */}
+              <p className="text-primary font-medium text-sm mb-1 truncate">
+                {person.title}
+              </p>
               <div className="flex items-center text-muted-foreground text-sm min-w-0">
                 <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
                 <span className="truncate">{person.location}</span>
@@ -150,25 +129,12 @@ const PersonCard = memo(({ person, onViewProfile, onContact }: PersonCardProps) 
         </div>
       )}
 
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onViewProfile(person)}
-          className="flex-1"
-        >
-          View Profile
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => onContact(person)}
-          className="flex-1"
-        >
-          <Handshake className="w-4 h-4 mr-1" />
-          Get Warm Intro
-        </Button>
-      </div>
-    </div>
+      <CardCTA
+        entity="mentor"
+        target={{ entity: "mentor", id: person.id, name: displayName }}
+        onSecondary={() => onViewProfile(person)}
+      />
+    </DirectoryCard>
   );
 });
 

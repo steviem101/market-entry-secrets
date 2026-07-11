@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription, SubscriptionTier } from '@/hooks/useSubscription';
 import { ProfileDialog } from './ProfileDialog';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getInitials, getDisplayName } from '@/lib/profileUtils';
 import { cn } from '@/lib/utils';
 
@@ -36,11 +36,20 @@ export const UserDropdown = () => {
   const { user, profile, signOut, isAdmin, isModerator } = useAuth();
   const { subscription } = useSubscription();
   const [showProfile, setShowProfile] = useState(false);
+  const navigate = useNavigate();
 
-  if (!user || !profile) return null;
+  // Signed-in users must always get the dropdown, even if the profile row is
+  // missing or failed to load — returning null here removed the entire header
+  // control (no avatar, no way to sign out). getDisplayName/getInitials already
+  // fall back to the email / '??' for a null profile.
+  if (!user) return null;
 
   const handleSignOut = async () => {
     await signOut();
+    // Leave whatever page they were on — protected pages (/my-reports,
+    // /member-hub, /bookmarks) would otherwise strand them on a
+    // "please sign in" fallback.
+    navigate('/');
   };
 
   return (
@@ -49,7 +58,7 @@ export const UserDropdown = () => {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={profile.avatar_url} alt={getDisplayName(profile, user)} />
+              <AvatarImage src={profile?.avatar_url} alt={getDisplayName(profile, user)} />
               <AvatarFallback>{getInitials(profile)}</AvatarFallback>
             </Avatar>
           </Button>

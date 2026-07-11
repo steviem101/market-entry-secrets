@@ -1,7 +1,7 @@
 # Phase 2 — Extract Irish Insights (`ii_*`) to its own project — EXECUTION RUNBOOK
 
 > **Status: STAGED, NOT EXECUTED.** Prepared at Hard Stop 1 per user direction ("Prep Phase 2, hold for org").
-> Nothing here runs until: (1) a human creates the **Irish Insights** org, (2) `get_cost`/`confirm_cost` + explicit cost approval, (3) Irish Insights is verified fully operational on the new project (**Hard Stop 2**) before the MES drop.
+> Nothing destructive runs until Irish Insights is verified fully operational on the new project (**Hard Stop 2**) before the MES drop. Project creation + cost approval are **DONE** (see §0 / §2).
 > These files live OUTSIDE `supabase/migrations/` on purpose so `supabase db push` cannot apply the destructive drop prematurely. Copy into `supabase/migrations/` + `supabase/rollback/` only at execution time.
 > Source of truth: `../supabase-reorg-master.md` (§5) and the audit `../_audit-supabase-reorg.md`.
 
@@ -9,14 +9,15 @@
 
 ## 0. Pre-flight gates (all must be ✅ before step 1)
 
-> **Provisioned 2026-06-22:** Irish Insights project ref **`kvobhxuurxfjgvhxmoeg`** (org "Irish Insights", URL `https://kvobhxuurxfjgvhxmoeg.supabase.co`). Cost gate approved. Currently **FREE / NANO — no backups, auto-pauses after ~7 days idle.**
+> **Project CREATED 2026-06-23 — decision: inside the MES Pro org, NOT a separate org** (same owner; inherits Pro durability with no second subscription). Ref **`schyrnxekxcoaragofgv`** (org **Market Entry Secrets**, PRO), URL `https://schyrnxekxcoaragofgv.supabase.co`, region **eu-west-1 (Ireland)**, **MICRO** compute. Being in the MES Pro org it **inherits Pro backups + no auto-pause** and is MCP-reachable with no extra setup. Confirm the ref via `list_projects` before use.
 > **Run location:** the schema/data move MUST run from a machine with **PG17 `pg_dump`** (or `supabase db dump`) and DB reach — i.e. the user's Mac, NOT the CC sandbox (its `pg_dump` is v16 < PG17 server, and it has no IPv6 for direct connections). The CC session handles only the MES-side drop (step 8) via MCP.
-> ⚠️ **Before the destructive drop (step 8):** upgrade the Irish Insights org to **Pro** (backups + no auto-pause) OR take a manual backup AND keep the MES `ii_*` copy until verified. Free tier is not a safe sole system-of-record.
+> ⚠️ **Before the destructive drop (step 8):** keep the MES `ii_*` copy until Irish Insights is verified operational on the new project (Hard Stop 2). Pro backups are already active on the new project, so durability is covered.
+> **Superseded:** the earlier empty Free project `kvobhxuurxfjgvhxmoeg` (separate org) is **PARKED/unused** — ignore it; do not migrate into it or delete it.
 
-- [ ] Irish Insights **organization** exists (human, dashboard).
-- [ ] This account can reach the new org via MCP (`list_organizations` shows it).
-- [ ] `mes-context` canary baseline captured (needs Content Creator access — still outstanding per audit §8). **The MES drop in step 7 must not run until this baseline exists**, even though `mes-context` reads MES product tables, not `ii_*`.
-- [ ] Cost approved: run `get_cost(type=project, organization_id=<II org>)` → `confirm_cost` → human "yes".
+- [x] Project created in the **MES Pro org** (`schyrnxekxcoaragofgv`) — §2 done. Confirm `ACTIVE_HEALTHY` via `list_projects` before step 3.
+- [x] Reachable via MCP (same org as MES; `list_projects` shows it).
+- [x] Cost approved + project provisioned (MICRO, eu-west-1).
+- [ ] `mes-context` canary baseline captured (needs Content Creator access — still outstanding per audit §8). **The MES drop (step 8) must not run until this baseline exists**, even though `mes-context` reads MES product tables, not `ii_*`.
 
 ---
 
@@ -52,13 +53,14 @@ Vector columns (`vector(1536)`, model `text-embedding-3-small`) on: `ii_content`
 
 ---
 
-## 2. Create the new project (scope: Irish Insights org)
+## 2. Create the new project — ✅ DONE (2026-06-23)
+Created **inside the MES Pro org** (decision: not a separate org — same owner, inherits Pro
+durability, no second subscription):
 ```
-get_cost(type=project, organization_id=<II_ORG_ID>)
-confirm_cost(...)                  # human approval REQUIRED (hard rule #10)
-create_project(name="Irish Insights", organization_id=<II_ORG_ID>, region=ap-southeast-2)
+II_REF = schyrnxekxcoaragofgv     # name "Irish Insights", org "Market Entry Secrets" (PRO)
+                                  # region eu-west-1 (Ireland), MICRO compute
 ```
-Record `II_REF=<new ref>`. **Rollback:** delete the new project; MES untouched.
+Confirm via `list_projects` that it is `ACTIVE_HEALTHY` before step 3. **Rollback:** delete the new project; MES untouched.
 
 ## 3. Enable extensions on the new project
 `vector` (must be **≥ 0.8.0** to match MES for a clean ivfflat embedding copy), `pg_trgm`. `pg_cron`/`pg_net` only if you later add in-DB scheduling (not needed for current `ii_*`). **Rollback:** `drop extension`.

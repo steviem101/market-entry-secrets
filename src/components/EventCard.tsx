@@ -169,11 +169,11 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
         <div className="flex gap-2 mt-auto">
           {useModal ? (
             <Button variant="default" size="sm" className="flex-1" onClick={handleViewDetails}>
-              View Details
+              View event
             </Button>
           ) : (
             <Button variant="default" size="sm" className="flex-1" asChild>
-              <Link to={`/events/${event.slug}`}>View Details</Link>
+              <Link to={`/events/${event.slug}`}>View event</Link>
             </Button>
           )}
           {showCalendarButton && (

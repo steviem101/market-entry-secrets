@@ -1,72 +1,55 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HERO_PERSONAS } from "./heroContent";
-import type { HeroPersona } from "./heroContent";
+import { HERO_CONTENT } from "./heroContent";
+import {
+  REPORT_CREATOR_STARTUP_PATH,
+  REPORT_CTA_MICROCOPY,
+} from "@/config/reportCta";
 
-interface HeroCTAGroupProps {
-  persona: HeroPersona;
-}
-
-export const HeroCTAGroup = ({ persona }: HeroCTAGroupProps) => {
-  const [displayPersona, setDisplayPersona] = useState(persona);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  useEffect(() => {
-    if (persona !== displayPersona) {
-      setIsTransitioning(true);
-      const timer = setTimeout(() => {
-        setDisplayPersona(persona);
-        setIsTransitioning(false);
-      }, 300);
-      return () => clearTimeout(timer);
-    } else {
-      setIsTransitioning(false);
-    }
-  }, [persona, displayPersona]);
-
-  const content = HERO_PERSONAS[displayPersona];
+export const HeroCTAGroup = () => {
+  const { primaryCTA, secondaryCTA } = HERO_CONTENT;
 
   return (
-    <div
-      className={`flex flex-col items-center lg:items-start gap-3 transition-all duration-200 ${
-        isTransitioning
-          ? "opacity-0 -translate-y-2"
-          : "opacity-100 translate-y-0"
-      }`}
-    >
+    <div className="flex flex-col items-center lg:items-start gap-3">
       {/* Button row — just the two buttons */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
-        <Link to={content.primaryCTA.href}>
+        <Link to={primaryCTA.href}>
           <Button
             size="lg"
-            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-6 text-base rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 group relative overflow-hidden"
+            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-8 py-6 text-base rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 group"
           >
-            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
-            <span className="relative flex items-center gap-2">
-              {content.primaryCTA.label}
+            <span className="flex items-center gap-2">
+              {primaryCTA.label}
               <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
             </span>
           </Button>
         </Link>
 
-        <Link to={content.secondaryCTA.href}>
+        <Link to={secondaryCTA.href}>
           <Button
             size="lg"
             variant="outline"
-            className="bg-background/80 backdrop-blur-sm border-primary/20 text-foreground hover:bg-primary/5 hover:border-primary/30 hover:text-foreground px-8 py-6 text-base rounded-xl transition-all duration-300"
+            className="bg-background/80 border-primary/20 text-foreground hover:bg-primary/5 hover:border-primary/30 hover:text-foreground px-8 py-6 text-base rounded-xl transition-all duration-300"
           >
-            {content.secondaryCTA.label}
+            {secondaryCTA.label}
           </Button>
         </Link>
       </div>
 
       {/* Trust micro-label — directly beneath buttons */}
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Shield className="w-3.5 h-3.5 text-emerald-500" />
-        <span>No credit card required · Ready in 3 minutes</span>
+        <Shield className="w-3.5 h-3.5 text-accent" />
+        <span>{REPORT_CTA_MICROCOPY}</span>
       </div>
+
+      {/* Persona deep-link for the local-founder journey */}
+      <Link
+        to={REPORT_CREATOR_STARTUP_PATH}
+        className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+      >
+        Growing an Australian startup? Start here
+      </Link>
     </div>
   );
 };

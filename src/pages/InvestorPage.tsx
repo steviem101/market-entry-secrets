@@ -1,14 +1,17 @@
-import { useParams } from "react-router-dom";
+import { useParams, useLocation, Navigate } from "react-router-dom";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { canonicalSlugRedirect } from "@/lib/canonicalRedirect";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { InvestorHero } from "@/components/investors/detail/InvestorHero";
 import { InvestorContent } from "@/components/investors/detail/InvestorContent";
 import { useInvestorBySlug, useRelatedInvestors } from "@/hooks/useInvestors";
+import { NoIndex } from "@/components/common/NoIndex";
 
 const InvestorPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { search, hash } = useLocation();
   const { data: investor, isLoading, error } = useInvestorBySlug(slug || "");
   const { data: relatedInvestors = [] } = useRelatedInvestors(
     investor?.id || "",
@@ -23,6 +26,7 @@ const InvestorPage = () => {
   if (error || !investor) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
+        <NoIndex notFound />
         <h1 className="text-2xl font-bold mb-4">Investor Not Found</h1>
         <p className="text-muted-foreground">
           The investor you're looking for doesn't exist or has been removed.
@@ -30,6 +34,14 @@ const InvestorPage = () => {
       </div>
     );
   }
+
+  // Legacy UUID URLs redirect to the canonical slug URL (MES-80 / SEO-04).
+  const redirectTo = canonicalSlugRedirect(
+    slug,
+    investor.slug,
+    (s) => `/investors/${s}`,
+  );
+  if (redirectTo) return <Navigate to={`${redirectTo}${search}${hash}`} replace />;
 
   return (
     <>

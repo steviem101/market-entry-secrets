@@ -1,5 +1,6 @@
-import { useParams } from "react-router-dom";
+import { useParams, useLocation, Navigate } from "react-router-dom";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { canonicalSlugRedirect } from "@/lib/canonicalRedirect";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { SEOHead } from "@/components/common/SEOHead";
@@ -11,9 +12,11 @@ import {
   useServiceProviderReviews,
   useServiceProviderContacts,
 } from "@/hooks/useServiceProviders";
+import { NoIndex } from "@/components/common/NoIndex";
 
 const ServiceProviderPage = () => {
   const { providerSlug } = useParams<{ providerSlug: string }>();
+  const { search, hash } = useLocation();
   const { data: provider, isLoading, error } = useServiceProviderBySlug(providerSlug || "");
 
   const { data: reviews = [] } = useServiceProviderReviews(provider?.id || "");
@@ -31,6 +34,7 @@ const ServiceProviderPage = () => {
   if (error || !provider) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
+        <NoIndex notFound />
         <h1 className="text-2xl font-bold mb-4">Service Provider Not Found</h1>
         <p className="text-muted-foreground">
           The service provider you're looking for doesn't exist or has been removed.
@@ -38,6 +42,15 @@ const ServiceProviderPage = () => {
       </div>
     );
   }
+
+  // Legacy UUID or name-based URLs redirect to the canonical slug URL
+  // (MES-80 / SEO-04) so Google holds one URL per provider.
+  const redirectTo = canonicalSlugRedirect(
+    providerSlug,
+    provider.slug,
+    (s) => `/service-providers/${s}`,
+  );
+  if (redirectTo) return <Navigate to={`${redirectTo}${search}${hash}`} replace />;
 
   const pageTitle = provider.meta_title || `${provider.name} | Service Providers | Market Entry Secrets`;
   const pageDescription = provider.meta_description || provider.tagline || provider.description?.slice(0, 160) || "";

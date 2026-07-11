@@ -1,15 +1,14 @@
 import { Helmet } from "react-helmet-async";
 import { HeroSection } from "@/components/sections/HeroSection";
-import { BeforeAfterSection } from "@/components/sections/BeforeAfterSection";
+import { ProofStrip } from "@/components/sections/ProofStrip";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
+import { WhatsInYourReport } from "@/components/sections/WhatsInYourReport";
 import { SearchSection } from "@/components/sections/SearchSection";
-import { ValueSection } from "@/components/sections/ValueSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
-import { PricingSection } from "@/components/sections/PricingSection";
 import { CTASection } from "@/components/sections/CTASection";
-import { FloatingCTAButton } from "@/components/FloatingCTAButton";
 
-const FALLBACK_URL = "https://market-entry-secrets.lovable.app";
+
+const FALLBACK_URL = "https://marketentrysecrets.com";
 
 const Index = () => {
   const siteUrl = typeof window !== "undefined" ? window.location.origin : FALLBACK_URL;
@@ -20,7 +19,7 @@ const Index = () => {
     name: "Market Entry Secrets",
     url: siteUrl,
     description:
-      "AI-powered market entry intelligence platform helping international companies enter the Australian and New Zealand markets.",
+      "AI-powered intelligence and execution platform for the Australian and New Zealand market, serving international companies entering ANZ and local founders scaling within it.",
     areaServed: ["Australia", "New Zealand"],
     serviceType: "Market Entry Intelligence",
   };
@@ -43,15 +42,15 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Market Entry Secrets | Australian Market Entry Intelligence</title>
+        <title>Market Entry Secrets | AI Market Entry Reports for ANZ</title>
         <meta
           name="description"
-          content="AI market entry intelligence for companies entering Australia. 500+ vetted providers, mentors, and custom reports in minutes."
+          content="Turn a 5-minute questionnaire into a full ANZ market entry report: live market intelligence, competitor landscape, vetted providers, mentors, and an action plan."
         />
-        <meta property="og:title" content="Market Entry Secrets | Australian Market Entry Intelligence" />
+        <meta property="og:title" content="Market Entry Secrets | AI Market Entry Reports for ANZ" />
         <meta
           property="og:description"
-          content="AI market entry intelligence for companies entering Australia. 500+ vetted providers, mentors, and custom reports in minutes."
+          content="Turn a 5-minute questionnaire into a full ANZ market entry report: live market intelligence, competitor landscape, vetted providers, mentors, and an action plan."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${siteUrl}/`} />
@@ -64,32 +63,27 @@ const Index = () => {
         </script>
       </Helmet>
 
-      {/* Interactive Hero Section */}
+      {/* Hero — headline, platform definition, single CTA pair, report mockup */}
       <HeroSection />
 
-      {/* Before vs. After Market Entry Section */}
-      <BeforeAfterSection />
+      {/* Live directory counts — the one source of numbers on the page */}
+      <ProofStrip />
 
-      {/* How It Works — 3-Step Process */}
+      {/* How It Works — 3-step process, single CTA */}
       <HowItWorksSection />
 
-      {/* Search Section */}
+      {/* What's in your report — mirrors real report sections + tier gating */}
+      <WhatsInYourReport />
+
+      {/* Directory / search teaser */}
       <SearchSection />
 
-      {/* Combined Value Section */}
-      <ValueSection />
-
-      {/* Testimonials Section */}
+      {/* Testimonials */}
       <TestimonialsSection />
 
-      {/* Pricing Section */}
-      <PricingSection />
-
-      {/* Final Conversion CTA Section */}
+      {/* Final conversion CTA */}
       <CTASection />
 
-      {/* Floating CTA Button */}
-      <FloatingCTAButton />
     </>
   );
 };

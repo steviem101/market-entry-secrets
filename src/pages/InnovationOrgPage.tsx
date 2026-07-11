@@ -6,6 +6,7 @@ import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { InnovationOrgHero } from "@/components/innovation-ecosystem/detail/InnovationOrgHero";
 import { InnovationOrgContent } from "@/components/innovation-ecosystem/detail/InnovationOrgContent";
 import { useInnovationOrgBySlug, useRelatedInnovationOrgs } from "@/hooks/useInnovationEcosystem";
+import { NoIndex } from "@/components/common/NoIndex";
 
 const InnovationOrgPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -22,6 +23,7 @@ const InnovationOrgPage = () => {
   if (error || !org) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
+        <NoIndex notFound />
         <h1 className="text-2xl font-bold mb-4">Organization Not Found</h1>
         <p className="text-muted-foreground">
           The organization you're looking for doesn't exist or has been removed.

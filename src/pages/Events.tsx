@@ -1,186 +1,98 @@
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { Calendar, AlertCircle } from "lucide-react";
 import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { EventsHero } from "@/components/events/EventsHero";
-import { StandardDirectoryFilters } from "@/components/common/StandardDirectoryFilters";
+import { DirectoryFilterBar, type FilterOption, type SelectFilterConfig } from "@/components/common/DirectoryFilterBar";
 import { ListPagination } from "@/components/common/ListPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useEvents } from "@/hooks/useEvents";
 import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
-import { usePersona } from "@/contexts/PersonaContext";
+import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
+import { useContextPersonaSeed } from "@/hooks/useContextPersonaSeed";
+import type { FilterSpec } from "@/lib/directoryFilters";
+import { filterEvents, matchesSource, COMMUNITY_SOURCE, TOPIC_TAGS } from "@/lib/eventFilters";
 
 const PAGE_SIZE = 12;
 
-// The event function axis (Appendix D categories), carried in `tags`. Kept as a
-// fixed allowlist so the Topic filter shows clean function chips rather than the
-// noisy location/keyword tags some curated rows also carry (australia, b2b, etc).
-const TOPIC_TAGS = [
-  "AI/ML", "Founders/Startup", "Investing", "Networking",
-  "Growth/Marketing", "Product", "Design", "Dev/Engineering", "Web3/Crypto",
-];
-
-const COMMUNITY_SOURCE = "apify_events_finder";
+// `city` param name and `tab` (time) param name are kept for backward-compat
+// with existing shared links. Source + time partition the base set, so they are
+// presentation dimensions (URL-synced, excluded from clear-all / active-filters).
+const EVENT_FILTER_SPEC: FilterSpec = {
+  search: { param: "search", default: "" },
+  category: { param: "category", default: "all" },
+  type: { param: "type", default: "all" },
+  city: { param: "city", default: "all" },
+  sector: { param: "sector", default: "all" },
+  topic: { param: "topic", default: "all" },
+  persona: { param: "persona", default: "all" },
+  source: { param: "source", default: "curated", presentation: true },
+  time: { param: "tab", default: "upcoming", presentation: true },
+};
 
 const Events = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { persona } = usePersona();
-  const [personaFilterValue, setPersonaFilterValue] = useState<PersonaFilterValue>(
-    (searchParams.get("persona") as PersonaFilterValue) ?? (persona as PersonaFilterValue) ?? 'all'
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(EVENT_FILTER_SPEC);
+  useContextPersonaSeed(setFilter);
+
+  const {
+    events, upcomingEvents, pastEvents, loading, searchLoading, error,
+    setSearchTerm, isSearching,
+  } = useEvents();
+
+  // Drive the hook's server-side search from the URL-synced search value.
+  // (Scroll-stability on filter change is handled by DirectoryFilterBar.)
+  useEffect(() => {
+    setSearchTerm(filters.search);
+  }, [filters.search, setSearchTerm]);
+
+  const categories = useMemo(() => Array.from(new Set(events.map((e) => e.category))).sort(), [events]);
+  const types = useMemo(() => Array.from(new Set(events.map((e) => e.type))).sort(), [events]);
+  const cities = useMemo(() => Array.from(new Set(events.map((e) => e.city).filter(Boolean) as string[])).sort(), [events]);
+  const sectors = useMemo(() => Array.from(new Set(events.map((e) => e.sector).filter(Boolean) as string[])).sort(), [events]);
+  const topics = useMemo(() => TOPIC_TAGS.filter((t) => events.some((e) => (e.tags ?? []).includes(t))), [events]);
+
+  const baseEvents = filters.time === "upcoming" ? upcomingEvents : filters.time === "past" ? pastEvents : events;
+  const curatedCount = baseEvents.filter((e) => e.source !== COMMUNITY_SOURCE).length;
+  const communityCount = baseEvents.filter((e) => e.source === COMMUNITY_SOURCE).length;
+
+  const sourceFiltered = useMemo(
+    () => baseEvents.filter((e) => matchesSource(e, filters.source)),
+    [baseEvents, filters.source]
   );
-  const [localSearchQuery, setLocalSearchQuery] = useState(searchParams.get("search") ?? "");
-  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get("category") ?? "all");
-  const [selectedType, setSelectedType] = useState<string>(searchParams.get("type") ?? "all");
-  const [selectedCity, setSelectedCity] = useState<string>(searchParams.get("city") ?? "all");
-  const [selectedSector, setSelectedSector] = useState<string>(searchParams.get("sector") ?? "all");
-  const [selectedTopic, setSelectedTopic] = useState<string>(searchParams.get("topic") ?? "all");
-  // Source axis: default to curated so scraped community volume never dominates the brand.
-  const [selectedSource, setSelectedSource] = useState<string>(searchParams.get("source") ?? "curated");
-  const [showFilters, setShowFilters] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>(searchParams.get("tab") ?? "upcoming");
-  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
-
-  useEffect(() => {
-    const p = new URLSearchParams();
-    if (localSearchQuery) p.set("search", localSearchQuery);
-    if (selectedCategory !== "all") p.set("category", selectedCategory);
-    if (selectedType !== "all") p.set("type", selectedType);
-    if (selectedCity !== "all") p.set("city", selectedCity);
-    if (selectedSector !== "all") p.set("sector", selectedSector);
-    if (selectedTopic !== "all") p.set("topic", selectedTopic);
-    if (selectedSource !== "curated") p.set("source", selectedSource);
-    if (activeTab !== "upcoming") p.set("tab", activeTab);
-    if (personaFilterValue !== "all") p.set("persona", personaFilterValue);
-    if (currentPage > 1) p.set("page", String(currentPage));
-    setSearchParams(p, { replace: true });
-  }, [localSearchQuery, selectedCategory, selectedType, selectedCity, selectedSector, selectedTopic, selectedSource, activeTab, personaFilterValue, currentPage, setSearchParams]);
-
-  // Keep the page still when a filter changes. Two things conspire to yank the
-  // page toward the filter bar: (1) Radix tabs/selects move focus to the control
-  // that was clicked and the browser scrolls it into view, and (2) swapping the
-  // card list reflows the document height and clamps scroll. Both fire AFTER the
-  // click, so a live scroll ref gets clobbered before we can read it.
-  //
-  // Instead, snapshot the scroll position at the instant the user starts
-  // interacting (pointerdown / keydown, capture phase, before focus moves), then
-  // pin scroll back to that snapshot for a few frames after the re-render so we
-  // beat the focus-induced scrollIntoView and the reflow clamp.
-  const restoreScrollY = useRef<number | null>(null);
-  useEffect(() => {
-    const snapshot = (e: Event) => {
-      // Ignore interactions inside an open popover/listbox (e.g. picking an option
-      // in the Location select). By then Radix has already scrolled the open
-      // control into view, so the live scrollY is the post-open-shift position, not
-      // the resting spot we want to return to. Keep the snapshot taken when the
-      // trigger was first pressed.
-      const target = e.target as HTMLElement | null;
-      if (target?.closest?.('[data-radix-popper-content-wrapper],[role="listbox"],[role="menu"],[role="dialog"]')) return;
-      restoreScrollY.current = window.scrollY;
-    };
-    document.addEventListener("pointerdown", snapshot, true);
-    document.addEventListener("keydown", snapshot, true);
-    return () => {
-      document.removeEventListener("pointerdown", snapshot, true);
-      document.removeEventListener("keydown", snapshot, true);
-    };
-  }, []);
-  const filterSignature = `${selectedSource}|${activeTab}|${selectedCategory}|${selectedType}|${selectedCity}|${selectedSector}|${selectedTopic}|${personaFilterValue}|${localSearchQuery}`;
-  const didMountRef = useRef(false);
-  useLayoutEffect(() => {
-    if (!didMountRef.current) { didMountRef.current = true; return; }
-    const target = restoreScrollY.current;
-    if (target == null) return;
-    let frame = 0;
-    let count = 0;
-    const pin = () => {
-      if (Math.abs(window.scrollY - target) > 1) window.scrollTo(0, target);
-      if (count++ < 4) frame = requestAnimationFrame(pin);
-    };
-    pin();
-    return () => cancelAnimationFrame(frame);
-  }, [filterSignature]);
-
-  const { events, upcomingEvents, pastEvents, loading, searchLoading, error, setSearchTerm, clearSearch, searchQuery, isSearching } = useEvents();
-
-  const categories = Array.from(new Set(events.map(event => event.category))).sort();
-  const types = Array.from(new Set(events.map(event => event.type))).sort();
-  const cities = Array.from(new Set(events.map(event => event.city).filter(Boolean) as string[])).sort();
-  const sectors = Array.from(new Set(events.map(event => event.sector).filter(Boolean))).sort();
-  const topics = TOPIC_TAGS.filter(t => events.some(e => (e.tags ?? []).includes(t)));
-
-  const baseEvents = activeTab === "upcoming" ? upcomingEvents : activeTab === "past" ? pastEvents : events;
-
-  const curatedCount = baseEvents.filter(e => e.source !== COMMUNITY_SOURCE).length;
-  const communityCount = baseEvents.filter(e => e.source === COMMUNITY_SOURCE).length;
-
-  const filteredEvents = baseEvents.filter(event => {
-    const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
-    const matchesType = selectedType === "all" || event.type === selectedType;
-    const matchesCity = selectedCity === "all" || event.city === selectedCity;
-    const matchesSector = selectedSector === "all" || event.sector === selectedSector;
-    const matchesTopic = selectedTopic === "all" || (event.tags ?? []).includes(selectedTopic);
-    const matchesSource = selectedSource === "all" ||
-      (selectedSource === "curated" && event.source !== COMMUNITY_SOURCE) ||
-      (selectedSource === "community" && event.source === COMMUNITY_SOURCE);
-    const matchesPersona = (() => {
-      if (personaFilterValue === 'all') return true;
-      const hasTarget = !!event.target_personas?.length;
-      const hasPersona = !!event.persona;
-      // Don't hide events we can't classify on either signal.
-      if (!hasTarget && !hasPersona) return true;
-      const targetMatch = hasTarget && event.target_personas!.includes(personaFilterValue);
-      // Community events carry the persona column (international_entrant | local_founder | both).
-      const personaMatch = hasPersona && (
-        event.persona === 'both' ||
-        (personaFilterValue === 'international_entrant' && event.persona === 'international_entrant') ||
-        (personaFilterValue === 'local_startup' && event.persona === 'local_founder')
-      );
-      return targetMatch || personaMatch;
-    })();
-    return matchesCategory && matchesType && matchesCity && matchesSector && matchesTopic && matchesSource && matchesPersona;
-  });
+  const filteredEvents = useMemo(() => filterEvents(sourceFiltered, filters), [sourceFiltered, filters]);
 
   const totalPages = Math.ceil(filteredEvents.length / PAGE_SIZE);
-  const paginatedEvents = filteredEvents.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
+  const paginatedEvents = filteredEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const handleSearch = (query: string) => {
-    setLocalSearchQuery(query);
-    setSearchTerm(query);
-    setCurrentPage(1);
-  };
+  const categoryTabs: FilterOption[] = useMemo(() => [
+    { value: "all", label: "All", count: sourceFiltered.length },
+    ...categories.map((c) => ({ value: c, label: c, count: sourceFiltered.filter((e) => e.category === c).length })),
+  ], [categories, sourceFiltered]);
 
-  const handleClearFilters = () => {
-    setLocalSearchQuery("");
-    setSelectedCategory("all");
-    setSelectedType("all");
-    setSelectedCity("all");
-    setSelectedSector("all");
-    setSelectedTopic("all");
-    clearSearch();
-    setCurrentPage(1);
-  };
+  const selects: SelectFilterConfig[] = [
+    { key: "city", allLabel: "All Locations", options: cities.map((c) => ({ value: c, label: c })) },
+    { key: "type", allLabel: "All Types", options: types.map((t) => ({ value: t, label: t })) },
+    { key: "sector", allLabel: "All Sectors", options: sectors.map((s) => ({ value: s, label: s })) },
+  ];
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    setCurrentPage(1);
-  };
-
-  const handleSourceChange = (source: string) => {
-    setSelectedSource(source);
-    setCurrentPage(1);
-  };
-
-  const hasActiveFilters = selectedCategory !== "all" || selectedType !== "all" ||
-    selectedCity !== "all" || selectedSector !== "all" || selectedTopic !== "all";
+  const advancedPanel = topics.length > 0 ? (
+    <div className="flex flex-wrap gap-2 items-center">
+      <span className="text-sm font-medium text-muted-foreground">Topic:</span>
+      <Button variant={filters.topic === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("topic", "all")}>
+        All Topics
+      </Button>
+      {topics.map((topic) => (
+        <Button key={topic} variant={filters.topic === topic ? "default" : "outline"} size="sm" onClick={() => setFilter("topic", topic)}>
+          {topic}
+        </Button>
+      ))}
+    </div>
+  ) : undefined;
 
   if (loading) {
     return (
@@ -211,7 +123,7 @@ const Events = () => {
           name="description"
           content="Discover upcoming events, conferences, and networking opportunities for companies entering the Australian and New Zealand markets."
         />
-        <link rel="canonical" href={`${typeof window !== "undefined" ? window.location.origin : "https://market-entry-secrets.lovable.app"}/events`} />
+        <link rel="canonical" href={`${typeof window !== "undefined" ? window.location.origin : "https://marketentrysecrets.com"}/events`} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -220,7 +132,7 @@ const Events = () => {
             itemListElement: upcomingEvents.slice(0, 25).map((ev: any, i: number) => ({
               "@type": "ListItem",
               position: i + 1,
-              url: `https://market-entry-secrets.lovable.app/events/${ev.slug}`,
+              url: `https://marketentrysecrets.com/events/${ev.slug}`,
               name: ev.title,
             })),
           })}
@@ -233,82 +145,28 @@ const Events = () => {
         upcomingCount={upcomingEvents.length}
       />
 
-      <StandardDirectoryFilters
-        searchTerm={localSearchQuery}
-        onSearchChange={handleSearch}
-        selectedLocation={selectedCity}
-        onLocationChange={(c) => { setSelectedCity(c); setCurrentPage(1); }}
-        selectedType={selectedType}
-        onTypeChange={(t) => { setSelectedType(t); setCurrentPage(1); }}
-        selectedSector={selectedSector}
-        onSectorChange={(s) => { setSelectedSector(s); setCurrentPage(1); }}
-        showFilters={showFilters}
-        onToggleFilters={() => setShowFilters(!showFilters)}
-        onClearFilters={handleClearFilters}
+      <DirectoryFilterBar
+        filters={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}
-        locations={cities}
-        types={types}
-        sectors={sectors}
-        searchPlaceholder="Search events, locations, or organizers..."
-        searchLoading={searchLoading}
+        noun="events"
+        shownCount={paginatedEvents.length}
+        totalCount={filteredEvents.length}
+        tabs={{ key: "category", options: categoryTabs }}
+        search={{ key: "search", placeholder: "Search events, locations, or organizers...", loading: searchLoading }}
+        selects={selects}
+        audience={{ key: "persona" }}
       >
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm font-medium text-muted-foreground">Category:</span>
-            <Button
-              variant={selectedCategory === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => { setSelectedCategory("all"); setCurrentPage(1); }}
-            >
-              All Categories
-            </Button>
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
-                onClick={() => { setSelectedCategory(category); setCurrentPage(1); }}
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-
-          {topics.length > 0 && (
-            <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-sm font-medium text-muted-foreground">Topic:</span>
-              <Button
-                variant={selectedTopic === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => { setSelectedTopic("all"); setCurrentPage(1); }}
-              >
-                All Topics
-              </Button>
-              {topics.map((topic) => (
-                <Button
-                  key={topic}
-                  variant={selectedTopic === topic ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => { setSelectedTopic(topic); setCurrentPage(1); }}
-                >
-                  {topic}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
-      </StandardDirectoryFilters>
+        {advancedPanel}
+      </DirectoryFilterBar>
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
 
-        <div className="mb-6">
-          <PersonaFilter value={personaFilterValue} onChange={(v) => { setPersonaFilterValue(v); setCurrentPage(1); }} />
-        </div>
-
-        {/* Source axis: keep editorial (Curated) and scraped (Community) events distinct. */}
+        {/* Source partition: keep editorial (Curated) and scraped (Community) distinct. */}
         <div className="mb-4">
-          <Tabs value={selectedSource} onValueChange={handleSourceChange}>
+          <Tabs value={filters.source} onValueChange={(v) => setFilter("source", v)}>
             <TabsList>
               <TabsTrigger value="curated">Curated ({curatedCount})</TabsTrigger>
               <TabsTrigger value="community">Community ({communityCount})</TabsTrigger>
@@ -317,17 +175,14 @@ const Events = () => {
           </Tabs>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <div className="mb-6">
+          <Tabs value={filters.time} onValueChange={(v) => setFilter("time", v)}>
             <TabsList>
               <TabsTrigger value="upcoming">Upcoming ({upcomingEvents.length})</TabsTrigger>
               <TabsTrigger value="past">Past ({pastEvents.length})</TabsTrigger>
               <TabsTrigger value="all">All ({events.length})</TabsTrigger>
             </TabsList>
           </Tabs>
-          <p className="text-muted-foreground text-sm">
-            Showing {paginatedEvents.length} of {filteredEvents.length} events
-          </p>
         </div>
 
         {filteredEvents.length === 0 ? (
@@ -337,18 +192,19 @@ const Events = () => {
             description={
               isSearching
                 ? "Try adjusting your search criteria to find more events."
-                : selectedSource === "community"
+                : filters.source === "community"
                   ? "No community events match your filters yet. New ones arrive from the weekly scrape."
-                  : activeTab === "upcoming"
+                  : filters.time === "upcoming"
                     ? "No upcoming events at the moment. Check back soon!"
                     : "There are no events matching your current filters."
             }
-            actionLabel={(localSearchQuery || hasActiveFilters) ? "Clear all filters" : undefined}
-            onAction={(localSearchQuery || hasActiveFilters) ? handleClearFilters : undefined}
+            actionLabel={hasActiveFilters ? "Clear all filters" : undefined}
+            onAction={hasActiveFilters ? clearAll : undefined}
           />
         ) : (
           <>
             <ListingPageGate contentType="events">
+              <h2 className="sr-only">Event results</h2>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {paginatedEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
@@ -356,9 +212,9 @@ const Events = () => {
               </div>
             </ListingPageGate>
             <ListPagination
-              currentPage={currentPage}
+              currentPage={page}
               totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              onPageChange={setPage}
             />
           </>
         )}

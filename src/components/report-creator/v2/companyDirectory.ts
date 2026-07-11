@@ -30,7 +30,8 @@ export async function searchCompanyDirectory(query: string): Promise<DirectoryCo
 
   const [sp, inv, ie] = await Promise.all([
     safeRows(supabase.from('service_providers').select('name, website').ilike('name', like).limit(6)),
-    safeRows(supabase.from('investors').select('name, website').ilike('name', like).limit(6)),
+    // investors_public, not the base table — investors is admin-locked (MES-56)
+    safeRows(supabase.from('investors_public').select('name, website').ilike('name', like).limit(6)),
     safeRows(supabase.from('innovation_ecosystem').select('name, website').ilike('name', like).limit(6)),
   ]);
 
