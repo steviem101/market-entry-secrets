@@ -25,6 +25,7 @@ import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePerso
 import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
+import { auditPolishedSections } from "./polishDiffAudit.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -2954,6 +2955,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
 
     // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
 
+    // MES-148 Phase 2c: set by the polish diff audit below; captured into the
+    // polished report's metadata (null on the pre-polish save and when polish
+    // is skipped).
+    let polishAudit: { checked: number; reverted_sections: string[] } | null = null;
+
     const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => {
       // Citation integrity (B11/B15): renumber inline [N] markers to a contiguous
       // 1..M and store only the actually-cited sources, so inline indices and the
@@ -3031,6 +3037,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // instructed to preserve facts verbatim; a post-polish diff audit is
         // Phase 2). null = the step failed fail-open.
         claims_registry: { count: reportClaims.length, extraction_ok: claimsExtractionOk },
+        // MES-148 Phase 2c: polish diff audit — how many polished sections were
+        // checked and which were reverted for introducing a new figure/entity.
+        // null on the pre-polish save and when polish is skipped.
+        polish_audit: polishAudit,
         verification,
         // MES-148 1b: whether this run resumed the research phase from a prior
         // run's artifact (false = a full fresh run). Costs in firecrawl_health/
@@ -3121,9 +3131,30 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         polishedSections = await runPolishOnce();
       }
 
-      // Polish succeeded — update report with polished content
+      // MES-148 Phase 2c: diff-audit the polish. The polish is an editorial
+      // rewrite that must not introduce a new figure or named entity; where it
+      // does (model drift), keep the pre-polish, already-verified text for that
+      // section instead of shipping the drift. Faithful rewording is unaffected.
+      const preText: Record<string, string> = {};
+      const postText: Record<string, string> = {};
       for (const [name, data] of Object.entries(polishedSections)) {
+        preText[name] = (sections[name]?.content ?? "") as string;
+        postText[name] = (data?.content ?? "") as string;
+      }
+      const { revert: polishRevert, summary: polishAuditSummary } = auditPolishedSections(preText, postText);
+      polishAudit = { checked: polishAuditSummary.checked, reverted_sections: polishAuditSummary.reverted_sections };
+
+      // Apply polished content, EXCEPT for sections the audit flagged — those
+      // keep their original (pre-polish) content.
+      for (const [name, data] of Object.entries(polishedSections)) {
+        if (polishRevert.has(name)) continue; // keep pre-polish text
         sections[name] = data;
+      }
+      if (polishRevert.size > 0) {
+        console.log(
+          `Polish diff audit: reverted ${polishRevert.size} drifting section(s) [${polishAuditSummary.reverted_sections.join(", ")}] | ` +
+          JSON.stringify(polishAuditSummary.details),
+        );
       }
 
       const polishedReportJson = buildReportJson(sections, true);
