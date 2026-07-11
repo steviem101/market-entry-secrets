@@ -345,3 +345,40 @@ stream on both projects.
 `APIFY_TOKEN` wrong/missing). Needs token confirmed (`curl api.apify.com/v2/users/me` → 200) +
 a fresh Apify run; verify `200` + rows in `ii_prefilter_log`/`ii_content`. Then: DB-consumer
 repoint (Python classifier, Beehiiv, research.yml) → final freeze-sync → Hard Stop 2 → MES drop.
+
+---
+
+### 2026-07-11 — GitHub-Actions pipeline cut over to Irish Insights + backlog resynced
+
+Operator repointed the `steviem101/irish-insights-email-ingest` Actions secrets:
+`SUPABASE_URL` → `https://schyrnxekxcoaragofgv.supabase.co`, `SUPABASE_SECRET_KEY` →
+Irish Insights service-role key. The repo's full Actions secret list confirmed the ENTIRE
+pipeline (Gmail ingest, Beehiiv, Anthropic/OpenAI classifier, research orchestrator,
+Slack/Notion posting) runs as GitHub Actions sharing those two values — so this single change
+repoints Gmail ingest + Beehiiv + classifier + research all at once. Only two Supabase-related
+secrets existed (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`); no raw `DATABASE_URL`.
+
+**MES drift since the 06-29 sync** (pipeline was still MES-pointed until the cutover):
+content +227 (7124), curated_log +581 (6064), curations +48 (343), published_archive +12 (822);
+prefilter +0 (Apify billing-blocked), reddit +0. MES last write 2026-07-10 10:26; quiet since.
+
+**Backlog resynced via dblink** (II had NO pipeline writes yet — all II data still from the
+06-29 sync — so DO UPDATE from MES carried zero clobber risk): content (≥06-25, upsert),
+curations (≥06-25, upsert), curated_log (≥06-25, insert-only), published_archive (full table,
+upsert — metrics update in place on old rows). Post-sync anti-join: **0 missing on all tables,
+0 FK orphans.** dblink dropped again.
+
+**Cutover state:** every writer now targets Irish Insights — Apify webhook (billing-blocked),
+Notion trigger (verified), and the whole Actions pipeline. MES `ii_*` should now be frozen.
+
+**Remaining before Hard Stop 2 / drop:**
+1. Confirm the pipeline actually writes to II on its next scheduled run (or a manual dispatch) —
+   watch for II `ii_content`/`ii_curated_log` timestamps advancing past 2026-07-11.
+2. Confirm nothing runs the pipeline OUTSIDE GitHub Actions (operator to verify; secrets list
+   strongly implies Actions-only).
+3. Apify: raise the monthly usage limit ($29/$29 hard cap) to run its final live test; token
+   already verified. Not a drop blocker (webhook already points to II).
+4. FINAL freeze-sync right before the drop must be **insert-only (DO NOTHING)** to avoid
+   reverting any II-native post-cutover updates (metrics/embeddings/status) with frozen MES data.
+5. Then Hard Stop 2 (explicit approval) → capture byte-exact rollback → drop MES `ii_*` → remove
+   the 2 MES edge fns → re-run mes-context canary → get_advisors → rotate the shared DB passwords.
