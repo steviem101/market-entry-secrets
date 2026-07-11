@@ -67,6 +67,6 @@ export const getStandardTypes = {
   events: ['Conference', 'Workshop', 'Webinar', 'Networking', 'Trade Show'],
   leads: ['Lead Database', 'Market Data', 'TAM Map'],
   serviceProviders: ['Consultant', 'Law Firm', 'Accountant', 'Marketing Agency', 'Other'],
-  innovationEcosystem: ['Incubator', 'Accelerator', 'Coworking Space', 'Research Institute', 'Industry Body'],
+  innovationEcosystem: ['Incubator', 'Accelerator', 'Coworking Space', 'Research Institute', 'Industry Body', 'Community'],
   tradeAgencies: ['Trade Agency', 'Investment Agency', 'Government Agency']
 };
