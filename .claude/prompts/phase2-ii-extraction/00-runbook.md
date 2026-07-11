@@ -321,3 +321,27 @@ With secrets unset both fail closed (401 / 500), so they're safely inert pre-rep
 `3RnAZzC9CsXXPZrbM` webhook URL + the Notion automation URL to the new endpoints (keep the
 same header secrets); repoint DB consumers (Python classifier, Beehiiv, `research.yml`) to the
 II connection string/keys. Then final freeze-sync + Hard Stop 2 + MES drop.
+
+---
+
+### Session C (2026-07-xx) cont. — notion-research-trigger VERIFIED end-to-end on Irish Insights
+
+Consumer repoint + secrets completed for `notion-research-trigger`:
+- Notion automation URL repointed MES → `https://schyrnxekxcoaragofgv.supabase.co/functions/v1/notion-research-trigger`.
+- Secrets set on II: `NOTION_TRIGGER_SECRET` (aligned both sides), `GITHUB_DISPATCH_TOKEN`
+  (fine-grained PAT, Actions:read/write), `GITHUB_REPO_OWNER=steviem101`,
+  `GITHUB_REPO_NAME=irish-insights-email-ingest` (confirmed via list_repos — this is the
+  ii-ingest repo holding `research.yml`).
+- Verified in stages via edge logs + a side-effect-free empty-body probe (correct secret →
+  `400 missing page_id` = secret + all GitHub vars present), then a **real Notion deep-research
+  flip → `POST | 200` (1.8s)** = PAT valid and `research.yml` dispatched. Fully working.
+
+Debug trail worth keeping: first real flip went to MES (200) because the Notion URL hadn't been
+repointed; after repoint it hit II but `401` (secret mismatch); after secret alignment `500`
+(GitHub vars missing); after GitHub vars `200`. Each step localized via the `get_logs` request
+stream on both projects.
+
+**Remaining for step 6:** `apify-webhook` still `502` (Apify dataset fetch failing →
+`APIFY_TOKEN` wrong/missing). Needs token confirmed (`curl api.apify.com/v2/users/me` → 200) +
+a fresh Apify run; verify `200` + rows in `ii_prefilter_log`/`ii_content`. Then: DB-consumer
+repoint (Python classifier, Beehiiv, research.yml) → final freeze-sync → Hard Stop 2 → MES drop.
