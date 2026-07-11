@@ -73,12 +73,13 @@ pg_dump "$MES_CONN" --schema-only --no-owner --no-privileges \
   -t 'public.ii_published_archive' -t 'public.ii_personal_linkedin_posts' \
   -t 'public.ii_prefilter_log' -t 'public.ii_intro_archive' \
   > ii_schema.sql
-# NOTE: pg_dump -t does NOT pull standalone functions. Append the 10 fns + 4 triggers:
+# NOTE: pg_dump -t does NOT pull standalone functions. Append the 11 fns + 4 triggers:
 #   psql "$MES_CONN" -At -c "select pg_get_functiondef(oid) from pg_proc
 #     where pronamespace='public'::regnamespace and proname in
 #     ('match_content','match_archive','match_emails','recent_ii_content','recent_ii_emails',
 #      'upsert_ii_linkedin_posts','update_ii_content_updated_at','ii_curations_set_updated_at',
-#      'update_ii_published_archive_updated_at','ii_reddit_signals_set_updated_at');" >> ii_schema.sql
+#      'update_ii_published_archive_updated_at','ii_reddit_signals_set_updated_at',
+#      'update_ii_emails_updated_at');" >> ii_schema.sql   -- 11th: orphan legacy trigger fn
 #   then the 4 CREATE TRIGGER statements (captured in the audit session).
 # Sanity-check ii_schema.sql by eye before restoring.
 
@@ -129,7 +130,7 @@ select relname, relrowsecurity from pg_class where relname like 'ii_%' and relki
    ```bash
    pg_dump "$MES_CONN" --schema-only --no-owner --no-privileges \
      -t 'public.ii_*' > supabase/rollback/<ts>_ii_extraction_drop_from_mes_revert.sql
-   # append the 10 fns + 4 triggers exactly as in step 4a, then restore-test it
+   # append the 11 fns + 4 triggers exactly as in step 4a, then restore-test it
    # against a scratch DB before proceeding.
    ```
 2. Apply `10-mes-drop.sql` (this folder) as `supabase/migrations/<ts>_ii_extraction_drop_from_mes.sql`.

@@ -6,7 +6,7 @@
 --   1. Irish Insights project verified fully operational (Hard Stop 2 approved).
 --   2. The byte-exact down migration has been captured AND restore-tested:
 --        supabase/rollback/<ts>_ii_extraction_drop_from_mes_revert.sql
---        (pg_dump --schema-only -t 'public.ii_*' + the 10 fns + 4 triggers).
+--        (pg_dump --schema-only -t 'public.ii_*' + the 11 fns + 4 triggers).
 --   3. mes-context canary baseline exists (audit §8) and will be re-run after.
 -- This file is staged OUTSIDE supabase/migrations/ so it cannot auto-apply.
 -- At execution time, copy it to:
@@ -15,20 +15,32 @@
 
 begin;
 
--- Belt-and-braces guard: refuse to run if any ii_* table still holds rows that
--- have NOT been confirmed copied. Operator must comment this block out only
--- after the Hard Stop 2 row-count match. (Remove/relax intentionally.)
+-- Observability checkpoint — NOT a hard stop, and it does NOT refuse to run.
+-- At drop time every ii_* table is still FULL: they are the copied backup being
+-- removed, so a non-zero total is EXPECTED, not a stop condition. This block
+-- PRINTS the row count of ALL 9 ii_* tables so the operator can eyeball them
+-- against the Hard-Stop-2-verified Irish Insights counts immediately before
+-- COMMIT. It cannot itself verify the copy (MES cannot see Irish Insights), so
+-- it deliberately does not raise. The real gate is the human Hard Stop 2
+-- approval + the row-count match already recorded in the runbook.
 do $$
-declare n bigint;
+declare rec record; msg text := '';
 begin
-  select coalesce(sum(c),0) into n from (
-    select count(*) c from public.ii_content
-    union all select count(*) from public.ii_published_archive
-    union all select count(*) from public.ii_reddit_signals
-  ) t;
-  raise notice 'Pre-drop ii_* sentinel row total (content+archive+reddit): %', n;
-  -- Intentionally NOT raising here — this is an observability checkpoint, not a
-  -- hard stop. The hard stop is the human approval at Hard Stop 2.
+  for rec in
+    select 'ii_content'                 as t, count(*) c from public.ii_content
+    union all select 'ii_curations',                count(*) from public.ii_curations
+    union all select 'ii_curated_log',              count(*) from public.ii_curated_log
+    union all select 'ii_experiment_outputs',       count(*) from public.ii_experiment_outputs
+    union all select 'ii_reddit_signals',           count(*) from public.ii_reddit_signals
+    union all select 'ii_published_archive',        count(*) from public.ii_published_archive
+    union all select 'ii_personal_linkedin_posts',  count(*) from public.ii_personal_linkedin_posts
+    union all select 'ii_prefilter_log',            count(*) from public.ii_prefilter_log
+    union all select 'ii_intro_archive',            count(*) from public.ii_intro_archive
+    order by 1
+  loop
+    msg := msg || format('    %-28s %s', rec.t, rec.c) || E'\n';
+  end loop;
+  raise notice E'Pre-drop ii_* row counts (all 9 tables) — compare against the Hard-Stop-2-verified Irish Insights counts before COMMIT:\n%', msg;
 end $$;
 
 -- 1) Tables — children before parents; CASCADE covers the internal FK graph,

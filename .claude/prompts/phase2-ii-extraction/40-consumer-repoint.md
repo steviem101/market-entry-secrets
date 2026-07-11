@@ -56,11 +56,18 @@ Concretely:
 
 ## Safety notes for the cutover window
 
-- **Switch order doesn't matter** and partial states are safe: II-only writes
-  are never overwritten by the MES→II delta sync (it upserts with
-  `on conflict do nothing` / keyed updates — MES rows only add, never clobber).
-- Consumers still on MES keep drifting MES forward — expected; the **final
-  freeze-sync** (dblink anti-join → 0 missing) reconciles right before the drop.
+- **Switch order doesn't matter for *new* rows:** a partially-switched state is
+  safe for inserts because new rows carry fresh ids and never collide.
+- ⚠️ **The MES→II sync is NOT unconditionally non-clobbering.** The interim
+  top-ups used `on conflict … DO UPDATE` on `ii_content` / `ii_curations` /
+  `ii_published_archive` (to carry backfilled embeddings + newsletter metrics),
+  which *overwrites* the target row. That was safe only because those syncs ran
+  **before** Irish Insights took any live writes. Once II is live, a `DO UPDATE`
+  sync from frozen MES would silently regress II's fresh values.
+- Therefore the **final freeze-sync MUST be insert-only (`DO NOTHING`)** — add
+  only the rows II is missing (dblink anti-join → 0 missing), never update
+  existing ones. Consumers still on MES keep drifting MES forward until repointed;
+  the final insert-only sync reconciles right before the drop.
 - After ALL consumers point at II: run the final sync, verify 0 missing +
   FK-clean, then Hard Stop 2 (explicit approval) → MES `ii_*` drop.
 - Post-drop hygiene: rotate both DB passwords (shared in chat during the
