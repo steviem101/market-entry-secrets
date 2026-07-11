@@ -1,0 +1,56 @@
+{
+  "golden_id": "synthetic-sg-medtech",
+  "description": "SYNTHETIC: Singapore medtech scale-up entering Brisbane/QLD, international persona, regulatory focus — covers the Singapore corridor, healthcare vertical and TGA-style compliance framing.",
+  "frozen_at": "2026-07-11",
+  "source_intake_id": null,
+  "intake": {
+    "company_name": "MedSight Diagnostics",
+    "website_url": "example-medsight.invalid",
+    "country_of_origin": "Singapore",
+    "industry_sector": ["MedTech", "Medical Devices", "Healthcare Technology"],
+    "company_stage": "Series A-B",
+    "employee_count": "51-200",
+    "target_regions": ["Brisbane/QLD"],
+    "services_needed": [
+      "Understand regulatory & compliance",
+      "Find vetted service providers",
+      "Connect with trade & investment agencies",
+      "Access market entry case studies",
+      "Discover events & networking"
+    ],
+    "timeline": "",
+    "budget_level": "",
+    "primary_goals": "Understand regulatory & compliance; Find vetted service providers; Connect with trade & investment agencies; Access market entry case studies; Discover events & networking",
+    "key_challenges": "Regulatory approval timelines, Finding distribution partners",
+    "known_competitors": [],
+    "end_buyer_industries": ["Hospitals and Health Care"],
+    "end_buyers": [],
+    "customer_type": "B2B",
+    "challenge_tags": ["Regulatory approval timelines", "Finding distribution partners"],
+    "goal_ids": ["compliance", "find_providers", "trade_agencies", "case_studies", "events"],
+    "report_focus": "how long will regulatory approval take",
+    "raw_input": {
+      "persona": "international",
+      "goal_ids": ["compliance", "find_providers", "trade_agencies", "case_studies", "events"],
+      "challenges": { "tags": ["Regulatory approval timelines", "Finding distribution partners"], "other": "" },
+      "website_url": "example-medsight.invalid",
+      "company_name": "MedSight Diagnostics",
+      "report_focus": "how long will regulatory approval take",
+      "company_stage": "Series A-B",
+      "employee_count": "51-200",
+      "target_regions": ["Brisbane/QLD"],
+      "industry_sector": ["MedTech", "Medical Devices", "Healthcare Technology"],
+      "additional_notes": "",
+      "target_customers": {
+        "notes": "hospital procurement leads",
+        "industries": ["Hospitals and Health Care"],
+        "customer_type": "B2B",
+        "named_companies": []
+      },
+      "country_of_origin": "Singapore",
+      "known_competitors": [],
+      "website_scrape_accepted": false,
+      "target_customer_description": "B2B customers — in Hospitals and Health Care — hospital procurement leads"
+    }
+  }
+}

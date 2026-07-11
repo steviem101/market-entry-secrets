@@ -1,0 +1,71 @@
+{
+  "golden_id": "infact-uk-fintech",
+  "description": "UK credit-reporting fintech entering Sydney, international persona, accelerator focus — exercises the UK corridor, compliance and lead-list surfaces.",
+  "frozen_at": "2026-07-11",
+  "source_intake_id": "ef2c1e86-7d72-4c1a-b8bf-cfae86b6ae1e",
+  "intake": {
+    "company_name": "Infact",
+    "website_url": "infact.io",
+    "country_of_origin": "United Kingdom",
+    "industry_sector": ["FinTech", "Credit Reporting", "Risk Management"],
+    "company_stage": "Startup/Seed",
+    "employee_count": "11-50",
+    "target_regions": ["Sydney/NSW"],
+    "services_needed": [
+      "Access qualified lead lists",
+      "Find experienced mentors & advisors",
+      "Find vetted service providers",
+      "Understand regulatory & compliance",
+      "Connect with trade & investment agencies",
+      "Find industry associations & chambers",
+      "Access market entry case studies",
+      "Discover events & networking"
+    ],
+    "timeline": "",
+    "budget_level": "",
+    "primary_goals": "Access qualified lead lists; Find experienced mentors & advisors; Find vetted service providers; Understand regulatory & compliance; Connect with trade & investment agencies; Find industry associations & chambers; Access market entry case studies; Discover events & networking",
+    "key_challenges": "Finding distribution partners, Hiring local talent",
+    "known_competitors": [
+      { "name": "Experian", "website": "experian.com" },
+      { "name": "Adrenalin Equity", "website": "adrenalinequity.com" }
+    ],
+    "end_buyer_industries": ["finance", "banking", "lending"],
+    "end_buyers": [
+      { "name": "Commbank", "website": "commbank.com" },
+      { "name": "Anz", "website": "anz.com.westpac.com" }
+    ],
+    "customer_type": "B2B",
+    "challenge_tags": ["Finding distribution partners", "Hiring local talent"],
+    "goal_ids": ["lead_lists_intl", "mentors_intl", "find_providers", "compliance", "trade_agencies", "associations", "case_studies", "events"],
+    "report_focus": "need to join an accelerator",
+    "raw_input": {
+      "persona": "international",
+      "goal_ids": ["lead_lists_intl", "mentors_intl", "find_providers", "compliance", "trade_agencies", "associations", "case_studies", "events"],
+      "challenges": { "tags": ["Finding distribution partners", "Hiring local talent"], "other": "" },
+      "website_url": "infact.io",
+      "company_name": "Infact",
+      "report_focus": "need to join an accelerator",
+      "company_stage": "Startup/Seed",
+      "employee_count": "11-50",
+      "target_regions": ["Sydney/NSW"],
+      "industry_sector": ["FinTech", "Credit Reporting", "Risk Management"],
+      "additional_notes": "need to join an accelerator",
+      "target_customers": {
+        "notes": "head of data at a bank or lender",
+        "industries": ["finance", "banking", "lending"],
+        "customer_type": "B2B",
+        "named_companies": [
+          { "name": "Commbank", "website": "commbank.com" },
+          { "name": "Anz", "website": "anz.com.westpac.com" }
+        ]
+      },
+      "country_of_origin": "United Kingdom",
+      "known_competitors": [
+        { "name": "Experian", "website": "experian.com" },
+        { "name": "Adrenalin Equity", "website": "adrenalinequity.com" }
+      ],
+      "website_scrape_accepted": true,
+      "target_customer_description": "B2B customers — in finance, banking, lending — head of data at a bank or lender"
+    }
+  }
+}
