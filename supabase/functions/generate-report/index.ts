@@ -22,6 +22,7 @@ import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
+import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
@@ -1796,6 +1797,12 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       merged[tbl] = [...sem, ...backfill].slice(0, cfg.cap);
     }
   }
+  // MES-148 Phase 2d (SHADOW): snapshot the merged pools BEFORE the eight union
+  // gates below mutate them, so scoreRelevance() can be replayed over the same
+  // input the live gates saw and its hard-exclusion decisions compared. Shallow
+  // array copies — we only compare membership by identity, never mutate the rows.
+  const preGatePools: Record<string, any[]> = {};
+  for (const k of Object.keys(merged)) preGatePools[k] = [...(merged[k] || [])];
   // ── Lead-list ICP gate at the UNION (P1-C follow-up) ────────────────────
   // The overlap path gates its own leads, but lead_databases is ALSO embedded in
   // the KB and is merged semantic-first — so an off-ICP list surfaced by the
@@ -1921,18 +1928,70 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // preferRelevant, so a thin pool still renders) — UNLESS the company is
   // international, or explicitly asked for immigration / relocation /
   // international-hiring help.
-  if (!isInternationalOrigin(intake.country_of_origin)) {
-    const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
-      `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
-    );
-    if (!wantsImmigration) {
-      for (const [tbl, floor] of [["community_members", 3], ["service_providers", 4]] as const) {
-        if (!(merged[tbl] || []).length) continue;
-        const before = merged[tbl].length;
-        merged[tbl] = preferRelevant(merged[tbl], (r: any) => !isImmigrationFocused(r), floor);
-        const dropped = before - merged[tbl].length;
-        if (dropped > 0) console.log(`immigration filter (domestic) ${tbl}: demoted ${dropped} row(s)`);
+  // Computed once and shared with the Phase 2d shadow below, so both read the SAME
+  // immigration-intent signal — a drifted second copy would make the shadow
+  // misreport divergence, defeating its purpose.
+  const isDomesticOrigin = !isInternationalOrigin(intake.country_of_origin);
+  const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
+    `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
+  );
+  if (isDomesticOrigin && !wantsImmigration) {
+    for (const [tbl, floor] of [["community_members", 3], ["service_providers", 4]] as const) {
+      if (!(merged[tbl] || []).length) continue;
+      const before = merged[tbl].length;
+      merged[tbl] = preferRelevant(merged[tbl], (r: any) => !isImmigrationFocused(r), floor);
+      const dropped = before - merged[tbl].length;
+      if (dropped > 0) console.log(`immigration filter (domestic) ${tbl}: demoted ${dropped} row(s)`);
+    }
+  }
+
+  // ── MES-148 Phase 2d: relevance SHADOW ──────────────────────────────────
+  // Replay the unified scoreRelevance() over the pre-gate pools and log, per
+  // surface, how often each hard-exclusion reason fires plus any divergence from
+  // the live hard gates (a would-hard-exclude row that survived them — should be
+  // ~0 if the port is faithful). Counts only, server logs only — NOT written to
+  // report_json.metadata (which rides past the tier strip point). Purely additive
+  // telemetry to validate the function before it becomes authoritative behind the
+  // golden harness; wrapped so it can NEVER break generation, and switchable off
+  // (any of off/false/0/no, case-insensitive).
+  const shadowFlag = (Deno.env.get("REPORT_RELEVANCE_SHADOW") || "").trim().toLowerCase();
+  if (!["off", "false", "0", "no"].includes(shadowFlag)) {
+    try {
+      const relGates: RelevanceGates = {
+        geoMatcher,
+        agencyOriginTerms,
+        targetRegions: geoTargetRegions,
+        icpTokens: leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []),
+        // Shares the live gate's exact immigration signal (computed once above).
+        excludeImmigration: isDomesticOrigin && !wantsImmigration,
+      };
+      const RELEVANCE_PROFILES: Record<string, RelevanceProfile> = {
+        service_providers: { geo: true, chamber: true, immigration: true },
+        innovation_ecosystem: { geo: true, chamber: true },
+        trade_investment_agencies: { agencyCorridor: true, stateRegion: true },
+        community_members: { immigration: true },
+        lead_databases: { leadIcp: true },
+      };
+      // geo + immigration are floor-guarded in the live pipeline, so a flagged-but-kept
+      // row there is expected; only the strict hard gates should show zero divergence.
+      const HARD = new Set(["agency_out_of_corridor", "state_mismatch", "chamber_mismatch", "off_icp"]);
+      for (const [tbl, profile] of Object.entries(RELEVANCE_PROFILES)) {
+        const pre = preGatePools[tbl] || [];
+        if (!pre.length) continue;
+        const shadow = summariseRelevanceShadow(pre, {}, ctx, relGates, profile);
+        let hardKept = 0;
+        for (const row of merged[tbl] || []) {
+          if (scoreRelevance(row, {}, ctx, relGates, profile).hard_exclusions.some((r) => HARD.has(r))) hardKept++;
+        }
+        if (shadow.flagged_rows > 0 || hardKept > 0) {
+          console.log(
+            `relevance shadow ${tbl}: ${JSON.stringify(shadow.by_reason)} ` +
+            `flagged=${shadow.flagged_rows}/${shadow.evaluated} hard_gate_divergence=${hardKept}`,
+          );
+        }
       }
+    } catch (e) {
+      console.error("relevance shadow error (non-fatal):", e instanceof Error ? e.message : String(e));
     }
   }
 
