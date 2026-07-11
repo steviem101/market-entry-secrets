@@ -50,10 +50,19 @@ jobs:
           EVAL_USER_PASSWORD: ${{ secrets.EVAL_USER_PASSWORD }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RUN_LABEL: ${{ github.event.pull_request.head.sha || github.sha }}
+          # Pass the dispatch input through the environment — NEVER interpolate
+          # ${{ github.event.inputs.* }} into the run script: with the secrets
+          # above in scope that is a GitHub Actions script-injection / secret-
+          # exfiltration vector.
+          GOLDENS_INPUT: ${{ github.event.inputs.goldens }}
         run: |
           ARGS=""
-          if [ -n "${{ github.event.inputs.goldens || '' }}" ]; then
-            ARGS="--goldens ${{ github.event.inputs.goldens }}"
+          if [ -n "$GOLDENS_INPUT" ]; then
+            # Defence in depth: reject anything outside the golden-id charset.
+            case "$GOLDENS_INPUT" in
+              *[!a-zA-Z0-9,_-]*) echo "Invalid goldens input" >&2; exit 1 ;;
+            esac
+            ARGS="--goldens=$GOLDENS_INPUT"
           fi
           # --no-lock: the root deno.lock pins esm.sh hashes for other tooling
           # and drifts as esm.sh re-resolves unpinned deps — the runner is not

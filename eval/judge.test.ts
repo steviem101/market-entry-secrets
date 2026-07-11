@@ -54,6 +54,15 @@ test("parseJudgeResponse: valid reply round-trips; every expected section requir
     null,
   );
   assert.equal(parseJudgeResponse("not json", ["executive_summary"]), null);
+  // prose-wrapped array is salvaged to the outermost brackets
+  const salvaged = parseJudgeResponse(
+    'Here are the scores: [{"section":"executive_summary","grounding":4,"specificity":4,"personalisation":4,"duplication":4}] — done.',
+    ["executive_summary"],
+  );
+  assert.ok(salvaged);
+  assert.equal(salvaged!.executive_summary.grounding, 4);
+  // uppercase code fence is stripped
+  assert.ok(parseJudgeResponse('```JSON\n[{"section":"executive_summary","grounding":3,"specificity":3,"personalisation":3,"duplication":3}]\n```', ["executive_summary"]));
   // unexpected section name → reject
   assert.equal(
     parseJudgeResponse('[{"section":"mystery","grounding":4,"specificity":3,"personalisation":5,"duplication":4}]', ["executive_summary"]),

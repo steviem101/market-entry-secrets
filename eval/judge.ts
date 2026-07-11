@@ -70,7 +70,13 @@ export function parseJudgeResponse(
 ): Record<string, SectionScores> | null {
   let parsed: unknown;
   try {
-    const cleaned = (raw || "").replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+    let cleaned = (raw || "").replace(/```json?\n?/gi, "").replace(/```/g, "").trim();
+    // Salvage an array wrapped in stray prose ("Here are the scores: [ ... ]")
+    // by slicing to the outermost brackets — mirrors rubric.ts's parseScoring.
+    if (!cleaned.startsWith("[")) {
+      const s = cleaned.indexOf("["), e = cleaned.lastIndexOf("]");
+      if (s !== -1 && e > s) cleaned = cleaned.slice(s, e + 1);
+    }
     parsed = JSON.parse(cleaned);
   } catch {
     return null;
@@ -108,6 +114,7 @@ export interface Regression {
 
 export interface BaselineFile {
   rubric_version?: string;
+  judge_model?: string; // the judge that produced these scores; a mismatch invalidates the gate
   goldens: Record<string, Record<string, SectionScores>>; // golden_id -> section -> scores
 }
 

@@ -73,10 +73,19 @@ if (missing.length > 0) {
 }
 
 const updateBaseline = Deno.args.includes("--update-baseline");
-const goldenFilterArg = Deno.args.find((a) => a.startsWith("--goldens"));
-const goldenFilter = goldenFilterArg
-  ? (Deno.args[Deno.args.indexOf(goldenFilterArg) + 1] || goldenFilterArg.split("=")[1] || "").split(",").filter(Boolean)
-  : null;
+// Accept both `--goldens a,b` and `--goldens=a,b`. The equals-form value is
+// read from the flag token itself; the space-form value is the NEXT token only
+// when it isn't itself a flag (so `--goldens=x --update-baseline` doesn't grab
+// `--update-baseline` as the filter).
+function parseGoldenFilter(): string[] | null {
+  const eq = Deno.args.find((a) => a.startsWith("--goldens="));
+  if (eq) return eq.slice("--goldens=".length).split(",").filter(Boolean);
+  const i = Deno.args.indexOf("--goldens");
+  if (i === -1) return null;
+  const next = Deno.args[i + 1];
+  return (next && !next.startsWith("--") ? next : "").split(",").filter(Boolean);
+}
+const goldenFilter = parseGoldenFilter();
 const runLabel = Deno.env.get("RUN_LABEL") || `local-${new Date().toISOString().slice(0, 16)}`;
 
 interface Golden {
@@ -119,7 +128,11 @@ async function callJudge(prompt: string): Promise<string | null> {
       return null;
     }
     const data = await resp.json();
-    return (data.content || []).map((b: { text?: string }) => b?.text || "").join("") || null;
+    // Text blocks only — a non-text block would otherwise contribute "".
+    return (data.content || [])
+      .filter((b: { type?: string }) => b?.type === "text")
+      .map((b: { text?: string }) => b?.text || "")
+      .join("") || null;
   } catch (e) {
     console.error("  judge call threw:", e instanceof Error ? e.message : e);
     return null;
@@ -142,6 +155,21 @@ async function main() {
   } catch {
     console.log("No readable eval/baselines.json — regression gate inactive this run.");
   }
+  // A baseline is only comparable when it was produced by the SAME rubric AND
+  // judge model — otherwise a diff measures the judge change, not the pipeline.
+  // On mismatch, deactivate the gate (loud warning) rather than compare across
+  // incompatible judges. --update-baseline re-stamps and adopts the current set.
+  if (baseline && !updateBaseline) {
+    const rubricOk = !baseline.rubric_version || baseline.rubric_version === RUBRIC_VERSION;
+    const judgeOk = !baseline.judge_model || baseline.judge_model === JUDGE_MODEL;
+    if (!rubricOk || !judgeOk) {
+      console.warn(
+        `⚠︎ baseline incompatible (baseline rubric=${baseline.rubric_version}/judge=${baseline.judge_model} ` +
+        `vs current rubric=${RUBRIC_VERSION}/judge=${JUDGE_MODEL}) — regression gate DISABLED this run. Re-baseline with --update-baseline.`,
+      );
+      baseline = null;
+    }
+  }
 
   const userClient = createClient(env.url!, env.anonKey!);
   const { data: auth, error: authErr } = await userClient.auth.signInWithPassword({
@@ -155,7 +183,7 @@ async function main() {
   const service = createClient(env.url!, env.serviceKey!);
 
   const allRegressions: Regression[] = [];
-  const newBaseline: BaselineFile = { rubric_version: RUBRIC_VERSION, goldens: { ...(baseline?.goldens ?? {}) } };
+  const newBaseline: BaselineFile = { rubric_version: RUBRIC_VERSION, judge_model: JUDGE_MODEL, goldens: { ...(baseline?.goldens ?? {}) } };
   let judgeFailures = 0;
 
   for (const golden of goldens) {

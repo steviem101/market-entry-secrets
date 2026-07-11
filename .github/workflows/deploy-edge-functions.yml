@@ -35,6 +35,9 @@ on:
       - "supabase/functions/create-checkout/**"
       - "supabase/functions/stripe-webhook/**"
       - "supabase/functions/stripe-webhook-reconcile/**"
+      - "supabase/functions/process-email-queue/**"
+      - "supabase/functions/email-assets/**"
+      - "supabase/functions/import-contact-images/**"
       - "supabase/functions/_shared/**"
       - ".github/workflows/deploy-edge-functions.yml"
 
@@ -84,3 +87,15 @@ jobs:
 
       - name: Deploy stripe-webhook-reconcile
         run: supabase functions deploy stripe-webhook-reconcile --project-ref "$PROJECT_REF"
+
+      # MES-148: the new deno-check CI type-checks these three, so keep repo and
+      # prod in lockstep — otherwise a CI-forced type fix never reaches prod and
+      # the next manual deploy ships an unexpected diff.
+      - name: Deploy process-email-queue
+        run: supabase functions deploy process-email-queue --project-ref "$PROJECT_REF"
+
+      - name: Deploy email-assets
+        run: supabase functions deploy email-assets --project-ref "$PROJECT_REF"
+
+      - name: Deploy import-contact-images
+        run: supabase functions deploy import-contact-images --project-ref "$PROJECT_REF"

@@ -125,7 +125,7 @@ export function parseClaimsResponse(
 ): ReportClaim[] | null {
   let parsed: unknown;
   try {
-    const cleaned = (raw || "").replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+    const cleaned = (raw || "").replace(/```json?\n?/gi, "").replace(/```/g, "").trim();
     parsed = JSON.parse(cleaned);
   } catch {
     return null;

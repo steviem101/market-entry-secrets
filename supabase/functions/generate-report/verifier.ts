@@ -71,9 +71,13 @@ export function normalizeNumeral(raw: string): number | null {
 // [N] citation markers, markdown link targets (URLs), and code spans.
 function stripNonFactualDigits(text: string): string {
   return (text || "")
-    .replace(/\[(\d{1,3})\]/g, " ")
+    // Drop markdown link TARGETS first: a linked citation like
+    // `[2](https://x/report-12500)` must lose its URL before the [N] strip,
+    // otherwise removing `[2]` breaks the `](` match and the URL's digits (12500)
+    // survive into numeral extraction as a phantom figure.
     .replace(/\]\([^)]*\)/g, "]") // keep link text, drop the URL
-    .replace(/`[^`]*`/g, " ");
+    .replace(/\[(\d{1,3})\]/g, " ") // [N] citation markers
+    .replace(/`[^`]*`/g, " ");      // code spans
 }
 
 const NUMERAL_PATTERNS: RegExp[] = [
@@ -92,30 +96,36 @@ const NUMERAL_PATTERNS: RegExp[] = [
  *  surrounding context for telemetry/adjudication. */
 export function extractNumerals(text: string): NumeralMention[] {
   const cleaned = stripNonFactualDigits(text);
-  const out: NumeralMention[] = [];
-  const seenSpans = new Set<string>();
+  // Collect every match with its ACTUAL span (m.index), then suppress spans that
+  // start inside an already-kept longer span. Overlap is tested against the real
+  // match position — not indexOf(raw), which finds the first occurrence and so
+  // (a) mis-tests a figure that repeats and (b) rescans the whole string O(n²).
+  const spans: Array<{ start: number; end: number; raw: string }> = [];
   for (const pattern of NUMERAL_PATTERNS) {
     pattern.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = pattern.exec(cleaned)) !== null) {
       const raw = m[0].trim();
-      const key = `${m.index}|${raw}`;
-      if (seenSpans.has(key)) continue;
-      // Skip if this span is inside an already-captured longer mention
-      // (the currency pattern also matches what the magnitude pattern sees).
-      const overlaps = out.some((o) =>
-        cleaned.indexOf(o.raw) !== -1 &&
-        m!.index >= cleaned.indexOf(o.raw) &&
-        m!.index < cleaned.indexOf(o.raw) + o.raw.length
-      );
-      if (overlaps) continue;
-      seenSpans.add(key);
-      out.push({
-        raw,
-        normalized: normalizeNumeral(raw),
-        context: cleaned.slice(Math.max(0, m.index - 40), m.index + raw.length + 40).replace(/\s+/g, " ").trim(),
-      });
+      // The trimmed raw can be shorter than m[0] (leading/trailing space); anchor
+      // the span at the raw's offset within the match so the bounds stay tight.
+      const lead = m[0].indexOf(raw);
+      const start = m.index + (lead < 0 ? 0 : lead);
+      spans.push({ start, end: start + raw.length, raw });
     }
+  }
+  // Sort by start, then by longest span first, so the enclosing currency match
+  // is kept and the inner bare-magnitude match is suppressed.
+  spans.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+  const out: NumeralMention[] = [];
+  const kept: Array<{ start: number; end: number }> = [];
+  for (const s of spans) {
+    if (kept.some((k) => s.start >= k.start && s.start < k.end)) continue;
+    kept.push({ start: s.start, end: s.end });
+    out.push({
+      raw: s.raw,
+      normalized: normalizeNumeral(s.raw),
+      context: cleaned.slice(Math.max(0, s.start - 40), s.end + 40).replace(/\s+/g, " ").trim(),
+    });
   }
   return out;
 }
@@ -123,7 +133,9 @@ export function extractNumerals(text: string): NumeralMention[] {
 // ── Allowed-evidence corpus ───────────────────────────────────────────────
 
 export interface EvidenceCorpus {
-  /** Normalised numbers found anywhere in the provided evidence. */
+  /** Sorted, de-duplicated normalised numbers found anywhere in the evidence.
+   *  Sorted so numeralIsSupported can binary-search the ±tolerance band instead
+   *  of scanning the whole array per checked figure. */
   numbers: number[];
   /** Lowercased haystack of all evidence text (entity substring checks). */
   haystack: string;
@@ -142,19 +154,26 @@ export function buildEvidenceCorpus(
   const joined = texts.filter(Boolean).join("\n");
   const claimText = claims.map((c) => `${c.statement} ${c.value ?? ""}`).join("\n");
   const all = `${joined}\n${claimText}`;
-  const numbers: number[] = [];
-  for (const mention of extractNumerals(all)) {
-    if (mention.normalized !== null) numbers.push(mention.normalized);
-  }
-  // Percent-free plain numbers in evidence also matter (e.g. "43.5" in a table);
-  // add every digit-run's normalised value cheaply.
-  const plain = all.match(/\d[\d,]*(?:\.\d+)?/g) || [];
-  for (const p of plain) {
-    const n = Number(p.replace(/,/g, ""));
-    if (Number.isFinite(n)) numbers.push(n);
+  // ONE pass: every digit-run, plus (when a magnitude suffix follows) the
+  // magnitude-multiplied value — so "8.48 billion" contributes both 8.48 and
+  // 8.48e9. A Set dedups the (id/score/timestamp-heavy) corpus, and we sort once
+  // so numeralIsSupported can binary-search. The old code ran the full
+  // extractNumerals machinery (with its own quadratic overlap check) over this
+  // hundreds-of-KB string AND then a second plain-digit pass — both are folded here.
+  const set = new Set<number>();
+  const DIGIT_MAG = /(\d[\d,]*(?:\.\d+)?)\s?(k|mn|m|bn|b|t|million|billion|trillion)?/gi;
+  let m: RegExpExecArray | null;
+  while ((m = DIGIT_MAG.exec(all)) !== null) {
+    const base = Number(m[1].replace(/,/g, ""));
+    if (!Number.isFinite(base)) continue;
+    set.add(base);
+    if (m[2]) {
+      const scaled = normalizeNumeral(m[0]);
+      if (scaled !== null) set.add(scaled);
+    }
   }
   return {
-    numbers,
+    numbers: [...set].sort((a, b) => a - b),
     haystack: all.toLowerCase(),
     entityNames: new Set(entityNames.filter(Boolean).map((n) => n.toLowerCase().trim())),
   };
@@ -168,10 +187,28 @@ const REL_TOLERANCE = 0.01;
 export function numeralIsSupported(mention: NumeralMention, corpus: EvidenceCorpus): boolean {
   if (mention.normalized === null) return true; // unparseable → not checkable
   const target = mention.normalized;
-  for (const n of corpus.numbers) {
-    if (n === target) return true;
+  const nums = corpus.numbers; // sorted ascending
+  if (nums.length === 0) return false;
+  // Binary-search the insertion point, then check only the neighbours within the
+  // relative-tolerance band (evidence numbers are sorted + de-duplicated).
+  let lo = 0, hi = nums.length - 1, pos = nums.length;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (nums[mid] >= target) { pos = mid; hi = mid - 1; } else { lo = mid + 1; }
+  }
+  const within = (n: number) => {
     const scale = Math.max(Math.abs(n), Math.abs(target));
-    if (scale > 0 && Math.abs(n - target) / scale <= REL_TOLERANCE) return true;
+    return n === target || (scale > 0 && Math.abs(n - target) / scale <= REL_TOLERANCE);
+  };
+  for (let i = pos; i < nums.length; i++) {
+    if (within(nums[i])) return true;
+    const scale = Math.max(Math.abs(nums[i]), Math.abs(target));
+    if (scale > 0 && (nums[i] - target) / scale > REL_TOLERANCE) break;
+  }
+  for (let i = pos - 1; i >= 0; i--) {
+    if (within(nums[i])) return true;
+    const scale = Math.max(Math.abs(nums[i]), Math.abs(target));
+    if (scale > 0 && (target - nums[i]) / scale > REL_TOLERANCE) break;
   }
   return false;
 }
@@ -188,6 +225,7 @@ const LEAD_STOPWORDS = new Set([
   "australian", "australia", "new", "key", "your", "our", "with", "by", "on",
   "to", "from", "as", "at", "it", "they", "we", "if", "each", "every", "both",
   "prioritise", "prioritize", "contact", "review", "attend", "secure", "focus",
+  "explore", "visit", "discover", "establish", "ensure", "target", "expand",
 ]);
 
 // Generic report phrases that are proper-noun-shaped but never fabricated
@@ -219,23 +257,29 @@ export function extractCandidateEntities(text: string): string[] {
   const tokenRun =
     /[A-Z][A-Za-z0-9&'’-]*(?:[ \t]+(?:[A-Z][A-Za-z0-9&'’-]*|of|and|for|the|&|de|du)){1,6}/g;
   const out = new Set<string>();
+  const allowed = (toks: string[]) =>
+    BUILTIN_ALLOW.has(toks.join(" ").replace(/[.,;:]+$/, "").toLowerCase());
   let m: RegExpExecArray | null;
   while ((m = tokenRun.exec(cleaned)) !== null) {
     let tokens = m[0].split(/\s+/);
     // Trim trailing connectors ("Department of" → drop the dangling "of").
     while (tokens.length && CONNECTORS.has(tokens[tokens.length - 1].toLowerCase())) tokens.pop();
     if (tokens.length < 2) continue;
-    // Drop a sentence-start ordinary word leading the phrase.
+    // Check the allowlist on the FULL phrase BEFORE stripping a lead stopword —
+    // otherwise an allowlisted name that legitimately starts with a stopword
+    // ("New South Wales" → "new" is a lead-stopword) gets mangled to "South
+    // Wales" and flagged. (Probe: this was a live false positive.)
+    if (allowed(tokens)) continue;
+    // Drop a sentence-start ordinary word leading the phrase, then re-check the
+    // allowlist ("Explore New Zealand" → "New Zealand", which is allowlisted).
     if (LEAD_STOPWORDS.has(tokens[0].toLowerCase())) {
       tokens = tokens.slice(1);
-      if (tokens.length < 2) continue;
+      if (tokens.length < 2 || allowed(tokens)) continue;
     }
     // Require at least two genuinely capitalised tokens after trimming.
     const caps = tokens.filter((t) => /^[A-Z]/.test(t));
     if (caps.length < 2) continue;
-    const phrase = tokens.join(" ").replace(/[.,;:]+$/, "");
-    if (BUILTIN_ALLOW.has(phrase.toLowerCase())) continue;
-    out.add(phrase);
+    out.add(tokens.join(" ").replace(/[.,;:]+$/, ""));
   }
   return [...out];
 }
@@ -327,18 +371,26 @@ export function parseAdjudication(
   itemCount: number,
 ): Array<{ index: number; fabricated: boolean; reason: string }> | null {
   try {
-    const cleaned = (raw || "").replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+    const cleaned = (raw || "").replace(/```json?\n?/gi, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(cleaned);
     if (!Array.isArray(parsed)) return null;
     const out: Array<{ index: number; fabricated: boolean; reason: string }> = [];
+    const seen = new Set<number>();
     for (const v of parsed) {
       if (typeof v !== "object" || v === null) return null;
       const o = v as Record<string, unknown>;
       const index = Number(o.index);
       if (!Number.isInteger(index) || index < 1 || index > itemCount) return null;
+      if (seen.has(index)) return null; // duplicate verdict → reject the whole reply
       if (typeof o.fabricated !== "boolean") return null;
+      seen.add(index);
       out.push({ index, fabricated: o.fabricated, reason: String(o.reason ?? "").slice(0, 200) });
     }
+    // Require a verdict for EVERY flagged item: a partial reply would otherwise
+    // let unlisted items default to not-fabricated, silently passing potential
+    // fabrications in blocking mode. Reject → caller treats adjudication as
+    // unavailable (fail-closed: no regeneration).
+    if (seen.size !== itemCount) return null;
     return out;
   } catch {
     return null;

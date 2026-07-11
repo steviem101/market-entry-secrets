@@ -40,6 +40,21 @@ test("extractNumerals: finds figures, skips citation markers, URLs and years", (
   assert.ok(!raws.includes("2024"));
 });
 
+test("extractNumerals: a linked citation's URL digits are not extracted (strip ordering)", () => {
+  // [2](.../report-12500): the link target must be stripped before the [2]
+  // marker, else 12500 survives as a phantom figure.
+  const raws = extractNumerals("Growth is strong [2](https://example.com/report-12500).").map((n) => n.raw);
+  assert.ok(!raws.some((r) => r.includes("12500")));
+});
+
+test("extractNumerals: a repeated figure is not double-extracted (span dedup, not indexOf)", () => {
+  // "US$2.1 billion" twice must yield exactly two mentions, both the full raw —
+  // the old indexOf-first overlap check leaked a spurious bare "2.1 billion".
+  const raws = extractNumerals("A US$2.1 billion pool; this US$2.1 billion chance.").map((n) => n.raw);
+  assert.equal(raws.length, 2);
+  assert.ok(raws.every((r) => /\$?2\.1\s?billion/i.test(r)));
+});
+
 test("numeralIsSupported: exact, tolerance-rounded, and fabricated figures", () => {
   const corpus = buildEvidenceCorpus(
     ["Market size was estimated at $8.48 billion in 2024, CAGR 5.1%."],
@@ -69,7 +84,19 @@ test("extractCandidateEntities: multi-word proper nouns, minus headings/stop-lea
   assert.ok(entities.includes("Department of Home Affairs"));
   assert.ok(entities.includes("KPMG Australia"));
   assert.ok(!entities.some((e) => e.includes("Executive Summary"))); // heading stripped
-  assert.ok(!entities.includes("New South Wales")); // builtin allowlist
+  // "New South Wales" is allowlisted AND must not be mangled into "South Wales"
+  // by lead-stopword trimming of "new" (the confirmed false positive).
+  assert.ok(!entities.includes("New South Wales"));
+  assert.ok(!entities.some((e) => e === "South Wales"));
+});
+
+test("extractCandidateEntities: verb-led phrase resolves to its allowlisted tail", () => {
+  // "Explore New Zealand" → "Explore" is a lead stopword; the remaining
+  // "New Zealand" is allowlisted, so nothing is flagged.
+  const entities = extractCandidateEntities("Explore New Zealand for expansion.");
+  assert.ok(!entities.some((e) => e === "South Wales"));
+  assert.ok(!entities.includes("New Zealand"));
+  assert.ok(!entities.includes("Explore New Zealand"));
 });
 
 test("entityIsSupported: directory names, corpus mentions and near-name matches pass", () => {
@@ -130,6 +157,13 @@ test("flaggedItemsOf + buildAdjudicationPrompt + parseAdjudication round-trip", 
   // malformed replies are rejected, not partially applied
   assert.equal(parseAdjudication('[{"index":9,"fabricated":true}]', flagged.length), null);
   assert.equal(parseAdjudication("garbage", flagged.length), null);
+  // a reply that omits an item is rejected (no silent not-fabricated default)
+  assert.equal(parseAdjudication('[{"index":1,"fabricated":true}]', flagged.length), null);
+  // duplicate verdicts are rejected
+  assert.equal(
+    parseAdjudication('[{"index":1,"fabricated":true},{"index":1,"fabricated":false}]', flagged.length),
+    null,
+  );
 });
 
 test("buildRegenerationNote: lists only the section's own flagged items", () => {

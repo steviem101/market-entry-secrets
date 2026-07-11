@@ -1068,7 +1068,12 @@ async function adjudicateWithAnthropic(prompt: string): Promise<string | null> {
       return null;
     }
     const data = await resp.json();
-    const text = (data.content || []).map((b: any) => b?.text || "").join("");
+    // Filter to text blocks (a non-text block, e.g. a thinking block, would
+    // otherwise contribute "" and could shift the joined output).
+    const text = (data.content || [])
+      .filter((b: any) => b?.type === "text")
+      .map((b: any) => b.text || "")
+      .join("");
     return text || null;
   } catch (e) {
     console.error("Adjudication call failed:", e instanceof Error ? e.message : "unknown");
@@ -1973,18 +1978,34 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
 }
 
 // ── MES-148 1b: stage artifacts (persist + resume) ─────────────────────
-// The expensive research/matching phase and the drafted sections are
-// snapshotted to report_run_artifacts (service-role-only table) keyed by
-// intake_form_id. A retry of the same intake — e.g. after the reaper marks a
-// stuck run failed — resumes from the freshest artifact instead of re-paying
-// Firecrawl/Perplexity/LLM spend. Best-effort on write, fail-open on read.
+// The expensive research/matching phase is snapshotted to report_run_artifacts
+// (service-role-only table) keyed by intake_form_id. A retry of the same intake
+// — e.g. after the reaper marks a stuck run failed — resumes from the freshest
+// `research_bundle` instead of re-paying Firecrawl/Perplexity/LLM spend. Best-
+// effort on write, fail-open on read.
+//
+// We deliberately DO NOT resume drafted sections. Reusing stored drafts would
+// carry the ORIGINAL run's per-section `visible` flags (a tier-gating hazard —
+// get_shared_report strips on the stored flag) and the ORIGINAL run's active
+// template set, and could be paired with a different run's research bundle.
+// Regenerating sections from the resumed research is cheap relative to the
+// research itself, and it recomputes tier-visibility, section set, verification,
+// and the claims registry correctly for the retry. (The `drafts`/`match_set`/
+// `briefs` stage values remain in the table CHECK for the Phase 3 pgmq DAG.)
 const ARTIFACT_TTL_MS = 24 * 60 * 60 * 1000; // research is intake-derived; a day-old bundle is still valid for a retry
+
+// "false"/"0" are truthy strings in JS, so an operator setting
+// REPORT_RESUME_DISABLED=false would otherwise silently keep resume OFF.
+function resumeDisabled(): boolean {
+  const v = (Deno.env.get("REPORT_RESUME_DISABLED") || "").trim().toLowerCase();
+  return v !== "" && v !== "false" && v !== "0" && v !== "no";
+}
 
 async function saveStageArtifact(
   supabase: any,
   intakeFormId: string,
   reportId: string,
-  stage: "research_bundle" | "drafts",
+  stage: "research_bundle",
   artifact: Record<string, unknown>,
 ): Promise<void> {
   try {
@@ -2004,20 +2025,23 @@ async function saveStageArtifact(
 async function loadStageArtifact(
   supabase: any,
   intakeFormId: string,
-  stage: "research_bundle" | "drafts",
+  stage: "research_bundle",
 ): Promise<Record<string, any> | null> {
-  if (Deno.env.get("REPORT_RESUME_DISABLED")) return null;
+  if (resumeDisabled()) return null;
   try {
+    // TTL enforced in the query (index-covered) so a stale artifact is never
+    // fetched-then-discarded.
+    const cutoff = new Date(Date.now() - ARTIFACT_TTL_MS).toISOString();
     const { data, error } = await supabase
       .from("report_run_artifacts")
-      .select("artifact, created_at")
+      .select("artifact")
       .eq("intake_form_id", intakeFormId)
       .eq("stage", stage)
+      .gte("created_at", cutoff)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (error || !data?.artifact) return null;
-    if (Date.now() - new Date(data.created_at).getTime() > ARTIFACT_TTL_MS) return null;
     return data.artifact as Record<string, any>;
   } catch (e) {
     console.error(`Stage artifact load (${stage}) threw (continuing without resume):`, e);
@@ -2063,10 +2087,8 @@ async function generateReportInBackground(
     // ── MES-148 1b: resume-from-artifact ────────────────────────────────
     // If a fresh research_bundle exists for this intake (a prior run got that
     // far before dying / being reaped), skip the whole research/matching phase.
-    // Drafts are only reused when the research bundle they were written from is
-    // also available (report_json.matches must match the drafted prose).
+    // Sections are always regenerated from it (see saveStageArtifact note).
     const resumedResearch = await loadStageArtifact(supabase, intakeFormId, "research_bundle");
-    const resumedDrafts = resumedResearch ? await loadStageArtifact(supabase, intakeFormId, "drafts") : null;
 
     // One stats collector per report, threaded through every Firecrawl wrapper
     // so the metadata can report plumbing health + total op count (P1/P2).
@@ -2336,17 +2358,25 @@ async function generateReportInBackground(
       let extracted: ReportClaim[] = [];
       if (researchStreams.some((s) => (s.text || "").trim())) {
         const extractionPrompt = buildClaimsExtractionPrompt(researchStreams);
+        // The retry covers BOTH a schema-invalid reply AND a transient callAI
+        // throw (429/5xx/timeout) — the throw is caught here, inside the loop,
+        // so it doesn't escape to the outer catch and discard metricClaims (the
+        // deterministic key-metric claims that needed no AI call).
         for (let attempt = 1; attempt <= 2 && !claimsExtractionOk; attempt++) {
-          const raw = await callAI(lovableKey, [
-            { role: "system", content: "You extract structured factual claims from market research notes. Return only valid JSON, no markdown fences." },
-            { role: "user", content: extractionPrompt },
-          ], "google/gemini-3-flash-preview", { temperature: 0.1 });
-          const parsed = parseClaimsResponse(raw, metricClaims.length + 1);
-          if (parsed) {
-            extracted = parsed;
-            claimsExtractionOk = true;
-          } else {
-            console.warn(`Claims extraction attempt ${attempt} failed schema validation`);
+          try {
+            const raw = await callAI(lovableKey, [
+              { role: "system", content: "You extract structured factual claims from market research notes. Return only valid JSON, no markdown fences." },
+              { role: "user", content: extractionPrompt },
+            ], "google/gemini-3-flash-preview", { temperature: 0.1 });
+            const parsed = parseClaimsResponse(raw, metricClaims.length + 1);
+            if (parsed) {
+              extracted = parsed;
+              claimsExtractionOk = true;
+            } else {
+              console.warn(`Claims extraction attempt ${attempt} failed schema validation`);
+            }
+          } catch (e) {
+            console.warn(`Claims extraction attempt ${attempt} threw (continuing):`, e instanceof Error ? e.message : e);
           }
         }
       }
@@ -2504,9 +2534,6 @@ async function generateReportInBackground(
     // 6. Generate sections
     const sections: Record<string, any> = {};
     const sectionsGenerated: string[] = [];
-    // MES-148 1b: drafted sections from a prior run of this intake (only used
-    // when the research bundle they were written from was also resumed).
-    const hasResumedDrafts = !!(resumedDrafts && resumedDrafts.sections && Object.keys(resumedDrafts.sections).length > 0);
 
     // ── Citation availability (P0-4) ─────────────────────────────────────
     // When Perplexity returned no citations, instructing the model that it
@@ -2642,7 +2669,7 @@ async function generateReportInBackground(
     // are matched rows only) and fail-open (no focus / no picks → renders as
     // before). Computed once here; the exec-summary section attaches the cards.
     let keyQuestionPicks: PickCard[] = [];
-    if (reportFocus && !hasResumedDrafts) {
+    if (reportFocus) {
       try {
         const candidates = buildPickCandidates(matches);
         if (candidates.length > 0) {
@@ -2668,8 +2695,7 @@ async function generateReportInBackground(
     // provenance guardrail. Best-effort: failure leaves reports exactly as before.
     let synthesisSignalNote = "";
     try {
-      // Skipped on drafts-resume: the prompts it feeds won't be re-run.
-      const linkedInSignal = hasResumedDrafts ? "" : await fetchLinkedInSignal(supabase, intake);
+      const linkedInSignal = await fetchLinkedInSignal(supabase, intake);
       if (linkedInSignal) {
         synthesisSignalNote = `\n\nPRACTITIONER SIGNAL (BACKGROUND ONLY — STRICT RULES): Below are anonymised excerpts from recent public posts by Australian market-entry practitioners and founders, provided purely as situational awareness. Use them ONLY to inform themes, framing, and what currently matters in-market. You MUST: (a) abstract and combine ideas in your own words; (b) NEVER reproduce any excerpt verbatim or near-verbatim; (c) NEVER quote them or wrap their wording in quotation marks; (d) NEVER attribute any statement to a named person, company, or post; (e) NEVER cite or list them as a source. Treat them as uncited background, not evidence.\n${linkedInSignal}`;
       }
@@ -2679,13 +2705,12 @@ async function generateReportInBackground(
 
     // MES-148 1a: each section's final prompt pair is stashed so blocking-mode
     // verification can regenerate a failing section once with a corrective note.
+    // Only populated in blocking mode — the regeneration loop is the sole reader,
+    // so shadow-mode runs don't retain ~1MB of prompt strings for the rest of the run.
+    const captureSectionPrompts = Deno.env.get("CLAIMS_VERIFIER_MODE") === "blocking";
     const sectionPrompts: Record<string, { system: string; user: string }> = {};
 
-    if (hasResumedDrafts) {
-      console.log("Resume: drafts artifact found — skipping section generation");
-      Object.assign(sections, resumedDrafts!.sections);
-      sectionsGenerated.push(...(((resumedDrafts!.sections_generated as string[]) ?? []).filter(Boolean)));
-    } else if (templates && templates.length > 0) {
+    if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
       // stored with `visible: false`. The frontend reads `visible` to gate
@@ -2723,7 +2748,7 @@ PRESENTATION & FORMATTING (applies to every section):
 
 ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}`;
 
-            sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
+            if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
@@ -2798,10 +2823,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     const verifierMode = Deno.env.get("CLAIMS_VERIFIER_MODE") === "blocking" ? "blocking" : "shadow";
     const MAX_REGENERATED_SECTIONS = 3;
     let verification: Record<string, unknown> | null = null;
-    if (hasResumedDrafts) {
-      // Drafts were verified when first generated — reuse that result.
-      verification = (resumedDrafts!.verification as Record<string, unknown> | null) ?? null;
-    } else try {
+    try {
       const knownEntityNames: string[] = [intake.company_name];
       for (const arr of Object.values(matches)) {
         if (!Array.isArray(arr)) continue;
@@ -2821,29 +2843,39 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       let result = verifySections(sections, sectionOrder, corpus);
       const flagged = flaggedItemsOf(result);
 
-      // ONE strong-model adjudication call, only when something was flagged —
-      // separates true fabrications from benign derivations before anything
-      // could block. Fail-open: no key / bad reply keeps flags advisory-only.
-      let adjudication: "not_needed" | "applied" | "unavailable" = "not_needed";
-      let fabricated: FlaggedItem[] = flagged;
-      if (flagged.length > 0) {
+      // ONE strong-model adjudication call, only in BLOCKING mode and only when
+      // something was flagged — it separates true fabrications from benign
+      // derivations before a rewrite. In shadow mode the verdict would only
+      // decorate telemetry, so we skip it (no latency, no Anthropic spend, and
+      // the durable completed-save that follows isn't delayed by a 30s call).
+      let adjudication: "not_needed" | "applied" | "unavailable" | "shadow_skipped" = "not_needed";
+      // Fail-CLOSED on adjudication: only items the judge positively marks
+      // fabricated may trigger a rewrite. If the judge is unavailable/unparseable
+      // we do NOT treat every heuristic flag as fabricated (that would regenerate
+      // good sections from noise) — flags stay advisory.
+      let fabricated: FlaggedItem[] = [];
+      if (verifierMode === "blocking" && flagged.length > 0) {
         const raw = await adjudicateWithAnthropic(buildAdjudicationPrompt(flagged));
         const verdicts = raw ? parseAdjudication(raw, flagged.length) : null;
         if (verdicts) {
           adjudication = "applied";
-          fabricated = flagged.filter((_, i) => verdicts.find((v) => v.index === i + 1)?.fabricated);
+          const byIndex = new Map(verdicts.map((v) => [v.index, v.fabricated] as const));
+          fabricated = flagged.filter((_, i) => byIndex.get(i + 1) === true);
         } else {
           adjudication = "unavailable";
         }
+      } else if (flagged.length > 0) {
+        adjudication = "shadow_skipped";
       }
 
       const regenerated: string[] = [];
       const stillUnverified: string[] = [];
       if (verifierMode === "blocking" && fabricated.length > 0) {
         const failingSections = [...new Set(fabricated.map((f) => f.section))].slice(0, MAX_REGENERATED_SECTIONS);
-        for (const name of failingSections) {
+        // Independent rewrites — run them concurrently (mirrors the section batch).
+        await Promise.allSettled(failingSections.map(async (name) => {
           const p = sectionPrompts[name];
-          if (!p || !sections[name]?.content) continue;
+          if (!p || !sections[name]?.content) return;
           try {
             const rewritten = await callAI(lovableKey, [
               { role: "system", content: p.system + buildRegenerationNote(fabricated, name) },
@@ -2856,7 +2888,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
           } catch (e) {
             console.error(`Blocking verifier: regeneration of ${name} failed:`, e);
           }
-        }
+        }));
         // Regenerate once, then flag: a section whose fabricated items survive
         // the rewrite (or whose rewrite failed) is marked unverified_facts in
         // its section data — additive metadata the frontend can badge later.
@@ -2871,6 +2903,12 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         }
       }
 
+      // Persisted telemetry is COUNTS-ONLY per section. The raw unverified
+      // numerals/entities are fragments of section prose — including gated
+      // sections — and report_json.metadata rides PAST the tier-gating strip
+      // point (get_tier_gated_report / get_shared_report only rewrite `sections`),
+      // so persisting the raw strings would leak gated-section text to free/anon
+      // readers (CLAUDE.md §7). The raw strings stay in the server log below.
       verification = {
         mode: verifierMode,
         adjudication,
@@ -2885,27 +2923,21 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             section: s.section,
             numerals_checked: s.numerals_checked,
             entities_checked: s.entities_checked,
-            unverified_numerals: s.unverified_numerals.slice(0, 10).map((n) => n.raw),
-            unverified_entities: s.unverified_entities.slice(0, 10),
+            unverified_numerals_count: s.unverified_numerals.length,
+            unverified_entities_count: s.unverified_entities.length,
           })),
       };
       console.log(
         `Verifier (${verifierMode}): checked ${result.totals.numerals_checked} numerals + ${result.totals.entities_checked} entities; ` +
         `flagged ${flagged.length}, fabricated ${fabricated.length} (adjudication: ${adjudication})` +
         `${regenerated.length ? `; regenerated [${regenerated.join(", ")}]` : ""}` +
-        `${stillUnverified.length ? `; still unverified [${stillUnverified.join(", ")}]` : ""}`,
+        `${stillUnverified.length ? `; still unverified [${stillUnverified.join(", ")}]` : ""}` +
+        // Raw flagged text is safe in server logs (never in report_json) — this
+        // is where an operator inspects false positives during the shadow rollout.
+        (flagged.length ? ` | flagged: ${JSON.stringify(flagged.slice(0, 20).map((f) => `${f.section}:${f.kind}:${f.text}`))}` : ""),
       );
     } catch (e) {
       console.error("Grounding verification failed (continuing):", e);
-    }
-
-    // MES-148 1b: snapshot the (verified) drafts so a retry resumes here.
-    if (!hasResumedDrafts) {
-      await saveStageArtifact(supabase, intakeFormId, reportId, "drafts", {
-        sections,
-        sections_generated: sectionsGenerated,
-        verification,
-      });
     }
 
     // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
@@ -2988,10 +3020,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // Phase 2). null = the step failed fail-open.
         claims_registry: { count: reportClaims.length, extraction_ok: claimsExtractionOk },
         verification,
-        // MES-148 1b: which stage artifacts this run resumed from (both false =
-        // a full fresh run). Costs in firecrawl_health/perplexity_health read
-        // zero on a resumed run — that's the point.
-        resume: { research_bundle: !!resumedResearch, drafts: hasResumedDrafts },
+        // MES-148 1b: whether this run resumed the research phase from a prior
+        // run's artifact (false = a full fresh run). Costs in firecrawl_health/
+        // perplexity_health read zero on a resumed run — that's the point.
+        resume: { research_bundle: !!resumedResearch },
         // Renumbered alongside the sections so metric-card [N]s and the stored
         // Sources list stay 1:1 (falls back to the originals when no citations).
         key_metrics: cited.keyMetrics ?? keyMetrics,
