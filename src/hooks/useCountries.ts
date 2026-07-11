@@ -1,7 +1,6 @@
-
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-
+// The canonical countries row shape. Data access moved to the RPCs behind
+// useCountryPage (detail) and useCountryDirectory (listing); this module now
+// only owns the row type.
 export interface CountryData {
   id: string;
   name: string;
@@ -11,7 +10,7 @@ export interface CountryData {
   hero_description: string;
   location_type: string;
   trade_relationship_strength: string | null;
-  economic_indicators: any;
+  economic_indicators: Record<string, unknown> | null;
   key_industries: string[];
   keywords: string[];
   content_keywords: string[];
@@ -23,54 +22,3 @@ export interface CountryData {
   created_at: string;
   updated_at: string;
 }
-
-export const useCountries = () => {
-  return useQuery({
-    queryKey: ['countries'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('countries')
-        .select('*')
-        .order('sort_order', { ascending: true });
-
-      if (error) throw error;
-      return data as CountryData[];
-    },
-    staleTime: 30 * 60 * 1000
-  });
-};
-
-export const useFeaturedCountries = () => {
-  return useQuery({
-    queryKey: ['featured-countries'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('countries')
-        .select('*')
-        .eq('featured', true)
-        .order('sort_order', { ascending: true });
-
-      if (error) throw error;
-      return data as CountryData[];
-    },
-    staleTime: 30 * 60 * 1000
-  });
-};
-
-export const useCountryBySlug = (slug: string) => {
-  return useQuery({
-    queryKey: ['country', slug],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('countries')
-        .select('*')
-        .eq('slug', slug)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data as CountryData;
-    },
-    enabled: !!slug,
-    staleTime: 30 * 60 * 1000
-  });
-};

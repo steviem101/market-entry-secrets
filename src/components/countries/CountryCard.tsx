@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Star } from "lucide-react";
-import { CountryData } from "@/hooks/useCountries";
+import { CountryDirectoryEntry } from "@/hooks/useCountryDirectory";
 import { CountryFlag } from "./CountryFlag";
 import { getCountryCode } from "@/lib/countryCodes";
 import { Link } from "react-router-dom";
 
 interface CountryCardProps {
-  country: CountryData;
+  country: CountryDirectoryEntry;
   featured?: boolean;
 }
 
@@ -18,9 +18,24 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
+// True data-density signals from curated links + editorial coverage;
+// zero-count parts are dropped so tiles never advertise emptiness.
+const densityLine = (c: CountryDirectoryEntry) => {
+  const parts = [
+    c.case_study_count > 0 ? `${c.case_study_count} case studies` : null,
+    c.mentor_count > 0 ? `${c.mentor_count} mentors` : null,
+    c.agency_count > 0 ? `${c.agency_count} agencies` : null,
+    c.investor_count > 0 ? `${c.investor_count} investors` : null,
+  ].filter(Boolean);
+  return parts.join(" · ");
+};
+
 const CountryCard = ({ country, featured = false }: CountryCardProps) => {
-  const economicData = country.economic_indicators;
+  const economicData = country.economic_indicators as
+    | { gdp?: string; population?: string; trade_volume_aud?: string }
+    | null;
   const countryCode = getCountryCode(country.slug);
+  const density = country.has_page_content ? densityLine(country) : "";
 
   const stats: { label: string; value: string }[] = [];
   if (economicData?.gdp) stats.push({ label: "GDP", value: String(economicData.gdp) });
@@ -70,6 +85,14 @@ const CountryCard = ({ country, featured = false }: CountryCardProps) => {
         <CardContent className="flex flex-1 flex-col">
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{country.description}</p>
 
+          {density ? (
+            <p className="mb-4 text-sm font-medium text-foreground/80 tabular-nums">{density}</p>
+          ) : !country.has_page_content ? (
+            <Badge variant="outline" className="mb-4 w-fit">
+              Playbook coming soon
+            </Badge>
+          ) : null}
+
           {stats.length > 0 && (
             <div className="flex gap-2 mb-4">
               {stats.map((s) => (
@@ -97,7 +120,7 @@ const CountryCard = ({ country, featured = false }: CountryCardProps) => {
           )}
 
           <span className="mt-auto pt-4 inline-flex items-center text-sm font-medium text-primary">
-            View country playbook
+            {country.has_page_content ? "View country playbook" : "Preview country page"}
             <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </span>
         </CardContent>
