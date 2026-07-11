@@ -15,6 +15,11 @@ const SLUG_TO_CODE: Record<string, string> = {
   "united-states": "US",
   "united-states-of-america": "US",
   singapore: "SG",
+  canada: "CA",
+  japan: "JP",
+  "south-korea": "KR",
+  korea: "KR",
+  france: "FR",
 };
 
 export const getCountryCode = (slug: string | null | undefined): string | null => {

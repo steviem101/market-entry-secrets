@@ -11,6 +11,7 @@ interface AgencyCardProps {
     role?: string | null;
     logo?: string | null;
     slug?: string | null;
+    blurb?: string | null;
   };
 }
 
@@ -39,8 +40,14 @@ export const AgencyCard = ({ agency }: AgencyCardProps) => {
           )}
         </div>
       </div>
-      {agency.description && (
-        <p className="mt-4 text-[14px] leading-relaxed text-mes-ink-soft">{agency.description}</p>
+      {agency.blurb ? (
+        <p className="mt-4 text-[13.5px] leading-relaxed text-mes-ink-soft border-l-2 border-mes-blue-light pl-3">
+          {agency.blurb}
+        </p>
+      ) : (
+        agency.description && (
+          <p className="mt-4 text-[14px] leading-relaxed text-mes-ink-soft">{agency.description}</p>
+        )
       )}
       <div className="mt-auto pt-4">
         <CardCTA

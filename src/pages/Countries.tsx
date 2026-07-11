@@ -1,10 +1,7 @@
-
 import { useState } from "react";
 import CountriesHero from "@/components/countries/CountriesHero";
-import FeaturedCountriesSection from "@/components/countries/FeaturedCountriesSection";
-import AllCountriesSection from "@/components/countries/AllCountriesSection";
+import CountriesDirectorySection from "@/components/countries/CountriesDirectorySection";
 import CountriesCallToAction from "@/components/countries/CountriesCallToAction";
-import { UsageBanner } from "@/components/UsageBanner";
 import { SEOHead } from "@/components/common/SEOHead";
 
 const Countries = () => {
@@ -14,25 +11,19 @@ const Countries = () => {
     <>
       <SEOHead
         title="Source Countries | Market Entry Secrets"
-        description="Explore market entry resources by country of origin for businesses expanding to Australia."
+        description="Explore market entry playbooks by country of origin for businesses expanding to Australia: case studies, mentors, agencies, and investors per corridor."
         canonicalPath="/countries"
       />
       <main>
-        <div className="container mx-auto px-4 pt-4">
-          <UsageBanner />
-        </div>
         <CountriesHero
-          searchQuery={searchQuery} 
-          onSearchChange={setSearchQuery} 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
-        
-        {!searchQuery && <FeaturedCountriesSection />}
-        
-        <AllCountriesSection searchQuery={searchQuery} />
-        
+
+        <CountriesDirectorySection searchQuery={searchQuery} />
+
         <CountriesCallToAction />
       </main>
-      
     </>
   );
 };
