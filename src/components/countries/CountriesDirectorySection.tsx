@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { useCountryDirectory, CountryDirectoryEntry } from "@/hooks/useCountryDirectory";
+import { useCountryDirectory } from "@/hooks/useCountryDirectory";
+import {
+  filterAndSortCountries,
+  distinctStrengths,
+  topSectors,
+  type CountrySortMode,
+} from "@/lib/countryDirectoryFilters";
 import { badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
@@ -15,58 +21,19 @@ interface CountriesDirectorySectionProps {
   searchQuery: string;
 }
 
-type SortMode = "featured" | "density" | "alphabetical";
-
-const density = (c: CountryDirectoryEntry) =>
-  c.case_study_count + c.mentor_count + c.agency_count + c.investor_count + c.provider_count;
-
 const CountriesDirectorySection = ({ searchQuery }: CountriesDirectorySectionProps) => {
   const { data: countries = [], isLoading } = useCountryDirectory();
   const [strength, setStrength] = useState<string | null>(null);
   const [sector, setSector] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortMode>("featured");
+  const [sort, setSort] = useState<CountrySortMode>("featured");
 
-  const strengths = useMemo(
-    () =>
-      Array.from(
-        new Set(countries.map((c) => c.trade_relationship_strength).filter(Boolean)),
-      ) as string[],
-    [countries],
+  const strengths = useMemo(() => distinctStrengths(countries), [countries]);
+  const sectors = useMemo(() => topSectors(countries), [countries]);
+
+  const visible = useMemo(
+    () => filterAndSortCountries(countries, { search: searchQuery, strength, sector, sort }),
+    [countries, searchQuery, strength, sector, sort],
   );
-
-  const sectors = useMemo(() => {
-    const counts = new Map<string, number>();
-    countries.forEach((c) =>
-      c.key_industries.forEach((k) => counts.set(k, (counts.get(k) ?? 0) + 1)),
-    );
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([k]) => k);
-  }, [countries]);
-
-  const visible = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    let list = countries.filter((c) => {
-      if (strength && c.trade_relationship_strength !== strength) return false;
-      if (sector && !c.key_industries.includes(sector)) return false;
-      if (!q) return true;
-      return (
-        c.name.toLowerCase().includes(q) ||
-        c.description.toLowerCase().includes(q) ||
-        c.key_industries.some((k) => k.toLowerCase().includes(q))
-      );
-    });
-
-    list = [...list].sort((a, b) => {
-      if (sort === "alphabetical") return a.name.localeCompare(b.name);
-      if (sort === "density") return density(b) - density(a) || a.name.localeCompare(b.name);
-      // featured first, then data density, then name
-      if (a.featured !== b.featured) return a.featured ? -1 : 1;
-      return density(b) - density(a) || a.name.localeCompare(b.name);
-    });
-    return list;
-  }, [countries, searchQuery, strength, sector, sort]);
 
   if (isLoading) {
     return (
@@ -114,7 +81,7 @@ const CountriesDirectorySection = ({ searchQuery }: CountriesDirectorySectionPro
             ))}
           </div>
 
-          <Select value={sort} onValueChange={(v) => setSort(v as SortMode)}>
+          <Select value={sort} onValueChange={(v) => setSort(v as CountrySortMode)}>
             <SelectTrigger className="w-[190px] shrink-0">
               <SelectValue placeholder="Sort" />
             </SelectTrigger>

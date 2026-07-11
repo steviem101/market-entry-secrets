@@ -15,6 +15,15 @@ const VerticalTricolour = ({ stripes }: { stripes: [string, string, string] }) =
 
 const IrishFlag = () => <VerticalTricolour stripes={["#169B62", "#FFFFFF", "#FF883E"]} />;
 
+const FrenchFlag = () => <VerticalTricolour stripes={["#002395", "#FFFFFF", "#ED2939"]} />;
+
+const JapaneseFlag = () => (
+  <svg viewBox="0 0 30 20" className="w-full h-full block" aria-hidden>
+    <rect width="30" height="20" fill="#FFFFFF" />
+    <circle cx="15" cy="10" r="6" fill="#BC002D" />
+  </svg>
+);
+
 const UnionJack = () => (
   <svg viewBox="0 0 60 30" className="w-full h-full block" aria-hidden>
     <rect width="60" height="30" fill="#012169" />
@@ -64,12 +73,16 @@ const AustralianFlag = () => (
   </svg>
 );
 
+// CA and KR intentionally have no renderer (maple leaf and taegeuk don't
+// simplify well) — they fall back to the Globe glyph below.
 const FLAGS: Record<string, () => JSX.Element> = {
   IE: IrishFlag,
   GB: UnionJack,
   US: USFlag,
   SG: SingaporeFlag,
   AU: AustralianFlag,
+  FR: FrenchFlag,
+  JP: JapaneseFlag,
 };
 
 export const CountryFlag = ({ countryCode, className }: CountryFlagProps) => {

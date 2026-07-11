@@ -84,6 +84,14 @@ export interface CountryCity {
   [key: string]: unknown;
 }
 
+export interface CountryLinkTotals {
+  mentor?: number;
+  agency?: number;
+  service_provider?: number;
+  investor?: number;
+  event?: number;
+}
+
 export interface CountryPageBundle {
   country: CountryData;
   page_content: CountryPageContent | null;
@@ -98,6 +106,7 @@ export interface CountryPageBundle {
   investors: CountryLinkedInvestor[];
   events: CountryLinkedEvent[];
   cities: CountryCity[];
+  link_totals: CountryLinkTotals;
 }
 
 // The RPC is not in the generated Supabase types yet, so cast the client

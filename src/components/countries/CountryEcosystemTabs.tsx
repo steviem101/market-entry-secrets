@@ -12,6 +12,7 @@ import type {
   CountryLinkedMentor,
   CountryLinkedProvider,
   CountryLinkedInvestor,
+  CountryLinkTotals,
 } from "@/hooks/useCountryPage";
 
 interface CountryEcosystemTabsProps {
@@ -21,7 +22,15 @@ interface CountryEcosystemTabsProps {
   mentors: CountryLinkedMentor[];
   services: CountryLinkedProvider[];
   investors: CountryLinkedInvestor[];
+  totals?: CountryLinkTotals;
 }
+
+const DIRECTORY_LINKS: Record<string, { href: string; label: string }> = {
+  agencies: { href: "/government-support", label: "government support directory" },
+  mentors: { href: "/mentors", label: "mentors directory" },
+  services: { href: "/service-providers", label: "service providers directory" },
+  investors: { href: "/investors", label: "investors directory" },
+};
 
 const EMPTY_COPY: Record<string, (country: string) => string> = {
   agencies: (c) => `We're mapping the agencies that support ${c} companies entering Australia.`,
@@ -37,30 +46,37 @@ export const CountryEcosystemTabs = ({
   mentors,
   services,
   investors,
+  totals = {},
 }: CountryEcosystemTabsProps) => {
+  // Header counts show the TOTAL curated links (matching the listing tiles);
+  // only the top few render as cards, with a browse-all line when truncated.
   const panels = [
     {
       value: "agencies",
       label: "Agencies",
-      count: agencies.length,
+      shown: agencies.length,
+      total: Math.max(totals.agency ?? 0, agencies.length),
       cards: agencies.map((a) => <AgencyCard key={a.id} agency={a} />),
     },
     {
       value: "mentors",
       label: "Mentors",
-      count: mentors.length,
+      shown: mentors.length,
+      total: Math.max(totals.mentor ?? 0, mentors.length),
       cards: mentors.map((m) => <MentorCard key={m.id} mentor={m} />),
     },
     {
       value: "services",
       label: "Services",
-      count: services.length,
+      shown: services.length,
+      total: Math.max(totals.service_provider ?? 0, services.length),
       cards: services.map((s) => <ServiceCard key={s.id} provider={s} />),
     },
     {
       value: "investors",
       label: "Investors",
-      count: investors.length,
+      shown: investors.length,
+      total: Math.max(totals.investor ?? 0, investors.length),
       cards: investors.map((i) => <InvestorCard key={i.id} investor={i} />),
     },
   ];
@@ -92,7 +108,7 @@ export const CountryEcosystemTabs = ({
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span className="text-[14px] font-medium">{p.label}</span>
-                <span className="text-[11px] text-mes-ink-muted tabular-nums">({p.count})</span>
+                <span className="text-[11px] text-mes-ink-muted tabular-nums">({p.total})</span>
                 <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-mes-ink opacity-0 group-data-[state=active]:opacity-100" />
               </TabsTrigger>
             ))}
@@ -100,7 +116,7 @@ export const CountryEcosystemTabs = ({
 
           {panels.map((p) => (
             <TabsContent key={p.value} value={p.value} className="mt-8">
-              {p.count === 0 ? (
+              {p.shown === 0 ? (
                 <div className="border border-mes-border bg-mes-bg rounded-xl p-6 max-w-2xl">
                   <p className="text-[15px] font-semibold text-mes-ink">
                     {EMPTY_COPY[p.value]?.(countryName)}
@@ -121,7 +137,21 @@ export const CountryEcosystemTabs = ({
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{p.cards}</div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{p.cards}</div>
+                  {p.total > p.shown && (
+                    <p className="mt-6 text-[13.5px] text-mes-ink-soft">
+                      Showing the top {p.shown} of {p.total} curated {p.label.toLowerCase()}.{" "}
+                      <Link
+                        to={DIRECTORY_LINKS[p.value].href}
+                        className="font-medium text-mes-teal-dark hover:text-mes-ink underline underline-offset-2"
+                      >
+                        Browse the full {DIRECTORY_LINKS[p.value].label}
+                      </Link>
+                      .
+                    </p>
+                  )}
+                </>
               )}
             </TabsContent>
           ))}

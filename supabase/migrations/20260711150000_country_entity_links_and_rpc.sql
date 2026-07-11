@@ -282,17 +282,34 @@ SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM country) THEN NULL ELSE jsonb_build_o
     WHERE l.entity_type = 'investor' AND l.rank <= 6
   ), '[]'::jsonb),
   'events', COALESCE((
-    SELECT jsonb_agg(jsonb_build_object(
-      'id', e.id, 'title', e.title, 'slug', e.slug, 'date', e.date,
-      'location', e.location, 'description', e.description, 'category', e.category,
-      'blurb', l.blurb
-    ) ORDER BY e.date NULLS LAST)
-    FROM ranked_links l
-    JOIN events e ON e.id = l.entity_id
-    WHERE l.entity_type = 'event'
-      AND (e.date IS NULL OR e.date >= CURRENT_DATE)
-      AND l.rank <= 6
+    -- Date-filter BEFORE taking the top 6: rank is computed over all event
+    -- links, so applying rank <= 6 first could starve upcoming events behind
+    -- past ones.
+    SELECT jsonb_agg(sub.ev ORDER BY sub.event_date NULLS LAST)
+    FROM (
+      SELECT e.date AS event_date,
+             jsonb_build_object(
+               'id', e.id, 'title', e.title, 'slug', e.slug, 'date', e.date,
+               'location', e.location, 'description', e.description, 'category', e.category,
+               'blurb', l.blurb
+             ) AS ev
+      FROM ranked_links l
+      JOIN events e ON e.id = l.entity_id
+      WHERE l.entity_type = 'event'
+        AND (e.date IS NULL OR e.date >= CURRENT_DATE)
+      ORDER BY e.date NULLS LAST, l.rank
+      LIMIT 6
+    ) sub
   ), '[]'::jsonb),
+  'link_totals', (
+    -- Totals across ALL approved links per type, so tab headers and listing
+    -- tiles agree even though only the top 6 render as cards.
+    SELECT COALESCE(jsonb_object_agg(l.entity_type, l.n), '{}'::jsonb)
+    FROM (
+      SELECT entity_type, COUNT(*) AS n
+      FROM ranked_links GROUP BY entity_type
+    ) l
+  ),
   'cities', COALESCE((
     SELECT jsonb_agg(to_jsonb(loc) ORDER BY ord.i)
     FROM country_page_content p

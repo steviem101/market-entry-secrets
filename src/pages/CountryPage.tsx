@@ -71,6 +71,7 @@ const CountryPage = () => {
     investors,
     events,
     cities,
+    link_totals: linkTotals,
   } = bundle;
 
   const fundingOrigin = funding.filter((f) => f.side === "origin");
@@ -159,6 +160,7 @@ const CountryPage = () => {
           mentors={mentors}
           services={serviceProviders}
           investors={investors}
+          totals={linkTotals}
         />
 
         <CountryPlaybook
