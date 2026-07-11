@@ -382,3 +382,28 @@ Notion trigger (verified), and the whole Actions pipeline. MES `ii_*` should now
    reverting any II-native post-cutover updates (metrics/embeddings/status) with frozen MES data.
 5. Then Hard Stop 2 (explicit approval) → capture byte-exact rollback → drop MES `ii_*` → remove
    the 2 MES edge fns → re-run mes-context canary → get_advisors → rotate the shared DB passwords.
+
+---
+
+### 2026-07-11 — apify-webhook verified live end-to-end; II is now source of truth
+
+Operator raised the Apify monthly limit ($29→$40) and re-ran task `3RnAZzC9CsXXPZrbM`
+(`harvestapi/linkedin-profile-posts`). On completion the webhook fired and delivered:
+`POST 200` (2.3s), **692 posts pre-filtered → 430 kept into `ii_content` (linkedin_post)**,
+262 dropped. Totals: `ii_content` 7124→7554, `ii_prefilter_log` 14091→14783. APIFY_TOKEN fix
+confirmed working against a real dataset.
+
+**Both edge functions now verified with live traffic:** apify-webhook (430 real rows) +
+notion-research-trigger (real dispatch 200). Irish Insights holds 430 linkedin rows MES does
+NOT have (MES Apify was billing-blocked) — i.e. II is now legitimately ahead; the cutover is real.
+
+**Confirmed live paths:** Apify ingest ✅, Notion research dispatch ✅.
+**Not yet watched end-to-end on II:** the Gmail/Beehiiv/classifier GitHub-Actions pipeline —
+same shared secrets, so low risk, and the 430 new unclassified rows (is_ii_relevant=null) are a
+natural pending test for the next classifier run. Operator confirmed pipeline is Actions-only.
+
+**Endgame remaining:** (1) confirm one GitHub-Actions run reads/writes II (email ingest +
+classifier picking up the 430 new rows); (2) final INSERT-ONLY freeze-sync (MES is frozen ~24h;
+must not clobber II's now-fresh data); (3) Hard Stop 2 explicit approval → capture byte-exact
+rollback → drop MES `ii_*` → remove 2 MES edge fns → re-run mes-context canary → get_advisors →
+rotate the shared DB passwords.
