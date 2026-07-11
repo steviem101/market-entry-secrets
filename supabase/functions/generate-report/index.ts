@@ -1928,18 +1928,20 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // preferRelevant, so a thin pool still renders) — UNLESS the company is
   // international, or explicitly asked for immigration / relocation /
   // international-hiring help.
-  if (!isInternationalOrigin(intake.country_of_origin)) {
-    const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
-      `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
-    );
-    if (!wantsImmigration) {
-      for (const [tbl, floor] of [["community_members", 3], ["service_providers", 4]] as const) {
-        if (!(merged[tbl] || []).length) continue;
-        const before = merged[tbl].length;
-        merged[tbl] = preferRelevant(merged[tbl], (r: any) => !isImmigrationFocused(r), floor);
-        const dropped = before - merged[tbl].length;
-        if (dropped > 0) console.log(`immigration filter (domestic) ${tbl}: demoted ${dropped} row(s)`);
-      }
+  // Computed once and shared with the Phase 2d shadow below, so both read the SAME
+  // immigration-intent signal — a drifted second copy would make the shadow
+  // misreport divergence, defeating its purpose.
+  const isDomesticOrigin = !isInternationalOrigin(intake.country_of_origin);
+  const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
+    `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
+  );
+  if (isDomesticOrigin && !wantsImmigration) {
+    for (const [tbl, floor] of [["community_members", 3], ["service_providers", 4]] as const) {
+      if (!(merged[tbl] || []).length) continue;
+      const before = merged[tbl].length;
+      merged[tbl] = preferRelevant(merged[tbl], (r: any) => !isImmigrationFocused(r), floor);
+      const dropped = before - merged[tbl].length;
+      if (dropped > 0) console.log(`immigration filter (domestic) ${tbl}: demoted ${dropped} row(s)`);
     }
   }
 
@@ -1950,18 +1952,18 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // ~0 if the port is faithful). Counts only, server logs only — NOT written to
   // report_json.metadata (which rides past the tier strip point). Purely additive
   // telemetry to validate the function before it becomes authoritative behind the
-  // golden harness; wrapped so it can NEVER break generation, and switchable off.
-  if (Deno.env.get("REPORT_RELEVANCE_SHADOW") !== "off") {
+  // golden harness; wrapped so it can NEVER break generation, and switchable off
+  // (any of off/false/0/no, case-insensitive).
+  const shadowFlag = (Deno.env.get("REPORT_RELEVANCE_SHADOW") || "").trim().toLowerCase();
+  if (!["off", "false", "0", "no"].includes(shadowFlag)) {
     try {
-      const wantsImmigrationShadow = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
-        `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
-      );
       const relGates: RelevanceGates = {
         geoMatcher,
         agencyOriginTerms,
         targetRegions: geoTargetRegions,
         icpTokens: leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []),
-        excludeImmigration: !isInternationalOrigin(intake.country_of_origin) && !wantsImmigrationShadow,
+        // Shares the live gate's exact immigration signal (computed once above).
+        excludeImmigration: isDomesticOrigin && !wantsImmigration,
       };
       const RELEVANCE_PROFILES: Record<string, RelevanceProfile> = {
         service_providers: { geo: true, chamber: true, immigration: true },
