@@ -19,23 +19,17 @@ export interface CountryDirectoryEntry {
   provider_count: number;
 }
 
-// The RPC is not in the generated Supabase types yet; cast through `unknown`
-// to a minimal typed surface (avoids `any`), matching the intake funnel pattern.
-interface MinimalRpcClient {
-  rpc: (fn: string) => PromiseLike<{ data: unknown; error: unknown }>;
-}
-
 // One call for the /countries listing: every country plus true data-density
 // signals (curated links + editorial coverage) so tiles can be honest about
-// what each corridor page actually holds.
+// what each corridor page actually holds. The RPC returns Json in the
+// generated types; the entry shape is asserted here.
 export const useCountryDirectory = () => {
   return useQuery({
     queryKey: ["country-directory"],
     queryFn: async (): Promise<CountryDirectoryEntry[]> => {
-      const client = supabase as unknown as MinimalRpcClient;
-      const { data, error } = await client.rpc("get_country_directory");
+      const { data, error } = await supabase.rpc("get_country_directory");
       if (error) throw error;
-      return (data as CountryDirectoryEntry[]) ?? [];
+      return (data as unknown as CountryDirectoryEntry[]) ?? [];
     },
     staleTime: 30 * 60 * 1000,
   });

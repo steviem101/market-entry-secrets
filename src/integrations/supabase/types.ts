@@ -1184,6 +1184,65 @@ export type Database = {
           },
         ]
       }
+      country_entity_links: {
+        Row: {
+          blurb: string | null
+          country_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          is_featured: boolean
+          relationship: string
+          relevance: number
+          sort_order: number | null
+          source: string
+          status: string
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          blurb?: string | null
+          country_id: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_featured?: boolean
+          relationship: string
+          relevance?: number
+          sort_order?: number | null
+          source?: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          blurb?: string | null
+          country_id?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_featured?: boolean
+          relationship?: string
+          relevance?: number
+          sort_order?: number | null
+          source?: string
+          status?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_entity_links_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       country_faqs: {
         Row: {
           answer: string
@@ -1324,6 +1383,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      country_page_events: {
+        Row: {
+          country_slug: string
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          section: string | null
+          session_id: string
+        }
+        Insert: {
+          country_slug: string
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          section?: string | null
+          session_id: string
+        }
+        Update: {
+          country_slug?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          section?: string | null
+          session_id?: string
+        }
+        Relationships: []
       }
       country_playbook_stages: {
         Row: {
@@ -5469,6 +5558,50 @@ export type Database = {
         }
         Relationships: []
       }
+      service_provider_contacts_public: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          is_primary: boolean | null
+          linkedin_url: string | null
+          role: string | null
+          service_provider_id: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          linkedin_url?: string | null
+          role?: string | null
+          service_provider_id?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          linkedin_url?: string | null
+          role?: string | null
+          service_provider_id?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_provider_contacts_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       any_sector_agnostic: { Args: { raws: string[] }; Returns: boolean }
@@ -5483,6 +5616,8 @@ export type Database = {
         Returns: string
       }
       generate_slug: { Args: { input_text: string }; Returns: string }
+      get_country_directory: { Args: never; Returns: Json }
+      get_country_page: { Args: { page_slug: string }; Returns: Json }
       get_ecosystem_stats: { Args: never; Returns: Json }
       get_shared_report: {
         Args: { p_share_token: string }
