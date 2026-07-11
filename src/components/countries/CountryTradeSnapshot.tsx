@@ -1,4 +1,5 @@
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { SectionHeading } from "@/components/common/SectionHeading";
 import type { CountryTradeMetric } from "@/lib/countryPageContent";
 
 interface CountryTradeSnapshotProps {
@@ -12,17 +13,13 @@ export const CountryTradeSnapshot = ({ metrics, countryName }: CountryTradeSnaps
   return (
     <section className="bg-mes-ink text-white border-b border-mes-ink">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-20">
-        <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-blue-light mb-3">
-            01 / Trade snapshot
-          </div>
-          <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold">
-            The numbers behind {countryName} to Australia
-          </h2>
-          <p className="mt-4 text-[16px] md:text-[17px] leading-relaxed max-w-2xl text-white/70">
-            Six tiles. Pulled from the official sources Irish founders use to underwrite an Australia decision.
-          </p>
-        </div>
+        <SectionHeading
+          className="mb-10"
+          tone="inverse"
+          kicker="01 / Trade snapshot"
+          title={`The numbers behind ${countryName} to Australia`}
+          subhead={`Six tiles. Pulled from the official sources ${countryName} founders use to underwrite an Australia decision.`}
+        />
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {metrics.map((m, i) => {

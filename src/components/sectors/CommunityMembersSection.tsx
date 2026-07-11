@@ -16,6 +16,7 @@ const CommunityMembersSection = ({ communityMembers }: CommunityMembersSectionPr
   return (
     <ListingPageGate contentType="community_members">
       <SectorSection
+        kicker="Mentors"
         title="Industry Experts & Mentors"
         viewAllLink="/mentors"
         viewAllText="View All Experts"

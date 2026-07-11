@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CountryFlag } from "./CountryFlag";
+import { SectionHeading } from "@/components/common/SectionHeading";
 import type { CountryFundingInstrument } from "@/lib/countryPageContent";
 
 interface CountryFundingPathwaysProps {
@@ -44,17 +45,12 @@ export const CountryFundingPathways = ({
   return (
     <section className="border-b border-mes-border bg-mes-card">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
-        <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
-            06 / Funding pathways
-          </div>
-          <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
-            Stack {countryName} grants on top of AU credits
-          </h2>
-          <p className="mt-3 text-[16px] leading-relaxed text-mes-ink-soft">
-            Use {countryName} origin support to fund discovery. Use AU instruments to fund execution.
-          </p>
-        </div>
+        <SectionHeading
+          className="mb-10"
+          kicker="06 / Funding pathways"
+          title={`Stack ${countryName} grants on top of AU credits`}
+          subhead={`Use ${countryName} origin support to fund discovery. Use AU instruments to fund execution.`}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className="bg-mes-bg border border-mes-border rounded-xl p-6">

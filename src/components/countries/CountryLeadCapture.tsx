@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { trackCountryEvent } from "@/lib/analytics/countryFunnel";
+import { SectionHeading } from "@/components/common/SectionHeading";
 
 interface CountryLeadCaptureProps {
   countryName: string;
@@ -45,14 +46,11 @@ export const CountryLeadCapture = ({
   return (
     <section className="border-b border-mes-border bg-mes-bg">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
-        <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
-            10 / Get started
-          </div>
-          <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
-            Three ways {countryName} founders work with us
-          </h2>
-        </div>
+        <SectionHeading
+          className="mb-10"
+          kicker="10 / Get started"
+          title={`Three ways ${countryName} founders work with us`}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <article className="bg-mes-card border border-mes-border rounded-xl p-6 flex flex-col">

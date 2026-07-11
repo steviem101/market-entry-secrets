@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { trackCountryEvent } from "@/lib/analytics/countryFunnel";
+import { SectionHeading } from "@/components/common/SectionHeading";
 import { AgencyCard } from "./parts/AgencyCard";
 import { MentorCard } from "./parts/MentorCard";
 import { ServiceCard } from "./parts/ServiceCard";
@@ -84,17 +85,12 @@ export const CountryEcosystemTabs = ({
   return (
     <section id="ecosystem" className="border-b border-mes-border bg-mes-card">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
-        <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
-            04 / Ecosystem
-          </div>
-          <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
-            The {countryName} to Australia network
-          </h2>
-          <p className="mt-3 text-[16px] leading-relaxed text-mes-ink-soft">
-            Vetted agencies, mentors, services, and investors who already work the corridor.
-          </p>
-        </div>
+        <SectionHeading
+          className="mb-10"
+          kicker="04 / Ecosystem"
+          title={`The ${countryName} to Australia network`}
+          subhead="Vetted agencies, mentors, services, and investors who already work the corridor."
+        />
 
         <Tabs defaultValue="agencies" className="w-full">
           <TabsList className="bg-transparent h-auto p-0 border-b border-mes-border w-full justify-start gap-6 rounded-none">

@@ -13,6 +13,7 @@ const InnovationEcosystemSection = ({ innovationEcosystem }: InnovationEcosystem
   return (
     <ListingPageGate contentType="innovation_ecosystem">
       <SectorSection
+        kicker="Innovation"
         title="Innovation Ecosystem Partners"
         viewAllLink="/innovation-ecosystem"
         viewAllText="View All Partners"

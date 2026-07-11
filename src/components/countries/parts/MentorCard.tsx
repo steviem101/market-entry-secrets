@@ -20,14 +20,23 @@ export const MentorCard = ({ mentor }: MentorCardProps) => {
   return (
     <DirectoryCard compact>
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-mes-ink/10 text-mes-ink flex items-center justify-center font-semibold">
-          {mentor.name
-            .split(/\s+/)
-            .map((p) => p[0])
-            .slice(0, 2)
-            .join("")
-            .toUpperCase()}
-        </div>
+        {mentor.photo ? (
+          <img
+            src={mentor.photo}
+            alt=""
+            className="w-12 h-12 rounded-full object-cover border border-mes-border"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-mes-ink/10 text-mes-ink flex items-center justify-center font-semibold">
+            {mentor.name
+              .split(/\s+/)
+              .map((p) => p[0])
+              .slice(0, 2)
+              .join("")
+              .toUpperCase()}
+          </div>
+        )}
         <div className="min-w-0">
           <h3 className="text-[16px] font-semibold text-mes-ink leading-snug">{mentor.name}</h3>
           <div className="text-[12.5px] text-mes-ink-soft truncate">

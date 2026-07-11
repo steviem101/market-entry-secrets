@@ -3,6 +3,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SectionHeading } from "@/components/common/SectionHeading";
 import type { CountryFaq } from "@/lib/countryPageContent";
 
 interface CountryFAQProps {
@@ -27,14 +28,11 @@ export const CountryFAQ = ({ countryName, countrySlug, faqs }: CountryFAQProps) 
   return (
     <section id="faqs" className="border-b border-mes-border bg-mes-card">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-24">
-        <div className="mb-10 max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-mes-teal-dark mb-3">
-            09 / FAQs
-          </div>
-          <h2 className="text-3xl md:text-[40px] leading-[1.1] tracking-tight font-semibold text-mes-ink">
-            The questions {countryName} founders actually ask
-          </h2>
-        </div>
+        <SectionHeading
+          className="mb-10"
+          kicker="09 / FAQs"
+          title={`The questions ${countryName} founders actually ask`}
+        />
 
         <div className="grid grid-cols-12 gap-8">
           <aside className="hidden md:block md:col-span-4">

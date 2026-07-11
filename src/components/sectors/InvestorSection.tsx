@@ -12,6 +12,7 @@ const InvestorSection = ({ investors }: InvestorSectionProps) => {
   return (
     <ListingPageGate contentType="investor">
       <SectorSection
+        kicker="Capital"
         title="Investors"
         viewAllLink="/investors"
         viewAllText="View All Investors"
