@@ -2433,6 +2433,18 @@ async function generateReportInBackground(
       ? `\n\nNO MATCHED LEAD DATASETS (this section): The directory returned NO lead datasets matching this company's buyer profile. Keep this section SHORT and honest (2–4 sentences): state that no pre-built list matched their specific buyer profile and that they can request a custom list built for them (a request form appears directly below this section). Do NOT name or recommend specific investors, VCs, angel groups, accelerators, funds, or companies here — those are covered in other sections and naming un-provided ones is not grounded. Do NOT cite market-size, ecosystem-value, or funding figures that are not in the canonical figures list.`
       : "";
 
+    // Lead-list SCOPE guard (Daon review): the lead_list section must be ONLY
+    // about the purchasable lead datasets in {{matched_leads_json}} + the custom-
+    // list request box. When few datasets match, the model padded the section
+    // with industry communities, events, accelerators, service providers and
+    // mentors — all of which have their OWN sections — producing a duplicated
+    // "networking strategy" under the Lead List heading (Daon: 1 lead card, prose
+    // covering Cyber West / AISA / FinTechWA / Austrade / West Tech Fest). This is
+    // amplified when report_focus pulls toward communities ("find relevant
+    // industry communities"), because focusNote is injected into every section.
+    // Applied on EVERY lead_list run (not just the empty case) to hold the line.
+    const leadScopeNote = `\n\nSTRICT SCOPE (this section only): Write ONLY about the pre-built lead datasets provided in the matched leads data above, and the option to request a custom-built list (a request form renders directly below this section). Do NOT discuss, list, or recommend industry communities, associations, networks, events, conferences, accelerators, incubators, co-working spaces, service providers, government/trade agencies, mentors, or investors — every one of those has its OWN dedicated section elsewhere in this report, and repeating them here duplicates the report. If the user's stated priority points toward communities or networking, do NOT satisfy it here — the relevant sections already do. If no dataset matches a given need, say so briefly and point to the custom-list request rather than substituting other entity types.`;
+
     // D2: emphasise (never hide) the sections the user's selected goals map to.
     const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
 
@@ -2512,7 +2524,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}`;
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
