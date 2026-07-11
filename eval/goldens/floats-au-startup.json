@@ -1,0 +1,73 @@
+{
+  "golden_id": "floats-au-startup",
+  "description": "Australian recruitment-tech AI startup (Melbourne), startup persona, R&D-grant focus — the canonical grants/investor/mentor slate.",
+  "frozen_at": "2026-07-11",
+  "source_intake_id": "74546bb6-a3af-4c84-992c-aadd3d8e0c70",
+  "intake": {
+    "company_name": "Floats",
+    "website_url": "floats.ai",
+    "country_of_origin": "Australia",
+    "industry_sector": ["Recruitment Technology", "HRTech", "Artificial Intelligence"],
+    "company_stage": "Startup/Seed",
+    "employee_count": "1-10",
+    "target_regions": ["Melbourne/VIC"],
+    "services_needed": [
+      "Find investors & VCs",
+      "Connect with mentors & advisors",
+      "Identify grants & government funding",
+      "Discover accelerators & incubators",
+      "Find co-working & innovation hubs",
+      "Discover events & networking",
+      "Find growth-stage service providers",
+      "Read growth & scaling playbooks"
+    ],
+    "timeline": "",
+    "budget_level": "",
+    "primary_goals": "Find investors & VCs; Connect with mentors & advisors; Identify grants & government funding; Discover accelerators & incubators; Find co-working & innovation hubs; Discover events & networking; Find growth-stage service providers; Read growth & scaling playbooks",
+    "key_challenges": "Navigating R&D grants",
+    "known_competitors": [
+      { "name": "source whale", "website": "" },
+      { "name": "juice box", "website": "" }
+    ],
+    "end_buyer_industries": ["Staffing and Recruiting"],
+    "end_buyers": [
+      { "name": "walter page", "website": "" },
+      { "name": "kelly recruitment", "website": "" },
+      { "name": "gadens", "website": "" }
+    ],
+    "customer_type": "B2B",
+    "challenge_tags": ["Navigating R&D grants"],
+    "goal_ids": ["investors", "mentors_startup", "grants", "accelerators", "spaces", "events", "growth_providers", "guides_startup"],
+    "report_focus": "need r&d grant",
+    "raw_input": {
+      "persona": "startup",
+      "goal_ids": ["investors", "mentors_startup", "grants", "accelerators", "spaces", "events", "growth_providers", "guides_startup"],
+      "challenges": { "tags": ["Navigating R&D grants"], "other": "" },
+      "website_url": "floats.ai",
+      "company_name": "Floats",
+      "report_focus": "need r&d grant",
+      "company_stage": "Startup/Seed",
+      "employee_count": "1-10",
+      "target_regions": ["Melbourne/VIC"],
+      "industry_sector": ["Recruitment Technology", "HRTech", "Artificial Intelligence"],
+      "additional_notes": "need r&d grant",
+      "target_customers": {
+        "notes": "head of marketing",
+        "industries": ["Staffing and Recruiting"],
+        "customer_type": "B2B",
+        "named_companies": [
+          { "name": "walter page", "website": "" },
+          { "name": "kelly recruitment", "website": "" },
+          { "name": "gadens", "website": "" }
+        ]
+      },
+      "country_of_origin": "Australia",
+      "known_competitors": [
+        { "name": "source whale", "website": "" },
+        { "name": "juice box", "website": "" }
+      ],
+      "website_scrape_accepted": true,
+      "target_customer_description": "B2B customers — in Staffing and Recruiting — head of marketing"
+    }
+  }
+}

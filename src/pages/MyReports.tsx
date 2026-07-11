@@ -1,12 +1,15 @@
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileText, Plus, Calendar, ArrowRight, ArrowLeft, BarChart3 } from 'lucide-react';
+import { FileText, Plus, Calendar, ArrowRight, ArrowLeft, BarChart3, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useMyReports } from '@/hooks/useReport';
+import { reportApi } from '@/lib/api/reportApi';
 import { format } from 'date-fns';
 
 const tierColors: Record<string, string> = {
@@ -18,6 +21,18 @@ const tierColors: Record<string, string> = {
 
 const MyReports = () => {
   const { data: reports, isLoading } = useMyReports();
+  const queryClient = useQueryClient();
+
+  // MES-148 1b: a failed report can be retried — generate-report resumes from
+  // the run's persisted stage artifacts, so research isn't paid for twice.
+  const retryMutation = useMutation({
+    mutationFn: (intakeFormId: string) => reportApi.generateReport(intakeFormId),
+    onSuccess: () => {
+      toast.success('Regenerating your report — it resumes from the last completed stage and usually takes a few minutes.');
+      queryClient.invalidateQueries({ queryKey: ['my-reports'] });
+    },
+    onError: (e: Error) => toast.error(e.message || 'Could not restart the report. Please try again.'),
+  });
 
   return (
     <ProtectedRoute fallbackMessage="Please sign in to view your reports.">
@@ -104,7 +119,23 @@ const MyReports = () => {
                           </div>
                         </div>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      {report.status === 'failed' && report.intake_form_id ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={retryMutation.isPending}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            retryMutation.mutate(report.intake_form_id);
+                          }}
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                          {retryMutation.isPending ? 'Restarting…' : 'Retry'}
+                        </Button>
+                      ) : (
+                        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      )}
                     </CardContent>
                   </Card>
                 </Link>

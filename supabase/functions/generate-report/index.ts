@@ -23,6 +23,8 @@ import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitor
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
+import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
+import { buildEvidenceCorpus, verifySections, flaggedItemsOf, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -1032,6 +1034,55 @@ async function callAI(
   return data.choices?.[0]?.message?.content || "";
 }
 
+// ── MES-148 1a: strong-model adjudication of verifier flags ───────────
+// ONE bounded Anthropic call per report (only when the deterministic verifier
+// flagged something), separating true fabrications from benign derivations
+// (arithmetic on evidenced figures, generic proper-noun-shaped phrases). Fail-
+// open: any error returns null and the flags stay advisory. An Anthropic judge
+// also de-correlates from the Gemini writers it is checking.
+const ADJUDICATION_TIMEOUT_MS = 30000;
+
+async function adjudicateWithAnthropic(prompt: string): Promise<string | null> {
+  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!key) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ADJUDICATION_TIMEOUT_MS);
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: Deno.env.get("VERIFIER_ADJUDICATION_MODEL") || "claude-sonnet-4-6",
+        max_tokens: 2000,
+        messages: [{ role: "user", content: prompt }],
+      }),
+      signal: controller.signal,
+    });
+    if (!resp.ok) {
+      // Status only — never log the body (same rule as the Perplexity guard).
+      console.error("Adjudication error: status", resp.status);
+      return null;
+    }
+    const data = await resp.json();
+    // Filter to text blocks (a non-text block, e.g. a thinking block, would
+    // otherwise contribute "" and could shift the joined output).
+    const text = (data.content || [])
+      .filter((b: any) => b?.type === "text")
+      .map((b: any) => b.text || "")
+      .join("");
+    return text || null;
+  } catch (e) {
+    console.error("Adjudication call failed:", e instanceof Error ? e.message : "unknown");
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ── Report polish pass ─────────────────────────────────────────────────
 
 const SECTION_DELIMITER_PREFIX = "===SECTION: ";
@@ -1926,6 +1977,78 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
   }
 }
 
+// ── MES-148 1b: stage artifacts (persist + resume) ─────────────────────
+// The expensive research/matching phase is snapshotted to report_run_artifacts
+// (service-role-only table) keyed by intake_form_id. A retry of the same intake
+// — e.g. after the reaper marks a stuck run failed — resumes from the freshest
+// `research_bundle` instead of re-paying Firecrawl/Perplexity/LLM spend. Best-
+// effort on write, fail-open on read.
+//
+// We deliberately DO NOT resume drafted sections. Reusing stored drafts would
+// carry the ORIGINAL run's per-section `visible` flags (a tier-gating hazard —
+// get_shared_report strips on the stored flag) and the ORIGINAL run's active
+// template set, and could be paired with a different run's research bundle.
+// Regenerating sections from the resumed research is cheap relative to the
+// research itself, and it recomputes tier-visibility, section set, verification,
+// and the claims registry correctly for the retry. (The `drafts`/`match_set`/
+// `briefs` stage values remain in the table CHECK for the Phase 3 pgmq DAG.)
+const ARTIFACT_TTL_MS = 24 * 60 * 60 * 1000; // research is intake-derived; a day-old bundle is still valid for a retry
+
+// "false"/"0" are truthy strings in JS, so an operator setting
+// REPORT_RESUME_DISABLED=false would otherwise silently keep resume OFF.
+function resumeDisabled(): boolean {
+  const v = (Deno.env.get("REPORT_RESUME_DISABLED") || "").trim().toLowerCase();
+  return v !== "" && v !== "false" && v !== "0" && v !== "no";
+}
+
+async function saveStageArtifact(
+  supabase: any,
+  intakeFormId: string,
+  reportId: string,
+  stage: "research_bundle",
+  artifact: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const { error } = await supabase.from("report_run_artifacts").insert({
+      intake_form_id: intakeFormId,
+      report_id: reportId,
+      stage,
+      artifact,
+    });
+    if (error) console.error(`Stage artifact save (${stage}) failed (continuing):`, error.message);
+    else console.log(`Stage artifact saved: ${stage}`);
+  } catch (e) {
+    console.error(`Stage artifact save (${stage}) threw (continuing):`, e);
+  }
+}
+
+async function loadStageArtifact(
+  supabase: any,
+  intakeFormId: string,
+  stage: "research_bundle",
+): Promise<Record<string, any> | null> {
+  if (resumeDisabled()) return null;
+  try {
+    // TTL enforced in the query (index-covered) so a stale artifact is never
+    // fetched-then-discarded.
+    const cutoff = new Date(Date.now() - ARTIFACT_TTL_MS).toISOString();
+    const { data, error } = await supabase
+      .from("report_run_artifacts")
+      .select("artifact")
+      .eq("intake_form_id", intakeFormId)
+      .eq("stage", stage)
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data?.artifact) return null;
+    return data.artifact as Record<string, any>;
+  } catch (e) {
+    console.error(`Stage artifact load (${stage}) threw (continuing without resume):`, e);
+    return null;
+  }
+}
+
 // ── Background report generation logic ─────────────────────────────────
 
 async function generateReportInBackground(
@@ -1961,7 +2084,11 @@ async function generateReportInBackground(
     // 2. Run ALL enrichment + research + matching in parallel
     const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin}${intake.employee_count ? ` with ${intake.employee_count} employees` : ""}. Their target end buyers are in: ${(intake.end_buyer_industries || []).join(", ") || "not specified"}.`;
 
-    console.log("Starting optimised parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + providers enrichment + competitors + end buyers...");
+    // ── MES-148 1b: resume-from-artifact ────────────────────────────────
+    // If a fresh research_bundle exists for this intake (a prior run got that
+    // far before dying / being reaped), skip the whole research/matching phase.
+    // Sections are always regenerated from it (see saveStageArtifact note).
+    const resumedResearch = await loadStageArtifact(supabase, intakeFormId, "research_bundle");
 
     // One stats collector per report, threaded through every Firecrawl wrapper
     // so the metadata can report plumbing health + total op count (P1/P2).
@@ -1970,6 +2097,37 @@ async function generateReportInBackground(
     // set, in which case repeated scrapes (esp. matched providers) hit the cache
     // instead of re-burning Firecrawl credits every report.
     const firecrawlCache = buildScrapeCache(supabase);
+
+    let companyEnrichResult: { profile: EnrichedCompanyProfile | null; enrichedSummary: string; diagnostics: CompanyScrapeDiagnostics | null };
+    let marketResearch: MarketResearch;
+    let matches: Record<string, any[]>;
+    let competitorResult: { competitors: CompetitorData[]; raw_results: any[]; competitor_depth: boolean };
+    let endBuyerScrapeResult: EndBuyerIntelligence[];
+    let endBuyerProcurementResearch: string;
+    let endBuyerAccountResearch: string;
+    // Extracted key metrics (from the landscape response — no separate call).
+    let keyMetrics: Array<{ label: string; value: string; context: string; estimated?: boolean }> = [];
+    let discoveredEvents: DiscoveredEvent[] = [];
+    let matchRerankInfo: { applied: boolean; dropped: Record<string, number>; dropped_count: number } | null = null;
+
+    if (resumedResearch) {
+      console.log(`Resume: research_bundle artifact found for intake ${intakeFormId} — skipping research/matching phase`);
+      companyEnrichResult = resumedResearch.companyEnrichResult ?? { profile: null, enrichedSummary: fallbackSummary, diagnostics: null };
+      marketResearch = resumedResearch.marketResearch ?? {
+        landscape: "", regulatory: "", news: "", bilateral_trade: "", cost_of_business: "", grants: "",
+        citations: [], used: false, health: { attempted: 0, succeeded: 0, statuses: [] },
+      };
+      matches = resumedResearch.matches ?? {};
+      competitorResult = resumedResearch.competitorResult ?? { competitors: [], raw_results: [], competitor_depth: false };
+      endBuyerScrapeResult = resumedResearch.endBuyerScrapeResult ?? [];
+      endBuyerProcurementResearch = resumedResearch.endBuyerProcurementResearch ?? "";
+      endBuyerAccountResearch = resumedResearch.endBuyerAccountResearch ?? "";
+      keyMetrics = resumedResearch.keyMetrics ?? [];
+      discoveredEvents = resumedResearch.discoveredEvents ?? [];
+      matchRerankInfo = resumedResearch.matchRerankInfo ?? null;
+    } else {
+
+    console.log("Starting optimised parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + providers enrichment + competitors + end buyers...");
 
     // Wrap DB matching + provider enrichment into a single parallel task
     const matchesAndEnrichTask = async () => {
@@ -1984,7 +2142,7 @@ async function generateReportInBackground(
       return rawMatches;
     };
 
-    const [
+    [
       companyEnrichResult,
       marketResearch,
       matches,
@@ -2019,7 +2177,6 @@ async function generateReportInBackground(
     ]);
 
     // Extract key metrics from the landscape response instead of a separate Perplexity call
-    const keyMetrics: Array<{ label: string; value: string; context: string; estimated?: boolean }> = [];
     if (marketResearch.landscape) {
       const metricLines = marketResearch.landscape.match(/- METRIC: (.+?) \| (.+?) \| (.+)/g);
       if (metricLines) {
@@ -2046,10 +2203,6 @@ async function generateReportInBackground(
       }
       console.log(`Extracted ${keyMetrics.length} key metrics from landscape query`);
     }
-
-    const enrichedSummary = companyEnrichResult.enrichedSummary;
-    const companyProfile = companyEnrichResult.profile;
-    const companyScrapeDiag = companyEnrichResult.diagnostics;
 
     // Competitor recall backfill (Floats feedback): discovery can come up thin
     // (Floats got 1 competitor) while the market-research prose already fetched
@@ -2100,14 +2253,13 @@ async function generateReportInBackground(
       }
     } catch (e) { console.error("competitor backfill failed (continuing):", e); }
 
-    if (companyProfile) {
+    if (companyEnrichResult.profile) {
       await supabase.from("user_intake_forms")
-        .update({ enriched_input: companyProfile })
+        .update({ enriched_input: companyEnrichResult.profile })
         .eq("id", intakeFormId);
     }
 
     // Conditional external event discovery: only if DB returned < 3 events
-    let discoveredEvents: DiscoveredEvent[] = [];
     const internalEventCount = (matches.events || []).length;
     if (firecrawlKey && internalEventCount < 3) {
       console.log(`Only ${internalEventCount} internal events found — discovering external events...`);
@@ -2139,7 +2291,6 @@ async function generateReportInBackground(
     // enriched company profile to ONE cheap Gemini call and drop what an analyst would
     // cut. Drop-only, floor-guarded, and fail-open (see matchRerank.ts) so it can
     // never empty a section or add/reorder — worst case it's a no-op.
-    let matchRerankInfo: { applied: boolean; dropped: Record<string, number>; dropped_count: number } | null = null;
     if (Deno.env.get("MATCH_RERANK_ENABLED")) {
       try {
         const rerankItems = buildRerankItems(matches);
@@ -2149,7 +2300,7 @@ async function generateReportInBackground(
             `from ${intake.country_of_origin || "unknown origin"}`,
             `entering ${(intake.target_regions || []).join(", ") || "Australia"}`,
             (intake.end_buyer_industries || []).length ? `sells to: ${(intake.end_buyer_industries || []).join(", ")}` : "",
-            enrichedSummary ? `Profile: ${String(enrichedSummary).slice(0, 600)}` : "",
+            companyEnrichResult.enrichedSummary ? `Profile: ${String(companyEnrichResult.enrichedSummary).slice(0, 600)}` : "",
           ].filter(Boolean).join(". ");
           const aiText = await callAI(lovableKey, [
             { role: "system", content: "You are a meticulous market-entry analyst. Return only valid JSON, no markdown fences." },
@@ -2168,6 +2319,82 @@ async function generateReportInBackground(
 
     // All Firecrawl work for this report is done — log plumbing health + op count.
     console.log(`Firecrawl health: ${firecrawlStats.succeeded}/${firecrawlStats.ops} OK (scrape ${firecrawlStats.scrape.ok}/${firecrawlStats.scrape.attempted}, map ${firecrawlStats.map.ok}/${firecrawlStats.map.attempted}, search ${firecrawlStats.search.ok}/${firecrawlStats.search.attempted}); cache ${firecrawlStats.cache_hits} hit / ${firecrawlStats.cache_misses} miss; statuses [${firecrawlStats.statuses.join(",")}]`);
+
+    // MES-148 1b: the expensive phase is complete — snapshot it so a retry of
+    // this intake never re-pays research. (Closes the resume else-branch.)
+    await saveStageArtifact(supabase, intakeFormId, reportId, "research_bundle", {
+      companyEnrichResult,
+      marketResearch,
+      matches,
+      competitorResult,
+      endBuyerScrapeResult,
+      endBuyerProcurementResearch,
+      endBuyerAccountResearch,
+      keyMetrics,
+      discoveredEvents,
+      matchRerankInfo,
+    });
+    }
+
+    // ── MES-148 1a: claims registry ─────────────────────────────────────
+    // Key metrics become claims deterministically; the free-prose research
+    // streams go through ONE extraction call whose JSON reply is schema-
+    // validated with a single retry. The merged registry is persisted to
+    // report_claims (service-role write) per report — a resumed run re-registers
+    // claims for its new report row. Best-effort throughout — a claims failure
+    // must never fail the report.
+    let reportClaims: ReportClaim[] = [];
+    let claimsExtractionOk = false;
+    try {
+      const metricClaims = claimsFromKeyMetrics(keyMetrics, marketResearch.citations);
+      const researchStreams = [
+        { name: "landscape", text: marketResearch.landscape },
+        { name: "regulatory", text: marketResearch.regulatory },
+        { name: "news", text: marketResearch.news },
+        { name: "bilateral_trade", text: marketResearch.bilateral_trade },
+        { name: "cost_of_business", text: marketResearch.cost_of_business },
+        { name: "grants", text: marketResearch.grants },
+      ];
+      let extracted: ReportClaim[] = [];
+      if (researchStreams.some((s) => (s.text || "").trim())) {
+        const extractionPrompt = buildClaimsExtractionPrompt(researchStreams);
+        // The retry covers BOTH a schema-invalid reply AND a transient callAI
+        // throw (429/5xx/timeout) — the throw is caught here, inside the loop,
+        // so it doesn't escape to the outer catch and discard metricClaims (the
+        // deterministic key-metric claims that needed no AI call).
+        for (let attempt = 1; attempt <= 2 && !claimsExtractionOk; attempt++) {
+          try {
+            const raw = await callAI(lovableKey, [
+              { role: "system", content: "You extract structured factual claims from market research notes. Return only valid JSON, no markdown fences." },
+              { role: "user", content: extractionPrompt },
+            ], "google/gemini-3-flash-preview", { temperature: 0.1 });
+            const parsed = parseClaimsResponse(raw, metricClaims.length + 1);
+            if (parsed) {
+              extracted = parsed;
+              claimsExtractionOk = true;
+            } else {
+              console.warn(`Claims extraction attempt ${attempt} failed schema validation`);
+            }
+          } catch (e) {
+            console.warn(`Claims extraction attempt ${attempt} threw (continuing):`, e instanceof Error ? e.message : e);
+          }
+        }
+      }
+      reportClaims = renumberClaims(dedupeClaims([...metricClaims, ...extracted]));
+      if (reportClaims.length > 0) {
+        const { error: claimsErr } = await supabase.from("report_claims").insert(
+          reportClaims.map((c) => ({ ...c, report_id: reportId })),
+        );
+        if (claimsErr) console.error("report_claims insert failed (continuing):", claimsErr.message);
+      }
+      console.log(`Claims registry: ${reportClaims.length} claims (extraction_ok=${claimsExtractionOk})`);
+    } catch (e) {
+      console.error("Claims registry failed (continuing):", e);
+    }
+
+    const enrichedSummary = companyEnrichResult.enrichedSummary;
+    const companyProfile = companyEnrichResult.profile;
+    const companyScrapeDiag = companyEnrichResult.diagnostics;
 
     // 3. Get user subscription tier
     let userTier = "free";
@@ -2488,6 +2715,13 @@ async function generateReportInBackground(
       console.error("linkedin synthesis signal failed", e);
     }
 
+    // MES-148 1a: each section's final prompt pair is stashed so blocking-mode
+    // verification can regenerate a failing section once with a corrective note.
+    // Only populated in blocking mode — the regeneration loop is the sole reader,
+    // so shadow-mode runs don't retain ~1MB of prompt strings for the rest of the run.
+    const captureSectionPrompts = Deno.env.get("CLAIMS_VERIFIER_MODE") === "blocking";
+    const sectionPrompts: Record<string, { system: string; user: string }> = {};
+
     if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
@@ -2525,6 +2759,8 @@ PRESENTATION & FORMATTING (applies to every section):
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
 ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}`;
+
+            if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
@@ -2585,8 +2821,138 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       console.log(`Section generation: ${sectionsGenerated.length} sections in ${Date.now() - sectionStartTime}ms (single batch)`);
     }
 
-    // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
     const sectionOrder = templates ? templates.map((t: any) => t.section_name) : Object.keys(sections);
+
+    // ── MES-148 1a: grounding verification (shadow by default) ──────────
+    // Deterministic check of every draft numeral + multi-word proper noun
+    // against the claims registry, the research corpus, and the matched
+    // directory rows — the `variables` map IS the evidence pack the writers
+    // were given, so anything not traceable to it was invented. Shadow mode
+    // logs + persists telemetry only; CLAIMS_VERIFIER_MODE=blocking
+    // regenerates a failing section once with a corrective note, then flags
+    // it `unverified_facts` (regenerate-once-then-soften). Fail-open
+    // everywhere: verification can never fail a report.
+    const verifierMode = Deno.env.get("CLAIMS_VERIFIER_MODE") === "blocking" ? "blocking" : "shadow";
+    const MAX_REGENERATED_SECTIONS = 3;
+    let verification: Record<string, unknown> | null = null;
+    try {
+      const knownEntityNames: string[] = [intake.company_name];
+      for (const arr of Object.values(matches)) {
+        if (!Array.isArray(arr)) continue;
+        for (const r of arr as any[]) {
+          for (const k of ["name", "title", "company", "company_name", "organizer", "provider_name"]) {
+            if (r?.[k]) knownEntityNames.push(String(r[k]));
+          }
+        }
+      }
+      for (const c of competitorResult.competitors) if (c?.name) knownEntityNames.push(String(c.name));
+      for (const b of endBuyerScrapeResult || []) if (b?.name) knownEntityNames.push(String(b.name));
+      for (const kc of (intake.known_competitors || []) as Array<{ name?: string }>) {
+        if (kc?.name) knownEntityNames.push(String(kc.name));
+      }
+
+      const corpus = buildEvidenceCorpus(Object.values(variables), knownEntityNames, reportClaims);
+      let result = verifySections(sections, sectionOrder, corpus);
+      const flagged = flaggedItemsOf(result);
+
+      // ONE strong-model adjudication call, only in BLOCKING mode and only when
+      // something was flagged — it separates true fabrications from benign
+      // derivations before a rewrite. In shadow mode the verdict would only
+      // decorate telemetry, so we skip it (no latency, no Anthropic spend, and
+      // the durable completed-save that follows isn't delayed by a 30s call).
+      let adjudication: "not_needed" | "applied" | "unavailable" | "shadow_skipped" = "not_needed";
+      // Fail-CLOSED on adjudication: only items the judge positively marks
+      // fabricated may trigger a rewrite. If the judge is unavailable/unparseable
+      // we do NOT treat every heuristic flag as fabricated (that would regenerate
+      // good sections from noise) — flags stay advisory.
+      let fabricated: FlaggedItem[] = [];
+      if (verifierMode === "blocking" && flagged.length > 0) {
+        const raw = await adjudicateWithAnthropic(buildAdjudicationPrompt(flagged));
+        const verdicts = raw ? parseAdjudication(raw, flagged.length) : null;
+        if (verdicts) {
+          adjudication = "applied";
+          const byIndex = new Map(verdicts.map((v) => [v.index, v.fabricated] as const));
+          fabricated = flagged.filter((_, i) => byIndex.get(i + 1) === true);
+        } else {
+          adjudication = "unavailable";
+        }
+      } else if (flagged.length > 0) {
+        adjudication = "shadow_skipped";
+      }
+
+      const regenerated: string[] = [];
+      const stillUnverified: string[] = [];
+      if (verifierMode === "blocking" && fabricated.length > 0) {
+        const failingSections = [...new Set(fabricated.map((f) => f.section))].slice(0, MAX_REGENERATED_SECTIONS);
+        // Independent rewrites — run them concurrently (mirrors the section batch).
+        await Promise.allSettled(failingSections.map(async (name) => {
+          const p = sectionPrompts[name];
+          if (!p || !sections[name]?.content) return;
+          try {
+            const rewritten = await callAI(lovableKey, [
+              { role: "system", content: p.system + buildRegenerationNote(fabricated, name) },
+              { role: "user", content: p.user },
+            ], "google/gemini-3-flash-preview", { temperature: 0.2 });
+            if (rewritten && rewritten.trim().length > 50) {
+              sections[name] = { ...sections[name], content: rewritten };
+              regenerated.push(name);
+            }
+          } catch (e) {
+            console.error(`Blocking verifier: regeneration of ${name} failed:`, e);
+          }
+        }));
+        // Regenerate once, then flag: a section whose fabricated items survive
+        // the rewrite (or whose rewrite failed) is marked unverified_facts in
+        // its section data — additive metadata the frontend can badge later.
+        result = verifySections(sections, sectionOrder, corpus);
+        for (const name of failingSections) {
+          const own = fabricated.filter((f) => f.section === name);
+          const content = (sections[name]?.content || "").toLowerCase();
+          if (own.some((f) => content.includes(f.text.toLowerCase()))) {
+            sections[name] = { ...sections[name], unverified_facts: true };
+            stillUnverified.push(name);
+          }
+        }
+      }
+
+      // Persisted telemetry is COUNTS-ONLY per section. The raw unverified
+      // numerals/entities are fragments of section prose — including gated
+      // sections — and report_json.metadata rides PAST the tier-gating strip
+      // point (get_tier_gated_report / get_shared_report only rewrite `sections`),
+      // so persisting the raw strings would leak gated-section text to free/anon
+      // readers (CLAUDE.md §7). The raw strings stay in the server log below.
+      verification = {
+        mode: verifierMode,
+        adjudication,
+        totals: result.totals,
+        flagged_count: flagged.length,
+        fabricated_count: fabricated.length,
+        regenerated_sections: regenerated,
+        unverified_sections: stillUnverified,
+        sections: result.sections
+          .filter((s) => s.unverified_numerals.length || s.unverified_entities.length)
+          .map((s) => ({
+            section: s.section,
+            numerals_checked: s.numerals_checked,
+            entities_checked: s.entities_checked,
+            unverified_numerals_count: s.unverified_numerals.length,
+            unverified_entities_count: s.unverified_entities.length,
+          })),
+      };
+      console.log(
+        `Verifier (${verifierMode}): checked ${result.totals.numerals_checked} numerals + ${result.totals.entities_checked} entities; ` +
+        `flagged ${flagged.length}, fabricated ${fabricated.length} (adjudication: ${adjudication})` +
+        `${regenerated.length ? `; regenerated [${regenerated.join(", ")}]` : ""}` +
+        `${stillUnverified.length ? `; still unverified [${stillUnverified.join(", ")}]` : ""}` +
+        // Raw flagged text is safe in server logs (never in report_json) — this
+        // is where an operator inspects false positives during the shadow rollout.
+        (flagged.length ? ` | flagged: ${JSON.stringify(flagged.slice(0, 20).map((f) => `${f.section}:${f.kind}:${f.text}`))}` : ""),
+      );
+    } catch (e) {
+      console.error("Grounding verification failed (continuing):", e);
+    }
+
+    // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
 
     const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => {
       // Citation integrity (B11/B15): renumber inline [N] markers to a contiguous
@@ -2660,6 +3026,16 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
           icp_titles: parsedIcp.titles,
         },
         polish_applied: polishApplied,
+        // MES-148 1a: claims-registry + grounding-verification telemetry.
+        // verification reflects the pre-polish drafts (the polish pass is
+        // instructed to preserve facts verbatim; a post-polish diff audit is
+        // Phase 2). null = the step failed fail-open.
+        claims_registry: { count: reportClaims.length, extraction_ok: claimsExtractionOk },
+        verification,
+        // MES-148 1b: whether this run resumed the research phase from a prior
+        // run's artifact (false = a full fresh run). Costs in firecrawl_health/
+        // perplexity_health read zero on a resumed run — that's the point.
+        resume: { research_bundle: !!resumedResearch },
         // Renumbered alongside the sections so metric-card [N]s and the stored
         // Sources list stay 1:1 (falls back to the originals when no citations).
         key_metrics: cited.keyMetrics ?? keyMetrics,

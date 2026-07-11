@@ -20,7 +20,7 @@ const src = await readFile(
 test('fetchMyReports selects list columns only, never *', () => {
   assert.ok(
     src.includes(
-      "select('id, status, tier_at_generation, created_at, user_intake_forms(company_name)')"
+      "select('id, status, tier_at_generation, created_at, intake_form_id, user_intake_forms(company_name)')"
     ),
     'fetchMyReports must select exactly the list columns'
   );

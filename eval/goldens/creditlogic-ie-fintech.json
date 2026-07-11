@@ -1,0 +1,71 @@
+{
+  "golden_id": "creditlogic-ie-fintech",
+  "description": "Irish Series A-B banking-tech SaaS entering Sydney, international persona, competitor focus — exercises the Irish corridor and competitor landscape depth.",
+  "frozen_at": "2026-07-11",
+  "source_intake_id": "6f41048b-0031-4354-9abe-3393366e72bd",
+  "intake": {
+    "company_name": "CreditLogic",
+    "website_url": "creditlogic.com",
+    "country_of_origin": "Ireland",
+    "industry_sector": ["Fintech", "Banking Technology", "SaaS"],
+    "company_stage": "Series A-B",
+    "employee_count": "11-50",
+    "target_regions": ["Sydney/NSW"],
+    "services_needed": [
+      "Access qualified lead lists",
+      "Find experienced mentors & advisors",
+      "Find vetted service providers",
+      "Find industry associations & chambers",
+      "Discover events & networking",
+      "Connect with trade & investment agencies",
+      "Access market entry case studies",
+      "Get market & industry research"
+    ],
+    "timeline": "",
+    "budget_level": "",
+    "primary_goals": "Access qualified lead lists; Find experienced mentors & advisors; Find vetted service providers; Find industry associations & chambers; Discover events & networking; Connect with trade & investment agencies; Access market entry case studies; Get market & industry research",
+    "key_challenges": "Finding distribution partners, Tax & GST setup, Competing with incumbents, Pricing for the AU market",
+    "known_competitors": [],
+    "end_buyer_industries": ["Credit Intermediation", "finance", "banking"],
+    "end_buyers": [
+      { "name": "westpac", "website": "" },
+      { "name": "Commbank", "website": "commbank.com" },
+      { "name": "Financeone", "website": "financeone.com.au" },
+      { "name": "Peppermoney", "website": "peppermoney.com.au" },
+      { "name": "Anz", "website": "anz.com" }
+    ],
+    "customer_type": "B2B",
+    "challenge_tags": ["Finding distribution partners", "Tax & GST setup", "Competing with incumbents", "Pricing for the AU market"],
+    "goal_ids": ["lead_lists_intl", "mentors_intl", "find_providers", "associations", "events", "trade_agencies", "case_studies", "market_research"],
+    "report_focus": "understand competitors",
+    "raw_input": {
+      "persona": "international",
+      "goal_ids": ["lead_lists_intl", "mentors_intl", "find_providers", "associations", "events", "trade_agencies", "case_studies", "market_research"],
+      "challenges": { "tags": ["Finding distribution partners", "Tax & GST setup", "Competing with incumbents", "Pricing for the AU market"], "other": "" },
+      "website_url": "creditlogic.com",
+      "company_name": "CreditLogic",
+      "report_focus": "understand competitors",
+      "company_stage": "Series A-B",
+      "employee_count": "11-50",
+      "target_regions": ["Sydney/NSW"],
+      "industry_sector": ["Fintech", "Banking Technology", "SaaS"],
+      "additional_notes": "understand competitors",
+      "target_customers": {
+        "notes": "head of lending",
+        "industries": ["Credit Intermediation", "finance", "banking"],
+        "customer_type": "B2B",
+        "named_companies": [
+          { "name": "westpac", "website": "" },
+          { "name": "Commbank", "website": "commbank.com" },
+          { "name": "Financeone", "website": "financeone.com.au" },
+          { "name": "Peppermoney", "website": "peppermoney.com.au" },
+          { "name": "Anz", "website": "anz.com" }
+        ]
+      },
+      "country_of_origin": "Ireland",
+      "known_competitors": [],
+      "website_scrape_accepted": true,
+      "target_customer_description": "B2B customers — in Credit Intermediation, finance, banking — head of lending"
+    }
+  }
+}

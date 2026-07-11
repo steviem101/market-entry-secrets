@@ -1,0 +1,56 @@
+{
+  "golden_id": "synthetic-au-cleantech",
+  "description": "SYNTHETIC: Perth cleantech pre-seed startup, startup persona, fundraising focus, B2G motion — covers the WA region, energy vertical and investor-heavy goal slate with no named buyers.",
+  "frozen_at": "2026-07-11",
+  "source_intake_id": null,
+  "intake": {
+    "company_name": "TideGrid Energy",
+    "website_url": "example-tidegrid.invalid",
+    "country_of_origin": "Australia",
+    "industry_sector": ["CleanTech", "Renewable Energy", "Energy Storage"],
+    "company_stage": "Startup/Seed",
+    "employee_count": "1-10",
+    "target_regions": ["Perth/WA"],
+    "services_needed": [
+      "Find investors & VCs",
+      "Identify grants & government funding",
+      "Discover accelerators & incubators",
+      "Connect with mentors & advisors",
+      "Discover events & networking"
+    ],
+    "timeline": "",
+    "budget_level": "",
+    "primary_goals": "Find investors & VCs; Identify grants & government funding; Discover accelerators & incubators; Connect with mentors & advisors; Discover events & networking",
+    "key_challenges": "Raising a seed round, Navigating R&D grants",
+    "known_competitors": [],
+    "end_buyer_industries": ["Utilities", "Government Administration"],
+    "end_buyers": [],
+    "customer_type": "B2G",
+    "challenge_tags": ["Raising a seed round", "Navigating R&D grants"],
+    "goal_ids": ["investors", "grants", "accelerators", "mentors_startup", "events"],
+    "report_focus": "which investors back early-stage cleantech",
+    "raw_input": {
+      "persona": "startup",
+      "goal_ids": ["investors", "grants", "accelerators", "mentors_startup", "events"],
+      "challenges": { "tags": ["Raising a seed round", "Navigating R&D grants"], "other": "" },
+      "website_url": "example-tidegrid.invalid",
+      "company_name": "TideGrid Energy",
+      "report_focus": "which investors back early-stage cleantech",
+      "company_stage": "Startup/Seed",
+      "employee_count": "1-10",
+      "target_regions": ["Perth/WA"],
+      "industry_sector": ["CleanTech", "Renewable Energy", "Energy Storage"],
+      "additional_notes": "",
+      "target_customers": {
+        "notes": "network planning teams",
+        "industries": ["Utilities", "Government Administration"],
+        "customer_type": "B2G",
+        "named_companies": []
+      },
+      "country_of_origin": "Australia",
+      "known_competitors": [],
+      "website_scrape_accepted": false,
+      "target_customer_description": "B2G customers — in Utilities, Government Administration — network planning teams"
+    }
+  }
+}

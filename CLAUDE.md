@@ -271,7 +271,7 @@ Owned by skill `mes-ticket-workflow`; the invariants:
 | `FIRECRAWL_API_KEY` (+ tuning: `FIRECRAWL_CACHE_ENABLED`, `FIRECRAWL_COMPETITOR_DEPTH`) | Scraping/search |
 | `PERPLEXITY_API_KEY` | Market research |
 | `LOVABLE_API_KEY` | Lovable AI Gateway (report sections) |
-| `ANTHROPIC_API_KEY` (+ `RQ_LOOP_MODEL` override) | generate-plan, classify-personas, normalize-events, report-quality-loop |
+| `ANTHROPIC_API_KEY` (+ `RQ_LOOP_MODEL` override; `VERIFIER_ADJUDICATION_MODEL` override in generate-report) | generate-plan, classify-personas, normalize-events, report-quality-loop, generate-report (claims-verifier adjudication — MES-148 1a) |
 | `OPENAI_API_KEY` (Vault fallback `openai_api_key`) | KB embeddings (embed-knowledge, knowledge-search) |
 | `MATCH_RERANK_ENABLED` | generate-report matching toggle |
 | `RESEND_API_KEY`, `EMAIL_INTERNAL_SECRET` | Transactional email |
@@ -305,8 +305,11 @@ Owned by skill `mes-ticket-workflow`; the invariants:
 3. Directory matching uses Postgres array overlap (`.cs.{}`) against `services[]`/`keywords[]`
    arrays — label/tag mismatches silently match nothing; test against real rows.
 4. Guest intake drafts: localStorage `mes_intake_form_draft`; persona: `mes_user_persona`.
-5. A "completed" report can be missing sections (per-section failures are silent — §7); stuck
-   `processing` rows block regeneration for that intake (no reaper yet — MES-35 R3).
+5. A "completed" report can be missing sections (per-section failures are silent — §7). Stuck
+   `processing` rows are now swept by the `reap-stuck-reports` pg_cron (every 5 min → `failed`
+   after 15 min; MES-148 1b, migration `20260711230000`), which unblocks regeneration for that
+   intake; the failed-report **Retry** button on `/my-reports` resumes from the persisted
+   `research_bundle` artifact (`report_run_artifacts`) without re-paying research.
 6. `mcp` function is a generated bundle — edit `src/lib/mcp/` sources instead.
 7. Event freshness is owned by skill `content-freshness-and-seo-ops-loop` — read it before
    touching event lifecycle or sitemap filters (known gap: the sitemap has no event-date filter,

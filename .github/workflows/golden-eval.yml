@@ -1,0 +1,70 @@
+# MES-148 Phase 1c: golden-set eval — replay frozen intakes through the real
+# generate-report pipeline and judge-score every section; fail on a >=1.0 mean
+# drop vs eval/baselines.json. See eval/README.md.
+#
+# Runs on manual dispatch and on PRs touching the report pipeline, templates,
+# or the harness itself. Each golden burns one full report of external spend,
+# so this is deliberately NOT on every push.
+#
+# One-time setup: repo secrets EVAL_SUPABASE_URL, EVAL_SUPABASE_ANON_KEY,
+# EVAL_SERVICE_ROLE_KEY, EVAL_USER_EMAIL, EVAL_USER_PASSWORD, ANTHROPIC_API_KEY
+# (point at a preview/staging env, never prod). Until they exist the runner
+# prints SKIPPED and exits 0.
+
+name: Golden Eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      goldens:
+        description: "Comma-separated golden_ids (empty = all)"
+        required: false
+        default: ""
+  pull_request:
+    paths:
+      - "supabase/functions/generate-report/**"
+      - "supabase/functions/_shared/**"
+      - "supabase/migrations/*report_template*"
+      - "eval/**"
+      - ".github/workflows/golden-eval.yml"
+
+concurrency:
+  group: golden-eval-${{ github.ref }}
+  cancel-in-progress: false # a run in flight has already spent research money — let it finish
+
+jobs:
+  golden-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Run golden set
+        env:
+          EVAL_SUPABASE_URL: ${{ secrets.EVAL_SUPABASE_URL }}
+          EVAL_SUPABASE_ANON_KEY: ${{ secrets.EVAL_SUPABASE_ANON_KEY }}
+          EVAL_SERVICE_ROLE_KEY: ${{ secrets.EVAL_SERVICE_ROLE_KEY }}
+          EVAL_USER_EMAIL: ${{ secrets.EVAL_USER_EMAIL }}
+          EVAL_USER_PASSWORD: ${{ secrets.EVAL_USER_PASSWORD }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RUN_LABEL: ${{ github.event.pull_request.head.sha || github.sha }}
+          # Pass the dispatch input through the environment — NEVER interpolate
+          # ${{ github.event.inputs.* }} into the run script: with the secrets
+          # above in scope that is a GitHub Actions script-injection / secret-
+          # exfiltration vector.
+          GOLDENS_INPUT: ${{ github.event.inputs.goldens }}
+        run: |
+          ARGS=""
+          if [ -n "$GOLDENS_INPUT" ]; then
+            # Defence in depth: reject anything outside the golden-id charset.
+            case "$GOLDENS_INPUT" in
+              *[!a-zA-Z0-9,_-]*) echo "Invalid goldens input" >&2; exit 1 ;;
+            esac
+            ARGS="--goldens=$GOLDENS_INPUT"
+          fi
+          # --no-lock: the root deno.lock pins esm.sh hashes for other tooling
+          # and drifts as esm.sh re-resolves unpinned deps — the runner is not
+          # bound by it.
+          deno run --no-lock --allow-net --allow-env --allow-read --allow-write eval/run-goldens.ts $ARGS

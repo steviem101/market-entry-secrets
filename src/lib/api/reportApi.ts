@@ -210,9 +210,12 @@ export const reportApi = {
     // List columns only — never `*`. Selecting `*` shipped the full
     // report_json (including tier-gated premium prose) to the /my-reports
     // network panel for free-tier owners (MES-38 / audit R1).
+    // intake_form_id powers the failed-report Retry button (MES-148 1b):
+    // regeneration re-enters generate-report, which resumes from the run's
+    // persisted stage artifacts instead of re-paying research.
     const { data, error } = await (supabase as any)
       .from('user_reports')
-      .select('id, status, tier_at_generation, created_at, user_intake_forms(company_name)')
+      .select('id, status, tier_at_generation, created_at, intake_form_id, user_intake_forms(company_name)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -222,6 +225,7 @@ export const reportApi = {
       tier_at_generation: string;
       status: string;
       created_at: string;
+      intake_form_id: string | null;
       user_intake_forms: { company_name: string } | null;
     }>;
   },

@@ -1,0 +1,5 @@
+{
+  "rubric_version": "golden-judge-v1",
+  "judge_model": "claude-sonnet-4-6",
+  "goldens": {}
+}
