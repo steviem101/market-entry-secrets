@@ -78,7 +78,7 @@ export const CountryLeadCapture = ({
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="bg-mes-ink hover:bg-black text-white"
+                  className="bg-mes-ink-surface hover:bg-black text-white"
                 >
                   <Mail className="h-4 w-4" />
                 </Button>
@@ -86,7 +86,7 @@ export const CountryLeadCapture = ({
             )}
           </article>
 
-          <article className="bg-mes-ink text-white rounded-xl p-6 flex flex-col relative">
+          <article className="bg-mes-ink-surface text-white rounded-xl p-6 flex flex-col relative">
             <span className="absolute -top-2 right-5 text-[10.5px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-mes-blue-light text-mes-teal-dark">
               Most popular
             </span>
@@ -118,7 +118,7 @@ export const CountryLeadCapture = ({
             <p className="mt-2 text-[14px] text-mes-ink-soft">
               90-minute working session with the MES team and a {countryName} corridor operator.
             </p>
-            <Button asChild variant="outline" className="mt-5 border-mes-ink text-mes-ink hover:bg-mes-ink hover:text-white">
+            <Button asChild variant="outline" className="mt-5 border-mes-ink text-mes-ink hover:bg-mes-ink-surface hover:text-white">
               <Link to={`/contact?topic=${countrySlug}-call`}>
                 <Phone className="mr-2 h-4 w-4" />
                 Book a call

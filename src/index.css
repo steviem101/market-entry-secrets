@@ -65,6 +65,11 @@
     --mes-border: var(--border);
     --mes-bg: var(--muted);
     --mes-card: var(--card);
+    /* Inverted surface for the dark editorial bands (trade snapshot, pull
+       quotes, lead-capture tier 2). Fixed dark in BOTH themes and paired with
+       text-white, so these bands stay legible if a dark theme ships — unlike
+       --mes-ink, which follows --foreground and inverts. */
+    --mes-ink-surface: 220 25% 12%;
 
     /* Report Creator v2 tokens — aliased to the app's main design system so the
        wizard inherits the same brand colours, neutrals, and surfaces as every
@@ -121,7 +126,8 @@
     --sidebar-ring: 200 85% 60%;
 
     /* Standalone mes-* tokens (the aliased ones inherit dark values through
-       their parent semantic tokens automatically). */
+       their parent semantic tokens automatically). --mes-ink-surface stays
+       fixed dark on purpose (see :root). */
     --mes-teal-dark: 200 80% 60%;
     --mes-blue-light: 200 45% 28%;
     --mes-ink-soft: 210 13% 78%;

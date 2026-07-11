@@ -40,14 +40,23 @@ export function trackCountryEvent(
   opts: TrackOptions = {},
 ): void {
   try {
-    // Fire-and-forget; swallow any error (analytics must never break the page).
-    void supabase.from('country_page_events').insert({
-      session_id: getCountrySessionId(),
-      country_slug: countrySlug,
-      event_type: type,
-      section: opts.section ?? null,
-      metadata: opts.metadata ?? {},
-    });
+    // Fire-and-forget, but the insert MUST be awaited/`.then`ed: supabase-js
+    // query builders are lazy thenables — the HTTP request only fires when
+    // `.then()` is invoked, so a bare `void insert(...)` never sends anything.
+    // Swallow any error (analytics must never break the page).
+    void supabase
+      .from('country_page_events')
+      .insert({
+        session_id: getCountrySessionId(),
+        country_slug: countrySlug,
+        event_type: type,
+        section: opts.section ?? null,
+        metadata: opts.metadata ?? {},
+      })
+      .then(
+        () => {},
+        () => {},
+      );
   } catch {
     /* ignore */
   }

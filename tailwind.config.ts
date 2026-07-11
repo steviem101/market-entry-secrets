@@ -66,6 +66,7 @@ export default {
 				'mes-teal-dark':  'hsl(var(--mes-teal-dark))',
 				'mes-blue-light': 'hsl(var(--mes-blue-light))',
 				'mes-ink':        'hsl(var(--mes-ink))',
+				'mes-ink-surface':'hsl(var(--mes-ink-surface))',
 				'mes-ink-soft':   'hsl(var(--mes-ink-soft))',
 				'mes-ink-muted':  'hsl(var(--mes-ink-muted))',
 				'mes-success':    'hsl(var(--mes-success))',

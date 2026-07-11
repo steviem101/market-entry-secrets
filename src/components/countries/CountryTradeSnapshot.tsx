@@ -11,7 +11,7 @@ export const CountryTradeSnapshot = ({ metrics, countryName }: CountryTradeSnaps
   if (!metrics?.length) return null;
 
   return (
-    <section className="bg-mes-ink text-white border-b border-mes-ink">
+    <section className="bg-mes-ink-surface text-white border-b border-mes-ink">
       <div className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-20">
         <SectionHeading
           className="mb-10"

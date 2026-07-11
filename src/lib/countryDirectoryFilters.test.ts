@@ -11,6 +11,7 @@ import {
 const mk = (over: Partial<CountryDirectoryLike> & { name: string }): CountryDirectoryLike => ({
   description: "",
   featured: false,
+  sort_order: null,
   key_industries: [],
   trade_relationship_strength: null,
   case_study_count: 0,
@@ -58,6 +59,26 @@ const DATA: CountryDirectoryLike[] = [
 const base = { search: "", strength: null, sector: null, sort: "featured" as const };
 
 test("no filters, featured sort: featured first, then density, then name", () => {
+  assert.deepEqual(
+    filterAndSortCountries(DATA, base).map((c) => c.name),
+    ["Ireland", "United Kingdom", "Canada", "Japan"],
+  );
+});
+
+test("featured sort honours admin sort_order before density", () => {
+  // UK has lower density than Ireland but a smaller sort_order -> pinned first.
+  const pinned = [
+    mk({ name: "Ireland", featured: true, sort_order: 2, mentor_count: 50 }),
+    mk({ name: "United Kingdom", featured: true, sort_order: 1, mentor_count: 1 }),
+    mk({ name: "Canada", featured: false, sort_order: null, case_study_count: 5 }),
+  ];
+  assert.deepEqual(
+    filterAndSortCountries(pinned, base).map((c) => c.name),
+    ["United Kingdom", "Ireland", "Canada"],
+  );
+});
+
+test("featured sort falls through to density when sort_order is unset", () => {
   assert.deepEqual(
     filterAndSortCountries(DATA, base).map((c) => c.name),
     ["Ireland", "United Kingdom", "Canada", "Japan"],

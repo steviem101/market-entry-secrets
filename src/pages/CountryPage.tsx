@@ -45,7 +45,21 @@ const CountryPage = () => {
 
   if (isLoading) return <PageSkeleton />;
 
-  if (error || !bundle?.country) {
+  // A transient RPC failure must NOT be treated as an unknown slug: emitting
+  // NoIndex + a 404 for a live URL during a DB blip risks deindexation. Only a
+  // successful RPC that returns no country is a genuine 404.
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+        <p className="text-muted-foreground">
+          We could not load this country page just now. Please try again shortly.
+        </p>
+      </div>
+    );
+  }
+
+  if (!bundle?.country) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <NoIndex notFound />
