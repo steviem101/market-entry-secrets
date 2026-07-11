@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 import { InvestorsHero } from "@/components/investors/InvestorsHero";
 import { DirectoryFilterBar, type FilterOption } from "@/components/common/DirectoryFilterBar";
 import InvestorResults from "@/components/investors/InvestorResults";
@@ -101,7 +102,7 @@ const Investors = () => {
           property="og:description"
           content="Discover VCs, angels, accelerators, grants, and venture debt providers in Australia."
         />
-        <link rel="canonical" href={`${window.location.origin}/investors`} />
+        <link rel="canonical" href={`${publishedOrigin()}/investors`} />
       </Helmet>
 
       <InvestorsHero
