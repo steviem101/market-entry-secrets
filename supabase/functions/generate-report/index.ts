@@ -25,6 +25,7 @@ import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePerso
 import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
+import { resolveSectionModel, sectionModelMap } from "./sectionModel.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -2722,6 +2723,12 @@ async function generateReportInBackground(
     const captureSectionPrompts = Deno.env.get("CLAIMS_VERIFIER_MODE") === "blocking";
     const sectionPrompts: Record<string, { system: string; user: string }> = {};
 
+    // MES-148 Phase 2a: per-section model routing. Each section resolves its
+    // model as report_templates.model → SECTION_MODEL_DEFAULT env → flash.
+    // Unset everywhere (the default) keeps today's model, so behaviour + cost are
+    // unchanged until a section is deliberately routed (the money-section A/B).
+    const sectionModelDefault = Deno.env.get("SECTION_MODEL_DEFAULT") || null;
+
     if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
@@ -2762,10 +2769,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
+            const sectionModel = resolveSectionModel(tmpl.model, sectionModelDefault);
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
               { role: "user", content: prompt },
-            ], "google/gemini-3-flash-preview", { temperature: 0.4 });
+            ], sectionModel, { temperature: 0.4 });
 
             // competitor_landscape has no directory pool — its prose names the
             // scraped competitors, so render THOSE as cards (B7) instead of the
@@ -2889,10 +2897,15 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
           const p = sectionPrompts[name];
           if (!p || !sections[name]?.content) return;
           try {
+            // Regenerate with the SAME model the section was written with (Phase 2a).
+            const regenModel = resolveSectionModel(
+              templates?.find((t: any) => t.section_name === name)?.model,
+              sectionModelDefault,
+            );
             const rewritten = await callAI(lovableKey, [
               { role: "system", content: p.system + buildRegenerationNote(fabricated, name) },
               { role: "user", content: p.user },
-            ], "google/gemini-3-flash-preview", { temperature: 0.2 });
+            ], regenModel, { temperature: 0.2 });
             if (rewritten && rewritten.trim().length > 50) {
               sections[name] = { ...sections[name], content: rewritten };
               regenerated.push(name);
@@ -3031,6 +3044,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // instructed to preserve facts verbatim; a post-polish diff audit is
         // Phase 2). null = the step failed fail-open.
         claims_registry: { count: reportClaims.length, extraction_ok: claimsExtractionOk },
+        // MES-148 Phase 2a: the model each section was written with, so an A/B
+        // (money-section routing) is observable per report. All-flash by default.
+        section_models: sectionModelMap((templates || []) as any, sectionModelDefault),
         verification,
         // MES-148 1b: whether this run resumed the research phase from a prior
         // run's artifact (false = a full fresh run). Costs in firecrawl_health/
