@@ -1972,6 +1972,59 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
   }
 }
 
+// ── MES-148 1b: stage artifacts (persist + resume) ─────────────────────
+// The expensive research/matching phase and the drafted sections are
+// snapshotted to report_run_artifacts (service-role-only table) keyed by
+// intake_form_id. A retry of the same intake — e.g. after the reaper marks a
+// stuck run failed — resumes from the freshest artifact instead of re-paying
+// Firecrawl/Perplexity/LLM spend. Best-effort on write, fail-open on read.
+const ARTIFACT_TTL_MS = 24 * 60 * 60 * 1000; // research is intake-derived; a day-old bundle is still valid for a retry
+
+async function saveStageArtifact(
+  supabase: any,
+  intakeFormId: string,
+  reportId: string,
+  stage: "research_bundle" | "drafts",
+  artifact: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const { error } = await supabase.from("report_run_artifacts").insert({
+      intake_form_id: intakeFormId,
+      report_id: reportId,
+      stage,
+      artifact,
+    });
+    if (error) console.error(`Stage artifact save (${stage}) failed (continuing):`, error.message);
+    else console.log(`Stage artifact saved: ${stage}`);
+  } catch (e) {
+    console.error(`Stage artifact save (${stage}) threw (continuing):`, e);
+  }
+}
+
+async function loadStageArtifact(
+  supabase: any,
+  intakeFormId: string,
+  stage: "research_bundle" | "drafts",
+): Promise<Record<string, any> | null> {
+  if (Deno.env.get("REPORT_RESUME_DISABLED")) return null;
+  try {
+    const { data, error } = await supabase
+      .from("report_run_artifacts")
+      .select("artifact, created_at")
+      .eq("intake_form_id", intakeFormId)
+      .eq("stage", stage)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data?.artifact) return null;
+    if (Date.now() - new Date(data.created_at).getTime() > ARTIFACT_TTL_MS) return null;
+    return data.artifact as Record<string, any>;
+  } catch (e) {
+    console.error(`Stage artifact load (${stage}) threw (continuing without resume):`, e);
+    return null;
+  }
+}
+
 // ── Background report generation logic ─────────────────────────────────
 
 async function generateReportInBackground(
@@ -2007,7 +2060,13 @@ async function generateReportInBackground(
     // 2. Run ALL enrichment + research + matching in parallel
     const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin}${intake.employee_count ? ` with ${intake.employee_count} employees` : ""}. Their target end buyers are in: ${(intake.end_buyer_industries || []).join(", ") || "not specified"}.`;
 
-    console.log("Starting optimised parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + providers enrichment + competitors + end buyers...");
+    // ── MES-148 1b: resume-from-artifact ────────────────────────────────
+    // If a fresh research_bundle exists for this intake (a prior run got that
+    // far before dying / being reaped), skip the whole research/matching phase.
+    // Drafts are only reused when the research bundle they were written from is
+    // also available (report_json.matches must match the drafted prose).
+    const resumedResearch = await loadStageArtifact(supabase, intakeFormId, "research_bundle");
+    const resumedDrafts = resumedResearch ? await loadStageArtifact(supabase, intakeFormId, "drafts") : null;
 
     // One stats collector per report, threaded through every Firecrawl wrapper
     // so the metadata can report plumbing health + total op count (P1/P2).
@@ -2016,6 +2075,37 @@ async function generateReportInBackground(
     // set, in which case repeated scrapes (esp. matched providers) hit the cache
     // instead of re-burning Firecrawl credits every report.
     const firecrawlCache = buildScrapeCache(supabase);
+
+    let companyEnrichResult: { profile: EnrichedCompanyProfile | null; enrichedSummary: string; diagnostics: CompanyScrapeDiagnostics | null };
+    let marketResearch: MarketResearch;
+    let matches: Record<string, any[]>;
+    let competitorResult: { competitors: CompetitorData[]; raw_results: any[]; competitor_depth: boolean };
+    let endBuyerScrapeResult: EndBuyerIntelligence[];
+    let endBuyerProcurementResearch: string;
+    let endBuyerAccountResearch: string;
+    // Extracted key metrics (from the landscape response — no separate call).
+    let keyMetrics: Array<{ label: string; value: string; context: string; estimated?: boolean }> = [];
+    let discoveredEvents: DiscoveredEvent[] = [];
+    let matchRerankInfo: { applied: boolean; dropped: Record<string, number>; dropped_count: number } | null = null;
+
+    if (resumedResearch) {
+      console.log(`Resume: research_bundle artifact found for intake ${intakeFormId} — skipping research/matching phase`);
+      companyEnrichResult = resumedResearch.companyEnrichResult ?? { profile: null, enrichedSummary: fallbackSummary, diagnostics: null };
+      marketResearch = resumedResearch.marketResearch ?? {
+        landscape: "", regulatory: "", news: "", bilateral_trade: "", cost_of_business: "", grants: "",
+        citations: [], used: false, health: { attempted: 0, succeeded: 0, statuses: [] },
+      };
+      matches = resumedResearch.matches ?? {};
+      competitorResult = resumedResearch.competitorResult ?? { competitors: [], raw_results: [], competitor_depth: false };
+      endBuyerScrapeResult = resumedResearch.endBuyerScrapeResult ?? [];
+      endBuyerProcurementResearch = resumedResearch.endBuyerProcurementResearch ?? "";
+      endBuyerAccountResearch = resumedResearch.endBuyerAccountResearch ?? "";
+      keyMetrics = resumedResearch.keyMetrics ?? [];
+      discoveredEvents = resumedResearch.discoveredEvents ?? [];
+      matchRerankInfo = resumedResearch.matchRerankInfo ?? null;
+    } else {
+
+    console.log("Starting optimised parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + providers enrichment + competitors + end buyers...");
 
     // Wrap DB matching + provider enrichment into a single parallel task
     const matchesAndEnrichTask = async () => {
@@ -2030,7 +2120,7 @@ async function generateReportInBackground(
       return rawMatches;
     };
 
-    const [
+    [
       companyEnrichResult,
       marketResearch,
       matches,
@@ -2065,7 +2155,6 @@ async function generateReportInBackground(
     ]);
 
     // Extract key metrics from the landscape response instead of a separate Perplexity call
-    const keyMetrics: Array<{ label: string; value: string; context: string; estimated?: boolean }> = [];
     if (marketResearch.landscape) {
       const metricLines = marketResearch.landscape.match(/- METRIC: (.+?) \| (.+?) \| (.+)/g);
       if (metricLines) {
@@ -2092,58 +2181,6 @@ async function generateReportInBackground(
       }
       console.log(`Extracted ${keyMetrics.length} key metrics from landscape query`);
     }
-
-    // ── MES-148 1a: claims registry ─────────────────────────────────────
-    // Key metrics become claims deterministically; the free-prose research
-    // streams go through ONE extraction call whose JSON reply is schema-
-    // validated with a single retry. The merged registry is persisted to
-    // report_claims (service-role write) and is the evidence base the shadow
-    // verifier checks drafts against below. Best-effort throughout — a claims
-    // failure must never fail the report.
-    let reportClaims: ReportClaim[] = [];
-    let claimsExtractionOk = false;
-    try {
-      const metricClaims = claimsFromKeyMetrics(keyMetrics, marketResearch.citations);
-      const researchStreams = [
-        { name: "landscape", text: marketResearch.landscape },
-        { name: "regulatory", text: marketResearch.regulatory },
-        { name: "news", text: marketResearch.news },
-        { name: "bilateral_trade", text: marketResearch.bilateral_trade },
-        { name: "cost_of_business", text: marketResearch.cost_of_business },
-        { name: "grants", text: marketResearch.grants },
-      ];
-      let extracted: ReportClaim[] = [];
-      if (researchStreams.some((s) => (s.text || "").trim())) {
-        const extractionPrompt = buildClaimsExtractionPrompt(researchStreams);
-        for (let attempt = 1; attempt <= 2 && !claimsExtractionOk; attempt++) {
-          const raw = await callAI(lovableKey, [
-            { role: "system", content: "You extract structured factual claims from market research notes. Return only valid JSON, no markdown fences." },
-            { role: "user", content: extractionPrompt },
-          ], "google/gemini-3-flash-preview", { temperature: 0.1 });
-          const parsed = parseClaimsResponse(raw, metricClaims.length + 1);
-          if (parsed) {
-            extracted = parsed;
-            claimsExtractionOk = true;
-          } else {
-            console.warn(`Claims extraction attempt ${attempt} failed schema validation`);
-          }
-        }
-      }
-      reportClaims = renumberClaims(dedupeClaims([...metricClaims, ...extracted]));
-      if (reportClaims.length > 0) {
-        const { error: claimsErr } = await supabase.from("report_claims").insert(
-          reportClaims.map((c) => ({ ...c, report_id: reportId })),
-        );
-        if (claimsErr) console.error("report_claims insert failed (continuing):", claimsErr.message);
-      }
-      console.log(`Claims registry: ${reportClaims.length} claims (${metricClaims.length} metrics, extraction_ok=${claimsExtractionOk})`);
-    } catch (e) {
-      console.error("Claims registry failed (continuing):", e);
-    }
-
-    const enrichedSummary = companyEnrichResult.enrichedSummary;
-    const companyProfile = companyEnrichResult.profile;
-    const companyScrapeDiag = companyEnrichResult.diagnostics;
 
     // Competitor recall backfill (Floats feedback): discovery can come up thin
     // (Floats got 1 competitor) while the market-research prose already fetched
@@ -2194,14 +2231,13 @@ async function generateReportInBackground(
       }
     } catch (e) { console.error("competitor backfill failed (continuing):", e); }
 
-    if (companyProfile) {
+    if (companyEnrichResult.profile) {
       await supabase.from("user_intake_forms")
-        .update({ enriched_input: companyProfile })
+        .update({ enriched_input: companyEnrichResult.profile })
         .eq("id", intakeFormId);
     }
 
     // Conditional external event discovery: only if DB returned < 3 events
-    let discoveredEvents: DiscoveredEvent[] = [];
     const internalEventCount = (matches.events || []).length;
     if (firecrawlKey && internalEventCount < 3) {
       console.log(`Only ${internalEventCount} internal events found — discovering external events...`);
@@ -2233,7 +2269,6 @@ async function generateReportInBackground(
     // enriched company profile to ONE cheap Gemini call and drop what an analyst would
     // cut. Drop-only, floor-guarded, and fail-open (see matchRerank.ts) so it can
     // never empty a section or add/reorder — worst case it's a no-op.
-    let matchRerankInfo: { applied: boolean; dropped: Record<string, number>; dropped_count: number } | null = null;
     if (Deno.env.get("MATCH_RERANK_ENABLED")) {
       try {
         const rerankItems = buildRerankItems(matches);
@@ -2243,7 +2278,7 @@ async function generateReportInBackground(
             `from ${intake.country_of_origin || "unknown origin"}`,
             `entering ${(intake.target_regions || []).join(", ") || "Australia"}`,
             (intake.end_buyer_industries || []).length ? `sells to: ${(intake.end_buyer_industries || []).join(", ")}` : "",
-            enrichedSummary ? `Profile: ${String(enrichedSummary).slice(0, 600)}` : "",
+            companyEnrichResult.enrichedSummary ? `Profile: ${String(companyEnrichResult.enrichedSummary).slice(0, 600)}` : "",
           ].filter(Boolean).join(". ");
           const aiText = await callAI(lovableKey, [
             { role: "system", content: "You are a meticulous market-entry analyst. Return only valid JSON, no markdown fences." },
@@ -2262,6 +2297,74 @@ async function generateReportInBackground(
 
     // All Firecrawl work for this report is done — log plumbing health + op count.
     console.log(`Firecrawl health: ${firecrawlStats.succeeded}/${firecrawlStats.ops} OK (scrape ${firecrawlStats.scrape.ok}/${firecrawlStats.scrape.attempted}, map ${firecrawlStats.map.ok}/${firecrawlStats.map.attempted}, search ${firecrawlStats.search.ok}/${firecrawlStats.search.attempted}); cache ${firecrawlStats.cache_hits} hit / ${firecrawlStats.cache_misses} miss; statuses [${firecrawlStats.statuses.join(",")}]`);
+
+    // MES-148 1b: the expensive phase is complete — snapshot it so a retry of
+    // this intake never re-pays research. (Closes the resume else-branch.)
+    await saveStageArtifact(supabase, intakeFormId, reportId, "research_bundle", {
+      companyEnrichResult,
+      marketResearch,
+      matches,
+      competitorResult,
+      endBuyerScrapeResult,
+      endBuyerProcurementResearch,
+      endBuyerAccountResearch,
+      keyMetrics,
+      discoveredEvents,
+      matchRerankInfo,
+    });
+    }
+
+    // ── MES-148 1a: claims registry ─────────────────────────────────────
+    // Key metrics become claims deterministically; the free-prose research
+    // streams go through ONE extraction call whose JSON reply is schema-
+    // validated with a single retry. The merged registry is persisted to
+    // report_claims (service-role write) per report — a resumed run re-registers
+    // claims for its new report row. Best-effort throughout — a claims failure
+    // must never fail the report.
+    let reportClaims: ReportClaim[] = [];
+    let claimsExtractionOk = false;
+    try {
+      const metricClaims = claimsFromKeyMetrics(keyMetrics, marketResearch.citations);
+      const researchStreams = [
+        { name: "landscape", text: marketResearch.landscape },
+        { name: "regulatory", text: marketResearch.regulatory },
+        { name: "news", text: marketResearch.news },
+        { name: "bilateral_trade", text: marketResearch.bilateral_trade },
+        { name: "cost_of_business", text: marketResearch.cost_of_business },
+        { name: "grants", text: marketResearch.grants },
+      ];
+      let extracted: ReportClaim[] = [];
+      if (researchStreams.some((s) => (s.text || "").trim())) {
+        const extractionPrompt = buildClaimsExtractionPrompt(researchStreams);
+        for (let attempt = 1; attempt <= 2 && !claimsExtractionOk; attempt++) {
+          const raw = await callAI(lovableKey, [
+            { role: "system", content: "You extract structured factual claims from market research notes. Return only valid JSON, no markdown fences." },
+            { role: "user", content: extractionPrompt },
+          ], "google/gemini-3-flash-preview", { temperature: 0.1 });
+          const parsed = parseClaimsResponse(raw, metricClaims.length + 1);
+          if (parsed) {
+            extracted = parsed;
+            claimsExtractionOk = true;
+          } else {
+            console.warn(`Claims extraction attempt ${attempt} failed schema validation`);
+          }
+        }
+      }
+      reportClaims = renumberClaims(dedupeClaims([...metricClaims, ...extracted]));
+      if (reportClaims.length > 0) {
+        const { error: claimsErr } = await supabase.from("report_claims").insert(
+          reportClaims.map((c) => ({ ...c, report_id: reportId })),
+        );
+        if (claimsErr) console.error("report_claims insert failed (continuing):", claimsErr.message);
+      }
+      console.log(`Claims registry: ${reportClaims.length} claims (extraction_ok=${claimsExtractionOk})`);
+    } catch (e) {
+      console.error("Claims registry failed (continuing):", e);
+    }
+
+    const enrichedSummary = companyEnrichResult.enrichedSummary;
+    const companyProfile = companyEnrichResult.profile;
+    const companyScrapeDiag = companyEnrichResult.diagnostics;
 
     // 3. Get user subscription tier
     let userTier = "free";
@@ -2401,6 +2504,9 @@ async function generateReportInBackground(
     // 6. Generate sections
     const sections: Record<string, any> = {};
     const sectionsGenerated: string[] = [];
+    // MES-148 1b: drafted sections from a prior run of this intake (only used
+    // when the research bundle they were written from was also resumed).
+    const hasResumedDrafts = !!(resumedDrafts && resumedDrafts.sections && Object.keys(resumedDrafts.sections).length > 0);
 
     // ── Citation availability (P0-4) ─────────────────────────────────────
     // When Perplexity returned no citations, instructing the model that it
@@ -2536,7 +2642,7 @@ async function generateReportInBackground(
     // are matched rows only) and fail-open (no focus / no picks → renders as
     // before). Computed once here; the exec-summary section attaches the cards.
     let keyQuestionPicks: PickCard[] = [];
-    if (reportFocus) {
+    if (reportFocus && !hasResumedDrafts) {
       try {
         const candidates = buildPickCandidates(matches);
         if (candidates.length > 0) {
@@ -2562,7 +2668,8 @@ async function generateReportInBackground(
     // provenance guardrail. Best-effort: failure leaves reports exactly as before.
     let synthesisSignalNote = "";
     try {
-      const linkedInSignal = await fetchLinkedInSignal(supabase, intake);
+      // Skipped on drafts-resume: the prompts it feeds won't be re-run.
+      const linkedInSignal = hasResumedDrafts ? "" : await fetchLinkedInSignal(supabase, intake);
       if (linkedInSignal) {
         synthesisSignalNote = `\n\nPRACTITIONER SIGNAL (BACKGROUND ONLY — STRICT RULES): Below are anonymised excerpts from recent public posts by Australian market-entry practitioners and founders, provided purely as situational awareness. Use them ONLY to inform themes, framing, and what currently matters in-market. You MUST: (a) abstract and combine ideas in your own words; (b) NEVER reproduce any excerpt verbatim or near-verbatim; (c) NEVER quote them or wrap their wording in quotation marks; (d) NEVER attribute any statement to a named person, company, or post; (e) NEVER cite or list them as a source. Treat them as uncited background, not evidence.\n${linkedInSignal}`;
       }
@@ -2574,7 +2681,11 @@ async function generateReportInBackground(
     // verification can regenerate a failing section once with a corrective note.
     const sectionPrompts: Record<string, { system: string; user: string }> = {};
 
-    if (templates && templates.length > 0) {
+    if (hasResumedDrafts) {
+      console.log("Resume: drafts artifact found — skipping section generation");
+      Object.assign(sections, resumedDrafts!.sections);
+      sectionsGenerated.push(...(((resumedDrafts!.sections_generated as string[]) ?? []).filter(Boolean)));
+    } else if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
       // stored with `visible: false`. The frontend reads `visible` to gate
@@ -2687,7 +2798,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     const verifierMode = Deno.env.get("CLAIMS_VERIFIER_MODE") === "blocking" ? "blocking" : "shadow";
     const MAX_REGENERATED_SECTIONS = 3;
     let verification: Record<string, unknown> | null = null;
-    try {
+    if (hasResumedDrafts) {
+      // Drafts were verified when first generated — reuse that result.
+      verification = (resumedDrafts!.verification as Record<string, unknown> | null) ?? null;
+    } else try {
       const knownEntityNames: string[] = [intake.company_name];
       for (const arr of Object.values(matches)) {
         if (!Array.isArray(arr)) continue;
@@ -2785,6 +2899,15 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       console.error("Grounding verification failed (continuing):", e);
     }
 
+    // MES-148 1b: snapshot the (verified) drafts so a retry resumes here.
+    if (!hasResumedDrafts) {
+      await saveStageArtifact(supabase, intakeFormId, reportId, "drafts", {
+        sections,
+        sections_generated: sectionsGenerated,
+        verification,
+      });
+    }
+
     // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
 
     const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => {
@@ -2865,6 +2988,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // Phase 2). null = the step failed fail-open.
         claims_registry: { count: reportClaims.length, extraction_ok: claimsExtractionOk },
         verification,
+        // MES-148 1b: which stage artifacts this run resumed from (both false =
+        // a full fresh run). Costs in firecrawl_health/perplexity_health read
+        // zero on a resumed run — that's the point.
+        resume: { research_bundle: !!resumedResearch, drafts: hasResumedDrafts },
         // Renumbered alongside the sections so metric-card [N]s and the stored
         // Sources list stay 1:1 (falls back to the originals when no citations).
         key_metrics: cited.keyMetrics ?? keyMetrics,
