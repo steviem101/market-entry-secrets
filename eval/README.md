@@ -28,8 +28,12 @@ golden runs.
 The runner **self-cleans**: after judging each golden it deletes the intake it
 created, which cascades to that report (`user_reports.intake_form_id` is
 `ON DELETE CASCADE`); the `eval_runs` telemetry survives because its `report_id`
-FK is `ON DELETE SET NULL`. So a run leaves **zero residue** in the target env
-(set `EVAL_KEEP_ROWS=1` to keep rows when debugging a run).
+FK is `ON DELETE SET NULL`. It also deletes the `activity_events` the report
+emitted (`report.completed` / `report.quality` / `report.requested`) — those have
+**no FK** to `user_reports`, so the cascade misses them and they'd otherwise
+persist. So a run leaves **effectively no residue** (set `EVAL_KEEP_ROWS=1` to
+keep rows when debugging). One exception: a report still `processing` at the poll
+timeout is left for the stuck-report reaper rather than deleted mid-flight.
 
 Because of that, **prod is an acceptable target** — and in practice the only one
 with the real directory data (`service_providers`, `community_members`, `events`,
@@ -37,9 +41,14 @@ with the real directory data (`service_providers`, `community_members`, `events`
 hollow reports and meaningless scores. Two things to accept when targeting prod:
 
 1. `EVAL_SERVICE_ROLE_KEY` is then the **prod** service-role key stored in GitHub
-   Actions secrets (god-mode DB access). Controlled — GH secrets aren't shared
-   with fork PRs and are masked in logs, and the workflow guards against
-   script-injection — but rotate it if you ever suspect exposure.
+   Actions secrets (god-mode DB access). To limit exposure, the `golden-eval`
+   workflow does **not** auto-run on PRs that modify the runner or the workflow
+   itself (`eval/**` / `golden-eval.yml`) — those run only on manual dispatch and
+   the nightly schedule, so a PR can't run attacker-modified runner code with the
+   key in env. Report-pipeline PRs (`generate-report` / `_shared` / report-template
+   migrations) still smoke-test with the trusted, committed runner. GH secrets are
+   also not shared with fork PRs and are masked in logs. Rotate the key if you ever
+   suspect exposure.
 2. Every run still burns real Firecrawl/Perplexity/LLM spend (~one report per
    golden), the same on any env.
 
