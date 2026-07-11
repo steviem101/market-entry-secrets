@@ -407,3 +407,38 @@ classifier picking up the 430 new rows); (2) final INSERT-ONLY freeze-sync (MES 
 must not clobber II's now-fresh data); (3) Hard Stop 2 explicit approval → capture byte-exact
 rollback → drop MES `ii_*` → remove 2 MES edge fns → re-run mes-context canary → get_advisors →
 rotate the shared DB passwords.
+
+---
+
+### 2026-07-11 — FULL PIPELINE VERIFIED on Irish Insights; MES drop DEFERRED (operator choice)
+
+Ran `II Email Ingestion` (ingest.yml: `ingest` + `classify-pending` jobs). Results in II:
+- `ingest` green → `ii_content` 7554→7571 (new emails written with operator's SUPABASE_SECRET_KEY).
+- `classify-pending` green → **linkedin unclassified 430→0** (classifier WROTE is_ii_relevant back:
+  1085 relevant / 4150 not-relevant). Confirms Actions→II **write** path with the operator key.
+- Earlier same run: curation job read II (all REST GETs 200 via python-httpx). The II Curation
+  "Failed to save" warning was NOT Supabase (all II calls 200/201) — an external service (Notion)
+  blip.
+
+**Every path now verified live on Irish Insights:** email ingest (write), classifier (write),
+Apify linkedin (write, 430 rows), curation (read), notion research dispatch (200), plus the full
+data copy (9 tables, 0 missing, FK-clean, embeddings + match_content self-sim = 1.0). II is the
+operational source of truth; all writers repointed; MES `ii_*` frozen since 2026-07-10 10:26.
+
+**Hard Stop 2 reached; operator chose "keep MES as backup, drop later."** No destructive action
+taken. MES `ii_*` retained as a frozen safety copy.
+
+**To execute the drop later (when operator says go):**
+1. Confirm MES `ii_*` still frozen (no writes since cutover) + `10-mes-drop.sql` sentinel.
+2. Final **insert-only** sync MES→II (expect 0 missing; MES frozen) — re-enable dblink, verify, drop it.
+3. Capture byte-exact rollback → `supabase/rollback/<ts>_ii_extraction_drop_from_mes_revert.sql`
+   (schema-only `pg_dump -t 'public.ii_*'` + the 11 fns + 4 triggers via the captured 20-/21- SQL).
+4. Copy `10-mes-drop.sql` → `supabase/migrations/<ts>_ii_extraction_drop_from_mes.sql`; run via MCP.
+5. Delete MES edge fns `apify-webhook` + `notion-research-trigger`; re-run mes-context canary;
+   `get_advisors(security|performance)` on MES.
+
+**Housekeeping (independent of the drop):**
+- Rotate the **II DB password** now (live production DB; the postgres password was shared in chat).
+  Nothing operational uses it — the pipeline auth is the service-role key — so rotation is safe.
+- Rotate the **MES DB password** after the final sync/drop (dblink still needs it until then).
+- Gmail OAuth token is printed in the `ingest` job summary — suppress in ingest.yml when convenient.
