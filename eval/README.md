@@ -25,9 +25,26 @@ golden runs.
 
 ## Environment
 
-Point the runner at a **preview/staging Supabase env, never prod** (it inserts
-intakes and burns real Firecrawl/Perplexity/LLM spend — roughly one full report
-per golden per run).
+The runner **self-cleans**: after judging each golden it deletes the intake it
+created, which cascades to that report (`user_reports.intake_form_id` is
+`ON DELETE CASCADE`); the `eval_runs` telemetry survives because its `report_id`
+FK is `ON DELETE SET NULL`. So a run leaves **zero residue** in the target env
+(set `EVAL_KEEP_ROWS=1` to keep rows when debugging a run).
+
+Because of that, **prod is an acceptable target** — and in practice the only one
+with the real directory data (`service_providers`, `community_members`, `events`,
+…) that `generate-report` matches against; a fresh empty project would produce
+hollow reports and meaningless scores. Two things to accept when targeting prod:
+
+1. `EVAL_SERVICE_ROLE_KEY` is then the **prod** service-role key stored in GitHub
+   Actions secrets (god-mode DB access). Controlled — GH secrets aren't shared
+   with fork PRs and are masked in logs, and the workflow guards against
+   script-injection — but rotate it if you ever suspect exposure.
+2. Every run still burns real Firecrawl/Perplexity/LLM spend (~one report per
+   golden), the same on any env.
+
+A dedicated paid staging project is the fully-isolated alternative, but it would
+also need a copy of prod's directory data to be useful.
 
 | Variable | Meaning |
 |----------|---------|
