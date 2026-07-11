@@ -164,12 +164,20 @@ mentoring networks — they serve founders across all sectors.
 - Service tags refined: Appomate/EverestEngineering → Software Development,
   Spruson & Ferguson → IP & Legal.
 
-**Only open decision left:** approve the new `innovation_ecosystem.type` value
-**"Community"** (22 rows still `review`). Everything else is `import`.
+**Community type APPROVED (2026-07-10)** — the new `innovation_ecosystem.type`
+value "Community" is signed off. All 22 rows now import. **Review queue is
+empty; all 134 rows are import-ready.**
 
-Final import set (excl. the 22 pending Community): investors 44,
-innovation_ecosystem 29, service_providers 18, trade_investment_agencies 15,
-events 6 = **112 rows**; **134** if Community is approved. Skips 18, media 5.
+Final import set: investors 44, innovation_ecosystem 51, service_providers 18,
+trade_investment_agencies 15, events 6 = **134 rows**. Skips 18, media 5.
+
+Pre-flight verification (2026-07-10): 0 domain collisions and 0 name
+collisions vs 993 live MES records (incl. the 16 corrected URLs); 0 NOT-NULL
+violations; all enum-like values match live data (incl. the new Community
+type). 3 rows remain linkless (DEI Australia, LGBTQ+ Founders Network,
+Regional Accelerator Network) — no confident canonical URL found; pending a
+keep-linkless vs drop decision. 25 rows are grants/competitions where "org
+active" is verified but "current round open" is not individually checked.
 
 ## Decisions needed from the reviewer
 

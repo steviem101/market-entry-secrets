@@ -429,7 +429,7 @@ def main() -> None:
                 flags.extend(tflags)
                 ie_types = [ie_type]
             if "Community" in ie_types:
-                flags.append("introduces NEW innovation_ecosystem type value 'Community' (product decision)")
+                flags.append("innovation_ecosystem type 'Community' — new value, APPROVED 2026-07-10")
             prop["proposed_type"] = "; ".join(ie_types)
             prop["proposed_sectors"] = "; ".join(override_display or display_labels(row["Industries"]))
             prop["proposed_founded"] = ""
@@ -473,13 +473,10 @@ def main() -> None:
 
         if row["Name"] in REVIEW_FLAGS:
             flags.append(REVIEW_FLAGS[row["Name"]])
-        # Human review is complete (REVIEW-QUEUE sign-off). The only remaining
-        # open decision is approving the NEW innovation_ecosystem "Community"
-        # type value — those rows stay 'review' until the reviewer confirms.
-        if any("introduces NEW innovation_ecosystem type" in f for f in flags):
-            action = "review"
-        else:
-            action = "import"
+        # Human review complete + Community type approved (2026-07-10):
+        # every kept row is import-ready. Linkless rows keep their flag for
+        # visibility but are not blocked.
+        action = "import"
         record = {
             **{c: row.get(c, "") for c in ("Name", "Category", "Type", "State", "Amount",
                                            "Timing / Deadline", "Status", "Industries",
