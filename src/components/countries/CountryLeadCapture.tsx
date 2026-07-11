@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { trackCountryEvent } from "@/lib/analytics/countryFunnel";
 
 interface CountryLeadCaptureProps {
   countryName: string;
@@ -37,6 +38,7 @@ export const CountryLeadCapture = ({
       return;
     }
     setSubmitted(true);
+    trackCountryEvent(countrySlug, "lead_capture_submit", { section: "digest" });
     toast.success("You are in. Watch your inbox.");
   };
 
@@ -98,7 +100,12 @@ export const CountryLeadCapture = ({
               Generate a customised {countryName} to Australia market entry report. Matched partners, grants, ICP.
             </p>
             <Button asChild className="mt-5 bg-mes-teal hover:bg-mes-teal-dark text-white">
-              <Link to={`/report-creator?source=country-${countrySlug}`}>
+              <Link
+                to={`/report-creator?source=country-${countrySlug}`}
+                onClick={() =>
+                  trackCountryEvent(countrySlug, "report_creator_click", { section: "lead_capture" })
+                }
+              >
                 Generate my report
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

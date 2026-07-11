@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useCountryPage } from "@/hooks/useCountryPage";
+import { trackCountryEvent } from "@/lib/analytics/countryFunnel";
 import { SEOHead } from "@/components/common/SEOHead";
 import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -20,7 +22,7 @@ import { publishedOrigin } from "@/lib/publishedOrigin";
 import { getCountryCode } from "@/lib/countryCodes";
 import { NoIndex } from "@/components/common/NoIndex";
 
-// Per-slug SEO overrides — keep bespoke copy data-driven rather than branching in JSX.
+// Per-slug SEO overrides - keep bespoke copy data-driven rather than branching in JSX.
 const SEO_OVERRIDES: Record<string, { title: string; description: (c: { name: string; key_industries?: string[] }) => string }> = {
   ireland: {
     title: "Ireland to Australia Market Entry Playbook 2026",
@@ -36,6 +38,10 @@ const CountryPage = () => {
   const { countrySlug } = useParams<{ countrySlug: string }>();
   const slug = countrySlug || "";
   const { data: bundle, isLoading, error } = useCountryPage(slug);
+
+  useEffect(() => {
+    if (slug) trackCountryEvent(slug, "page_view");
+  }, [slug]);
 
   if (isLoading) return <PageSkeleton />;
 
@@ -84,7 +90,7 @@ const CountryPage = () => {
     seoOverride?.description(country) ??
     (pageContent?.hero_subhead ||
       `Market entry resources for ${country.name} companies expanding to Australia${
-        topIndustries ? ` — agencies, partners, and case studies across ${topIndustries}.` : "."
+        topIndustries ? `: agencies, partners, and case studies across ${topIndustries}.` : "."
       }`);
 
   const jsonLd = buildCountryJsonLd({
@@ -112,6 +118,9 @@ const CountryPage = () => {
         countryName={country.name}
         countryCode={countryCode ?? ""}
         primaryCtaHref={`/report-creator?source=country-${country.slug}`}
+        onPrimaryClick={() =>
+          trackCountryEvent(country.slug, "report_creator_click", { section: "sticky_bar" })
+        }
       />
 
       <main className="pt-4">

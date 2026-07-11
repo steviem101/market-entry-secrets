@@ -2,18 +2,25 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { trackCountryEvent } from "@/lib/analytics/countryFunnel";
 import { AgencyCard } from "./parts/AgencyCard";
 import { MentorCard } from "./parts/MentorCard";
 import { ServiceCard } from "./parts/ServiceCard";
 import { InvestorCard } from "./parts/InvestorCard";
+import type {
+  CountryLinkedAgency,
+  CountryLinkedMentor,
+  CountryLinkedProvider,
+  CountryLinkedInvestor,
+} from "@/hooks/useCountryPage";
 
 interface CountryEcosystemTabsProps {
   countryName: string;
   countrySlug: string;
-  agencies: any[];
-  mentors: any[];
-  services: any[];
-  investors: any[];
+  agencies: CountryLinkedAgency[];
+  mentors: CountryLinkedMentor[];
+  services: CountryLinkedProvider[];
+  investors: CountryLinkedInvestor[];
 }
 
 const EMPTY_COPY: Record<string, (country: string) => string> = {
@@ -32,10 +39,30 @@ export const CountryEcosystemTabs = ({
   investors,
 }: CountryEcosystemTabsProps) => {
   const panels = [
-    { value: "agencies", label: "Agencies", count: agencies.length, items: agencies },
-    { value: "mentors", label: "Mentors", count: mentors.length, items: mentors },
-    { value: "services", label: "Services", count: services.length, items: services },
-    { value: "investors", label: "Investors", count: investors.length, items: investors },
+    {
+      value: "agencies",
+      label: "Agencies",
+      count: agencies.length,
+      cards: agencies.map((a) => <AgencyCard key={a.id} agency={a} />),
+    },
+    {
+      value: "mentors",
+      label: "Mentors",
+      count: mentors.length,
+      cards: mentors.map((m) => <MentorCard key={m.id} mentor={m} />),
+    },
+    {
+      value: "services",
+      label: "Services",
+      count: services.length,
+      cards: services.map((s) => <ServiceCard key={s.id} provider={s} />),
+    },
+    {
+      value: "investors",
+      label: "Investors",
+      count: investors.length,
+      cards: investors.map((i) => <InvestorCard key={i.id} investor={i} />),
+    },
   ];
 
   return (
@@ -73,7 +100,7 @@ export const CountryEcosystemTabs = ({
 
           {panels.map((p) => (
             <TabsContent key={p.value} value={p.value} className="mt-8">
-              {p.items.length === 0 ? (
+              {p.count === 0 ? (
                 <div className="border border-mes-border bg-mes-bg rounded-xl p-6 max-w-2xl">
                   <p className="text-[15px] font-semibold text-mes-ink">
                     {EMPTY_COPY[p.value]?.(countryName)}
@@ -82,19 +109,19 @@ export const CountryEcosystemTabs = ({
                     Request an intro and we will route you to the closest fit today.
                   </p>
                   <Button asChild variant="link" className="mt-3 p-0 h-auto text-mes-teal-dark hover:text-mes-ink">
-                    <Link to={`/contact?topic=country-intro&country=${countrySlug}&section=${p.value}`}>
+                    <Link
+                      to={`/contact?topic=country-intro&country=${countrySlug}&section=${p.value}`}
+                      onClick={() =>
+                        trackCountryEvent(countrySlug, "intro_request_click", { section: p.value })
+                      }
+                    >
                       Request an intro
                       <ArrowRight className="ml-1 h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {p.value === "agencies" && p.items.map((a) => <AgencyCard key={a.id} agency={a} />)}
-                  {p.value === "mentors" && p.items.map((m) => <MentorCard key={m.id} mentor={m} />)}
-                  {p.value === "services" && p.items.map((s) => <ServiceCard key={s.id} provider={s} />)}
-                  {p.value === "investors" && p.items.map((i) => <InvestorCard key={i.id} investor={i} />)}
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{p.cards}</div>
               )}
             </TabsContent>
           ))}
