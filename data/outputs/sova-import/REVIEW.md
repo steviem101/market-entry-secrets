@@ -194,7 +194,23 @@ Croc Pitch, Smart50, Startup World Cup, TiE Women, …). **3 problems caught:**
 - **3 still need a call** (below): One Roof competition, NT Business Innovation
   Support, Tasmania Business Growth Programs.
 
-Import now **129** (investors 42). Skips 23, media 5.
+Two further pre-migration catches (2026-07-10):
+
+- **Events dedup gap** — MES-146 excluded the `events` table from matching, so
+  when 6 festivals were re-routed to events they were never checked against it.
+  Direct check found **4 already in MES events** under different slugs (Intersekt,
+  SOUTHSTART, Startup 2 Scaleup Summit, West Tech Fest) — dropped. Only Growth
+  Summit and Spark Festival are genuinely new. (A full re-dedup incl. events also
+  flagged Startup Grind and AWS Activate as domain matches, but those are the
+  org/program vs a distinct MES *event* on a shared domain — kept.)
+- **Vitality APAC Climate-Tech Fund I dropped** — Sova's own description flagged
+  it "unverified entity — verify legitimacy". Withheld from a live directory
+  (anti-fabrication).
+
+**Final import: 121 rows** — investors 38, innovation_ecosystem 48,
+service_providers 18, trade_investment_agencies 15, events 2. Skips 31, media 5.
+Migration: `supabase/migrations/20260711120000_seed_sova_directory_import.sql`
+(idempotent, ON CONFLICT (slug) DO NOTHING; column/value alignment validated).
 
 ### Open judgement calls from deep-verify
 1. **One Roof Unstoppable Founder Competition** — the org (One Roof) is active

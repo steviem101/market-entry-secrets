@@ -154,6 +154,18 @@ REVIEWER_DROPS = {
     # Deep-verify of grant/competition rounds (2026-07-10):
     "Westpac Businesses of Tomorrow": "discontinued — ran 2016-2019, replaced by Westpac Female Founder Awards",
     "LIFTWOMEN": "internal duplicate of 'LiftWomen' (same org, liftwomen.com)",
+    "One Roof Unstoppable Founder Competition": "reviewer: drop (2026 competition unconfirmed; org site is weareoneroof.com)",
+    "NT Business Innovation Support": "reviewer: drop (overlaps 'Business Innovation Program NT')",
+    "Tasmania Business Growth Programs": "reviewer: drop (too generic; overlaps Tasmania Business Growth Loan Scheme)",
+    # Already in the MES events table under a different slug (dedup gap: MES-146
+    # excluded events, so these were never checked until the events re-route).
+    # Self-flagged unverifiable entity in Sova data — anti-fabrication (don't ship
+    # a possibly-illegitimate fund to a live directory).
+    "Vitality APAC Climate-Tech Fund I": "Sova flagged 'unverified entity — verify legitimacy'; withhold from live directory",
+    "Intersekt Festival": "already in MES events ('Intersekt FinTech Festival' / 'National Fintech Summit Intersekt')",
+    "SOUTHSTART": "already in MES events ('SouthStart')",
+    "Startup 2 Scaleup Summit (S2S)": "already in MES events ('Startup To Scaleup Summit S2S')",
+    "West Tech Fest": "already in MES events ('West Tech Fest')",
 }
 
 # Ring-fenced for a SEPARATE future build: a "Media" database in the MES
