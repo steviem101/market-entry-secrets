@@ -3310,12 +3310,23 @@ Deno.serve(async (req) => {
     }
 
     // ── Rate limiting: max 5 reports per 60 minutes per user ─────────
-    const rateLimitError = await checkRateLimit(user.id, "generate-report", 5, 60);
-    if (rateLimitError) {
-      return new Response(
-        JSON.stringify({ error: rateLimitError }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // The golden-eval user is exempt: it replays the whole frozen set (5→10-20
+    // goldens) back-to-back through this function, which the per-user cap would
+    // otherwise 429. Env-gated to a single user id (EVAL_BYPASS_USER_ID) — unset
+    // in normal operation, so real users are never affected. Only skips the abuse
+    // cap; auth + intake-ownership checks above still apply.
+    const evalBypassUserId = Deno.env.get("EVAL_BYPASS_USER_ID");
+    const isEvalUser = !!evalBypassUserId && user.id === evalBypassUserId;
+    if (isEvalUser) {
+      console.log("Rate limit bypassed for eval user", { user_id: user.id });
+    } else {
+      const rateLimitError = await checkRateLimit(user.id, "generate-report", 5, 60);
+      if (rateLimitError) {
+        return new Response(
+          JSON.stringify({ error: rateLimitError }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Pre-create the report row with "processing" status.

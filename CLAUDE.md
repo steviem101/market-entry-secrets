@@ -274,6 +274,7 @@ Owned by skill `mes-ticket-workflow`; the invariants:
 | `ANTHROPIC_API_KEY` (+ `RQ_LOOP_MODEL` override; `VERIFIER_ADJUDICATION_MODEL` override in generate-report) | generate-plan, classify-personas, normalize-events, report-quality-loop, generate-report (claims-verifier adjudication — MES-148 1a) |
 | `OPENAI_API_KEY` (Vault fallback `openai_api_key`) | KB embeddings (embed-knowledge, knowledge-search) |
 | `MATCH_RERANK_ENABLED` | generate-report matching toggle |
+| `EVAL_BYPASS_USER_ID` | generate-report: exempts one user id (the golden-eval user) from the 5/60min report rate limit; unset in normal operation (MES-148 Phase 1c) |
 | `RESEND_API_KEY`, `EMAIL_INTERNAL_SECRET` | Transactional email |
 | `FRONTEND_URL` | Stripe redirects + CORS allowlist entry |
 | `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `SLACK_NOTIFY_WEBHOOK_SECRET`, `RQ_SLACK_REVIEWERS`, `SLACK_EVENTS_WEBHOOK`, `SLACK_ALERTS_WEBHOOK` | Slack notify/loops + events digests |
