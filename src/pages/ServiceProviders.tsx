@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 import { ServiceProvidersHero } from "@/components/service-providers/ServiceProvidersHero";
 import { ServiceProvidersDataProvider } from "@/components/service-providers/ServiceProvidersDataProvider";
 import { ServiceProvidersList } from "@/components/service-providers/ServiceProvidersList";
@@ -156,8 +157,8 @@ const ServiceProviders = () => {
           property="og:description"
           content="Connect with verified service providers for your market entry into Australia and New Zealand."
         />
-        <meta property="og:url" content={`${window.location.origin}/service-providers`} />
-        <link rel="canonical" href={`${window.location.origin}/service-providers`} />
+        <meta property="og:url" content={`${publishedOrigin()}/service-providers`} />
+        <link rel="canonical" href={`${publishedOrigin()}/service-providers`} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -165,7 +166,7 @@ const ServiceProviders = () => {
             name: "Service Providers Directory",
             description:
               "Directory of vetted service providers specializing in market entry to Australia and New Zealand.",
-            url: `${window.location.origin}/service-providers`,
+            url: `${publishedOrigin()}/service-providers`,
           })}
         </script>
       </Helmet>

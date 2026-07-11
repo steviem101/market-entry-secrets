@@ -78,10 +78,13 @@ Deno.serve(async (req: Request) => {
           .gte("date", new Date().toISOString())
           .order("date", { ascending: true })
           .limit(10),
+        // Only the caller's OWN reports — this runs with the service-role key
+        // (RLS bypassed), so a persona filter would pull other users' report
+        // rows into this user's plan context. Scope to user.id (AUD-026).
         supabase
           .from("user_reports")
           .select("id, status, tier_at_generation, created_at")
-          .or(personaFilter("target_personas"))
+          .eq("user_id", user.id)
           .limit(10),
         supabase
           .from("content_company_profiles")
