@@ -1,0 +1,9 @@
+{
+  // Pins Deno tooling (deno check in CI) to its default strict compiler options
+  // for the edge-function tree. Without this, `deno check` walks up and discovers
+  // the repo-root tsconfig.json (Vite/browser settings, strictNullChecks:false),
+  // which breaks discriminated-union narrowing and reports phantom errors in
+  // _shared/stripeEvents.ts consumers. Keep this free of imports/options —
+  // runtime behaviour on Supabase is unaffected.
+  "compilerOptions": {}
+}

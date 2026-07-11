@@ -275,7 +275,11 @@ Deno.serve(async (req: Request) => {
 // ── Helpers ──────────────────────────────────────────────────────
 
 async function fetchDynamicData(
-  supabase: ReturnType<typeof createClient>
+  // Bare `ReturnType<typeof createClient>` resolves the schema generics to
+  // `never` under strict Deno type-checking (supabase-js v2 defaults), making
+  // every `.from()` result `never` — type loosely like the other functions.
+  // deno-lint-ignore no-explicit-any
+  supabase: any
 ): Promise<DynamicData> {
   const defaults: DynamicData = {
     provider_count: "100+",

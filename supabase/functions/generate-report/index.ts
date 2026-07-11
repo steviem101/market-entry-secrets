@@ -23,6 +23,8 @@ import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitor
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { renderTemplate } from "./promptTemplate.ts";
+import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
+import { buildEvidenceCorpus, verifySections, flaggedItemsOf, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -1030,6 +1032,50 @@ async function callAI(
 
   const data = await resp.json();
   return data.choices?.[0]?.message?.content || "";
+}
+
+// ── MES-148 1a: strong-model adjudication of verifier flags ───────────
+// ONE bounded Anthropic call per report (only when the deterministic verifier
+// flagged something), separating true fabrications from benign derivations
+// (arithmetic on evidenced figures, generic proper-noun-shaped phrases). Fail-
+// open: any error returns null and the flags stay advisory. An Anthropic judge
+// also de-correlates from the Gemini writers it is checking.
+const ADJUDICATION_TIMEOUT_MS = 30000;
+
+async function adjudicateWithAnthropic(prompt: string): Promise<string | null> {
+  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!key) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ADJUDICATION_TIMEOUT_MS);
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: Deno.env.get("VERIFIER_ADJUDICATION_MODEL") || "claude-sonnet-4-6",
+        max_tokens: 2000,
+        messages: [{ role: "user", content: prompt }],
+      }),
+      signal: controller.signal,
+    });
+    if (!resp.ok) {
+      // Status only — never log the body (same rule as the Perplexity guard).
+      console.error("Adjudication error: status", resp.status);
+      return null;
+    }
+    const data = await resp.json();
+    const text = (data.content || []).map((b: any) => b?.text || "").join("");
+    return text || null;
+  } catch (e) {
+    console.error("Adjudication call failed:", e instanceof Error ? e.message : "unknown");
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ── Report polish pass ─────────────────────────────────────────────────
@@ -2047,6 +2093,54 @@ async function generateReportInBackground(
       console.log(`Extracted ${keyMetrics.length} key metrics from landscape query`);
     }
 
+    // ── MES-148 1a: claims registry ─────────────────────────────────────
+    // Key metrics become claims deterministically; the free-prose research
+    // streams go through ONE extraction call whose JSON reply is schema-
+    // validated with a single retry. The merged registry is persisted to
+    // report_claims (service-role write) and is the evidence base the shadow
+    // verifier checks drafts against below. Best-effort throughout — a claims
+    // failure must never fail the report.
+    let reportClaims: ReportClaim[] = [];
+    let claimsExtractionOk = false;
+    try {
+      const metricClaims = claimsFromKeyMetrics(keyMetrics, marketResearch.citations);
+      const researchStreams = [
+        { name: "landscape", text: marketResearch.landscape },
+        { name: "regulatory", text: marketResearch.regulatory },
+        { name: "news", text: marketResearch.news },
+        { name: "bilateral_trade", text: marketResearch.bilateral_trade },
+        { name: "cost_of_business", text: marketResearch.cost_of_business },
+        { name: "grants", text: marketResearch.grants },
+      ];
+      let extracted: ReportClaim[] = [];
+      if (researchStreams.some((s) => (s.text || "").trim())) {
+        const extractionPrompt = buildClaimsExtractionPrompt(researchStreams);
+        for (let attempt = 1; attempt <= 2 && !claimsExtractionOk; attempt++) {
+          const raw = await callAI(lovableKey, [
+            { role: "system", content: "You extract structured factual claims from market research notes. Return only valid JSON, no markdown fences." },
+            { role: "user", content: extractionPrompt },
+          ], "google/gemini-3-flash-preview", { temperature: 0.1 });
+          const parsed = parseClaimsResponse(raw, metricClaims.length + 1);
+          if (parsed) {
+            extracted = parsed;
+            claimsExtractionOk = true;
+          } else {
+            console.warn(`Claims extraction attempt ${attempt} failed schema validation`);
+          }
+        }
+      }
+      reportClaims = renumberClaims(dedupeClaims([...metricClaims, ...extracted]));
+      if (reportClaims.length > 0) {
+        const { error: claimsErr } = await supabase.from("report_claims").insert(
+          reportClaims.map((c) => ({ ...c, report_id: reportId })),
+        );
+        if (claimsErr) console.error("report_claims insert failed (continuing):", claimsErr.message);
+      }
+      console.log(`Claims registry: ${reportClaims.length} claims (${metricClaims.length} metrics, extraction_ok=${claimsExtractionOk})`);
+    } catch (e) {
+      console.error("Claims registry failed (continuing):", e);
+    }
+
     const enrichedSummary = companyEnrichResult.enrichedSummary;
     const companyProfile = companyEnrichResult.profile;
     const companyScrapeDiag = companyEnrichResult.diagnostics;
@@ -2476,6 +2570,10 @@ async function generateReportInBackground(
       console.error("linkedin synthesis signal failed", e);
     }
 
+    // MES-148 1a: each section's final prompt pair is stashed so blocking-mode
+    // verification can regenerate a failing section once with a corrective note.
+    const sectionPrompts: Record<string, { system: string; user: string }> = {};
+
     if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
@@ -2513,6 +2611,8 @@ PRESENTATION & FORMATTING (applies to every section):
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
 ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}`;
+
+            sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
             const content = await callAI(lovableKey, [
               { role: "system", content: systemContent },
@@ -2573,8 +2673,119 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       console.log(`Section generation: ${sectionsGenerated.length} sections in ${Date.now() - sectionStartTime}ms (single batch)`);
     }
 
-    // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
     const sectionOrder = templates ? templates.map((t: any) => t.section_name) : Object.keys(sections);
+
+    // ── MES-148 1a: grounding verification (shadow by default) ──────────
+    // Deterministic check of every draft numeral + multi-word proper noun
+    // against the claims registry, the research corpus, and the matched
+    // directory rows — the `variables` map IS the evidence pack the writers
+    // were given, so anything not traceable to it was invented. Shadow mode
+    // logs + persists telemetry only; CLAIMS_VERIFIER_MODE=blocking
+    // regenerates a failing section once with a corrective note, then flags
+    // it `unverified_facts` (regenerate-once-then-soften). Fail-open
+    // everywhere: verification can never fail a report.
+    const verifierMode = Deno.env.get("CLAIMS_VERIFIER_MODE") === "blocking" ? "blocking" : "shadow";
+    const MAX_REGENERATED_SECTIONS = 3;
+    let verification: Record<string, unknown> | null = null;
+    try {
+      const knownEntityNames: string[] = [intake.company_name];
+      for (const arr of Object.values(matches)) {
+        if (!Array.isArray(arr)) continue;
+        for (const r of arr as any[]) {
+          for (const k of ["name", "title", "company", "company_name", "organizer", "provider_name"]) {
+            if (r?.[k]) knownEntityNames.push(String(r[k]));
+          }
+        }
+      }
+      for (const c of competitorResult.competitors) if (c?.name) knownEntityNames.push(String(c.name));
+      for (const b of endBuyerScrapeResult || []) if (b?.name) knownEntityNames.push(String(b.name));
+      for (const kc of (intake.known_competitors || []) as Array<{ name?: string }>) {
+        if (kc?.name) knownEntityNames.push(String(kc.name));
+      }
+
+      const corpus = buildEvidenceCorpus(Object.values(variables), knownEntityNames, reportClaims);
+      let result = verifySections(sections, sectionOrder, corpus);
+      const flagged = flaggedItemsOf(result);
+
+      // ONE strong-model adjudication call, only when something was flagged —
+      // separates true fabrications from benign derivations before anything
+      // could block. Fail-open: no key / bad reply keeps flags advisory-only.
+      let adjudication: "not_needed" | "applied" | "unavailable" = "not_needed";
+      let fabricated: FlaggedItem[] = flagged;
+      if (flagged.length > 0) {
+        const raw = await adjudicateWithAnthropic(buildAdjudicationPrompt(flagged));
+        const verdicts = raw ? parseAdjudication(raw, flagged.length) : null;
+        if (verdicts) {
+          adjudication = "applied";
+          fabricated = flagged.filter((_, i) => verdicts.find((v) => v.index === i + 1)?.fabricated);
+        } else {
+          adjudication = "unavailable";
+        }
+      }
+
+      const regenerated: string[] = [];
+      const stillUnverified: string[] = [];
+      if (verifierMode === "blocking" && fabricated.length > 0) {
+        const failingSections = [...new Set(fabricated.map((f) => f.section))].slice(0, MAX_REGENERATED_SECTIONS);
+        for (const name of failingSections) {
+          const p = sectionPrompts[name];
+          if (!p || !sections[name]?.content) continue;
+          try {
+            const rewritten = await callAI(lovableKey, [
+              { role: "system", content: p.system + buildRegenerationNote(fabricated, name) },
+              { role: "user", content: p.user },
+            ], "google/gemini-3-flash-preview", { temperature: 0.2 });
+            if (rewritten && rewritten.trim().length > 50) {
+              sections[name] = { ...sections[name], content: rewritten };
+              regenerated.push(name);
+            }
+          } catch (e) {
+            console.error(`Blocking verifier: regeneration of ${name} failed:`, e);
+          }
+        }
+        // Regenerate once, then flag: a section whose fabricated items survive
+        // the rewrite (or whose rewrite failed) is marked unverified_facts in
+        // its section data — additive metadata the frontend can badge later.
+        result = verifySections(sections, sectionOrder, corpus);
+        for (const name of failingSections) {
+          const own = fabricated.filter((f) => f.section === name);
+          const content = (sections[name]?.content || "").toLowerCase();
+          if (own.some((f) => content.includes(f.text.toLowerCase()))) {
+            sections[name] = { ...sections[name], unverified_facts: true };
+            stillUnverified.push(name);
+          }
+        }
+      }
+
+      verification = {
+        mode: verifierMode,
+        adjudication,
+        totals: result.totals,
+        flagged_count: flagged.length,
+        fabricated_count: fabricated.length,
+        regenerated_sections: regenerated,
+        unverified_sections: stillUnverified,
+        sections: result.sections
+          .filter((s) => s.unverified_numerals.length || s.unverified_entities.length)
+          .map((s) => ({
+            section: s.section,
+            numerals_checked: s.numerals_checked,
+            entities_checked: s.entities_checked,
+            unverified_numerals: s.unverified_numerals.slice(0, 10).map((n) => n.raw),
+            unverified_entities: s.unverified_entities.slice(0, 10),
+          })),
+      };
+      console.log(
+        `Verifier (${verifierMode}): checked ${result.totals.numerals_checked} numerals + ${result.totals.entities_checked} entities; ` +
+        `flagged ${flagged.length}, fabricated ${fabricated.length} (adjudication: ${adjudication})` +
+        `${regenerated.length ? `; regenerated [${regenerated.join(", ")}]` : ""}` +
+        `${stillUnverified.length ? `; still unverified [${stillUnverified.join(", ")}]` : ""}`,
+      );
+    } catch (e) {
+      console.error("Grounding verification failed (continuing):", e);
+    }
+
+    // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
 
     const buildReportJson = (currentSections: Record<string, any>, polishApplied: boolean) => {
       // Citation integrity (B11/B15): renumber inline [N] markers to a contiguous
@@ -2648,6 +2859,12 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
           icp_titles: parsedIcp.titles,
         },
         polish_applied: polishApplied,
+        // MES-148 1a: claims-registry + grounding-verification telemetry.
+        // verification reflects the pre-polish drafts (the polish pass is
+        // instructed to preserve facts verbatim; a post-polish diff audit is
+        // Phase 2). null = the step failed fail-open.
+        claims_registry: { count: reportClaims.length, extraction_ok: claimsExtractionOk },
+        verification,
         // Renumbered alongside the sections so metric-card [N]s and the stored
         // Sources list stay 1:1 (falls back to the originals when no citations).
         key_metrics: cited.keyMetrics ?? keyMetrics,

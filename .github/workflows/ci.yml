@@ -1,0 +1,72 @@
+# CI for the report-pipeline trust work (MES-148 Phase 1) — and the repo at large.
+#
+# Two jobs:
+#   1. test        — the existing pure-module suite (node --test) + app typecheck.
+#   2. deno-check  — type-checks every edge function entrypoint under Deno's
+#                    strict defaults (supabase/functions/deno.json). This is the
+#                    MES-148 quick win: a scope bug in an edge function reached QA
+#                    this cycle because nothing type-checked the Deno tree in CI.
+#
+# `mcp` is excluded: it is a generated bundle (@lovable.dev/mcp-js) — edit
+# src/lib/mcp/ sources instead; the bundle does not type-check as authored code.
+#
+# node_modules is installed before deno-check because some esm.sh modules
+# (stripe) carry `/// <reference types="node" />` and Deno resolves @types/node
+# from node_modules.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Unit tests (node --test)
+        run: npm test
+      - name: App typecheck
+        run: npx tsc -p tsconfig.app.json --noEmit
+
+  deno-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check edge functions
+        run: |
+          set -euo pipefail
+          fail=0
+          for entry in supabase/functions/*/index.ts; do
+            name="$(basename "$(dirname "$entry")")"
+            if [ "$name" = "mcp" ]; then
+              echo "skip  $name (generated bundle — edit src/lib/mcp/ instead)"
+              continue
+            fi
+            if deno check --no-lock --config supabase/functions/deno.json --quiet "$entry"; then
+              echo "ok    $name"
+            else
+              echo "FAIL  $name"
+              fail=1
+            fi
+          done
+          exit "$fail"
