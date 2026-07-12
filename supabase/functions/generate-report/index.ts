@@ -2433,7 +2433,7 @@ async function generateReportInBackground(
     // Runs after Phase 1 so it can reuse the company scrape output; adds at most one
     // Firecrawl search + one classify call. Fail-safe: defaults to `none` (today's
     // entry framing) on any weakness/error. Threaded into section prompts below.
-    if (["on", "1", "true"].includes((Deno.env.get("AU_PRESENCE_SIGNAL") || "").toLowerCase())) {
+    if (["on", "1", "true"].includes((Deno.env.get("AU_PRESENCE_SIGNAL") || "").trim().toLowerCase())) {
       auPresence = await deriveAuPresence(
         supabase,
         firecrawlKey,
@@ -3004,7 +3004,7 @@ async function generateReportInBackground(
     // verification can regenerate a failing section once with a corrective note.
     // Only populated in blocking mode — the regeneration loop is the sole reader,
     // so shadow-mode runs don't retain ~1MB of prompt strings for the rest of the run.
-    const captureSectionPrompts = Deno.env.get("CLAIMS_VERIFIER_MODE") === "blocking";
+    const captureSectionPrompts = (Deno.env.get("CLAIMS_VERIFIER_MODE") || "").trim() === "blocking";
     const sectionPrompts: Record<string, { system: string; user: string }> = {};
 
     // MES-148 Phase 2a: per-section model routing. Each section resolves its
@@ -3145,7 +3145,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     // regenerates a failing section once with a corrective note, then flags
     // it `unverified_facts` (regenerate-once-then-soften). Fail-open
     // everywhere: verification can never fail a report.
-    const verifierMode = Deno.env.get("CLAIMS_VERIFIER_MODE") === "blocking" ? "blocking" : "shadow";
+    const verifierMode = (Deno.env.get("CLAIMS_VERIFIER_MODE") || "").trim() === "blocking" ? "blocking" : "shadow";
     const MAX_REGENERATED_SECTIONS = 3;
     let verification: Record<string, unknown> | null = null;
     try {
