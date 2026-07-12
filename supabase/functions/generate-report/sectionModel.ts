@@ -25,6 +25,18 @@ export function anthropicModelId(model: string): string {
   return model.trim().replace(/^anthropic\//i, "");
 }
 
+/** Whether a failed section write should retry once on the Gemini flash writer.
+ *  True only for a direct-Anthropic model (the gateway path already can't hit the
+ *  Anthropic-specific failure modes) that resolved from config — NOT from an eval
+ *  A/B override. Rationale: `report_templates.model = claude-*` promotes real,
+ *  every-report sections; an Anthropic outage/credit/access failure must degrade
+ *  to flash prose, not silently blank the section. But an eval-override failure
+ *  must stay loud so the money-section guard (run-goldens) catches it — so eval
+ *  runs never fall back. */
+export function shouldFallbackToFlash(model: string, isEvalOverride: boolean): boolean {
+  return isAnthropicModel(model) && !isEvalOverride;
+}
+
 /** Resolve the model for one section.
  *  @param rowModel   report_templates.model (null/blank when unset)
  *  @param envDefault SECTION_MODEL_DEFAULT env (blank when unset)
