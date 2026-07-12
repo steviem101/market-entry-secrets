@@ -2243,6 +2243,11 @@ async function generateReportInBackground(
     // Extracted key metrics (from the landscape response — no separate call).
     let keyMetrics: Array<{ label: string; value: string; context: string; estimated?: boolean }> = [];
     let discoveredEvents: DiscoveredEvent[] = [];
+    // MES-159: declared at function scope (like the Phase-1 vars above) so the
+    // section-prompt loop + buildReportJson below can read them; assigned after Phase 1.
+    let auPresence: AuPresenceSignal = { ...NONE_SIGNAL };
+    let auPresenceNote = "";
+    let auFootprintNote = "";
     let matchRerankInfo: { applied: boolean; dropped: Record<string, number>; dropped_count: number } | null = null;
 
     if (resumedResearch) {
@@ -2315,7 +2320,6 @@ async function generateReportInBackground(
     // Runs after Phase 1 so it can reuse the company scrape output; adds at most one
     // Firecrawl search + one classify call. Fail-safe: defaults to `none` (today's
     // entry framing) on any weakness/error. Threaded into section prompts below.
-    let auPresence: AuPresenceSignal = { ...NONE_SIGNAL };
     if (["on", "1", "true"].includes((Deno.env.get("AU_PRESENCE_SIGNAL") || "").toLowerCase())) {
       auPresence = await deriveAuPresence(
         supabase,
@@ -2326,8 +2330,8 @@ async function generateReportInBackground(
         firecrawlStats,
       );
     }
-    const auPresenceNote = buildPresenceReweightNote(auPresence.status);
-    const auFootprintNote = buildFootprintNote(auPresence);
+    auPresenceNote = buildPresenceReweightNote(auPresence.status);
+    auFootprintNote = buildFootprintNote(auPresence);
 
     // Extract key metrics from the landscape response instead of a separate Perplexity call
     if (marketResearch.landscape) {
