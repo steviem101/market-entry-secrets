@@ -23,7 +23,7 @@ import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitor
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
-import { applyRelevanceSelection } from "./selectRelevant.ts";
+import { applyRelevanceSelection, SURFACE_SELECT_IMMIGRATION } from "./selectRelevant.ts";
 import { buildAuPresencePrompt, parseAuPresenceResponse, directoryPresenceEvidence, mergePresence, hostOf, buildPresenceReweightNote, buildFootprintNote, presenceMetadata, NONE_SIGNAL, type AuPresenceSignal, type DirectoryRow } from "./auPresence.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
@@ -1967,12 +1967,24 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // Behind RELEVANCE_AUTHORITATIVE (default off) — legacy gates stay the default
   // until the golden harness validates the flip. Grants-ordering + cross-section
   // dedupe (set-ops, not per-row relevance) run in BOTH modes, below.
+  //
+  // FAITHFUL ORDERING: only the PRE-dedupe surfaces run here (leads, providers,
+  // innovation, agencies — geo-before-chamber inside each). The immigration floor
+  // runs POST-dedupe (mirrors legacy line ~2102) so a floor-backfilled mentor
+  // isn't then deduped below its floor, and an immigration provider still sits in
+  // the dedupe's providerPool. Wrapped so a throw can NEVER break generation
+  // (matches the shadow's fail-safe posture) — on failure the pools pass through
+  // unfiltered rather than aborting the report.
   const relevanceAuthoritative = ["on", "1", "true"].includes(
     (Deno.env.get("RELEVANCE_AUTHORITATIVE") || "").trim().toLowerCase(),
   );
   if (relevanceAuthoritative) {
-    Object.assign(merged, applyRelevanceSelection(merged, ctx, relevanceGates));
-    console.log("relevance selection: AUTHORITATIVE (scoreRelevance drives selection)");
+    try {
+      Object.assign(merged, applyRelevanceSelection(merged, ctx, relevanceGates));
+      console.log("relevance selection: AUTHORITATIVE pre-dedupe (scoreRelevance drives selection)");
+    } catch (e) {
+      console.error("authoritative relevance selection (pre-dedupe) failed — passing pools through unfiltered", e);
+    }
   }
 
   // ── Lead-list ICP gate at the UNION (P1-C follow-up) ────────────────────
@@ -2106,6 +2118,18 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
       merged[tbl] = preferRelevant(merged[tbl], (r: any) => !isImmigrationFocused(r), floor);
       const dropped = before - merged[tbl].length;
       if (dropped > 0) console.log(`immigration filter (domestic) ${tbl}: demoted ${dropped} row(s)`);
+    }
+  } else if (relevanceAuthoritative) {
+    // Authoritative immigration gate — runs HERE, post-dedupe, to mirror the
+    // legacy sequence. `immigration_for_domestic` self-gates via
+    // relevanceGates.excludeImmigration (isDomesticOrigin && !wantsImmigration),
+    // so this is a no-op for international / immigration-seeking companies —
+    // matching the legacy guard above. Same fail-safe wrap as the pre-dedupe pass.
+    try {
+      Object.assign(merged, applyRelevanceSelection(merged, ctx, relevanceGates, SURFACE_SELECT_IMMIGRATION));
+      console.log("relevance selection: AUTHORITATIVE post-dedupe immigration");
+    } catch (e) {
+      console.error("authoritative relevance selection (immigration) failed — leaving deduped pools as-is", e);
     }
   }
 
