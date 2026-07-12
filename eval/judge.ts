@@ -17,6 +17,20 @@ export type Dimension = (typeof DIMENSIONS)[number];
 
 export type SectionScores = Record<Dimension, number> & { notes?: string };
 
+/** The three "money" sections the Phase 2b A/B routes to a candidate model
+ *  (exec summary, first customers, action plan). Shared so the runner's routing
+ *  and its empty-section guard agree on one list. */
+export const MONEY_SECTIONS = ["executive_summary", "first_customers", "action_plan"] as const;
+
+/** Money sections absent from a report's NON-EMPTY section names. A candidate
+ *  model that fails to write a section leaves it blank — filtered out before
+ *  judging — which would otherwise masquerade as a pass rather than a broken
+ *  model. Used to fail an A/B run loudly. Order-preserving. */
+export function missingMoneySections(presentSectionNames: string[]): string[] {
+  const present = new Set(presentSectionNames);
+  return MONEY_SECTIONS.filter((s) => !present.has(s));
+}
+
 /** A section's mean score across the four dimensions. */
 export function sectionMean(scores: SectionScores): number {
   const sum = DIMENSIONS.reduce((s, d) => s + scores[d], 0);

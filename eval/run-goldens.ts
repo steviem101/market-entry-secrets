@@ -37,6 +37,8 @@ import {
   compareToBaseline,
   summarizeScores,
   RUBRIC_VERSION,
+  MONEY_SECTIONS,
+  missingMoneySections,
   type BaselineFile,
   type Regression,
   type SectionScores,
@@ -113,7 +115,6 @@ function parseMoneyModel(): string {
   return v;
 }
 const moneyModel = parseMoneyModel();
-const MONEY_SECTIONS = ["executive_summary", "first_customers", "action_plan"];
 const evalSectionModels: Record<string, string> = moneyModel
   ? Object.fromEntries(MONEY_SECTIONS.map((s) => [s, moneyModel]))
   : {};
@@ -222,6 +223,11 @@ async function main() {
   // 5 reports/60min, so a burst (or a run before EVAL_BYPASS_USER_ID is live in the
   // target env) must not red-fail the gate — it just means reduced coverage this run.
   let rateLimited = 0;
+  // Phase 2b A/B guard: goldens where a money section the candidate model was
+  // meant to write came back EMPTY. A section the model fails to write is stored
+  // blank and filtered out before judging — which would masquerade as "no data"
+  // (a false pass) instead of a broken/unavailable model id. Counted as a failure.
+  let moneySectionFailures = 0;
   // Goldens actually generated AND judged. If this stays 0 (everything skipped)
   // the gate evaluated NOTHING — it must not report "passed", or a green run with
   // zero coverage would let a real regression merge undetected.
@@ -318,6 +324,21 @@ async function main() {
         judgeFailures++;
         continue;
       }
+      // Phase 2b guard: in an A/B run the candidate model MUST have written the
+      // money sections. If any is missing/empty here it failed to write (blank →
+      // filtered out above) — fail loud rather than silently judge the rest and
+      // report a false pass. (Only when money_model is set; the baseline pipeline
+      // may legitimately omit a section on a thin intake.)
+      if (moneyModel) {
+        const missingMoney = missingMoneySections(sectionList.map((s) => s.name));
+        if (missingMoney.length) {
+          console.error(
+            `  MONEY SECTION(S) EMPTY under money_model=${moneyModel}: ${missingMoney.join(", ")} — the model failed to write them (report has them blank). Failing this golden.`,
+          );
+          moneySectionFailures++;
+          continue;
+        }
+      }
       const verification = reportJson?.metadata?.verification ?? null;
       if (verification) {
         console.log(`  verifier: ${JSON.stringify(verification.totals ?? {})}`);
@@ -391,13 +412,18 @@ async function main() {
   if (judgeFailures > 0) {
     console.error(`${judgeFailures} golden(s) failed to generate or judge.`);
   }
+  if (moneySectionFailures > 0) {
+    console.error(
+      `${moneySectionFailures} golden(s) had EMPTY money section(s) under money_model — the candidate model failed to write them. Check the model id is valid + enabled on ANTHROPIC_API_KEY.`,
+    );
+  }
   if (allRegressions.length > 0) {
     console.error("REGRESSIONS (section mean dropped >= 1.0 vs baseline):");
     for (const r of allRegressions) {
       console.error(`  ${r.golden_id} / ${r.section}: ${r.baseline_mean} → ${r.current_mean} (${r.delta})`);
     }
   }
-  if (allRegressions.length > 0 || judgeFailures > 0) Deno.exit(1);
+  if (allRegressions.length > 0 || judgeFailures > 0 || moneySectionFailures > 0) Deno.exit(1);
   // Zero goldens judged (every one skipped/rate-limited) means the gate evaluated
   // nothing — don't claim "passed". Still exit 0 so a transient rate-limit burst
   // doesn't red-block merges, but say plainly that coverage was zero.

@@ -6,9 +6,28 @@ import {
   compareToBaseline,
   summarizeScores,
   sectionMean,
+  MONEY_SECTIONS,
+  missingMoneySections,
   type SectionScores,
   type BaselineFile,
 } from "./judge.ts";
+
+test("missingMoneySections: all present → none missing", () => {
+  const present = [...MONEY_SECTIONS, "swot_analysis", "lead_list"];
+  assert.deepEqual(missingMoneySections(present), []);
+});
+
+test("missingMoneySections: a money section absent (model failed to write it) is reported", () => {
+  // The real failure mode: candidate model wrote nothing for executive_summary +
+  // action_plan, so they were filtered out before judging and only the flash-written
+  // sections remain. The guard must surface the missing money sections, order-preserved.
+  const present = ["swot_analysis", "competitor_landscape", "first_customers", "service_providers"];
+  assert.deepEqual(missingMoneySections(present), ["executive_summary", "action_plan"]);
+});
+
+test("missingMoneySections: empty report → every money section missing", () => {
+  assert.deepEqual(missingMoneySections([]), [...MONEY_SECTIONS]);
+});
 
 const golden = {
   golden_id: "test-golden",
