@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveSectionModel, sectionModelMap, FLASH_MODEL, isAnthropicModel, anthropicModelId } from "./sectionModel.ts";
+import { resolveSectionModel, sectionModelMap, FLASH_MODEL, isAnthropicModel, anthropicModelId, shouldFallbackToFlash } from "./sectionModel.ts";
 
 test("isAnthropicModel: claude ids (bare or anthropic/-prefixed) route to Anthropic", () => {
   assert.equal(isAnthropicModel("claude-sonnet-5"), true);
@@ -18,6 +18,17 @@ test("anthropicModelId: strips an optional anthropic/ prefix to the bare id", ()
   assert.equal(anthropicModelId("anthropic/claude-sonnet-5"), "claude-sonnet-5");
   assert.equal(anthropicModelId("claude-sonnet-4-6"), "claude-sonnet-4-6");
   assert.equal(anthropicModelId("  claude-haiku-4-5 "), "claude-haiku-4-5");
+});
+
+test("shouldFallbackToFlash: config-resolved Anthropic sections fall back; eval overrides + gateway models do not", () => {
+  // A section promoted via report_templates.model = claude-* on a REAL report → fall back.
+  assert.equal(shouldFallbackToFlash("claude-sonnet-4-6", false), true);
+  assert.equal(shouldFallbackToFlash("anthropic/claude-sonnet-5", false), true);
+  // Same model, but it came from an eval A/B override → do NOT fall back (stay loud for the guard).
+  assert.equal(shouldFallbackToFlash("claude-sonnet-4-6", true), false);
+  // Gateway/flash models never need a flash fallback.
+  assert.equal(shouldFallbackToFlash(FLASH_MODEL, false), false);
+  assert.equal(shouldFallbackToFlash("google/gemini-3-flash-preview", false), false);
 });
 
 test("resolveSectionModel: row override wins, then env default, then flash", () => {

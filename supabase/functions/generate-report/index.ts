@@ -29,7 +29,7 @@ import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
-import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId } from "./sectionModel.ts";
+import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, shouldFallbackToFlash, FLASH_MODEL } from "./sectionModel.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -3055,10 +3055,30 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
 
             // Phase 2b: eval override (money-section A/B) wins over row/env/flash.
             const sectionModel = evalSectionModels[tmpl.section_name] || resolveSectionModel(tmpl.model, sectionModelDefault);
-            const content = await writeSection(sectionModel, [
+            const isEvalOverride = !!evalSectionModels[tmpl.section_name];
+            const sectionMessages = [
               { role: "system", content: systemContent },
               { role: "user", content: prompt },
-            ], { temperature: 0.4 }, { lovableKey, anthropicKey });
+            ];
+            let content: string;
+            try {
+              content = await writeSection(sectionModel, sectionMessages, { temperature: 0.4 }, { lovableKey, anthropicKey });
+            } catch (writeErr) {
+              // Resilience (MES-148 Phase 2b): a section promoted to a direct-Anthropic
+              // model (report_templates.model = claude-*) must not silently blank on an
+              // Anthropic outage / credit lapse / model-access change — retry once on the
+              // flash writer so the section still renders. Eval A/B overrides deliberately
+              // do NOT fall back (the money-section guard must see the empty section).
+              if (shouldFallbackToFlash(sectionModel, isEvalOverride)) {
+                console.error(
+                  `Section ${tmpl.section_name}: model ${sectionModel} failed, falling back to flash:`,
+                  writeErr instanceof Error ? writeErr.message : writeErr,
+                );
+                content = await writeSection(FLASH_MODEL, sectionMessages, { temperature: 0.4 }, { lovableKey, anthropicKey });
+              } else {
+                throw writeErr;
+              }
+            }
 
             // competitor_landscape has no directory pool — its prose names the
             // scraped competitors, so render THOSE as cards (B7) instead of the
