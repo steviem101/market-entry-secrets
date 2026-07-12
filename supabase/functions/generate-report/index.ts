@@ -2545,7 +2545,9 @@ async function generateReportInBackground(
           statement: `Existing Australian presence (${auPresence.status}): ${ev}`,
           value: null,
           unit: null,
-          source_url: auPresence.sources[i] || auPresence.sources[0] || null,
+          // Only the positionally-matching source; no sources[0] fallback (it would
+          // mis-attribute an unrelated URL to this specific evidence). null is honest.
+          source_url: auPresence.sources[i] || null,
           confidence: (auPresence.status === "established" ? "high" : "medium") as ReportClaim["confidence"],
           as_of: null,
           stage: "directory" as ReportClaim["stage"],

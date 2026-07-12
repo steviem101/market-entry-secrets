@@ -50,6 +50,13 @@ test("hostOf: normalises scheme/www/path", () => {
   assert.equal(hostOf(null), "");
 });
 
+test("hostOf: strips non-hostname chars (PostgREST .or() injection safety)", () => {
+  // A malicious website_url with a comma would otherwise inject an extra OR-condition.
+  assert.equal(hostOf("evil.com,name.ilike.*"), "evil.comname.ilike.");
+  assert.equal(hostOf("http://a b(c).com"), "abc.com");
+  assert.match(hostOf("daon.com,foo"), /^[a-z0-9.-]*$/);
+});
+
 test("directory: domain match wins and is labelled", () => {
   const { evidence, sources } = directoryPresenceEvidence(
     "Daon",

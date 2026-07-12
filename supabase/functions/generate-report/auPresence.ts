@@ -139,7 +139,12 @@ export function hostOf(url: string | null | undefined): string {
     .replace(/^https?:\/\//, "")
     .replace(/^www\./, "")
     .split(/[/?#]/)[0]
-    .trim();
+    .trim()
+    // Restrict to the legal hostname charset. A real domain is only [a-z0-9.-];
+    // this also makes the value safe to interpolate into a PostgREST `.or()`
+    // filter (a stray comma would otherwise inject an extra OR-condition). Callers
+    // compare hostOf(a) === hostOf(b), so stripping both sides stays consistent.
+    .replace(/[^a-z0-9.-]/g, "");
 }
 
 /** Deterministic evidence that the SUBJECT company already appears in our AU
