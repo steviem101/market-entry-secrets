@@ -23,6 +23,7 @@ import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitor
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
+import { buildAuPresencePrompt, parseAuPresenceResponse, directoryPresenceEvidence, mergePresence, hostOf, buildPresenceReweightNote, buildFootprintNote, presenceMetadata, NONE_SIGNAL, type AuPresenceSignal, type DirectoryRow } from "./auPresence.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
@@ -1035,6 +1036,79 @@ async function callAI(
 
   const data = await resp.json();
   return data.choices?.[0]?.message?.content || "";
+}
+
+// ── MES-159: existing-Australia-presence signal ──────────────────────────
+// Derive a {status, evidence[], sources[]} signal for the SUBJECT company from
+// the company scrape (already run) + one targeted search + a deterministic
+// directory cross-reference. Reuses the competitor au_presence extraction shape.
+// Fully fail-safe: any error at any step falls back to NONE_SIGNAL, so the report
+// never gets a fabricated "established" and never breaks. Behind AU_PRESENCE_SIGNAL.
+async function deriveAuPresence(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  firecrawlKey: string | undefined,
+  lovableKey: string | undefined,
+  // deno-lint-ignore no-explicit-any
+  intake: any,
+  scrapeText: string,
+  stats?: FirecrawlStats,
+): Promise<AuPresenceSignal> {
+  try {
+    const companyName = String(intake.company_name || "").trim();
+    const website = String(intake.website_url || "").trim();
+    if (!companyName) return { ...NONE_SIGNAL };
+    const host = hostOf(website);
+
+    // 1. One targeted search (best-effort) + 3. directory cross-reference (cheap,
+    //    deterministic) in parallel — neither depends on the other.
+    const [searchResults, dirTables] = await Promise.all([
+      firecrawlKey
+        ? firecrawlSearch(firecrawlKey, `"${companyName}" Australia office OR customers OR "com.au"`, 5, 15000, stats).catch(() => [])
+        : Promise.resolve([] as Array<{ url: string; title: string; description: string; markdown: string }>),
+      (async (): Promise<Array<{ label: string; rows: DirectoryRow[] }>> => {
+        if (!host) return []; // domain is the reliable, injection-safe match key for v1
+        const pull = async (table: string, label: string, cols: string, filter: string) => {
+          const { data } = await supabase.from(table).select(cols).or(filter).limit(5);
+          return { label, rows: (data || []) as DirectoryRow[] };
+        };
+        try {
+          return await Promise.all([
+            pull("service_providers", "service providers", "name, website", `website.ilike.%${host}%`),
+            pull("innovation_ecosystem", "innovation ecosystem", "name, website", `website.ilike.%${host}%`),
+            pull("trade_investment_agencies", "trade & government agencies", "name, website, website_url, domain",
+              `website.ilike.%${host}%,website_url.ilike.%${host}%,domain.ilike.%${host}%`),
+          ]);
+        } catch (e) {
+          console.error("au-presence directory query failed:", e instanceof Error ? e.message : e);
+          return [];
+        }
+      })(),
+    ]);
+    const searchText = searchResults
+      .map((r) => `${r.title}\n${r.description}\n${r.markdown}`).join("\n\n").slice(0, 3000);
+
+    // 2. Classify (best-effort; deterministic none on failure).
+    let llm: AuPresenceSignal = { ...NONE_SIGNAL };
+    if (lovableKey) {
+      try {
+        const raw = await callAI(lovableKey, [
+          { role: "user", content: buildAuPresencePrompt(companyName, website, scrapeText, searchText) },
+        ], "google/gemini-3-flash-preview", { temperature: 0 });
+        llm = parseAuPresenceResponse(raw);
+      } catch (e) {
+        console.error("au-presence classify failed (fallback none):", e instanceof Error ? e.message : e);
+      }
+    }
+
+    const directory = directoryPresenceEvidence(companyName, website, dirTables);
+    const signal = mergePresence(llm, directory);
+    console.log(`au-presence: status=${signal.status} evidence=${signal.evidence.length} (llm=${llm.status}, directory=${directory.evidence.length})`);
+    return signal;
+  } catch (e) {
+    console.error("deriveAuPresence failed (fallback none):", e instanceof Error ? e.message : e);
+    return { ...NONE_SIGNAL };
+  }
 }
 
 // ── MES-148 1a: strong-model adjudication of verifier flags ───────────
@@ -2237,6 +2311,24 @@ async function generateReportInBackground(
       })(),
     ]);
 
+    // ── MES-159: existing-Australia-presence signal (behind AU_PRESENCE_SIGNAL) ──
+    // Runs after Phase 1 so it can reuse the company scrape output; adds at most one
+    // Firecrawl search + one classify call. Fail-safe: defaults to `none` (today's
+    // entry framing) on any weakness/error. Threaded into section prompts below.
+    let auPresence: AuPresenceSignal = { ...NONE_SIGNAL };
+    if (["on", "1", "true"].includes((Deno.env.get("AU_PRESENCE_SIGNAL") || "").toLowerCase())) {
+      auPresence = await deriveAuPresence(
+        supabase,
+        firecrawlKey,
+        lovableKey,
+        intake,
+        (companyEnrichResult as any)?.enrichedSummary || fallbackSummary,
+        firecrawlStats,
+      );
+    }
+    const auPresenceNote = buildPresenceReweightNote(auPresence.status);
+    const auFootprintNote = buildFootprintNote(auPresence);
+
     // Extract key metrics from the landscape response instead of a separate Perplexity call
     if (marketResearch.landscape) {
       const metricLines = marketResearch.landscape.match(/- METRIC: (.+?) \| (.+?) \| (.+)/g);
@@ -2441,7 +2533,20 @@ async function generateReportInBackground(
           }
         }
       }
-      reportClaims = renumberClaims(dedupeClaims([...metricClaims, ...extracted]));
+      // MES-159: register the AU-presence finding as sourced claims, so a "already
+      // operates in Australia via X" footprint statement is traceable, not asserted.
+      const presenceClaims: ReportClaim[] = auPresence.status === "none" ? [] :
+        auPresence.evidence.map((ev, i) => ({
+          claim_id: `p${i + 1}`, // renumbered below
+          statement: `Existing Australian presence (${auPresence.status}): ${ev}`,
+          value: null,
+          unit: null,
+          source_url: auPresence.sources[i] || auPresence.sources[0] || null,
+          confidence: (auPresence.status === "established" ? "high" : "medium") as ReportClaim["confidence"],
+          as_of: null,
+          stage: "directory" as ReportClaim["stage"],
+        }));
+      reportClaims = renumberClaims(dedupeClaims([...metricClaims, ...extracted, ...presenceClaims]));
       if (reportClaims.length > 0) {
         const { error: claimsErr } = await supabase.from("report_claims").insert(
           reportClaims.map((c) => ({ ...c, report_id: reportId })),
@@ -2825,7 +2930,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
@@ -3109,6 +3214,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // instructed to preserve facts verbatim; a post-polish diff audit is
         // Phase 2). null = the step failed fail-open.
         claims_registry: { count: reportClaims.length, extraction_ok: claimsExtractionOk },
+        // MES-159: subject company's existing-AU-presence signal (counts + sources
+        // only — about the user's own company, not gated content). `none` by default
+        // (flag off or no evidence), so this is inert until the reweight is enabled.
+        au_presence: presenceMetadata(auPresence),
         // MES-148 Phase 2c: polish diff audit — how many polished sections were
         // checked and which were reverted for introducing a new figure/entity.
         // null on the pre-polish save and when polish is skipped.
