@@ -20,6 +20,10 @@ on:
         description: "Comma-separated golden_ids (empty = all)"
         required: false
         default: ""
+      money_model:
+        description: "Phase 2b A/B: route the 3 money sections to this model id (e.g. claude-sonnet-5). Empty = flash baseline."
+        required: false
+        default: ""
   # PRs run a cheap 2-golden SMOKE subset (see the run step); the full set runs on
   # manual dispatch and nightly. Keeps report-pipeline PRs from burning the whole
   # set (and brushing the 5-reports/60min limit) on every push.
@@ -69,6 +73,9 @@ jobs:
           # above in scope that is a GitHub Actions script-injection / secret-
           # exfiltration vector.
           GOLDENS_INPUT: ${{ github.event.inputs.goldens }}
+          # Phase 2b money-section A/B model id — read directly by the runner (which
+          # charset-guards it), passed via env (never interpolated into the script).
+          MONEY_MODEL: ${{ github.event.inputs.money_model }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
           ARGS=""

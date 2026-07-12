@@ -28,7 +28,7 @@ import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
-import { resolveSectionModel, sectionModelMap } from "./sectionModel.ts";
+import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId } from "./sectionModel.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -1036,6 +1036,72 @@ async function callAI(
 
   const data = await resp.json();
   return data.choices?.[0]?.message?.content || "";
+}
+
+// ── MES-148 Phase 2b: direct-Anthropic section writer + model dispatch ────
+// The Lovable gateway only serves Gemini here, so a section routed to a Claude
+// model is written via the DIRECT Anthropic API. Mirrors callAI's shape (returns
+// the text, throws on error) so the section-writer call sites and their existing
+// try/catch stay uniform. Only exercised when a section's resolved model is a
+// Claude id (the money-section A/B via the eval override, or a promoted
+// report_templates.model / SECTION_MODEL_DEFAULT); the flash default is unchanged.
+const SECTION_ANTHROPIC_TIMEOUT_MS = 90000;
+
+async function callAnthropicChat(
+  apiKey: string,
+  model: string,
+  systemContent: string,
+  userContent: string,
+  opts: { temperature?: number; max_tokens?: number } = {},
+): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SECTION_ANTHROPIC_TIMEOUT_MS);
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({
+        model,
+        max_tokens: opts.max_tokens ?? 3000,
+        ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
+        system: systemContent,
+        messages: [{ role: "user", content: userContent }],
+      }),
+      signal: controller.signal,
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error("Anthropic section error:", resp.status, text);
+      throw new Error(`Anthropic call failed: ${resp.status}`);
+    }
+    const data = await resp.json();
+    // Text blocks only (a thinking block would otherwise contribute "").
+    return (data.content || [])
+      .filter((b: any) => b?.type === "text")
+      .map((b: any) => b.text || "")
+      .join("") || "";
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Write one section with the resolved model: Claude ids go direct to Anthropic,
+ *  everything else through the Lovable gateway (callAI). Same messages shape both
+ *  ways; throws on error like callAI so callers' try/catch is unchanged. */
+async function writeSection(
+  model: string,
+  messages: Array<{ role: string; content: string }>,
+  opts: { temperature?: number; max_tokens?: number },
+  keys: { lovableKey: string; anthropicKey?: string },
+): Promise<string> {
+  if (isAnthropicModel(model)) {
+    const anthropicKey = keys.anthropicKey;
+    if (!anthropicKey) throw new Error(`ANTHROPIC_API_KEY unset but section routed to ${model}`);
+    const system = messages.find((m) => m.role === "system")?.content ?? "";
+    const user = messages.find((m) => m.role === "user")?.content ?? "";
+    return await callAnthropicChat(anthropicKey, anthropicModelId(model), system, user, opts);
+  }
+  return await callAI(keys.lovableKey, messages, model, opts);
 }
 
 // ── MES-159: existing-Australia-presence signal ──────────────────────────
@@ -2188,9 +2254,13 @@ async function loadStageArtifact(
 
 async function generateReportInBackground(
   intakeFormId: string,
-  reportId: string
+  reportId: string,
+  // MES-148 Phase 2b: per-section model override, honoured ONLY for the eval
+  // user (gated at the call site). {} in normal operation → no effect.
+  evalSectionModels: Record<string, string> = {},
 ): Promise<void> {
   const startTime = Date.now();
+  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -2940,11 +3010,12 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
-            const sectionModel = resolveSectionModel(tmpl.model, sectionModelDefault);
-            const content = await callAI(lovableKey, [
+            // Phase 2b: eval override (money-section A/B) wins over row/env/flash.
+            const sectionModel = evalSectionModels[tmpl.section_name] || resolveSectionModel(tmpl.model, sectionModelDefault);
+            const content = await writeSection(sectionModel, [
               { role: "system", content: systemContent },
               { role: "user", content: prompt },
-            ], sectionModel, { temperature: 0.4 });
+            ], { temperature: 0.4 }, { lovableKey, anthropicKey });
 
             // competitor_landscape has no directory pool — its prose names the
             // scraped competitors, so render THOSE as cards (B7) instead of the
@@ -3068,15 +3139,15 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
           const p = sectionPrompts[name];
           if (!p || !sections[name]?.content) return;
           try {
-            // Regenerate with the SAME model the section was written with (Phase 2a).
-            const regenModel = resolveSectionModel(
+            // Regenerate with the SAME model the section was written with (Phase 2a/2b).
+            const regenModel = evalSectionModels[name] || resolveSectionModel(
               templates?.find((t: any) => t.section_name === name)?.model,
               sectionModelDefault,
             );
-            const rewritten = await callAI(lovableKey, [
+            const rewritten = await writeSection(regenModel, [
               { role: "system", content: p.system + buildRegenerationNote(fabricated, name) },
               { role: "user", content: p.user },
-            ], regenModel, { temperature: 0.2 });
+            ], { temperature: 0.2 }, { lovableKey, anthropicKey });
             if (rewritten && rewritten.trim().length > 50) {
               sections[name] = { ...sections[name], content: rewritten };
               regenerated.push(name);
@@ -3442,7 +3513,8 @@ Deno.serve(async (req) => {
   console.log(`[generate-report] ${req.method} request from origin: ${origin}`);
 
   try {
-    const { intake_form_id } = await req.json();
+    const requestBody = await req.json().catch(() => ({} as Record<string, unknown>));
+    const { intake_form_id } = requestBody as { intake_form_id?: string };
     if (!intake_form_id) throw new Error("intake_form_id is required");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -3494,6 +3566,25 @@ Deno.serve(async (req) => {
     // 429 mid-run). Same guard the eval runner applies to its env.
     const evalBypassUserId = Deno.env.get("EVAL_BYPASS_USER_ID")?.trim();
     const isEvalUser = !!evalBypassUserId && user.id === evalBypassUserId;
+
+    // MES-148 Phase 2b: per-section model override for the money-section A/B —
+    // honoured ONLY for the eval user, so real users are never routed to a
+    // candidate model. Body shape: { eval_section_models: { section_name: model } }.
+    // Values coerced to strings + charset-guarded; unknown callers get {}.
+    const evalSectionModels: Record<string, string> = {};
+    if (isEvalUser) {
+      const raw = (requestBody as { eval_section_models?: unknown }).eval_section_models;
+      if (raw && typeof raw === "object") {
+        for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+          const model = String(v ?? "").trim();
+          if (model && /^[a-z0-9/._-]+$/i.test(model)) evalSectionModels[k] = model;
+        }
+      }
+      if (Object.keys(evalSectionModels).length > 0) {
+        console.log("Eval section-model override:", JSON.stringify(evalSectionModels));
+      }
+    }
+
     if (isEvalUser) {
       console.log("Rate limit bypassed for eval user");
     } else {
@@ -3547,7 +3638,7 @@ Deno.serve(async (req) => {
     // Kick off background processing — does NOT block the response
     // @ts-ignore: EdgeRuntime.waitUntil is available in Supabase Edge Functions
     EdgeRuntime.waitUntil(
-      generateReportInBackground(intake_form_id, reportId).catch((err) => {
+      generateReportInBackground(intake_form_id, reportId, evalSectionModels).catch((err) => {
         console.error("Unhandled error in background report generation:", err);
       })
     );
