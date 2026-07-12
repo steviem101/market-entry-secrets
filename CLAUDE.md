@@ -271,7 +271,7 @@ Owned by skill `mes-ticket-workflow`; the invariants:
 | `FIRECRAWL_API_KEY` (+ tuning: `FIRECRAWL_CACHE_ENABLED`, `FIRECRAWL_COMPETITOR_DEPTH`) | Scraping/search |
 | `PERPLEXITY_API_KEY` | Market research |
 | `LOVABLE_API_KEY` | Lovable AI Gateway (report sections) |
-| `ANTHROPIC_API_KEY` (+ `RQ_LOOP_MODEL` override; `VERIFIER_ADJUDICATION_MODEL` override in generate-report) | generate-plan, classify-personas, normalize-events, report-quality-loop, generate-report (claims-verifier adjudication — MES-148 1a) |
+| `ANTHROPIC_API_KEY` (+ `RQ_LOOP_MODEL` override; `VERIFIER_ADJUDICATION_MODEL` override in generate-report) | generate-plan, classify-personas, normalize-events, report-quality-loop, generate-report (claims-verifier adjudication — MES-148 1a; **and section writing when a section resolves to a `claude-*` model — Phase 2b — those go direct to Anthropic, not the Lovable gateway**) |
 | `OPENAI_API_KEY` (Vault fallback `openai_api_key`) | KB embeddings (embed-knowledge, knowledge-search) |
 | `MATCH_RERANK_ENABLED` | generate-report matching toggle |
 | `EVAL_BYPASS_USER_ID` | generate-report: exempts one user id (the golden-eval user) from the 5/60min report rate limit; unset in normal operation (MES-148 Phase 1c) |

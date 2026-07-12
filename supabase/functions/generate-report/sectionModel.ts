@@ -12,6 +12,19 @@
 /** The pipeline's historical section-writer model. */
 export const FLASH_MODEL = "google/gemini-3-flash-preview";
 
+/** True when a resolved section model is an Anthropic (Claude) model — these are
+ *  called via the DIRECT Anthropic API, not the Lovable gateway (which only serves
+ *  Gemini here). Accepts a bare id ("claude-sonnet-5") or an "anthropic/"-prefixed
+ *  one; anything else (e.g. "google/gemini-3-flash-preview") is a gateway model. */
+export function isAnthropicModel(model: string | null | undefined): boolean {
+  return /^(anthropic\/)?claude-/i.test((model ?? "").trim());
+}
+
+/** The bare Anthropic model id for the API (strips an optional "anthropic/"). */
+export function anthropicModelId(model: string): string {
+  return model.trim().replace(/^anthropic\//i, "");
+}
+
 /** Resolve the model for one section.
  *  @param rowModel   report_templates.model (null/blank when unset)
  *  @param envDefault SECTION_MODEL_DEFAULT env (blank when unset)

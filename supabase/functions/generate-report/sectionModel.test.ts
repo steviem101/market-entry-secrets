@@ -1,6 +1,24 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveSectionModel, sectionModelMap, FLASH_MODEL } from "./sectionModel.ts";
+import { resolveSectionModel, sectionModelMap, FLASH_MODEL, isAnthropicModel, anthropicModelId } from "./sectionModel.ts";
+
+test("isAnthropicModel: claude ids (bare or anthropic/-prefixed) route to Anthropic", () => {
+  assert.equal(isAnthropicModel("claude-sonnet-5"), true);
+  assert.equal(isAnthropicModel("claude-sonnet-4-6"), true);
+  assert.equal(isAnthropicModel("anthropic/claude-sonnet-5"), true);
+  assert.equal(isAnthropicModel("  claude-haiku-4-5  "), true);
+  // gateway / other models are NOT Anthropic
+  assert.equal(isAnthropicModel("google/gemini-3-flash-preview"), false);
+  assert.equal(isAnthropicModel(FLASH_MODEL), false);
+  assert.equal(isAnthropicModel(""), false);
+  assert.equal(isAnthropicModel(null), false);
+});
+
+test("anthropicModelId: strips an optional anthropic/ prefix to the bare id", () => {
+  assert.equal(anthropicModelId("anthropic/claude-sonnet-5"), "claude-sonnet-5");
+  assert.equal(anthropicModelId("claude-sonnet-4-6"), "claude-sonnet-4-6");
+  assert.equal(anthropicModelId("  claude-haiku-4-5 "), "claude-haiku-4-5");
+});
 
 test("resolveSectionModel: row override wins, then env default, then flash", () => {
   assert.equal(resolveSectionModel("claude-sonnet-4-6", "x"), "claude-sonnet-4-6");

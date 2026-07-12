@@ -98,7 +98,28 @@ function parseGoldenFilter(): string[] | null {
   return (next && !next.startsWith("--") ? next : "").split(",").filter(Boolean);
 }
 const goldenFilter = parseGoldenFilter();
-const runLabel = Deno.env.get("RUN_LABEL") || `local-${new Date().toISOString().slice(0, 16)}`;
+
+// MES-148 Phase 2b: money-section model A/B. MONEY_MODEL (env) or --money-model=<id>
+// routes the three money sections (exec summary, first customers, action plan) to a
+// candidate model via the eval-only override generate-report honours for this user.
+// The run_label is suffixed so eval_runs rows are attributable to the model arm.
+function parseMoneyModel(): string {
+  const eq = Deno.args.find((a) => a.startsWith("--money-model="));
+  const v = (eq ? eq.slice("--money-model=".length) : Deno.env.get("MONEY_MODEL") || "").trim();
+  if (v && !/^[a-z0-9/._-]+$/i.test(v)) {
+    console.error(`Invalid --money-model "${v}" (charset)`);
+    Deno.exit(1);
+  }
+  return v;
+}
+const moneyModel = parseMoneyModel();
+const MONEY_SECTIONS = ["executive_summary", "first_customers", "action_plan"];
+const evalSectionModels: Record<string, string> = moneyModel
+  ? Object.fromEntries(MONEY_SECTIONS.map((s) => [s, moneyModel]))
+  : {};
+
+const baseRunLabel = Deno.env.get("RUN_LABEL") || `local-${new Date().toISOString().slice(0, 16)}`;
+const runLabel = moneyModel ? `${baseRunLabel}::money=${moneyModel}` : baseRunLabel;
 
 interface Golden {
   golden_id: string;
@@ -159,7 +180,7 @@ async function main() {
     console.error("No goldens found (filter too narrow?)");
     Deno.exit(1);
   }
-  console.log(`Golden eval: ${goldens.length} golden(s), run_label=${runLabel}, judge=${JUDGE_MODEL}`);
+  console.log(`Golden eval: ${goldens.length} golden(s), run_label=${runLabel}, judge=${JUDGE_MODEL}${moneyModel ? `, money_model=${moneyModel}` : ""}`);
 
   let baseline: BaselineFile | null = null;
   try {
@@ -240,7 +261,11 @@ async function main() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${auth.session.access_token}`,
         },
-        body: JSON.stringify({ intake_form_id: intakeRow.id }),
+        body: JSON.stringify({
+          intake_form_id: intakeRow.id,
+          // Honoured only for the eval user (server-gated). Empty {} = no-op.
+          ...(moneyModel ? { eval_section_models: evalSectionModels } : {}),
+        }),
       });
       const genJson = await genResp.json().catch(() => ({}));
       if (genResp.status === 429) {
