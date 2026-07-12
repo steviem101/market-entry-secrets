@@ -23,6 +23,7 @@ import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitor
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
+import { applyRelevanceSelection } from "./selectRelevant.ts";
 import { buildAuPresencePrompt, parseAuPresenceResponse, directoryPresenceEvidence, mergePresence, hostOf, buildPresenceReweightNote, buildFootprintNote, presenceMetadata, NONE_SIGNAL, type AuPresenceSignal, type DirectoryRow } from "./auPresence.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
@@ -1943,6 +1944,37 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // array copies — we only compare membership by identity, never mutate the rows.
   const preGatePools: Record<string, any[]> = {};
   for (const k of Object.keys(merged)) preGatePools[k] = [...(merged[k] || [])];
+
+  // ── MES-148 Phase 2d: shared relevance-gate inputs ──────────────────────
+  // Computed once, used by the legacy gates below, the authoritative selector,
+  // and the shadow — so all three read the same predicates (no drift).
+  const geoTargetRegions = deriveLocationPatterns(intake);
+  const geoMatcher = buildGeoMatcher({ targetRegions: geoTargetRegions });
+  const agencyOriginTerms = geoOriginTerms(intake.country_of_origin);
+  const isDomesticOrigin = !isInternationalOrigin(intake.country_of_origin);
+  const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
+    `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
+  );
+  const relevanceGates: RelevanceGates = {
+    geoMatcher,
+    agencyOriginTerms,
+    targetRegions: geoTargetRegions,
+    icpTokens: leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []),
+    excludeImmigration: isDomesticOrigin && !wantsImmigration,
+  };
+  // Authoritative mode replaces the SIX per-row union gates below (lead-ICP, geo,
+  // agency corridor, state, chamber, immigration) with the one scored function.
+  // Behind RELEVANCE_AUTHORITATIVE (default off) — legacy gates stay the default
+  // until the golden harness validates the flip. Grants-ordering + cross-section
+  // dedupe (set-ops, not per-row relevance) run in BOTH modes, below.
+  const relevanceAuthoritative = ["on", "1", "true"].includes(
+    (Deno.env.get("RELEVANCE_AUTHORITATIVE") || "").trim().toLowerCase(),
+  );
+  if (relevanceAuthoritative) {
+    Object.assign(merged, applyRelevanceSelection(merged, ctx, relevanceGates));
+    console.log("relevance selection: AUTHORITATIVE (scoreRelevance drives selection)");
+  }
+
   // ── Lead-list ICP gate at the UNION (P1-C follow-up) ────────────────────
   // The overlap path gates its own leads, but lead_databases is ALSO embedded in
   // the KB and is merged semantic-first — so an off-ICP list surfaced by the
@@ -1951,7 +1983,7 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // ICP filter here, at the union, so BOTH paths are covered. Strict (no floor):
   // an off-ICP list is dropped, not padded — the custom-list request box is the
   // escape hatch. Empty ICP tokens → leadMatchesIcp returns true → no-op.
-  if (merged.lead_databases?.length) {
+  if (!relevanceAuthoritative && merged.lead_databases?.length) {
     const leadIcp = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []);
     const before = merged.lead_databases.length;
     merged.lead_databases = merged.lead_databases.filter((l: any) => leadMatchesIcp(l, leadIcp));
@@ -1969,11 +2001,9 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // Providers + innovation hubs: geography is free-text `location`. Gate via the
   // ANZ/target matcher, backfilling (preferRelevant) so a thin directory never
   // empties the section — a clearly-foreign location (a New-York firm) drops.
-  const geoTargetRegions = deriveLocationPatterns(intake);
-  const geoMatcher = buildGeoMatcher({ targetRegions: geoTargetRegions });
   const GEO_MIN_KEEP = 3;
   for (const tbl of ["service_providers", "innovation_ecosystem"]) {
-    if (merged[tbl]?.length) {
+    if (!relevanceAuthoritative && merged[tbl]?.length) {
       const before = merged[tbl].length;
       merged[tbl] = preferRelevant(merged[tbl], (r) => isGeoRelevant(r, geoMatcher), GEO_MIN_KEEP);
       if (merged[tbl].length !== before) console.log(`geo gate ${tbl}: ${before} → ${merged[tbl].length}`);
@@ -1984,8 +2014,7 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // represented country). HARD filter (no backfill): re-adding foreign missions to hit a
   // minimum would just reintroduce B4, and the providers section stays populated from
   // service_providers + innovation regardless.
-  const agencyOriginTerms = geoOriginTerms(intake.country_of_origin);
-  if (merged.trade_investment_agencies?.length) {
+  if (!relevanceAuthoritative && merged.trade_investment_agencies?.length) {
     const before = merged.trade_investment_agencies.length;
     merged.trade_investment_agencies = merged.trade_investment_agencies.filter(
       (r) => isAgencyInCorridor(r, agencyOriginTerms),
@@ -2000,7 +2029,7 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // state ≠ any state named by the report's target regions. Silent for national targets
   // (no specific state) and non-state bodies (federal/industry/bilateral stay). Hard
   // filter: only wrong-state state bodies are removed, so the section stays populated.
-  if (merged.trade_investment_agencies?.length) {
+  if (!relevanceAuthoritative && merged.trade_investment_agencies?.length) {
     const before = merged.trade_investment_agencies.length;
     merged.trade_investment_agencies = merged.trade_investment_agencies.filter(
       (r) => !stateAgencyRegionMismatch(r, geoTargetRegions),
@@ -2026,7 +2055,7 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // a wrong-corridor chamber is pure noise and the section stays full from the many
   // non-chamber providers. (Stage 7 bug B8.)
   for (const tbl of ["service_providers", "innovation_ecosystem"]) {
-    if (merged[tbl]?.length) {
+    if (!relevanceAuthoritative && merged[tbl]?.length) {
       const before = merged[tbl].length;
       merged[tbl] = merged[tbl].filter((r) => !chamberOriginMismatch(r, agencyOriginTerms));
       if (merged[tbl].length !== before) console.log(`chamber gate ${tbl}: ${before} → ${merged[tbl].length}`);
@@ -2068,14 +2097,9 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // preferRelevant, so a thin pool still renders) — UNLESS the company is
   // international, or explicitly asked for immigration / relocation /
   // international-hiring help.
-  // Computed once and shared with the Phase 2d shadow below, so both read the SAME
-  // immigration-intent signal — a drifted second copy would make the shadow
-  // misreport divergence, defeating its purpose.
-  const isDomesticOrigin = !isInternationalOrigin(intake.country_of_origin);
-  const wantsImmigration = /\b(visa|immigration|relocation|mobility|international (hire|hiring|talent)|sponsor)\b/i.test(
-    `${(intake.services_needed || []).join(" ")} ${intake.report_focus || ""} ${intake.key_challenges || ""}`,
-  );
-  if (isDomesticOrigin && !wantsImmigration) {
+  // (isDomesticOrigin + wantsImmigration are computed once at the top of the gate
+  // block and shared with the authoritative selector + shadow.)
+  if (!relevanceAuthoritative && isDomesticOrigin && !wantsImmigration) {
     for (const [tbl, floor] of [["community_members", 3], ["service_providers", 4]] as const) {
       if (!(merged[tbl] || []).length) continue;
       const before = merged[tbl].length;
@@ -2095,16 +2119,11 @@ async function searchMatches(supabase: any, intake: any): Promise<Record<string,
   // golden harness; wrapped so it can NEVER break generation, and switchable off
   // (any of off/false/0/no, case-insensitive).
   const shadowFlag = (Deno.env.get("REPORT_RELEVANCE_SHADOW") || "").trim().toLowerCase();
-  if (!["off", "false", "0", "no"].includes(shadowFlag)) {
+  // Skip the shadow when authoritative mode is on (scoreRelevance already IS the
+  // selector — there's nothing to shadow against) or when explicitly disabled.
+  if (!relevanceAuthoritative && !["off", "false", "0", "no"].includes(shadowFlag)) {
     try {
-      const relGates: RelevanceGates = {
-        geoMatcher,
-        agencyOriginTerms,
-        targetRegions: geoTargetRegions,
-        icpTokens: leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []),
-        // Shares the live gate's exact immigration signal (computed once above).
-        excludeImmigration: isDomesticOrigin && !wantsImmigration,
-      };
+      const relGates = relevanceGates;
       const RELEVANCE_PROFILES: Record<string, RelevanceProfile> = {
         service_providers: { geo: true, chamber: true, immigration: true },
         innovation_ecosystem: { geo: true, chamber: true },
