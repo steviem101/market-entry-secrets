@@ -3694,7 +3694,34 @@ Deno.serve(async (req) => {
       .select("id")
       .single();
 
-    if (reportErr) throw reportErr;
+    // P3.0 concurrency guard: the partial unique index (one 'processing' report per
+    // intake) makes this INSERT the ATOMIC gate — the SELECT above only wins the
+    // common case. On a lost race the insert hits the unique violation (23505);
+    // return the row the winner created instead of erroring, matching the
+    // "already processing" branch above (prevents duplicate concurrent generations
+    // + double external spend).
+    if (reportErr) {
+      if (reportErr.code === "23505") {
+        const { data: winner } = await supabase
+          .from("user_reports")
+          .select("id")
+          .eq("user_id", intake.user_id)
+          .eq("intake_form_id", intake_form_id)
+          .eq("status", "processing")
+          .maybeSingle();
+        if (winner) {
+          log("generate-report", "Concurrent generation deduped by unique index", {
+            reportId: winner.id,
+            intakeFormId: intake_form_id,
+          });
+          return new Response(
+            JSON.stringify({ report_id: winner.id, status: "processing" }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+      throw reportErr;
+    }
 
     const reportId = report.id;
 
