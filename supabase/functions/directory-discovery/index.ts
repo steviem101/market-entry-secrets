@@ -3,15 +3,18 @@
 // Reads the top open unmet-demand signals (directory_demand_signals, P5-5), web-searches
 // (Firecrawl) for organisations that could fill each gap, dedupes candidates against the
 // live directory + already-staged rows, and lands each as a propose-only candidate
-// (directory_discovery_staging) + a Slack Approve/Dismiss card. A human approves; the
-// import still ships as a reviewed action — NOTHING is auto-inserted into a directory.
+// (directory_discovery_staging) + an informational Slack digest. NOTHING is auto-inserted
+// into a directory — a human triages the staging queue and the import ships as a separate
+// reviewed action.
 //
 // Doubly disabled by default: requires DIRECTORY_DISCOVERY_ENABLED=on AND an enabled
 // activity_event_routing 'directory.discovery' row. Cost-bounded: at most MAX_SIGNALS
-// gaps per run, each with a capped search. Auth: x-webhook-secret ==
-// SLACK_NOTIFY_WEBHOOK_SECRET (verify_jwt=false).
+// gaps per run, each with a capped search, and a gap is acknowledged after one attempt so
+// it isn't re-searched every run. Auth: x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET
+// (verify_jwt=false — see supabase/config.toml).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { escapeSlack } from "../_shared/slack.ts";
 import {
   buildQueries,
   dedupeAgainstExisting,
@@ -33,6 +36,10 @@ const DEFAULT_MAX_SIGNALS = 3;    // gaps targeted per run (bounds Firecrawl cos
 const MAX_SIGNALS_CAP = 10;
 const SEARCH_LIMIT = 5;           // results per query
 const FIRECRAWL_TIMEOUT_MS = 30000;
+// PostgREST caps a single response at ~1000 rows (CLAUDE.md gotcha #1); page the dedup
+// snapshot with .range() so providers past the first page aren't silently missed.
+const PROVIDERS_PAGE = 1000;
+const PROVIDERS_MAX = 10000;
 const SLACK_TOP = 20;
 
 const CORS = {
@@ -61,9 +68,11 @@ async function postToSlack(channel: string, text: string, blocks: any[]): Promis
   } catch (e) { log("slack post threw", String(e)); }
 }
 
-/** One Firecrawl /v1/search call → raw hits. Returns [] on any error (best-effort). */
-async function firecrawlSearch(query: string): Promise<RawHit[]> {
-  if (!FIRECRAWL_API_KEY) { log("FIRECRAWL_API_KEY missing — skipping search"); return []; }
+/** One Firecrawl /v1/search call. `ok` distinguishes a genuine empty result (ok:true)
+ *  from a transient failure (ok:false) so the caller can retry a failed gap next run
+ *  instead of acknowledging it. */
+async function firecrawlSearch(query: string): Promise<{ ok: boolean; hits: RawHit[] }> {
+  if (!FIRECRAWL_API_KEY) { log("FIRECRAWL_API_KEY missing — skipping search"); return { ok: false, hits: [] }; }
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), FIRECRAWL_TIMEOUT_MS);
   try {
@@ -73,17 +82,45 @@ async function firecrawlSearch(query: string): Promise<RawHit[]> {
       body: JSON.stringify({ query, limit: SEARCH_LIMIT, lang: "en", country: "au" }),
       signal: ctrl.signal,
     });
-    if (!res.ok) { log("firecrawl search non-2xx", res.status); return []; }
+    if (!res.ok) { log("firecrawl search non-2xx", res.status); return { ok: false, hits: [] }; }
     const body = await res.json();
     const rows = Array.isArray(body?.data) ? body.data : [];
     // deno-lint-ignore no-explicit-any
-    return rows.map((r: any) => ({ title: r?.title ?? r?.metadata?.title ?? null, url: r?.url ?? null, description: r?.description ?? r?.metadata?.description ?? null }));
+    const hits = rows.map((r: any) => ({ title: r?.title ?? r?.metadata?.title ?? null, url: r?.url ?? null, description: r?.description ?? r?.metadata?.description ?? null }));
+    return { ok: true, hits };
   } catch (e) {
     log("firecrawl search threw", String(e));
-    return [];
+    return { ok: false, hits: [] };
   } finally {
     clearTimeout(to);
   }
+}
+
+/** Paginated dedup snapshot: every live provider's normalised domain + name, plus the
+ *  domains of open (new/approved) staging candidates, so we don't re-surface something
+ *  already listed or already queued. Throws on a live-provider read error so the caller
+ *  records a failed run rather than staging against an empty (falsely-clean) set. */
+// deno-lint-ignore no-explicit-any
+async function loadExistingIdentity(supabase: any): Promise<{ domains: Set<string>; names: Set<string> }> {
+  const domains = new Set<string>();
+  const names = new Set<string>();
+  for (let from = 0; from < PROVIDERS_MAX; from += PROVIDERS_PAGE) {
+    const { data, error } = await supabase.from("service_providers")
+      .select("name,website").order("id", { ascending: true }).range(from, from + PROVIDERS_PAGE - 1);
+    if (error) throw new Error(`providers load failed: ${error.message}`);
+    const page = data ?? [];
+    for (const p of page) {
+      const d = normalizeDomain(p.website); if (d) domains.add(d);
+      const n = normalizeName(p.name); if (n) names.add(n);
+    }
+    if (page.length < PROVIDERS_PAGE) break;
+  }
+  // Open staging candidates (best-effort — the DB unique index is the hard guard).
+  const { data: openStaged, error: stErr } = await supabase.from("directory_discovery_staging")
+    .select("candidate_domain").in("status", ["new", "approved"]);
+  if (stErr) { log("open-staging dedup load failed (non-fatal)", stErr.message); }
+  else { for (const r of openStaged ?? []) if (r.candidate_domain) domains.add(r.candidate_domain); }
+  return { domains, names };
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -118,98 +155,106 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (sigErr) { log("load demand signals failed", sigErr.message); return json({ error: "signals_unavailable" }, 500); }
   if (!signals || signals.length === 0) { log("no open demand signals — nothing to discover"); return json({ ok: true, targeted: 0, staged: 0 }); }
 
-  const runId = crypto.randomUUID();
   const startedAt = new Date().toISOString();
+  const runId = crypto.randomUUID();
 
-  // Existing directory identity, loaded once for dedupe (id/name/website only).
-  const { data: existing } = await supabase.from("service_providers").select("name,website").limit(5000);
-  const existingDomains = new Set<string>();
-  const existingNames = new Set<string>();
-  for (const p of existing ?? []) {
-    const d = normalizeDomain(p.website);
-    if (d) existingDomains.add(d);
-    const n = normalizeName(p.name);
-    if (n) existingNames.add(n);
-  }
-
-  const perSignal: Array<{ term: string; searched: number; staged: number }> = [];
-  const allStaged: Array<{ name: string; url: string; term: string; proposalId: string }> = [];
-
-  for (const sig of signals) {
-    const signalLike: DemandSignalLike = {
-      term_slug: sig.term_slug, term_label: sig.term_label,
-      sample_sectors: sig.sample_sectors, sample_regions: sig.sample_regions,
-    };
-    const queries = buildQueries(signalLike);
-    const hits: RawHit[] = [];
-    for (const q of queries) hits.push(...await firecrawlSearch(q));
-
-    const candidates = dedupeAgainstExisting(extractCandidates(hits), existingDomains, existingNames);
-    let staged = 0;
-    for (const c of candidates) {
-      // Reserve the domain across this run so two signals don't both stage it.
-      if (existingDomains.has(c.domain)) continue;
-      existingDomains.add(c.domain);
-      if (dryRun) { staged += 1; continue; }
-      const proposalId = crypto.randomUUID();
-      const { error: insErr } = await supabase.from("directory_discovery_staging").insert({
-        id: proposalId, run_id: runId, directory_table: "service_providers",
-        candidate_name: c.name, candidate_url: c.url, candidate_domain: c.domain,
-        description: c.description, term_slug: sig.term_slug, demand_signal_id: sig.id,
-        source_query: queries[0] ?? null, status: "new",
-        evidence: { source: "firecrawl_search", queries, snippet: c.description },
-      });
-      if (insErr) { log(`stage ${c.domain} skipped`, insErr.message); continue; } // unique open-per-domain = already queued
-      staged += 1;
-      allStaged.push({ name: c.name, url: c.url, term: sig.term_label, proposalId });
-    }
-    perSignal.push({ term: sig.term_slug, searched: candidates.length, staged });
-
-    // Mark the signal acknowledged once discovery has staged at least one candidate for it,
-    // so the next run doesn't re-spend search credits on the same gap. A gap that yielded
-    // nothing stays 'new' for a retry.
-    if (staged > 0 && !dryRun) {
-      await supabase.from("directory_demand_signals")
-        .update({ status: "ack", reviewed_at: new Date().toISOString() })
-        .eq("id", sig.id).eq("status", "new");
-    }
-  }
-
-  const totalStaged = perSignal.reduce((a, p) => a + p.staged, 0);
-
-  // ── Slack digest (only when something was staged) ──────────────────────────────
-  if (allStaged.length > 0) {
-    // deno-lint-ignore no-explicit-any
-    const blocks: any[] = [
-      { type: "header", text: { type: "plain_text", text: "🛰️ Directory discovery — candidate providers" } },
-      { type: "context", elements: [{ type: "mrkdwn", text: `${signals.length} gap(s) targeted · ${allStaged.length} new candidate(s) staged for review${dryRun ? " · _dry run_" : ""}` }] },
-    ];
-    for (const s of allStaged.slice(0, SLACK_TOP)) {
-      blocks.push({
-        type: "section",
-        text: { type: "mrkdwn", text: `*${s.name}* — fills *${s.term}*\n<${s.url}|${s.url.slice(0, 80)}>` },
-      });
-      blocks.push({
-        type: "actions",
-        elements: [
-          { type: "button", style: "primary", text: { type: "plain_text", text: "✅ Approve" }, action_id: `dd_approve_${s.proposalId}`, value: s.proposalId },
-          { type: "button", text: { type: "plain_text", text: "❌ Dismiss" }, action_id: `dd_dismiss_${s.proposalId}`, value: s.proposalId },
-        ],
-      });
-    }
-    blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: "_Sourced from web search against unmet-demand signals. Approve queues a reviewed import — nothing is auto-added to the directory._" }] });
-    await postToSlack(channel, "Directory discovery — candidate providers", blocks);
-  }
-
-  // Telemetry.
+  // Start-of-run telemetry: a 'running' row up front so a crash/failure mid-run (after
+  // Firecrawl credits were spent) is visible to the ops loop.
+  let runRowId: string | null = null;
   if (!dryRun) {
-    await supabase.from("automation_runs").insert({
-      loop: LOOP_NAME, started_at: startedAt, finished_at: new Date().toISOString(), status: "success",
-      reviewed: signals.length, proposed: totalStaged,
-      metadata: { max_signals: maxSignals, per_signal: perSignal },
-    });
+    const { data: run } = await supabase.from("automation_runs")
+      .insert({ loop: LOOP_NAME, started_at: startedAt, status: "running", metadata: { max_signals: maxSignals } })
+      .select("id").maybeSingle();
+    runRowId = run?.id ?? null;
   }
 
-  log("run complete", { targeted: signals.length, staged: totalStaged, dryRun });
-  return json({ ok: true, targeted: signals.length, staged: totalStaged, dry_run: dryRun, per_signal: perSignal });
+  try {
+    const { domains: existingDomains, names: existingNames } = await loadExistingIdentity(supabase);
+
+    const perSignal: Array<{ term: string; searched: number; staged: number; search_ok: boolean }> = [];
+    const allStaged: Array<{ name: string; url: string; term: string }> = [];
+
+    for (const sig of signals) {
+      const signalLike: DemandSignalLike = {
+        term_slug: sig.term_slug, term_label: sig.term_label,
+        sample_sectors: sig.sample_sectors, sample_regions: sig.sample_regions,
+      };
+      // Independent queries run concurrently. searchOk is false if ANY query failed
+      // transiently (empty queries → every() true → attempted-but-nothing).
+      const queries = buildQueries(signalLike);
+      const results = await Promise.all(queries.map(firecrawlSearch));
+      const searchOk = results.every((r) => r.ok);
+      const hits = results.flatMap((r) => r.hits);
+
+      const candidates = dedupeAgainstExisting(extractCandidates(hits), existingDomains, existingNames);
+      let staged = 0;
+      for (const c of candidates) {
+        // Reserve BOTH domain and name across the run so a later signal doesn't re-stage
+        // the same org under a different domain.
+        existingDomains.add(c.domain);
+        existingNames.add(normalizeName(c.name));
+        if (!dryRun) {
+          const { error: insErr } = await supabase.from("directory_discovery_staging").insert({
+            id: crypto.randomUUID(), run_id: runId, directory_table: "service_providers",
+            candidate_name: c.name, candidate_url: c.url, candidate_domain: c.domain,
+            description: c.description, term_slug: sig.term_slug, demand_signal_id: sig.id,
+            source_query: queries[0] ?? null, status: "new",
+            evidence: { source: "firecrawl_search", queries, snippet: c.description },
+          });
+          if (insErr) { log(`stage ${c.domain} skipped`, insErr.message); continue; } // unique open-per-domain = already queued
+        }
+        staged += 1;
+        allStaged.push({ name: c.name, url: c.url, term: sig.term_label });
+      }
+      perSignal.push({ term: sig.term_slug, searched: candidates.length, staged, search_ok: searchOk });
+
+      // Acknowledge the gap once we've actually attempted it (candidates or not), so it's
+      // not re-searched every run — the recurring-cost guard. A transient search FAILURE
+      // leaves it 'new' for a genuine retry next run.
+      if (searchOk && !dryRun) {
+        await supabase.from("directory_demand_signals")
+          .update({ status: "ack", reviewed_at: new Date().toISOString() })
+          .eq("id", sig.id).eq("status", "new");
+      }
+    }
+
+    const totalStaged = perSignal.reduce((a, p) => a + p.staged, 0);
+
+    // ── Informational Slack digest (real runs only; a dry-run must not spam the channel).
+    //    No action buttons — triage happens in the admin staging queue. Untrusted
+    //    web-search text (candidate name/url) is escaped for mrkdwn.
+    if (!dryRun && allStaged.length > 0) {
+      // deno-lint-ignore no-explicit-any
+      const blocks: any[] = [
+        { type: "header", text: { type: "plain_text", text: "🛰️ Directory discovery — candidate providers" } },
+        { type: "context", elements: [{ type: "mrkdwn", text: `${signals.length} gap(s) targeted · ${allStaged.length} new candidate(s) staged for review` }] },
+      ];
+      for (const s of allStaged.slice(0, SLACK_TOP)) {
+        blocks.push({
+          type: "section",
+          text: { type: "mrkdwn", text: `*${escapeSlack(s.name)}* — fills *${escapeSlack(s.term)}*\n${escapeSlack(s.url)}` },
+        });
+      }
+      blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: "_Sourced from web search against unmet-demand signals. Triage in the admin review queue — nothing is auto-added to the directory._" }] });
+      await postToSlack(channel, "Directory discovery — candidate providers", blocks);
+    }
+
+    // Success telemetry.
+    if (!dryRun && runRowId) {
+      await supabase.from("automation_runs").update({
+        finished_at: new Date().toISOString(), status: "success",
+        reviewed: signals.length, proposed: totalStaged,
+        metadata: { max_signals: maxSignals, per_signal: perSignal },
+      }).eq("id", runRowId);
+    }
+
+    log("run complete", { targeted: signals.length, staged: totalStaged, dryRun });
+    return json({ ok: true, targeted: signals.length, staged: totalStaged, dry_run: dryRun, per_signal: perSignal, candidates: dryRun ? allStaged : undefined });
+  } catch (e) {
+    log("run failed", String(e));
+    if (!dryRun && runRowId) {
+      await supabase.from("automation_runs").update({ finished_at: new Date().toISOString(), status: "error", error: String(e) }).eq("id", runRowId);
+    }
+    return json({ error: "run_failed", detail: String(e) }, 500);
+  }
 });
