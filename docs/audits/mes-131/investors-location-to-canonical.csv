@@ -1,0 +1,88 @@
+raw_value,count,canonical_slug,notes
+"Sydney, NSW",181,sydney,
+"Melbourne, VIC",74,melbourne,
+Australia,73,proposed:australia,country-level row missing from locations table
+"Brisbane, QLD",20,brisbane,
+"Auckland, New Zealand",9,auckland,
+"Perth, WA",8,perth,
+"Canberra, ACT",6,canberra,
+Singapore,6,proposed:international,
+Sydney,6,sydney,
+Victoria,6,victoria,
+"Adelaide, SA",5,adelaide,
+National,5,proposed:australia,
+"Sydney, Australia",5,sydney,
+Queensland,4,queensland,
+"Byron Bay, NSW",3,new-south-wales,no Byron Bay row; nearest = state
+"Gold Coast, QLD",3,gold-coast,
+"London, UK",3,proposed:international,
+NSW,3,new-south-wales,
+"San Francisco, USA",3,proposed:international,
+"Sunshine Coast, QLD",3,queensland,no Sunshine Coast row
+"California, USA",2,proposed:international,
+"Darwin, NT",2,darwin,
+"Geelong, VIC",2,victoria,no Geelong row
+Melbourne,2,melbourne,
+South Australia,2,south-australia,
+"Wollongong, NSW",2,new-south-wales,no Wollongong row
+ACT,1,australian-capital-territory,
+"Adelaide, SA (L5, 2 Ebenezer Place)",1,adelaide,address noise
+"Arlington, VA, USA",1,proposed:international,
+Auckland,1,auckland,
+"Auckland, NZ (Level 9, Suite 4, 125 Queen Street)",1,auckland,address noise
+Austin,1,proposed:international,
+"Austin, TX, USA",1,proposed:international,
+"Bondi Junction, NSW",1,sydney,Sydney metro suburb
+"Boston, USA (global)",1,proposed:international,
+"Boston, USA / Singapore",1,proposed:international,
+Brisbane,1,brisbane,
+"Brisbane, QLD (primary)",1,brisbane,
+"Brisbane, QLD (University of Queensland)",1,brisbane,
+"Burlington, VT, USA",1,proposed:international,
+California,1,proposed:international,
+"Campbell, ACT (Suite 41, Level 1, 65 Constitution Ave)",1,canberra,Canberra metro suburb
+"Christchurch, New Zealand",1,christchurch,
+"Claremont, WA",1,perth,Perth metro suburb
+"Copenhagen, Denmark",1,proposed:international,
+"Cremorne, VIC (60 Cremorne St)",1,melbourne,Melbourne metro suburb
+"Darlinghurst, NSW (165 Riley St)",1,sydney,Sydney metro suburb
+"Darlinghurst, Sydney NSW (137-153 Crown St)",1,sydney,Sydney metro suburb
+"Denver, USA",1,proposed:international,
+"Edgecliff, Sydney NSW",1,sydney,Sydney metro suburb
+"Hobart, TAS",1,proposed:tasmania,no Tasmania/Hobart row exists
+International,1,proposed:international,
+"Melbourne, VIC (AU team); Singapore",1,melbourne,multi-site; primary first
+"Melbourne, VIC (Level 2, 39 Little Collins St)",1,melbourne,address noise
+"Melbourne, VIC (Level 8, 446 Collins St)",1,melbourne,address noise
+"Mosman, NSW / Ichikawa, Japan",1,sydney,multi-site; primary first
+"Multiple (Melbourne, Brisbane, Sydney)",1,melbourne;brisbane;sydney,multi-site; first = primary for location_id
+"Munich, Germany",1,proposed:international,
+"Nanango, QLD",1,queensland,regional QLD
+"New Farm, QLD (Brisbane)",1,brisbane,Brisbane metro suburb
+"Newcastle, NSW",1,new-south-wales,no Newcastle row
+"North Sydney, NSW (100 Mount St)",1,sydney,Sydney metro suburb
+"North Sydney, NSW (L32, 101 Miller St)",1,sydney,Sydney metro suburb
+"Not publicly stated (SE Asia / ANZ team)",1,proposed:international,
+Perth,1,perth,
+"Perth, Australia",1,perth,
+"Queensland (and New York)",1,queensland,multi-site; primary first
+"San Francisco and Sydney",1,proposed:international;sydney,multi-site; primary first
+"San Francisco, CA, USA",1,proposed:international,
+"Shenzhen, China",1,proposed:international,
+"Singapore (193 Jalan Besar Rd)",1,proposed:international,
+"Southbank, VIC",1,melbourne,Melbourne metro suburb
+"Subiaco, Perth WA (Level 1, 131-135 Rokeby Rd)",1,perth,Perth metro suburb
+"Surry Hills, NSW",1,sydney,Sydney metro suburb
+"Surry Hills, Sydney NSW",1,sydney,Sydney metro suburb
+"Surry Hills, Sydney NSW (33 Nickson St)",1,sydney,Sydney metro suburb
+"Sydney, NSW (1 Macquarie Pl)",1,sydney,address noise
+"Sydney, NSW (and New York)",1,sydney,multi-site; primary first
+"Sydney, NSW (Governor Macquarie Tower)",1,sydney,address noise
+"Sydney, NSW (Level 10, 17-19 Bridge St)",1,sydney,address noise
+"Sydney, NSW (Level 27, 1 Farrer Place)",1,sydney,address noise
+"Sydney, NSW (Level 3, 180 George St)",1,sydney,address noise
+"The Rocks, Sydney NSW",1,sydney,Sydney metro suburb
+"Toronto, Canada",1,proposed:international,
+"Turramurra, NSW (AU office)",1,sydney,Sydney metro suburb
+"Wellington, New Zealand",1,wellington,
+Western Australia,1,western-australia,

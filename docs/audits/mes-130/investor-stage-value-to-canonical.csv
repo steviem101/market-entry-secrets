@@ -1,0 +1,69 @@
+raw_value,count,canonical_stages,notes
+Seed,324,seed,
+Pre-seed,219,pre-seed,
+Series A,159,series-a,
+Series B,40,series-b,
+Pre-Seed,38,pre-seed,case-dupe of Pre-seed
+Growth,35,growth,
+Startup/Seed,16,seed,
+Early stage,11,pre-seed;seed;series-a,range expands
+Series A-B,10,series-a;series-b,range expands
+Series C,8,series-c-plus,
+Series D+,6,series-c-plus,
+Enterprise,5,growth,
+Angel,4,pre-seed,
+Early-stage,3,pre-seed;seed;series-a,hyphen-dupe of Early stage
+Pre-IPO,3,pre-ipo,
+Pre-Seed to Series A,3,pre-seed;seed;series-a,range expands
+Seed to Series A,3,seed;series-a,range expands
+Early to Late stage,2,all,expands to every canonical stage
+Growth (secondary transactions),2,growth,
+Growth (Series D+),2,series-c-plus;growth,
+Not applicable (family office),2,na,excluded from filter options
+Pre-Seed to Series B,2,pre-seed;seed;series-a;series-b,range expands
+Pre-Series A,2,pre-seed;seed,
+Seed to Growth,2,seed;series-a;series-b;series-c-plus;growth,range expands
+Seed to Series B,2,seed;series-a;series-b,range expands
+All stages (VC innovation to large infrastructure),1,all,
+B,1,series-b,
+Buyout,1,na,PE strategy not a venture stage
+C,1,series-c-plus,
+Early Growth stage,1,series-b;growth,
+Early stage (pre-commercialisation to commercialisation),1,pre-seed;seed,
+Early stage (PropTech accelerator),1,pre-seed;seed,
+Early stage to Series B,1,pre-seed;seed;series-a;series-b,range expands
+Early to late stage,1,all,case-dupe
+Early to Pre-IPO,1,all,
+Early-stage to Growth,1,pre-seed;seed;series-a;series-b;series-c-plus;growth,range expands
+Expansion,1,growth,
+Follow-on,1,na,strategy not a stage
+fund investments),1,na,PARSE ARTIFACT - source row needs repair
+Growth (venture debt),1,growth,
+Growth credit,1,growth,
+Growth Equity,1,growth,
+Growth stage,1,growth,
+Late Stage,1,pre-ipo,
+Multi-stage,1,all,
+Multi-stage (direct VC investments,1,all,PARSE ARTIFACT - truncated value; source row needs repair
+N/A (advisory firm),1,na,
+N/A (individual entry),1,na,
+N/A (not currently investing in VC),1,na,
+Not a traditional VC stage focus,1,na,
+Not applicable,1,na,
+Not applicable (advisory + investment),1,na,
+Not applicable (matchmaker),1,na,
+Post-Seed,1,seed;series-a,
+Pre-IPO),1,pre-ipo,PARSE ARTIFACT - stray bracket; source row needs repair
+Pre-seed to Late stage,1,all,
+Pre-Seed to Late stage,1,all,case-dupe
+Pre-Seed to Pre-Series A,1,pre-seed;seed,
+Research Translation,1,pre-seed,
+Secondaries,1,na,strategy not a stage
+Seed to Pre-IPO,1,seed;series-a;series-b;series-c-plus;growth;pre-ipo,range expands
+Series A to Series C,1,series-a;series-b;series-c-plus,range expands
+Series B+,1,series-b;series-c-plus;growth,
+Series C+,1,series-c-plus,
+Series D+ (Growth,1,series-c-plus;growth,PARSE ARTIFACT - truncated value; source row needs repair
+Special situations,1,na,
+VC,1,na,not a stage
+Venture,1,na,not a stage

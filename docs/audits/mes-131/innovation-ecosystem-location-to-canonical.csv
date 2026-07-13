@@ -1,0 +1,52 @@
+raw_value,count,canonical_slug,notes
+"Sydney, NSW",62,sydney,
+"Melbourne, VIC",31,melbourne,
+Australia,27,proposed:australia,country-level row missing
+"Adelaide, SA",10,adelaide,
+"Perth, WA",9,perth,
+Sydney,8,sydney,dupe of "Sydney, NSW"
+"Brisbane, QLD",7,brisbane,
+"Canberra, ACT",7,canberra,
+Melbourne,5,melbourne,dupe of "Melbourne, VIC"
+"Auckland, NZ",4,auckland,
+"Newcastle, NSW",3,new-south-wales,no Newcastle row
+"Canberra, ACT, Australia",2,canberra,dupe
+"Darwin, NT",2,darwin,
+"Perth, Western Australia",2,perth,dupe
+"Sydney & Melbourne",2,sydney;melbourne,multi-site; first = primary
+"Adelaide, SA (Lot Fourteen Space Lab Building, 4 Frome Rd)",1,adelaide,address noise
+"Auckland (Parnell), New Zealand",1,auckland,
+"Auckland (Wynyard Quarter, 101 Pakenham Street West)",1,auckland,address noise
+AUS/NZ,1,proposed:australia;proposed:new-zealand,multi-country
+"Australia (Asia-Pacific remit)",1,proposed:australia,
+"Australia (Queensland-focused, national agrifood-tech remit)",1,queensland,
+Byron Bay,1,new-south-wales,no Byron Bay row
+"Christchurch, New Zealand",1,christchurch,
+"Fortitude Valley, Brisbane",1,brisbane,Brisbane metro suburb
+"Geelong, VIC",1,victoria,no Geelong row
+"Gold Coast, QLD",1,gold-coast,
+"Hobart, TAS",1,proposed:tasmania,no Tasmania/Hobart row
+"Liverpool, NSW, Australia",1,sydney,Sydney metro suburb
+"Melbourne (Swinburne University), Australia",1,melbourne,
+"Melbourne, Sydney, Perth",1,melbourne;sydney;perth,multi-site; first = primary
+"Melbourne, Victoria",1,melbourne,dupe
+Multiple Locations,1,proposed:australia,unresolvable; needs manual check
+Naarm/Melbourne/Australia,1,melbourne,
+"Neutral Bay, Sydney",1,sydney,Sydney metro suburb
+"North Parramatta, Sydney",1,sydney,Sydney metro suburb
+"Orange, NSW",1,new-south-wales,regional NSW
+"Palmerston North, New Zealand",1,proposed:new-zealand,no Palmerston North row
+Perth,1,perth,dupe
+"San Francisco, USA",1,proposed:international,
+Shoalhaven,1,new-south-wales,regional NSW
+"South Australia",1,south-australia,
+"South Brisbane, QLD",1,brisbane,Brisbane metro suburb
+"South Melbourne, VIC",1,melbourne,Melbourne metro suburb
+"Surry Hills, Sydney",1,sydney,Sydney metro suburb
+"Surry Hills, Sydney NSW",1,sydney,dupe of previous
+"Sydney (Level 5, 100 Market Street, Sydney NSW 2000)",1,sydney,address noise
+"Sydney, NSW (Level 3, Salesforce Tower, 180 George St)",1,sydney,address noise
+USA,1,proposed:international,
+"Warners Bay, NSW",1,new-south-wales,regional NSW (Newcastle area)
+"Wellington, New Zealand",1,wellington,
+"Wollongong, NSW",1,new-south-wales,no Wollongong row
