@@ -8,6 +8,7 @@ import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shar
 import { selectKeyPages } from "./keyPageSelect.ts";
 import { buildCompetitorQueries, dedupeCompetitorResults, domainOf, dropNonCompetitors } from "./competitorQueries.ts";
 import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits, goalSelectsGrants } from "./goalServiceTags.ts";
+import { buildServiceTermIndex, expandServiceTags, type ServiceTermRow } from "./serviceTerms.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
@@ -1397,10 +1398,27 @@ async function searchMatchesOverlap(supabase: any, intake: any) {
   const regions = intake.target_regions || [];
   // Expand selected goals into short service tags for better .cs.{} matching.
   // Prefer the stable goal_ids column; fall back to legacy services_needed labels.
-  const serviceTags = expandGoalsToServiceTags({
+  let serviceTags = expandGoalsToServiceTags({
     goal_ids: intake.goal_ids,
     services_needed: intake.services_needed,
   });
+  // MES-148 Phase 5 (P5-1): expand each goal tag into the real directory-cased
+  // synonyms from service_terms, so an exact tag ("Legal") also matches the rows
+  // that use a variant ("Legal Services", "Employment Law"). ADDITIVE superset —
+  // originals are retained, so this can only ADD candidates, never remove. Behind
+  // SERVICE_TERMS_ENABLED; fail-open to the un-expanded tags on any error.
+  if (["on", "1", "true"].includes((Deno.env.get("SERVICE_TERMS_ENABLED") || "").trim().toLowerCase())) {
+    try {
+      const { data: termRows } = await supabase.from("service_terms").select("slug, label, synonyms");
+      if (termRows && termRows.length > 0) {
+        const before = serviceTags.length;
+        serviceTags = expandServiceTags(serviceTags, buildServiceTermIndex(termRows as ServiceTermRow[]));
+        console.log(`service_terms: expanded ${before} goal tag(s) → ${serviceTags.length} (incl. synonyms)`);
+      }
+    } catch (e) {
+      console.warn("service_terms expansion skipped (using un-expanded tags):", e instanceof Error ? e.message : e);
+    }
+  }
   // Grants goal → structured boost on the agency surface (grants_available column;
   // no grant tag vocabulary exists in any directory table).
   const wantsGrantsGoal = goalSelectsGrants(intake);
