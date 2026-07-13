@@ -2378,6 +2378,12 @@ async function generateReportInBackground(
       keyMetrics = resumedResearch.keyMetrics ?? [];
       discoveredEvents = resumedResearch.discoveredEvents ?? [];
       matchRerankInfo = resumedResearch.matchRerankInfo ?? null;
+      // MES-159: rehydrate the AU-presence signal so a resumed report keeps its
+      // expansion-vs-entry framing (footprint line + reweighting) and its
+      // presence claims. Without this a retry silently reverts to `none` even
+      // for an established multinational. Older artifacts predating this field
+      // fall back to `none` (today's entry framing) — safe, never wrong-way.
+      auPresence = resumedResearch.auPresence ?? { ...NONE_SIGNAL };
     } else {
 
     console.log("Starting optimised parallel pipeline: deep scrape + Perplexity (6 queries) + DB matching + providers enrichment + competitors + end buyers...");
@@ -2443,8 +2449,6 @@ async function generateReportInBackground(
         firecrawlStats,
       );
     }
-    auPresenceNote = buildPresenceReweightNote(auPresence.status);
-    auFootprintNote = buildFootprintNote(auPresence);
 
     // Extract key metrics from the landscape response instead of a separate Perplexity call
     if (marketResearch.landscape) {
@@ -2603,8 +2607,14 @@ async function generateReportInBackground(
       keyMetrics,
       discoveredEvents,
       matchRerankInfo,
+      auPresence,
     });
     }
+
+    // Derive the AU-presence prompt notes for BOTH the fresh and resumed paths
+    // (auPresence is now set in each branch), so a retry reweights identically.
+    auPresenceNote = buildPresenceReweightNote(auPresence.status);
+    auFootprintNote = buildFootprintNote(auPresence);
 
     // ── MES-148 1a: claims registry ─────────────────────────────────────
     // Key metrics become claims deterministically; the free-prose research
@@ -3026,7 +3036,15 @@ async function generateReportInBackground(
       const results = await Promise.allSettled(
         templates.map(async (tmpl: any) => {
           const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
-          const willBeVisible = requiredTierIndex === -1 || userTierIndex >= requiredTierIndex;
+          if (requiredTierIndex === -1) {
+            // Unknown/null visibility_tier — fail CLOSED (hidden) rather than
+            // open. An unrecognised tier is a config error, and defaulting a
+            // section to visible could leak paid prose to a free/anon viewer
+            // before the frontend gate applies. All live templates carry a
+            // valid tier, so this only bites a future mis-seeded row.
+            console.warn(`Section "${tmpl.section_name}" has unrecognised visibility_tier "${tmpl.visibility_tier}" — defaulting to hidden (fail-closed).`);
+          }
+          const willBeVisible = requiredTierIndex !== -1 && userTierIndex >= requiredTierIndex;
           // D2: the user explicitly selected a goal that this section addresses.
           const emphasisNote = prioritisedSections.has(tmpl.section_name)
             ? `\n\nPRIORITISED SECTION: the user explicitly selected a goal that this section addresses, so it is one of the outcomes they most want. Make it especially specific, concrete and actionable — lead with the highest-value, most directly useful recommendations (stay within the length budget above).`
@@ -3387,7 +3405,15 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     // report is durably stored even if the polish step crashes.
     const reportJson = buildReportJson(sections, false);
 
-    const { error: reportErr } = await supabase
+    // Guard the completed-save on status = 'processing' so we never resurrect a
+    // report the reap-stuck-reports cron already demoted to 'failed' (a slow
+    // worker finishing after the 15-min reap window would otherwise flip a
+    // reaped row back to 'completed' and email the user — and if they'd already
+    // hit Retry, they'd get a second report + a second email). If 0 rows match,
+    // this run lost the race: the retry (or a concurrent run) owns finalisation,
+    // so we stop here without touching queryable columns, intake status, polish,
+    // or the completion email.
+    const { data: savedRows, error: reportErr } = await supabase
       .from("user_reports")
       .update({
         tier_at_generation: userTier,
@@ -3395,9 +3421,18 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         sections_generated: sectionsGenerated,
         status: "completed",
       })
-      .eq("id", reportId);
+      .eq("id", reportId)
+      .eq("status", "processing")
+      .select("id");
 
     if (reportErr) throw reportErr;
+
+    if (!savedRows || savedRows.length === 0) {
+      console.warn(
+        `Report ${reportId} was no longer 'processing' at completed-save (likely reaped to 'failed' or finalised by a retry) — skipping finalisation to avoid a duplicate completion.`,
+      );
+      return;
+    }
 
     // Best-effort: mirror key metadata into queryable columns (migration
     // 20260628210003). Deliberately a SEPARATE update from the critical save
