@@ -34,8 +34,8 @@ prod data the ranking is:
 | 1 | **Investors → Sector** (`sector_focus[]`) | **113** | 499 | massive long tail; near-dupes (`Deep Tech`/`DeepTech`-style) |
 | 2 | **Investors → Stage** (`stage_focus[]`) | **68** | 499 | case-dupes: `Pre-seed` 219 **+** `Pre-Seed` 38; `Seed` 324 + `Startup/Seed` 16 |
 | 3 | **Investors → Location** | 87 | 499 | free-text city/region tail |
-| 4 | **Events → Sector** (`events.sector`) | 46 | 145 | ~30 singletons (SaaS 1, Pharmacy 1, …) |
-| 5 | **Events → Type** (`events.type`) | **20** | 145 | compound near-dupes (`Conference + Exhibition`, `Summit + Pitch Night`, …) — **the classification target** |
+| 4 | **Events → Sector** (`events.sector`) | 45 (+null) | 146 | ~30 singletons (SaaS 1, Pharmacy 1, …) |
+| 5 | **Events → Type** (`events.type`) | **20** | 146 | compound near-dupes (`Conference + Exhibition`, `Summit + Pitch Night`, …) — **the classification target** |
 | 6 | **Innovation Ecosystem → Location** | ~50 | 217 | free-text tail |
 | 7 | **Gov Support → Location** | ~100 | 148 | full street addresses (`235 St Georges Terrace…`) — MES-131 territory |
 | 8 | **Case Studies → Industry** | 30 | 102 | FinTech 17, Software 15, then a tail of singletons |
@@ -111,7 +111,7 @@ Counts are result counts per option. "≤2" column = how many options have count
 top-N cap removes from the visible list). All controls order **alphabetically** today with **no cap**
 unless noted.
 
-### 3.1 Events — `src/pages/Events.tsx` → `events` (status = `approved`, 145 rows)
+### 3.1 Events — `src/pages/Events.tsx` → `events` (status = `approved`, **146** rows — the ticket's "145" is stale)
 
 **Type** (`events.type`, 20 distinct — the classification target, §5):
 
@@ -128,10 +128,10 @@ unless noted.
 
 → **14 of 20 values have count ≤ 2.** Classified into **7 canonical buckets** (§5), 6 populated.
 
-**Sector** (`events.sector`, 46 distinct): Founders & Startups 28, Technology 12, Professional
-Services 9, AI & Data 8, Mining & Metals 7, Venture Capital 5, `(null)` 4, then a tail where **~30
-values have count 1** (SaaS, Pharmacy, LegalTech, GovTech, Smart Cities, Hospitality, …).
-**Category** (`events.category`, 48 distinct) is an even longer near-duplicate of Sector and is not
+**Sector** (`events.sector`, 45 distinct + `(null)` on 4 rows): Founders & Startups 28, Technology
+12, Professional Services 9, AI & Data 8, Mining & Metals 7, Venture Capital 5, then a tail where
+**~30 values have count 1** (SaaS, Pharmacy, LegalTech, GovTech, Smart Cities, Hospitality, …).
+**Category** (`events.category`, 49 distinct) is an even longer near-duplicate of Sector and is not
 currently surfaced as a select — flag to MES-108/110 that `sector` and `category` overlap.
 
 ### 3.2 Investors — `src/pages/Investors.tsx` → `investors_public` (499 rows)
@@ -196,8 +196,11 @@ currently surfaced as a select — flag to MES-108/110 that `sector` and `catego
 
 - **Outcome** (tabs, hand-rolled All/Success/**Failure**): DB `outcome` = successful 25, `null` 61,
   scaling 13, acquired 2, ipo 1. **There is no `failed` value** → the **Failure Stories tab is a
-  permanent 0** (the ticket's flagged phantom). Curation zero-rule removes it. Provisional primary
-  dimension pending MES-108 (candidate: a real Success/Scaling/Exited grouping over `outcome`).
+  permanent 0** (the ticket's flagged phantom). Curation zero-rule removes it. Note **outcome is
+  null on 61 of 102 rows**, so even curated outcome tabs only classify 41 rows — the null rule
+  (§4.1) applies and the count-sum test is the three-term identity, not `tabs = All`. Provisional
+  primary dimension pending MES-108 (candidate: a real Success/Scaling/Exited grouping over
+  `outcome` — only worth promoting if the null backlog gets classified).
 - **Industry** (`profile.industry`, 30 distinct): FinTech 17, Software 15, Marketplace 8, AI & Data
   7, Cybersecurity 5, E-commerce 4, HealthTech 4, then ~20 singletons. Top-10 + zero-hide.
 - **Origin Country** (13 distinct): curate top-N, keep flag emoji.
@@ -245,17 +248,32 @@ curated. The engine is a single pure function; the bar change is additive.
 | **Empty control** | **control hidden entirely** if 0 options survive | e.g. SP sector when all rows agnostic |
 | **Empty directory** | render the existing empty-state; suppress all filter controls | no "filter to nothing" |
 | **Overflow (the tail beyond top-N)** | see 4.2 — depends on control type | every row stays reachable |
+| **Null values** | never rendered as an option; null-valued rows are reachable via **All** only | e.g. Case Studies `outcome` null 61/102, Gov Support `category_slug` null 15, Events `sector` null 4 |
+| **Min-count** | deliberately **1** (= zero-hiding only), overridable per control | with 65–500-row datasets, a ≥2 threshold hides legitimate reachable singletons that have no canonical bucket to fold into; the cap + overflow already bounds the visible list — a higher default is rejected, not forgotten |
+
+**Count-sum invariant (restated precisely — the naive "options sum to All" is structurally false
+for two dimension classes):**
+
+- **Scalar dimensions:** `visible + overflow + null-valued rows = All`. Null-heavy dimensions make
+  this visible: Case Studies outcome options sum to **41 of 102** (61 nulls) — correct behaviour,
+  not a bug. Tests must assert the three-term identity, not `options = All`.
+- **Array dimensions** (`sector_focus[]`, `type[]`, `sector_tags[]`, `market_corridors[]`): one row
+  counts under many options, so option counts legitimately sum to **more** than All. Exempt from
+  the sum test; assert instead that every row carries ≥1 option or is null-reachable via All.
 
 ### 4.2 Overflow — "More…" vs "Other", chosen by control type
 
 The reachability guarantee (AC: *every row remains reachable*) is satisfied differently per control:
 
 - **Free-text / taxonomy selects** (location, sector, stage, industry, origin) → **"More…"
-  searchable overflow.** Show top-10; the 11th item is a **"More…"** entry that opens the *full*
-  option list in a searchable popover (the Innovation Ecosystem `Command` combobox is the existing
-  pattern to generalise). No value is dropped — it is one click deeper. **Counts render inline** on
-  each option (new bar capability, §7). This is the default for selects because these dimensions have
-  no canonical bucketing to fold the tail into.
+  searchable overflow.** Show top-10 with a **"More…"** path to the *full* searchable option list.
+  **Implementation call:** do **not** embed a "More…" pseudo-item inside the shadcn/Radix `Select`
+  — its value model fights an item that opens a second surface. Instead, when a control's overflow
+  is non-empty, `DirectoryFilterBar` renders that control as a **`Popover`+`Command` combobox
+  variant** (the Innovation Ecosystem Service control is the in-repo proof), showing the top-10
+  ranked with the rest one search away. No value is dropped. **Counts render inline** on each
+  option (new bar capability, §7). This is the default for selects because these dimensions have no
+  canonical bucketing to fold the tail into.
 - **Classified / bucketed tabs** (Events type, investor type, IE type, leads type) → **"Other"
   catch-all bucket.** The classification maps *every* raw value to a canonical bucket (or `Other`),
   so the tail is reachable by selecting `Other`. `Other` is itself subject to the zero rule (hidden
@@ -276,6 +294,12 @@ Ranking is computed at **query/render time from the current result set** (client
 it reflects live data. To avoid the "options reshuffle as I type" problem, **rank against the
 directory's full unfiltered set, not the search-narrowed set** — the option list is stable across
 search/tab interactions within a session. Ties break on label, so equal-count options never swap.
+
+**Documented tradeoff (convention, not a bug):** because ranking/counts come from the *unfiltered*
+set, a displayed count will not shrink when a tab or search is active ("FinTech 17" stays 17 while
+a tab narrows the grid to 3). This is deliberate — live-recomputing counts makes options reorder
+and vanish mid-interaction, which is worse than a stale count. State it in the Phase B PR
+descriptions so reviewers don't file it.
 
 ### 4.5 Per-directory config (recommended overrides)
 
@@ -319,7 +343,7 @@ Festival/Showcase`.
 | **Workshop & Training** | **2** | Workshop (2) |
 | **Webinar** | 0 | *(reserved; hidden by zero-rule until online events exist)* |
 | **Other** | 0 | *(catch-all for future unmapped values)* |
-| **Total** | **146** | (= approved type-tagged rows) |
+| **Total** | **146** | = the full approved set (146 rows, all type-tagged, zero null types) — buckets sum exactly to All ✓ |
 
 **Coordination note for MES-108:** this 7-bucket set is a superset-compatible extension of
 `getStandardTypes.events = ['Conference','Workshop','Webinar','Networking','Trade Show']` — it splits
@@ -373,12 +397,14 @@ changes yet.
 - `src/lib/filterCuration.ts` — pure `curateOptions(counted: {value,label,count}[], cfg)` →
   `{ visible: FilterOption[], overflow: FilterOption[] }`. Implements popularity sort, stable tie,
   top-N cap, min-count, zero-hide, `pin`, and `Other` folding. Colocated `filterCuration.test.ts`
-  (`node --test`): top-N selection, tie-break stability, count-sum-to-All, zero-hiding, pin, overflow
-  reachability.
-- `DirectoryFilterBar.tsx` — additive: render `count` on **select** options; add a **"More…"**
-  searchable overflow (`Popover`+`Command`, generalised from the IE Service combobox) for selects
-  whose `overflow` is non-empty. Tabs `Other` bucket support. Fully backward-compatible: a control
-  with no overflow renders exactly as today.
+  (`node --test`): top-N selection, tie-break stability, the §4.1 count-sum invariant
+  (`visible + overflow + nulls = All` for scalar dims; array dims exempt), zero-hiding, pin,
+  overflow reachability.
+- `DirectoryFilterBar.tsx` — additive: render `count` on **select** options; when a select's
+  `overflow` is non-empty, render that control as the **`Popover`+`Command` combobox variant**
+  (generalised from the IE Service control) rather than embedding a "More…" pseudo-item in the
+  Radix `Select` (§4.2). Tabs `Other` bucket support. Fully backward-compatible: a control with no
+  overflow renders exactly as today.
 - A shared `DirectoryCurationConfig` type + a `directoryCuration.ts` config map holding the §4.5
   overrides.
 
@@ -388,7 +414,13 @@ approval-gated data step — ship it as its own PR with the parity checklist (ty
 All count; every raw value maps; originals preserved).
 
 **B2 — Investors.** Sector (113→10+More…), Stage (68→10+More…), Location; hide empty tabs. Highest
-user-facing win after Events.
+user-facing win after Events. **Caveat that must ship with B2:** top-N over a duplicate-ridden
+vocabulary makes the visible list look authoritative while the dupes hide in the overflow — a user
+picking the visible `Pre-seed` (219) silently misses the `Pre-Seed` (38) rows. That trap exists
+today, but curation *amplifies* it. Either land a minimal stage-vocabulary merge (case-fold +
+`Startup/Seed`→`Seed`) alongside B2 as a reviewed data fix, or have the curation key
+case-insensitively fold display-identical values at render time (frontend-only, reversible) until
+the data merge lands. Do not ship B2 with neither.
 
 **B3 — Simple adopters:** Leads, Innovation Ecosystem, Gov Support (Sector/Location caps + zero-hide;
 IE Service combobox becomes the overflow reference).
@@ -399,9 +431,9 @@ rule; cap Industry/Origin. Flag the `content_type` vocab mismatch to MES-108.
 **B5 — Service Providers & Mentors:** SP sector/location; Mentors switch primary tab to `archetype`
 (provisional), curate corridor/sector pills, and file the dead `mentor_categories` bug.
 
-Each PR: parity checklist (every §3 dimension still reachable; counts sum to All; search+tab+select
-combos correct; mobile wrap at 375px; tier-gating untouched). Config-driven ⇒ any directory reverts
-by config.
+Each PR: parity checklist (every §3 dimension still reachable; the §4.1 count-sum invariant holds;
+search+tab+select combos correct; mobile wrap at 375px; tier-gating untouched). Config-driven ⇒ any
+directory reverts by config.
 
 ---
 
@@ -426,7 +458,7 @@ by config.
 - [x] Complete Events type value→canonical mapping covering **all 20** values (§5 + CSV), flagged to MES-108. *(Review/approval pending — Phase A gate.)*
 - [ ] Shared component supports config-driven caps/ranking/overflow/zero-hide — **Phase B** (§7 B0).
 - [x] Per-directory primary dimension applied per MES-108 rule or marked **provisional** (§4.5).
-- [ ] Every row reachable / counts sum to All — **Phase B**, with tests (§7).
+- [ ] Every row reachable / §4.1 count-sum invariant holds (`visible + overflow + nulls = All`, array dims exempt) — **Phase B**, with tests (§7).
 - [x] Zero-count tabs identified for removal (Case Studies Failure, Guides Article/Success Story, Investors Other); **Investors empty-state documented as env-specific, not a bug** (§6).
 - [x] Recommendations reference actual components/routes and live data values/counts.
 
