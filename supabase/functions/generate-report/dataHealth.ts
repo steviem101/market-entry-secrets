@@ -29,8 +29,11 @@ function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
 }
 
-/** Compute a 0–100 data-health score. Deterministic; missing/invalid signals
- *  degrade to their neutral contribution rather than throwing. */
+/** Compute a 0–100 data-health score. Deterministic and total — it never throws.
+ *  Invalid/missing signals fail SAFE toward a LOWER score (NaN completeness → 0,
+ *  NaN/absent age → fully stale → 0 freshness; only an explicitly-null urlReachable
+ *  is a true neutral half-weight), so an unscoreable row reads as stale and the
+ *  steward re-examines it rather than trusting a bogus high score. */
 export function computeDataHealth(sig: HealthSignals): number {
   // Reachability: live = full, unknown = half (don't punish an unchecked row),
   // dead = zero (a broken source is the strongest staleness signal).

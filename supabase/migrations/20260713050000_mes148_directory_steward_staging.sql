@@ -21,7 +21,7 @@ create table if not exists public.directory_steward_staging (
   source_url text,                        -- the URL that was re-scraped
   change_class text not null check (change_class in ('A', 'B')),
   field_diffs jsonb not null default '{}'::jsonb,  -- { field: { before, after } }
-  computed_health smallint,               -- the data_health the steward scored for this row
+  computed_health smallint check (computed_health between 0 and 100),  -- the data_health the steward scored
   status text not null default 'new' check (status in ('new', 'approved', 'dismissed', 'applied')),
   evidence jsonb not null default '{}'::jsonb,
   run_id uuid,
@@ -33,12 +33,13 @@ create table if not exists public.directory_steward_staging (
 comment on table public.directory_steward_staging is
   'MES-148 Phase 5: nightly directory steward review/audit queue. Class-A auto-applied (status applied); class-B propose-only (new → approved/dismissed), applied via a reviewed action. Never client-writable.';
 
--- At most one OPEN ('new') class-B proposal per directory row, so a row is not
--- re-proposed every night until the current proposal is resolved. Class-A audit
--- rows ('applied') and resolved rows are unconstrained (history).
+-- At most one PENDING class-B proposal per directory row — covers both 'new' (awaiting
+-- review) and 'approved' (awaiting the downstream reviewed apply), so the nightly
+-- steward can't stage a duplicate for a record that already has an unresolved proposal.
+-- Class-A audit rows ('applied') and 'dismissed'/resolved rows are unconstrained (history).
 create unique index if not exists uq_directory_steward_open_per_record
   on public.directory_steward_staging (directory_table, record_id)
-  where status = 'new';
+  where status in ('new', 'approved');
 
 -- Review-queue + per-record lookups.
 create index if not exists idx_directory_steward_status on public.directory_steward_staging (status, created_at);

@@ -30,8 +30,8 @@ test("computeDataHealth: partial completeness is proportional; dead link caps th
   assert.equal(computeDataHealth({ urlReachable: false, requiredPresent: 1, ageDays: 0 }), 60);
 });
 
-test("computeDataHealth: NaN signals degrade to neutral (fully stale), never throw", () => {
-  // reach 20 (null) + complete 0 (NaN) + fresh 0 (NaN age → STALE_DAYS) = 20
+test("computeDataHealth: NaN signals fail SAFE toward a low score, never throw", () => {
+  // reach 20 (null → neutral half) + complete 0 (NaN → min) + fresh 0 (NaN age → fully stale) = 20
   assert.equal(computeDataHealth({ urlReachable: null, requiredPresent: NaN, ageDays: NaN }), 20);
 });
 

@@ -135,7 +135,7 @@ async function processStewardDecision(decision: "approved" | "dismissed", propos
   if (!updated?.length) return await respond(responseUrl, `ℹ️ \`[${ref}]\` changed while you clicked — no change made. Re-check its current status before deciding again.`, "ephemeral");
 
   log("steward proposal reviewed", { ref, decision });
-  const label = `${escapeSlack(String(row.directory_table ?? ""))} row ${escapeSlack(String(row.record_id ?? "").slice(0, 8))}`;
+  const label = `${escapeSlack(String(row.directory_table ?? ""))} row ${escapeSlack(String(row.record_id ?? "").slice(0, 8))} (class ${escapeSlack(String(row.change_class ?? "?"))})`;
   const suffix = decision === "approved"
     ? "\n_Approved — the change applies via a reviewed action, not from this click._"
     : "";
