@@ -178,6 +178,12 @@ export function goalSelectsGrants(source: { goal_ids?: string[] | null; services
 export function countGoalTagHits(
   goalIds: string[] | null | undefined,
   pools: Record<string, Array<Record<string, unknown>>>,
+  // MES-148 Phase 5 (P5-1): optional service_terms expander. When the matcher
+  // expanded goal tags into synonyms, count a row that carries a SYNONYM (e.g.
+  // "Legal Services") as a hit for the goal whose tag ("Legal") expands to it —
+  // otherwise the telemetry would understate the very matching improvement it's
+  // meant to observe. Undefined = count against the raw goal tags (today's shape).
+  expand?: (tags: string[]) => string[],
 ): Record<string, number> {
   const out: Record<string, number> = {};
   const rows = Object.values(pools || {}).flat().filter(Boolean);
@@ -190,8 +196,9 @@ export function countGoalTagHits(
     return terms;
   });
   for (const id of goalIds ?? []) {
-    const tags = GOAL_SERVICE_TAGS_BY_ID[id];
-    if (!tags) continue;
+    const base = GOAL_SERVICE_TAGS_BY_ID[id];
+    if (!base) continue;
+    const tags = expand ? expand(base) : base;
     out[id] = rowTerms.filter((terms) => tags.some((t) => terms.has(t))).length;
   }
   return out;

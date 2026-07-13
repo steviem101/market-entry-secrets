@@ -34,7 +34,7 @@ create table if not exists public.service_terms (
 comment on table public.service_terms is
   'MES-148 Phase 5: canonical service/specialty vocabulary + real directory-cased synonyms. Kills the dead-tag under-match by expanding goal tags to synonyms at match time.';
 
-create index if not exists idx_service_terms_slug on public.service_terms (slug);
+-- (slug already has a unique index from the UNIQUE constraint — no extra index needed.)
 
 alter table public.service_terms enable row level security;
 revoke all on table public.service_terms from anon, authenticated;
