@@ -11,13 +11,16 @@
  * The component is presentational: it renders the values a page holds (usually
  * via `useDirectoryFilters`) and calls back on change. It owns no filter state.
  */
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter, X, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
 import type { FilterValues } from "@/lib/directoryFilters";
 
@@ -34,10 +37,119 @@ export interface SelectFilterConfig {
   key: string;
   /** Label for the default "all" row, e.g. "All Locations". */
   allLabel: string;
+  /**
+   * Options to render. When they carry `count` (see `curateOptions`), a subtle
+   * count suffix is shown and the list is expected to be popularity-ranked.
+   */
   options: FilterOption[];
+  /**
+   * Render as a searchable combobox (MES-130). Use for curated long lists:
+   * the top `cap` options show first and the whole ranked tail is one keystroke
+   * away, so no value is unreachable. Plain `Select` otherwise.
+   */
+  searchable?: boolean;
+  /** Searchable-only: how many ranked options to show before the user types. Default 10. */
+  cap?: number;
   /** Optional Tailwind width class; defaults to a sensible sm width. */
   widthClass?: string;
 }
+
+/**
+ * Searchable single-select combobox for curated option lists (MES-130).
+ * Shows the top `cap` ranked options until the user searches, then filters the
+ * full list — the popularity-ranked tail stays reachable without a giant menu.
+ */
+const SearchableFilterSelect = ({
+  allLabel,
+  options,
+  value,
+  onChange,
+  cap = 10,
+  widthClass,
+}: {
+  allLabel: string;
+  options: FilterOption[];
+  value: string;
+  onChange: (value: string) => void;
+  cap?: number;
+  widthClass?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options.slice(0, cap);
+    return options.filter((o) => o.label.toLowerCase().includes(q));
+  }, [options, query, cap]);
+
+  const selectedLabel =
+    value && value !== "all" ? (options.find((o) => o.value === value)?.label ?? value) : allLabel;
+  const hiddenBeforeSearch = !query.trim() && options.length > shown.length;
+
+  return (
+    <div className={widthClass ?? "w-full sm:w-44"}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between font-normal"
+          >
+            <span className={cn("truncate", value === "all" && "text-muted-foreground")}>
+              {selectedLabel}
+            </span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[260px] p-0" align="start">
+          <Command shouldFilter={false}>
+            <CommandInput placeholder={`Search ${allLabel.toLowerCase()}...`} value={query} onValueChange={setQuery} />
+            <CommandEmpty>No matches.</CommandEmpty>
+            <div className="max-h-[300px] overflow-y-auto">
+              <CommandGroup>
+                <CommandItem
+                  value="__all__"
+                  onSelect={() => {
+                    onChange("all");
+                    setQuery("");
+                    setOpen(false);
+                  }}
+                >
+                  <Check className={cn("mr-2 h-4 w-4", value === "all" ? "opacity-100" : "opacity-0")} />
+                  {allLabel}
+                </CommandItem>
+                {shown.map((opt) => (
+                  <CommandItem
+                    key={opt.value}
+                    value={opt.value}
+                    onSelect={() => {
+                      onChange(opt.value);
+                      setQuery("");
+                      setOpen(false);
+                    }}
+                  >
+                    <Check className={cn("mr-2 h-4 w-4", value === opt.value ? "opacity-100" : "opacity-0")} />
+                    <span className="flex-1 truncate">{opt.label}</span>
+                    {opt.count !== undefined && (
+                      <span className="ml-2 text-xs text-muted-foreground">{opt.count}</span>
+                    )}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              {hiddenBeforeSearch && (
+                <p className="px-2 py-1.5 text-xs text-muted-foreground">
+                  Showing top {shown.length} — type to search all {options.length}.
+                </p>
+              )}
+            </div>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
 
 export interface DirectoryFilterBarProps {
   /** Current values + change handler, typically from useDirectoryFilters. */
@@ -166,26 +278,41 @@ export const DirectoryFilterBar = ({
               </div>
             )}
 
-            {selects.map((sel) => (
-              <div key={sel.key} className={sel.widthClass ?? "w-full sm:w-44"}>
-                <Select
+            {selects.map((sel) =>
+              sel.searchable ? (
+                <SearchableFilterSelect
+                  key={sel.key}
+                  allLabel={sel.allLabel}
+                  options={sel.options}
                   value={filters[sel.key]}
-                  onValueChange={(v) => onFilterChange(sel.key, v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={sel.allLabel} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{sel.allLabel}</SelectItem>
-                    {sel.options.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
+                  onChange={(v) => onFilterChange(sel.key, v)}
+                  cap={sel.cap}
+                  widthClass={sel.widthClass}
+                />
+              ) : (
+                <div key={sel.key} className={sel.widthClass ?? "w-full sm:w-44"}>
+                  <Select
+                    value={filters[sel.key]}
+                    onValueChange={(v) => onFilterChange(sel.key, v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={sel.allLabel} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{sel.allLabel}</SelectItem>
+                      {sel.options.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                          {opt.count !== undefined && (
+                            <span className="ml-1.5 text-xs text-muted-foreground">{opt.count}</span>
+                          )}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ),
+            )}
 
             {sort && (
               <div className="w-full sm:w-44">

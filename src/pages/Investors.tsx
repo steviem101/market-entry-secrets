@@ -10,6 +10,7 @@ import { useInvestors } from "@/hooks/useInvestors";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterInvestors } from "@/lib/investorFilters";
+import { curateValues } from "@/lib/filterCuration";
 
 const PAGE_SIZE = 12;
 
@@ -43,18 +44,21 @@ const Investors = () => {
     [investors, filters],
   );
 
-  const uniqueLocations = useMemo(
-    () => [...new Set((investors ?? []).map((inv) => inv.location).filter(Boolean))].sort() as string[],
+  // MES-130: popularity-ranked, zero-hidden option lists (interim frontend-only
+  // curation on the raw columns — the canonical sector_tags swap is a separate,
+  // approval-gated follow-up that needs investors_public to expose the column).
+  const locationOptions = useMemo(
+    () => curateValues((investors ?? []).map((inv) => inv.location)),
     [investors],
   );
 
-  const uniqueStages = useMemo(
-    () => [...new Set((investors ?? []).flatMap((inv) => inv.stage_focus || []))].sort() as string[],
+  const stageOptions = useMemo(
+    () => curateValues((investors ?? []).flatMap((inv) => inv.stage_focus || [])),
     [investors],
   );
 
-  const uniqueSectors = useMemo(
-    () => [...new Set((investors ?? []).flatMap((inv) => inv.sector_focus || []))].sort() as string[],
+  const sectorOptions = useMemo(
+    () => curateValues((investors ?? []).flatMap((inv) => inv.sector_focus || [])),
     [investors],
   );
 
@@ -121,9 +125,9 @@ const Investors = () => {
         tabs={{ key: "type", options: tabOptions }}
         search={{ key: "search", placeholder: "Search investors, sectors, or locations..." }}
         selects={[
-          { key: "location", allLabel: "All Locations", options: uniqueLocations.map((l) => ({ value: l, label: l })) },
-          { key: "stage", allLabel: "All Stages", options: uniqueStages.map((s) => ({ value: s, label: s })) },
-          { key: "sector", allLabel: "All Sectors", options: uniqueSectors.map((s) => ({ value: s, label: s })) },
+          { key: "location", allLabel: "All Locations", options: locationOptions, searchable: true },
+          { key: "stage", allLabel: "All Stages", options: stageOptions, searchable: true },
+          { key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true },
         ]}
       />
 
