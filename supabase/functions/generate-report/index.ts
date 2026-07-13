@@ -28,6 +28,7 @@ import { buildAuPresencePrompt, parseAuPresenceResponse, directoryPresenceEviden
 import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
+import { parseAbPercent, inCandidateBucket } from "./promptAb.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, shouldFallbackToFlash, FLASH_MODEL } from "./sectionModel.ts";
 
@@ -3023,6 +3024,36 @@ async function generateReportInBackground(
     // unchanged until a section is deliberately routed (the money-section A/B).
     const sectionModelDefault = Deno.env.get("SECTION_MODEL_DEFAULT") || null;
 
+    // MES-148 Phase 4 (PR-A): live prompt A/B. report_templates.prompt_body is
+    // the ACTIVE prompt; prompt_versions stages CANDIDATE bodies. A report that
+    // hashes into the PROMPT_AB_PERCENT bucket swaps in the candidate body for
+    // any section that has one and records it in metadata.prompt_ab, so the
+    // nightly loop can attribute scores. Default percent 0 → never bucketed →
+    // zero behaviour change; and we only query prompt_versions for bucketed runs.
+    const promptAbPercent = parseAbPercent(Deno.env.get("PROMPT_AB_PERCENT"));
+    const promptAbBucket = inCandidateBucket(reportId, promptAbPercent);
+    const candidateBodies: Record<string, { body: string; version: number }> = {};
+    const promptVariantsUsed: Record<string, number> = {}; // section → candidate version actually written
+    if (promptAbBucket) {
+      try {
+        const { data: candidates } = await supabase
+          .from("prompt_versions")
+          .select("section_name, version, body")
+          .eq("status", "candidate");
+        for (const c of (candidates || []) as Array<{ section_name?: string; version?: number; body?: string }>) {
+          if (c?.section_name && typeof c.body === "string" && c.body.trim()) {
+            candidateBodies[c.section_name] = { body: c.body, version: c.version ?? 1 };
+          }
+        }
+        const n = Object.keys(candidateBodies).length;
+        if (n > 0) console.log(`Prompt A/B: report ${reportId} in candidate bucket (${promptAbPercent}%); ${n} candidate section(s) available.`);
+      } catch (e) {
+        // Fail-open: on any lookup error the report is written with the active
+        // prompts (today's behaviour), never blocked.
+        console.warn("Prompt A/B: candidate fetch failed (using active prompts):", e instanceof Error ? e.message : e);
+      }
+    }
+
     if (templates && templates.length > 0) {
       // Generate ALL sections in a single parallel batch (was batches of 3).
       // (P0-3) Sections gated above the user's tier are STILL generated and
@@ -3050,9 +3081,15 @@ async function generateReportInBackground(
             ? `\n\nPRIORITISED SECTION: the user explicitly selected a goal that this section addresses, so it is one of the outcomes they most want. Make it especially specific, concrete and actionable — lead with the highest-value, most directly useful recommendations (stay within the length budget above).`
             : "";
 
+          // Phase 4: if this report is in the A/B bucket and a candidate body
+          // exists for the section, write from the candidate instead of the
+          // active prompt_body (and record which version, for score attribution).
+          const candidate = candidateBodies[tmpl.section_name];
+          const promptBody = candidate?.body ?? tmpl.prompt_body;
+          if (candidate) promptVariantsUsed[tmpl.section_name] = candidate.version;
           // Drop empty {{#var}}...{{/var}} blocks (incl. stringified-empty JSON "[]"/"{}"),
           // then substitute {{key}} values. See promptTemplate.ts.
-          const prompt = renderTemplate(tmpl.prompt_body, variables);
+          const prompt = renderTemplate(promptBody, variables);
 
           try {
             const personaContext = persona === "startup"
@@ -3415,6 +3452,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // MES-148 Phase 2a: the model each section was written with, so an A/B
         // (money-section routing) is observable per report. All-flash by default.
         section_models: sectionModelMap((templates || []) as any, sectionModelDefault),
+        // MES-148 Phase 4: which arm of the prompt A/B this report ran in.
+        // bucket=false is the control (active prompts); variants lists the
+        // candidate version actually written per section (empty on control /
+        // when no candidate exists). Inert until PROMPT_AB_PERCENT > 0.
+        prompt_ab: { bucket: promptAbBucket, percent: promptAbPercent, variants: promptVariantsUsed },
         verification,
         // MES-148 1b: whether this run resumed the research phase from a prior
         // run's artifact (false = a full fresh run). Costs in firecrawl_health/
