@@ -1469,6 +1469,9 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
   const ctx: MatchContext = {
     userSectors, sellsToSectors, serviceTags, locationPatterns,
     userCountry, userIsIntl, countryTerm,
+    // MES-148 Phase 5 (P5-2): freshness tiebreaker from steward-scored data_health.
+    // Off by default; inert until the steward populates data_health (NULL = neutral).
+    freshnessEnabled: ["on", "1", "true"].includes((Deno.env.get("FRESHNESS_RANKING_ENABLED") || "").trim().toLowerCase()),
   };
 
   // rank(): score -> sort -> optional diversity + specialist guarantee -> attach
@@ -1491,7 +1494,7 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
     // swallowed it → matches.service_providers was never set → every report
     // surfaced "We did not find matching service providers."
     let spQuery = supabase.from("service_providers")
-      .select("id, name, slug, location, services, description, website, sector_tags, sector_agnostic")
+      .select("id, name, slug, location, services, description, website, sector_tags, sector_agnostic, data_health")
       .limit(CAND);
     spQuery = spQuery.or(buildOr({ service: "services" }));
     const { data: sp, error: spErr } = await spQuery;
@@ -1507,7 +1510,7 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
   // Community members (mentors) — sector + skill + country corridor + location
   try {
     let cmQuery = supabase.from("community_members")
-      .select("id, name, title, slug, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic, is_anonymous, is_active")
+      .select("id, name, title, slug, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic, is_anonymous, is_active, data_health")
       .eq("is_active", true)
       .eq("is_anonymous", false)
       .limit(CAND);
@@ -1656,7 +1659,7 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
 
   // Innovation ecosystem — sector + service + location (+ agnostic)
   try {
-    let ieQuery = supabase.from("innovation_ecosystem").select("id, slug, name, location, services, description, website, sector_tags, sector_agnostic").limit(CAND);
+    let ieQuery = supabase.from("innovation_ecosystem").select("id, slug, name, location, services, description, website, sector_tags, sector_agnostic, data_health").limit(CAND);
     ieQuery = ieQuery.or(buildOr({ service: "services" }));
     const { data: ie, error: ieErr } = await ieQuery;
     if (ieErr) console.error("IE query error:", ieErr);
@@ -1677,7 +1680,7 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
   // pool, filter to in-corridor rows, THEN rank into the 5 slots. The union-level
   // gate stays as the safety net for the semantic path.
   try {
-    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, website_url, domain, tagline, target_company_origin, organisation_type, government_level, location_state, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic, grants_available").limit(300);
+    let taQuery = supabase.from("trade_investment_agencies").select("id, name, slug, location, services, description, website, website_url, domain, tagline, target_company_origin, organisation_type, government_level, location_state, location_country, country_iso2, jurisdiction, sector_tags, sector_agnostic, grants_available, data_health").limit(300);
     taQuery = taQuery.or(buildOr({ service: "services" }));
     const { data: ta, error: taErr } = await taQuery;
     if (taErr) console.error("TIA query error:", taErr);
@@ -1715,7 +1718,7 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
   // 447-row table, so fetch a larger candidate pool before ranking. Stage/check
   // size are surfaced for the reader but intentionally not used for weighting.
   try {
-    let invQuery = supabase.from("investors").select("id, slug, name, investor_type, location, country, sector_focus, stage_focus, check_size_min, check_size_max, website, description, sector_tags, sector_agnostic").limit(120);
+    let invQuery = supabase.from("investors").select("id, slug, name, investor_type, location, country, sector_focus, stage_focus, check_size_min, check_size_max, website, description, sector_tags, sector_agnostic, data_health").limit(120);
     invQuery = invQuery.or(buildOr());
     const { data: inv, error: invErr } = await invQuery;
     if (invErr) console.error("Investors query error:", invErr);
