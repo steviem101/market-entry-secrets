@@ -1,7 +1,7 @@
 # CLAUDE.md — Market Entry Secrets
 
 > Root context file for Claude Code — auto-loaded every session.
-> **Last reviewed: 2026-07-12 (MES-148 Phase 2 rollout flags** — prior review 2026-07-11 country pages v2; full review 2026-07-07 MES-115, gap report: [`docs/audits/mes-115-claude-md-gap-report.md`](docs/audits/mes-115-claude-md-gap-report.md)**).**
+> **Last reviewed: 2026-07-13 (MES-148 Phase 5 data-stewardship flags + rollout runbook** — prior review 2026-07-12 MES-148 Phase 2 rollout flags; full review 2026-07-07 MES-115, gap report: [`docs/audits/mes-115-claude-md-gap-report.md`](docs/audits/mes-115-claude-md-gap-report.md)**).**
 > Maintenance: this file owns **orientation, invariants, and pointers** only. Deep procedures live
 > in [`.claude/skills/`](.claude/skills/README.md); evidence and audit artefacts live in [`docs/`](docs/).
 > Keep it ≤400 lines, verify every claim against the repo before editing, and update the date above.
@@ -276,6 +276,7 @@ Owned by skill `mes-ticket-workflow`; the invariants:
 | `MATCH_RERANK_ENABLED` | generate-report matching toggle |
 | `EVAL_BYPASS_USER_ID` | generate-report: exempts one user id (the golden-eval user) from the 5/60min report rate limit; unset in normal operation (MES-148 Phase 1c) |
 | `RELEVANCE_AUTHORITATIVE` (`on`/`1`/`true`), `AU_PRESENCE_SIGNAL` (`on`/`1`/`true`), `CLAIMS_VERIFIER_MODE` (`blocking`) | generate-report quality flags — **all default off**; staged rollout procedure in [`docs/runbooks/mes-148-flag-rollout.md`](docs/runbooks/mes-148-flag-rollout.md) (MES-148 Phase 2d / MES-159 / Phase 1a) |
+| `SERVICE_TERMS_ENABLED`, `FRESHNESS_RANKING_ENABLED` (generate-report matcher); `DIRECTORY_STEWARD_ENABLED`, `DEMAND_MINING_ENABLED`, `DIRECTORY_DISCOVERY_ENABLED` (the Phase 5 loops — each ALSO needs an enabled `activity_event_routing` row) | MES-148 Phase 5 data-stewardship flags — **all default off**; staged rollout procedure in [`docs/runbooks/mes-148-phase5-rollout.md`](docs/runbooks/mes-148-phase5-rollout.md) |
 | `RESEND_API_KEY`, `EMAIL_INTERNAL_SECRET` | Transactional email |
 | `FRONTEND_URL` | Stripe redirects + CORS allowlist entry |
 | `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `SLACK_NOTIFY_WEBHOOK_SECRET`, `RQ_SLACK_REVIEWERS`, `SLACK_EVENTS_WEBHOOK`, `SLACK_ALERTS_WEBHOOK` | Slack notify/loops + events digests |
@@ -342,3 +343,4 @@ Owned by skill `mes-ticket-workflow`; the invariants:
 | Report-generation audit | [`docs/audits/AUDIT_REPORT_GENERATION.md`](docs/audits/AUDIT_REPORT_GENERATION.md) |
 | Runbooks (auth dashboard, www/apex 301) | `docs/runbooks/` |
 | Report-pipeline flag rollout (MES-148) | [`docs/runbooks/mes-148-flag-rollout.md`](docs/runbooks/mes-148-flag-rollout.md) |
+| Phase 5 data-stewardship rollout (MES-148) | [`docs/runbooks/mes-148-phase5-rollout.md`](docs/runbooks/mes-148-phase5-rollout.md) |
