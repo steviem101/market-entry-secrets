@@ -25,6 +25,9 @@ const DEFAULT_LOOKBACK_DAYS = 30;
 const MIN_N = Math.max(Number(Deno.env.get("PROMPT_AB_MIN_N")) || 20, 2);
 const LIFT_THRESHOLD = Math.max(Number(Deno.env.get("PROMPT_AB_LIFT")) || 3, 0.1);
 const SAMPLE_CAP = 5000; // hard bound on reports pulled per run
+// Golden-eval reports (rate-limit-bypass user, money-section model A/B) must not
+// pollute the prompt A/B population — exclude them when the id is configured.
+const EVAL_BYPASS_USER_ID = (Deno.env.get("EVAL_BYPASS_USER_ID") ?? "").trim();
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -98,8 +101,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // --- recent scored reports + their A/B arm --------------------------------------------
   const since = new Date(Date.now() - lookbackDays * DAY).toISOString();
-  const { data: qrows, error: qErr } = await supabase.from("report_quality")
-    .select("report_id, report_score").eq("report_status", "completed").gte("created_at", since).limit(SAMPLE_CAP);
+  let qQuery = supabase.from("report_quality")
+    .select("report_id, report_score").eq("report_status", "completed").gte("created_at", since);
+  if (EVAL_BYPASS_USER_ID) qQuery = qQuery.neq("user_id", EVAL_BYPASS_USER_ID);
+  // Deterministic sample under the cap: keep the NEWEST reports, not an arbitrary
+  // set (a bare .limit() with no order is nondeterministic and could bias the arms).
+  const { data: qrows, error: qErr } = await qQuery.order("created_at", { ascending: false }).limit(SAMPLE_CAP);
   if (qErr) return json({ ok: false, error: qErr.message }, 500);
   const scoreById = new Map<string, number | null>();
   for (const r of qrows ?? []) scoreById.set(r.report_id, typeof r.report_score === "number" ? r.report_score : null);
@@ -137,11 +144,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const proposalIdByKey = new Map<string, string>();
   let proposalsWritten = 0;
   if (!dryRun && actionable.length) {
-    // Skip candidates that already have an open ('new') proposal.
-    const { data: openRows } = await supabase.from("prompt_ab_proposals")
-      .select("section_name, candidate_version").eq("status", "new");
-    const openKeys = new Set((openRows ?? []).map((o) => `${o.section_name}::${o.candidate_version}`));
-    const toInsert = actionable.filter((r) => !openKeys.has(`${r.section}::${r.version}`));
+    // Skip candidates that already have ANY proposal for this exact (section,
+    // version) — new/accepted/dismissed/shipped alike. A resolved recommendation
+    // is not re-proposed every night (that would make a dismiss un-sticky and spam
+    // reviewers); to re-evaluate, bump the candidate to a new version.
+    const { data: existRows } = await supabase.from("prompt_ab_proposals")
+      .select("section_name, candidate_version");
+    const seenKeys = new Set((existRows ?? []).map((o) => `${o.section_name}::${o.candidate_version}`));
+    const toInsert = actionable.filter((r) => !seenKeys.has(`${r.section}::${r.version}`));
     for (const r of toInsert) {
       const id = crypto.randomUUID();
       proposalIdByKey.set(`${r.section}::${r.version}`, id);

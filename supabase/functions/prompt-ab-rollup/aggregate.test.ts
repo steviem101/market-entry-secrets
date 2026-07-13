@@ -66,6 +66,40 @@ test("aggregateAb: a report running a DIFFERENT candidate section is excluded fr
   assert.equal(r.verdict, "promote");
 });
 
+test("aggregateAb: a report that ALSO ran another candidate section is excluded from the candidate arm", () => {
+  const samples: AbReportSample[] = [
+    // 20 clean single-section candidates + 20 pure controls → would be 'promote'...
+    ...Array.from({ length: 20 }, () => cand("executive_summary", 2, 85)),
+    ...Array.from({ length: 20 }, () => ctrl(78)),
+    // ...plus 5 reports that ran BOTH exec_summary v2 AND action_plan v1 with a
+    // tanked score. Under a naive `variants[section]===version` these would count
+    // into the exec_summary candidate arm and corrupt the lift; the single-section
+    // guard must exclude them.
+    ...Array.from({ length: 5 }, () => ({ bucket: true, variants: { executive_summary: 2, action_plan: 1 }, score: 20, grounding: {} } as AbReportSample)),
+  ];
+  const [r] = aggregateAb(samples, [{ section: "executive_summary", version: 2 }], { minN: 20, liftThreshold: 3 });
+  assert.equal(r.candidate.n, 20);      // the 5 multi-candidate reports are NOT counted
+  assert.equal(r.candidate.meanScore, 85);
+  assert.equal(r.verdict, "promote");
+});
+
+test("aggregateAb: multiple candidate sections live at once → each arm fails safe to insufficient", () => {
+  // Every bucketed report ran two candidates, so no report is a single-section
+  // candidate for EITHER section → both arms empty → insufficient (not a wrong verdict).
+  const samples: AbReportSample[] = [
+    ...Array.from({ length: 30 }, () => ({ bucket: true, variants: { executive_summary: 2, action_plan: 1 }, score: 90, grounding: {} } as AbReportSample)),
+    ...Array.from({ length: 30 }, () => ctrl(78)),
+  ];
+  const results = aggregateAb(samples, [
+    { section: "executive_summary", version: 2 },
+    { section: "action_plan", version: 1 },
+  ], { minN: 20, liftThreshold: 3 });
+  assert.equal(results[0].candidate.n, 0);
+  assert.equal(results[0].verdict, "insufficient");
+  assert.equal(results[1].candidate.n, 0);
+  assert.equal(results[1].verdict, "insufficient");
+});
+
 test("aggregateAb: only the matching candidate VERSION counts as the candidate arm", () => {
   const samples = [
     ...Array.from({ length: 20 }, () => cand("executive_summary", 3, 85)), // version 3 running

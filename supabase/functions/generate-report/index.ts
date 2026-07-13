@@ -3083,10 +3083,12 @@ async function generateReportInBackground(
 
           // Phase 4: if this report is in the A/B bucket and a candidate body
           // exists for the section, write from the candidate instead of the
-          // active prompt_body (and record which version, for score attribution).
+          // active prompt_body. The variant is recorded only AFTER the section
+          // produces real content (below) — a candidate that failed/blanked must
+          // not count as a candidate observation (it would inflate the arm's
+          // grounding, since an empty section reads as perfectly grounded).
           const candidate = candidateBodies[tmpl.section_name];
           const promptBody = candidate?.body ?? tmpl.prompt_body;
-          if (candidate) promptVariantsUsed[tmpl.section_name] = candidate.version;
           // Drop empty {{#var}}...{{/var}} blocks (incl. stringified-empty JSON "[]"/"{}"),
           // then substitute {{key}} values. See promptTemplate.ts.
           const prompt = renderTemplate(promptBody, variables);
@@ -3154,6 +3156,13 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
               sectionContent = `${content}\n\n**Who from your matches can help with this:**`;
             } else {
               sectionMatches = getMatchesForSection(tmpl.section_name, matches);
+            }
+
+            // Record the A/B variant only now that the candidate actually produced
+            // content — so `variants` means "candidate written", matching the arm
+            // attribution in prompt-ab-rollup (a blank candidate is not a sample).
+            if (candidate && content && content.trim().length > 0) {
+              promptVariantsUsed[tmpl.section_name] = candidate.version;
             }
 
             return {

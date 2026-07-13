@@ -71,7 +71,15 @@ export function aggregateAb(
     const ctrlGr: number[] = [];
 
     for (const s of samples) {
-      const ranThisCandidate = s.variants?.[section] === version;
+      const v = s.variants ?? {};
+      // Candidate arm requires this section to be the ONLY deviation from the
+      // active prompts — a report that ALSO ran another candidate section would
+      // confound the report-level score, so it is excluded from both arms (as
+      // tight as the control arm). With the one-candidate-at-a-time operating
+      // model this is every bucketed report; if multiple candidates are ever live
+      // at once, each arm empties out and the verdict fails safe to `insufficient`
+      // rather than emitting a contaminated promote/retire.
+      const ranThisCandidate = v[section] === version && Object.keys(v).length === 1;
       const pureControl = s.bucket === false; // ran the active prompt for every section
       if (ranThisCandidate) {
         if (typeof s.score === "number") candScores.push(s.score);
