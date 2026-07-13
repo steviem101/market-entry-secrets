@@ -10,9 +10,10 @@
 // Read-only upstream: it only READS intake + supply and WRITES its own signal rows —
 // never a directory row. Doubly disabled by default: requires DEMAND_MINING_ENABLED=on
 // AND an enabled activity_event_routing 'directory.demand' row. Auth: x-webhook-secret ==
-// SLACK_NOTIFY_WEBHOOK_SECRET (verify_jwt=false).
+// SLACK_NOTIFY_WEBHOOK_SECRET (verify_jwt=false — see supabase/config.toml).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { escapeSlack } from "../_shared/slack.ts";
 import {
   buildTermIndex,
   gapScore,
@@ -30,7 +31,11 @@ const ROUTING_EVENT = "directory.demand";
 const LOOP_NAME = "demand-mining";
 const DEFAULT_WINDOW_DAYS = 180;
 const MAX_WINDOW_DAYS = 730;
-const INTAKE_CAP = 3000;      // most-recent forms to scan (Supabase default limit is 1000)
+// PostgREST caps a single response at ~1000 rows (CLAUDE.md gotcha #1), so a bare
+// .limit(3000) would silently see only 1000 forms and undercount demand. Page through
+// with .range() up to a hard ceiling instead.
+const INTAKE_PAGE = 1000;
+const INTAKE_MAX = 5000;      // forms scanned per run (5 pages) — bounds work + memory
 const MAX_SYNONYMS = 60;      // cap the .overlaps() array per supply count
 const SLACK_TOP = 15;         // gaps shown in the digest
 
@@ -60,6 +65,25 @@ async function postToSlack(channel: string, text: string, blocks: any[]): Promis
   } catch (e) { log("slack post threw", String(e)); }
 }
 
+/** Page through intake forms in the window via .range() (a single PostgREST response is
+ *  capped at ~1000 rows), most-recent first, up to INTAKE_MAX. Throws on a read error so
+ *  the caller records a failed run rather than silently mining partial data. */
+// deno-lint-ignore no-explicit-any
+async function fetchIntakeForms(supabase: any, cutoff: string): Promise<IntakeDemand[]> {
+  const rows: IntakeDemand[] = [];
+  for (let from = 0; from < INTAKE_MAX; from += INTAKE_PAGE) {
+    const { data, error } = await supabase.from("user_intake_forms")
+      .select("services_needed,target_regions,industry_sector,created_at")
+      .gte("created_at", cutoff).order("created_at", { ascending: false })
+      .range(from, from + INTAKE_PAGE - 1);
+    if (error) throw new Error(`intake load failed: ${error.message}`);
+    const page = (data ?? []) as IntakeDemand[];
+    rows.push(...page);
+    if (page.length < INTAKE_PAGE) break; // short page = last page
+  }
+  return rows;
+}
+
 interface Signal {
   term_slug: string;
   term_label: string;
@@ -70,9 +94,11 @@ interface Signal {
   sample_sectors: string[];
 }
 
-/** Upsert one open signal per term: refresh the existing open row's counts, else insert.
- *  The partial unique index (status in new/ack) guarantees at most one open row, so an
- *  insert race surfaces as a unique violation we swallow. */
+/** Upsert one open signal per term. Refresh the existing open (new/ack) row's counts;
+ *  else, if a TERMINAL row (dismissed/actioned) already exists for the term, respect it
+ *  and do NOT recreate it as 'new' (a nightly re-run must not undo a human dismissal);
+ *  else insert a fresh 'new' row. The partial unique index (status in new/ack) makes an
+ *  insert race surface as a unique violation we swallow. */
 // deno-lint-ignore no-explicit-any
 async function upsertSignal(supabase: any, s: Signal, windowDays: number, runId: string): Promise<"updated" | "inserted" | "skipped"> {
   const patch = {
@@ -92,6 +118,15 @@ async function upsertSignal(supabase: any, s: Signal, windowDays: number, runId:
     .select("id");
   if (upErr) { log(`update signal ${s.term_slug} failed`, upErr.message); return "skipped"; }
   if (updated && updated.length > 0) return "updated";
+
+  // No open row. If a resolved (dismissed/actioned) row exists, honour it — don't
+  // resurrect a gap a human already closed. Only a genuinely never-seen term inserts.
+  const { data: terminal } = await supabase.from("directory_demand_signals")
+    .select("id,status").eq("signal_type", "service").eq("term_slug", s.term_slug).limit(1);
+  if (terminal && terminal.length > 0) {
+    log(`signal ${s.term_slug} already resolved (${terminal[0].status}) — not resurrecting`);
+    return "skipped";
+  }
 
   const { error: insErr } = await supabase.from("directory_demand_signals").insert({
     signal_type: "service", term_slug: s.term_slug, status: "new",
@@ -126,88 +161,105 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (!rt || !rt.enabled || !rt.channel_id) { log("routing disabled — skipping"); return json({ ok: true, skipped: "routing_disabled" }); }
   const channel = rt.channel_id as string;
 
-  const runId = crypto.randomUUID();
   const startedAt = new Date().toISOString();
+  const runId = crypto.randomUUID();
   const cutoff = new Date(Date.now() - windowDays * 86400000).toISOString();
 
-  // 1) Canonical vocabulary (P5-1). No terms → nothing to mine.
-  const { data: termRows, error: termErr } = await supabase.from("service_terms").select("slug,label,synonyms");
-  if (termErr) { log("load service_terms failed", termErr.message); return json({ error: "service_terms_unavailable" }, 500); }
-  const terms = (termRows ?? []) as ServiceTerm[];
-  const index = buildTermIndex(terms);
-  const synonymsBySlug = new Map<string, string[]>();
-  for (const t of terms) {
-    const syns = [...new Set([t.label, ...(Array.isArray(t.synonyms) ? t.synonyms : [])])].filter((x): x is string => typeof x === "string" && x.length > 0);
-    synonymsBySlug.set(t.slug, syns);
-  }
-
-  // 2) Recent intake demand.
-  const { data: forms, error: formErr } = await supabase.from("user_intake_forms")
-    .select("services_needed,target_regions,industry_sector,created_at")
-    .gte("created_at", cutoff).order("created_at", { ascending: false }).limit(INTAKE_CAP);
-  if (formErr) { log("load intake failed", formErr.message); return json({ error: "intake_unavailable" }, 500); }
-  const demand = tallyDemand((forms ?? []) as IntakeDemand[], index);
-
-  // 3) For each sufficiently-demanded term, count supply + score the gap.
-  const signals: Signal[] = [];
-  for (const d of demand) {
-    if (d.demand < MIN_DEMAND) continue;
-    const syns = (synonymsBySlug.get(d.slug) ?? []).slice(0, MAX_SYNONYMS);
-    let supply = 0;
-    if (syns.length > 0) {
-      const { count, error } = await supabase.from("service_providers")
-        .select("id", { count: "exact", head: true }).overlaps("services", syns);
-      if (error) { log(`supply count ${d.slug} failed`, error.message); continue; }
-      supply = count ?? 0;
-    }
-    const gap = gapScore(d.demand, supply);
-    if (gap <= 0) continue; // adequately served — not a gap
-    signals.push({
-      term_slug: d.slug, term_label: d.label, demand_count: d.demand,
-      supply_count: supply, gap_score: gap, sample_regions: d.regions, sample_sectors: d.sectors,
-    });
-  }
-  signals.sort((a, b) => (b.gap_score - a.gap_score) || (b.demand_count - a.demand_count) || a.term_slug.localeCompare(b.term_slug));
-
-  // 4) Persist (unless dry-run).
-  let upserted = 0;
+  // Start-of-run telemetry: a 'running' row up front so a crash/failure mid-run is
+  // visible to the ops loop (not just successful runs).
+  let runRowId: string | null = null;
   if (!dryRun) {
-    for (const s of signals) {
-      const r = await upsertSignal(supabase, s, windowDays, runId);
-      if (r !== "skipped") upserted += 1;
+    const { data: run } = await supabase.from("automation_runs")
+      .insert({ loop: LOOP_NAME, started_at: startedAt, status: "running", metadata: { window_days: windowDays } })
+      .select("id").maybeSingle();
+    runRowId = run?.id ?? null;
+  }
+
+  try {
+    // 1) Canonical vocabulary (P5-1). No terms → nothing to mine.
+    const { data: termRows, error: termErr } = await supabase.from("service_terms").select("slug,label,synonyms");
+    if (termErr) throw new Error(`service_terms load failed: ${termErr.message}`);
+    const terms = (termRows ?? []) as ServiceTerm[];
+    const index = buildTermIndex(terms);
+    const synonymsBySlug = new Map<string, string[]>();
+    for (const t of terms) {
+      const syns = [...new Set([t.label, ...(Array.isArray(t.synonyms) ? t.synonyms : [])])].filter((x): x is string => typeof x === "string" && x.length > 0);
+      synonymsBySlug.set(t.slug, syns);
     }
-  }
 
-  // 5) Slack digest (only when there are gaps).
-  if (signals.length > 0) {
-    // deno-lint-ignore no-explicit-any
-    const blocks: any[] = [
-      { type: "header", text: { type: "plain_text", text: "📈 Directory demand — underserved services" } },
-      { type: "context", elements: [{ type: "mrkdwn", text: `${forms?.length ?? 0} intake forms (last ${windowDays}d) · ${signals.length} service gap(s)${dryRun ? " · _dry run_" : ""}` }] },
-    ];
-    for (const s of signals.slice(0, SLACK_TOP)) {
-      const ctx = [
-        s.sample_sectors.length ? `sectors: ${s.sample_sectors.join(", ")}` : "",
-        s.sample_regions.length ? `regions: ${s.sample_regions.join(", ")}` : "",
-      ].filter(Boolean).join(" · ");
-      blocks.push({
-        type: "section",
-        text: { type: "mrkdwn", text: `*${s.term_label}* — demand *${s.demand_count}* vs supply *${s.supply_count}*  ·  gap \`${s.gap_score}\`${ctx ? `\n_${ctx}_` : ""}` },
-      });
+    // 2) Recent intake demand (paginated — see fetchIntakeForms).
+    const forms = await fetchIntakeForms(supabase, cutoff);
+    const demand = tallyDemand(forms, index);
+
+    // 3) For each sufficiently-demanded term, count supply (accurate count:exact — not
+    //    subject to the row cap) + score the gap. Counts run concurrently.
+    const demanded = demand.filter((d) => d.demand >= MIN_DEMAND);
+    const scored = await Promise.all(demanded.map(async (d): Promise<Signal | null> => {
+      const syns = (synonymsBySlug.get(d.slug) ?? []).slice(0, MAX_SYNONYMS);
+      let supply = 0;
+      if (syns.length > 0) {
+        const { count, error } = await supabase.from("service_providers")
+          .select("id", { count: "exact", head: true }).overlaps("services", syns);
+        if (error) { log(`supply count ${d.slug} failed`, error.message); return null; }
+        supply = count ?? 0;
+      }
+      const gap = gapScore(d.demand, supply);
+      if (gap <= 0) return null; // adequately served — not a gap
+      return {
+        term_slug: d.slug, term_label: d.label, demand_count: d.demand,
+        supply_count: supply, gap_score: gap, sample_regions: d.regions, sample_sectors: d.sectors,
+      };
+    }));
+    const signals = scored.filter((x): x is Signal => x !== null)
+      .sort((a, b) => (b.gap_score - a.gap_score) || (b.demand_count - a.demand_count) || a.term_slug.localeCompare(b.term_slug));
+
+    // 4) Persist (unless dry-run).
+    let upserted = 0;
+    if (!dryRun) {
+      for (const s of signals) {
+        const r = await upsertSignal(supabase, s, windowDays, runId);
+        if (r !== "skipped") upserted += 1;
+      }
     }
-    blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: "_Demand mined from report intake vs directory supply. The discovery agent targets these; nothing is auto-added._" }] });
-    await postToSlack(channel, "Directory demand — underserved services", blocks);
-  }
 
-  // 6) Telemetry.
-  if (!dryRun) {
-    await supabase.from("automation_runs").insert({
-      loop: LOOP_NAME, started_at: startedAt, finished_at: new Date().toISOString(), status: "success",
-      reviewed: forms?.length ?? 0, proposed: signals.length, accepted: upserted,
-      metadata: { window_days: windowDays, terms: terms.length, gaps: signals.map((s) => ({ term: s.term_slug, demand: s.demand_count, supply: s.supply_count, gap: s.gap_score })) },
-    });
-  }
+    // 5) Slack digest — real runs only (a dry-run must not spam the channel). Untrusted
+    //    intake-derived text (term label, sectors, regions) is escaped for mrkdwn.
+    if (!dryRun && signals.length > 0) {
+      // deno-lint-ignore no-explicit-any
+      const blocks: any[] = [
+        { type: "header", text: { type: "plain_text", text: "📈 Directory demand — underserved services" } },
+        { type: "context", elements: [{ type: "mrkdwn", text: `${forms.length} intake forms (last ${windowDays}d) · ${signals.length} service gap(s)` }] },
+      ];
+      for (const s of signals.slice(0, SLACK_TOP)) {
+        const ctx = [
+          s.sample_sectors.length ? `sectors: ${s.sample_sectors.map(escapeSlack).join(", ")}` : "",
+          s.sample_regions.length ? `regions: ${s.sample_regions.map(escapeSlack).join(", ")}` : "",
+        ].filter(Boolean).join(" · ");
+        blocks.push({
+          type: "section",
+          text: { type: "mrkdwn", text: `*${escapeSlack(s.term_label)}* — demand *${s.demand_count}* vs supply *${s.supply_count}*  ·  gap \`${s.gap_score}\`${ctx ? `\n_${ctx}_` : ""}` },
+        });
+      }
+      blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: "_Demand mined from report intake vs directory supply. The discovery agent targets these; nothing is auto-added._" }] });
+      await postToSlack(channel, "Directory demand — underserved services", blocks);
+    }
 
-  log("run complete", { scanned: forms?.length ?? 0, gaps: signals.length, upserted, dryRun });
-  return json({ ok: true, scanned: forms?.length ?? 0, gaps: signals.length, upserted, dry_run: dryRun, signals });
+    // 6) Success telemetry.
+    if (!dryRun && runRowId) {
+      await supabase.from("automation_runs").update({
+        finished_at: new Date().toISOString(), status: "success",
+        reviewed: forms.length, proposed: signals.length, accepted: upserted,
+        metadata: { window_days: windowDays, terms: terms.length, gaps: signals.map((s) => ({ term: s.term_slug, demand: s.demand_count, supply: s.supply_count, gap: s.gap_score })) },
+      }).eq("id", runRowId);
+    }
+
+    log("run complete", { scanned: forms.length, gaps: signals.length, upserted, dryRun });
+    return json({ ok: true, scanned: forms.length, gaps: signals.length, upserted, dry_run: dryRun, signals });
+  } catch (e) {
+    log("run failed", String(e));
+    if (!dryRun && runRowId) {
+      await supabase.from("automation_runs").update({ finished_at: new Date().toISOString(), status: "error", error: String(e) }).eq("id", runRowId);
+    }
+    return json({ error: "run_failed", detail: String(e) }, 500);
+  }
 });
