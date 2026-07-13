@@ -1,0 +1,13 @@
+raw_value,count,canonical_slug,notes
+Sydney,64,sydney,
+Melbourne,48,melbourne,
+(null),13,,reachable via All only; no canonical row assigned
+Brisbane,6,brisbane,
+Gold Coast,5,gold-coast,
+Adelaide,2,adelaide,
+Canberra,2,canberra,
+Perth,2,perth,
+Darwin,1,darwin,
+Geelong,1,victoria,no Geelong row
+Mackay,1,queensland,regional QLD
+Parramatta,1,sydney,Sydney metro suburb

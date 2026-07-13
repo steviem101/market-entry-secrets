@@ -1,0 +1,26 @@
+raw_value,count,canonical_slug,notes
+Greater Sydney Area,35,sydney,dupe cluster with "Sydney, New South Wales, Australia"
+"Sydney, New South Wales, Australia",33,sydney,
+"Melbourne, Victoria, Australia",14,melbourne,
+Greater Melbourne Area,12,melbourne,dupe cluster
+Australia,9,proposed:australia,country-level row missing
+"Brisbane, Queensland, Australia",4,brisbane,
+"Auckland, Auckland, New Zealand",3,auckland,
+"Gold Coast, Queensland, Australia",2,gold-coast,
+Greater Perth Area,2,perth,
+"The Rocks, New South Wales, Australia",2,sydney,Sydney metro suburb
+"Wellington, Wellington, New Zealand",2,wellington,
+"Adelaide, South Australia, Australia",1,adelaide,
+"Barangaroo, New South Wales, Australia",1,sydney,Sydney metro suburb
+"Bondi, New South Wales, Australia",1,sydney,Sydney metro suburb
+"Canberra, Australian Capital Territory, Australia",1,canberra,
+"Clovelly, New South Wales, Australia",1,sydney,Sydney metro suburb
+"Darlinghurst, New South Wales, Australia",1,sydney,Sydney metro suburb
+Greater Newcastle Area,1,new-south-wales,no Newcastle row
+"Malvern, Victoria, Australia",1,melbourne,Melbourne metro suburb
+"New South Wales, Australia",1,new-south-wales,
+New Zealand,1,proposed:new-zealand,country-level row missing
+"Perth, Western Australia, Australia",1,perth,
+"Prahran, Victoria, Australia",1,melbourne,Melbourne metro suburb
+"Randwick, New South Wales, Australia",1,sydney,Sydney metro suburb
+"Waikato, New Zealand",1,waikato,

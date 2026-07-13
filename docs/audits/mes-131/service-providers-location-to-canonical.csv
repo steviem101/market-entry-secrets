@@ -1,0 +1,28 @@
+raw_value,count,canonical_slug,notes
+"Sydney, NSW",39,sydney,
+"Melbourne, VIC",30,melbourne,
+Australia,14,proposed:australia,country-level row missing
+"Canberra, ACT",4,canberra,
+"London, UK",2,proposed:international,
+"North Sydney, NSW",2,sydney,Sydney metro suburb
+"Richmond, VIC",2,melbourne,Melbourne metro suburb
+"6 Australia St,  Camperdown,  Sydney",1,sydney,malformed address
+"6th of October City, Giza, Egypt",1,proposed:international,
+"Austin, TX",1,proposed:international,
+"Brisbane, QLD",1,brisbane,
+France,1,proposed:international,
+"Geneva, Switzerland",1,proposed:international,
+"Gold Coast, QLD",1,gold-coast,
+"Holland Park West, QLD",1,brisbane,Brisbane metro suburb
+Hong Kong,1,proposed:international,
+"Ingleburn, NSW",1,sydney,Sydney metro suburb
+"Liverpool, NSW",1,sydney,Sydney metro suburb
+"Manchester, UK",1,proposed:international,
+"New York City, NY, USA",1,proposed:international,
+"New York, NY",1,proposed:international,
+"North Melbourne, VIC",1,melbourne,Melbourne metro suburb
+"Perth, WA",1,perth,
+"Sheffield, UK",1,proposed:international,
+Singapore,1,proposed:international,
+"Sydney, NSW (Primary), Melbourne, VIC",1,sydney;melbourne,multi-site; first = primary
+"Wellington, New Zealand",1,wellington,

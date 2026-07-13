@@ -442,10 +442,10 @@ directory reverts by config.
 | # | Finding | Owner / follow-up |
 |---|---|---|
 | 1 | **`mentor_categories` table does not exist**; `useMentorCategories` silently returns `[]`; `community_members` has no `category_slug`. Mentor primary tabs are dead. | MES-130 B5 uses `archetype`; file a **bug ticket** to either create `mentor_categories` or formally retire the hook. |
-| 2 | **Investors `stage_focus` case/format dupes** (`Pre-seed` 219 + `Pre-Seed` 38; `Seed`/`Startup/Seed`). Curation *hides* but does not *merge*. | Data-quality follow-up (a small stage vocabulary, MES-108/110-adjacent). |
+| 2 | **Investors `stage_focus` case/format dupes** (`Pre-seed` 219 + `Pre-Seed` 38; `Seed`/`Startup/Seed`). Curation *hides* but does not *merge*. | **Audited 2026-07-13** — complete 68-value mapping + the sector finding (canonical `sector_tags` already populated; `investors_public` just doesn't expose it) in [`mes-130/investor-vocabulary-consolidation.md`](mes-130/investor-vocabulary-consolidation.md). |
 | 3 | **Guides `content_type` vocabulary mismatch**: page expects `article`/`success_story`; DB has `case_study/guide/best_practice/interview/compliance`. | MES-108 (type buckets) — the Guides tab set should match the real domain. |
 | 4 | **Events `sector` vs `category`** are overlapping 46/48-value near-duplicates on the same table. | MES-110/108 — one should be canonical; MES-130 curates whichever the page surfaces. |
-| 5 | **Gov Support & SP location values** are raw addresses / malformed free-text. | MES-131 location consolidation. |
+| 5 | **Gov Support & SP location values** are raw addresses / malformed free-text. | MES-131 — **Phase A audited 2026-07-13**: [`mes-131-location-taxonomy-audit.md`](mes-131-location-taxonomy-audit.md) (complete value→canonical CSVs; the 23-row `locations` taxonomy exists but `location_id` is ~unpopulated). |
 | 6 | **New event ingest re-fragments `type`** unless `normalize-events` emits the canonical bucket. | MES-130 B1 follow-up: classify on ingest (additive) so the bucket set stays stable. |
 | 7 | **`investor_type = 'Other'`, Case Studies `Failure`, Guides `Article/Success Story`** are hard-coded phantom tabs. | Fixed generically by the §4.1 zero rule during rollout. |
 
