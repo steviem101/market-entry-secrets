@@ -37,6 +37,21 @@ export interface MatchContext {
   userCountry: string;        // normalised country_of_origin
   userIsIntl: boolean;        // entering AU from abroad
   countryTerm: string;        // lowercased raw country_of_origin
+  /** MES-148 Phase 5 (P5-2): when true, a row's steward-scored data_health nudges
+   *  its rank (fresh/complete rows up, stale ones down). Off by default; a NULL
+   *  data_health is always neutral, so this is inert until the steward populates it. */
+  freshnessEnabled?: boolean;
+}
+
+// Freshness is a TIEBREAKER, not a dominant signal — capped below the target-region
+// bonus (+2) so it reorders near-equal rows without burying a strong industry/corridor
+// match under a merely-fresher generalist. data_health is 0–100, neutral at 50.
+const FRESHNESS_MAX = 1.5;
+export function freshnessDelta(dataHealth: unknown): number {
+  if (typeof dataHealth !== "number" || !Number.isFinite(dataHealth)) return 0;
+  const clamped = Math.max(0, Math.min(100, dataHealth));
+  const raw = ((clamped - 50) / 50) * FRESHNESS_MAX;
+  return Number(raw.toFixed(2));
 }
 
 export interface ScoreOpts {
@@ -221,6 +236,16 @@ export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
     if (hay.includes(ctx.countryTerm)) {
       s += 1.5;
       reasons.push("country mentioned in profile (+1.5)");
+    }
+  }
+
+  // MES-148 Phase 5 (P5-2): steward-scored freshness tiebreaker. Inert when the flag
+  // is off or data_health is NULL (not yet scored) — so this ships as a no-op.
+  if (ctx.freshnessEnabled) {
+    const fd = freshnessDelta(row.data_health);
+    if (fd !== 0) {
+      s += fd;
+      reasons.push(`data health ${row.data_health}/100 (${fd > 0 ? "+" : ""}${fd})`);
     }
   }
 

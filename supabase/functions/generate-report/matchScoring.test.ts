@@ -6,7 +6,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, textMatchesAnyToken, industryTokens, leadIcpTokens, leadMatchesIcp, type MatchContext, type Scored } from "./matchScoring.ts";
+import { scoreRow, scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, textMatchesAnyToken, industryTokens, leadIcpTokens, leadMatchesIcp, freshnessDelta, type MatchContext, type Scored } from "./matchScoring.ts";
 
 const CTX: MatchContext = {
   userSectors: ["technology-information-and-media", "construction", "professional-services"],
@@ -45,6 +45,42 @@ test("a focused industry specialist outranks a broad agnostic generalist with th
   assert.ok(expert.specialist, "ai expert should be flagged specialist");
   assert.ok(!generalist.specialist, "agnostic generalist should NOT be a specialist");
   assert.ok(expert.reasons.some((r) => r.includes("specialist")), "reasons should explain the specialist bonus");
+});
+
+test("freshnessDelta: maps data_health 0–100 to a capped ±1.5 tiebreaker; NULL/invalid → 0", () => {
+  assert.equal(freshnessDelta(100), 1.5);
+  assert.equal(freshnessDelta(50), 0);      // neutral midpoint
+  assert.equal(freshnessDelta(0), -1.5);
+  assert.equal(freshnessDelta(75), 0.75);
+  assert.equal(freshnessDelta(150), 1.5);   // clamps high
+  assert.equal(freshnessDelta(-20), -1.5);  // clamps low
+  assert.equal(freshnessDelta(null), 0);
+  assert.equal(freshnessDelta(undefined), 0);
+  assert.equal(freshnessDelta("80"), 0);    // non-number → neutral
+  assert.equal(freshnessDelta(NaN), 0);
+});
+
+test("scoreRow freshness: inert when the flag is off or data_health is NULL; nudges when both present", () => {
+  const row = { id: "f", sector_agnostic: false, sector_tags: ["technology-information-and-media"], specialties: [], data_health: 90 };
+  // Flag OFF → no freshness contribution (identical to a row without data_health).
+  const off = scoreRow(row, {}, CTX);
+  const offNoHealth = scoreRow({ ...row, data_health: undefined }, {}, CTX);
+  assert.equal(off.score, offNoHealth.score);
+  assert.ok(!off.reasons.some((r) => r.includes("data health")));
+  // Flag ON, health 90 → +1.2 nudge ((90−50)/50×1.5) and an explaining reason.
+  const on = scoreRow(row, {}, { ...CTX, freshnessEnabled: true });
+  assert.equal(Number((on.score - off.score).toFixed(2)), 1.2);
+  assert.ok(on.reasons.some((r) => r.includes("data health 90/100")));
+  // Flag ON but health NULL → still inert (neutral).
+  const onNull = scoreRow({ ...row, data_health: null }, {}, { ...CTX, freshnessEnabled: true });
+  assert.equal(onNull.score, off.score);
+});
+
+test("scoreRow freshness never dominates a strong signal (capped below target-region +2)", () => {
+  // A stale specialist (health 0 → −1.5) still outranks a fresh no-overlap generalist.
+  const staleExpert = scoreRow({ ...aiExpert, data_health: 0 }, { service: "specialties" }, { ...CTX, freshnessEnabled: true });
+  const freshGeneralist = scoreRow({ id: "g", sector_agnostic: true, sector_tags: [], specialties: [], data_health: 100 }, { service: "specialties" }, { ...CTX, freshnessEnabled: true });
+  assert.ok(staleExpert.score > freshGeneralist.score, `stale expert ${staleExpert.score} should still beat fresh generalist ${freshGeneralist.score}`);
 });
 
 test("a pure trade/government generalist with no industry overlap scores near zero", () => {
