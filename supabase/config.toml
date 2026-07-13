@@ -164,9 +164,18 @@ verify_jwt = false
 # Disabled by default — self-gates on activity_event_routing 'report.quality.loop'.
 verify_jwt = false
 
+[functions.prompt-ab-rollup]
+# MES-148 Phase 4: nightly prompt A/B candidate-vs-active rollup (propose-only);
+# authenticated in-code by x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET (same
+# pattern as report-quality-rollup). Must stay false or the gateway rejects the cron
+# POST (no JWT). Disabled by default — self-gates on activity_event_routing
+# 'prompt.ab.rollup'.
+verify_jwt = false
+
 [functions.rq-slack-actions]
 # Slack interactivity receiver for the report-quality review queue (Accept/Reject
-# buttons on #report-quality digests). Authenticated in-code by Slack request signing
+# buttons on #report-quality digests) AND the prompt A/B promote/retire buttons
+# (Phase 4). Authenticated in-code by Slack request signing
 # (SLACK_SIGNING_SECRET) — Slack sends no JWT, so this must stay false or the gateway
 # rejects the interaction POST before the function runs.
 verify_jwt = false

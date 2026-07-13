@@ -84,6 +84,35 @@ async function respond(responseUrl: string | undefined, text: string, visibility
   }
 }
 
+// MES-148 Phase 4 (PR-B): the same propose-only pattern for prompt A/B
+// recommendations (prompt-ab-rollup posts Accept/Dismiss buttons). Accepting only
+// flips prompt_ab_proposals.status → the actual prompt promotion still ships as a
+// human migration/PR (copy the candidate body into report_templates, retire the
+// prompt_versions row). This endpoint never writes the active prompt.
+async function processAbDecision(decision: "accepted" | "dismissed", proposalId: string, slackUser: string, slackUserId: string, responseUrl: string | undefined): Promise<void> {
+  const ref = proposalId.slice(0, 8);
+  const { data: row, error: readErr } = await supabase.from("prompt_ab_proposals")
+    .select("id, section_name, candidate_version, verdict, status, evidence").eq("id", proposalId).maybeSingle();
+  if (readErr) { log("ab read error", readErr.message); return await respond(responseUrl, `⚠️ \`[${ref}]\` lookup failed — see function logs.`, "ephemeral"); }
+  if (!row) return await respond(responseUrl, `⚠️ Prompt A/B proposal \`[${ref}]\` not found.`, "ephemeral");
+  if (row.status === "shipped") return await respond(responseUrl, `ℹ️ \`[${ref}]\` is already *shipped* — not changing it.`, "ephemeral");
+  if (row.status === decision) return await respond(responseUrl, `ℹ️ \`[${ref}]\` was already ${decision}.`, "ephemeral");
+
+  const evidence = { ...(row.evidence ?? {}), slack_review: { decision, by: slackUser, by_id: slackUserId, at: new Date().toISOString() } };
+  const { data: updated, error: updErr } = await supabase.from("prompt_ab_proposals")
+    .update({ status: decision, reviewed_at: new Date().toISOString(), evidence })
+    .eq("id", proposalId).eq("status", row.status).select("id");
+  if (updErr) { log("ab update error", updErr.message); return await respond(responseUrl, `⚠️ Failed to update \`[${ref}]\` — see function logs.`, "ephemeral"); }
+  if (!updated?.length) return await respond(responseUrl, `ℹ️ \`[${ref}]\` changed while you clicked — no change made. Re-check its current status before deciding again.`, "ephemeral");
+
+  log("ab proposal reviewed", { ref, decision });
+  const label = `${escapeSlack(String(row.section_name ?? ""))} v${row.candidate_version} (${escapeSlack(String(row.verdict ?? ""))})`;
+  const suffix = decision === "accepted"
+    ? "\n_Ship it via a migration/PR — copy the candidate body into report_templates and retire the version._"
+    : "";
+  await respond(responseUrl, `${decision === "accepted" ? "✅" : "❌"} \`[${ref}]\` *${label}* — *${decision}* by ${escapeSlack(slackUser)}.${suffix}`);
+}
+
 // The DB read/update + confirmation, run after the 3s ack has been returned.
 async function processDecision(decision: "accepted" | "rejected", proposalId: string, slackUser: string, slackUserId: string, responseUrl: string | undefined): Promise<void> {
   const ref = proposalId.slice(0, 8);
@@ -129,7 +158,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const actionId: string = action?.action_id ?? "";
   const proposalId: string = action?.value ?? "";
   const decision = actionId.startsWith("rq_accept_") ? "accepted" as const : actionId.startsWith("rq_reject_") ? "rejected" as const : null;
-  if (!decision) return new Response("ok", { status: 200 }); // not one of our buttons
+  // Phase 4 (PR-B): prompt A/B promote/retire buttons share this receiver.
+  const abDecision = actionId.startsWith("ab_accept_") ? "accepted" as const : actionId.startsWith("ab_dismiss_") ? "dismissed" as const : null;
+  if (!decision && !abDecision) return new Response("ok", { status: 200 }); // not one of our buttons
   const responseUrl: string | undefined = payload.response_url;
   const slackUserId: string = payload.user?.id ?? "";
   const slackUser: string = payload.user?.username ?? payload.user?.name ?? (slackUserId || "unknown");
@@ -146,7 +177,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
         log("reviewer not in RQ_SLACK_REVIEWERS");
         return await respond(responseUrl, "⛔ You're not in the reviewer allowlist for report-quality proposals.", "ephemeral");
       }
-      await processDecision(decision, proposalId, slackUser, slackUserId, responseUrl);
+      if (abDecision) await processAbDecision(abDecision, proposalId, slackUser, slackUserId, responseUrl);
+      else await processDecision(decision!, proposalId, slackUser, slackUserId, responseUrl);
     } catch (e) {
       log("background work failed", String(e));
       await respond(responseUrl, "⚠️ Something went wrong handling that click — see function logs.", "ephemeral");
