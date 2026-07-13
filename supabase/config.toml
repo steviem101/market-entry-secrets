@@ -164,6 +164,14 @@ verify_jwt = false
 # Disabled by default — self-gates on activity_event_routing 'report.quality.loop'.
 verify_jwt = false
 
+[functions.directory-steward]
+# MES-148 Phase 5: nightly directory freshness/health pass — writes last_verified +
+# data_health metadata to live rows and stages dead sources (propose-only). Authenticated
+# in-code by x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET; must stay false or the gateway
+# rejects the cron POST (no JWT). DOUBLY disabled by default — requires
+# DIRECTORY_STEWARD_ENABLED=on AND an enabled activity_event_routing 'directory.steward'.
+verify_jwt = false
+
 [functions.prompt-ab-rollup]
 # MES-148 Phase 4: nightly prompt A/B candidate-vs-active rollup (propose-only);
 # authenticated in-code by x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET (same
