@@ -1,0 +1,21 @@
+raw_type_value,approved_count,canonical_bucket,rule_applied
+Networking,31,Networking,exact
+Conference + Exhibition,31,Conference,lead-token (Conference)
+Conference,17,Conference,exact
+Pitch Night,16,Pitch & Demo Day,synonym (Pitch Night)
+Summit,15,Conference,synonym (Summit -> Conference)
+Trade Show + Conference,9,Expo & Trade Show,lead-token (Trade Show)
+Trade Show,8,Expo & Trade Show,synonym (Trade Show)
+Expo,5,Expo & Trade Show,synonym (Expo)
+Festival + Conference,2,Festival & Showcase,lead-token (Festival)
+Workshop,2,Workshop & Training,synonym (Workshop)
+Airshow + Trade Exhibition,1,Expo & Trade Show,lead-token (Airshow -> trade exhibition family)
+Conference + Expo,1,Conference,lead-token (Conference)
+Conference + Investor Presentation,1,Conference,lead-token (Conference)
+Conference + Networking,1,Conference,lead-token (Conference)
+Festival + Conference + Exhibition,1,Festival & Showcase,lead-token (Festival)
+Festival + Conference + Startup Expo,1,Festival & Showcase,lead-token (Festival)
+Showcase + Networking,1,Festival & Showcase,lead-token (Showcase)
+Summit + Exhibition,1,Conference,lead-token (Summit -> Conference)
+Summit + Pitch Night,1,Conference,lead-token (Summit -> Conference)
+Trade Exhibition,1,Expo & Trade Show,synonym (Trade Exhibition)
