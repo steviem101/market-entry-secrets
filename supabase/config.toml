@@ -188,6 +188,14 @@ verify_jwt = false
 # and activity_event_routing 'directory.demand'.
 verify_jwt = false
 
+[functions.directory-discovery]
+# MES-148 Phase 5 (P5-4): demand-driven directory discovery agent (propose-only);
+# authenticated in-code by x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET (same
+# pattern as demand-mining). Must stay false or the gateway rejects the cron POST (no
+# JWT) before the function runs. Disabled by default — self-gates on
+# DIRECTORY_DISCOVERY_ENABLED and activity_event_routing 'directory.discovery'.
+verify_jwt = false
+
 [functions.rq-slack-actions]
 # Slack interactivity receiver for the report-quality review queue (Accept/Reject
 # buttons on #report-quality digests) AND the prompt A/B promote/retire buttons
