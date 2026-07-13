@@ -339,17 +339,42 @@ export interface FlaggedItem {
   context: string;
 }
 
-export function flaggedItemsOf(result: VerificationResult, cap = 30): FlaggedItem[] {
-  const items: FlaggedItem[] = [];
+// Safety cap on how many flagged items enter adjudication. Measured golden
+// volume is ~70–107 flagged entities + 0–4 numerals per report, so 30 (the old
+// value) adjudicated barely a third and let fabrications in later sections
+// escape blocking mode entirely. 160 covers the observed spread with headroom;
+// the caller batches the call so a large set stays parseable (see index.ts).
+export const ADJUDICATION_CAP = 160;
+
+/** Flatten a verification result into the items to adjudicate — NUMERALS FIRST,
+ *  then entities. Numerals are few and high-signal (a wrong figure is the most
+ *  damaging fabrication and is near-clean in telemetry), so numerals-first means
+ *  a safety-cap truncation only ever drops the long, noisy tail of entity flags,
+ *  never a numeral. Order is otherwise section order within each kind. */
+export function flaggedItemsOf(result: VerificationResult, cap = ADJUDICATION_CAP): FlaggedItem[] {
+  const numerals: FlaggedItem[] = [];
+  const entities: FlaggedItem[] = [];
   for (const s of result.sections) {
     for (const n of s.unverified_numerals) {
-      items.push({ section: s.section, kind: "numeral", text: n.raw, context: n.context });
+      numerals.push({ section: s.section, kind: "numeral", text: n.raw, context: n.context });
     }
     for (const e of s.unverified_entities) {
-      items.push({ section: s.section, kind: "entity", text: e, context: "" });
+      entities.push({ section: s.section, kind: "entity", text: e, context: "" });
     }
   }
-  return items.slice(0, cap);
+  return [...numerals, ...entities].slice(0, cap);
+}
+
+/** Split flagged items into fixed-size batches for adjudication. A single call
+ *  over ~90 items is fragile: parseAdjudication is strict all-or-nothing (one
+ *  dropped/duplicated index rejects the WHOLE reply → fail-closed to zero
+ *  fabrications), and that probability climbs with batch size. Smaller batches
+ *  each parse reliably and one unparseable batch no longer discards every
+ *  verdict. */
+export function batchFlagged(items: FlaggedItem[], size = 40): FlaggedItem[][] {
+  const batches: FlaggedItem[][] = [];
+  for (let i = 0; i < items.length; i += size) batches.push(items.slice(i, i + size));
+  return batches;
 }
 
 export function buildAdjudicationPrompt(items: FlaggedItem[]): string {

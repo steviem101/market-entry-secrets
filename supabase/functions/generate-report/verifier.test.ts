@@ -9,9 +9,12 @@ import {
   entityIsSupported,
   verifySections,
   flaggedItemsOf,
+  batchFlagged,
+  ADJUDICATION_CAP,
   buildAdjudicationPrompt,
   parseAdjudication,
   buildRegenerationNote,
+  type FlaggedItem,
 } from "./verifier.ts";
 import { claimsFromKeyMetrics } from "./claims.ts";
 
@@ -164,6 +167,40 @@ test("flaggedItemsOf + buildAdjudicationPrompt + parseAdjudication round-trip", 
     parseAdjudication('[{"index":1,"fabricated":true},{"index":1,"fabricated":false}]', flagged.length),
     null,
   );
+});
+
+test("flaggedItemsOf: numerals lead, then entities; cap drops the entity tail not numerals", () => {
+  // 2 numerals + 3 entities interleaved across sections.
+  const result = {
+    sections: [
+      { section: "s1", numerals_checked: 0, entities_checked: 0,
+        unverified_numerals: [{ raw: "$1", normalized: 1, context: "" }],
+        unverified_entities: ["Alpha Advisory", "Beta Ventures"] },
+      { section: "s2", numerals_checked: 0, entities_checked: 0,
+        unverified_numerals: [{ raw: "$2", normalized: 2, context: "" }],
+        unverified_entities: ["Gamma Group"] },
+    ],
+    totals: { numerals_checked: 0, entities_checked: 0, unverified_numerals: 2, unverified_entities: 3 },
+  };
+  const all = flaggedItemsOf(result);
+  assert.deepEqual(all.map((f) => f.kind), ["numeral", "numeral", "entity", "entity", "entity"]);
+  assert.deepEqual(all.slice(0, 2).map((f) => f.text), ["$1", "$2"]);
+  // A cap smaller than the total keeps BOTH numerals and drops only entity tail.
+  const capped = flaggedItemsOf(result, 3);
+  assert.equal(capped.length, 3);
+  assert.deepEqual(capped.map((f) => f.kind), ["numeral", "numeral", "entity"]);
+  assert.ok(ADJUDICATION_CAP >= 100); // covers measured ~70–110 flags/report
+});
+
+test("batchFlagged: splits into fixed-size batches covering every item", () => {
+  const items: FlaggedItem[] = Array.from({ length: 90 }, (_, i) => ({
+    section: "s", kind: "entity", text: `E${i}`, context: "",
+  }));
+  const batches = batchFlagged(items, 40);
+  assert.deepEqual(batches.map((b) => b.length), [40, 40, 10]);
+  assert.equal(batches.flat().length, 90);
+  assert.deepEqual(batches.flat().map((f) => f.text), items.map((f) => f.text));
+  assert.deepEqual(batchFlagged([], 40), []);
 });
 
 test("buildRegenerationNote: lists only the section's own flagged items", () => {

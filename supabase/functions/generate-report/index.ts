@@ -27,7 +27,7 @@ import { applyRelevanceSelection, SURFACE_SELECT_IMMIGRATION } from "./selectRel
 import { buildAuPresencePrompt, parseAuPresenceResponse, directoryPresenceEvidence, mergePresence, hostOf, buildPresenceReweightNote, buildFootprintNote, presenceMetadata, NONE_SIGNAL, type AuPresenceSignal, type DirectoryRow } from "./auPresence.ts";
 import { renderTemplate } from "./promptTemplate.ts";
 import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse, dedupeClaims, renumberClaims, type ReportClaim } from "./claims.ts";
-import { buildEvidenceCorpus, verifySections, flaggedItemsOf, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
+import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, shouldFallbackToFlash, FLASH_MODEL } from "./sectionModel.ts";
 
@@ -3185,28 +3185,43 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       const corpus = buildEvidenceCorpus(Object.values(variables), knownEntityNames, reportClaims);
       let result = verifySections(sections, sectionOrder, corpus);
       const flagged = flaggedItemsOf(result);
+      // The TRUE flagged volume before the safety cap — measured at ~70–110/report,
+      // so this is what tells an operator whether the cap is biting (it did at 30).
+      const flaggedPrecap = result.totals.unverified_numerals + result.totals.unverified_entities;
 
-      // ONE strong-model adjudication call, only in BLOCKING mode and only when
-      // something was flagged — it separates true fabrications from benign
-      // derivations before a rewrite. In shadow mode the verdict would only
-      // decorate telemetry, so we skip it (no latency, no Anthropic spend, and
-      // the durable completed-save that follows isn't delayed by a 30s call).
+      // Strong-model adjudication, only in BLOCKING mode and only when something
+      // was flagged — it separates true fabrications from benign derivations
+      // before a rewrite. In shadow mode the verdict would only decorate
+      // telemetry, so we skip it (no latency, no Anthropic spend, and the durable
+      // completed-save that follows isn't delayed). Adjudication is BATCHED: one
+      // call over ~90 items would fail-closed to zero on a single dropped index
+      // (parseAdjudication is strict all-or-nothing), so we split into batches,
+      // run them concurrently, and merge — one bad batch no longer voids the rest.
       let adjudication: "not_needed" | "applied" | "unavailable" | "shadow_skipped" = "not_needed";
+      const adjudicationBatches = { total: 0, ok: 0 };
       // Fail-CLOSED on adjudication: only items the judge positively marks
       // fabricated may trigger a rewrite. If the judge is unavailable/unparseable
       // we do NOT treat every heuristic flag as fabricated (that would regenerate
       // good sections from noise) — flags stay advisory.
       let fabricated: FlaggedItem[] = [];
       if (verifierMode === "blocking" && flagged.length > 0) {
-        const raw = await adjudicateWithAnthropic(buildAdjudicationPrompt(flagged));
-        const verdicts = raw ? parseAdjudication(raw, flagged.length) : null;
-        if (verdicts) {
-          adjudication = "applied";
+        const batches = batchFlagged(flagged);
+        adjudicationBatches.total = batches.length;
+        const perBatch = await Promise.all(batches.map(async (batch) => {
+          const raw = await adjudicateWithAnthropic(buildAdjudicationPrompt(batch));
+          const verdicts = raw ? parseAdjudication(raw, batch.length) : null;
+          if (!verdicts) return null; // this batch is unavailable; others still count
           const byIndex = new Map(verdicts.map((v) => [v.index, v.fabricated] as const));
-          fabricated = flagged.filter((_, i) => byIndex.get(i + 1) === true);
-        } else {
-          adjudication = "unavailable";
+          return batch.filter((_, i) => byIndex.get(i + 1) === true);
+        }));
+        for (const r of perBatch) {
+          if (r === null) continue;
+          adjudicationBatches.ok++;
+          fabricated.push(...r);
         }
+        // "applied" if at least one batch was adjudicated; "unavailable" only when
+        // EVERY batch failed (judge down/unparseable) — then no regeneration runs.
+        adjudication = adjudicationBatches.ok > 0 ? "applied" : "unavailable";
       } else if (flagged.length > 0) {
         adjudication = "shadow_skipped";
       }
@@ -3249,6 +3264,18 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             stillUnverified.push(name);
           }
         }
+        // Fabrications can span more sections than the MAX_REGENERATED_SECTIONS
+        // rewrite budget. A section with an adjudicated fabrication we did NOT
+        // attempt to rewrite still contains it, so badge it too — otherwise the
+        // metadata would imply those sections are clean. Additive-only.
+        const notRegenerated = [...new Set(fabricated.map((f) => f.section))].filter(
+          (name) => !failingSections.includes(name),
+        );
+        for (const name of notRegenerated) {
+          if (!sections[name]) continue;
+          sections[name] = { ...sections[name], unverified_facts: true };
+          stillUnverified.push(name);
+        }
       }
 
       // Persisted telemetry is COUNTS-ONLY per section. The raw unverified
@@ -3260,8 +3287,12 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       verification = {
         mode: verifierMode,
         adjudication,
+        adjudication_batches: adjudicationBatches,
         totals: result.totals,
+        // flagged_count = items actually adjudicated (numerals-first, safety-capped);
+        // flagged_precap_count = the true pre-cap volume, so a biting cap is visible.
         flagged_count: flagged.length,
+        flagged_precap_count: flaggedPrecap,
         fabricated_count: fabricated.length,
         regenerated_sections: regenerated,
         unverified_sections: stillUnverified,
@@ -3277,7 +3308,8 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       };
       console.log(
         `Verifier (${verifierMode}): checked ${result.totals.numerals_checked} numerals + ${result.totals.entities_checked} entities; ` +
-        `flagged ${flagged.length}, fabricated ${fabricated.length} (adjudication: ${adjudication})` +
+        `flagged ${flagged.length}/${flaggedPrecap} adjudicated${adjudicationBatches.total ? ` in ${adjudicationBatches.ok}/${adjudicationBatches.total} batches` : ""}, ` +
+        `fabricated ${fabricated.length} (adjudication: ${adjudication})` +
         `${regenerated.length ? `; regenerated [${regenerated.join(", ")}]` : ""}` +
         `${stillUnverified.length ? `; still unverified [${stillUnverified.join(", ")}]` : ""}` +
         // Raw flagged text is safe in server logs (never in report_json) — this
