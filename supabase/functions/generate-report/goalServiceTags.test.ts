@@ -149,6 +149,17 @@ test("countGoalTagHits: counts matched rows carrying a goal's tags across pools"
   assert.equal(hits.events, 1);
 });
 
+test("countGoalTagHits: an expander counts synonym-carrying rows as goal hits (P5-1)", () => {
+  // find_providers → ["Legal","Tax","HR","Accounting","Finance","Immigration"].
+  // A provider tagged only "Legal Services" carries NO raw goal tag, so without the
+  // expander it doesn't count — the telemetry would understate the P5-1 improvement.
+  const pools = { service_providers: [{ name: "X", services: ["Legal Services"] }] };
+  assert.equal(countGoalTagHits(["find_providers"], pools).find_providers, 0);
+  // With an expander that maps "Legal" → ["Legal","Legal Services",...], it counts.
+  const expand = (tags: string[]) => tags.flatMap((t) => (t === "Legal" ? ["Legal", "Legal Services"] : [t]));
+  assert.equal(countGoalTagHits(["find_providers"], pools, expand).find_providers, 1);
+});
+
 test("countGoalTagHits: safe on empty/unknown input", () => {
   assert.deepEqual(countGoalTagHits(null, {}), {});
   assert.deepEqual(countGoalTagHits(["nonexistent_goal"], { x: [{ services: ["Tax"] }] }), {});

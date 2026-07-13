@@ -8,6 +8,7 @@ import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shar
 import { selectKeyPages } from "./keyPageSelect.ts";
 import { buildCompetitorQueries, dedupeCompetitorResults, domainOf, dropNonCompetitors } from "./competitorQueries.ts";
 import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits, goalSelectsGrants } from "./goalServiceTags.ts";
+import { buildServiceTermIndex, expandServiceTags, type ServiceTermRow, type ServiceTermIndex } from "./serviceTerms.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
@@ -1392,15 +1393,40 @@ const regionFilterAndDedupeEvents = <T extends { title?: string; date?: string; 
 // The legacy, deterministic matcher: Postgres array-overlap on sector_tags /
 // services + location ilike, with the weighted scoreRow ranking. This is the
 // per-section backfill AND total fallback for the semantic path below.
-async function searchMatchesOverlap(supabase: any, intake: any) {
+// MES-148 Phase 5 (P5-1): load the service_terms synonym index (flag-gated).
+// Returns null when SERVICE_TERMS_ENABLED is off, the table is empty, or on any
+// error (fail-open → un-expanded tags). Loaded ONCE per report and shared by the
+// matcher and the goal_tag_hits telemetry so both see the same expansion.
+async function loadServiceTermIndex(supabase: any): Promise<ServiceTermIndex | null> {
+  if (!["on", "1", "true"].includes((Deno.env.get("SERVICE_TERMS_ENABLED") || "").trim().toLowerCase())) return null;
+  try {
+    const { data: termRows } = await supabase.from("service_terms").select("slug, label, synonyms");
+    if (!termRows || termRows.length === 0) return null;
+    return buildServiceTermIndex(termRows as ServiceTermRow[]);
+  } catch (e) {
+    console.warn("service_terms load skipped (using un-expanded tags):", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex: ServiceTermIndex | null) {
   const matches: Record<string, any[]> = {};
   const regions = intake.target_regions || [];
   // Expand selected goals into short service tags for better .cs.{} matching.
   // Prefer the stable goal_ids column; fall back to legacy services_needed labels.
-  const serviceTags = expandGoalsToServiceTags({
+  let serviceTags = expandGoalsToServiceTags({
     goal_ids: intake.goal_ids,
     services_needed: intake.services_needed,
   });
+  // MES-148 Phase 5 (P5-1): expand each goal tag into the real directory-cased
+  // synonyms from service_terms, so an exact tag ("Legal") also matches the rows
+  // that use a variant ("Legal Services", "Employment Law"). ADDITIVE superset —
+  // originals are retained, so this can only ADD candidates, never remove.
+  if (serviceTermIndex) {
+    const before = serviceTags.length;
+    serviceTags = expandServiceTags(serviceTags, serviceTermIndex);
+    console.log(`service_terms: expanded ${before} goal tag(s) → ${serviceTags.length} (incl. synonyms)`);
+  }
   // Grants goal → structured boost on the agency surface (grants_available column;
   // no grant tag vocabulary exists in any directory table).
   const wantsGrantsGoal = goalSelectsGrants(intake);
@@ -1889,8 +1915,8 @@ async function fetchLinkedInSignal(supabase: any, intake: any): Promise<string> 
  *  are not in the KB, so they always come from the overlap path. If OPENAI_API_KEY
  *  is unset or the KB call fails, semantic returns {} and the (now bug-fixed)
  *  overlap path carries the whole report. */
-async function searchMatches(supabase: any, intake: any): Promise<Record<string, any[]>> {
-  const { matches: overlap, ctx } = await searchMatchesOverlap(supabase, intake);
+async function searchMatches(supabase: any, intake: any, serviceTermIndex: ServiceTermIndex | null = null): Promise<Record<string, any[]>> {
+  const { matches: overlap, ctx } = await searchMatchesOverlap(supabase, intake, serviceTermIndex);
   let semantic: Record<string, any[]> = {};
   try {
     semantic = await semanticMatches(supabase, intake);
@@ -2363,6 +2389,10 @@ async function generateReportInBackground(
     let auPresenceNote = "";
     let auFootprintNote = "";
     let matchRerankInfo: { applied: boolean; dropped: Record<string, number>; dropped_count: number } | null = null;
+    // MES-148 Phase 5 (P5-1): load the service_terms synonym index once (flag-gated,
+    // null when off). Shared by the fresh-path matcher AND the goal_tag_hits
+    // telemetry (both paths) so the expansion is reflected consistently.
+    const serviceTermIndex = await loadServiceTermIndex(supabase);
 
     if (resumedResearch) {
       console.log(`Resume: research_bundle artifact found for intake ${intakeFormId} — skipping research/matching phase`);
@@ -2391,7 +2421,7 @@ async function generateReportInBackground(
 
     // Wrap DB matching + provider enrichment into a single parallel task
     const matchesAndEnrichTask = async () => {
-      const rawMatches = await searchMatches(supabase, intake);
+      const rawMatches = await searchMatches(supabase, intake, serviceTermIndex);
       // Enrich providers in parallel (was previously sequential after the main block)
       rawMatches.service_providers = await enrichMatchedProviders(
         firecrawlKey,
@@ -3431,7 +3461,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // the goal's service tags. A goal that logs 0 across reports has dead tags
         // (vocabulary drift) — observable here because a unit test cannot assert
         // live-DB vocabulary.
-        goal_tag_hits: countGoalTagHits((intake as any).goal_ids, matches),
+        goal_tag_hits: countGoalTagHits((intake as any).goal_ids, matches, serviceTermIndex ? (t) => expandServiceTags(t, serviceTermIndex) : undefined),
         // Buyer-briefs v1 observability: chips given vs briefed vs unverified, and
         // whether the batched account research came back. A consistently-zero
         // signals count = the tech/hiring extraction isn't finding evidence.
