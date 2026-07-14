@@ -36,10 +36,9 @@ import re
 from pathlib import Path
 
 from transform import (
-    split_sections,
-    md_block_to_html,
-    slugify,
-    unescape_md,
+    parse_case_study,
+    populate_target_sql,
+    read_time_for,
     sql_str,
     table_value,
     normalise_country,
@@ -77,27 +76,10 @@ TARGETS: dict[str, tuple[str, str, int]] = {
 }
 
 
-def section_rows(body_md: str):
-    _, sections = split_sections(body_md)
-    rows = []
-    used: set[str] = set()
-    for order, (heading, section_md) in enumerate(sections, start=1):
-        s_slug = slugify(unescape_md(heading)) or f"section-{order}"
-        base, n = s_slug, 2
-        while s_slug in used:
-            s_slug = f"{base}-{n}"
-            n += 1
-        used.add(s_slug)
-        rows.append((unescape_md(heading), s_slug, order, section_md))
-    return rows
-
-
 def build_block(new_slug: str, existing_slug: str, action: str, row: dict) -> str:
     body_md = row["body_markdown"].replace("\r\n", "\n")
-    intro_md, _ = split_sections(body_md)
-    secs = section_rows(body_md)
-    words = len(re.findall(r"\w+", body_md))
-    read_time = max(2, round(words / 200))
+    intro_md, sections = parse_case_study(body_md)
+    read_time = read_time_for(body_md)
 
     company = COMPANY_MAP.get(new_slug, (None, None))[0] or table_value(body_md, "Company")
     origin = normalise_country(table_value(body_md, "Origin country", "Origin")) \
@@ -107,14 +89,6 @@ def build_block(new_slug: str, existing_slug: str, action: str, row: dict) -> st
     outcome = outcome_value(table_value(body_md, "Outcome"))
 
     tgt = f"(SELECT id FROM public.content_items WHERE slug = {sql_str(existing_slug)} AND content_type = 'case_study')"
-
-    sec_values = ",\n      ".join(
-        f"({sql_str(t)}, {sql_str(s)}, {o})" for t, s, o, _ in secs
-    )
-    body_values = ",\n      ".join(
-        f"({sql_str(s)}, {sql_str(md_block_to_html(md))}, {sql_str(md)}, {o})"
-        for _, s, o, md in secs
-    )
 
     lines = [f"-- {existing_slug}  ({action}; live body was {TARGETS[new_slug][2]} chars) <- {new_slug}",
              "BEGIN;"]
@@ -126,26 +100,7 @@ def build_block(new_slug: str, existing_slug: str, action: str, row: dict) -> st
             "  -- ^ cascades section-level bodies; SET NULLs case_study_sources/quotes.section_id (rows preserved)",
         ]
 
-    lines += [
-        "-- intro (with quick-facts table)",
-        "INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)",
-        f"SELECT {tgt}, {sql_str(md_block_to_html(intro_md))}, {sql_str(intro_md)}, 0, 'case_study';",
-        "-- sections",
-        "INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)",
-        f"SELECT {tgt}, v.title, v.slug, v.ord, true",
-        "FROM (VALUES",
-        f"      {sec_values}",
-        ") AS v(title, slug, ord);",
-        "-- section bodies",
-        "INSERT INTO public.content_bodies (content_id, section_id, body_text, body_markdown, sort_order, content_type)",
-        "SELECT s.content_id, s.id, v.html, v.md, v.ord, 'case_study'",
-        "FROM public.content_sections s",
-        "JOIN (VALUES",
-        f"      {body_values}",
-        f") AS v(slug, html, md, ord) ON v.slug = s.slug AND s.content_id = {tgt};",
-        "-- read time",
-        f"UPDATE public.content_items SET read_time = {read_time} WHERE id = {tgt};",
-    ]
+    lines += populate_target_sql(tgt, intro_md, sections, read_time)
 
     # Fill only blank profile fields — never overwrite curated values.
     profile_sets = []
@@ -180,7 +135,7 @@ def main() -> None:
     for new_slug, (existing_slug, action, live_chars) in TARGETS.items():
         row = rows[new_slug]
         blocks.append(build_block(new_slug, existing_slug, action, row))
-        secs = section_rows(row["body_markdown"].replace("\r\n", "\n"))
+        _, secs = parse_case_study(row["body_markdown"])
         new_chars = len(re.sub(r"<[^>]+>", "", row["body_markdown"]))
         doc_rows.append((existing_slug, action, live_chars, new_chars, len(secs), new_slug))
 

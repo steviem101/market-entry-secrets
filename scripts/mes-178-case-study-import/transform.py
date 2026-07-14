@@ -159,6 +159,12 @@ def sql_str(value: str | None) -> str:
     return "'" + value.replace("'", "''") + "'"
 
 
+def q_lit(value: str | None) -> str:
+    """A text literal for the nullable `question` column. NULL is cast so a
+    VALUES column that is all-NULL still types as text."""
+    return sql_str(value) if value is not None else "NULL::text"
+
+
 def slugify(text: str) -> str:
     text = re.sub(r"&", " and ", text.lower())
     text = re.sub(r"[^a-z0-9]+", "-", text)
@@ -223,14 +229,99 @@ def md_block_to_html(md: str) -> str:
     return "\n".join(out)
 
 
-def split_sections(md: str) -> tuple[str, list[tuple[str, str]]]:
-    """Return (intro_md, [(heading, section_md), ...]) splitting on H1/H2."""
-    parts = re.split(r"^#{1,2} (.+)$", md, flags=re.M)
-    intro = parts[0].strip()
+def top_heading_level(md: str) -> int:
+    """The shallowest heading level present (1 or 2 across this batch).
+    Sections split at this level; one level deeper are subsections."""
+    levels = [len(m.group(1)) for m in re.finditer(r"^(#{1,6}) \S", md, re.M)]
+    return min(levels) if levels else 2
+
+
+def _split_at_level(md: str, level: int) -> tuple[str, list[tuple[str, str]]]:
+    """Split on headings of EXACTLY `level` hashes (a heading of a different
+    depth has a non-space char after `level` hashes, so it never matches).
+    Returns (lead_text, [(heading, body), ...])."""
+    parts = re.split(rf"^#{{{level}}} (.+)$", md, flags=re.M)
+    lead = parts[0].strip()
+    items = [(parts[j].strip(), parts[j + 1].strip()) for j in range(1, len(parts), 2)]
+    return lead, items
+
+
+def parse_case_study(md: str):
+    """Return (intro_md, sections) where each section is
+    (title, slug, order, bodies) and bodies is a list of (question|None, body_md).
+
+    The drafts use a two-level heading hierarchy: some use `##` throughout (flat
+    sections), others use `#` group headers with `##` subsections. Detecting the
+    top level per draft and mapping subsections onto the `question` field (an H3
+    in ContentBodyRenderer) avoids the flattening that left empty section bodies.
+    Sections that resolve to no content are dropped, so no empty body is emitted.
+    """
+    md = md.replace("\r\n", "\n")
+    top = top_heading_level(md)
+    intro_md, raw_sections = _split_at_level(md, top)
     sections = []
-    for j in range(1, len(parts), 2):
-        sections.append((parts[j].strip(), parts[j + 1].strip()))
-    return intro, sections
+    used: set[str] = set()
+    for order, (heading, section_md) in enumerate(raw_sections, start=1):
+        s_slug = slugify(unescape_md(heading)) or f"section-{order}"
+        base, n = s_slug, 2
+        while s_slug in used:
+            s_slug = f"{base}-{n}"
+            n += 1
+        used.add(s_slug)
+
+        lead, subs = _split_at_level(section_md, top + 1)
+        bodies: list[tuple[str | None, str]] = []
+        if lead.strip():
+            bodies.append((None, lead.strip()))
+        for sub_title, sub_md in subs:
+            if sub_md.strip():
+                bodies.append((unescape_md(sub_title), sub_md.strip()))
+        if bodies:
+            sections.append((unescape_md(heading), s_slug, order, bodies))
+    return intro_md, sections
+
+
+def _section_values(sections) -> str:
+    return ",\n      ".join(
+        f"({sql_str(title)}, {sql_str(sslug)}, {order})"
+        for title, sslug, order, _ in sections
+    )
+
+
+def _body_values(sections) -> str:
+    """Flatten section bodies to `(section_slug, question, html, md, order)`
+    rows with a document-global, monotonically increasing sort_order."""
+    rows = []
+    counter = 0
+    for _, sslug, _, bodies in sections:
+        for question, body_md in bodies:
+            counter += 1
+            rows.append(
+                f"({sql_str(sslug)}, {q_lit(question)}, "
+                f"{sql_str(md_block_to_html(body_md))}, {sql_str(body_md)}, {counter})"
+            )
+    return ",\n      ".join(rows)
+
+
+def populate_target_sql(tgt_expr: str, intro_md: str, sections, read_time: int) -> list[str]:
+    """SQL statements that insert intro + sections + bodies against the
+    content_id given by `tgt_expr` (a scalar subquery), plus a read_time update.
+    Shared by the reapply and enrichment paths so they can't drift from the
+    import's structure again."""
+    return [
+        "INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)\n"
+        f"SELECT {tgt_expr}, {sql_str(md_block_to_html(intro_md))}, {sql_str(intro_md)}, 0, 'case_study';",
+        "INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)\n"
+        f"SELECT {tgt_expr}, v.title, v.slug, v.ord, true\nFROM (VALUES\n      {_section_values(sections)}\n) AS v(title, slug, ord);",
+        "INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)\n"
+        "SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'\n"
+        f"FROM public.content_sections s\nJOIN (VALUES\n      {_body_values(sections)}\n) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = {tgt_expr};",
+        f"UPDATE public.content_items SET read_time = {read_time} WHERE id = {tgt_expr};",
+    ]
+
+
+def read_time_for(body_md: str) -> int:
+    return max(2, round(len(re.findall(r"\w+", body_md)) / 200))
 
 
 def table_value(md: str, *labels: str) -> str | None:
@@ -301,15 +392,10 @@ def meta_description(intro_md: str) -> str | None:
     return cut + "…"
 
 
-def build_statement(row: dict) -> str:
-    slug = row["suggested_slug"]
-    body_md = row["body_markdown"].replace("\r\n", "\n")
-    intro_md, sections = split_sections(body_md)
-
+def parse_profile(slug: str, body_md: str):
+    """(company, origin, industry, entry, outcome) from the quick-facts table."""
     company, origin_fallback = COMPANY_MAP.get(slug, (None, None))
     if not company:
-        # Fallback: table "Company" value, stripped of qualifiers like
-        # "(UK)" or ", formerly Lightspeed POS".
         raw_company = table_value(body_md, "Company")
         if raw_company:
             company = re.sub(r"\s*\(.*?\)", "", raw_company)
@@ -320,31 +406,17 @@ def build_statement(row: dict) -> str:
     industry = table_value(body_md, "Sector")
     entry = entry_year(table_value(body_md, "Entry year", "Key period"))
     outcome = outcome_value(table_value(body_md, "Outcome"))
+    return company, origin, industry, entry, outcome
+
+
+def build_statement(row: dict) -> str:
+    """Fresh insert of a new draft — guarded by NOT EXISTS on the slug."""
+    slug = row["suggested_slug"]
+    body_md = row["body_markdown"].replace("\r\n", "\n")
+    intro_md, sections = parse_case_study(body_md)
+    company, origin, industry, entry, outcome = parse_profile(slug, body_md)
     category = CATEGORY_OVERRIDES.get(slug, CAT_TECH_MARKET_ENTRY)
-
-    words = len(re.findall(r"\w+", body_md))
-    read_time = max(2, round(words / 200))
-
-    # sections with de-duplicated slugs
-    section_rows = []
-    used = set()
-    for order, (heading, section_md) in enumerate(sections, start=1):
-        s_slug = slugify(unescape_md(heading)) or f"section-{order}"
-        base = s_slug
-        n = 2
-        while s_slug in used:
-            s_slug = f"{base}-{n}"
-            n += 1
-        used.add(s_slug)
-        section_rows.append((unescape_md(heading), s_slug, order, section_md))
-
-    sec_values = ",\n      ".join(
-        f"({sql_str(t)}, {sql_str(s)}, {o})" for t, s, o, _ in section_rows
-    )
-    body_values = ",\n      ".join(
-        f"({sql_str(s)}, {sql_str(md_block_to_html(md))}, {sql_str(md)}, {o})"
-        for _, s, o, md in section_rows
-    )
+    read_time = read_time_for(body_md)
 
     stmt = f"""-- {slug}
 WITH item AS (
@@ -364,17 +436,17 @@ secs AS (
   INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
   SELECT item.id, v.title, v.slug, v.ord, true
   FROM item, (VALUES
-      {sec_values}
+      {_section_values(sections)}
   ) AS v(title, slug, ord)
   RETURNING id, content_id, slug
 ),
 sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.html, v.md, v.ord, 'case_study'
+  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
   FROM secs s
   JOIN (VALUES
-      {body_values}
-  ) AS v(slug, html, md, ord) ON v.slug = s.slug
+      {_body_values(sections)}
+  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
 )
 INSERT INTO public.content_company_profiles
   (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
@@ -383,6 +455,32 @@ SELECT item.id, {sql_str(company)}, {sql_str(origin)}, 'Australia',
 FROM item
 WHERE {sql_str(company)} IS NOT NULL;"""
     return stmt
+
+
+def build_reapply(row: dict) -> str:
+    """Rebuild sections/bodies for an ALREADY-IMPORTED draft in place, so the
+    corrected subsection structure replaces the flattened one. Scoped to
+    status='draft' + content_type='case_study' so it can never touch a
+    published row. Leaves content_items (except read_time) and the profile
+    untouched. Wrapped in its own transaction."""
+    slug = row["suggested_slug"]
+    body_md = row["body_markdown"].replace("\r\n", "\n")
+    intro_md, sections = parse_case_study(body_md)
+    read_time = read_time_for(body_md)
+    tgt = (
+        f"(SELECT id FROM public.content_items "
+        f"WHERE slug = {sql_str(slug)} AND status = 'draft' AND content_type = 'case_study')"
+    )
+    lines = [
+        f"-- {slug} (reapply corrected structure)",
+        "BEGIN;",
+        f"DELETE FROM public.content_bodies WHERE content_id = {tgt} AND section_id IS NULL;",
+        f"DELETE FROM public.content_sections WHERE content_id = {tgt};",
+        "  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)",
+    ]
+    lines += populate_target_sql(tgt, intro_md, sections, read_time)
+    lines.append("COMMIT;")
+    return "\n".join(lines)
 
 
 def main() -> None:
@@ -394,6 +492,7 @@ def main() -> None:
 
     OUT_DIR.mkdir(exist_ok=True)
     statements: list[str] = []
+    reapply_statements: list[str] = []
     imported: list[dict] = []
     skipped: list[tuple[str, str]] = []
 
@@ -402,8 +501,13 @@ def main() -> None:
         if slug in SKIP_EXISTING:
             skipped.append((slug, SKIP_EXISTING[slug]))
             continue
+        body_md = row["body_markdown"].replace("\r\n", "\n")
         statements.append(build_statement(row))
-        body_md = row["body_markdown"]
+        # Only drafts that use the two-level heading shape (top level == 1)
+        # were flattened by the original import and need re-applying.
+        if top_heading_level(body_md) == 1:
+            reapply_statements.append(build_reapply(row))
+        intro_md, sections = parse_case_study(body_md)
         imported.append(
             {
                 "slug": slug,
@@ -415,12 +519,21 @@ def main() -> None:
                 )
                 or COMPANY_MAP.get(slug, (None, None))[1],
                 "outcome": outcome_value(table_value(body_md, "Outcome")) or "mixed/none",
-                "sections": len(split_sections(body_md)[1]),
+                "sections": len(sections),
                 "notion": row["notion_page_url"],
             }
         )
 
     (OUT_DIR / "import_batch.sql").write_text("\n\n".join(statements) + "\n")
+    reapply_header = (
+        "-- MES-178 W1 fix: re-apply corrected subsection structure to the\n"
+        "-- already-imported drafts that used the two-level heading shape.\n"
+        "-- Scoped to status='draft'; each target is its own transaction.\n\n"
+    )
+    (OUT_DIR / "reapply_sections.sql").write_text(
+        reapply_header + "\n\n".join(reapply_statements) + "\n"
+    )
+    print(f"reapply targets={len(reapply_statements)}")
 
     lines = [
         "# MES-178 case-study import review",

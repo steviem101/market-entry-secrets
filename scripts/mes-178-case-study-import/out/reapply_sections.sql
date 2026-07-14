@@ -1,1782 +1,14 @@
--- how-uniqlo-tested-australia-with-a-pop-up-before-its-flagship-bet
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-uniqlo-tested-australia-with-a-pop-up-before-its-flagship-bet', 'How Uniqlo Tested Australia With a Pop-Up Before Its Flagship Bet', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Uniqlo announced its Australian entry in September 2013 and opened its first store at Melbourne''s Emporium in 2014. Within two years, Australian sales…', 2, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-uniqlo-tested-australia-with-a-pop-up-before-its-flagship-bet')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Uniqlo announced its Australian entry in September 2013 and opened its first store at Melbourne''s Emporium in 2014. Within two years, Australian sales jumped 47% to $174.5 million across just 12 stores — and Australia has since become one of Fast Retailing''s stronger international markets.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Japan</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Apparel retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2014</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Wholly owned subsidiary, flagship-first rollout</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 'Uniqlo announced its Australian entry in September 2013 and opened its first store at Melbourne''s Emporium in 2014. Within two years, Australian sales jumped 47% to \$174.5 million across just 12 stores — and Australia has since become one of Fast Retailing''s stronger international markets.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Japan</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Apparel retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2014</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Wholly owned subsidiary, flagship-first rollout</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('Launch team & sequencing', 'launch-team-and-sequencing', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Uniqlo arrived during the "fast fashion invasion" wave alongside Zara, Topshop and H&amp;M, when premium CBD retail space was opening up to international entrants and Australian consumers were hungry for global brands. Unlike trend-driven rivals, Uniqlo positioned around "LifeWear" — high-quality everyday basics and technical fabrics like HEATTECH and AIRism.</p>', 'Uniqlo arrived during the "fast fashion invasion" wave alongside Zara, Topshop and H&M, when premium CBD retail space was opening up to international entrants and Australian consumers were hungry for global brands. Unlike trend-driven rivals, Uniqlo positioned around "LifeWear" — high-quality everyday basics and technical fabrics like HEATTECH and AIRism.', 1),
-      ('entry-strategy', NULL::text, '<p>Uniqlo followed a flagship-first strategy: large-format stores in premium CBD centres (Emporium Melbourne, then Sydney), building brand authority before spreading to suburban malls. It ran the market as a wholly owned subsidiary, keeping control of pricing, store experience and supply chain, and adapted its range to Southern Hemisphere seasons — a discipline that tripped up other Northern Hemisphere entrants.</p>', 'Uniqlo followed a flagship-first strategy: large-format stores in premium CBD centres (Emporium Melbourne, then Sydney), building brand authority before spreading to suburban malls. It ran the market as a wholly owned subsidiary, keeping control of pricing, store experience and supply chain, and adapted its range to Southern Hemisphere seasons — a discipline that tripped up other Northern Hemisphere entrants.', 2),
-      ('launch-team-and-sequencing', NULL::text, '<ul>
-<li><strong>A named local CEO from announcement day.</strong> The entry was announced on 30 September 2013 with Shoichi Miyasaka — a Fast Retailing group executive — as CEO of Uniqlo Australia, giving the market a accountable local leader a full six months before the first store traded.</li>
-<li><strong>A pop-up before the flagship.</strong> Uniqlo announced a Melbourne CBD pop-up in December 2013, trading on Swanston Street from late January to March 2014, to seed the brand and test the market ahead of the Emporium flagship''s April 2014 opening — low-cost demand validation before the big-format commitment.</li>
-<li><strong>The site did the signalling.</strong> Choosing Emporium Melbourne, a brand-new premium complex in the heart of the CBD, positioned Uniqlo alongside global flagships rather than discount fashion from day one.</li>
-</ul>', '- **A named local CEO from announcement day.** The entry was announced on 30 September 2013 with Shoichi Miyasaka — a Fast Retailing group executive — as CEO of Uniqlo Australia, giving the market a accountable local leader a full six months before the first store traded.
-- **A pop-up before the flagship.** Uniqlo announced a Melbourne CBD pop-up in December 2013, trading on Swanston Street from late January to March 2014, to seed the brand and test the market ahead of the Emporium flagship''s April 2014 opening — low-cost demand validation before the big-format commitment.
-- **The site did the signalling.** Choosing Emporium Melbourne, a brand-new premium complex in the heart of the CBD, positioned Uniqlo alongside global flagships rather than discount fashion from day one.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Differentiated positioning</strong>: basics and fabric technology rather than disposable trend fashion, insulating it from the fast-fashion shakeout that later claimed Topshop</li>
-<li><strong>Flagship-first credibility</strong> in premium centres before broader rollout</li>
-<li><strong>Seasonal localisation</strong> of buying and stock for the Australian calendar</li>
-<li><strong>Measured expansion</strong>: store count grew only as sales density proved out</li>
-</ul>', '- **Differentiated positioning**: basics and fabric technology rather than disposable trend fashion, insulating it from the fast-fashion shakeout that later claimed Topshop
-- **Flagship-first credibility** in premium centres before broader rollout
-- **Seasonal localisation** of buying and stock for the Australian calendar
-- **Measured expansion**: store count grew only as sales density proved out', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>FY2016: sales up 47% to $174.5 million with 12 stores</li>
-<li>FY2019: sales up 25% to $306 million</li>
-<li>Australia now ranks among Fast Retailing''s better-performing international operations</li>
-</ul>', '- FY2016: sales up 47% to \$174.5 million with 12 stores
-- FY2019: sales up 25% to \$306 million
-- Australia now ranks among Fast Retailing''s better-performing international operations', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>Uniqlo shows the value of entering a crowded wave with a distinct proposition and adapting operational details (seasonality, store economics) while protecting the global brand formula.</p>', 'Uniqlo shows the value of entering a crowded wave with a distinct proposition and adapting operational details (seasonality, store economics) while protecting the global brand formula.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Uniqlo', 'Japan', 'Australia',
-       'Apparel retail', '2014', 'successful'
-FROM item
-WHERE 'Uniqlo' IS NOT NULL;
+-- MES-178 W1 fix: re-apply corrected subsection structure to the
+-- already-imported drafts that used the two-level heading shape.
+-- Scoped to status='draft'; each target is its own transaction.
 
--- how-ing-built-australias-biggest-branchless-bank-from-one-savings-product
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-ing-built-australias-biggest-branchless-bank-from-one-savings-product', 'How ING Built Australia''s Biggest Branchless Bank From One Savings Product', 'draft', 'case_study',
-         '0563b826-2123-4627-b912-14f63e9fbfb6'::uuid, 'In 1999, Dutch banking group ING launched ING Direct — Australia''s first branchless, direct-to-consumer bank. Two decades later it counts 2.6 million…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-ing-built-australias-biggest-branchless-bank-from-one-savings-product')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>In 1999, Dutch banking group ING launched ING Direct — Australia''s first branchless, direct-to-consumer bank. Two decades later it counts 2.6 million customers, posted $440 million in net profit in 2019, and became the largest home lender outside the Big Four, with the highest NPS of any major Australian financial institution.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Netherlands</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Banking / financial services</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>1999</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Wholly owned subsidiary, branchless direct model</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 'In 1999, Dutch banking group ING launched ING Direct — Australia''s first branchless, direct-to-consumer bank. Two decades later it counts 2.6 million customers, posted \$440 million in net profit in 2019, and became the largest home lender outside the Big Four, with the highest NPS of any major Australian financial institution.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Netherlands</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Banking / financial services</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>1999</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Wholly owned subsidiary, branchless direct model</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('People & first product', 'people-and-first-product', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Australian banking in the late 1990s was a comfortable oligopoly: branch networks, low deposit rates, high fees. ING saw that a bank with no branches could pass its cost advantage straight to customers — and that Australians would bank by phone and internet if the rate was right.</p>', 'Australian banking in the late 1990s was a comfortable oligopoly: branch networks, low deposit rates, high fees. ING saw that a bank with no branches could pass its cost advantage straight to customers — and that Australians would bank by phone and internet if the rate was right.', 1),
-      ('entry-strategy', NULL::text, '<p>ING Direct launched with a single hero product: the Savings Maximiser, a high-interest online savings account with no fees and no branch requirement. The simple, transparent offer did the marketing — the rate differential versus the Big Four was the acquisition engine. Deposits funded a gradual, disciplined expansion into home loans, and much later into transaction accounts, always keeping the product set narrow.</p>', 'ING Direct launched with a single hero product: the Savings Maximiser, a high-interest online savings account with no fees and no branch requirement. The simple, transparent offer did the marketing — the rate differential versus the Big Four was the acquisition engine. Deposits funded a gradual, disciplined expansion into home loans, and much later into transaction accounts, always keeping the product set narrow.', 2),
-      ('people-and-first-product', NULL::text, '<ul>
-<li><strong>A four-year advance party.</strong> Founding CEO Vaughn Richtor — who had joined ING in London in 1991 and set up its Dublin branch — was sent to Australia in 1995 to establish the banking operations that became ING Direct, four years before launch. He led the bank until January 2006, and returned to run it again from 2012 to 2016.</li>
-<li><strong>One hero product at launch.</strong> The Savings Maximiser, launched in August 1999 as Australia''s first high-interest, fee-free online savings account, was the entire consumer proposition — and Richtor''s flagship from day one.</li>
-<li><strong>Borrowed offices, then a building.</strong> The bank launched out of sister company ING Australia''s offices at 347 Kent Street, Sydney, before leasing floors at 140 Sussex Street in 2001 — growth eventually saw it take the entire 14-storey building.</li>
-<li><strong>Local leadership as the maturity marker.</strong> In November 2020 Melanie Evans became the first female and first Australian CEO of the subsidiary.</li>
-</ul>', '- **A four-year advance party.** Founding CEO Vaughn Richtor — who had joined ING in London in 1991 and set up its Dublin branch — was sent to Australia in 1995 to establish the banking operations that became ING Direct, four years before launch. He led the bank until January 2006, and returned to run it again from 2012 to 2016.
-- **One hero product at launch.** The Savings Maximiser, launched in August 1999 as Australia''s first high-interest, fee-free online savings account, was the entire consumer proposition — and Richtor''s flagship from day one.
-- **Borrowed offices, then a building.** The bank launched out of sister company ING Australia''s offices at 347 Kent Street, Sydney, before leasing floors at 140 Sussex Street in 2001 — growth eventually saw it take the entire 14-storey building.
-- **Local leadership as the maturity marker.** In November 2020 Melanie Evans became the first female and first Australian CEO of the subsidiary.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Structural cost advantage</strong>: no branch network meant permanently better rates, not a promotional gimmick</li>
-<li><strong>One-product wedge</strong>: a single unmistakably better product built trust before cross-selling</li>
-<li><strong>Patience</strong>: two decades of gradual product expansion rather than a full-service assault on the Big Four</li>
-<li><strong>Challenger brand identity</strong> maintained even at scale — "the bank that isn''t like the banks"</li>
-</ul>', '- **Structural cost advantage**: no branch network meant permanently better rates, not a promotional gimmick
-- **One-product wedge**: a single unmistakably better product built trust before cross-selling
-- **Patience**: two decades of gradual product expansion rather than a full-service assault on the Big Four
-- **Challenger brand identity** maintained even at scale — "the bank that isn''t like the banks"', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>Australia''s first branchless direct bank (1999)</li>
-<li>2.6 million customers</li>
-<li>2019 net profit after tax of $440 million</li>
-<li>Largest mortgage lender outside the Big Four</li>
-<li>Highest NPS of any major Australian financial institution</li>
-</ul>', '- Australia''s first branchless direct bank (1999)
-- 2.6 million customers
-- 2019 net profit after tax of \$440 million
-- Largest mortgage lender outside the Big Four
-- Highest NPS of any major Australian financial institution', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>ING shows that in regulated, incumbent-dominated markets, the winning entry is often a single structurally advantaged product — not a full-service replica of the incumbents — scaled patiently over decades.</p>', 'ING shows that in regulated, incumbent-dominated markets, the winning entry is often a single structurally advantaged product — not a full-service replica of the incumbents — scaled patiently over decades.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'ING', 'Netherlands', 'Australia',
-       'Banking / financial services', '1999', 'successful'
-FROM item
-WHERE 'ING' IS NOT NULL;
-
--- how-zara-turned-day-one-sydney-queues-into-a-national-foothold
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-zara-turned-day-one-sydney-queues-into-a-national-foothold', 'How Zara Turned Day-One Sydney Queues Into a National Foothold', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'When Zara opened its first Australian store at Westfield Sydney on Pitt Street Mall on 20 April 2011, an estimated 22,000 shoppers passed through the…', 2, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-zara-turned-day-one-sydney-queues-into-a-national-foothold')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>When Zara opened its first Australian store at Westfield Sydney on Pitt Street Mall on 20 April 2011, an estimated 22,000 shoppers passed through the 1,400sqm, three-level store on day one. Inditex''s Australian arm grew revenue to $311.8 million by FY2019 — one of the most successful launches of the fast-fashion wave.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Spain</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Fast fashion retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2011</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Local launch partnership (Inditex-controlled)</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 'When Zara opened its first Australian store at Westfield Sydney on Pitt Street Mall on 20 April 2011, an estimated 22,000 shoppers passed through the 1,400sqm, three-level store on day one. Inditex''s Australian arm grew revenue to \$311.8 million by FY2019 — one of the most successful launches of the fast-fashion wave.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Spain</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Fast fashion retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2011</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Local launch partnership (Inditex-controlled)</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('Launch mechanics', 'launch-mechanics', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Zara was among the first of the global fast-fashion giants to land in Australia, entering while local mid-market apparel chains were slow-moving and department stores dominated. Pent-up demand was extreme — Australians already knew the brand from overseas travel.</p>', 'Zara was among the first of the global fast-fashion giants to land in Australia, entering while local mid-market apparel chains were slow-moving and department stores dominated. Pent-up demand was extreme — Australians already knew the brand from overseas travel.', 1),
-      ('entry-strategy', NULL::text, '<p>Zara launched with a high-impact flagship in Australia''s premier retail strip, partnering with local retail interests for the launch while Inditex retained control of the operating model. Crucially, it imported the machine that makes Zara work globally: twice-weekly stock drops flown in from Spain, keeping ranges scarce, fresh and full-price. Expansion followed the flagship playbook into premium centres in Melbourne, Brisbane, Adelaide and Perth.</p>', 'Zara launched with a high-impact flagship in Australia''s premier retail strip, partnering with local retail interests for the launch while Inditex retained control of the operating model. Crucially, it imported the machine that makes Zara work globally: twice-weekly stock drops flown in from Spain, keeping ranges scarce, fresh and full-price. Expansion followed the flagship playbook into premium centres in Melbourne, Brisbane, Adelaide and Perth.', 2),
-      ('launch-mechanics', NULL::text, '<ul>
-<li><strong>A launch agency turned opening day into an event.</strong> Australian agency TORSTAR ran the launch of what it called the first high-street retailer into Australia — the Pitt Street opening "literally stopped traffic" as 22,000 shoppers came through the doors.</li>
-<li><strong>Security-managed queues became the story.</strong> Security staff were needed to control the crowds at the 77 Pitt Street store — imagery that ran nationally and did the brand''s advertising for it.</li>
-<li><strong>Adjacent formats followed the beachhead.</strong> Zara Home arrived years later — first at Melbourne''s Highpoint, then Pitt Street Mall — with national online shipping switched on to coincide with the Sydney store, extending the flagship playbook into homewares.</li>
-</ul>', '- **A launch agency turned opening day into an event.** Australian agency TORSTAR ran the launch of what it called the first high-street retailer into Australia — the Pitt Street opening "literally stopped traffic" as 22,000 shoppers came through the doors.
-- **Security-managed queues became the story.** Security staff were needed to control the crowds at the 77 Pitt Street store — imagery that ran nationally and did the brand''s advertising for it.
-- **Adjacent formats followed the beachhead.** Zara Home arrived years later — first at Melbourne''s Highpoint, then Pitt Street Mall — with national online shipping switched on to coincide with the Sydney store, extending the flagship playbook into homewares.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Scarcity-driven supply chain</strong>: twice-weekly deliveries meant fresh stock and minimal markdowns, unlike locally warehoused competitors</li>
-<li><strong>Pent-up brand demand</strong> converted into a launch-day event that generated national media coverage for free</li>
-<li><strong>Premium-location discipline</strong>: fewer, larger stores in the best centres rather than a broad footprint</li>
-<li><strong>Global model, local calendar</strong>: range adjusted to Southern Hemisphere seasons</li>
-</ul>', '- **Scarcity-driven supply chain**: twice-weekly deliveries meant fresh stock and minimal markdowns, unlike locally warehoused competitors
-- **Pent-up brand demand** converted into a launch-day event that generated national media coverage for free
-- **Premium-location discipline**: fewer, larger stores in the best centres rather than a broad footprint
-- **Global model, local calendar**: range adjusted to Southern Hemisphere seasons', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>22,000 shoppers through the doors on day one</li>
-<li>FY2014: revenue $141 million, up 32%</li>
-<li>FY2017: 18 stores and ~1,700 staff</li>
-<li>FY2019: revenue $311.8 million, up 10.5%</li>
-</ul>', '- 22,000 shoppers through the doors on day one
-- FY2014: revenue \$141 million, up 32%
-- FY2017: 18 stores and \~1,700 staff
-- FY2019: revenue \$311.8 million, up 10.5%', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>Zara''s Australian entry shows how existing global brand awareness can be converted into launch momentum — and that a supply-chain advantage, not just brand, is what sustains a premium-priced fast-fashion position at distance.</p>', 'Zara''s Australian entry shows how existing global brand awareness can be converted into launch momentum — and that a supply-chain advantage, not just brand, is what sustains a premium-priced fast-fashion position at distance.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Zara', 'Spain', 'Australia',
-       'Fast fashion retail', '2011', 'successful'
-FROM item
-WHERE 'Zara' IS NOT NULL;
-
--- how-aldi-cracked-australias-grocery-duopoly-with-a-no-frills-playbook
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-aldi-cracked-australias-grocery-duopoly-with-a-no-frills-playbook', 'How Aldi Cracked Australia''s Grocery Duopoly With a No-Frills Playbook', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'When Aldi opened its first Australian store in Sydney in 2001, analysts doubted a no-frills German discounter could crack a grocery duopoly. Two decades…', 2, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-aldi-cracked-australias-grocery-duopoly-with-a-no-frills-playbook')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>When Aldi opened its first Australian store in Sydney in 2001, analysts doubted a no-frills German discounter could crack a grocery duopoly. Two decades later, Aldi operates roughly 540+ stores, holds around 11–12% of the grocery market, and posted $13.94 billion in FY2025 sales — permanently resetting how Australians shop for groceries.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Germany</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Grocery retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2001</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Organic greenfield rollout, self-funded</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 'When Aldi opened its first Australian store in Sydney in 2001, analysts doubted a no-frills German discounter could crack a grocery duopoly. Two decades later, Aldi operates roughly 540+ stores, holds around 11–12% of the grocery market, and posted \$13.94 billion in FY2025 sales — permanently resetting how Australians shop for groceries.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Germany</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Grocery retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2001</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Organic greenfield rollout, self-funded</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('Launch & footprint', 'launch-and-footprint', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Aldi arrived as the Australian grocery landscape was consolidating: Franklins was collapsing and Bi-Lo was in decline, leaving a vacuum at the discount end of the market that Coles and Woolworths were happy to vacate. Aldi moved straight into that gap.</p>', 'Aldi arrived as the Australian grocery landscape was consolidating: Franklins was collapsing and Bi-Lo was in decline, leaving a vacuum at the discount end of the market that Coles and Woolworths were happy to vacate. Aldi moved straight into that gap.', 1),
-      ('entry-strategy', NULL::text, '<p>Aldi began on the east coast and expanded deliberately — store by store, funded from its own balance sheet rather than debt or franchising. It kept its proven limited-range formula largely intact: ~1,500 SKUs versus ~25,000 in a full-line supermarket, around 90% private label, small-format stores with minimal labour and quarter-sized footprints.</p>', 'Aldi began on the east coast and expanded deliberately — store by store, funded from its own balance sheet rather than debt or franchising. It kept its proven limited-range formula largely intact: \~1,500 SKUs versus \~25,000 in a full-line supermarket, around 90% private label, small-format stores with minimal labour and quarter-sized footprints.', 2),
-      ('launch-and-footprint', NULL::text, '<ul>
-<li><strong>Two stores on Australia Day weekend.</strong> Aldi opened its first two Australian stores simultaneously at Bankstown Airport and Marrickville in Sydney on 25 January 2001, with queues stretching around the buildings and through the car parks. By the end of 2001 it had 22 stores across NSW.</li>
-<li><strong>A western Sydney nerve centre.</strong> The national head office sits at Minchinbury in Sydney''s west, co-located with its first distribution region — Aldi runs Australia through regional distribution centres rather than a CBD corporate tower.</li>
-<li><strong>Scale today.</strong> More than 570 stores and around 7,600 employees nationally, still without presence in Tasmania or the Northern Territory.</li>
-</ul>', '- **Two stores on Australia Day weekend.** Aldi opened its first two Australian stores simultaneously at Bankstown Airport and Marrickville in Sydney on 25 January 2001, with queues stretching around the buildings and through the car parks. By the end of 2001 it had 22 stores across NSW.
-- **A western Sydney nerve centre.** The national head office sits at Minchinbury in Sydney''s west, co-located with its first distribution region — Aldi runs Australia through regional distribution centres rather than a CBD corporate tower.
-- **Scale today.** More than 570 stores and around 7,600 employees nationally, still without presence in Tasmania or the Northern Territory.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Timing</strong>: entered as Franklins and Bi-Lo exited, inheriting the value-shopper segment</li>
-<li><strong>Format discipline</strong>: never chased the majors on range; competed only on price and quality</li>
-<li><strong>Patient capital</strong>: private ownership allowed a slow, profitable rollout over 20+ years rather than a land grab</li>
-<li><strong>Localisation where it mattered</strong>: heavily Australian-sourced products under private labels, adapting buying without abandoning the model</li>
-</ul>', '- **Timing**: entered as Franklins and Bi-Lo exited, inheriting the value-shopper segment
-- **Format discipline**: never chased the majors on range; competed only on price and quality
-- **Patient capital**: private ownership allowed a slow, profitable rollout over 20+ years rather than a land grab
-- **Localisation where it mattered**: heavily Australian-sourced products under private labels, adapting buying without abandoning the model', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>~540 stores by August 2019, still no presence in Tasmania or the Northern Territory</li>
-<li>~11–12.6% national grocery market share</li>
-<li>FY2025 sales of $13.94 billion, up 4.8%</li>
-<li>Profit fell ~20% in the 2026 supermarket price war — evidence that even the disruptor now shapes, and pays for, industry-wide price competition</li>
-</ul>', '- \~540 stores by August 2019, still no presence in Tasmania or the Northern Territory
-- \~11–12.6% national grocery market share
-- FY2025 sales of \$13.94 billion, up 4.8%
-- Profit fell \~20% in the 2026 supermarket price war — evidence that even the disruptor now shapes, and pays for, industry-wide price competition', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>Aldi shows that a foreign format can win in Australia without heavy localisation — if the entrant picks its moment, funds a patient rollout, and refuses to drift toward incumbents'' playbooks.</p>', 'Aldi shows that a foreign format can win in Australia without heavy localisation — if the entrant picks its moment, funds a patient rollout, and refuses to drift toward incumbents'' playbooks.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Aldi', 'Germany', 'Australia',
-       'Grocery retail', '2001', 'successful'
-FROM item
-WHERE 'Aldi' IS NOT NULL;
-
--- how-costco-pre-sold-australia-on-the-membership-warehouse-model
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-costco-pre-sold-australia-on-the-membership-warehouse-model', 'How Costco Pre-Sold Australia on the Membership Warehouse Model', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Costco opened its first Australian warehouse at Melbourne''s Docklands on 17 August 2009 — a single site testing whether Australians would pay an annual fee…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-costco-pre-sold-australia-on-the-membership-warehouse-model')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Costco opened its first Australian warehouse at Melbourne''s Docklands on 17 August 2009 — a single site testing whether Australians would pay an annual fee just to shop. Sixteen years on, 15 warehouses generate $12.6 billion in annual sales, and the Australian arm paid a ~$300 million dividend back to its US parent.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>United States</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Membership warehouse retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2009</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Wholly owned subsidiary, organic rollout</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 'Costco opened its first Australian warehouse at Melbourne''s Docklands on 17 August 2009 — a single site testing whether Australians would pay an annual fee just to shop. Sixteen years on, 15 warehouses generate \$12.6 billion in annual sales, and the Australian arm paid a \~\$300 million dividend back to its US parent.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>United States</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Membership warehouse retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2009</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Wholly owned subsidiary, organic rollout</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('People & first customers', 'people-and-first-customers', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>The paid-membership warehouse model was unknown in Australia, and sceptics argued Australians would never pay to enter a shop. Costco bet that its global playbook — extreme bulk value, a treasure-hunt product mix, and a loyal fee-paying member base — would translate.</p>', 'The paid-membership warehouse model was unknown in Australia, and sceptics argued Australians would never pay to enter a shop. Costco bet that its global playbook — extreme bulk value, a treasure-hunt product mix, and a loyal fee-paying member base — would translate.', 1),
-      ('entry-strategy', NULL::text, '<p>Costco entered with a single proof-of-concept warehouse in Melbourne, followed by Auburn (Sydney) and Canberra in 2011 once the model was validated. Expansion has been deliberately slow — 15 warehouses in 16 years — constrained by the large-format sites the model requires and Costco''s insistence on owning its economics rather than rushing scale. The core model was left untouched: annual membership, limited SKUs in bulk, and famously thin margins where the membership fee is effectively the profit line.</p>', 'Costco entered with a single proof-of-concept warehouse in Melbourne, followed by Auburn (Sydney) and Canberra in 2011 once the model was validated. Expansion has been deliberately slow — 15 warehouses in 16 years — constrained by the large-format sites the model requires and Costco''s insistence on owning its economics rather than rushing scale. The core model was left untouched: annual membership, limited SKUs in bulk, and famously thin margins where the membership fee is effectively the profit line.', 2),
-      ('people-and-first-customers', NULL::text, '<ul>
-<li><strong>A returning local ran the entry.</strong> Managing director Patrick Noone was Melbourne-born, started in retail with Woolworths supermarkets in 1978, moved to Canada in 1985 and helped launch the Price Club membership-warehouse concept there before its 1993 merger with Costco. He came home to open the first Australian warehouse and led the country business until retiring after 33 years with the company.</li>
-<li><strong>Members signed up sight unseen.</strong> Before Docklands opened, memberships "in the thousands" had been sold at $60 for individuals and $55 for businesses — Australians paying to shop at a store they had never entered. Noone''s read: "Most have been to the US or the UK so they know of Costco. They just get it."</li>
-<li><strong>Site selection as strategy.</strong> Docklands was chosen for freeway and CityLink access: "We''re not a suburban shopping centre, we''re a regional drawcard," Noone said — the catchment logic that still governs Costco''s 15-site network.</li>
-</ul>', '- **A returning local ran the entry.** Managing director Patrick Noone was Melbourne-born, started in retail with Woolworths supermarkets in 1978, moved to Canada in 1985 and helped launch the Price Club membership-warehouse concept there before its 1993 merger with Costco. He came home to open the first Australian warehouse and led the country business until retiring after 33 years with the company.
-- **Members signed up sight unseen.** Before Docklands opened, memberships "in the thousands" had been sold at \$60 for individuals and \$55 for businesses — Australians paying to shop at a store they had never entered. Noone''s read: "Most have been to the US or the UK so they know of Costco. They just get it."
-- **Site selection as strategy.** Docklands was chosen for freeway and CityLink access: "We''re not a suburban shopping centre, we''re a regional drawcard," Noone said — the catchment logic that still governs Costco''s 15-site network.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Model integrity</strong>: the membership fee, Kirkland private label, and bulk-value proposition were imported intact</li>
-<li><strong>Destination economics</strong>: each warehouse draws from a huge catchment, so 15 sites cover much of the population</li>
-<li><strong>Membership loyalty</strong>: prepaid membership creates switching costs and industry-leading renewal behaviour</li>
-<li><strong>Price authority</strong>: uncontested positioning on bulk value that neither Coles, Woolworths nor Aldi directly contest</li>
-</ul>', '- **Model integrity**: the membership fee, Kirkland private label, and bulk-value proposition were imported intact
-- **Destination economics**: each warehouse draws from a huge catchment, so 15 sites cover much of the population
-- **Membership loyalty**: prepaid membership creates switching costs and industry-leading renewal behaviour
-- **Price authority**: uncontested positioning on bulk value that neither Coles, Woolworths nor Aldi directly contest', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>15 warehouses nationally</li>
-<li>$12.6 billion in sales in the year to August 2025</li>
-<li>~$300 million dividend paid to the US parent — a marker of a mature, cash-generative subsidiary</li>
-<li>The Australian entry has been studied academically (QUT) as a successful format transplant</li>
-</ul>', '- 15 warehouses nationally
-- \$12.6 billion in sales in the year to August 2025
-- \~\$300 million dividend paid to the US parent — a marker of a mature, cash-generative subsidiary
-- The Australian entry has been studied academically (QUT) as a successful format transplant', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>Costco proves a genuinely novel retail format can be exported to Australia without dilution — provided the entrant accepts a slow, capital-heavy rollout and lets unit economics, not store count, define success.</p>', 'Costco proves a genuinely novel retail format can be exported to Australia without dilution — provided the entrant accepts a slow, capital-heavy rollout and lets unit economics, not store count, define success.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Costco', 'United States', 'Australia',
-       'Membership warehouse retail', '2009', 'successful'
-FROM item
-WHERE 'Costco' IS NOT NULL;
-
--- how-byd-rode-a-local-distributor-into-australias-top-car-brands
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-byd-rode-a-local-distributor-into-australias-top-car-brands', 'How BYD Rode a Local Distributor Into Australia''s Top Car Brands', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Chinese EV giant BYD entered Australia not with a wholly owned subsidiary but through an exclusive local distributor, EVDirect. The bet paid off: BYD''s…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-byd-rode-a-local-distributor-into-australias-top-car-brands')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Chinese EV giant BYD entered Australia not with a wholly owned subsidiary but through an exclusive local distributor, EVDirect. The bet paid off: BYD''s battery-electric sales jumped 58% to 21,174 vehicles in January–November 2025, and the brand is now targeting a top-three position in the Australian market in 2026.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>China</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Automotive / electric vehicles</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2022 (Atto 3 launch)</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Exclusive local distributor, later direct control</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 'Chinese EV giant BYD entered Australia not with a wholly owned subsidiary but through an exclusive local distributor, EVDirect. The bet paid off: BYD''s battery-electric sales jumped 58% to 21,174 vehicles in January–November 2025, and the brand is now targeting a top-three position in the Australian market in 2026.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>China</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Automotive / electric vehicles</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2022 (Atto 3 launch)</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Exclusive local distributor, later direct control</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('People & proving ground', 'people-and-proving-ground', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Australian buyers had little awareness of Chinese car brands, and EV adoption was just beginning to accelerate. Rather than build a local organisation from scratch, BYD appointed EVDirect — led by Australian entrepreneur Luke Todd — as its exclusive distributor, borrowing local credibility, regulatory knowledge and retail relationships.</p>', 'Australian buyers had little awareness of Chinese car brands, and EV adoption was just beginning to accelerate. Rather than build a local organisation from scratch, BYD appointed EVDirect — led by Australian entrepreneur Luke Todd — as its exclusive distributor, borrowing local credibility, regulatory knowledge and retail relationships.', 1),
-      ('entry-strategy', NULL::text, '<p>EVDirect launched the Atto 3 as an affordable, well-specified EV squarely aimed at the gap below Tesla''s price points, distributing through a dealer joint venture (EVDealer Group) with listed dealer giant Eagers Automotive. As volumes scaled, BYD followed the classic distributor-to-direct playbook: in July 2025 it took direct control of the Australian operation, with EVDirect retaining 20% of the EVDealer Group JV alongside Eagers (80%).</p>', 'EVDirect launched the Atto 3 as an affordable, well-specified EV squarely aimed at the gap below Tesla''s price points, distributing through a dealer joint venture (EVDealer Group) with listed dealer giant Eagers Automotive. As volumes scaled, BYD followed the classic distributor-to-direct playbook: in July 2025 it took direct control of the Australian operation, with EVDirect retaining 20% of the EVDealer Group JV alongside Eagers (80%).', 2),
-      ('people-and-proving-ground', NULL::text, '<ul>
-<li><strong>A founder with transport in the blood.</strong> EVDirect chairman and managing director Luke Todd came from a family transport business background and fronted the entire entry — from opening pre-sales in July 2021 through the Atto 3 launch — publicly targeting the number-one automotive brand position in Australia by 2027.</li>
-<li><strong>Australia as BYD''s global test bed.</strong> BYD''s assembly line builds a car for the Australian market every 52 seconds, and the AFR reports the company treats Australia as a key proving ground for its push into advanced Western markets.</li>
-<li><strong>Top-10 status reached.</strong> By August 2025 BYD was Australia''s sixth-best-selling car brand, delivering close to 5,000 vehicles in a single month — before the full factory-backed structure had even bedded in.</li>
-</ul>', '- **A founder with transport in the blood.** EVDirect chairman and managing director Luke Todd came from a family transport business background and fronted the entire entry — from opening pre-sales in July 2021 through the Atto 3 launch — publicly targeting the number-one automotive brand position in Australia by 2027.
-- **Australia as BYD''s global test bed.** BYD''s assembly line builds a car for the Australian market every 52 seconds, and the AFR reports the company treats Australia as a key proving ground for its push into advanced Western markets.
-- **Top-10 status reached.** By August 2025 BYD was Australia''s sixth-best-selling car brand, delivering close to 5,000 vehicles in a single month — before the full factory-backed structure had even bedded in.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Borrowed local credibility</strong>: a local distributor and a major dealer group de-risked an unknown Chinese brand for Australian buyers</li>
-<li><strong>Price-to-value disruption</strong>: undercut Tesla while offering strong specification</li>
-<li><strong>Speed to market</strong>: distribution partnership put cars on the road years faster than a greenfield subsidiary</li>
-<li><strong>Staged control</strong>: distributor for entry, direct ownership once scale justified it</li>
-</ul>', '- **Borrowed local credibility**: a local distributor and a major dealer group de-risked an unknown Chinese brand for Australian buyers
-- **Price-to-value disruption**: undercut Tesla while offering strong specification
-- **Speed to market**: distribution partnership put cars on the road years faster than a greenfield subsidiary
-- **Staged control**: distributor for entry, direct ownership once scale justified it', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>BEV sales up 58% to 21,174 vehicles (Jan–Nov 2025), plus strong plug-in hybrid volume</li>
-<li>BYD took direct control of distribution in July 2025</li>
-<li>Targeting a top-three overall sales position in Australia in 2026</li>
-</ul>', '- BEV sales up 58% to 21,174 vehicles (Jan–Nov 2025), plus strong plug-in hybrid volume
-- BYD took direct control of distribution in July 2025
-- Targeting a top-three overall sales position in Australia in 2026', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>BYD''s entry is the textbook case for the distributor-first model: use a local partner to buy speed and trust, structure the deal so you can take direct control later, and let product value do the brand-building.</p>', 'BYD''s entry is the textbook case for the distributor-first model: use a local partner to buy speed and trust, structure the deal so you can take direct control later, and let product value do the brand-building.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'BYD', 'China', 'Australia',
-       'Automotive / electric vehicles', '2022', 'successful'
-FROM item
-WHERE 'BYD' IS NOT NULL;
-
--- how-purplebricks-flat-fee-failed-australias-no-sale-no-fee-culture
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-purplebricks-flat-fee-failed-australias-no-sale-no-fee-culture', 'How Purplebricks'' Flat Fee Failed Australia''s No-Sale-No-Fee Culture', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'UK online estate agency Purplebricks launched in Australia in September 2016 promising to disrupt real estate commissions with a flat fee. Less than three…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-purplebricks-flat-fee-failed-australias-no-sale-no-fee-culture')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>UK online estate agency Purplebricks launched in Australia in September 2016 promising to disrupt real estate commissions with a flat fee. Less than three years later, in May 2019, it quit the market after an $18 million half-year loss — having been forced to nearly double its flat fee from $4,500 to $8,800 along the way.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>United Kingdom</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Real estate / proptech</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2016</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Wholly owned subsidiary, national launch</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure — exit May 2019</td>
-</tr>
-</table>', 'UK online estate agency Purplebricks launched in Australia in September 2016 promising to disrupt real estate commissions with a flat fee. Less than three years later, in May 2019, it quit the market after an \$18 million half-year loss — having been forced to nearly double its flat fee from \$4,500 to \$8,800 along the way.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>United Kingdom</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Real estate / proptech</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2016</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Wholly owned subsidiary, national launch</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure — exit May 2019</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('People & unravelling', 'people-and-unravelling', 3),
-      ('Failure factors', 'failure-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Purplebricks'' UK model — salaried "local property experts," a flat fee paid regardless of sale outcome, and heavy TV advertising — had made it a stock-market darling, with the parent peaking at a £1.3 billion valuation. Australia, with commissions around 2–2.5%, looked like an obvious next market.</p>', 'Purplebricks'' UK model — salaried "local property experts," a flat fee paid regardless of sale outcome, and heavy TV advertising — had made it a stock-market darling, with the parent peaking at a £1.3 billion valuation. Australia, with commissions around 2–2.5%, looked like an obvious next market.', 1),
-      ('entry-strategy', NULL::text, '<p>Purplebricks launched nationally with saturation advertising attacking agent commissions. But the model transplanted poorly: the pay-anyway flat fee clashed with Australia''s no-sale-no-fee culture, and its salaried-agent structure collided with a commission-driven local industry — while its low fee couldn''t fund the vendor-paid marketing campaigns (portals, photography, auctions) that Australian sellers expect.</p>', 'Purplebricks launched nationally with saturation advertising attacking agent commissions. But the model transplanted poorly: the pay-anyway flat fee clashed with Australia''s no-sale-no-fee culture, and its salaried-agent structure collided with a commission-driven local industry — while its low fee couldn''t fund the vendor-paid marketing campaigns (portals, photography, auctions) that Australian sellers expect.', 2),
-      ('people-and-unravelling', NULL::text, '<ul>
-<li><strong>105 agents at an average $5,300 fee.</strong> Purplebricks recruited around 105 Australian "local property experts" charging an average $5,300 fixed fee — but as the housing market slowed, salaried agents struggled, and the model was reworked into a split fee ($4,400 upfront, $4,400 at settlement) to stem departures. Sixteen agents left in the final months alone.</li>
-<li><strong>Leadership churn at both levels.</strong> Local CEO Ryan Dinsdale stepped down in early 2019, replaced by Neil Tavender just months before the exit; in the same week Australia was abandoned, global founder-CEO Michael Bruce was fired by chairman Paul Pindar, who admitted the company had "expanded too quickly".</li>
-<li><strong>The competition celebrated openly.</strong> "Crisis over," said one rival operator on exit day — the entrant had united the fragmented local industry against it without converting consumers.</li>
-</ul>', '- **105 agents at an average \$5,300 fee.** Purplebricks recruited around 105 Australian "local property experts" charging an average \$5,300 fixed fee — but as the housing market slowed, salaried agents struggled, and the model was reworked into a split fee (\$4,400 upfront, \$4,400 at settlement) to stem departures. Sixteen agents left in the final months alone.
-- **Leadership churn at both levels.** Local CEO Ryan Dinsdale stepped down in early 2019, replaced by Neil Tavender just months before the exit; in the same week Australia was abandoned, global founder-CEO Michael Bruce was fired by chairman Paul Pindar, who admitted the company had "expanded too quickly".
-- **The competition celebrated openly.** "Crisis over," said one rival operator on exit day — the entrant had united the fragmented local industry against it without converting consumers.', 3),
-      ('failure-factors', NULL::text, '<ul>
-<li><strong>Model-market mismatch</strong>: Australians resisted paying a fee even if the home didn''t sell — the inverse of local no-sale-no-fee norms</li>
-<li><strong>Broken unit economics</strong>: the fee nearly doubled ($4,500 → $8,800), destroying the disruption story without reaching profitability</li>
-<li><strong>Agent recruitment and churn</strong>: top local agents wouldn''t swap commission upside for a salary</li>
-<li><strong>Simultaneous multi-market expansion</strong>: Australia and the US were launched in parallel, stretching management and capital as UK growth stalled</li>
-</ul>', '- **Model-market mismatch**: Australians resisted paying a fee even if the home didn''t sell — the inverse of local no-sale-no-fee norms
-- **Broken unit economics**: the fee nearly doubled (\$4,500 → \$8,800), destroying the disruption story without reaching profitability
-- **Agent recruitment and churn**: top local agents wouldn''t swap commission upside for a salary
-- **Simultaneous multi-market expansion**: Australia and the US were launched in parallel, stretching management and capital as UK growth stalled', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>Launched September 2016; exited May 2019 — under three years</li>
-<li>$18 million loss in its final half-year</li>
-<li>Flat fee rose from $4,500 to $8,800</li>
-<li>UK parent later sold for a nominal £1 after its £1.3 billion peak</li>
-</ul>', '- Launched September 2016; exited May 2019 — under three years
-- \$18 million loss in its final half-year
-- Flat fee rose from \$4,500 to \$8,800
-- UK parent later sold for a nominal £1 after its £1.3 billion peak', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>Pricing models are cultural, not just mathematical. Purplebricks exported a fee structure that violated local norms and had no economic headroom to adapt — disruptors must validate willingness-to-pay mechanics, not just the headline saving.</p>', 'Pricing models are cultural, not just mathematical. Purplebricks exported a fee structure that violated local norms and had no economic headroom to adapt — disruptors must validate willingness-to-pay mechanics, not just the headline saving.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Purplebricks', 'United Kingdom', 'Australia',
-       'Real estate / proptech', '2016', 'unsuccessful'
-FROM item
-WHERE 'Purplebricks' IS NOT NULL;
-
--- how-krispy-kreme-over-expanded-its-way-into-administration-in-australia
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-krispy-kreme-over-expanded-its-way-into-administration-in-australia', 'How Krispy Kreme Over-Expanded Its Way Into Administration in Australia', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Krispy Kreme opened its first store outside North America in Penrith, Sydney on 19 June 2003, to scenes of cars queued down the street and interstate…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-krispy-kreme-over-expanded-its-way-into-administration-in-australia')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Krispy Kreme opened its first store outside North America in Penrith, Sydney on 19 June 2003, to scenes of cars queued down the street and interstate travellers flying doughnuts home. Seven years and 40+ stores later, the Australian business collapsed into voluntary administration on 29 October 2010 — a cautionary tale of scaling a destination treat into an everyday commodity.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>United States</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>QSR / food retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2003</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Franchise — first international market</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure via over-expansion — administration 2010, later stabilised smaller</td>
-</tr>
-</table>', 'Krispy Kreme opened its first store outside North America in Penrith, Sydney on 19 June 2003, to scenes of cars queued down the street and interstate travellers flying doughnuts home. Seven years and 40+ stores later, the Australian business collapsed into voluntary administration on 29 October 2010 — a cautionary tale of scaling a destination treat into an everyday commodity.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>United States</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>QSR / food retail</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2003</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Franchise — first international market</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure via over-expansion — administration 2010, later stabilised smaller</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('People & the balance sheet', 'people-and-the-balance-sheet', 3),
-      ('Failure factors', 'failure-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Australia was Krispy Kreme''s first market outside North America, and the launch was a phenomenon: the Penrith store became a destination, with customers travelling hundreds of kilometres and Melburnians carrying boxes home on flights. Scarcity was doing the marketing.</p>', 'Australia was Krispy Kreme''s first market outside North America, and the launch was a phenomenon: the Penrith store became a destination, with customers travelling hundreds of kilometres and Melburnians carrying boxes home on flights. Scarcity was doing the marketing.', 1),
-      ('entry-strategy', NULL::text, '<p>Management read the launch frenzy as mass-market demand and expanded aggressively — more than 40 stores by 2010, plus wholesale distribution through petrol stations and convenience channels. Ubiquity destroyed the scarcity that made the brand special, while an expensive store network and long distribution runs pushed up fixed costs.</p>', 'Management read the launch frenzy as mass-market demand and expanded aggressively — more than 40 stores by 2010, plus wholesale distribution through petrol stations and convenience channels. Ubiquity destroyed the scarcity that made the brand special, while an expensive store network and long distribution runs pushed up fixed costs.', 2),
-      ('people-and-the-balance-sheet', NULL::text, '<ul>
-<li><strong>A lawyer-turned-doughnut-baron ran the entry.</strong> Krispy Kreme Australia was led by chief executive (later chairman) John McGuigan, who went from "an office and no employees" to a Huntingwood factory with 120 staff within a year of launch — and personally negotiated store sites against sceptical landlords.</li>
-<li><strong>The debt had a famous name on it.</strong> At administration the company owed $15 million to John Kinghorn, the RAMS Home Loans co-founder and a major investor — the business had posted a $12 million loss in 2008 and recovered almost nothing since.</li>
-<li><strong>Administration was surgical, not terminal.</strong> Administrators from Smith Hancock were appointed with secured-creditor support; the company emerged in December 2010 with nearly half its underperforming stores closed and, per McGuigan, "much more financially" sound.</li>
-</ul>', '- **A lawyer-turned-doughnut-baron ran the entry.** Krispy Kreme Australia was led by chief executive (later chairman) John McGuigan, who went from "an office and no employees" to a Huntingwood factory with 120 staff within a year of launch — and personally negotiated store sites against sceptical landlords.
-- **The debt had a famous name on it.** At administration the company owed \$15 million to John Kinghorn, the RAMS Home Loans co-founder and a major investor — the business had posted a \$12 million loss in 2008 and recovered almost nothing since.
-- **Administration was surgical, not terminal.** Administrators from Smith Hancock were appointed with secured-creditor support; the company emerged in December 2010 with nearly half its underperforming stores closed and, per McGuigan, "much more financially" sound.', 3),
-      ('failure-factors', NULL::text, '<ul>
-<li><strong>Misreading novelty as durable demand</strong>: launch queues were an event, not a run-rate</li>
-<li><strong>Ubiquity killed the brand</strong>: once doughnuts were in every servo, the destination pull — and pricing power — evaporated</li>
-<li><strong>Cost structure</strong>: pricey retail rents and high distribution costs across Australia''s geography outran falling sales</li>
-<li><strong>Specialty vs volume confusion</strong>: analysts noted it needed to operate as a specialty retailer, but opened ~50 stores in a few years</li>
-</ul>', '- **Misreading novelty as durable demand**: launch queues were an event, not a run-rate
-- **Ubiquity killed the brand**: once doughnuts were in every servo, the destination pull — and pricing power — evaporated
-- **Cost structure**: pricey retail rents and high distribution costs across Australia''s geography outran falling sales
-- **Specialty vs volume confusion**: analysts noted it needed to operate as a specialty retailer, but opened \~50 stores in a few years', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>First store: Penrith, 19 June 2003 — Krispy Kreme''s first outside North America</li>
-<li>40+ stores by 2010</li>
-<li>Voluntary administration 29 October 2010; multiple store closures that November; SA assets sold to Peregrine Group</li>
-<li>Exited administration December 2010 and rebuilt profitably with a smaller footprint, resuming expansion from 2014</li>
-</ul>', '- First store: Penrith, 19 June 2003 — Krispy Kreme''s first outside North America
-- 40+ stores by 2010
-- Voluntary administration 29 October 2010; multiple store closures that November; SA assets sold to Peregrine Group
-- Exited administration December 2010 and rebuilt profitably with a smaller footprint, resuming expansion from 2014', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>Krispy Kreme''s Australian arc is the over-expansion classic: treat launch euphoria as a marketing asset to be rationed, not a demand curve to be extrapolated. The post-administration recovery shows the model worked — at a third of the footprint.</p>', 'Krispy Kreme''s Australian arc is the over-expansion classic: treat launch euphoria as a marketing asset to be rationed, not a demand curve to be extrapolated. The post-administration recovery shows the model worked — at a third of the footprint.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Krispy Kreme', 'United States', 'Australia',
-       'QSR / food retail', '2003', 'unsuccessful'
-FROM item
-WHERE 'Krispy Kreme' IS NOT NULL;
-
--- how-guzman-y-gomez-filled-australias-mexican-fast-food-gap-and-hit-the-asx
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-guzman-y-gomez-filled-australias-mexican-fast-food-gap-and-hit-the-asx', 'How Guzman y Gomez Filled Australia''s Mexican Fast-Food Gap and Hit the ASX', 'draft', 'case_study',
-         'e1b408ed-bf02-4b29-b63b-a9a417616513'::uuid, 'Founded in Sydney in 2006 by New Yorkers Steven Marks and Robert Hazan, Guzman y Gomez built Mexican fast food into an Australian institution — culminating…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-guzman-y-gomez-filled-australias-mexican-fast-food-gap-and-hit-the-asx')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Founded in Sydney in 2006 by New Yorkers Steven Marks and Robert Hazan, Guzman y Gomez built Mexican fast food into an Australian institution — culminating in the ASX''s biggest IPO since 2021. Shares priced at A$22 surged 36% to close at A$30 on debut day (20 June 2024), valuing GYG at $3 billion.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Australia (Sydney; US-born founders)</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>QSR / fast food</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2006 (ASX IPO 2024)</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Domestic launch, company + franchise stores</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success (with US expansion caveats)</td>
-</tr>
-</table>', 'Founded in Sydney in 2006 by New Yorkers Steven Marks and Robert Hazan, Guzman y Gomez built Mexican fast food into an Australian institution — culminating in the ASX''s biggest IPO since 2021. Shares priced at A\$22 surged 36% to close at A\$30 on debut day (20 June 2024), valuing GYG at \$3 billion.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Australia (Sydney; US-born founders)</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>QSR / fast food</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2006 (ASX IPO 2024)</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Domestic launch, company + franchise stores</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success (with US expansion caveats)</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Founding & GTM strategy', 'founding-and-gtm-strategy', 2),
-      ('Founders & early build', 'founders-and-early-build', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Marks, a former hedge-fund trader, and Hazan saw a gap in Australia: no credible Mexican fast-food player, and a QSR market dominated by legacy burger and chicken chains. Rather than import a US franchise, they built a local brand from scratch — named after childhood friends — and positioned it against "fake fast food" with fresh-made, clean-ingredient positioning.</p>', 'Marks, a former hedge-fund trader, and Hazan saw a gap in Australia: no credible Mexican fast-food player, and a QSR market dominated by legacy burger and chicken chains. Rather than import a US franchise, they built a local brand from scratch — named after childhood friends — and positioned it against "fake fast food" with fresh-made, clean-ingredient positioning.', 1),
-      ('founding-and-gtm-strategy', NULL::text, '<p>GYG opened its first restaurant in Newtown, Sydney, and grew deliberately: prove the menu and unit economics in company-owned stores, then scale through franchising, drive-thrus and 24/7 formats. The brand invested heavily in speed of service and breakfast to lift restaurant productivity toward McDonald''s-style economics — while marketing itself as the anti-establishment challenger.</p>', 'GYG opened its first restaurant in Newtown, Sydney, and grew deliberately: prove the menu and unit economics in company-owned stores, then scale through franchising, drive-thrus and 24/7 formats. The brand invested heavily in speed of service and breakfast to lift restaurant productivity toward McDonald''s-style economics — while marketing itself as the anti-establishment challenger.', 2),
-      ('founders-and-early-build', NULL::text, '<ul>
-<li><strong>Two New Yorkers homesick for Mexican food.</strong> Steven Marks (ex-hedge fund) and Robert Hazan (fashion wholesale and retail) were childhood best friends from New York who both landed in Sydney and missed the fresh Mexican flavours of home — the brand name honours two other childhood friends, Guzman and Gomez.</li>
-<li><strong>King Street, Newtown, 2006 — still trading.</strong> The first restaurant opened in Newtown, with Bondi Junction and Kings Cross following within a year, 12 stores by April 2012 and 100 Australian stores within 12 years.</li>
-<li><strong>Authenticity was hired, speed was engineered.</strong> Marks recruited chefs from Mexico to set the food standard, while the founders designed a bespoke operating platform and sticker system — among the fastest fresh-food operating systems in QSR — and grew many early team members into today''s franchisees.</li>
-<li><strong>International came early.</strong> Singapore opened at the end of 2013 and Tokyo in April 2015 — years before the US attempt — giving GYG offshore reps long before its IPO.</li>
-</ul>', '- **Two New Yorkers homesick for Mexican food.** Steven Marks (ex-hedge fund) and Robert Hazan (fashion wholesale and retail) were childhood best friends from New York who both landed in Sydney and missed the fresh Mexican flavours of home — the brand name honours two other childhood friends, Guzman and Gomez.
-- **King Street, Newtown, 2006 — still trading.** The first restaurant opened in Newtown, with Bondi Junction and Kings Cross following within a year, 12 stores by April 2012 and 100 Australian stores within 12 years.
-- **Authenticity was hired, speed was engineered.** Marks recruited chefs from Mexico to set the food standard, while the founders designed a bespoke operating platform and sticker system — among the fastest fresh-food operating systems in QSR — and grew many early team members into today''s franchisees.
-- **International came early.** Singapore opened at the end of 2013 and Tokyo in April 2015 — years before the US attempt — giving GYG offshore reps long before its IPO.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Category white space</strong>: first scaled Mexican QSR brand in Australia, with no incumbent to displace</li>
-<li><strong>Unit-economics obsession</strong>: drive-thru formats and daypart expansion drove sales per store to industry-leading levels</li>
-<li><strong>Brand authenticity</strong>: challenger positioning against processed fast food resonated with younger consumers</li>
-<li><strong>Patient scaling</strong>: 18 years from first store to IPO</li>
-</ul>', '- **Category white space**: first scaled Mexican QSR brand in Australia, with no incumbent to displace
-- **Unit-economics obsession**: drive-thru formats and daypart expansion drove sales per store to industry-leading levels
-- **Brand authenticity**: challenger positioning against processed fast food resonated with younger consumers
-- **Patient scaling**: 18 years from first store to IPO', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>IPO 20 June 2024 at A$22; closed day one at A$30 (+36%), $3 billion valuation — biggest ASX IPO since 2021</li>
-<li>Caveat for the case study: by May 2026 GYG''s US expansion was struggling, with store closures and a shareholder class action within six months — a reminder that home-market dominance doesn''t guarantee export success</li>
-</ul>', '- IPO 20 June 2024 at A\$22; closed day one at A\$30 (+36%), \$3 billion valuation — biggest ASX IPO since 2021
-- Caveat for the case study: by May 2026 GYG''s US expansion was struggling, with store closures and a shareholder class action within six months — a reminder that home-market dominance doesn''t guarantee export success', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>GYG is the inverse of most failed inbound QSR stories: it won by building a local brand for a genuine category gap and refining unit economics for nearly two decades before seeking public capital.</p>', 'GYG is the inverse of most failed inbound QSR stories: it won by building a local brand for a genuine category gap and refining unit economics for nearly two decades before seeking public capital.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Guzman y Gomez', 'Australia', 'Australia',
-       'QSR / fast food', '2006', 'successful'
-FROM item
-WHERE 'Guzman y Gomez' IS NOT NULL;
-
--- how-xinja-grew-deposits-it-couldnt-afford-and-handed-back-its-banking-licence
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-xinja-grew-deposits-it-couldnt-afford-and-handed-back-its-banking-licence', 'How Xinja Grew Deposits It Couldn''t Afford and Handed Back Its Banking Licence', 'draft', 'case_study',
-         '0563b826-2123-4627-b912-14f63e9fbfb6'::uuid, 'Xinja was only the second Australian neobank to win a full banking licence (2019) — and the first to hand it back, exiting banking in December 2020. It had…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-xinja-grew-deposits-it-couldnt-afford-and-handed-back-its-banking-licence')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Xinja was only the second Australian neobank to win a full banking licence (2019) — and the first to hand it back, exiting banking in December 2020. It had gathered $457 million in deposits paying market-leading interest, with no lending product generating a cent of income, while betting its survival on a $430 million Dubai investment that never arrived.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Australia</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Banking / neobank fintech</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2017 (full ADI licence 2019)</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Domestic greenfield neobank</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure — returned banking licence December 2020</td>
-</tr>
-</table>', 'Xinja was only the second Australian neobank to win a full banking licence (2019) — and the first to hand it back, exiting banking in December 2020. It had gathered \$457 million in deposits paying market-leading interest, with no lending product generating a cent of income, while betting its survival on a \$430 million Dubai investment that never arrived.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Australia</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Banking / neobank fintech</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2017 (full ADI licence 2019)</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Domestic greenfield neobank</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure — returned banking licence December 2020</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('What happened', 'what-happened', 2),
-      ('People & the runaway launch', 'people-and-the-runaway-launch', 3),
-      ('Failure factors', 'failure-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>The 2018 Banking Royal Commission created a regulatory window for challenger banks, and APRA began granting new licences for the first time in years. Xinja positioned itself as the rebellious, customer-first neobank, raising via crowdfunding and venture rounds and winning its full authorised deposit-taking institution (ADI) licence in 2019.</p>', 'The 2018 Banking Royal Commission created a regulatory window for challenger banks, and APRA began granting new licences for the first time in years. Xinja positioned itself as the rebellious, customer-first neobank, raising via crowdfunding and venture rounds and winning its full authorised deposit-taking institution (ADI) licence in 2019.', 1),
-      ('what-happened', NULL::text, '<p>Xinja launched its "Stash" savings account with one of the market''s highest interest rates — before it had any lending products to earn revenue against those deposits. Deposits flooded in ($457 million), each dollar adding to the interest bill of a bank with no income. The plan to bridge the gap — a $430 million injection from Dubai-based World Investments — never materialised, and a $9 million emergency raise couldn''t close the hole. In December 2020 Xinja returned its licence and gave back all deposits; in October 2025 APRA disqualified two former directors over the collapse.</p>', 'Xinja launched its "Stash" savings account with one of the market''s highest interest rates — before it had any lending products to earn revenue against those deposits. Deposits flooded in (\$457 million), each dollar adding to the interest bill of a bank with no income. The plan to bridge the gap — a \$430 million injection from Dubai-based World Investments — never materialised, and a \$9 million emergency raise couldn''t close the hole. In December 2020 Xinja returned its licence and gave back all deposits; in October 2025 APRA disqualified two former directors over the collapse.', 2),
-      ('people-and-the-runaway-launch', NULL::text, '<ul>
-<li><strong>Founded and fronted by Eric Wilson.</strong> Wilson founded Xinja in 2017, took it through crowdfunding raises in 2018, a restricted licence in December 2018 and the full ADI licence on 9 September 2019, launching accounts on 15 January 2020 under its own BSB (775-775).</li>
-<li><strong>Growth arrived 19 days into the plan.</strong> The 2.5% Stash account hit $100 million in deposits within 19 days of launch — "we expected to do about $120 million in deposits in a year," Wilson said — and quickly passed $300 million from 25,000 customers, each dollar deepening the losses.</li>
-<li><strong>The retreat was public and painful.</strong> Xinja cut the rate to 1.8% and closed the account to new customers after the RBA''s March 2020 rate cuts — and when the end came, APRA''s investigation into investor "side agreements" led to the first disqualifications under the Financial Accountability Regime: Wilson for eight years, non-executive director Craig Swanger for ten.</li>
-</ul>', '- **Founded and fronted by Eric Wilson.** Wilson founded Xinja in 2017, took it through crowdfunding raises in 2018, a restricted licence in December 2018 and the full ADI licence on 9 September 2019, launching accounts on 15 January 2020 under its own BSB (775-775).
-- **Growth arrived 19 days into the plan.** The 2.5% Stash account hit \$100 million in deposits within 19 days of launch — "we expected to do about \$120 million in deposits in a year," Wilson said — and quickly passed \$300 million from 25,000 customers, each dollar deepening the losses.
-- **The retreat was public and painful.** Xinja cut the rate to 1.8% and closed the account to new customers after the RBA''s March 2020 rate cuts — and when the end came, APRA''s investigation into investor "side agreements" led to the first disqualifications under the Financial Accountability Regime: Wilson for eight years, non-executive director Craig Swanger for ten.', 3),
-      ('failure-factors', NULL::text, '<ul>
-<li><strong>Balance-sheet sequencing backwards</strong>: paying top-of-market interest on deposits with no lending revenue is a business model that loses money faster as it grows</li>
-<li><strong>Funding dependency on a single speculative investor</strong>: the Dubai lifeline was announced before it was secured, and never arrived</li>
-<li><strong>Growth marketing ahead of unit economics</strong>: customer acquisition succeeded brilliantly at delivering losses</li>
-<li><strong>Regulatory capital pressure</strong>: APRA''s requirements left no runway once funding fell through</li>
-</ul>', '- **Balance-sheet sequencing backwards**: paying top-of-market interest on deposits with no lending revenue is a business model that loses money faster as it grows
-- **Funding dependency on a single speculative investor**: the Dubai lifeline was announced before it was secured, and never arrived
-- **Growth marketing ahead of unit economics**: customer acquisition succeeded brilliantly at delivering losses
-- **Regulatory capital pressure**: APRA''s requirements left no runway once funding fell through', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>Second Australian neobank to receive a full ADI licence (2019)</li>
-<li>$457 million in deposits; zero lending income</li>
-<li>Failed $430 million World Investments (Dubai) deal; $9 million emergency raise</li>
-<li>Licence returned December 2020; two directors disqualified by APRA in October 2025</li>
-</ul>', '- Second Australian neobank to receive a full ADI licence (2019)
-- \$457 million in deposits; zero lending income
-- Failed \$430 million World Investments (Dubai) deal; \$9 million emergency raise
-- Licence returned December 2020; two directors disqualified by APRA in October 2025', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>Xinja is the definitive sequencing failure: in banking, revenue products must precede (or accompany) deposit growth. Growth that amplifies losses is not traction — and a market entry strategy that depends on one unsecured funding promise is a countdown clock.</p>', 'Xinja is the definitive sequencing failure: in banking, revenue products must precede (or accompany) deposit growth. Growth that amplifies losses is not traction — and a market entry strategy that depends on one unsecured funding promise is a countdown clock.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Xinja', 'Australia', 'Australia',
-       'Banking / neobank fintech', '2017', 'unsuccessful'
-FROM item
-WHERE 'Xinja' IS NOT NULL;
-
--- how-koala-won-australian-mattresses-with-four-hour-delivery-and-a-120-night-trial
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-koala-won-australian-mattresses-with-four-hour-delivery-and-a-120-night-trial', 'How Koala Won Australian Mattresses With Four-Hour Delivery and a 120-Night Trial', 'draft', 'case_study',
-         'e1b408ed-bf02-4b29-b63b-a9a417616513'::uuid, 'Koala launched in November 2015 with less than $2,000 of founders'' capital — and sold $1 million of mattresses in its first 80 days. Founders Dany Milham…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-koala-won-australian-mattresses-with-four-hour-delivery-and-a-120-night-trial')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Koala launched in November 2015 with less than $2,000 of founders'' capital — and sold $1 million of mattresses in its first 80 days. Founders Dany Milham and Mitch Taylor turned over $13 million in year one, built revenue to ~$197.9 million by FY2025, and took the company to a ~$300 million ASX IPO in March 2026.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Australia</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>D2C e-commerce / furniture</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2015</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Domestic direct-to-consumer launch</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success — ASX IPO March 2026</td>
-</tr>
-</table>', 'Koala launched in November 2015 with less than \$2,000 of founders'' capital — and sold \$1 million of mattresses in its first 80 days. Founders Dany Milham and Mitch Taylor turned over \$13 million in year one, built revenue to \~\$197.9 million by FY2025, and took the company to a \~\$300 million ASX IPO in March 2026.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Australia</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>D2C e-commerce / furniture</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2015</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Domestic direct-to-consumer launch</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success — ASX IPO March 2026</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Founding & GTM strategy', 'founding-and-gtm-strategy', 2),
-      ('Founders & brand mechanics', 'founders-and-brand-mechanics', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Mattress retail in 2015 Australia meant showrooms, commissioned salespeople and opaque pricing. The US bed-in-a-box wave (Casper) had proven the D2C model overseas but no one had localised it. Milham and Taylor bet that a single excellent mattress, sold online with risk reversal, could take the category.</p>', 'Mattress retail in 2015 Australia meant showrooms, commissioned salespeople and opaque pricing. The US bed-in-a-box wave (Casper) had proven the D2C model overseas but no one had localised it. Milham and Taylor bet that a single excellent mattress, sold online with risk reversal, could take the category.', 1),
-      ('founding-and-gtm-strategy', NULL::text, '<p>Koala launched with one product and two killer offers: a 120-night free trial and four-hour delivery in Sydney — attacking the two biggest objections to buying a mattress online (can''t try it; can''t wait for it). Social-first marketing, an unmistakably Australian brand (koala adoption with every purchase), and aggressive customer-experience benchmarks did the rest. The range later expanded across furniture, and the company exported the playbook to Japan, the US and UK.</p>', 'Koala launched with one product and two killer offers: a 120-night free trial and four-hour delivery in Sydney — attacking the two biggest objections to buying a mattress online (can''t try it; can''t wait for it). Social-first marketing, an unmistakably Australian brand (koala adoption with every purchase), and aggressive customer-experience benchmarks did the rest. The range later expanded across furniture, and the company exported the playbook to Japan, the US and UK.', 2),
-      ('founders-and-brand-mechanics', NULL::text, '<ul>
-<li><strong>Childhood mates from Byron Bay.</strong> Dany Milham and Mitch Taylor founded Koala in November 2015 and ran everything themselves in the early days, headquartering the company in Sydney.</li>
-<li><strong>The pitch was an attack on markup.</strong> Milham''s founding argument: mattresses cost a few hundred dollars to make but carried up to 1,000% markup through showroom overheads and distribution — Koala''s four-hour delivery in Sydney, Melbourne and Brisbane offered the product at a fraction of the price of mattresses that took weeks to arrive.</li>
-<li><strong>The koala wasn''t just a logo.</strong> Every purchase funded a koala adoption — first with Port Macquarie''s Koala Hospital, later expanding into a global WWF partnership — hard-wiring the conservation story into the unit economics of every sale.</li>
-</ul>', '- **Childhood mates from Byron Bay.** Dany Milham and Mitch Taylor founded Koala in November 2015 and ran everything themselves in the early days, headquartering the company in Sydney.
-- **The pitch was an attack on markup.** Milham''s founding argument: mattresses cost a few hundred dollars to make but carried up to 1,000% markup through showroom overheads and distribution — Koala''s four-hour delivery in Sydney, Melbourne and Brisbane offered the product at a fraction of the price of mattresses that took weeks to arrive.
-- **The koala wasn''t just a logo.** Every purchase funded a koala adoption — first with Port Macquarie''s Koala Hospital, later expanding into a global WWF partnership — hard-wiring the conservation story into the unit economics of every sale.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Risk reversal as the core offer</strong>: the 120-night trial made the online purchase safer than in-store</li>
-<li><strong>Logistics as marketing</strong>: four-hour delivery was a headline-grabbing operational feat competitors couldn''t match</li>
-<li><strong>Brand nationalism done well</strong>: authentic Australian identity plus conservation partnerships built fast affinity</li>
-<li><strong>Extreme capital efficiency</strong>: sub-$2,000 founding capital to $13 million year-one turnover</li>
-</ul>', '- **Risk reversal as the core offer**: the 120-night trial made the online purchase safer than in-store
-- **Logistics as marketing**: four-hour delivery was a headline-grabbing operational feat competitors couldn''t match
-- **Brand nationalism done well**: authentic Australian identity plus conservation partnerships built fast affinity
-- **Extreme capital efficiency**: sub-\$2,000 founding capital to \$13 million year-one turnover', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>$1 million in sales in the first 80 days; $13 million turnover in year one</li>
-<li>FY2025 revenue ~$197.9 million</li>
-<li>March 2026 ASX IPO at ~$300 million; founders'' stakes worth $63.3 million and $54 million</li>
-<li>International expansion into Japan, the US and UK</li>
-</ul>', '- \$1 million in sales in the first 80 days; \$13 million turnover in year one
-- FY2025 revenue \~\$197.9 million
-- March 2026 ASX IPO at \~\$300 million; founders'' stakes worth \$63.3 million and \$54 million
-- International expansion into Japan, the US and UK', 5),
-      ('lessons-for-market-entrants', NULL::text, '<p>Koala shows how a proven overseas model can be won locally by whoever localises it hardest: the trial, the delivery promise and the brand were all engineered specifically for Australian buyers.</p>', 'Koala shows how a proven overseas model can be won locally by whoever localises it hardest: the trial, the delivery promise and the brand were all engineered specifically for Australian buyers.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Koala', 'Australia', 'Australia',
-       'D2C e-commerce / furniture', '2015', 'successful'
-FROM item
-WHERE 'Koala' IS NOT NULL;
-
--- how-spotify-converted-australias-music-pirates-into-paying-subscribers
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-spotify-converted-australias-music-pirates-into-paying-subscribers', 'How Spotify Converted Australia''s Music Pirates Into Paying Subscribers', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'When Spotify launched in Australia on 22 May 2012, it arrived more than six months later than planned — a delay it chose deliberately, refusing to go live…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-spotify-converted-australias-music-pirates-into-paying-subscribers')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>When Spotify launched in Australia on 22 May 2012, it arrived more than six months later than planned — a delay it chose deliberately, refusing to go live until it had signed deals with every major record label and could offer its full catalogue of more than 16 million tracks from day one. The licensing-first entry, paired with a freemium model positioned squarely against piracy, made Australia one of Spotify''s strongest markets.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Sweden</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Music streaming</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2012</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Direct digital launch, delayed until full local licensing was secured</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success — category leader; Australia became a top per-capita market</td>
-</tr>
-</table>', 'When Spotify launched in Australia on 22 May 2012, it arrived more than six months later than planned — a delay it chose deliberately, refusing to go live until it had signed deals with every major record label and could offer its full catalogue of more than 16 million tracks from day one. The licensing-first entry, paired with a freemium model positioned squarely against piracy, made Australia one of Spotify''s strongest markets.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Sweden</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Music streaming</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2012</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Direct digital launch, delayed until full local licensing was secured</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success — category leader; Australia became a top per-capita market</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('Team & local footprint', 'team-and-local-footprint', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>By 2012 the Australian recorded music market had endured a decade of piracy-driven decline, and legal digital music largely meant iTunes downloads. A handful of sub-scale local streaming services (Songl, JB Hi-Fi Now, MOG, Rdio) had partial catalogues and little traction. Spotify, founded in Sweden and live since 2008, had grown to roughly 10 million users across 16 countries and was expanding market by market — with Australia among its first launches beyond Europe and the US.</p>', 'By 2012 the Australian recorded music market had endured a decade of piracy-driven decline, and legal digital music largely meant iTunes downloads. A handful of sub-scale local streaming services (Songl, JB Hi-Fi Now, MOG, Rdio) had partial catalogues and little traction. Spotify, founded in Sweden and live since 2008, had grown to roughly 10 million users across 16 countries and was expanding market by market — with Australia among its first launches beyond Europe and the US.', 1),
-      ('entry-strategy', NULL::text, '<ul>
-<li><strong>Licensing before launch.</strong> Spotify delayed its Australian launch by more than six months to complete negotiations with all the major record labels, arriving with a complete catalogue rather than the partial libraries that hobbled local rivals.</li>
-<li><strong>Freemium as an anti-piracy wedge.</strong> A free, ad-supported tier (30-day unlimited trial, then 10 hours of streaming per month) was pitched as the legal alternative to piracy — competing with ''free'' rather than asking pirates to jump straight to paying.</li>
-<li><strong>Premium conversion funnel.</strong> Offline listening, mobile access and ad-free playback at $11.99 a month gave free users a clear upgrade path.</li>
-<li><strong>Local partners and social distribution.</strong> Spotify launched with local marketing partners and deep Facebook integration, letting playlist sharing do the customer acquisition.</li>
-<li><strong>Bring the industry along.</strong> Per-stream royalties plus a share of subscription revenue gave labels a stake in Spotify''s growth — even as some local artists publicly questioned payout rates at launch.</li>
-</ul>', '- **Licensing before launch.** Spotify delayed its Australian launch by more than six months to complete negotiations with all the major record labels, arriving with a complete catalogue rather than the partial libraries that hobbled local rivals.
-- **Freemium as an anti-piracy wedge.** A free, ad-supported tier (30-day unlimited trial, then 10 hours of streaming per month) was pitched as the legal alternative to piracy — competing with ''free'' rather than asking pirates to jump straight to paying.
-- **Premium conversion funnel.** Offline listening, mobile access and ad-free playback at \$11.99 a month gave free users a clear upgrade path.
-- **Local partners and social distribution.** Spotify launched with local marketing partners and deep Facebook integration, letting playlist sharing do the customer acquisition.
-- **Bring the industry along.** Per-stream royalties plus a share of subscription revenue gave labels a stake in Spotify''s growth — even as some local artists publicly questioned payout rates at launch.', 2),
-      ('team-and-local-footprint', NULL::text, '<ul>
-<li><strong>Hire a proven local launcher first.</strong> Spotify''s first Australian employee was Kate Vale, hired in November 2011 as Managing Director ANZ — six months before launch. Vale had been Google''s first in-region hire in 2002, building its ANZ sales operation from her lounge room to the country''s largest digital ad business, and then ran YouTube ANZ from 2009 — a launch-from-zero résumé matched exactly to the job.</li>
-<li><strong>Small local team, global product.</strong> Vale built the Sydney-based team from scratch, running label relations, advertising sales and launch marketing locally (with Renee Chambers on the launch marketing side) while product and engineering stayed global. Sydney grew into Spotify''s largest Australian office and a springboard for its Asian expansion.</li>
-<li><strong>Continuity through scale-up.</strong> Vale led ANZ for five years until her 2017 departure, by which time Australia was one of Spotify''s strongest per-capita markets and a favoured test market for new features.</li>
-</ul>', '- **Hire a proven local launcher first.** Spotify''s first Australian employee was Kate Vale, hired in November 2011 as Managing Director ANZ — six months before launch. Vale had been Google''s first in-region hire in 2002, building its ANZ sales operation from her lounge room to the country''s largest digital ad business, and then ran YouTube ANZ from 2009 — a launch-from-zero résumé matched exactly to the job.
-- **Small local team, global product.** Vale built the Sydney-based team from scratch, running label relations, advertising sales and launch marketing locally (with Renee Chambers on the launch marketing side) while product and engineering stayed global. Sydney grew into Spotify''s largest Australian office and a springboard for its Asian expansion.
-- **Continuity through scale-up.** Vale led ANZ for five years until her 2017 departure, by which time Australia was one of Spotify''s strongest per-capita markets and a favoured test market for new features.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Complete catalogue at launch</strong>: in licensed-content businesses the catalogue is the product; Spotify never gave users a reason to look elsewhere</li>
-<li><strong>The free tier competed with piracy, not with premium</strong>: usage caps and feature gaps kept the upgrade incentive intact</li>
-<li><strong>Social features as organic growth</strong>: shared playlists and Facebook integration made adoption viral among exactly the young, piracy-prone demographic that mattered</li>
-<li><strong>First scaled mover</strong>: no local rival had the capital or label relationships to match the offer</li>
-</ul>', '- **Complete catalogue at launch**: in licensed-content businesses the catalogue is the product; Spotify never gave users a reason to look elsewhere
-- **The free tier competed with piracy, not with premium**: usage caps and feature gaps kept the upgrade incentive intact
-- **Social features as organic growth**: shared playlists and Facebook integration made adoption viral among exactly the young, piracy-prone demographic that mattered
-- **First scaled mover**: no local rival had the capital or label relationships to match the offer', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>16+ million licensed tracks available at Australian launch</li>
-<li>Roughly 10 million global users across 16 countries at time of entry</li>
-<li>Free tier: 30-day unlimited trial, then 10 hours per month; Premium at $11.99 per month</li>
-<li>Australia became one of Spotify''s strongest per-capita markets and a favoured test market for new features</li>
-<li>Streaming led the Australian recorded music industry back to sustained revenue growth from the mid-2010s after a decade of decline</li>
-</ul>', '- 16+ million licensed tracks available at Australian launch
-- Roughly 10 million global users across 16 countries at time of entry
-- Free tier: 30-day unlimited trial, then 10 hours per month; Premium at \$11.99 per month
-- Australia became one of Spotify''s strongest per-capita markets and a favoured test market for new features
-- Streaming led the Australian recorded music industry back to sustained revenue growth from the mid-2010s after a decade of decline', 5),
-      ('lessons-for-market-entrants', NULL::text, '<ol>
-<li><strong>A deliberate delay beats a broken launch.</strong> Spotify sacrificed six months to guarantee the product was whole on day one.</li>
-<li><strong>In licensed-content markets, supply-side deals are the real entry barrier.</strong> Winning the labels first made the consumer launch almost inevitable.</li>
-<li><strong>Price against the real competitor.</strong> Spotify''s true rival was piracy at $0, so the entry product had to be free.</li>
-<li><strong>Give incumbent gatekeepers economics in your success.</strong> The labels that could have blocked Spotify became its content partners.</li>
-</ol>', '1. **A deliberate delay beats a broken launch.** Spotify sacrificed six months to guarantee the product was whole on day one.
-2. **In licensed-content markets, supply-side deals are the real entry barrier.** Winning the labels first made the consumer launch almost inevitable.
-3. **Price against the real competitor.** Spotify''s true rival was piracy at \$0, so the entry product had to be free.
-4. **Give incumbent gatekeepers economics in your success.** The labels that could have blocked Spotify became its content partners.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Spotify', 'Sweden', 'Australia',
-       'Music streaming', '2012', 'successful'
-FROM item
-WHERE 'Spotify' IS NOT NULL;
-
--- how-uber-outran-australian-regulators-and-legalised-ride-sharing
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-uber-outran-australian-regulators-and-legalised-ride-sharing', 'How Uber Outran Australian Regulators and Legalised Ride-Sharing', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Leaked internal documents — the 2022 ''Uber Files'' — confirmed what Australia''s taxi industry had long alleged: Uber knew it was operating illegally when it…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-uber-outran-australian-regulators-and-legalised-ride-sharing')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Leaked internal documents — the 2022 ''Uber Files'' — confirmed what Australia''s taxi industry had long alleged: Uber knew it was operating illegally when it launched here in 2012, and treated legality as a lobbying problem to be solved after reaching scale. The gamble worked. Within four years of UberX''s arrival, every Australian state and territory had rewritten its transport laws, and Uber was the entrenched market leader.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>United States</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Ridesharing / mobility platform</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2012</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Direct launch without regulatory approval — ''launch first, legalise later''</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success — laws changed in every state; dominant market position</td>
-</tr>
-</table>', 'Leaked internal documents — the 2022 ''Uber Files'' — confirmed what Australia''s taxi industry had long alleged: Uber knew it was operating illegally when it launched here in 2012, and treated legality as a lobbying problem to be solved after reaching scale. The gamble worked. Within four years of UberX''s arrival, every Australian state and territory had rewritten its transport laws, and Uber was the entrenched market leader.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>United States</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Ridesharing / mobility platform</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2012</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Direct launch without regulatory approval — ''launch first, legalise later''</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Success — laws changed in every state; dominant market position</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('Team & local footprint', 'team-and-local-footprint', 3),
-      ('Success factors', 'success-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Australian point-to-point transport was regulated state by state, built around scarce taxi licences that traded for hundreds of thousands of dollars, plus costly hire-car licences (around $40,000 in Victoria) with luxury-vehicle requirements. That regime made ridesharing — ordinary people driving ordinary cars for money — simply illegal everywhere in Australia when Uber arrived.</p>', 'Australian point-to-point transport was regulated state by state, built around scarce taxi licences that traded for hundreds of thousands of dollars, plus costly hire-car licences (around \$40,000 in Victoria) with luxury-vehicle requirements. That regime made ridesharing — ordinary people driving ordinary cars for money — simply illegal everywhere in Australia when Uber arrived.', 1),
-      ('entry-strategy', NULL::text, '<ul>
-<li><strong>Land quietly with the compliant-ish product.</strong> Uber launched in Sydney in 2012 with its premium black-car service using licensed hire cars — a defensible beachhead that built the brand and operational muscle.</li>
-<li><strong>Then launch the illegal one.</strong> UberX — unlicensed drivers in private cars — rolled out from 2014 in breach of every state''s transport laws. The leaked documents show the company understood this clearly.</li>
-<li><strong>Absorb enforcement as a customer-acquisition cost.</strong> Uber paid or indemnified drivers'' fines, treating penalties as marketing spend while regulators struggled to enforce at scale.</li>
-<li><strong>Weaponise the user base.</strong> Riders and drivers were mobilised to petition politicians. By the time governments moved, hundreds of thousands of voters were habitual users — the documented playbook: launch first, build a loyal base, then lobby aggressively for the law to change.</li>
-<li><strong>Pick off fragmented regulators one by one.</strong> The ACT legalised ridesharing first (October 2015), NSW followed in December 2015 with an industry compensation package of around $250 million funded by a per-trip levy, and the remaining states fell into line by 2017–18.</li>
-</ul>', '- **Land quietly with the compliant-ish product.** Uber launched in Sydney in 2012 with its premium black-car service using licensed hire cars — a defensible beachhead that built the brand and operational muscle.
-- **Then launch the illegal one.** UberX — unlicensed drivers in private cars — rolled out from 2014 in breach of every state''s transport laws. The leaked documents show the company understood this clearly.
-- **Absorb enforcement as a customer-acquisition cost.** Uber paid or indemnified drivers'' fines, treating penalties as marketing spend while regulators struggled to enforce at scale.
-- **Weaponise the user base.** Riders and drivers were mobilised to petition politicians. By the time governments moved, hundreds of thousands of voters were habitual users — the documented playbook: launch first, build a loyal base, then lobby aggressively for the law to change.
-- **Pick off fragmented regulators one by one.** The ACT legalised ridesharing first (October 2015), NSW followed in December 2015 with an industry compensation package of around \$250 million funded by a per-trip levy, and the remaining states fell into line by 2017–18.', 2),
-      ('team-and-local-footprint', NULL::text, '<ul>
-<li><strong>One founding hire, Silicon Valley-vetted.</strong> Uber''s Australian business began with a single person: David Rohrsheim, an Adelaide-born Stanford MBA and former Draper Fisher Jurvetson venture analyst (and ex-Bain consultant) who pitched CEO Travis Kalanick on Australia''s potential. He launched Sydney in late 2012 as the founding member of the local team and became General Manager for Australia &amp; New Zealand.</li>
-<li><strong>Lean city-launch teams.</strong> The early Sydney operation was small and young — the launch team often worked until midnight clearing customer support tickets — replicating Uber''s global playbook of a city GM plus a handful of operations and driver-supply hires per market.</li>
-<li><strong>Scale followed legalisation.</strong> As states legalised ridesharing from 2015, Rohrsheim''s team grew to more than 200 people across Australia and New Zealand, expanding city by city into every capital.</li>
-</ul>', '- **One founding hire, Silicon Valley-vetted.** Uber''s Australian business began with a single person: David Rohrsheim, an Adelaide-born Stanford MBA and former Draper Fisher Jurvetson venture analyst (and ex-Bain consultant) who pitched CEO Travis Kalanick on Australia''s potential. He launched Sydney in late 2012 as the founding member of the local team and became General Manager for Australia & New Zealand.
-- **Lean city-launch teams.** The early Sydney operation was small and young — the launch team often worked until midnight clearing customer support tickets — replicating Uber''s global playbook of a city GM plus a handful of operations and driver-supply hires per market.
-- **Scale followed legalisation.** As states legalised ridesharing from 2015, Rohrsheim''s team grew to more than 200 people across Australia and New Zealand, expanding city by city into every capital.', 3),
-      ('success-factors', NULL::text, '<ul>
-<li><strong>Speed to habit formation</strong>: the service was dramatically better and cheaper than taxis; consumer loyalty formed faster than enforcement could respond</li>
-<li><strong>Deep capital</strong>: absorbing fines, subsidising fares and funding a multi-year, multi-state lobbying campaign required a war chest no local rival had</li>
-<li><strong>Structural power</strong>: Uber positioned itself as jobs, innovation and consumer choice — politically costly to ban outright</li>
-<li><strong>Federation as a feature</strong>: eight separate regulatory battles meant one early win (ACT) created a domino template for the rest</li>
-</ul>', '- **Speed to habit formation**: the service was dramatically better and cheaper than taxis; consumer loyalty formed faster than enforcement could respond
-- **Deep capital**: absorbing fines, subsidising fares and funding a multi-year, multi-state lobbying campaign required a war chest no local rival had
-- **Structural power**: Uber positioned itself as jobs, innovation and consumer choice — politically costly to ban outright
-- **Federation as a feature**: eight separate regulatory battles meant one early win (ACT) created a domino template for the rest', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>2012: Sydney launch with licensed hire cars; UberX ridesharing from 2014</li>
-<li>October 2015: ACT becomes the first Australian jurisdiction to legalise ridesharing; NSW follows within months with an industry compensation package of around $250 million</li>
-<li>By 2017–18: ridesharing legalised in every state and territory</li>
-<li>Taxi licence values collapsed from peaks in the hundreds of thousands of dollars; Uber became Australia''s dominant rideshare platform with millions of active users</li>
-</ul>', '- 2012: Sydney launch with licensed hire cars; UberX ridesharing from 2014
-- October 2015: ACT becomes the first Australian jurisdiction to legalise ridesharing; NSW follows within months with an industry compensation package of around \$250 million
-- By 2017–18: ridesharing legalised in every state and territory
-- Taxi licence values collapsed from peaks in the hundreds of thousands of dollars; Uber became Australia''s dominant rideshare platform with millions of active users', 5),
-      ('lessons-for-market-entrants', NULL::text, '<ol>
-<li><strong>''Launch first, legalise later'' is a capital-intensive strategy.</strong> It only works with deep pockets and a product loved enough to create a political constituency.</li>
-<li><strong>Stage the risk.</strong> The compliant black-car beachhead built brand and infrastructure before the contested UberX launch.</li>
-<li><strong>Fragmented regulation favours the entrant.</strong> One sympathetic jurisdiction becomes the template that isolates the holdouts.</li>
-<li><strong>Count the reputational bill.</strong> The same playbook triggered the global Uber Files backlash — most entrants could not survive that scrutiny, and regulators now watch for it.</li>
-</ol>', '1. **''Launch first, legalise later'' is a capital-intensive strategy.** It only works with deep pockets and a product loved enough to create a political constituency.
-2. **Stage the risk.** The compliant black-car beachhead built brand and infrastructure before the contested UberX launch.
-3. **Fragmented regulation favours the entrant.** One sympathetic jurisdiction becomes the template that isolates the holdouts.
-4. **Count the reputational bill.** The same playbook triggered the global Uber Files backlash — most entrants could not survive that scrutiny, and regulators now watch for it.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Uber', 'United States', 'Australia',
-       'Ridesharing / mobility platform', '2012', 'successful'
-FROM item
-WHERE 'Uber' IS NOT NULL;
-
--- how-quickflix-lost-its-home-market-when-netflix-arrived
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-quickflix-lost-its-home-market-when-netflix-arrived', 'How Quickflix Lost Its Home Market When Netflix Arrived', 'draft', 'case_study',
-         'e1b408ed-bf02-4b29-b63b-a9a417616513'::uuid, 'Quickflix beat Netflix to Australian streaming by four years — and was in voluntary administration 13 months after Netflix arrived. Founded in Perth in 2003…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-quickflix-lost-its-home-market-when-netflix-arrived')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Quickflix beat Netflix to Australian streaming by four years — and was in voluntary administration 13 months after Netflix arrived. Founded in Perth in 2003 as Australia''s answer to Netflix''s DVD-by-mail model, it built more than 182,000 subscribers, an ASX listing and an HBO investment. None of it survived contact with the company it had copied.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Australia (domestic)</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Streaming video / DVD subscription</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2003 (streaming from 2011)</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Domestic launch — DVD-by-mail, then first-mover streaming pivot</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure — voluntary administration April 2016; wound up 2021</td>
-</tr>
-</table>', 'Quickflix beat Netflix to Australian streaming by four years — and was in voluntary administration 13 months after Netflix arrived. Founded in Perth in 2003 as Australia''s answer to Netflix''s DVD-by-mail model, it built more than 182,000 subscribers, an ASX listing and an HBO investment. None of it survived contact with the company it had copied.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Australia (domestic)</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Streaming video / DVD subscription</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2003 (streaming from 2011)</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>Domestic launch — DVD-by-mail, then first-mover streaming pivot</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure — voluntary administration April 2016; wound up 2021</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Founding & GTM strategy', 'founding-and-gtm-strategy', 2),
-      ('Founders & base', 'founders-and-base', 3),
-      ('Failure factors', 'failure-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Stephen Langsford founded Quickflix in Perth in 2003, importing the DVD-by-mail subscription model Netflix had proven in the US. It listed on the ASX, launched online movie downloads in 2006 and began streaming in 2011 — making it the first major streaming service to operate in Australia. By June 2014 it had more than 182,000 subscribers and had attracted an investment of $10 million from HBO. Then the market it pioneered arrived all at once: Stan launched in January 2015, Netflix in March, and Foxtel''s Presto scaled up — all backed by content budgets and balance sheets Quickflix could not approach.</p>', 'Stephen Langsford founded Quickflix in Perth in 2003, importing the DVD-by-mail subscription model Netflix had proven in the US. It listed on the ASX, launched online movie downloads in 2006 and began streaming in 2011 — making it the first major streaming service to operate in Australia. By June 2014 it had more than 182,000 subscribers and had attracted an investment of \$10 million from HBO. Then the market it pioneered arrived all at once: Stan launched in January 2015, Netflix in March, and Foxtel''s Presto scaled up — all backed by content budgets and balance sheets Quickflix could not approach.', 1),
-      ('founding-and-gtm-strategy', NULL::text, '<ul>
-<li><strong>Copy a proven overseas model early.</strong> DVD-by-mail subscription modelled directly on Netflix US, localised for Australia years before the original could arrive.</li>
-<li><strong>Pivot to streaming ahead of the giants.</strong> Streaming from 2011 gave Quickflix a four-year head start on Netflix''s local launch.</li>
-<li><strong>Borrow credibility from a content major.</strong> HBO''s 2013 investment brought marquee association — and redeemable preference shares that would later prove fatal.</li>
-<li><strong>Fund growth from the ASX drip.</strong> Repeated small capital raisings rather than a large war chest — workable in a quiet market, ruinous in a land war.</li>
-</ul>', '- **Copy a proven overseas model early.** DVD-by-mail subscription modelled directly on Netflix US, localised for Australia years before the original could arrive.
-- **Pivot to streaming ahead of the giants.** Streaming from 2011 gave Quickflix a four-year head start on Netflix''s local launch.
-- **Borrow credibility from a content major.** HBO''s 2013 investment brought marquee association — and redeemable preference shares that would later prove fatal.
-- **Fund growth from the ASX drip.** Repeated small capital raisings rather than a large war chest — workable in a quiet market, ruinous in a land war.', 2),
-      ('founders-and-base', NULL::text, '<ul>
-<li><strong>A serial Perth founder.</strong> Stephen Langsford co-founded Quickflix with Simon Hodge after two prior exits — internet pioneer Method + Madness (founded 1998, acquired by ASX-listed Sausage Software) and consulting group Change Corporation (acquired by CSG Limited in 2007). Quickflix listed on the ASX in 2005, roughly two years after founding.</li>
-<li><strong>Headquartered in Perth for its entire life</strong> — a continent away from the Sydney media establishment that controlled the content deals, capital and partnerships it ultimately needed.</li>
-<li><strong>Firsts that didn''t compound.</strong> Quickflix was first in Australia to stream to smart TVs, game consoles and mobile devices, and an early mover in securing Hollywood studio content locally — pioneering work that built the market Netflix later harvested.</li>
-</ul>', '- **A serial Perth founder.** Stephen Langsford co-founded Quickflix with Simon Hodge after two prior exits — internet pioneer Method + Madness (founded 1998, acquired by ASX-listed Sausage Software) and consulting group Change Corporation (acquired by CSG Limited in 2007). Quickflix listed on the ASX in 2005, roughly two years after founding.
-- **Headquartered in Perth for its entire life** — a continent away from the Sydney media establishment that controlled the content deals, capital and partnerships it ultimately needed.
-- **Firsts that didn''t compound.** Quickflix was first in Australia to stream to smart TVs, game consoles and mobile devices, and an early mover in securing Hollywood studio content locally — pioneering work that built the market Netflix later harvested.', 3),
-      ('failure-factors', NULL::text, '<ul>
-<li><strong>Sub-scale content economics.</strong> Global streamers amortise content across tens of millions of subscribers; Quickflix''s per-subscriber licensing costs were unsustainable against rivals priced at $8.99–$10.</li>
-<li><strong>The 2015 pincer.</strong> Netflix, Stan and Presto all launched or scaled within months, resetting price and catalogue expectations overnight; against them Quickflix was widely seen as sluggish and limited.</li>
-<li><strong>A poisoned capital structure.</strong> HBO''s redeemable preference shares — later sold to Nine Entertainment, co-owner of rival Stan — sat ahead of ordinary equity and deterred the recapitalisation Quickflix desperately needed.</li>
-<li><strong>Legacy cost base.</strong> DVD logistics kept dragging margins while the fight moved to streaming.</li>
-</ul>', '- **Sub-scale content economics.** Global streamers amortise content across tens of millions of subscribers; Quickflix''s per-subscriber licensing costs were unsustainable against rivals priced at \$8.99–\$10.
-- **The 2015 pincer.** Netflix, Stan and Presto all launched or scaled within months, resetting price and catalogue expectations overnight; against them Quickflix was widely seen as sluggish and limited.
-- **A poisoned capital structure.** HBO''s redeemable preference shares — later sold to Nine Entertainment, co-owner of rival Stan — sat ahead of ordinary equity and deterred the recapitalisation Quickflix desperately needed.
-- **Legacy cost base.** DVD logistics kept dragging margins while the fight moved to streaming.', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>182,000+ subscribers at peak (June 2014) — the largest local streaming base before Netflix''s arrival</li>
-<li>HBO investment of $10 million (2013) for a 15.7% stake; the preference-share stake later passed to Nine Entertainment</li>
-<li>Voluntary administration announced 26 April 2016 — 13 months after Netflix''s Australian launch</li>
-<li>Relaunched under new owners in late 2016; wound up September 2021</li>
-</ul>', '- 182,000+ subscribers at peak (June 2014) — the largest local streaming base before Netflix''s arrival
-- HBO investment of \$10 million (2013) for a 15.7% stake; the preference-share stake later passed to Nine Entertainment
-- Voluntary administration announced 26 April 2016 — 13 months after Netflix''s Australian launch
-- Relaunched under new owners in late 2016; wound up September 2021', 5),
-      ('lessons-for-market-entrants', NULL::text, '<ol>
-<li><strong>First-mover advantage without capital scale is a countdown clock.</strong> Quickflix''s four-year head start bought it nothing once global-scale competitors landed.</li>
-<li><strong>In content businesses, the moat is the content budget.</strong> Local pioneers cannot out-license a player amortising costs across 50 countries.</li>
-<li><strong>Strategic investors can become strategic blockers.</strong> Instrument terms (redeemable preference shares) mattered more than the marquee name attached to them — especially once that stake reached a competitor''s owner.</li>
-<li><strong>When a category-defining global brand announces entry, the window to sell or consolidate is before it lands.</strong> Quickflix''s enterprise value peaked the day Netflix confirmed its launch date.</li>
-</ol>', '1. **First-mover advantage without capital scale is a countdown clock.** Quickflix''s four-year head start bought it nothing once global-scale competitors landed.
-2. **In content businesses, the moat is the content budget.** Local pioneers cannot out-license a player amortising costs across 50 countries.
-3. **Strategic investors can become strategic blockers.** Instrument terms (redeemable preference shares) mattered more than the marquee name attached to them — especially once that stake reached a competitor''s owner.
-4. **When a category-defining global brand announces entry, the window to sell or consolidate is before it lands.** Quickflix''s enterprise value peaked the day Netflix confirmed its launch date.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Quickflix', 'Australia', 'Australia',
-       'Streaming video / DVD subscription', '2003', 'unsuccessful'
-FROM item
-WHERE 'Quickflix' IS NOT NULL;
-
--- how-klarna-entered-afterpays-home-turf-with-a-big-bank-alliance
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-klarna-entered-afterpays-home-turf-with-a-big-bank-alliance', 'How Klarna Entered Afterpay''s Home Turf With a Big-Bank Alliance', 'draft', 'case_study',
-         '0563b826-2123-4627-b912-14f63e9fbfb6'::uuid, 'Klarna entered Australia in January 2020 holding what looked like an unbeatable hand: a 50:50 joint venture with Commonwealth Bank, more than US$300 million…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-klarna-entered-afterpays-home-turf-with-a-big-bank-alliance')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Klarna entered Australia in January 2020 holding what looked like an unbeatable hand: a 50:50 joint venture with Commonwealth Bank, more than US$300 million of CBA investment, and distribution through the CommBank app''s 7 million digitally active customers. It still couldn''t dent Afterpay and Zip in the country that invented buy-now-pay-later. Local losses hit $56 million in 2021 and the Australian push was wound back — even as CBA''s investment stake soared in value.</p>
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Sweden</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Fintech — buy now, pay later</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2020</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>50:50 joint venture with Commonwealth Bank; distribution via CommBank app</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure — could not displace incumbents; local push wound back (service continues at reduced scale)</td>
-</tr>
-</table>', 'Klarna entered Australia in January 2020 holding what looked like an unbeatable hand: a 50:50 joint venture with Commonwealth Bank, more than US\$300 million of CBA investment, and distribution through the CommBank app''s 7 million digitally active customers. It still couldn''t dent Afterpay and Zip in the country that invented buy-now-pay-later. Local losses hit \$56 million in 2021 and the Australian push was wound back — even as CBA''s investment stake soared in value.
-<table header-column="true">
-<tr>
-<td>Origin country</td>
-<td>Sweden</td>
-</tr>
-<tr>
-<td>Sector</td>
-<td>Fintech — buy now, pay later</td>
-</tr>
-<tr>
-<td>Entry year</td>
-<td>2020</td>
-</tr>
-<tr>
-<td>Entry mode</td>
-<td>50:50 joint venture with Commonwealth Bank; distribution via CommBank app</td>
-</tr>
-<tr>
-<td>Outcome</td>
-<td>Failure — could not displace incumbents; local push wound back (service continues at reduced scale)</td>
-</tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
-      ('Background', 'background', 1),
-      ('Entry strategy', 'entry-strategy', 2),
-      ('Team & first partners', 'team-and-first-partners', 3),
-      ('Failure factors', 'failure-factors', 4),
-      ('Key metrics & performance', 'key-metrics-and-performance', 5),
-      ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
-      ('background', NULL::text, '<p>Buy-now-pay-later was born in Australia. By 2020 Afterpay — founded in Sydney in 2014 — had millions of local customers and near-default presence at fashion and beauty checkouts, with Zip a strong second. BNPL wasn''t a new behaviour Klarna could introduce; it was an entrenched habit attached to local brands. Klarna, Europe''s BNPL giant with 85 million customers and 200,000 merchants globally, was entering the one market where its category was already someone else''s home turf.</p>', 'Buy-now-pay-later was born in Australia. By 2020 Afterpay — founded in Sydney in 2014 — had millions of local customers and near-default presence at fashion and beauty checkouts, with Zip a strong second. BNPL wasn''t a new behaviour Klarna could introduce; it was an entrenched habit attached to local brands. Klarna, Europe''s BNPL giant with 85 million customers and 200,000 merchants globally, was entering the one market where its category was already someone else''s home turf.', 1),
-      ('entry-strategy', NULL::text, '<ul>
-<li><strong>Buy distribution through an incumbent.</strong> CBA invested US$100 million in Klarna''s August 2019 funding round, lifting its total investment to US$300 million and a 5.5% stake, with 50:50 ownership rights over Klarna''s Australian and New Zealand business.</li>
-<li><strong>Launch inside the bank''s app.</strong> From January 2020, CBA customers could register for Klarna directly through the CommBank app — instant access to the country''s largest digital banking base and its data.</li>
-<li><strong>Differentiate on model.</strong> Klarna led with a shopping-app approach — shop at any online store via one-time virtual cards, price-drop alerts, wish lists — rather than Afterpay''s merchant-integrated checkout button.</li>
-</ul>', '- **Buy distribution through an incumbent.** CBA invested US\$100 million in Klarna''s August 2019 funding round, lifting its total investment to US\$300 million and a 5.5% stake, with 50:50 ownership rights over Klarna''s Australian and New Zealand business.
-- **Launch inside the bank''s app.** From January 2020, CBA customers could register for Klarna directly through the CommBank app — instant access to the country''s largest digital banking base and its data.
-- **Differentiate on model.** Klarna led with a shopping-app approach — shop at any online store via one-time virtual cards, price-drop alerts, wish lists — rather than Afterpay''s merchant-integrated checkout button.', 2),
-      ('team-and-first-partners', NULL::text, '<ul>
-<li><strong>Poach the country head from a local rival.</strong> Klarna appointed Francine (Fran) Ereira as General Manager ANZ in January 2020 — a senior executive hired directly from local BNPL incumbent Zip Co, with 20+ years across The Walt Disney Company, Sheridan, eWave and Temando. She started on 3 February, days after the 29 January consumer launch.</li>
-<li><strong>Sydney base, bank-side distribution.</strong> The local entity, Klarna Australia Pty Ltd, operated independently from Sydney while leaning on the CommBank app — and CBA''s 7 million digitally active customers — for consumer acquisition rather than building its own acquisition engine.</li>
-<li><strong>First merchant logos.</strong> Early direct retail partnerships included Australia Post and Appliances Online, but checkout integrations never approached Afterpay''s near-universal merchant coverage in fashion and beauty.</li>
-<li><strong>Early traction undershot.</strong> 160,000 app downloads by May 2020 — a take-up Ereira publicly described as "slightly behind" expectations — rising to about 250,000 users by July 2020.</li>
-</ul>', '- **Poach the country head from a local rival.** Klarna appointed Francine (Fran) Ereira as General Manager ANZ in January 2020 — a senior executive hired directly from local BNPL incumbent Zip Co, with 20+ years across The Walt Disney Company, Sheridan, eWave and Temando. She started on 3 February, days after the 29 January consumer launch.
-- **Sydney base, bank-side distribution.** The local entity, Klarna Australia Pty Ltd, operated independently from Sydney while leaning on the CommBank app — and CBA''s 7 million digitally active customers — for consumer acquisition rather than building its own acquisition engine.
-- **First merchant logos.** Early direct retail partnerships included Australia Post and Appliances Online, but checkout integrations never approached Afterpay''s near-universal merchant coverage in fashion and beauty.
-- **Early traction undershot.** 160,000 app downloads by May 2020 — a take-up Ereira publicly described as "slightly behind" expectations — rising to about 250,000 users by July 2020.', 3),
-      ('failure-factors', NULL::text, '<ul>
-<li><strong>The moat was at the merchant checkout, not in a consumer app.</strong> Afterpay''s button on virtually every relevant checkout was simultaneously a payment option and a free lead-generation channel merchants valued; Klarna''s shop-anywhere model had weaker merchant pull and more consumer friction.</li>
-<li><strong>Habit incumbency.</strong> BNPL behaviour was already formed around local brands — Klarna''s global scale meant little to a shopper whose checkout already offered Afterpay and Zip.</li>
-<li><strong>Growth without momentum.</strong> Around 250,000 users after five months looked respectable but was a rounding error against Afterpay''s millions — and the gap never closed.</li>
-<li><strong>Losses compounding.</strong> Klarna Australia posted a net loss of $56 million in 2021, roughly four times its launch-year loss.</li>
-<li><strong>Global retrenchment.</strong> Klarna''s 2022 valuation crash forced worldwide cost-cutting; the sub-scale Australian operation was an obvious casualty and local marketing was slashed.</li>
-</ul>', '- **The moat was at the merchant checkout, not in a consumer app.** Afterpay''s button on virtually every relevant checkout was simultaneously a payment option and a free lead-generation channel merchants valued; Klarna''s shop-anywhere model had weaker merchant pull and more consumer friction.
-- **Habit incumbency.** BNPL behaviour was already formed around local brands — Klarna''s global scale meant little to a shopper whose checkout already offered Afterpay and Zip.
-- **Growth without momentum.** Around 250,000 users after five months looked respectable but was a rounding error against Afterpay''s millions — and the gap never closed.
-- **Losses compounding.** Klarna Australia posted a net loss of \$56 million in 2021, roughly four times its launch-year loss.
-- **Global retrenchment.** Klarna''s 2022 valuation crash forced worldwide cost-cutting; the sub-scale Australian operation was an obvious casualty and local marketing was slashed.', 4),
-      ('key-metrics-and-performance', NULL::text, '<ul>
-<li>Launch: January 2020, jointly announced with CBA</li>
-<li>CBA investment: US$100 million (August 2019) on top of US$200 million, for a 5.5% stake and 50:50 AU/NZ ownership rights</li>
-<li>Around 250,000 Australian users by mid-2020 (roughly 50,000 a month) — against Afterpay''s multi-million local base</li>
-<li>Klarna Australia net loss: $56 million in 2021, about four times the prior year</li>
-<li>The postscript: Afterpay sold to Block in a deal announced at around A$39 billion (2021), while CBA''s Klarna stake was valued near A$1.2 billion at Klarna''s 2025 US IPO — the investment succeeded even as the market entry failed</li>
-</ul>', '- Launch: January 2020, jointly announced with CBA
-- CBA investment: US\$100 million (August 2019) on top of US\$200 million, for a 5.5% stake and 50:50 AU/NZ ownership rights
-- Around 250,000 Australian users by mid-2020 (roughly 50,000 a month) — against Afterpay''s multi-million local base
-- Klarna Australia net loss: \$56 million in 2021, about four times the prior year
-- The postscript: Afterpay sold to Block in a deal announced at around A\$39 billion (2021), while CBA''s Klarna stake was valued near A\$1.2 billion at Klarna''s 2025 US IPO — the investment succeeded even as the market entry failed', 5),
-      ('lessons-for-market-entrants', NULL::text, '<ol>
-<li><strong>Distribution partnerships don''t transfer network effects.</strong> CBA could hand Klarna consumers, but the merchant-side moat had to be rebuilt from scratch — and never was.</li>
-<li><strong>Attacking a category in its country of origin means fighting habit, not awareness.</strong> Every BNPL user Klarna wanted already had two local apps and no reason to switch.</li>
-<li><strong>A global brand is worth little where local brands defined the category.</strong> Category invention confers a home-ground advantage money struggles to buy.</li>
-<li><strong>Structure for optionality.</strong> CBA''s equity upside paid off despite the JV''s market failure — partnership economics can outlive the partnership''s strategic purpose.</li>
-</ol>', '1. **Distribution partnerships don''t transfer network effects.** CBA could hand Klarna consumers, but the merchant-side moat had to be rebuilt from scratch — and never was.
-2. **Attacking a category in its country of origin means fighting habit, not awareness.** Every BNPL user Klarna wanted already had two local apps and no reason to switch.
-3. **A global brand is worth little where local brands defined the category.** Category invention confers a home-ground advantage money struggles to buy.
-4. **Structure for optionality.** CBA''s equity upside paid off despite the JV''s market failure — partnership economics can outlive the partnership''s strategic purpose.', 6)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Klarna', 'Sweden', 'Australia',
-       'Fintech — buy now, pay later', '2020', 'unsuccessful'
-FROM item
-WHERE 'Klarna' IS NOT NULL;
-
--- how-ocado-entered-australia-as-a-technology-partner-not-a-retailer
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-ocado-entered-australia-as-a-technology-partner-not-a-retailer', 'How Ocado Entered Australia as a Technology Partner, Not a Retailer', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Ocado entered Australia without selling a single grocery. In March 2019, the UK online grocer signed an exclusive services agreement with Coles — its fifth…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-ocado-entered-australia-as-a-technology-partner-not-a-retailer')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Ocado entered Australia without selling a single grocery. In March 2019, the UK online grocer signed an <strong>exclusive services agreement with Coles</strong> — its fifth major overseas licensing deal in under 18 months — to deploy its Smart Platform and robotic fulfilment centres in Sydney and Melbourne. By 2026, Coles'' ecommerce was growing at <strong>13%+</strong> on Ocado''s technology, and Ocado had rolled off exclusivity, freeing it to sell to the rest of the Australian grocery market.</p>
+-- how-ocado-entered-australia-as-a-technology-partner-not-a-retailer (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-ocado-entered-australia-as-a-technology-partner-not-a-retailer' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-ocado-entered-australia-as-a-technology-partner-not-a-retailer' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-ocado-entered-australia-as-a-technology-partner-not-a-retailer' AND status = 'draft' AND content_type = 'case_study'), '<p>Ocado entered Australia without selling a single grocery. In March 2019, the UK online grocer signed an <strong>exclusive services agreement with Coles</strong> — its fifth major overseas licensing deal in under 18 months — to deploy its Smart Platform and robotic fulfilment centres in Sydney and Melbourne. By 2026, Coles'' ecommerce was growing at <strong>13%+</strong> on Ocado''s technology, and Ocado had rolled off exclusivity, freeing it to sell to the rest of the Australian grocery market.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -1820,27 +52,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — platform live, partner ecommerce growing 13%+, exclusivity now ended</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-ocado-entered-australia-as-a-technology-partner-not-a-retailer' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('People & footprint', 'people-and-footprint', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Ocado built its reputation as the UK''s online grocery pioneer, spending 15+ years developing automated "customer fulfilment centres" (CFCs) where robots pick orders on giant grids. Rather than exporting its retail brand, Ocado productised this capability as the <strong>Ocado Smart Platform (OSP)</strong> and began licensing it to incumbent grocers worldwide — including Kroger in the US and Casino in France. Australia''s $100B+ grocery market was a duopoly (Woolworths and Coles) with historically low online penetration. Coles was losing ground to Woolworths in ecommerce and needed a step-change, not an incremental fix.</p>', 'Ocado built its reputation as the UK''s online grocery pioneer, spending 15+ years developing automated "customer fulfilment centres" (CFCs) where robots pick orders on giant grids. Rather than exporting its retail brand, Ocado productised this capability as the **Ocado Smart Platform (OSP)** and began licensing it to incumbent grocers worldwide — including Kroger in the US and Casino in France.
 Australia''s \$100B+ grocery market was a duopoly (Woolworths and Coles) with historically low online penetration. Coles was losing ground to Woolworths in ecommerce and needed a step-change, not an incremental fix.', 1),
       ('entry-strategy', 'License to the incumbent, don''t fight it', '<p>Ocado entered by making the local number two its exclusive customer. Under the March 2019 agreement, Ocado partnered with Coles (ASX: COL) to deliver an end-to-end online grocery solution — webshop, robotic single-pick fulfilment, and last-mile delivery software — before the end of FY2023.</p>', 'Ocado entered by making the local number two its exclusive customer. Under the March 2019 agreement, Ocado partnered with Coles (ASX: COL) to deliver an end-to-end online grocery solution — webshop, robotic single-pick fulfilment, and last-mile delivery software — before the end of FY2023.', 2),
@@ -1882,27 +108,17 @@ Australia''s \$100B+ grocery market was a duopoly (Woolworths and Coles) with hi
 2. **Exclusivity is a pricing lever, not a permanent state.** Trade it for commitment early, then reclaim optionality once the market is proven.
 3. **B2B licensing de-risks distant markets.** For capital-intensive models, a local partner''s balance sheet and brand beat a greenfield launch.
 4. **Structure for long infrastructure timelines.** Multi-year milestones kept the partnership intact through construction delays.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Ocado', 'United Kingdom', 'Australia',
-       'Grocery technology / ecommerce fulfilment', '2019', 'successful'
-FROM item
-WHERE 'Ocado' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-ocado-entered-australia-as-a-technology-partner-not-a-retailer' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-ocado-entered-australia-as-a-technology-partner-not-a-retailer' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-lightspeed-acquired-its-way-into-australian-hospitality-pos
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-lightspeed-acquired-its-way-into-australian-hospitality-pos', 'How Lightspeed Acquired Its Way Into Australian Hospitality POS', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Canada''s Lightspeed didn''t launch in Australia — it bought its way to market leadership on both sides of the Tasman. In October 2019 it acquired Sydney…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-lightspeed-acquired-its-way-into-australian-hospitality-pos')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Canada''s Lightspeed didn''t launch in Australia — it bought its way to market leadership on both sides of the Tasman. In October 2019 it acquired Sydney hospitality POS company <strong>Kounta</strong> (~7,000 customer locations) for roughly <strong>US$43 million</strong>, and in 2021 it followed with Auckland retail POS leader <strong>Vend</strong> for about <strong>US$350 million</strong> — instantly becoming a dominant cloud point-of-sale player across Australia and New Zealand.</p>
+-- how-lightspeed-acquired-its-way-into-australian-hospitality-pos (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-lightspeed-acquired-its-way-into-australian-hospitality-pos' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-lightspeed-acquired-its-way-into-australian-hospitality-pos' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-lightspeed-acquired-its-way-into-australian-hospitality-pos' AND status = 'draft' AND content_type = 'case_study'), '<p>Canada''s Lightspeed didn''t launch in Australia — it bought its way to market leadership on both sides of the Tasman. In October 2019 it acquired Sydney hospitality POS company <strong>Kounta</strong> (~7,000 customer locations) for roughly <strong>US$43 million</strong>, and in 2021 it followed with Auckland retail POS leader <strong>Vend</strong> for about <strong>US$350 million</strong> — instantly becoming a dominant cloud point-of-sale player across Australia and New Zealand.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -1946,27 +162,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — instant APAC scale, 10,000+ hospitality venues under the brand</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-lightspeed-acquired-its-way-into-australian-hospitality-pos' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('People & continuity', 'people-and-continuity', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Montreal-based Lightspeed, founded by Dax Dasilva, listed on the TSX in March 2019 with an explicit strategy of consolidating the fragmented global POS market. Australia and New Zealand were attractive: high card-payment penetration, dense café and hospitality culture, and two strong home-grown cloud POS players — <strong>Kounta</strong> (Sydney, founded 2012 by Nick Cloete, backed by MYOB from 2014 and partnered with CBA from 2016) in hospitality, and <strong>Vend</strong> (Auckland, founded 2010 by Vaughan Rowsell) in retail.</p>', 'Montreal-based Lightspeed, founded by Dax Dasilva, listed on the TSX in March 2019 with an explicit strategy of consolidating the fragmented global POS market. Australia and New Zealand were attractive: high card-payment penetration, dense café and hospitality culture, and two strong home-grown cloud POS players — **Kounta** (Sydney, founded 2012 by Nick Cloete, backed by MYOB from 2014 and partnered with CBA from 2016) in hospitality, and **Vend** (Auckland, founded 2010 by Vaughan Rowsell) in retail.', 1),
       ('entry-strategy', 'Buy the local leader instead of fighting it', '<p>Greenfield entry would have meant years competing against entrenched local products with deep bank and accounting integrations. Lightspeed instead acquired Kounta — already integrated with MYOB and Commonwealth Bank, serving 7,000+ customer locations across AU/NZ — gaining a local team, brand trust, and distribution overnight.</p>', 'Greenfield entry would have meant years competing against entrenched local products with deep bank and accounting integrations. Lightspeed instead acquired Kounta — already integrated with MYOB and Commonwealth Bank, serving 7,000+ customer locations across AU/NZ — gaining a local team, brand trust, and distribution overnight.', 2),
       ('entry-strategy', 'Structure the deal to keep the team', '<p>Of the ~US$43M consideration, US$7.5M in deferred cash plus additional shares were payable to Kounta employees through October 2021, contingent on milestones and continued employment — locking in the local operators who understood the market.</p>', 'Of the \~US\$43M consideration, US\$7.5M in deferred cash plus additional shares were payable to Kounta employees through October 2021, contingent on milestones and continued employment — locking in the local operators who understood the market.', 3),
@@ -2001,27 +211,17 @@ sec_bodies AS (
 2. **Earn-outs keep the local knowledge you just paid for.** Deferred, employment-linked consideration held the Kounta team through integration.
 3. **Map the market by vertical and buy one leader per vertical.** Two targeted deals delivered full SMB coverage with little cannibalisation.
 4. **A listed acquirer''s shares are an entry weapon.** Part-scrip deals stretched Lightspeed''s capital across multiple markets simultaneously.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Lightspeed', 'Canada', 'Australia',
-       'Cloud point-of-sale and commerce software', '2019', 'successful'
-FROM item
-WHERE 'Lightspeed' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-lightspeed-acquired-its-way-into-australian-hospitality-pos' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-lightspeed-acquired-its-way-into-australian-hospitality-pos' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-starlings-engine-entered-australia-selling-bank-tech-not-banking
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-starlings-engine-entered-australia-selling-bank-tech-not-banking', 'How Starling''s Engine Entered Australia Selling Bank Tech, Not Banking', 'draft', 'case_study',
-         '0563b826-2123-4627-b912-14f63e9fbfb6'::uuid, 'UK neobank Starling never applied for an Australian banking licence — yet its technology now runs one of Australia''s newest digital banks. Through its SaaS…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-starlings-engine-entered-australia-selling-bank-tech-not-banking')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>UK neobank Starling never applied for an Australian banking licence — yet its technology now runs one of Australia''s newest digital banks. Through its SaaS subsidiary <strong>Engine by Starling</strong>, it partnered with AMP in November 2023, and just <strong>12 months from kick-off</strong>, AMP Bank GO launched in February 2025, targeting Australia''s <strong>2.4 million</strong> self-employed and micro businesses with the country''s first numberless debit cards.</p>
+-- how-starlings-engine-entered-australia-selling-bank-tech-not-banking (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-starlings-engine-entered-australia-selling-bank-tech-not-banking' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-starlings-engine-entered-australia-selling-bank-tech-not-banking' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-starlings-engine-entered-australia-selling-bank-tech-not-banking' AND status = 'draft' AND content_type = 'case_study'), '<p>UK neobank Starling never applied for an Australian banking licence — yet its technology now runs one of Australia''s newest digital banks. Through its SaaS subsidiary <strong>Engine by Starling</strong>, it partnered with AMP in November 2023, and just <strong>12 months from kick-off</strong>, AMP Bank GO launched in February 2025, targeting Australia''s <strong>2.4 million</strong> self-employed and micro businesses with the country''s first numberless debit cards.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -2065,27 +265,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — AMP Bank GO live, award-winning in year one</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-starlings-engine-entered-australia-selling-bank-tech-not-banking' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('First customer & delivery', 'first-customer-and-delivery', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Starling Bank proved the digital-first model in the UK, then spun its core technology into <strong>Engine</strong>, a platform other banks can license to run modern digital propositions. Australia looked like hostile territory for foreign neobanks: the local neobank wave had already collapsed (Xinja handed back its licence in 2020; 86 400 and Up were absorbed by majors). But that collapse left a gap — roughly 2.4 million Australian businesses are self-employed or employ 1–4 people, most turning over under $200k a year, and they remained badly served by the big four''s tooling. AMP, a 175-year-old wealth manager rebuilding after the Royal Commission, had a banking licence and a distribution brand but legacy technology.</p>', 'Starling Bank proved the digital-first model in the UK, then spun its core technology into **Engine**, a platform other banks can license to run modern digital propositions. Australia looked like hostile territory for foreign neobanks: the local neobank wave had already collapsed (Xinja handed back its licence in 2020; 86 400 and Up were absorbed by majors). But that collapse left a gap — roughly 2.4 million Australian businesses are self-employed or employ 1–4 people, most turning over under \$200k a year, and they remained badly served by the big four''s tooling.
 AMP, a 175-year-old wealth manager rebuilding after the Royal Commission, had a banking licence and a distribution brand but legacy technology.', 1),
       ('entry-strategy', 'Sell the engine, not the bank', '<p>Instead of repeating the failed foreign-neobank playbook (get licensed, burn capital acquiring deposits), Starling entered as a vendor. AMP kept the licence, capital, and regulatory burden; Engine supplied the proven core platform. Starling monetises Australia with SaaS economics and near-zero regulatory risk.</p>', 'Instead of repeating the failed foreign-neobank playbook (get licensed, burn capital acquiring deposits), Starling entered as a vendor. AMP kept the licence, capital, and regulatory burden; Engine supplied the proven core platform. Starling monetises Australia with SaaS economics and near-zero regulatory risk.', 2),
@@ -2125,27 +319,17 @@ AMP, a 175-year-old wealth manager rebuilding after the Royal Commission, had a 
 2. **A graveyard of failed entrants signals opportunity, not just risk.** Australia''s neobank collapse discredited one entry mode while validating the demand it had exposed.
 3. **Delivery speed is a differentiator you can sell.** "Bank in 12 months" became the story that carried the launch.
 4. **Pick a wedge segment.** Micro businesses were underserved enough to switch and small enough not to provoke an incumbent response.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Engine by Starling', 'United Kingdom', 'Australia',
-       'Banking technology (SaaS core banking platform)', '2023', 'successful'
-FROM item
-WHERE 'Engine by Starling' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-starlings-engine-entered-australia-selling-bank-tech-not-banking' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-starlings-engine-entered-australia-selling-bank-tech-not-banking' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-sharesies-took-kiwi-micro-investing-across-the-tasman
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-sharesies-took-kiwi-micro-investing-across-the-tasman', 'How Sharesies Took Kiwi Micro-Investing Across the Tasman', 'draft', 'case_study',
-         '0563b826-2123-4627-b912-14f63e9fbfb6'::uuid, 'Wellington fintech Sharesies took the classic trans-Tasman path — but ran it deliberately in stages. After soft-launching in Australia in April 2021, it…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-sharesies-took-kiwi-micro-investing-across-the-tasman')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Wellington fintech Sharesies took the classic trans-Tasman path — but ran it deliberately in stages. After <strong>soft-launching in Australia in April 2021</strong>, it waited until late August to switch on marketing, then raised <strong>NZ$50 million</strong> (doubling its valuation trajectory) explicitly to fund the expansion. Today the platform serves <strong>over 1 million customers</strong> across New Zealand and Australia with more than <strong>$12 billion</strong> invested.</p>
+-- how-sharesies-took-kiwi-micro-investing-across-the-tasman (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-sharesies-took-kiwi-micro-investing-across-the-tasman' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-sharesies-took-kiwi-micro-investing-across-the-tasman' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-sharesies-took-kiwi-micro-investing-across-the-tasman' AND status = 'draft' AND content_type = 'case_study'), '<p>Wellington fintech Sharesies took the classic trans-Tasman path — but ran it deliberately in stages. After <strong>soft-launching in Australia in April 2021</strong>, it waited until late August to switch on marketing, then raised <strong>NZ$50 million</strong> (doubling its valuation trajectory) explicitly to fund the expansion. Today the platform serves <strong>over 1 million customers</strong> across New Zealand and Australia with more than <strong>$12 billion</strong> invested.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -2189,27 +373,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — 1M+ customers across NZ + AU, \$12B+ on platform</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-sharesies-took-kiwi-micro-investing-across-the-tasman' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Team & launch playbook', 'team-and-launch-playbook', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Founded in Wellington in 2017, Sharesies set out to give "someone with $5 the same investment opportunities as someone with $5 million" — fractional investing, no minimums, and a deliberately friendly brand aimed at first-time investors. By late 2020 it dominated NZ retail investing. Crucially, Sharesies had already offered its NZ users access to <strong>ASX-listed shares</strong> before entering Australia — so the product knew the Australian market before Australians knew the product. Australia offered a 5x population, a strong retail-investing boom (post-COVID), and incumbents (CommSec, big-broker apps) that felt institutional rather than welcoming to beginners.</p>', 'Founded in Wellington in 2017, Sharesies set out to give "someone with \$5 the same investment opportunities as someone with \$5 million" — fractional investing, no minimums, and a deliberately friendly brand aimed at first-time investors. By late 2020 it dominated NZ retail investing. Crucially, Sharesies had already offered its NZ users access to **ASX-listed shares** before entering Australia — so the product knew the Australian market before Australians knew the product.
 Australia offered a 5x population, a strong retail-investing boom (post-COVID), and incumbents (CommSec, big-broker apps) that felt institutional rather than welcoming to beginners.', 1),
       ('entry-strategy', 'Soft launch first, market later', '<p>Sharesies went live to Australian customers in April 2021 with no fanfare — using the quiet period to test onboarding, compliance (AFSL arrangements), tax handling and support with real customers. The public marketing push began only in late August 2021, once the operational kinks were worked out.</p>', 'Sharesies went live to Australian customers in April 2021 with no fanfare — using the quiet period to test onboarding, compliance (AFSL arrangements), tax handling and support with real customers. The public marketing push began only in late August 2021, once the operational kinks were worked out.', 2),
@@ -2249,27 +427,17 @@ Australia offered a 5x population, a strong retail-investing boom (post-COVID), 
 2. **Serve the new market from home before entering it.** Offering ASX access to NZ users first built product readiness and demand signals pre-entry.
 3. **Raise for the expansion, not during it.** A dedicated war chest meant the entry was never hostage to the next funding round.
 4. **A beginner-friendly brand travels.** Positioning against category intimidation — not against a specific incumbent — worked identically on both sides of the Tasman.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Sharesies', 'New Zealand', 'Australia',
-       'Fintech — retail investing platform', '2021', 'successful'
-FROM item
-WHERE 'Sharesies' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-sharesies-took-kiwi-micro-investing-across-the-tasman' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-sharesies-took-kiwi-micro-investing-across-the-tasman' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-serko-won-australian-corporate-travel-before-going-global
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-serko-won-australian-corporate-travel-before-going-global', 'How Serko Won Australian Corporate Travel Before Going Global', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Auckland''s Serko conquered the Australian corporate travel market so thoroughly that by 2018 its CEO could state plainly: "the bulk of Serko''s revenue comes…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-serko-won-australian-corporate-travel-before-going-global')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Auckland''s Serko conquered the Australian corporate travel market so thoroughly that by 2018 its CEO could state plainly: "the bulk of Serko''s revenue comes from Australia." The travel-tech company got there without a consumer brand or a big-bang launch — it rode <strong>travel management company (TMC) distribution</strong>, a <strong>Qantas technology partnership</strong> (first corporate platform globally with IATA Level 3 NDC certification, 2018), and an <strong>ASX listing</strong> to become the default booking engine of Australasian business travel.</p>
+-- how-serko-won-australian-corporate-travel-before-going-global (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-serko-won-australian-corporate-travel-before-going-global' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-serko-won-australian-corporate-travel-before-going-global' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-serko-won-australian-corporate-travel-before-going-global' AND status = 'draft' AND content_type = 'case_study'), '<p>Auckland''s Serko conquered the Australian corporate travel market so thoroughly that by 2018 its CEO could state plainly: "the bulk of Serko''s revenue comes from Australia." The travel-tech company got there without a consumer brand or a big-bang launch — it rode <strong>travel management company (TMC) distribution</strong>, a <strong>Qantas technology partnership</strong> (first corporate platform globally with IATA Level 3 NDC certification, 2018), and an <strong>ASX listing</strong> to become the default booking engine of Australasian business travel.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -2313,27 +481,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — Australia became Serko''s largest revenue market</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-serko-won-australian-corporate-travel-before-going-global' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('People & anchor customers', 'people-and-anchor-customers', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Serko''s roots go back to 1994, when Darrin Grafton and Bob Shaw founded Interactive Technologies Limited to solve travel agents'' mid- and back-office problems. After selling ITL, they founded Serko in May 2007 around Serko Online — an online booking tool for corporate travel — later succeeded by the AI-driven Zeno platform. Australia and New Zealand function as one corporate travel region: the same TMCs (travel management companies), the same dominant carrier relationships (Qantas, Air New Zealand), and heavy trans-Tasman business traffic. For a Kiwi booking-tool vendor, Australia wasn''t a foreign market so much as the larger half of the home market.</p>', 'Serko''s roots go back to 1994, when Darrin Grafton and Bob Shaw founded Interactive Technologies Limited to solve travel agents'' mid- and back-office problems. After selling ITL, they founded Serko in May 2007 around Serko Online — an online booking tool for corporate travel — later succeeded by the AI-driven Zeno platform.
 Australia and New Zealand function as one corporate travel region: the same TMCs (travel management companies), the same dominant carrier relationships (Qantas, Air New Zealand), and heavy trans-Tasman business traffic. For a Kiwi booking-tool vendor, Australia wasn''t a foreign market so much as the larger half of the home market.', 1),
       ('entry-strategy', 'Distribute through the channel, not to the end customer', '<p>Serko sold through TMCs — the agencies that manage corporate travel programs — rather than selling directly to thousands of corporates. Each TMC win brought a portfolio of corporate customers with it, letting a small Auckland company scale across Australia with minimal local salesforce.</p>', 'Serko sold through TMCs — the agencies that manage corporate travel programs — rather than selling directly to thousands of corporates. Each TMC win brought a portfolio of corporate customers with it, letting a small Auckland company scale across Australia with minimal local salesforce.', 2),
@@ -2375,27 +537,17 @@ Australia and New Zealand function as one corporate travel region: the same TMCs
 2. **Certify into the incumbent''s ecosystem.** Being first to meet Qantas''s technical standard made Serko the path of least resistance for the whole market.
 3. **List where your revenue lives.** The ASX listing aligned Serko''s capital base with its customer base and raised its profile with Australian corporates.
 4. **Treat adjacency as a launchpad, not a destination.** Australian dominance funded and de-risked the later push into North America and Europe.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Serko', 'New Zealand', 'Australia',
-       'Corporate travel and expense technology', '2000', 'successful'
-FROM item
-WHERE 'Serko' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-serko-won-australian-corporate-travel-before-going-global' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-serko-won-australian-corporate-travel-before-going-global' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry', 'How OVO Energy Pivoted From Licensing to Owning Its Australian Entry', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'OVO Energy arrived in Australia in 2019 promising to disrupt electricity retailing the way it had in the UK. The consumer brand never got past roughly…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>OVO Energy arrived in Australia in 2019 promising to disrupt electricity retailing the way it had in the UK. The consumer brand never got past roughly <strong>80,000 customers</strong> — but the entry still paid off spectacularly, just not as planned. OVO''s real Australian business turned out to be its <strong>Kaluza</strong> software platform: AGL took a majority stake in OVO Energy Australia in 2021, fully acquired it by 2024, and then invested <strong>~A$150 million for 20% of Kaluza itself</strong>, committing to run its ~4 million customer services on OVO''s technology.</p>
+-- how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry' AND status = 'draft' AND content_type = 'case_study'), '<p>OVO Energy arrived in Australia in 2019 promising to disrupt electricity retailing the way it had in the UK. The consumer brand never got past roughly <strong>80,000 customers</strong> — but the entry still paid off spectacularly, just not as planned. OVO''s real Australian business turned out to be its <strong>Kaluza</strong> software platform: AGL took a majority stake in OVO Energy Australia in 2021, fully acquired it by 2024, and then invested <strong>~A$150 million for 20% of Kaluza itself</strong>, committing to run its ~4 million customer services on OVO''s technology.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -2439,27 +591,21 @@ intro AS (
 <td>Outcome</td>
 <td>Mixed — retail brand sub-scale and absorbed by AGL; technology platform won the market</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Team & local footprint', 'team-and-local-footprint', 3),
       ('Success and failure factors', 'success-and-failure-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Founded in Bristol in 2009 by Stephen Fitzpatrick, OVO grew from challenger to the UK''s third-largest domestic supplier (after acquiring SSE''s retail arm in 2020). Its differentiators were digital-first service and <strong>Kaluza</strong>, its in-house platform for billing, smart devices and grid flexibility. Australia looked attractive — high retail energy prices, low customer satisfaction with the big three (AGL, Origin, EnergyAustralia), and the world''s highest rooftop-solar penetration, ideal for Kaluza''s smart-energy technology. OVO applied to the AER in August 2019 and was authorised as an electricity retailer on 22 October 2019, launching with a Melbourne-based team across NSW, VIC, SA and QLD.</p>', 'Founded in Bristol in 2009 by Stephen Fitzpatrick, OVO grew from challenger to the UK''s third-largest domestic supplier (after acquiring SSE''s retail arm in 2020). Its differentiators were digital-first service and **Kaluza**, its in-house platform for billing, smart devices and grid flexibility.
 Australia looked attractive — high retail energy prices, low customer satisfaction with the big three (AGL, Origin, EnergyAustralia), and the world''s highest rooftop-solar penetration, ideal for Kaluza''s smart-energy technology. OVO applied to the AER in August 2019 and was authorised as an electricity retailer on 22 October 2019, launching with a Melbourne-based team across NSW, VIC, SA and QLD.', 1),
       ('entry-strategy', 'Phase 1: challenger retail brand (2019–2021)', '<p>OVO launched with UK-style propositions — flat monthly payments (bill smoothing), 3% interest paid on credit balances, no exit fees, and optional GreenPower. The AFR covered its promise of "more disruption in electricity retailing". But customer acquisition in Australian energy is brutal: comparison-site economics, thin margins under the Default Market Offer, and incumbents with massive retention budgets.</p>', 'OVO launched with UK-style propositions — flat monthly payments (bill smoothing), 3% interest paid on credit balances, no exit fees, and optional GreenPower. The AFR covered its promise of "more disruption in electricity retailing". But customer acquisition in Australian energy is brutal: comparison-site economics, thin margins under the Default Market Offer, and incumbents with massive retention budgets.', 2),
@@ -2501,27 +647,17 @@ Australia looked attractive — high retail energy prices, low customer satisfac
 2. **A small customer base can still be a strategic asset.** 80,000 customers weren''t a business — they were a local proof-of-concept that closed a nine-figure platform deal.
 3. **Selling to the incumbent can beat competing with it.** The pivot from AGL competitor to AGL vendor turned Australia''s market structure from obstacle into revenue.
 4. **Sequence brand → proof → platform.** Each phase created the credibility the next one needed.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'OVO Energy', 'United Kingdom', 'Australia',
-       'Energy retail → energy software (Kaluza)', '2019', NULL
-FROM item
-WHERE 'OVO Energy' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-ovo-energy-pivoted-from-licensing-to-owning-its-australian-entry' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-shopify-won-australian-merchants-with-partner-led-growth
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-shopify-won-australian-merchants-with-partner-led-growth', 'How Shopify Won Australian Merchants With Partner-Led Growth', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Shopify never held an Australian launch event — yet Australia became one of its highest-penetration markets in the world, with roughly 131,000 live Shopify…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-shopify-won-australian-merchants-with-partner-led-growth')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Shopify never held an Australian launch event — yet Australia became one of its highest-penetration markets in the world, with roughly <strong>131,000 live Shopify stores</strong> by 2026. The Canadian commerce platform entered through developers, agencies and local payment integrations rather than marketing spend, and Australian brands like Who Gives A Crap, Frank Body and Culture Kings grew up "Shopify-native".</p>
+-- how-shopify-won-australian-merchants-with-partner-led-growth (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-shopify-won-australian-merchants-with-partner-led-growth' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-shopify-won-australian-merchants-with-partner-led-growth' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-shopify-won-australian-merchants-with-partner-led-growth' AND status = 'draft' AND content_type = 'case_study'), '<p>Shopify never held an Australian launch event — yet Australia became one of its highest-penetration markets in the world, with roughly <strong>131,000 live Shopify stores</strong> by 2026. The Canadian commerce platform entered through developers, agencies and local payment integrations rather than marketing spend, and Australian brands like Who Gives A Crap, Frank Body and Culture Kings grew up "Shopify-native".</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -2565,27 +701,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — \~131,000 live AU stores; category-default platform for DTC brands</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-shopify-won-australian-merchants-with-partner-led-growth' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Team & flagship merchants', 'team-and-flagship-merchants', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Ottawa-based Shopify built a self-serve platform any merchant could adopt with a credit card — which meant international expansion could happen without international operations. Australia was fertile ground: high ecommerce growth off a low base, a strong DTC startup culture, English-speaking, and underserved by clunky local ecommerce software. Australian merchants simply started signing up. Editorial note: unlike most cases in this batch, there is no single "launch moment" — this case is best framed around tactics and ecosystem mechanics rather than a dated entry event.</p>', 'Ottawa-based Shopify built a self-serve platform any merchant could adopt with a credit card — which meant international expansion could happen without international operations. Australia was fertile ground: high ecommerce growth off a low base, a strong DTC startup culture, English-speaking, and underserved by clunky local ecommerce software. Australian merchants simply started signing up.
 Editorial note: unlike most cases in this batch, there is no single "launch moment" — this case is best framed around tactics and ecosystem mechanics rather than a dated entry event.', 1),
       ('entry-strategy', 'Let the product cross the border first', '<p>Shopify''s self-serve, credit-card-onboarding model meant Australian adoption preceded any Australian presence. The company effectively observed where organic demand clustered, then invested behind it — the opposite of the build-it-first retail entries (Masters, Kaufland) in this series.</p>', 'Shopify''s self-serve, credit-card-onboarding model meant Australian adoption preceded any Australian presence. The company effectively observed where organic demand clustered, then invested behind it — the opposite of the build-it-first retail entries (Masters, Kaufland) in this series.', 2),
@@ -2623,27 +753,17 @@ Editorial note: unlike most cases in this batch, there is no single "launch mome
 2. **Localise payments before anything else.** Money movement is where global products feel foreign; fixing it converts existing intent.
 3. **Build an ecosystem with skin in the game.** Local partners who profit from your growth are a distribution channel that compounds.
 4. **Your customers'' success stories are your market entry campaign.** Local hero brands did more for Shopify''s Australian credibility than advertising could.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Shopify', 'Canada', 'Australia',
-       'Ecommerce platform (SaaS)', '2010', 'successful'
-FROM item
-WHERE 'Shopify' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-shopify-won-australian-merchants-with-partner-led-growth' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-shopify-won-australian-merchants-with-partner-led-growth' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno', 'How Circles.Life Attacked Australian Telco Pricing as a Digital MVNO', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'When Singapore''s [Circles.Life](http://Circles.Life) launched in Australia on 12 September 2019, its opening move was audacious: it offered to pay new…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>When Singapore''s <a href="http://Circles.Life">Circles.Life</a> launched in Australia on <strong>12 September 2019</strong>, its opening move was audacious: it offered to pay new customers'' phone bills for the <strong>first four months</strong> — a 20GB, unlimited-calls plan normally priced at <strong>$28 a month</strong>, free. The digital telco went on to win national customer-satisfaction awards, then executed something rarer still: a deliberate, orderly exit that transferred its customer base to Amaysim.</p>
+-- how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno' AND status = 'draft' AND content_type = 'case_study'), '<p>When Singapore''s <a href="http://Circles.Life">Circles.Life</a> launched in Australia on <strong>12 September 2019</strong>, its opening move was audacious: it offered to pay new customers'' phone bills for the <strong>first four months</strong> — a 20GB, unlimited-calls plan normally priced at <strong>$28 a month</strong>, free. The digital telco went on to win national customer-satisfaction awards, then executed something rarer still: a deliberate, orderly exit that transferred its customer base to Amaysim.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -2695,27 +815,21 @@ intro AS (
 <td>Outcome</td>
 <td>Mixed — award-winning brand, later transferred its customer base to Amaysim in a planned build-operate-transfer exit</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Team & endgame', 'team-and-endgame', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p><a href="http://Circles.Life">Circles.Life</a> was Singapore''s first full-service digital telco — an MVNO that buys wholesale network capacity and replaces physical stores with an app. In Singapore it captured over 5% of the mobile market and posted a sector-leading NPS above 50. After a Series C round led by Sequoia India, it announced plans to launch in more than five countries within 18 months, investing over <strong>$50 million per market</strong> — Taiwan and Australia first, both in 2019.</p>', '[Circles.Life](http://Circles.Life) was Singapore''s first full-service digital telco — an MVNO that buys wholesale network capacity and replaces physical stores with an app. In Singapore it captured over 5% of the mobile market and posted a sector-leading NPS above 50. After a Series C round led by Sequoia India, it announced plans to launch in more than five countries within 18 months, investing over **\$50 million per market** — Taiwan and Australia first, both in 2019.', 1),
       ('entry-strategy', 'Ride on incumbent infrastructure', '<p><a href="http://Circles.Life">Circles.Life</a> entered as an MVNO on the Optus network — notably owned by fellow Singaporean company Singtel — avoiding network capex entirely and going to market in months, not years.</p>', '[Circles.Life](http://Circles.Life) entered as an MVNO on the Optus network — notably owned by fellow Singaporean company Singtel — avoiding network capex entirely and going to market in months, not years.', 2),
       ('entry-strategy', 'Buy attention with an outrageous offer', '<p>The four-months-free launch promotion generated national press coverage on day one and gave the unknown brand an acquisition engine no ad campaign could match.</p>', 'The four-months-free launch promotion generated national press coverage on day one and gave the unknown brand an acquisition engine no ad campaign could match.', 3),
@@ -2755,27 +869,17 @@ sec_bodies AS (
 2. **A shocking launch offer can substitute for years of brand-building** if the underlying product retains the customers it attracts.
 3. **Digital-only operations can out-satisfy incumbents**, not just undercut them.
 4. **Exit can be strategy.** A well-executed transfer of the customer base converted a sub-scale retail position into a credential for the company''s software business.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Circles.Life', 'Singapore', 'Australia',
-       'Digital telco (MVNO)', '2019', NULL
-FROM item
-WHERE 'Circles.Life' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-circles-life-attacked-australian-telco-pricing-as-a-digital-mvno' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down', 'How Japan Post''s Toll Takeover Became a Multi-Billion-Dollar Write-Down', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'In February 2015, Japan Post Holdings agreed to buy Australia''s biggest logistics company, Toll Holdings, for A$6.5 billion — a 49% premium to the last…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>In February 2015, Japan Post Holdings agreed to buy Australia''s biggest logistics company, Toll Holdings, for <strong>A$6.5 billion</strong> — a <strong>49% premium</strong> to the last closing price, unanimously recommended by Toll''s board. Barely two years later, Japan Post wrote down the investment by <strong>A$4.9 billion</strong> and its leadership publicly expressed regret for a "rushed" takeover. It stands as one of the most value-destructive inbound acquisitions in Australian corporate history.</p>
+-- how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down' AND status = 'draft' AND content_type = 'case_study'), '<p>In February 2015, Japan Post Holdings agreed to buy Australia''s biggest logistics company, Toll Holdings, for <strong>A$6.5 billion</strong> — a <strong>49% premium</strong> to the last closing price, unanimously recommended by Toll''s board. Barely two years later, Japan Post wrote down the investment by <strong>A$4.9 billion</strong> and its leadership publicly expressed regret for a "rushed" takeover. It stands as one of the most value-destructive inbound acquisitions in Australian corporate history.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -2827,27 +931,21 @@ intro AS (
 <td>Outcome</td>
 <td>Failure — A\$4.9B write-down within two years</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('What Japan Post did', 'what-japan-post-did', 2),
       ('Deal mechanics & aftermath', 'deal-mechanics-and-aftermath', 3),
       ('Failure factors', 'failure-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Toll was an Australian success story: Paul Little bought a five-depot, 125-truck trucking firm for $1.5 million in 1986 and built it into Australia''s largest freight and logistics group through a long web of acquisitions. Japan Post, a state-owned financial and postal giant, was preparing for its stockmarket listing and wanted a global logistics growth story to sell to IPO investors. Toll — with operations spanning 55 countries — looked like a shortcut.</p>', 'Toll was an Australian success story: Paul Little bought a five-depot, 125-truck trucking firm for \$1.5 million in 1986 and built it into Australia''s largest freight and logistics group through a long web of acquisitions. Japan Post, a state-owned financial and postal giant, was preparing for its stockmarket listing and wanted a global logistics growth story to sell to IPO investors. Toll — with operations spanning 55 countries — looked like a shortcut.', 1),
       ('what-japan-post-did', 'Paid a knockout premium for speed', '<p>The 49% premium ended any auction before it began and secured a unanimous board recommendation — but priced Toll''s cyclical earnings at the top.</p>', 'The 49% premium ended any auction before it began and secured a unanimous board recommendation — but priced Toll''s cyclical earnings at the top.', 2),
       ('what-japan-post-did', 'Bought a deal to dress an IPO', '<p>The acquisition was announced months before Japan Post''s own listing, and the timetable drove the diligence, not the other way around. Its own IPO documents warned that managing Toll''s web of acquisitions could be difficult.</p>', 'The acquisition was announced months before Japan Post''s own listing, and the timetable drove the diligence, not the other way around. Its own IPO documents warned that managing Toll''s web of acquisitions could be difficult.', 3),
@@ -2886,27 +984,17 @@ sec_bodies AS (
 2. **Hands-off is not the same as respectful.** Local autonomy without governance let known problems compound.
 3. **A cyclical business bought at the top punishes twice** — earnings fall and the write-down follows.
 4. **Scale in a market is not capability in a market.** Owning Australia''s biggest logistics firm did not make Japan Post a capable logistics operator in Australia.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Japan Post', 'Japan', 'Australia',
-       'Logistics and freight', '2015', 'unsuccessful'
-FROM item
-WHERE 'Japan Post' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-japan-posts-toll-takeover-became-a-multi-billion-dollar-write-down' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-singtel-bought-optus-to-enter-australia-at-full-scale
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-singtel-bought-optus-to-enter-australia-at-full-scale', 'How Singtel Bought Optus to Enter Australia at Full Scale', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'In March 2001, Singapore Telecommunications won the contest for Cable & Wireless Optus with a S$13.6 billion offer — at the time the largest Asian corporate…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-singtel-bought-optus-to-enter-australia-at-full-scale')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>In March 2001, Singapore Telecommunications won the contest for Cable &amp; Wireless Optus with a <strong>S$13.6 billion</strong> offer — at the time the largest Asian corporate acquisition of an Australian company ever. The deal completed on <strong>23 October 2001</strong>, and a quarter of a century later Optus remains Australia''s clear number-two carrier and Singtel''s largest single asset.</p>
+-- how-singtel-bought-optus-to-enter-australia-at-full-scale (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-singtel-bought-optus-to-enter-australia-at-full-scale' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-singtel-bought-optus-to-enter-australia-at-full-scale' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-singtel-bought-optus-to-enter-australia-at-full-scale' AND status = 'draft' AND content_type = 'case_study'), '<p>In March 2001, Singapore Telecommunications won the contest for Cable &amp; Wireless Optus with a <strong>S$13.6 billion</strong> offer — at the time the largest Asian corporate acquisition of an Australian company ever. The deal completed on <strong>23 October 2001</strong>, and a quarter of a century later Optus remains Australia''s clear number-two carrier and Singtel''s largest single asset.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -2958,27 +1046,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — Optus is still Australia''s #2 telco under Singtel ownership</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-singtel-bought-optus-to-enter-australia-at-full-scale' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Deal mechanics & people', 'deal-mechanics-and-people', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Optus was founded in 1992 as Australia''s second full-service carrier, built to challenge Telstra''s monopoly. By 2001 it had 3.4 million mobile subscribers and was 52.5% owned by the UK''s Cable &amp; Wireless, which wanted out. Singtel, dominant in a small home market and flush with capital, was hunting for regional scale — and the Singapore government signalled it would loosen its grip on the company to support overseas expansion.</p>', 'Optus was founded in 1992 as Australia''s second full-service carrier, built to challenge Telstra''s monopoly. By 2001 it had 3.4 million mobile subscribers and was 52.5% owned by the UK''s Cable & Wireless, which wanted out. Singtel, dominant in a small home market and flush with capital, was hunting for regional scale — and the Singapore government signalled it would loosen its grip on the company to support overseas expansion.', 1),
       ('entry-strategy', 'Buy the established challenger, don''t build', '<p>Rather than bidding for spectrum and building a greenfield network, Singtel bought the #2 player outright — instantly acquiring licences, infrastructure, retail distribution and millions of customers.</p>', 'Rather than bidding for spectrum and building a greenfield network, Singtel bought the #2 player outright — instantly acquiring licences, infrastructure, retail distribution and millions of customers.', 2),
       ('entry-strategy', 'Keep the local brand', '<p>The company was renamed SingTel Optus, but the consumer-facing Optus brand was retained in full. Australian customers noticed almost no change of ownership.</p>', 'The company was renamed SingTel Optus, but the consumer-facing Optus brand was retained in full. Australian customers noticed almost no change of ownership.', 3),
@@ -3018,27 +1100,17 @@ sec_bodies AS (
 2. **Keep the local brand if it has equity.** Ownership changed; the Optus brand and its challenger identity did not.
 3. **A strong #2 in a rational market is a prize**, even when strategists say the geography is wrong.
 4. **Local capital-market presence builds legitimacy** with institutions, regulators and talent.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Singtel', 'Singapore', 'Australia',
-       'Telecommunications', '2001', 'successful'
-FROM item
-WHERE 'Singtel' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-singtel-bought-optus-to-enter-australia-at-full-scale' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-singtel-bought-optus-to-enter-australia-at-full-scale' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-minor-international-bought-oaks-hotels-to-enter-australia-overnight
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-minor-international-bought-oaks-hotels-to-enter-australia-overnight', 'How Minor International Bought Oaks Hotels to Enter Australia Overnight', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'In 2011, Bangkok-based Minor International pulled off one of the sharpest inbound plays in Australian hospitality: it took control of ASX-listed Oaks Hotels…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-minor-international-bought-oaks-hotels-to-enter-australia-overnight')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>In 2011, Bangkok-based Minor International pulled off one of the sharpest inbound plays in Australian hospitality: it took control of ASX-listed Oaks Hotels &amp; Resorts through a takeover valuing the company''s equity at roughly <strong>A$90 million</strong> — against the recommendation of the Oaks board. Under Thai ownership, Oaks has grown into a network of well over 50 Australian properties, and Minor is now bringing its global luxury flagship Anantara to Perth.</p>
+-- how-minor-international-bought-oaks-hotels-to-enter-australia-overnight (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-minor-international-bought-oaks-hotels-to-enter-australia-overnight' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-minor-international-bought-oaks-hotels-to-enter-australia-overnight' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-minor-international-bought-oaks-hotels-to-enter-australia-overnight' AND status = 'draft' AND content_type = 'case_study'), '<p>In 2011, Bangkok-based Minor International pulled off one of the sharpest inbound plays in Australian hospitality: it took control of ASX-listed Oaks Hotels &amp; Resorts through a takeover valuing the company''s equity at roughly <strong>A$90 million</strong> — against the recommendation of the Oaks board. Under Thai ownership, Oaks has grown into a network of well over 50 Australian properties, and Minor is now bringing its global luxury flagship Anantara to Perth.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -3090,27 +1162,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — Oaks expanded across Australia; Anantara luxury brand now entering</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-minor-international-bought-oaks-hotels-to-enter-australia-overnight' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('People & platform', 'people-and-platform', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Oaks was founded in 1991 on Queensland''s Sunshine Coast and built a distinctive serviced-apartment model — managing apartment inventory owned by individual investors. By 2011 it operated 38 properties across Australia, New Zealand and Dubai, but shareholder distress had left a 34.4% block of the register in the hands of receivers. Minor International — owner of the Anantara luxury brand — had been looking for a platform in the Pacific.</p>', 'Oaks was founded in 1991 on Queensland''s Sunshine Coast and built a distinctive serviced-apartment model — managing apartment inventory owned by individual investors. By 2011 it operated 38 properties across Australia, New Zealand and Dubai, but shareholder distress had left a 34.4% block of the register in the hands of receivers. Minor International — owner of the Anantara luxury brand — had been looking for a platform in the Pacific.', 1),
       ('entry-strategy', 'Buy distress, not trophies', '<p>Minor started with a 19.96% stake for just <strong>A$12 million</strong> in March 2011, then acquired the 34.4% block held by PricewaterhouseCoopers as receivers — vaulting to 54.3% control before most of the market had reacted.</p>', 'Minor started with a 19.96% stake for just **A\$12 million** in March 2011, then acquired the 34.4% block held by PricewaterhouseCoopers as receivers — vaulting to 54.3% control before most of the market had reacted.', 2),
       ('entry-strategy', 'Persist through board opposition', '<p>Oaks'' directors formally urged shareholders to <strong>reject</strong> Minor''s A$0.52-per-share offer. Minor held its price, completed the takeover by late 2011, and moved to compulsory acquisition.</p>', 'Oaks'' directors formally urged shareholders to **reject** Minor''s A\$0.52-per-share offer. Minor held its price, completed the takeover by late 2011, and moved to compulsory acquisition.', 3),
@@ -3148,27 +1214,17 @@ sec_bodies AS (
 2. **A board''s ''reject'' is a negotiating position, not a wall.**
 3. **Keep the local brand where it carries the trust** — and layer your global brands on top later.
 4. **Mid-market platforms can carry luxury ambitions** into a new market decades later.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Minor International', 'Thailand', 'Australia',
-       'Hotels and hospitality', '2011', 'successful'
-FROM item
-WHERE 'Minor International' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-minor-international-bought-oaks-hotels-to-enter-australia-overnight' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-minor-international-bought-oaks-hotels-to-enter-australia-overnight' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia', 'How Kia Used Local Tuning and a Seven-Year Warranty to Crack Australia', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Kia''s Australian story is the longest of long games. The Korean carmaker entered in 1988 with the Rocsta and spent three decades as a budget also-ran —…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Kia''s Australian story is the longest of long games. The Korean carmaker entered in <strong>1988</strong> with the Rocsta and spent three decades as a budget also-ran — taking until <strong>2018</strong> to reach 500,000 cumulative sales. Then the flywheel caught: it sold its <strong>second half-million in just seven years</strong>, passing <strong>1 million cumulative Australian sales in 2025</strong> and establishing itself as one of the country''s top-selling brands.</p>
+-- how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia' AND status = 'draft' AND content_type = 'case_study'), '<p>Kia''s Australian story is the longest of long games. The Korean carmaker entered in <strong>1988</strong> with the Rocsta and spent three decades as a budget also-ran — taking until <strong>2018</strong> to reach 500,000 cumulative sales. Then the flywheel caught: it sold its <strong>second half-million in just seven years</strong>, passing <strong>1 million cumulative Australian sales in 2025</strong> and establishing itself as one of the country''s top-selling brands.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -3220,26 +1276,20 @@ intro AS (
 <td>Outcome</td>
 <td>Success — 1 million cumulative sales (2025), top-tier brand, now defending against Chinese entrants</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry and growth strategy', 'entry-and-growth-strategy', 2),
       ('Success factors', 'success-factors', 3),
       ('Key metrics & performance', 'key-metrics-and-performance', 4),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 5)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Like its early years in the US, Kia arrived in Australia as a low-cost value brand with a reputation for unremarkable quality. The transformation that followed mirrored the group''s global turnaround — design-led product, quality investment and aggressive warranty — but Australia added its own local ingredients.</p>', 'Like its early years in the US, Kia arrived in Australia as a low-cost value brand with a reputation for unremarkable quality. The transformation that followed mirrored the group''s global turnaround — design-led product, quality investment and aggressive warranty — but Australia added its own local ingredients.', 1),
       ('entry-and-growth-strategy', 'The 7-year warranty as a trust shortcut', '<p>Introduced on 1 October 2014, Kia''s seven-year unlimited-kilometre warranty was the longest new-car warranty in Australia at the time — bundled with seven years of capped-price servicing and roadside assistance. It converted sceptical buyers by pricing the company''s own confidence into the product; more than 366,000 Australians bought a new Kia under the programme in its first seven years, and Kia''s sales trajectory visibly steepened from its introduction.</p>', 'Introduced on 1 October 2014, Kia''s seven-year unlimited-kilometre warranty was the longest new-car warranty in Australia at the time — bundled with seven years of capped-price servicing and roadside assistance. It converted sceptical buyers by pricing the company''s own confidence into the product; more than 366,000 Australians bought a new Kia under the programme in its first seven years, and Kia''s sales trajectory visibly steepened from its introduction.', 2),
       ('entry-and-growth-strategy', 'Local ride and handling tuning', '<p>Kia Australia runs a dedicated local suspension tuning programme led by its Chief Ride and Handling Engineer, Graeme Gambold, re-engineering spring, damper and steering settings for Australian roads on locally sold models. It became a signature differentiator in Australian motoring reviews.</p>', 'Kia Australia runs a dedicated local suspension tuning programme led by its Chief Ride and Handling Engineer, Graeme Gambold, re-engineering spring, damper and steering settings for Australian roads on locally sold models. It became a signature differentiator in Australian motoring reviews.', 3),
@@ -3270,27 +1320,17 @@ sec_bodies AS (
 2. **Visible local engineering buys credibility** that no advertising spend can.
 3. **Brand turnarounds compound slowly, then suddenly** — 30 years to the first half-million, 7 to the second.
 4. **No position is permanent.** The value territory Kia conquered is exactly where Chinese entrants are now attacking.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Kia', 'South Korea', 'Australia',
-       'Automotive', '1988', 'successful'
-FROM item
-WHERE 'Kia' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-kia-used-local-tuning-and-a-seven-year-warranty-to-crack-australia' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-daiso-translated-japans-fixed-price-retail-model-for-australia
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-daiso-translated-japans-fixed-price-retail-model-for-australia', 'How Daiso Translated Japan''s Fixed-Price Retail Model for Australia', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'In 2010, Japan''s Daiso — the company that built a retail empire on the 100-yen price point — opened its first Australian store in Richmond, Melbourne. The…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-daiso-translated-japans-fixed-price-retail-model-for-australia')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>In 2010, Japan''s Daiso — the company that built a retail empire on the 100-yen price point — opened its first Australian store in Richmond, Melbourne. The format captured Australian shoppers almost immediately: the network grew to as many as <strong>46 stores across five states</strong>, and Daiso remains a fixture of Australian shopping centres today with stores in <strong>six states and the ACT</strong>.</p>
+-- how-daiso-translated-japans-fixed-price-retail-model-for-australia (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-daiso-translated-japans-fixed-price-retail-model-for-australia' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-daiso-translated-japans-fixed-price-retail-model-for-australia' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-daiso-translated-japans-fixed-price-retail-model-for-australia' AND status = 'draft' AND content_type = 'case_study'), '<p>In 2010, Japan''s Daiso — the company that built a retail empire on the 100-yen price point — opened its first Australian store in Richmond, Melbourne. The format captured Australian shoppers almost immediately: the network grew to as many as <strong>46 stores across five states</strong>, and Daiso remains a fixture of Australian shopping centres today with stores in <strong>six states and the ACT</strong>.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -3342,27 +1382,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — enduring national footprint across six states and the ACT</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-daiso-translated-japans-fixed-price-retail-model-for-australia' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Local structure & footprint', 'local-structure-and-footprint', 3),
       ('Success factors', 'success-factors', 4),
       ('Key metrics & performance', 'key-metrics-and-performance', 5),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Daiso traces back to 1972, when founder Hirotake Yano began street-vending household goods, formalising the company in 1977. Its 100-yen shops — everything in the store at one low fixed price — grew to more than 65% of Japan''s domestic market in the category and thousands of stores across 25 countries and regions. Australia, with high retail prices and an appetite for Japanese design, was fertile ground.</p>', 'Daiso traces back to 1972, when founder Hirotake Yano began street-vending household goods, formalising the company in 1977. Its 100-yen shops — everything in the store at one low fixed price — grew to more than 65% of Japan''s domestic market in the category and thousands of stores across 25 countries and regions. Australia, with high retail prices and an appetite for Japanese design, was fertile ground.', 1),
       ('entry-strategy', 'Transplant the fixed-price format', '<p>Daiso brought its defining mechanic — a single low price across (almost) the whole store — to a market where variety retail was dominated by discount chains with cluttered, inconsistent pricing. The simplicity itself was the marketing.</p>', 'Daiso brought its defining mechanic — a single low price across (almost) the whole store — to a market where variety retail was dominated by discount chains with cluttered, inconsistent pricing. The simplicity itself was the marketing.', 2),
       ('entry-strategy', 'Treasure-hunt merchandising', '<p>Thousands of Japanese-designed SKUs across kitchenware, stationery, storage, beauty and snacks, refreshed constantly. The browse-and-discover experience drove repeat visits that conventional discounters couldn''t match.</p>', 'Thousands of Japanese-designed SKUs across kitchenware, stationery, storage, beauty and snacks, refreshed constantly. The browse-and-discover experience drove repeat visits that conventional discounters couldn''t match.', 3),
@@ -3404,27 +1438,17 @@ sec_bodies AS (
 2. **Cultural novelty plus consistent quality beats price alone** in value retail.
 3. **Simplicity scales.** One price point simplifies everything from supply chain to store labour.
 4. **Right-sizing is not retreat.** Trimming the network after rapid growth kept the business sustainable.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Daiso', 'Japan', 'Australia',
-       'Value / variety retail', '2010', 'successful'
-FROM item
-WHERE 'Daiso' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-daiso-translated-japans-fixed-price-retail-model-for-australia' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-daiso-translated-japans-fixed-price-retail-model-for-australia' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-hellofresh-built-australias-meal-kit-category-from-scratch
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-hellofresh-built-australias-meal-kit-category-from-scratch', 'How HelloFresh Built Australia''s Meal-Kit Category From Scratch', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'HelloFresh was barely a year old when it landed in Australia in 2012 — one of four international markets it entered in a single expansion wave — and it went…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-hellofresh-built-australias-meal-kit-category-from-scratch')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>HelloFresh was barely a year old when it landed in Australia in 2012 — one of four international markets it entered in a single expansion wave — and it went on to make the country part of a global meal-kit business commanding roughly 75% of the category worldwide.</p>
+-- how-hellofresh-built-australias-meal-kit-category-from-scratch (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-hellofresh-built-australias-meal-kit-category-from-scratch' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-hellofresh-built-australias-meal-kit-category-from-scratch' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-hellofresh-built-australias-meal-kit-category-from-scratch' AND status = 'draft' AND content_type = 'case_study'), '<p>HelloFresh was barely a year old when it landed in Australia in 2012 — one of four international markets it entered in a single expansion wave — and it went on to make the country part of a global meal-kit business commanding roughly 75% of the category worldwide.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -3476,27 +1500,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — category leadership in Australia within a globally dominant business</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-hellofresh-built-australias-meal-kit-category-from-scratch' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Team & local build-out', 'team-and-local-build-out', 3),
       ('Why it worked', 'why-it-worked', 4),
       ('Key metrics', 'key-metrics', 5),
       ('Lessons', 'lessons', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Founded in Berlin in 2011 by a trio hand-packing ten grocery bags for friends, HelloFresh bet that time-poor households would subscribe to pre-portioned ingredients and recipes rather than plan and shop themselves. It was one of the first companies of its kind — which made speed, not perfection, the core of its international strategy.</p>', 'Founded in Berlin in 2011 by a trio hand-packing ten grocery bags for friends, HelloFresh bet that time-poor households would subscribe to pre-portioned ingredients and recipes rather than plan and shop themselves. It was one of the first companies of its kind — which made speed, not perfection, the core of its international strategy.', 1),
       ('entry-strategy', 'Expand before competitors exist', '<p>HelloFresh entered Australia in 2012, only a year after founding, deliberately arriving before a strong local incumbent could emerge. Its stated approach across markets was rapid expansion combined with high marketing expenditure to fend off local competitors — in Australia most notably fellow German-born rival Marley Spoon.</p>', 'HelloFresh entered Australia in 2012, only a year after founding, deliberately arriving before a strong local incumbent could emerge. Its stated approach across markets was rapid expansion combined with high marketing expenditure to fend off local competitors — in Australia most notably fellow German-born rival Marley Spoon.', 2),
       ('entry-strategy', 'Replicate a data-driven playbook', '<p>Rather than reinventing the model per market, HelloFresh transplanted the same subscription mechanics, menu engineering and performance-marketing engine it was refining in Europe, backed by data-driven scaling that eventually reached 18 countries.</p>', 'Rather than reinventing the model per market, HelloFresh transplanted the same subscription mechanics, menu engineering and performance-marketing engine it was refining in Europe, backed by data-driven scaling that eventually reached 18 countries.', 3),
@@ -3536,27 +1554,17 @@ sec_bodies AS (
 2. A proven home-market playbook can be exported almost unchanged when the consumer problem is universal.
 3. Marketing spend can function as a barrier to entry if sustained longer than competitors can fund.
 4. Win the land-grab first; monetise the base second.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'HelloFresh', 'Germany', 'Australia',
-       'Meal-kit subscription e-commerce', '2012', 'successful'
-FROM item
-WHERE 'HelloFresh' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-hellofresh-built-australias-meal-kit-category-from-scratch' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-hellofresh-built-australias-meal-kit-category-from-scratch' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-doordash-made-a-late-entry-work-in-australian-food-delivery
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-doordash-made-a-late-entry-work-in-australian-food-delivery', 'How DoorDash Made a Late Entry Work in Australian Food Delivery', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'When DoorDash switched on in Melbourne on 4 September 2019, it was the company''s first launch outside North America after six years at home — and it arrived…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-doordash-made-a-late-entry-work-in-australian-food-delivery')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>When DoorDash switched on in Melbourne on 4 September 2019, it was the company''s first launch outside North America after six years at home — and it arrived with thousands of restaurants already signed and a $30 delivery guarantee designed to make Melburnians try it once.</p>
+-- how-doordash-made-a-late-entry-work-in-australian-food-delivery (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-doordash-made-a-late-entry-work-in-australian-food-delivery' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-doordash-made-a-late-entry-work-in-australian-food-delivery' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-doordash-made-a-late-entry-work-in-australian-food-delivery' AND status = 'draft' AND content_type = 'case_study'), '<p>When DoorDash switched on in Melbourne on 4 September 2019, it was the company''s first launch outside North America after six years at home — and it arrived with thousands of restaurants already signed and a $30 delivery guarantee designed to make Melburnians try it once.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -3608,27 +1616,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — outlasted Foodora, Deliveroo and Menulog to become Uber Eats'' main challenger</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-doordash-made-a-late-entry-work-in-australian-food-delivery' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Team & scale-up', 'team-and-scale-up', 3),
       ('Why it worked', 'why-it-worked', 4),
       ('Key metrics', 'key-metrics', 5),
       ('Lessons', 'lessons', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>By 2019 DoorDash had become the largest on-demand food delivery platform in the US, but it had never operated outside North America. Australia''s delivery market was already crowded — Uber Eats, Deliveroo and Menulog were entrenched, and Foodora had exited the year before amid gig-economy legal battles. DoorDash chose Melbourne, "the most livable city in the world", as its first offshore beachhead, drawn by the density and diversity of its food scene.</p>', 'By 2019 DoorDash had become the largest on-demand food delivery platform in the US, but it had never operated outside North America. Australia''s delivery market was already crowded — Uber Eats, Deliveroo and Menulog were entrenched, and Foodora had exited the year before amid gig-economy legal battles. DoorDash chose Melbourne, "the most livable city in the world", as its first offshore beachhead, drawn by the density and diversity of its food scene.', 1),
       ('entry-strategy', 'Launch with supply already on the shelf', '<p>Rather than launching thin, DoorDash signed thousands of Melbourne restaurants before day one — national chains like Nando''s, Salsa''s, Boost Juice and Betty''s Burgers alongside local favourites — so the app felt full from the first open.</p>', 'Rather than launching thin, DoorDash signed thousands of Melbourne restaurants before day one — national chains like Nando''s, Salsa''s, Boost Juice and Betty''s Burgers alongside local favourites — so the app felt full from the first open.', 2),
       ('entry-strategy', 'Buy trial with aggressive launch promotions', '<p>The launch offer was free delivery on all orders over $10 for the first 30 days, plus a "30 or $30" promotion guaranteeing delivery within 30 minutes or a $30 credit — a direct attack on the incumbents'' weakest point, delivery reliability.</p>', 'The launch offer was free delivery on all orders over \$10 for the first 30 days, plus a "30 or \$30" promotion guaranteeing delivery within 30 minutes or a \$30 credit — a direct attack on the incumbents'' weakest point, delivery reliability.', 3),
@@ -3668,27 +1670,17 @@ sec_bodies AS (
 2. Pre-signing supply before launch beats spending the same money on ads after launch.
 3. A local HQ and government relationship (Invest Victoria) smooths entry into a market wary of gig-economy operators.
 4. In shakeout markets, survival is a strategy: the last well-capitalised challenger inherits the exiters'' share.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'DoorDash', 'United States', 'Australia',
-       'On-demand food delivery', '2019', 'successful'
-FROM item
-WHERE 'DoorDash' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-doordash-made-a-late-entry-work-in-australian-food-delivery' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-doordash-made-a-late-entry-work-in-australian-food-delivery' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-didi-tested-geelong-before-undercutting-uber-across-australia
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-didi-tested-geelong-before-undercutting-uber-across-australia', 'How DiDi Tested Geelong Before Undercutting Uber Across Australia', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'When the world''s most valuable startup wanted to prove it could compete in a Western market, it didn''t pick London or Los Angeles — it picked Geelong. DiDi…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-didi-tested-geelong-before-undercutting-uber-across-australia')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>When the world''s most valuable startup wanted to prove it could compete in a Western market, it didn''t pick London or Los Angeles — it picked Geelong. DiDi Chuxing ran a month-long trial in the Victorian regional city before launching DiDi Express in Melbourne on 25 June 2018, its first foray into a Western-style market.</p>
+-- how-didi-tested-geelong-before-undercutting-uber-across-australia (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-didi-tested-geelong-before-undercutting-uber-across-australia' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-didi-tested-geelong-before-undercutting-uber-across-australia' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-didi-tested-geelong-before-undercutting-uber-across-australia' AND status = 'draft' AND content_type = 'case_study'), '<p>When the world''s most valuable startup wanted to prove it could compete in a Western market, it didn''t pick London or Los Angeles — it picked Geelong. DiDi Chuxing ran a month-long trial in the Victorian regional city before launching DiDi Express in Melbourne on 25 June 2018, its first foray into a Western-style market.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -3740,27 +1732,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — still operating across Australia and New Zealand</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-didi-tested-geelong-before-undercutting-uber-across-australia' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Rollout & local team', 'rollout-and-local-team', 3),
       ('Why it worked', 'why-it-worked', 4),
       ('Key metrics', 'key-metrics', 5),
       ('Lessons', 'lessons', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>DiDi was the world''s largest ride-hailing app and, at roughly US$56 billion, the world''s most valuable startup at the time of its Australian entry. It was best known for defeating Uber in China — buying Uber''s mainland operations in 2016 in exchange for a stake. Having begun international expansion in Toluca, Mexico earlier in 2018, DiDi declared globalisation a core strategy. Australia would be its test of whether the model travelled to Western-style markets that skew toward US brands — and it meant a direct rematch with Uber, plus recent entrants Ola and Taxify.</p>', 'DiDi was the world''s largest ride-hailing app and, at roughly US\$56 billion, the world''s most valuable startup at the time of its Australian entry. It was best known for defeating Uber in China — buying Uber''s mainland operations in 2016 in exchange for a stake. Having begun international expansion in Toluca, Mexico earlier in 2018, DiDi declared globalisation a core strategy. Australia would be its test of whether the model travelled to Western-style markets that skew toward US brands — and it meant a direct rematch with Uber, plus recent entrants Ola and Taxify.', 1),
       ('entry-strategy', 'Test in a small market first', '<p>Before touching Melbourne, DiDi ran a month-long trial in nearby Geelong — large enough to generate real data on drivers, riders and pricing, small enough to contain mistakes and stay under competitors'' radar.</p>', 'Before touching Melbourne, DiDi ran a month-long trial in nearby Geelong — large enough to generate real data on drivers, riders and pricing, small enough to contain mistakes and stay under competitors'' radar.', 2),
       ('entry-strategy', 'Pick the second city, not the first', '<p>Melbourne — Australia''s second-biggest city and its most contested rideshare market — became the launch pad on 25 June 2018, chosen deliberately as DiDi''s first Western battleground against Uber, Ola and Taxify.</p>', 'Melbourne — Australia''s second-biggest city and its most contested rideshare market — became the launch pad on 25 June 2018, chosen deliberately as DiDi''s first Western battleground against Uber, Ola and Taxify.', 3),
@@ -3802,27 +1788,17 @@ sec_bodies AS (
 2. Enter where you have a proven playbook against the incumbent, not just where the market is largest.
 3. In multi-homing markets, you don''t need to displace the leader — you need to be worth a second app icon.
 4. Challenger shakeouts reward the deepest balance sheet, not the earliest arrival.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'DiDi', 'China', 'Australia',
-       'Ride-hailing', '2018', 'successful'
-FROM item
-WHERE 'DiDi' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-didi-tested-geelong-before-undercutting-uber-across-australia' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-didi-tested-geelong-before-undercutting-uber-across-australia' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly', 'How Bolt Took a Second Run at Australia''s Ride-Hailing Duopoly', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Bolt''s Australian story ended at midnight on a Saturday. On 28 March 2020, the Estonian rideshare challenger — which had entered as Taxify two and a half…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Bolt''s Australian story ended at midnight on a Saturday. On 28 March 2020, the Estonian rideshare challenger — which had entered as Taxify two and a half years earlier — terminated its business effective immediately, telling drivers to peel the stickers off their cars.</p>
+-- how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly' AND status = 'draft' AND content_type = 'case_study'), '<p>Bolt''s Australian story ended at midnight on a Saturday. On 28 March 2020, the Estonian rideshare challenger — which had entered as Taxify two and a half years earlier — terminated its business effective immediately, telling drivers to peel the stickers off their cars.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -3874,27 +1850,21 @@ intro AS (
 <td>Outcome</td>
 <td>Failure — first rideshare casualty of the COVID demand collapse</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('What went wrong', 'what-went-wrong', 2),
       ('Footprint & the second act', 'footprint-and-the-second-act', 3),
       ('Why it failed', 'why-it-failed', 4),
       ('Key metrics', 'key-metrics', 5),
       ('Lessons', 'lessons', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Taxify arrived in Sydney in late 2017 during a wave of challenger entries against Uber — alongside India''s Ola and, soon after, China''s DiDi. The Estonian company''s global model was lean: lower commissions for drivers, cheaper fares for riders, minimal local overhead. It rebranded to Bolt globally in March 2019. In Australia it remained a distant challenger in a market where Uber''s brand and liquidity dominated.</p>', 'Taxify arrived in Sydney in late 2017 during a wave of challenger entries against Uber — alongside India''s Ola and, soon after, China''s DiDi. The Estonian company''s global model was lean: lower commissions for drivers, cheaper fares for riders, minimal local overhead. It rebranded to Bolt globally in March 2019. In Australia it remained a distant challenger in a market where Uber''s brand and liquidity dominated.', 1),
       ('what-went-wrong', 'Challenger economics with no buffer', '<p>Bolt''s lean-entry model kept costs down but also meant thin local roots: no deep driver loyalty, no differentiated rider proposition beyond price, and no adjacent revenue lines in Australia to smooth shocks.</p>', 'Bolt''s lean-entry model kept costs down but also meant thin local roots: no deep driver loyalty, no differentiated rider proposition beyond price, and no adjacent revenue lines in Australia to smooth shocks.', 2),
       ('what-went-wrong', 'A four-way war for the same riders', '<p>By 2019 Sydney and Melbourne riders could choose between Uber, Ola, DiDi and Bolt. Every challenger was competing on the same axis — price — against rivals (DiDi especially) with far deeper capital reserves.</p>', 'By 2019 Sydney and Melbourne riders could choose between Uber, Ola, DiDi and Bolt. Every challenger was competing on the same axis — price — against rivals (DiDi especially) with far deeper capital reserves.', 3),
@@ -3931,27 +1901,17 @@ sec_bodies AS (
 2. Network-effect markets punish the smallest player disproportionately: density is the product.
 3. A market that is peripheral to your global strategy will be the first abandoned in a crisis — partners and drivers price that risk in.
 4. Exit manner matters: overnight terminations become the story competitors tell about you in every future market.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Bolt', 'Estonia', 'Australia',
-       'Ride-hailing', '2017', 'unsuccessful'
-FROM item
-WHERE 'Bolt' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-bolt-took-a-second-run-at-australias-ride-hailing-duopoly' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition', 'How Fujitsu Rebuilt Its Australian Business Through Serial Acquisition', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Fujitsu had been in Australia for decades — but by 2021 it was a legacy infrastructure provider watching the market move to cloud, data and cybersecurity.…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Fujitsu had been in Australia for decades — but by 2021 it was a legacy infrastructure provider watching the market move to cloud, data and cybersecurity. Its answer was a five-acquisition sprint across ANZ that ended a decade-long deal drought and culminated in a $300 million cybersecurity push.</p>
+-- how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition' AND status = 'draft' AND content_type = 'case_study'), '<p>Fujitsu had been in Australia for decades — but by 2021 it was a legacy infrastructure provider watching the market move to cloud, data and cybersecurity. Its answer was a five-acquisition sprint across ANZ that ended a decade-long deal drought and culminated in a $300 million cybersecurity push.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -4003,27 +1963,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — repositioned from legacy infrastructure to high-growth consulting and cyber</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('People & deal craft', 'people-and-deal-craft', 3),
       ('Why it worked', 'why-it-worked', 4),
       ('Key metrics', 'key-metrics', 5),
       ('Lessons', 'lessons', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Fujitsu''s ANZ business had scale and government relationships but skewed toward traditional managed infrastructure — a shrinking pool — while demand shifted to data analytics, cloud transformation and cybersecurity. Rather than retraining its way into these markets organically, Fujitsu bought its way in, acquiring capability, clients and — critically — cleared, credentialed people.</p>', 'Fujitsu''s ANZ business had scale and government relationships but skewed toward traditional managed infrastructure — a shrinking pool — while demand shifted to data analytics, cloud transformation and cybersecurity. Rather than retraining its way into these markets organically, Fujitsu bought its way in, acquiring capability, clients and — critically — cleared, credentialed people.', 1),
       ('entry-strategy', 'Break the drought with data', '<p>The April 2021 acquisition of Melbourne data and analytics consultancy Versor ended what commentators called a decade-long acquisition dry spell for Fujitsu in the region, and signalled the new strategy: buy specialist capability at the top of the demand curve.</p>', 'The April 2021 acquisition of Melbourne data and analytics consultancy Versor ended what commentators called a decade-long acquisition dry spell for Fujitsu in the region, and signalled the new strategy: buy specialist capability at the top of the demand curve.', 2),
       ('entry-strategy', 'Assemble a capability portfolio, deal by deal', '<p>Fujitsu followed with Enable Professional Services (Melbourne-based ServiceNow specialist, July 2022), oobe (Canberra Microsoft/Azure specialist), InPhySec (Wellington cybersecurity firm) and MF &amp; Associates (Canberra digital transformation and cyber consultancy, September 2023) — its fifth ANZ acquisition since 2021. Each deal bought a distinct platform partnership, security clearances or sector depth, especially in the government heartland of Canberra and Wellington.</p>', 'Fujitsu followed with Enable Professional Services (Melbourne-based ServiceNow specialist, July 2022), oobe (Canberra Microsoft/Azure specialist), InPhySec (Wellington cybersecurity firm) and MF & Associates (Canberra digital transformation and cyber consultancy, September 2023) — its fifth ANZ acquisition since 2021. Each deal bought a distinct platform partnership, security clearances or sector depth, especially in the government heartland of Canberra and Wellington.', 3),
@@ -4060,27 +2014,17 @@ sec_bodies AS (
 2. In government-heavy markets, acquisitions buy trust artefacts (clearances, panels, local leadership) money can''t otherwise access.
 3. Keeping and elevating acquired founders determines whether you bought a capability or just a client list.
 4. A sequence of small, thematic deals de-risks transformation better than one transformational bet.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Fujitsu', 'Japan', 'Australia',
-       'Enterprise IT services and consulting', '2021', 'successful'
-FROM item
-WHERE 'Fujitsu' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-fujitsu-rebuilt-its-australian-business-through-serial-acquisition' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-agoda-carved-out-an-australian-niche-in-asia-bound-travel
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-agoda-carved-out-an-australian-niche-in-asia-bound-travel', 'How Agoda Carved Out an Australian Niche in Asia-Bound Travel', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Agoda — the online travel agency born in Phuket, Thailand — didn''t win Australian travellers with advertising. It won Australian *hotels* first, surveying…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-agoda-carved-out-an-australian-niche-in-asia-bound-travel')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Agoda — the online travel agency born in Phuket, Thailand — didn''t win Australian travellers with advertising. It won Australian <em>hotels</em> first, surveying around 7,000 local accommodation partners and making Australia the first market in the world to get its 24/7 localised partner support.</p>
+-- how-agoda-carved-out-an-australian-niche-in-asia-bound-travel (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-agoda-carved-out-an-australian-niche-in-asia-bound-travel' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-agoda-carved-out-an-australian-niche-in-asia-bound-travel' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-agoda-carved-out-an-australian-niche-in-asia-bound-travel' AND status = 'draft' AND content_type = 'case_study'), '<p>Agoda — the online travel agency born in Phuket, Thailand — didn''t win Australian travellers with advertising. It won Australian <em>hotels</em> first, surveying around 7,000 local accommodation partners and making Australia the first market in the world to get its 24/7 localised partner support.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -4132,27 +2076,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — established OTA presence in an Expedia/[Booking.com](http://Booking.com)-dominated market</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-agoda-carved-out-an-australian-niche-in-asia-bound-travel' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Local footprint', 'local-footprint', 3),
       ('Why it worked', 'why-it-worked', 4),
       ('Key metrics', 'key-metrics', 5),
       ('Lessons', 'lessons', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Agoda was founded in Phuket, Thailand, and acquired by Priceline (now Booking Holdings) in November 2007 — giving a Southeast Asian OTA global capital while it retained its Asia-Pacific identity and hotel network. Australia mattered twice over: as a large outbound market of travellers heading to Asia (Agoda''s supply stronghold), and as a domestic accommodation market in its own right.</p>', 'Agoda was founded in Phuket, Thailand, and acquired by Priceline (now Booking Holdings) in November 2007 — giving a Southeast Asian OTA global capital while it retained its Asia-Pacific identity and hotel network. Australia mattered twice over: as a large outbound market of travellers heading to Asia (Agoda''s supply stronghold), and as a domestic accommodation market in its own right.', 1),
       ('entry-strategy', 'Borrow a loyalty program', '<p>On 29 October 2013, Agoda partnered with Virgin Australia''s Velocity Frequent Flyer program, letting members earn points on hotel bookings. Rather than building loyalty infrastructure from scratch, Agoda plugged into one of Australia''s two dominant airline programs — instant access to millions of engaged, travel-active consumers.</p>', 'On 29 October 2013, Agoda partnered with Virgin Australia''s Velocity Frequent Flyer program, letting members earn points on hotel bookings. Rather than building loyalty infrastructure from scratch, Agoda plugged into one of Australia''s two dominant airline programs — instant access to millions of engaged, travel-active consumers.', 2),
       ('entry-strategy', 'Win the supply side with service', '<p>Agoda launched 24/7 partner-services support for Australian hoteliers — the first market globally to receive it — alongside deeper localisation, informed by a survey of roughly 7,000 Australian hotel and accommodation owners. Better-supported hotels list better inventory and rates, which strengthens the consumer offer in turn.</p>', 'Agoda launched 24/7 partner-services support for Australian hoteliers — the first market globally to receive it — alongside deeper localisation, informed by a survey of roughly 7,000 Australian hotel and accommodation owners. Better-supported hotels list better inventory and rates, which strengthens the consumer offer in turn.', 3),
@@ -4190,27 +2128,17 @@ sec_bodies AS (
 2. Partnering with a national loyalty program is one of the cheapest ways to buy mainstream trust.
 3. "First market globally" treatment tells local partners they matter — and they reciprocate with better inventory.
 4. Lead with the corridor you dominate; adjacency will carry you into the domestic market.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Agoda', 'Thailand', 'Australia',
-       'Online travel booking (OTA)', NULL, 'successful'
-FROM item
-WHERE 'Agoda' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-agoda-carved-out-an-australian-niche-in-asia-bound-travel' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-agoda-carved-out-an-australian-niche-in-asia-bound-travel' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading', 'How Rakuten Kobo Rode Bookseller Partnerships Into Australian E-Reading', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Rakuten Kobo cracked the Amazon-dominated Australian e-reading market without opening a single store or spending big on brand — it borrowed the trust of…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Rakuten Kobo cracked the Amazon-dominated Australian e-reading market without opening a single store or spending big on brand — it borrowed the trust of Booktopia, Australia''s number-one online bookseller, and built its subscription business on top.</p>
+-- how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading' AND status = 'draft' AND content_type = 'case_study'), '<p>Rakuten Kobo cracked the Amazon-dominated Australian e-reading market without opening a single store or spending big on brand — it borrowed the trust of Booktopia, Australia''s number-one online bookseller, and built its subscription business on top.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -4262,27 +2190,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — Australia became an early Kobo Plus market with growing retail reach</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Partners & people', 'partners-and-people', 3),
       ('Why it worked', 'why-it-worked', 4),
       ('Key metrics', 'key-metrics', 5),
       ('Lessons', 'lessons', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Kobo, founded in Toronto in 2009 and acquired by Japan''s Rakuten in 2012 for US$315 million, is the world''s principal challenger to Amazon''s Kindle. Its global playbook is consistent: rather than fighting Amazon head-on, it allies with each country''s leading local bookseller. In Australia, that meant Booktopia.</p>', 'Kobo, founded in Toronto in 2009 and acquired by Japan''s Rakuten in 2012 for US\$315 million, is the world''s principal challenger to Amazon''s Kindle. Its global playbook is consistent: rather than fighting Amazon head-on, it allies with each country''s leading local bookseller. In Australia, that meant Booktopia.', 1),
       ('entry-strategy', 'Partner with the local champion', '<p>On 31 March 2020, Kobo announced a strategic partnership with Booktopia, Australia''s biggest online book retailer — putting Kobo devices and its e-book ecosystem in front of Booktopia''s customer base and aligning with local book-buying loyalty instead of competing with it.</p>', 'On 31 March 2020, Kobo announced a strategic partnership with Booktopia, Australia''s biggest online book retailer — putting Kobo devices and its e-book ecosystem in front of Booktopia''s customer base and aligning with local book-buying loyalty instead of competing with it.', 2),
       ('entry-strategy', 'Introduce subscription once the base existed', '<p>On 2 November 2021, Kobo Plus — its all-you-can-read subscription with 580,000+ titles — launched in Australia via Booktopia, making Australia one of its first markets after the Netherlands, Belgium, Canada and Portugal.</p>', 'On 2 November 2021, Kobo Plus — its all-you-can-read subscription with 580,000+ titles — launched in Australia via Booktopia, making Australia one of its first markets after the Netherlands, Belgium, Canada and Portugal.', 3),
@@ -4322,27 +2244,17 @@ sec_bodies AS (
 2. Sequencing (hardware → subscription → new formats → mass retail) lets each stage fund confidence in the next.
 3. A partnership model turns the incumbent''s biggest local rival into your sales force.
 4. Subscription pricing localised to market norms converts casual buyers into locked-in ecosystems.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Rakuten Kobo', 'Japan', 'Australia',
-       'E-readers, e-books and audiobook subscriptions', NULL, 'successful'
-FROM item
-WHERE 'Rakuten Kobo' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-rakuten-kobo-rode-bookseller-partnerships-into-australian-e-reading' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-nec-anchored-its-australian-entry-in-government-contracts
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-nec-anchored-its-australian-entry-in-government-contracts', 'How NEC Anchored Its Australian Entry in Government Contracts', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'NEC arrived in Australia in 1969 with five staff — one of the earliest Japanese technology companies to set up locally, decades before "Asian tech entry"…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-nec-anchored-its-australian-entry-in-government-contracts')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>NEC arrived in Australia in 1969 with five staff — one of the earliest Japanese technology companies to set up locally, decades before "Asian tech entry" became a category. More than half a century later, it remains a fixture of Australian government and enterprise technology.</p>
+-- how-nec-anchored-its-australian-entry-in-government-contracts (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-nec-anchored-its-australian-entry-in-government-contracts' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-nec-anchored-its-australian-entry-in-government-contracts' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-nec-anchored-its-australian-entry-in-government-contracts' AND status = 'draft' AND content_type = 'case_study'), '<p>NEC arrived in Australia in 1969 with five staff — one of the earliest Japanese technology companies to set up locally, decades before "Asian tech entry" became a category. More than half a century later, it remains a fixture of Australian government and enterprise technology.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -4394,27 +2306,21 @@ intro AS (
 <td>Outcome</td>
 <td>Success — 55+ years of continuous operation and 1,400+ staff at scale</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-nec-anchored-its-australian-entry-in-government-contracts' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Footprint & flagship contracts', 'footprint-and-flagship-contracts', 3),
       ('Why it worked', 'why-it-worked', 4),
       ('Key metrics', 'key-metrics', 5),
       ('Lessons', 'lessons', 6)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>In the late 1960s NEC began building an international subsidiary network, establishing NEC Australia in 1969 — among its early overseas outposts alongside Mexico and Brazil. Australia''s expanding telecommunications infrastructure and government procurement market made it a logical, if unglamorous, long-term bet.</p>', 'In the late 1960s NEC began building an international subsidiary network, establishing NEC Australia in 1969 — among its early overseas outposts alongside Mexico and Brazil. Australia''s expanding telecommunications infrastructure and government procurement market made it a logical, if unglamorous, long-term bet.', 1),
       ('entry-strategy', 'Start small, stay permanent', '<p>NEC Australia opened with just five staff. The entry wasn''t a splash but a stake in the ground: a wholly owned subsidiary structured for decades of patient growth rather than a distributor arrangement that could be unwound.</p>', 'NEC Australia opened with just five staff. The entry wasn''t a splash but a stake in the ground: a wholly owned subsidiary structured for decades of patient growth rather than a distributor arrangement that could be unwound.', 2),
       ('entry-strategy', 'Grow with national infrastructure', '<p>NEC built its Australian business by supplying the technology underneath the country''s communications build-out — telecommunications equipment first, then ICT systems and services as the market evolved. By 2001 the subsidiary employed more than 1,400 people.</p>', 'NEC built its Australian business by supplying the technology underneath the country''s communications build-out — telecommunications equipment first, then ICT systems and services as the market evolved. By 2001 the subsidiary employed more than 1,400 people.', 3),
@@ -4454,27 +2360,17 @@ sec_bodies AS (
 2. Aligning with national infrastructure spending gives foreign entrants decades of demand visibility.
 3. In public-sector markets, tenure compounds: every year in-country makes the next contract easier to win.
 4. Long-lived entrants survive by migrating their portfolio, not their postcode.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'NEC', 'Japan', 'Australia',
-       'Telecommunications, ICT and biometrics', '1969', 'successful'
-FROM item
-WHERE 'NEC' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-nec-anchored-its-australian-entry-in-government-contracts' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-nec-anchored-its-australian-entry-in-government-contracts' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-monday-com-scaled-australia-remotely-before-landing-onshore
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-monday-com-scaled-australia-remotely-before-landing-onshore', 'How monday.com Scaled Australia Remotely Before Landing Onshore', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, '[monday.com](http://monday.com) launched in Australia in June 2020 — in the middle of a pandemic, with offices closed and the world working from home. Five…', 5, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-monday-com-scaled-australia-remotely-before-landing-onshore')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p><a href="http://monday.com">monday.com</a> launched in Australia in June 2020 — in the middle of a pandemic, with offices closed and the world working from home. Five years later, its regional ARR had grown from $7 million to over $120 million, its brand had climbed from sixth to first in its category locally, and Sydney hosted its official APAC headquarters. It is one of the fastest and best-documented SaaS scale-ups in Australian market-entry history.</p>
+-- how-monday-com-scaled-australia-remotely-before-landing-onshore (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-monday-com-scaled-australia-remotely-before-landing-onshore' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-monday-com-scaled-australia-remotely-before-landing-onshore' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-monday-com-scaled-australia-remotely-before-landing-onshore' AND status = 'draft' AND content_type = 'case_study'), '<p><a href="http://monday.com">monday.com</a> launched in Australia in June 2020 — in the middle of a pandemic, with offices closed and the world working from home. Five years later, its regional ARR had grown from $7 million to over $120 million, its brand had climbed from sixth to first in its category locally, and Sydney hosted its official APAC headquarters. It is one of the fastest and best-documented SaaS scale-ups in Australian market-entry history.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -4526,26 +2422,20 @@ intro AS (
 <td>Outcome</td>
 <td>Strong success — regional ARR \$7M to \$120M+ in five years; #1 brand in category</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-monday-com-scaled-australia-remotely-before-landing-onshore' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Why it worked', 'why-it-worked', 3),
       ('Key metrics', 'key-metrics', 4),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 5)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p><a href="http://monday.com">monday.com</a>, the Tel Aviv-founded work management platform, was preparing for its 2021 IPO when it launched its Australian operation in June 2020. Australia was already showing strong self-serve adoption of work management tools, and COVID-era remote work was accelerating demand for exactly what <a href="http://monday.com">monday.com</a> sold. Rather than wait out the pandemic, the company treated the disruption as a tailwind and entered anyway.</p>', '[monday.com](http://monday.com), the Tel Aviv-founded work management platform, was preparing for its 2021 IPO when it launched its Australian operation in June 2020. Australia was already showing strong self-serve adoption of work management tools, and COVID-era remote work was accelerating demand for exactly what [monday.com](http://monday.com) sold. Rather than wait out the pandemic, the company treated the disruption as a tailwind and entered anyway.', 1),
       ('entry-strategy', 'Launch into the tailwind', '<p>Entering in June 2020 meant launching without offices, events or in-person sales — but into the single biggest demand spike the work-management category had ever seen. <a href="http://monday.com">monday.com</a> built its initial Australian team remotely and captured COVID-driven adoption while competitors hesitated.</p>', 'Entering in June 2020 meant launching without offices, events or in-person sales — but into the single biggest demand spike the work-management category had ever seen. [monday.com](http://monday.com) built its initial Australian team remotely and captured COVID-driven adoption while competitors hesitated.', 2),
       ('entry-strategy', 'Hire a regional builder, not a country manager', '<p>The regional operation was built under Dean Swan — <a href="http://monday.com">monday.com</a>''s employee number one in APAC — who joined at launch in 2020 after 11 years at Microsoft and a stint as Dropbox''s ANZ country manager. Swan set himself a goal of $100M in regional ARR within five years, at a time when the entire company was valued at around $120M, and his mandate was regional from the start: over five years the company opened offices in Sydney, Melbourne, Singapore and Tokyo, scaling the team more than 20x to 140+ people. Structuring APJ as one build — with Australia as the anchor — meant wins in each market compounded across the region.</p>', 'The regional operation was built under Dean Swan — [monday.com](http://monday.com)''s employee number one in APAC — who joined at launch in 2020 after 11 years at Microsoft and a stint as Dropbox''s ANZ country manager. Swan set himself a goal of \$100M in regional ARR within five years, at a time when the entire company was valued at around \$120M, and his mandate was regional from the start: over five years the company opened offices in Sydney, Melbourne, Singapore and Tokyo, scaling the team more than 20x to 140+ people. Structuring APJ as one build — with Australia as the anchor — meant wins in each market compounded across the region.', 3),
@@ -4583,27 +2473,17 @@ sec_bodies AS (
 2. Hire a regional builder with a multi-market mandate rather than a single-country manager; the economics compound.
 3. Brand investment is a market-entry weapon in SaaS, not a luxury — category brand rank translated directly into pipeline.
 4. Sequence: remote launch to capture demand, then a statement HQ to convert enterprise trust. Physical presence can follow traction.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'monday.com', 'Israel', 'Australia',
-       'SaaS — work management / work OS platform', '2020', 'successful'
-FROM item
-WHERE 'monday.com' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-monday-com-scaled-australia-remotely-before-landing-onshore' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 5 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-monday-com-scaled-australia-remotely-before-landing-onshore' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-zendesk-made-melbourne-its-asia-pacific-launchpad
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-zendesk-made-melbourne-its-asia-pacific-launchpad', 'How Zendesk Made Melbourne Its Asia-Pacific Launchpad', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'In September 2011, Zendesk arrived in Melbourne with a team of five and an ambition that went well beyond sales coverage. Within seven years, the Australian…', 5, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-zendesk-made-melbourne-its-asia-pacific-launchpad')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>In September 2011, Zendesk arrived in Melbourne with a team of five and an ambition that went well beyond sales coverage. Within seven years, the Australian operation had beaten San Francisco and Dublin in an internal contest to host one of the company''s most strategic engineering hubs — making Melbourne not just a regional beachhead, but part of Zendesk''s global product engine.</p>
+-- how-zendesk-made-melbourne-its-asia-pacific-launchpad (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-zendesk-made-melbourne-its-asia-pacific-launchpad' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-zendesk-made-melbourne-its-asia-pacific-launchpad' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-zendesk-made-melbourne-its-asia-pacific-launchpad' AND status = 'draft' AND content_type = 'case_study'), '<p>In September 2011, Zendesk arrived in Melbourne with a team of five and an ambition that went well beyond sales coverage. Within seven years, the Australian operation had beaten San Francisco and Dublin in an internal contest to host one of the company''s most strategic engineering hubs — making Melbourne not just a regional beachhead, but part of Zendesk''s global product engine.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -4655,26 +2535,20 @@ intro AS (
 <td>Outcome</td>
 <td>Success — Melbourne became a global engineering hub; Zendesk was acquired for \$10.2B in 2022</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-zendesk-made-melbourne-its-asia-pacific-launchpad' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Why it worked', 'why-it-worked', 3),
       ('Key metrics', 'key-metrics', 4),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 5)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Zendesk was founded in Copenhagen in 2007 and relocated its headquarters to San Francisco as it scaled. By 2011 it was one of the fastest-growing SaaS companies in the world, and Australia was already generating meaningful organic demand: Australian businesses were early, enthusiastic adopters of cloud software, and the ANZ market offered English-language customers in a timezone that could anchor an entire Asia-Pacific operation. Rather than servicing that demand remotely from California, Zendesk made Australia its first major commitment outside the US and Europe.</p>', 'Zendesk was founded in Copenhagen in 2007 and relocated its headquarters to San Francisco as it scaled. By 2011 it was one of the fastest-growing SaaS companies in the world, and Australia was already generating meaningful organic demand: Australian businesses were early, enthusiastic adopters of cloud software, and the ANZ market offered English-language customers in a timezone that could anchor an entire Asia-Pacific operation.
 Rather than servicing that demand remotely from California, Zendesk made Australia its first major commitment outside the US and Europe.', 1),
       ('entry-strategy', 'A regional HQ, not a sales outpost', '<p>In September 2011 Zendesk opened its Asia-Pacific headquarters at Level 1, 482 Bourke Street, Melbourne, with an initial team of five and plans to double headcount by year end. Positioning the office as the APAC headquarters — rather than an "Australian sales office" — mattered: it gave the local team a regional mandate, budget and seniority from day one. The office was led by Michael Folmer Hansen — Zendesk''s first-ever employee — who took the role of vice president and managing director for Asia-Pacific, giving the new market a leader with founder-level product knowledge and a direct line to HQ. And Zendesk wasn''t starting cold: at launch it already had about 1,200 APAC customers — roughly 700 in Australia and 200 in New Zealand — including Lonely Planet, REA Group and New Zealand Post.</p>', 'In September 2011 Zendesk opened its Asia-Pacific headquarters at Level 1, 482 Bourke Street, Melbourne, with an initial team of five and plans to double headcount by year end. Positioning the office as the APAC headquarters — rather than an "Australian sales office" — mattered: it gave the local team a regional mandate, budget and seniority from day one. The office was led by Michael Folmer Hansen — Zendesk''s first-ever employee — who took the role of vice president and managing director for Asia-Pacific, giving the new market a leader with founder-level product knowledge and a direct line to HQ. And Zendesk wasn''t starting cold: at launch it already had about 1,200 APAC customers — roughly 700 in Australia and 200 in New Zealand — including Lonely Planet, REA Group and New Zealand Post.', 2),
@@ -4715,27 +2589,17 @@ Rather than servicing that demand remotely from California, Zendesk made Austral
 2. Put product development in-market early. Engineering roots make a local operation strategically indispensable to HQ.
 3. Treat state governments as genuine partners: talent pipelines, expansion support and credibility all flow from the relationship.
 4. Start small and compound. Five people in 2011 became a global product hub by 2018 because each phase earned the next.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Zendesk', 'Denmark', 'Australia',
-       'SaaS — customer service and support software', '2011', 'successful'
-FROM item
-WHERE 'Zendesk' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-zendesk-made-melbourne-its-asia-pacific-launchpad' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 5 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-zendesk-made-melbourne-its-asia-pacific-launchpad' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-hubspot-grew-australia-using-its-own-inbound-playbook
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-hubspot-grew-australia-using-its-own-inbound-playbook', 'How HubSpot Grew Australia Using Its Own Inbound Playbook', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'When HubSpot chose the location for its first office outside the US and Ireland, it didn''t pick London, Singapore or Tokyo. It picked Sydney. In Q3 2014,…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-hubspot-grew-australia-using-its-own-inbound-playbook')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>When HubSpot chose the location for its first office outside the US and Ireland, it didn''t pick London, Singapore or Tokyo. It picked Sydney. In Q3 2014, seven people in a single serviced-office room at 1 O''Connell Street became HubSpot''s Asia-Pacific base — and within a year the team had outgrown four rooms.</p>
+-- how-hubspot-grew-australia-using-its-own-inbound-playbook (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-hubspot-grew-australia-using-its-own-inbound-playbook' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-hubspot-grew-australia-using-its-own-inbound-playbook' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-hubspot-grew-australia-using-its-own-inbound-playbook' AND status = 'draft' AND content_type = 'case_study'), '<p>When HubSpot chose the location for its first office outside the US and Ireland, it didn''t pick London, Singapore or Tokyo. It picked Sydney. In Q3 2014, seven people in a single serviced-office room at 1 O''Connell Street became HubSpot''s Asia-Pacific base — and within a year the team had outgrown four rooms.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -4787,26 +2651,20 @@ intro AS (
 <td>Outcome</td>
 <td>Success — Sydney became HubSpot''s APAC anchor covering AU, NZ, Japan and Singapore</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-hubspot-grew-australia-using-its-own-inbound-playbook' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Why it worked', 'why-it-worked', 3),
       ('Key metrics', 'key-metrics', 4),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 5)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>By 2014 HubSpot had built a category — "inbound marketing" — around the idea that businesses should attract customers with content rather than interrupt them with ads. The company had its Cambridge, Massachusetts headquarters and an international office in Dublin. For office number three, HubSpot announced in April 2014 that it would open in Sydney in Q3 2014 — its first Asia-Pacific location, chosen ahead of every other market in the region. The logic: Australia had a large, English-speaking base of small and mid-sized businesses, strong existing adoption of HubSpot''s software and methodology, and an active community of marketing agencies — the backbone of HubSpot''s partner-driven go-to-market.</p>', 'By 2014 HubSpot had built a category — "inbound marketing" — around the idea that businesses should attract customers with content rather than interrupt them with ads. The company had its Cambridge, Massachusetts headquarters and an international office in Dublin. For office number three, HubSpot announced in April 2014 that it would open in Sydney in Q3 2014 — its first Asia-Pacific location, chosen ahead of every other market in the region.
 The logic: Australia had a large, English-speaking base of small and mid-sized businesses, strong existing adoption of HubSpot''s software and methodology, and an active community of marketing agencies — the backbone of HubSpot''s partner-driven go-to-market.', 1),
       ('entry-strategy', 'Start lean: seven people, one serviced office', '<p>HubSpot launched with an "initial seven" staff on level 19 of 1 O''Connell Street in Sydney''s CBD, using flexible serviced-office space from Compass Offices rather than signing a long lease. The lean footprint kept the risk low while the company validated demand — and the flexibility paid off immediately: the team expanded from one room to four separate spaces within its first year as headcount grew ahead of plan. By its first anniversary the Sydney team numbered 25 — a sales team that initially "flew solo", progressively backed by services and marketing functions, and seeded with experienced transfers from the Dublin office who carried HubSpot''s culture and playbook with them.</p>', 'HubSpot launched with an "initial seven" staff on level 19 of 1 O''Connell Street in Sydney''s CBD, using flexible serviced-office space from Compass Offices rather than signing a long lease. The lean footprint kept the risk low while the company validated demand — and the flexibility paid off immediately: the team expanded from one room to four separate spaces within its first year as headcount grew ahead of plan. By its first anniversary the Sydney team numbered 25 — a sales team that initially "flew solo", progressively backed by services and marketing functions, and seeded with experienced transfers from the Dublin office who carried HubSpot''s culture and playbook with them.', 2),
@@ -4840,27 +2698,17 @@ The logic: Australia had a large, English-speaking base of small and mid-sized b
 2. Use serviced/flexible office space for year one — the option value of instant expansion beats a prestigious lease.
 3. A partner channel can outscale a direct salesforce in a new market, and partners carry your category evangelism for you.
 4. Scope the first office regionally. Sydney-as-APAC-anchor created a far stronger business case than Sydney-as-Australia-office.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'HubSpot', 'United States', 'Australia',
-       'SaaS — inbound marketing, sales and CRM software', '2014', 'successful'
-FROM item
-WHERE 'HubSpot' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-hubspot-grew-australia-using-its-own-inbound-playbook' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-hubspot-grew-australia-using-its-own-inbound-playbook' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-intercom-served-australia-product-first-presence-later
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-intercom-served-australia-product-first-presence-later', 'How Intercom Served Australia Product-First, Presence-Later', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Intercom''s Australian entry inverted the standard playbook: no office, no country manager, no launch event. Instead, the Irish customer-messaging company…', 3, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-intercom-served-australia-product-first-presence-later')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Intercom''s Australian entry inverted the standard playbook: no office, no country manager, no launch event. Instead, the Irish customer-messaging company hired a single remote support employee in Sydney in 2016, built a distributed APAC support team, and only opened a physical office in 2018 — after APAC customer numbers had already grown 900%.</p>
+-- how-intercom-served-australia-product-first-presence-later (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-intercom-served-australia-product-first-presence-later' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-intercom-served-australia-product-first-presence-later' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-intercom-served-australia-product-first-presence-later' AND status = 'draft' AND content_type = 'case_study'), '<p>Intercom''s Australian entry inverted the standard playbook: no office, no country manager, no launch event. Instead, the Irish customer-messaging company hired a single remote support employee in Sydney in 2016, built a distributed APAC support team, and only opened a physical office in 2018 — after APAC customer numbers had already grown 900%.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -4912,26 +2760,20 @@ intro AS (
 <td>Outcome</td>
 <td>Success — Sydney became Intercom''s fifth global office and APAC anchor</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-intercom-served-australia-product-first-presence-later' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Why it worked', 'why-it-worked', 3),
       ('Key metrics', 'key-metrics', 4),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 5)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Intercom, founded by four Irish engineers and headquartered in San Francisco, sells customer messaging software — the chat widget and support platform used by thousands of internet businesses. Like Slack, its adoption was heavily product-led: startups and scale-ups worldwide installed Intercom without ever speaking to a salesperson. By the mid-2010s, Asia-Pacific customers were multiplying, and they shared a common complaint: support responses arrived on San Francisco time.</p>', 'Intercom, founded by four Irish engineers and headquartered in San Francisco, sells customer messaging software — the chat widget and support platform used by thousands of internet businesses. Like Slack, its adoption was heavily product-led: startups and scale-ups worldwide installed Intercom without ever speaking to a salesperson. By the mid-2010s, Asia-Pacific customers were multiplying, and they shared a common complaint: support responses arrived on San Francisco time.', 1),
       ('entry-strategy', 'Hire people, not offices', '<p>Intercom''s first Australian presence was a single remote customer support engineer hired in Sydney in 2016. From there it built a distributed APAC support team of roughly 20 people across four countries — solving the timezone problem years before committing to real estate. The approach cost a fraction of a traditional country launch and generated direct, daily contact with the region''s customers.</p>', 'Intercom''s first Australian presence was a single remote customer support engineer hired in Sydney in 2016. From there it built a distributed APAC support team of roughly 20 people across four countries — solving the timezone problem years before committing to real estate. The approach cost a fraction of a traditional country launch and generated direct, daily contact with the region''s customers.', 2),
       ('entry-strategy', 'Open the office only when the data demands it', '<p>By 2018, APAC customer numbers had grown about <strong>900%</strong>, and the region accounted for roughly 10–12% of Intercom''s revenue. Only then did Intercom open a physical office — in Surry Hills, Sydney, in July 2018, its <strong>fifth office globally</strong> and, as the company noted, 12,000 km from its San Francisco headquarters. The office consolidated the remote team and added customer-facing roles, growing to 30+ customer-facing staff.</p>', 'By 2018, APAC customer numbers had grown about **900%**, and the region accounted for roughly 10–12% of Intercom''s revenue. Only then did Intercom open a physical office — in Surry Hills, Sydney, in July 2018, its **fifth office globally** and, as the company noted, 12,000 km from its San Francisco headquarters. The office consolidated the remote team and added customer-facing roles, growing to 30+ customer-facing staff.', 3),
@@ -4968,27 +2810,17 @@ sec_bodies AS (
 2. Enter through service quality. Timezone-local support is a differentiator customers feel every day.
 3. Set explicit data thresholds for each escalation of commitment (hires, office, localisation) and hold to them.
 4. Data residency is a genuine GTM unlock in Australia — compliance features open segments marketing can''t reach.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Intercom', 'Ireland', 'Australia',
-       'SaaS — customer messaging and AI customer service', '2016', 'successful'
-FROM item
-WHERE 'Intercom' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-intercom-served-australia-product-first-presence-later' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 3 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-intercom-served-australia-product-first-presence-later' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-intuit-quickbooks-took-the-fight-to-xero-in-australia
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-intuit-quickbooks-took-the-fight-to-xero-in-australia', 'How Intuit QuickBooks Took the Fight to Xero in Australia', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Intuit entered Australia the low-risk way: license the QuickBooks brand to a scrappy local distributor and collect royalties. For nearly two decades it…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-intuit-quickbooks-took-the-fight-to-xero-in-australia')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Intuit entered Australia the low-risk way: license the QuickBooks brand to a scrappy local distributor and collect royalties. For nearly two decades it worked — until the cloud arrived, the partnership collapsed, and Intuit had to re-enter its "own" market from scratch. By then a New Zealand startup called Xero had taken the country, and QuickBooks has been chasing it ever since.</p>
+-- how-intuit-quickbooks-took-the-fight-to-xero-in-australia (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-intuit-quickbooks-took-the-fight-to-xero-in-australia' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-intuit-quickbooks-took-the-fight-to-xero-in-australia' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-intuit-quickbooks-took-the-fight-to-xero-in-australia' AND status = 'draft' AND content_type = 'case_study'), '<p>Intuit entered Australia the low-risk way: license the QuickBooks brand to a scrappy local distributor and collect royalties. For nearly two decades it worked — until the cloud arrived, the partnership collapsed, and Intuit had to re-enter its "own" market from scratch. By then a New Zealand startup called Xero had taken the country, and QuickBooks has been chasing it ever since.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -5040,26 +2872,20 @@ intro AS (
 <td>Outcome</td>
 <td>Failure to win — outflanked by Xero; a distant third in its core market</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-intuit-quickbooks-took-the-fight-to-xero-in-australia' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('What went wrong', 'what-went-wrong', 2),
       ('Why it failed', 'why-it-failed', 3),
       ('Key metrics', 'key-metrics', 4),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 5)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>In the early 1990s, Intuit''s QuickBooks was becoming the default small-business accounting software in the United States. For Australia, Intuit chose an arms-length entry: it licensed the QuickBooks brand and products to <strong>Reckon</strong>, a local distributor founded in 1987 by Greg Wilkinson — famously started with $2,000 on a credit card. From 1993–94, Reckon built the QuickBooks business in Australia: localising the product for Australian tax and payroll, building the accountant and retail channels, and growing it into one of the market''s leading SME accounting brands. The licensing model gave Intuit royalty income with minimal risk — and gave Reckon two decades of a world-class brand. But it also meant Intuit owned no customer relationships, no channel and no local capability in one of the world''s most attractive English-speaking SaaS markets.</p>', 'In the early 1990s, Intuit''s QuickBooks was becoming the default small-business accounting software in the United States. For Australia, Intuit chose an arms-length entry: it licensed the QuickBooks brand and products to **Reckon**, a local distributor founded in 1987 by Greg Wilkinson — famously started with \$2,000 on a credit card. From 1993–94, Reckon built the QuickBooks business in Australia: localising the product for Australian tax and payroll, building the accountant and retail channels, and growing it into one of the market''s leading SME accounting brands.
 The licensing model gave Intuit royalty income with minimal risk — and gave Reckon two decades of a world-class brand. But it also meant Intuit owned no customer relationships, no channel and no local capability in one of the world''s most attractive English-speaking SaaS markets.', 1),
       ('what-went-wrong', 'The cloud broke the partnership', '<p>As cloud accounting emerged in the late 2000s, Intuit and Reckon''s ambitions diverged: Intuit wanted QuickBooks Online, its global cloud product, to win everywhere; Reckon had built its business on locally developed desktop software under the QuickBooks name. In 2012 the split was announced — Reckon would give up the QuickBooks brand (the licence formally terminated on 10 February 2014, with Reckon shares falling 9.7% on the news) and rebranded its products under its own name.</p>', 'As cloud accounting emerged in the late 2000s, Intuit and Reckon''s ambitions diverged: Intuit wanted QuickBooks Online, its global cloud product, to win everywhere; Reckon had built its business on locally developed desktop software under the QuickBooks name. In 2012 the split was announced — Reckon would give up the QuickBooks brand (the licence formally terminated on 10 February 2014, with Reckon shares falling 9.7% on the news) and rebranded its products under its own name.', 2),
@@ -5094,27 +2920,17 @@ The licensing model gave Intuit royalty income with minimal risk — and gave Re
 2. Partnerships rarely survive platform shifts; when the technology changes, licensor and licensee interests diverge fast.
 3. In channel-driven categories, whoever owns the advisor/partner channel owns the market — Xero won Australia by winning accountants, not end users.
 4. Re-entry is harder than entry: you carry brand baggage, face an entrenched winner, and start behind challengers you once outranked.', 7)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Intuit QuickBooks', 'United States', 'Australia',
-       'SaaS — small business accounting software', '1993', 'unsuccessful'
-FROM item
-WHERE 'Intuit QuickBooks' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-intuit-quickbooks-took-the-fight-to-xero-in-australia' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-intuit-quickbooks-took-the-fight-to-xero-in-australia' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-rippling-localised-payroll-to-enter-compliance-heavy-australia
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-rippling-localised-payroll-to-enter-compliance-heavy-australia', 'How Rippling Localised Payroll to Enter Compliance-Heavy Australia', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'When Rippling — the $11.25B US workforce-management platform — announced Sydney as its APAC headquarters in February 2024, it wasn''t entering an empty…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-rippling-localised-payroll-to-enter-compliance-heavy-australia')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>When Rippling — the $11.25B US workforce-management platform — announced Sydney as its APAC headquarters in February 2024, it wasn''t entering an empty market. It was landing directly on the turf of Employment Hero, an Australian unicorn claiming more than 20% of the country''s private-sector businesses. What followed is one of the most openly hostile incumbent-vs-entrant battles in Australian SaaS.</p>
+-- how-rippling-localised-payroll-to-enter-compliance-heavy-australia (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-rippling-localised-payroll-to-enter-compliance-heavy-australia' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-rippling-localised-payroll-to-enter-compliance-heavy-australia' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-rippling-localised-payroll-to-enter-compliance-heavy-australia' AND status = 'draft' AND content_type = 'case_study'), '<p>When Rippling — the $11.25B US workforce-management platform — announced Sydney as its APAC headquarters in February 2024, it wasn''t entering an empty market. It was landing directly on the turf of Employment Hero, an Australian unicorn claiming more than 20% of the country''s private-sector businesses. What followed is one of the most openly hostile incumbent-vs-entrant battles in Australian SaaS.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -5166,26 +2982,20 @@ intro AS (
 <td>Outcome</td>
 <td>Ongoing — contested entry against an entrenched local incumbent</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-rippling-localised-payroll-to-enter-compliance-heavy-australia' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Why it''s contested', 'why-it-s-contested', 3),
       ('Key metrics', 'key-metrics', 4),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 5)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Rippling, founded by Parker Conrad, built one of the fastest-growing platforms in B2B software by unifying HR, payroll, IT and device management into a single employee-record system. By early 2024 it had around 15,000 customers globally and a $11.25B valuation. Australia was a logical expansion market: English-speaking, SME-dense, high SaaS adoption — but also home to a formidable local incumbent, Employment Hero, plus established players in payroll and HR.</p>', 'Rippling, founded by Parker Conrad, built one of the fastest-growing platforms in B2B software by unifying HR, payroll, IT and device management into a single employee-record system. By early 2024 it had around 15,000 customers globally and a \$11.25B valuation. Australia was a logical expansion market: English-speaking, SME-dense, high SaaS adoption — but also home to a formidable local incumbent, Employment Hero, plus established players in payroll and HR.', 1),
       ('entry-strategy', 'An APAC HQ with product localisation', '<p>Rippling announced its Sydney APAC headquarters on 12 February 2024, launching a payroll product built for Australian employers — not a thin re-skin of its US offering. Payroll is brutally jurisdiction-specific (awards, superannuation, leave loading), so genuine localisation was table stakes for credibility, and Rippling led its launch messaging with it.</p>', 'Rippling announced its Sydney APAC headquarters on 12 February 2024, launching a payroll product built for Australian employers — not a thin re-skin of its US offering. Payroll is brutally jurisdiction-specific (awards, superannuation, leave loading), so genuine localisation was table stakes for credibility, and Rippling led its launch messaging with it.', 2),
       ('entry-strategy', 'Team and investment upfront', '<p>Rippling hired its regional leader seven months before launch: Matt Loop joined in July 2023 as VP and Head of Asia. Loop was a deliberate "been there" hire — he had opened Salesforce''s first Australian office from his Bondi apartment, helped scale LinkedIn across Asia, and led Slack''s 200-plus-person APAC business through COVID. The company then launched with around 30 people in its Sydney office at 135 King Street and committed millions of dollars to the APAC business — signalling to customers and the market that Australia was a build, not an experiment. The Sydney office was scoped as the regional headquarters, giving the local operation an expansion mandate beyond Australia.</p>', 'Rippling hired its regional leader seven months before launch: Matt Loop joined in July 2023 as VP and Head of Asia. Loop was a deliberate "been there" hire — he had opened Salesforce''s first Australian office from his Bondi apartment, helped scale LinkedIn across Asia, and led Slack''s 200-plus-person APAC business through COVID. The company then launched with around 30 people in its Sydney office at 135 King Street and committed millions of dollars to the APAC business — signalling to customers and the market that Australia was a build, not an experiment. The Sydney office was scoped as the regional headquarters, giving the local operation an expansion mandate beyond Australia.', 3),
@@ -5222,27 +3032,17 @@ sec_bodies AS (
 2. Expect the incumbent to fight, and assume your entry plans are being watched; competitive counter-intelligence is part of entering concentrated markets.
 3. Position where the incumbent can''t follow: Rippling''s global unified platform targets a need local specialists structurally can''t serve.
 4. Scope the first office as a regional HQ — it attracts stronger leadership hires and justifies bigger launch investment.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Rippling', 'United States', 'Australia',
-       'SaaS — HR, payroll, IT and workforce management', '2024', NULL
-FROM item
-WHERE 'Rippling' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-rippling-localised-payroll-to-enter-compliance-heavy-australia' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-rippling-localised-payroll-to-enter-compliance-heavy-australia' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-zoho-played-the-long-game-in-australia-with-local-data-centres
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-zoho-played-the-long-game-in-australia-with-local-data-centres', 'How Zoho Played the Long Game in Australia With Local Data Centres', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Every global SaaS company that enters Australia opens in Sydney or Melbourne — except Zoho. The Indian software giant anchored its Australian operation in…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-zoho-played-the-long-game-in-australia-with-local-data-centres')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Every global SaaS company that enters Australia opens in Sydney or Melbourne — except Zoho. The Indian software giant anchored its Australian operation in Adelaide, a deliberate expression of its global "transnational localism" philosophy: put offices where talent is loyal, costs are lower and communities are underserved. The contrarian bet has quietly compounded.</p>
+-- how-zoho-played-the-long-game-in-australia-with-local-data-centres (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-zoho-played-the-long-game-in-australia-with-local-data-centres' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-zoho-played-the-long-game-in-australia-with-local-data-centres' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-zoho-played-the-long-game-in-australia-with-local-data-centres' AND status = 'draft' AND content_type = 'case_study'), '<p>Every global SaaS company that enters Australia opens in Sydney or Melbourne — except Zoho. The Indian software giant anchored its Australian operation in Adelaide, a deliberate expression of its global "transnational localism" philosophy: put offices where talent is loyal, costs are lower and communities are underserved. The contrarian bet has quietly compounded.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -5294,26 +3094,20 @@ intro AS (
 <td>Outcome</td>
 <td>Success — growing AU operation with 60%+ of local staff in Adelaide</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-zoho-played-the-long-game-in-australia-with-local-data-centres' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Why it worked', 'why-it-worked', 3),
       ('Key metrics', 'key-metrics', 4),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 5)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Zoho is one of the world''s largest privately held software companies, selling a suite of 55+ business applications with a famously frugal, bootstrapped culture — no outside investors, no debt, and a preference for building offices in smaller cities rather than expensive tech hubs. Globally the company calls this "transnational localism": hiring and investing in secondary cities where it can be a big fish, talent churn is low, and cost structures support its value pricing. Australia — a mature, high-adoption SaaS market — was identified by Zoho as a key market in its global expansion. The question wasn''t whether to enter, but how to enter differently.</p>', 'Zoho is one of the world''s largest privately held software companies, selling a suite of 55+ business applications with a famously frugal, bootstrapped culture — no outside investors, no debt, and a preference for building offices in smaller cities rather than expensive tech hubs. Globally the company calls this "transnational localism": hiring and investing in secondary cities where it can be a big fish, talent churn is low, and cost structures support its value pricing.
 Australia — a mature, high-adoption SaaS market — was identified by Zoho as a key market in its global expansion. The question wasn''t whether to enter, but how to enter differently.', 1),
       ('entry-strategy', 'Skip the obvious cities', '<p>Zoho opened its first Australian office in Sydney in 2019 (following its 2018 Singapore APAC HQ), but in March 2024 named <strong>Adelaide</strong> its Australian headquarters — making it one of the only global SaaS companies headquartered in South Australia. The company moved into new Currie Street premises with 12 employees plus six working remotely across solution engineering, account management, marketing and business development, committing to around 50 new local positions over three years. The South Australian Department for Trade and Investment had spent the prior two years providing in-market support to court the company. The move mirrored Zoho''s global playbook: lower operating costs, less competition for talent, strong staff retention, and outsized goodwill from a state government eager to attract technology employers.</p>', 'Zoho opened its first Australian office in Sydney in 2019 (following its 2018 Singapore APAC HQ), but in March 2024 named **Adelaide** its Australian headquarters — making it one of the only global SaaS companies headquartered in South Australia. The company moved into new Currie Street premises with 12 employees plus six working remotely across solution engineering, account management, marketing and business development, committing to around 50 new local positions over three years. The South Australian Department for Trade and Investment had spent the prior two years providing in-market support to court the company. The move mirrored Zoho''s global playbook: lower operating costs, less competition for talent, strong staff retention, and outsized goodwill from a state government eager to attract technology employers.', 2),
@@ -5347,27 +3141,17 @@ Australia — a mature, high-adoption SaaS market — was identified by Zoho as 
 2. Match your entry model to your company identity; a frugal challenger opening a Sydney CBD flagship would ring false and burn cash.
 3. State governments compete for tech investment — choosing the underserved state converts your arrival into their win, and their platform into your PR.
 4. Serving the SME long tail is a viable wedge in a market where incumbents chase enterprise logos.', 8)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Zoho', 'India', 'Australia',
-       'SaaS — business software suite (CRM, finance, productivity, 55+ apps)', '2019', 'successful'
-FROM item
-WHERE 'Zoho' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-zoho-played-the-long-game-in-australia-with-local-data-centres' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-zoho-played-the-long-game-in-australia-with-local-data-centres' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;
 
--- how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs
-WITH item AS (
-  INSERT INTO public.content_items
-    (slug, title, status, content_type, category_id, meta_description, read_time, publish_date, view_count)
-  SELECT 'how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs', 'How Freshworks Undercut Enterprise Incumbents to Win Australian SMBs', 'draft', 'case_study',
-         '6a837ef6-c7b5-457c-8069-2b8da9c85716'::uuid, 'Freshworks — the Indian-founded challenger to Zendesk and Salesforce — entered Australia in 2015 with a Sydney office and a value-for-money pitch aimed at…', 4, NULL, 0
-  WHERE NOT EXISTS (SELECT 1 FROM public.content_items WHERE slug = 'how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs')
-  RETURNING id
-),
-intro AS (
-  INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
-  SELECT item.id, '<p>Freshworks — the Indian-founded challenger to Zendesk and Salesforce — entered Australia in 2015 with a Sydney office and a value-for-money pitch aimed at the mid-market. Four years and 5x ARR growth later, it doubled down with a second office in Melbourne, serving more than 2,000 paying ANZ customers.</p>
+-- how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs (reapply corrected structure)
+BEGIN;
+DELETE FROM public.content_bodies WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs' AND status = 'draft' AND content_type = 'case_study') AND section_id IS NULL;
+DELETE FROM public.content_sections WHERE content_id = (SELECT id FROM public.content_items WHERE slug = 'how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs' AND status = 'draft' AND content_type = 'case_study');
+  -- ^ cascades section-level bodies (these fresh drafts carry no sources/quotes)
+INSERT INTO public.content_bodies (content_id, body_text, body_markdown, sort_order, content_type)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs' AND status = 'draft' AND content_type = 'case_study'), '<p>Freshworks — the Indian-founded challenger to Zendesk and Salesforce — entered Australia in 2015 with a Sydney office and a value-for-money pitch aimed at the mid-market. Four years and 5x ARR growth later, it doubled down with a second office in Melbourne, serving more than 2,000 paying ANZ customers.</p>
 <table header-column="true">
 <tr>
 <td>Company</td>
@@ -5419,26 +3203,20 @@ intro AS (
 <td>Outcome</td>
 <td>Success — 5x ARR growth between offices; 2,000+ paying ANZ customers by 2019</td>
 </tr>
-</table>', 0, 'case_study'
-  FROM item
-),
-secs AS (
-  INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
-  SELECT item.id, v.title, v.slug, v.ord, true
-  FROM item, (VALUES
+</table>', 0, 'case_study';
+INSERT INTO public.content_sections (content_id, title, slug, sort_order, is_active)
+SELECT (SELECT id FROM public.content_items WHERE slug = 'how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs' AND status = 'draft' AND content_type = 'case_study'), v.title, v.slug, v.ord, true
+FROM (VALUES
       ('Background', 'background', 1),
       ('Entry strategy', 'entry-strategy', 2),
       ('Why it worked', 'why-it-worked', 3),
       ('Key metrics', 'key-metrics', 4),
       ('Lessons for market entrants', 'lessons-for-market-entrants', 5)
-  ) AS v(title, slug, ord)
-  RETURNING id, content_id, slug
-),
-sec_bodies AS (
-  INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
-  SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
-  FROM secs s
-  JOIN (VALUES
+) AS v(title, slug, ord);
+INSERT INTO public.content_bodies (content_id, section_id, question, body_text, body_markdown, sort_order, content_type)
+SELECT s.content_id, s.id, v.question, v.html, v.md, v.ord, 'case_study'
+FROM public.content_sections s
+JOIN (VALUES
       ('background', NULL::text, '<p>Freshworks (originally Freshdesk) was founded in Chennai in 2010 as a lower-cost, easier-to-deploy alternative to incumbent customer-support and CRM suites. Its global playbook was consistent: win the mid-market with transparent pricing, fast onboarding and a product-led funnel, then move upmarket. Australia — with its dense SME and mid-market base and high cloud adoption — was a natural expansion target, and by 2015 the company was ready to service its growing ANZ customer base locally.</p>', 'Freshworks (originally Freshdesk) was founded in Chennai in 2010 as a lower-cost, easier-to-deploy alternative to incumbent customer-support and CRM suites. Its global playbook was consistent: win the mid-market with transparent pricing, fast onboarding and a product-led funnel, then move upmarket. Australia — with its dense SME and mid-market base and high cloud adoption — was a natural expansion target, and by 2015 the company was ready to service its growing ANZ customer base locally.', 1),
       ('entry-strategy', 'A beachhead in Sydney', '<p>Freshworks opened its Sydney office in September 2015, giving it local sales, support and partner coverage in the region''s largest commercial centre. The subsidiary was built by Sreelesh Pillai — Freshworks'' first go-to-market hire globally — who relocated from Chennai in April 2015 to establish Freshworks Australia Pty Ltd as general manager, and stayed through to the company''s IPO. The market carried symbolic weight too: Freshworks'' first-ever paying customer had come from Australia, years before the company had any local presence. The office anchored ANZ operations and let the company compete for deals where a purely offshore vendor would have been screened out.</p>', 'Freshworks opened its Sydney office in September 2015, giving it local sales, support and partner coverage in the region''s largest commercial centre. The subsidiary was built by Sreelesh Pillai — Freshworks'' first go-to-market hire globally — who relocated from Chennai in April 2015 to establish Freshworks Australia Pty Ltd as general manager, and stayed through to the company''s IPO. The market carried symbolic weight too: Freshworks'' first-ever paying customer had come from Australia, years before the company had any local presence. The office anchored ANZ operations and let the company compete for deals where a purely offshore vendor would have been screened out.', 2),
       ('entry-strategy', 'Challenger economics as the GTM', '<p>Freshworks'' Australian go-to-market leaned on its global positioning: comparable capability to Zendesk or Salesforce at materially lower cost and complexity. Self-serve trials and transparent pricing generated mid-market pipeline, while the local team converted and expanded accounts — a land-and-expand motion well suited to Australia''s SME-heavy economy.</p>', 'Freshworks'' Australian go-to-market leaned on its global positioning: comparable capability to Zendesk or Salesforce at materially lower cost and complexity. Self-serve trials and transparent pricing generated mid-market pipeline, while the local team converted and expanded accounts — a land-and-expand motion well suited to Australia''s SME-heavy economy.', 3),
@@ -5472,11 +3250,6 @@ sec_bodies AS (
 </ol>', '1. A challenger brand can enter against entrenched incumbents by competing on price-to-value, not feature parity.
 2. Gate each expansion step to a revenue milestone — it disciplines the build and makes the internal business case unarguable.
 3. In Australia, a two-city presence (Sydney + Melbourne) is the practical definition of "national coverage" for B2B SaaS.', 9)
-  ) AS v(slug, question, html, md, ord) ON v.slug = s.slug
-)
-INSERT INTO public.content_company_profiles
-  (content_id, company_name, origin_country, target_market, industry, entry_date, outcome)
-SELECT item.id, 'Freshworks', 'India', 'Australia',
-       'SaaS — customer support, IT service management and CRM', '2015', 'successful'
-FROM item
-WHERE 'Freshworks' IS NOT NULL;
+) AS v(slug, question, html, md, ord) ON v.slug = s.slug AND s.content_id = (SELECT id FROM public.content_items WHERE slug = 'how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs' AND status = 'draft' AND content_type = 'case_study');
+UPDATE public.content_items SET read_time = 4 WHERE id = (SELECT id FROM public.content_items WHERE slug = 'how-freshworks-undercut-enterprise-incumbents-to-win-australian-smbs' AND status = 'draft' AND content_type = 'case_study');
+COMMIT;

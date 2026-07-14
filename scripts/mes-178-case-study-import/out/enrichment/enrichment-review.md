@@ -26,13 +26,13 @@ duplicates). The 6 medium and 6 already-rich live pages are left untouched.
 |---|---|---:|---:|---:|---|
 | `netflix-streaming-australia-launch` | fill | 0 | 4,903 | 6 | `how-netflix-localised-its-way-to-australian-streaming-dominance` |
 | `afterpay-buy-now-pay-later-revolution` | fill | 0 | 3,290 | 6 | `how-afterpay-invented-buy-now-pay-later-from-its-australian-home-market` |
-| `secretlab-anz-market-entry` | replace | 2,373 | 4,016 | 10 | `how-secretlab-sold-australia-gaming-chairs-without-a-single-store` |
-| `shopback-anz-market-entry` | replace | 2,598 | 3,991 | 10 | `how-shopback-used-cashback-to-break-into-australian-loyalty` |
+| `secretlab-anz-market-entry` | replace | 2,373 | 4,016 | 6 | `how-secretlab-sold-australia-gaming-chairs-without-a-single-store` |
+| `shopback-anz-market-entry` | replace | 2,598 | 3,991 | 6 | `how-shopback-used-cashback-to-break-into-australian-loyalty` |
 | `starbucks-australia-market-entry` | replace | 3,048 | 2,836 | 6 | `how-starbucks-misread-australias-coffee-culture-and-closed-61-stores` |
 | `masters-australia-market-entry` | replace | 3,054 | 3,364 | 6 | `how-masters-lowes-lost-billions-challenging-bunnings` |
 | `ola-australia-market-entry` | replace | 3,060 | 3,018 | 6 | `how-ola-won-australian-drivers-but-never-won-the-riders` |
 | `topshop-australia-market-entry` | replace | 3,156 | 3,208 | 6 | `how-topshops-australian-franchise-collapsed-under-its-own-economics` |
-| `wework-australia-market-entry` | replace | 3,449 | 3,898 | 10 | `how-weworks-australian-business-outlived-its-parents-bankruptcy` |
+| `wework-australia-market-entry` | replace | 3,449 | 3,898 | 6 | `how-weworks-australian-business-outlived-its-parents-bankruptcy` |
 
 ## Apply / rollback
 
