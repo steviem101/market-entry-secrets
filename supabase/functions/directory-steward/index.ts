@@ -17,6 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { validateExternalUrl } from "../_shared/url.ts";
 import { computeDataHealth, completeness, STALE_DAYS } from "../generate-report/dataHealth.ts";
 import { STEWARD_TABLES, ageInDays, type StewardTableConfig } from "./tables.ts";
+import { classifyReachabilityStatus, isTimeoutError, PROBE_HEADERS } from "./reachability.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -57,8 +58,12 @@ async function postToSlack(channel: string, text: string, blocks: unknown[]): Pr
   } catch (e) { log("slack post threw", String(e)); }
 }
 
-/** Reachability of a source URL. true = 2xx/3xx; false = 4xx/5xx or network error;
- *  null = not checkable (no URL, or SSRF-guarded private address — don't penalise). */
+/** Reachability of a source URL, as a three-state verdict (see reachability.ts):
+ *  true = alive (2xx/3xx); false = definitively dead (404/410 or a DNS/connection
+ *  failure) — the only signal that stages a row; null = not checkable / alive-but-
+ *  blocked (no URL, SSRF-guarded address, WAF/bot-block status, or a timeout) →
+ *  neutral, never staged. Biased toward false-negatives so a live-but-bot-blocking
+ *  source (LinkedIn 999, WAF 403) is never mis-staged as dead. */
 async function checkReachable(rawUrl: unknown): Promise<boolean | null> {
   if (typeof rawUrl !== "string" || !rawUrl.trim()) return null;
   let url: string;
@@ -67,12 +72,15 @@ async function checkReachable(rawUrl: unknown): Promise<boolean | null> {
   const to = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
     // GET (many sites 405 a HEAD); we only read status, not the body — cancel it so
-    // the connection isn't held open downloading a page we don't read.
-    const res = await fetch(url, { method: "GET", redirect: "follow", signal: ctrl.signal, headers: { "user-agent": "MES-DirectorySteward/1.0" } });
+    // the connection isn't held open downloading a page we don't read. Browser-like
+    // headers so a benign uptime check isn't itself the reason for a WAF 403.
+    const res = await fetch(url, { method: "GET", redirect: "follow", signal: ctrl.signal, headers: PROBE_HEADERS });
     try { await res.body?.cancel(); } catch { /* ignore */ }
-    return res.status < 400;
-  } catch {
-    return false; // timeout / DNS / connection refused → genuinely unreachable
+    return classifyReachabilityStatus(res.status);
+  } catch (e) {
+    // Timeout = ambiguous (slow origin / bot-tarpit) → don't penalise; a real
+    // DNS/connection/TLS failure = genuinely unreachable.
+    return isTimeoutError(e) ? null : false;
   } finally {
     clearTimeout(to);
   }
