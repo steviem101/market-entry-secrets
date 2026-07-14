@@ -17,7 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { validateExternalUrl } from "../_shared/url.ts";
 import { computeDataHealth, completeness, STALE_DAYS } from "../generate-report/dataHealth.ts";
 import { STEWARD_TABLES, ageInDays, type StewardTableConfig } from "./tables.ts";
-import { classifyReachabilityStatus, isTimeoutError, PROBE_HEADERS } from "./reachability.ts";
+import { classifyReachabilityStatus, classifyReachabilityError, PROBE_HEADERS } from "./reachability.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -78,9 +78,10 @@ async function checkReachable(rawUrl: unknown): Promise<boolean | null> {
     try { await res.body?.cancel(); } catch { /* ignore */ }
     return classifyReachabilityStatus(res.status);
   } catch (e) {
-    // Timeout = ambiguous (slow origin / bot-tarpit) → don't penalise; a real
-    // DNS/connection/TLS failure = genuinely unreachable.
-    return isTimeoutError(e) ? null : false;
+    // No HTTP status. Only a DNS-resolution failure (domain gone) reads as dead;
+    // timeout / connection-reset / TLS / HTTP-2 are ambiguous (often a live host's
+    // WAF rejecting a non-browser client) → null, never staged. See reachability.ts.
+    return classifyReachabilityError(e);
   } finally {
     clearTimeout(to);
   }
