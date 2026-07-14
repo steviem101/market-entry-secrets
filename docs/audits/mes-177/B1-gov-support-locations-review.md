@@ -1,5 +1,14 @@
 # MES-177 Phase B1 — Government Support location normalisation (REVIEW — awaiting sign-off)
 
+> **Post-merge correction (2026-07-14):** the first apply of B1 to prod **failed and rolled back**
+> because `trade_investment_agencies.location` is **NOT NULL** and the migration set 7 unresolvable
+> rows to `NULL`. This passed the empty-preview branch (0 rows updated → constraint never tripped)
+> but violated the constraint on prod, halting the ledger before B2. **Fix:** the 7 rows are now
+> **left as their existing `'Unknown'` value** (the A7 junk-sentinel filter guard hides `'Unknown'`
+> from the location options anyway, so the user-facing result is identical to NULL). Migration
+> `20260714100100` edited in place — it never committed, so this is a pre-first-apply fix, not a
+> rewrite of applied history. Re-deployed via a follow-up PR so the integration retries B1 then B2.
+
 **Status:** proposal only. No DB writes. Migration written *after* sign-off, then staged in
 `supabase/migrations/`. **Proposal:** `docs/audits/mes-177/gov-support-location-proposal.csv`
 (id, name, location_raw, proposed_location, confidence, rationale — rationale per row so you can
