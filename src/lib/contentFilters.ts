@@ -12,12 +12,14 @@ export interface ContentItemLike {
   subtitle?: string | null;
   content_type?: string | null;
   category_id?: string | null;
+  sector_tags?: string[] | null;
 }
 
-/** Keys: search, type (content_type), category (category id | "all"). */
+/** Keys: search, type (content_type), category (category id | "all"), sector
+ *  (canonical sector_tags slug | "all" — untagged items stay reachable via "all"). */
 export function filterContent<T extends ContentItemLike>(items: T[], filters: FilterValues): T[] {
   const search = (filters.search ?? "").toLowerCase().trim();
-  const { type = "all", category = "all" } = filters;
+  const { type = "all", category = "all", sector = "all" } = filters;
 
   return items.filter((item) => {
     const matchesSearch =
@@ -27,7 +29,8 @@ export function filterContent<T extends ContentItemLike>(items: T[], filters: Fi
 
     const matchesType = type === "all" || item.content_type === type;
     const matchesCategory = category === "all" || item.category_id === category;
+    const matchesSector = sector === "all" || (item.sector_tags ?? []).includes(sector);
 
-    return matchesSearch && matchesType && matchesCategory;
+    return matchesSearch && matchesType && matchesCategory && matchesSector;
   });
 }

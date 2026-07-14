@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { AddToCalendarButton } from "@/components/events/AddToCalendarButton";
 import { Event } from "@/hooks/useEvents";
+import { COMMUNITY_SOURCE } from "@/lib/eventFilters";
 import { Link } from "react-router-dom";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import {
@@ -29,11 +30,14 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
   const isApproximateDate = (event.date_precision ?? "exact") !== "exact";
   const timeLabel = event.time ?? (isApproximateDate ? "See website for time" : null);
   const organizerLabel = event.organizer ?? "Organizer TBC";
-  const isCommunity = event.source === "apify_events_finder";
+  // Community-sourced events sit in the same list as curated ones (no separate
+  // tab since the 2026-07-14 sweep) — the badge is what keeps provenance visible.
+  const isCommunity = event.source === COMMUNITY_SOURCE;
   const isOnline = event.event_format === "virtual";
   const platformLabel = event.source_platform
     ? event.source_platform.charAt(0).toUpperCase() + event.source_platform.slice(1)
     : null;
+  const communityLabel = platformLabel ? `Community · ${platformLabel}` : "Community";
   // Eventbrite image URLs are signed and can expire; fall back to the logo on load error.
   const [bannerFailed, setBannerFailed] = useState(false);
   const showBanner = !!event.image_url && !bannerFailed;
@@ -57,9 +61,9 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
             className="w-full h-full object-cover"
             onError={() => setBannerFailed(true)}
           />
-          {isCommunity && platformLabel && (
+          {isCommunity && (
             <Badge className="absolute left-2 top-2 border border-border bg-background/85 text-foreground backdrop-blur-sm">
-              Community · {platformLabel}
+              {communityLabel}
             </Badge>
           )}
         </div>
@@ -97,8 +101,8 @@ export const EventCard = memo(({ event, onViewDetails, useModal = false }: Event
                 {isOnline && (
                   <Badge variant="outline" className="text-xs">Online</Badge>
                 )}
-                {isCommunity && !event.image_url && platformLabel && (
-                  <Badge variant="outline" className="text-xs">Community · {platformLabel}</Badge>
+                {isCommunity && !showBanner && (
+                  <Badge variant="outline" className="text-xs">{communityLabel}</Badge>
                 )}
               </div>
               <CardTitle className="text-lg font-semibold line-clamp-2 leading-tight">

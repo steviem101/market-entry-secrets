@@ -24,7 +24,6 @@ interface ServiceProvidersDataProviderProps {
   selectedCategory?: string;
   verifiedOnly?: boolean;
   sortBy?: string;
-  personaFilter?: string;
 }
 
 export const ServiceProvidersDataProvider = ({
@@ -36,7 +35,6 @@ export const ServiceProvidersDataProvider = ({
   selectedCategory = "all",
   verifiedOnly = false,
   sortBy = "name",
-  personaFilter = 'all',
 }: ServiceProvidersDataProviderProps) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -187,12 +185,8 @@ export const ServiceProvidersDataProvider = ({
 
       const matchesVerified = !verifiedOnly || company.is_verified;
 
-      const matchesPersona = personaFilter === 'all' ||
-        !company.serves_personas?.length ||
-        company.serves_personas.includes(personaFilter);
-
       return matchesSearch && matchesLocation && matchesType && matchesSector &&
-        matchesCategory && matchesVerified && matchesPersona;
+        matchesCategory && matchesVerified;
     });
 
     // Sort
@@ -216,7 +210,7 @@ export const ServiceProvidersDataProvider = ({
     }
 
     return filtered;
-  }, [companies, searchTerm, selectedLocations, selectedType, selectedSector, selectedCategory, verifiedOnly, sortBy, personaFilter, sectors]);
+  }, [companies, searchTerm, selectedLocations, selectedType, selectedSector, selectedCategory, verifiedOnly, sortBy, sectors]);
 
   // Calculate comprehensive counts
   const totalCompanies = companies.length;

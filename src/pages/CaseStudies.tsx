@@ -14,7 +14,16 @@ import { DirectoryFilterBar, type FilterOption, type SelectFilterConfig } from "
 import { useCaseStudies } from "@/hooks/useCaseStudies";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
-import { filterAndSortCaseStudies, parseMoneyToNumber, REVENUE_RANGES, COST_RANGES } from "@/lib/caseStudyFilters";
+import {
+  filterAndSortCaseStudies,
+  parseMoneyToNumber,
+  isPositiveOutcome,
+  isFailureOutcome,
+  outcomeTone,
+  OUTCOME_LABELS,
+  REVENUE_RANGES,
+  COST_RANGES,
+} from "@/lib/caseStudyFilters";
 import { getCountryFlag } from "@/lib/countryFlags";
 import { curateValues } from "@/lib/filterCuration";
 import { SEOHead } from "@/components/common/SEOHead";
@@ -125,13 +134,14 @@ const CaseStudies = () => {
     page * PAGE_SIZE
   );
 
-  // Stats + tab counts.
+  // Stats + tab counts. Every positive outcome (successful/scaling/ipo/acquired)
+  // counts as a success; only 'unsuccessful' is a failure; NULL counts as neither.
   const successCount = useMemo(() =>
-    caseStudies.filter(cs => cs.content_company_profiles?.[0]?.outcome === 'successful').length,
+    caseStudies.filter(cs => isPositiveOutcome(cs.content_company_profiles?.[0]?.outcome)).length,
     [caseStudies]
   );
   const failureCount = useMemo(() =>
-    caseStudies.filter(cs => cs.content_company_profiles?.[0]?.outcome === 'unsuccessful').length,
+    caseStudies.filter(cs => isFailureOutcome(cs.content_company_profiles?.[0]?.outcome)).length,
     [caseStudies]
   );
 
@@ -185,7 +195,7 @@ const CaseStudies = () => {
   if (isLoading) {
     return (
       <>
-        <section className="bg-gradient-to-br from-sky-50 via-blue-50/50 to-indigo-50/30 py-16 md:py-20">
+        <section className="bg-gradient-to-r from-primary/10 to-accent/10 py-16 md:py-20">
           <div className="container mx-auto px-4 text-center">
             <Skeleton className="h-12 w-12 rounded-full mx-auto mb-6" />
             <Skeleton className="h-12 w-full max-w-sm mx-auto mb-4" />
@@ -225,11 +235,21 @@ const CaseStudies = () => {
     const profile = cs.content_company_profiles?.[0];
     const primaryFounder = cs.content_founders?.find((f: any) => f.is_primary) || cs.content_founders?.[0];
     const outcome = profile?.outcome;
-    const borderColor = outcome === "successful"
-      ? "hover:border-l-emerald-500"
-      : outcome === "unsuccessful"
-        ? "hover:border-l-red-400"
-        : "hover:border-l-blue-400";
+    // Presentation is tone-driven: every positive outcome renders green with its
+    // own label (Success/Scaling/IPO/Acquired); only 'unsuccessful' renders as
+    // Failure; NULL/unknown outcomes get no badge.
+    const tone = outcomeTone(outcome);
+    const outcomeLabel = tone ? OUTCOME_LABELS[outcome] : null;
+    const outcomeBadgeClass =
+      tone === "positive"
+        ? "border-mes-success/30 bg-mes-success/10 text-mes-success"
+        : "border-destructive/30 bg-destructive/10 text-destructive";
+    const borderColor =
+      tone === "positive"
+        ? "hover:border-l-mes-success"
+        : tone === "negative"
+          ? "hover:border-l-destructive"
+          : "hover:border-l-primary";
 
     if (isGrid) {
       return (
@@ -244,7 +264,7 @@ const CaseStudies = () => {
                     alt={profile?.company_name}
                     className="object-cover"
                   />
-                  <AvatarFallback className="rounded-lg bg-gradient-to-br from-sky-100 to-blue-200 text-blue-700 text-xs font-semibold">
+                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-semibold">
                     {(profile?.company_name || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
@@ -258,16 +278,12 @@ const CaseStudies = () => {
                     </p>
                   )}
                 </div>
-                {outcome && (
+                {outcomeLabel && (
                   <Badge
                     variant="outline"
-                    className={`text-xs flex-shrink-0 ${
-                      outcome === "successful"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-red-200 bg-red-50 text-red-700"
-                    }`}
+                    className={`text-xs flex-shrink-0 ${outcomeBadgeClass}`}
                   >
-                    {outcome === "successful" ? "Success" : "Failure"}
+                    {outcomeLabel}
                   </Badge>
                 )}
               </div>
@@ -342,7 +358,7 @@ const CaseStudies = () => {
                   alt={profile?.company_name}
                   className="object-cover"
                 />
-                <AvatarFallback className="rounded-lg bg-gradient-to-br from-sky-100 to-blue-200 text-blue-700 text-sm font-semibold">
+                <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-sm font-semibold">
                   {(profile?.company_name || '?').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
@@ -352,16 +368,12 @@ const CaseStudies = () => {
                   <h2 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                     {cs.title}
                   </h2>
-                  {outcome && (
+                  {outcomeLabel && (
                     <Badge
                       variant="outline"
-                      className={`text-xs ${
-                        outcome === "successful"
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : "border-red-200 bg-red-50 text-red-700"
-                      }`}
+                      className={`text-xs ${outcomeBadgeClass}`}
                     >
-                      {outcome === "successful" ? "Success" : "Failure"}
+                      {outcomeLabel}
                     </Badge>
                   )}
                 </div>
@@ -447,15 +459,15 @@ const CaseStudies = () => {
       />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-sky-50 via-blue-50/50 to-indigo-50/30 py-16 md:py-20">
+      <section className="bg-gradient-to-r from-primary/10 to-accent/10 py-16 md:py-20">
         <div className="container mx-auto px-4 text-center">
           <div className="flex justify-center mb-5">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <BookOpen className="w-10 h-10 text-blue-600" />
+            <div className="p-3 bg-primary/20 rounded-full">
+              <BookOpen className="w-10 h-10 text-primary" />
             </div>
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-            Market Entry <span className="text-blue-600">Case Studies</span>
+            Market Entry <span className="text-primary">Case Studies</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             Real stories from international businesses entering the Australian market — their successes, failures, and lessons learned.
@@ -467,32 +479,32 @@ const CaseStudies = () => {
           {/* Stats — hide zeros */}
           <div className="flex flex-wrap justify-center gap-4 md:gap-6">
             {caseStudies.length > 0 && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
-                <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-0.5">{caseStudies.length}</div>
+              <div className="bg-card/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
+                <div className="text-2xl md:text-3xl font-bold text-primary mb-0.5">{caseStudies.length}</div>
                 <div className="text-xs text-muted-foreground">Case Studies</div>
               </div>
             )}
             {successCount > 0 && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
-                <div className="text-2xl md:text-3xl font-bold text-emerald-600 mb-0.5">{successCount}</div>
+              <div className="bg-card/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
+                <div className="text-2xl md:text-3xl font-bold text-mes-success mb-0.5">{successCount}</div>
                 <div className="text-xs text-muted-foreground">Success Stories</div>
               </div>
             )}
             {failureCount > 0 && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
-                <div className="text-2xl md:text-3xl font-bold text-red-500 mb-0.5">{failureCount}</div>
+              <div className="bg-card/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
+                <div className="text-2xl md:text-3xl font-bold text-destructive mb-0.5">{failureCount}</div>
                 <div className="text-xs text-muted-foreground">Lessons Learned</div>
               </div>
             )}
             {industryOptions.length > 0 && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
-                <div className="text-2xl md:text-3xl font-bold text-violet-600 mb-0.5">{industryOptions.length}</div>
+              <div className="bg-card/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
+                <div className="text-2xl md:text-3xl font-bold text-mes-teal-dark mb-0.5">{industryOptions.length}</div>
                 <div className="text-xs text-muted-foreground">Industries</div>
               </div>
             )}
             {countryOptions.length > 0 && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
-                <div className="text-2xl md:text-3xl font-bold text-amber-600 mb-0.5">{countryOptions.length}</div>
+              <div className="bg-card/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
+                <div className="text-2xl md:text-3xl font-bold text-mes-warning mb-0.5">{countryOptions.length}</div>
                 <div className="text-xs text-muted-foreground">Origin Countries</div>
               </div>
             )}

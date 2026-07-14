@@ -7,11 +7,11 @@ const m = (p: Partial<MentorLike> & { name: string }): MentorLike => ({
 });
 
 const DATA: MentorLike[] = [
-  m({ name: "Alice", category_slug: "legal", location: "Sydney", persona_fit: ["international_entrant"], sector_tags: ["fintech"], market_corridors: ["uk-to-au"], is_featured: true, view_count: 10, years_experience: 5 }),
-  m({ name: "Bob", category_slug: "finance", location: "Melbourne", persona_fit: ["both"], sector_tags: ["saas"], market_corridors: ["usa-to-au"], view_count: 100, years_experience: 20 }),
-  m({ name: "Carol", category_slug: "legal", location: "Sydney", persona_fit: ["local_startup"], sector_tags: ["fintech"], market_corridors: ["uk-to-nz"], view_count: 50, years_experience: 12 }),
+  m({ name: "Alice", category_slug: "legal", location: "Sydney", sector_tags: ["fintech"], market_corridors: ["uk-to-au"], is_featured: true, view_count: 10, years_experience: 5 }),
+  m({ name: "Bob", category_slug: "finance", location: "Melbourne", sector_tags: ["saas"], market_corridors: ["usa-to-au"], view_count: 100, years_experience: 20 }),
+  m({ name: "Carol", category_slug: "legal", location: "Sydney", sector_tags: ["fintech"], market_corridors: ["uk-to-nz"], view_count: 50, years_experience: 12 }),
 ];
-const base = { search: "", persona: "all", category: "all", sector: "all", corridor: "all", location: "all", sort: "featured" };
+const base = { search: "", category: "all", sector: "all", corridor: "all", location: "all", sort: "featured" };
 
 test("category filter by legacy category_slug still works", () => {
   assert.deepEqual(filterMentors(DATA, { ...base, category: "legal" }).map((x) => x.name).sort(), ["Alice", "Carol"]);
@@ -40,9 +40,8 @@ test("category filter matches slugified archetype (the MES-130 primary dimension
     ["Evan"],
   );
 });
-test("persona: 'both' matches either; explicit personas match their side", () => {
-  assert.deepEqual(filterMentors(DATA, { ...base, persona: "international_entrant" }).map((x) => x.name).sort(), ["Alice", "Bob"]);
-  assert.deepEqual(filterMentors(DATA, { ...base, persona: "local_startup" }).map((x) => x.name).sort(), ["Bob", "Carol"]);
+test("a stale ?persona= value is ignored (dimension retired with the audience pill)", () => {
+  assert.equal(filterMentors(DATA, { ...base, persona: "international_entrant" }).length, DATA.length);
 });
 test("corridor matches origin prefix", () => {
   assert.deepEqual(filterMentors(DATA, { ...base, corridor: "uk" }).map((x) => x.name).sort(), ["Alice", "Carol"]);

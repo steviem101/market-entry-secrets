@@ -11,7 +11,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterInvestors } from "@/lib/investorFilters";
 import { curateValues } from "@/lib/filterCuration";
-import { humanizeSlug } from "@/lib/humanizeSlug";
+import { sectorLabel } from "@/lib/sectorLabels";
 
 const PAGE_SIZE = 12;
 
@@ -56,7 +56,7 @@ const Investors = () => {
   );
 
   const sectorOptions = useMemo(
-    () => curateValues((investors ?? []).flatMap((inv) => inv.sector_tags || []), { labelFor: humanizeSlug }),
+    () => curateValues((investors ?? []).flatMap((inv) => inv.sector_tags || []), { labelFor: sectorLabel }),
     [investors],
   );
 

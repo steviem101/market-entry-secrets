@@ -11,6 +11,39 @@ export const parseMoneyToNumber = (value: string | null | undefined): number => 
   return parseFloat(value.replace(/[$,]/g, "")) || 0;
 };
 
+/**
+ * Outcome semantics (2026-07-14 filter bar consistency sweep). The DB column
+ * carries more than a boolean: `scaling`, `ipo` and `acquired` are POSITIVE
+ * outcomes and must never render as "Failure". Tabs and stats stay binary —
+ * every positive outcome counts as a success; only `unsuccessful` is a failure;
+ * NULL/unknown outcomes get no badge and only appear under "All".
+ */
+export const POSITIVE_OUTCOMES: readonly string[] = ["successful", "scaling", "ipo", "acquired"];
+
+export const isPositiveOutcome = (outcome: string | null | undefined): boolean =>
+  outcome != null && POSITIVE_OUTCOMES.includes(outcome);
+
+export const isFailureOutcome = (outcome: string | null | undefined): boolean =>
+  outcome === "unsuccessful";
+
+/** Badge copy per outcome value; values without a label render no badge. */
+export const OUTCOME_LABELS: Readonly<Record<string, string>> = {
+  successful: "Success",
+  scaling: "Scaling",
+  ipo: "IPO",
+  acquired: "Acquired",
+  unsuccessful: "Failure",
+};
+
+export type OutcomeTone = "positive" | "negative";
+
+/** Presentation tone for an outcome; null → render nothing. */
+export function outcomeTone(outcome: string | null | undefined): OutcomeTone | null {
+  if (isPositiveOutcome(outcome)) return "positive";
+  if (isFailureOutcome(outcome)) return "negative";
+  return null;
+}
+
 /** The "no range selected" sentinels — either the standard default or the legacy one. */
 const isUnfiltered = (range: string) => range === "all" || range === "any";
 
@@ -100,7 +133,12 @@ export function filterAndSortCaseStudies<T extends CaseStudyLike>(
       (cs.subtitle ?? "").toLowerCase().includes(search) ||
       (profile?.company_name ?? "").toLowerCase().includes(search);
 
-    const matchesOutcome = outcome === "all" || profile?.outcome === outcome;
+    // The "successful" tab groups every positive outcome (scaling/ipo/acquired
+    // included); other values (unsuccessful, or a direct ?outcome=scaling deep
+    // link) match by equality.
+    const matchesOutcome =
+      outcome === "all" ||
+      (outcome === "successful" ? isPositiveOutcome(profile?.outcome) : profile?.outcome === outcome);
     const matchesIndustry = industry === "all" || profile?.industry === industry;
     const matchesCountry = country === "all" || profile?.origin_country === country;
     const matchesRevenue = matchesRevenueRange(profile?.monthly_revenue, revenue);

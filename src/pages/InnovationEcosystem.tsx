@@ -11,6 +11,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterOrganisations } from "@/lib/innovationFilters";
 import { curateValues } from "@/lib/filterCuration";
+import { sectorLabel } from "@/lib/sectorLabels";
 
 const PAGE_SIZE = 12;
 
@@ -19,6 +20,7 @@ const INNOVATION_FILTER_SPEC: FilterSpec = {
   type: { param: "type", default: "all" },
   location: { param: "location", default: "all" },
   service: { param: "service", default: "all" },
+  sector: { param: "sector", default: "all" },
 };
 
 const InnovationEcosystem = () => {
@@ -27,9 +29,21 @@ const InnovationEcosystem = () => {
 
   const { data: organizations, isLoading, error } = useInnovationEcosystem();
 
+  // Coerce a stale ?sector= (value outside the canonical option set) to "all"
+  // so it never silently renders an empty grid — mirrors Investors' safeSector.
+  const validSectors = useMemo(
+    () => new Set((organizations ?? []).flatMap((org) => org.sector_tags || [])),
+    [organizations],
+  );
+  const safeSector =
+    filters.sector === "all" || validSectors.size === 0 || validSectors.has(filters.sector)
+      ? filters.sector
+      : "all";
+  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
+
   const filteredOrganizations = useMemo(
-    () => (organizations ? filterOrganisations(organizations, filters) : []),
-    [organizations, filters]
+    () => (organizations ? filterOrganisations(organizations, effectiveFilters) : []),
+    [organizations, effectiveFilters]
   );
 
   const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
@@ -45,6 +59,12 @@ const InnovationEcosystem = () => {
   );
   const serviceOptions = useMemo(
     () => curateValues((organizations ?? []).flatMap((org) => org.services || [])),
+    [organizations]
+  );
+  // Canonical sector_tags (MES-110) with the shared friendly labels; untagged
+  // orgs simply don't contribute options and stay reachable via "All Sectors".
+  const sectorOptions = useMemo(
+    () => curateValues((organizations ?? []).flatMap((org) => org.sector_tags || []), { labelFor: sectorLabel }),
     [organizations]
   );
 
@@ -73,6 +93,7 @@ const InnovationEcosystem = () => {
 
   const selects: SelectFilterConfig[] = [
     { key: "location", allLabel: "All Locations", options: locationOptions, searchable: true },
+    { key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true },
     { key: "service", allLabel: "All Services", options: serviceOptions, searchable: true },
   ];
 
@@ -108,7 +129,7 @@ const InnovationEcosystem = () => {
       />
 
       <DirectoryFilterBar
-        filters={filters}
+        filters={effectiveFilters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}
