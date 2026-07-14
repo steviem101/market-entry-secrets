@@ -7,14 +7,17 @@
 //   null  = not checkable / alive-but-blocked — neutral half-health, never staged.
 //
 // Why this exists: the first cut treated ANY status >= 400 (and any fetch error) as
-// dead. That false-flagged live sources that merely bot-block an automated GET —
+// dead. That false-flagged live sources that merely bot-block an automated request —
 // LinkedIn serves HTTP 999, and Cloudflare/Akamai/Imperva WAFs on law-firm/gov hosts
-// serve 403/429 — so a real run staged ~18/25 "dead" rows that were perfectly alive.
-// Staging a live mentor/provider as dead is worse than missing a truly dead link
-// (the loop is propose-only, and FRESHNESS_RANKING would down-rank a false-dead row),
-// so we bias hard toward false-negatives: only a definitive 404/410 or a real
-// DNS/connection failure counts as dead; everything ambiguous is null (re-checked next
-// run). Pure + total so it's unit-tested under Node and reused by the edge function.
+// serve 403/429 OR reject a non-browser client at the CONNECTION layer (reset / TLS /
+// HTTP-2 handshake — observed on mckinsey.com and .gov WAFs). Staging a live mentor/
+// provider as dead is worse than missing a truly dead link (the loop is propose-only,
+// and FRESHNESS_RANKING would down-rank a false-dead row), so we bias hard toward
+// false-negatives. Only two signals count as dead: an HTTP 404/410, or a DNS-resolution
+// failure (the domain is genuinely gone). Every other status AND every other fetch
+// error (403/999/429/5xx, timeout, connection reset, TLS/cert, HTTP-2, refused) is null
+// — re-checked next run. Pure + total so it's unit-tested under Node and reused by the
+// edge function.
 
 /** Map an HTTP status to a reachability verdict.
  *  - `< 400` → true (served content, including redirects the client followed).
@@ -37,6 +40,39 @@ export function classifyReachabilityStatus(status: number): boolean | null {
 export function isTimeoutError(err: unknown): boolean {
   const name = (err as { name?: unknown } | null)?.name;
   return name === "AbortError" || name === "TimeoutError";
+}
+
+/** Flatten an error (and its cause chain) to a lowercase string for marker matching. */
+function errorText(err: unknown): string {
+  const parts: string[] = [];
+  // deno-lint-ignore no-explicit-any
+  let cur: any = err;
+  for (let i = 0; i < 4 && cur != null; i++) {
+    if (typeof cur === "string") { parts.push(cur); break; }
+    if (cur.message) parts.push(String(cur.message));
+    cur = cur.cause;
+  }
+  return parts.join(" | ").toLowerCase();
+}
+
+/** Whether a fetch rejection is a DNS-resolution failure — the domain doesn't resolve,
+ *  the one UNAMBIGUOUS "genuinely gone" network signal. Deno surfaces this inside the
+ *  TypeError message ("dns error: failed to lookup address information: ..."); we also
+ *  match the common libc/getaddrinfo phrasings for resilience across runtimes. */
+const DNS_FAILURE = /dns error|failed to lookup address|name or service not known|nodename nor servname|no such host|could not resolve host|name resolution/;
+export function isDnsError(err: unknown): boolean {
+  return DNS_FAILURE.test(errorText(err));
+}
+
+/** Verdict for a fetch that THREW (no HTTP status). Timeout → null (ambiguous: a slow
+ *  origin or a bot-tarpit). DNS-resolution failure → false (the domain is genuinely
+ *  gone). Everything else — connection reset, TLS/cert error, HTTP/2 protocol error,
+ *  connection refused → null: these are commonly a LIVE host's WAF/CDN rejecting a
+ *  non-browser client at the connection layer (observed on mckinsey.com, gov WAFs),
+ *  so they must NOT stage a live row. Only DNS-gone + HTTP 404/410 read as dead. */
+export function classifyReachabilityError(err: unknown): boolean | null {
+  if (isTimeoutError(err)) return null;
+  return isDnsError(err) ? false : null;
 }
 
 /** A browser-like UA + Accept for the reachability probe. The original
