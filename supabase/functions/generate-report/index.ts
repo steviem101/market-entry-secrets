@@ -31,7 +31,7 @@ import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse,
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { parseAbPercent, inCandidateBucket } from "./promptAb.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
-import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, shouldFallbackToFlash, FLASH_MODEL } from "./sectionModel.ts";
+import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry, FLASH_MODEL } from "./sectionModel.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -2863,6 +2863,10 @@ async function generateReportInBackground(
     // 6. Generate sections
     const sections: Record<string, any> = {};
     const sectionsGenerated: string[] = [];
+    // Report reliability: sections that came back blank even after the flash
+    // retry (or threw in the outer catch). Surfaced in metadata.empty_sections
+    // so a "completed" report short a section is observable, not silent (§14.5).
+    const emptySections: string[] = [];
 
     // ── Citation availability (P0-4) ─────────────────────────────────────
     // When Perplexity returned no citations, instructing the model that it
@@ -3150,24 +3154,32 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
               { role: "system", content: systemContent },
               { role: "user", content: prompt },
             ];
-            let content: string;
+            // Resilient write (report reliability): try the resolved model; if it
+            // throws OR returns blank, retry ONCE on flash. This generalises the old
+            // claude-only fallback to ANY blank result on ANY model — a flash hiccup or
+            // an empty completion previously dropped straight to the empty sink,
+            // silently shipping a "completed" report short a section (~5% of reports).
+            // Eval A/B overrides never retry (the money-section guard must observe the
+            // true empty). A section still blank after the retry is recorded in
+            // metadata.empty_sections (fail-loud), never silently dropped.
+            let content = "";
             try {
               content = await writeSection(sectionModel, sectionMessages, { temperature: 0.4 }, { lovableKey, anthropicKey });
             } catch (writeErr) {
-              // Resilience (MES-148 Phase 2b): a section promoted to a direct-Anthropic
-              // model (report_templates.model = claude-*) must not silently blank on an
-              // Anthropic outage / credit lapse / model-access change — retry once on the
-              // flash writer so the section still renders. Eval A/B overrides deliberately
-              // do NOT fall back (the money-section guard must see the empty section).
-              if (shouldFallbackToFlash(sectionModel, isEvalOverride)) {
-                console.error(
-                  `Section ${tmpl.section_name}: model ${sectionModel} failed, falling back to flash:`,
-                  writeErr instanceof Error ? writeErr.message : writeErr,
-                );
+              console.error(`Section ${tmpl.section_name}: model ${sectionModel} threw:`, writeErr instanceof Error ? writeErr.message : writeErr);
+            }
+            if (needsFlashRetry(content, isEvalOverride)) {
+              console.error(`Section ${tmpl.section_name}: blank from ${sectionModel} — retrying once on flash`);
+              try {
                 content = await writeSection(FLASH_MODEL, sectionMessages, { temperature: 0.4 }, { lovableKey, anthropicKey });
-              } else {
-                throw writeErr;
+              } catch (retryErr) {
+                console.error(`Section ${tmpl.section_name}: flash retry threw:`, retryErr instanceof Error ? retryErr.message : retryErr);
               }
+            }
+            if (isBlankContent(content)) {
+              emptySections.push(tmpl.section_name);
+              console.error(`Section ${tmpl.section_name}: EMPTY after flash retry — report ships without it`);
+              return { name: tmpl.section_name, data: { content: "", visible: false } };
             }
 
             // competitor_landscape has no directory pool — its prose names the
@@ -3207,7 +3219,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
               },
             };
           } catch (e) {
+            // Reached only if the post-write pipeline (card building, etc.)
+            // throws — the write itself is guarded above. Still fail-loud.
             console.error(`Failed to generate ${tmpl.section_name}:`, e);
+            emptySections.push(tmpl.section_name);
             return {
               name: tmpl.section_name,
               data: { content: "", visible: false },
@@ -3229,6 +3244,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       }
 
       console.log(`Section generation: ${sectionsGenerated.length} sections in ${Date.now() - sectionStartTime}ms (single batch)`);
+      if (emptySections.length > 0) {
+        console.error(`Section generation: ${emptySections.length}/${templates.length} section(s) EMPTY after retry — report ships without them: ${emptySections.join(", ")}`);
+      }
     }
 
     const sectionOrder = templates ? templates.map((t: any) => t.section_name) : Object.keys(sections);
@@ -3494,6 +3512,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // MES-148 Phase 2a: the model each section was written with, so an A/B
         // (money-section routing) is observable per report. All-flash by default.
         section_models: sectionModelMap((templates || []) as any, sectionModelDefault),
+        // Report reliability: sections that shipped blank despite the flash retry.
+        // Empty array on a healthy report; a non-empty list means a "completed"
+        // report is genuinely short those sections (fail-loud, never silent — §14.5).
+        empty_sections: emptySections,
         // MES-148 Phase 4: which arm of the prompt A/B this report ran in.
         // bucket=false is the control (active prompts); variants lists the
         // candidate version actually written per section (empty on control /

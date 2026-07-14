@@ -25,16 +25,21 @@ export function anthropicModelId(model: string): string {
   return model.trim().replace(/^anthropic\//i, "");
 }
 
-/** Whether a failed section write should retry once on the Gemini flash writer.
- *  True only for a direct-Anthropic model (the gateway path already can't hit the
- *  Anthropic-specific failure modes) that resolved from config — NOT from an eval
- *  A/B override. Rationale: `report_templates.model = claude-*` promotes real,
- *  every-report sections; an Anthropic outage/credit/access failure must degrade
- *  to flash prose, not silently blank the section. But an eval-override failure
- *  must stay loud so the money-section guard (run-goldens) catches it — so eval
- *  runs never fall back. */
-export function shouldFallbackToFlash(model: string, isEvalOverride: boolean): boolean {
-  return isAnthropicModel(model) && !isEvalOverride;
+/** A section writer produced nothing usable — it threw (caller leaves content "")
+ *  or the model returned empty/whitespace. Reliability guard: such a section must
+ *  be retried, then recorded, never silently dropped. */
+export function isBlankContent(s: string | null | undefined): boolean {
+  return !s || s.trim().length === 0;
+}
+
+/** Retry a blank section ONCE on the flash writer. Fires on ANY blank result
+ *  (a throw that left content "" OR an empty completion) from ANY resolved model —
+ *  so a flash section that hiccups gets a retry too, closing the silent-missing-
+ *  section gap (measured ~5% of reports). The one exception is an eval A/B override:
+ *  those must observe the true empty so the money-section guard (run-goldens) still
+ *  catches it, so they never retry. */
+export function needsFlashRetry(primaryContent: string | null | undefined, isEvalOverride: boolean): boolean {
+  return isBlankContent(primaryContent) && !isEvalOverride;
 }
 
 /** Resolve the model for one section.
