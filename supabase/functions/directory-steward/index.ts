@@ -177,10 +177,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
     runRowId = run?.id ?? null;
   }
 
+  // Stamp staged proposals with the automation_runs id (when we have one) so a staged
+  // row joins straight back to its run telemetry; fall back to the standalone uuid on a
+  // dry-run / failed telemetry insert (nothing to join to then anyway).
+  const stagingRunId = runRowId ?? runId;
+
   const results = [];
   for (const cfg of STEWARD_TABLES) {
     if (Date.now() >= deadlineAt) { log("deadline reached — stopping table loop"); break; }
-    results.push(await stewardTable(supabase, cfg, batch, runId, nowMs, deadlineAt, dryRun));
+    results.push(await stewardTable(supabase, cfg, batch, stagingRunId, nowMs, deadlineAt, dryRun));
   }
 
   const totals = results.reduce((a, r) => ({ scored: a.scored + r.scored, staged: a.staged + r.staged }), { scored: 0, staged: 0 });
