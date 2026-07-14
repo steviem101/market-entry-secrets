@@ -120,10 +120,14 @@ const SearchableFilterSelect = ({
                   <Check className={cn("mr-2 h-4 w-4", value === "all" ? "opacity-100" : "opacity-0")} />
                   {allLabel}
                 </CommandItem>
-                {shown.map((opt) => (
+                {shown.map((opt, i) => (
                   <CommandItem
                     key={opt.value}
-                    value={opt.value}
+                    // cmdk lowercases/dedupes its `value`; case-duplicate option
+                    // values (e.g. "Pre-seed"/"Pre-Seed") would collide and break
+                    // keyboard selection. Index-qualify to keep each item distinct;
+                    // selection still uses opt.value via the closure below.
+                    value={`${i}:${opt.value}`}
                     onSelect={() => {
                       onChange(opt.value);
                       setQuery("");
