@@ -11,6 +11,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterInvestors } from "@/lib/investorFilters";
 import { curateValues } from "@/lib/filterCuration";
+import { humanizeSlug } from "@/lib/humanizeSlug";
 
 const PAGE_SIZE = 12;
 
@@ -44,9 +45,11 @@ const Investors = () => {
     [investors, filters],
   );
 
-  // MES-130: popularity-ranked, zero-hidden option lists (interim frontend-only
-  // curation on the raw columns — the canonical sector_tags swap is a separate,
-  // approval-gated follow-up that needs investors_public to expose the column).
+  // MES-130: popularity-ranked, zero-hidden option lists. Location/stage curate
+  // the raw free-text columns; sector now uses the canonical sector_tags slugs
+  // (MES-110), exposed on investors_public by the accompanying migration. Falls
+  // back gracefully to an empty list during any deploy window before the view
+  // swap lands (rows simply carry no sector_tags yet).
   const locationOptions = useMemo(
     () => curateValues((investors ?? []).map((inv) => inv.location)),
     [investors],
@@ -58,7 +61,7 @@ const Investors = () => {
   );
 
   const sectorOptions = useMemo(
-    () => curateValues((investors ?? []).flatMap((inv) => inv.sector_focus || [])),
+    () => curateValues((investors ?? []).flatMap((inv) => inv.sector_tags || []), { labelFor: humanizeSlug }),
     [investors],
   );
 

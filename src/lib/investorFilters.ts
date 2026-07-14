@@ -12,6 +12,8 @@ export interface InvestorLike {
   investor_type?: string | null;
   stage_focus?: string[] | null;
   sector_focus?: string[] | null;
+  /** Canonical MES-110 sector slugs — the sector filter's source (MES-130). */
+  sector_tags?: string[] | null;
 }
 
 const includesCI = (haystack: string | null | undefined, needle: string) =>
@@ -39,7 +41,9 @@ export function filterInvestors<T extends InvestorLike>(
     const matchesType = type === "all" || inv.investor_type === type;
     const matchesLocation = location === "all" || inv.location === location;
     const matchesStage = stage === "all" || (inv.stage_focus ?? []).includes(stage);
-    const matchesSector = sector === "all" || (inv.sector_focus ?? []).includes(sector);
+    // Sector filter uses the canonical sector_tags (MES-130); free-text
+    // sector_focus stays searchable above for findability.
+    const matchesSector = sector === "all" || (inv.sector_tags ?? []).includes(sector);
 
     return matchesSearch && matchesType && matchesLocation && matchesStage && matchesSector;
   });
