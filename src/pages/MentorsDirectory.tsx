@@ -18,7 +18,7 @@ import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterMentors, archetypeToSlug } from "@/lib/mentorFilters";
 import { humanizeSlug } from "@/lib/humanizeSlug";
 import { sectorLabel } from "@/lib/sectorLabels";
-import { curateValues, curateOptions, coerceToValidOption } from "@/lib/filterCuration";
+import { curateValues, curateOptions } from "@/lib/filterCuration";
 import type { Mentor } from "@/hooks/useMentors";
 
 const PAGE_SIZE = 12;
@@ -53,8 +53,23 @@ const originLabel = (o: string) => ORIGIN_LABELS[o] || humanizeSlug(o);
 const MentorsDirectory = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const { data: mentors = [], isLoading, error } = useMentors();
+
+  // MES-130: popularity-ranked, zero-hidden location options; long tail searchable.
+  const locationOptions = useMemo(() => curateValues(mentors.map((m) => m.location)), [mentors]);
+  // Sector lives in the main bar (2026-07-14 sweep): canonical sector_tags slugs
+  // as values, friendly shared labels for display. Predicate unchanged. A stale/
+  // case-variant ?sector= is coerced against these options by the hook.
+  const sectorOptions = useMemo(
+    () => curateValues(mentors.flatMap((m) => m.sector_tags || []), { labelFor: sectorLabel }),
+    [mentors],
+  );
+  const allowedValues = useMemo(
+    () => ({ sector: sectorOptions.map((o) => o.value) }),
+    [sectorOptions],
+  );
+
   const { filters, page, setFilter, setFilters, setPage, clearAll, hasActiveFilters } =
-    useDirectoryFilters(MENTOR_FILTER_SPEC);
+    useDirectoryFilters(MENTOR_FILTER_SPEC, { allowedValues });
   const [rawParams] = useSearchParams();
   const [contactMentor, setContactMentor] = useState<Mentor | null>(null);
 
@@ -84,22 +99,7 @@ const MentorsDirectory = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categorySlug]);
 
-  // MES-130: popularity-ranked, zero-hidden location options; long tail searchable.
-  const locationOptions = useMemo(() => curateValues(mentors.map((m) => m.location)), [mentors]);
-  // Sector lives in the main bar (2026-07-14 sweep): canonical sector_tags slugs
-  // as values, friendly shared labels for display. Predicate unchanged.
-  const sectorOptions = useMemo(
-    () => curateValues(mentors.flatMap((m) => m.sector_tags || []), { labelFor: sectorLabel }),
-    [mentors],
-  );
-
-  // Coerce a stale/case-variant ?sector= to a valid option (or "all") so it
-  // never silently renders an empty grid; derived from the curated options so
-  // it stays consistent with the dropdown across every directory.
-  const safeSector = coerceToValidOption(filters.sector, sectorOptions);
-  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
-
-  const filteredMentors = useMemo(() => filterMentors(mentors, effectiveFilters), [mentors, effectiveFilters]);
+  const filteredMentors = useMemo(() => filterMentors(mentors, filters), [mentors, filters]);
 
   const totalPages = Math.ceil(filteredMentors.length / PAGE_SIZE);
   const paginatedMentors = filteredMentors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -201,7 +201,7 @@ const MentorsDirectory = () => {
       />
 
       <DirectoryFilterBar
-        filters={effectiveFilters}
+        filters={filters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}

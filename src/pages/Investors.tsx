@@ -10,7 +10,7 @@ import { useInvestors } from "@/hooks/useInvestors";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterInvestors } from "@/lib/investorFilters";
-import { curateValues, coerceToValidOption } from "@/lib/filterCuration";
+import { curateValues } from "@/lib/filterCuration";
 import { sectorLabel } from "@/lib/sectorLabels";
 
 const PAGE_SIZE = 12;
@@ -35,9 +35,6 @@ const INVESTOR_FILTER_SPEC: FilterSpec = {
 };
 
 const Investors = () => {
-  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
-    useDirectoryFilters(INVESTOR_FILTER_SPEC);
-
   const { data: investors, isLoading, error } = useInvestors();
 
   // MES-130: popularity-ranked, zero-hidden option lists. Location/stage curate
@@ -60,15 +57,19 @@ const Investors = () => {
     [investors],
   );
 
-  // Sector now matches canonical sector_tags. Coerce a stale/legacy/case-variant
-  // ?sector= (old free-text sector_focus value, e.g. "fintech") to a valid
-  // option (or "all") so it never silently shows an empty directory.
-  const safeSector = coerceToValidOption(filters.sector, sectorOptions);
-  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
+  // Sector matches canonical sector_tags: a stale/legacy/case-variant ?sector=
+  // (old free-text sector_focus, e.g. "fintech") is coerced against the curated
+  // options by the hook, so it never silently shows an empty directory.
+  const allowedValues = useMemo(
+    () => ({ sector: sectorOptions.map((o) => o.value) }),
+    [sectorOptions],
+  );
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(INVESTOR_FILTER_SPEC, { allowedValues });
 
   const filteredInvestors = useMemo(
-    () => (investors ? filterInvestors(investors, effectiveFilters) : []),
-    [investors, effectiveFilters],
+    () => (investors ? filterInvestors(investors, filters) : []),
+    [investors, filters],
   );
 
   // Per-type counts for the hero cards AND the tab suffixes.
@@ -127,7 +128,7 @@ const Investors = () => {
       />
 
       <DirectoryFilterBar
-        filters={effectiveFilters}
+        filters={filters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}

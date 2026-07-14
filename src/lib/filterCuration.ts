@@ -92,27 +92,6 @@ export function curateOptions(
 }
 
 /**
- * Coerce a filter value to `allValue` when it isn't one of the currently valid
- * curated option values, so a stale, case-variant, or junk-sentinel URL param
- * never renders an empty grid. Matching is case-insensitive and returns the
- * option's canonical casing, so it works whether the page's predicate compares
- * case-sensitively (e.g. `sector_tags.includes`) or not (e.g. mentors'
- * lower-cased compare). While `options` is empty (data still loading) the value
- * passes through unchanged so a valid deep link isn't wiped during the load
- * window. Deriving the allow-list from the CURATED options (not the raw column)
- * keeps every directory's coercion consistent with what its dropdown offers.
- */
-export function coerceToValidOption(
-  value: string,
-  options: FilterOption[],
-  allValue = "all",
-): string {
-  if (value === allValue || options.length === 0) return value;
-  const match = options.find((o) => o.value.toLowerCase() === value.toLowerCase());
-  return match ? match.value : allValue;
-}
-
-/**
  * Convenience: raw values → curated FilterOption[] in one step. `label`
  * defaults to the value; pass `labelFor` to map slugs to display names.
  */

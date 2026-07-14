@@ -10,7 +10,7 @@ import { useInnovationEcosystem } from "@/hooks/useInnovationEcosystem";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterOrganisations } from "@/lib/innovationFilters";
-import { curateValues, coerceToValidOption } from "@/lib/filterCuration";
+import { curateValues } from "@/lib/filterCuration";
 import { sectorLabel } from "@/lib/sectorLabels";
 
 const PAGE_SIZE = 12;
@@ -24,9 +24,6 @@ const INNOVATION_FILTER_SPEC: FilterSpec = {
 };
 
 const InnovationEcosystem = () => {
-  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
-    useDirectoryFilters(INNOVATION_FILTER_SPEC);
-
   const { data: organizations, isLoading, error } = useInnovationEcosystem();
 
   // MES-130: popularity-ranked, zero-hidden; the long location/service tails are searchable.
@@ -40,20 +37,22 @@ const InnovationEcosystem = () => {
   );
   // Canonical sector_tags (MES-110) with the shared friendly labels; untagged
   // orgs simply don't contribute options and stay reachable via "All Sectors".
+  // A stale/case-variant ?sector= is coerced against these options by the hook.
   const sectorOptions = useMemo(
     () => curateValues((organizations ?? []).flatMap((org) => org.sector_tags || []), { labelFor: sectorLabel }),
     [organizations]
   );
+  const allowedValues = useMemo(
+    () => ({ sector: sectorOptions.map((o) => o.value) }),
+    [sectorOptions],
+  );
 
-  // Coerce a stale/case-variant ?sector= to a valid option (or "all") so it
-  // never silently renders an empty grid; derived from the curated options so
-  // it stays consistent with the dropdown.
-  const safeSector = coerceToValidOption(filters.sector, sectorOptions);
-  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(INNOVATION_FILTER_SPEC, { allowedValues });
 
   const filteredOrganizations = useMemo(
-    () => (organizations ? filterOrganisations(organizations, effectiveFilters) : []),
-    [organizations, effectiveFilters]
+    () => (organizations ? filterOrganisations(organizations, filters) : []),
+    [organizations, filters]
   );
 
   const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
@@ -123,7 +122,7 @@ const InnovationEcosystem = () => {
       />
 
       <DirectoryFilterBar
-        filters={effectiveFilters}
+        filters={filters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}

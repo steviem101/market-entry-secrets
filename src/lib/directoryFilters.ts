@@ -98,3 +98,52 @@ export function clearedFilters(spec: FilterSpec, current: FilterValues): FilterV
   }
   return out;
 }
+
+/**
+ * Per-dimension allow-lists (usually the curated option *values* a directory's
+ * dropdown offers). An absent or empty list for a key means "not known yet"
+ * (data still loading) — that dimension is left untouched.
+ */
+export type AllowedValues = Record<string, readonly string[]>;
+
+/**
+ * Coerce one value against an allow-list. Matching is case-insensitive and
+ * returns the list's own casing, so the result is valid whether the page's
+ * predicate compares case-sensitively or not. The dimension default and an
+ * empty/absent list both pass through unchanged (so a valid deep link isn't
+ * wiped during the data-load window); any other out-of-list value becomes `def`.
+ */
+export function coerceValue(
+  value: string,
+  allowed: readonly string[] | undefined,
+  def: string,
+): string {
+  if (value === def || !allowed || allowed.length === 0) return value;
+  const match = allowed.find((a) => a.toLowerCase() === value.toLowerCase());
+  return match ?? def;
+}
+
+/**
+ * Apply per-dimension allow-lists to a parsed filter set. Dimensions with no
+ * allow-list are left as-is. Returns the SAME object reference when nothing
+ * changed, so callers can rely on it for memo/effect stability.
+ */
+export function coerceFilters(
+  spec: FilterSpec,
+  values: FilterValues,
+  allowed?: AllowedValues,
+): FilterValues {
+  if (!allowed) return values;
+  let changed = false;
+  const out: FilterValues = { ...values };
+  for (const key of Object.keys(spec)) {
+    const list = allowed[key];
+    if (!list) continue;
+    const coerced = coerceValue(values[key], list, spec[key].default);
+    if (coerced !== values[key]) {
+      out[key] = coerced;
+      changed = true;
+    }
+  }
+  return changed ? out : values;
+}

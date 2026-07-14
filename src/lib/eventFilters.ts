@@ -26,7 +26,6 @@ export interface EventLike {
   type_canonical?: string | null;
   city?: string | null;
   sector?: string | null;
-  source?: string | null;
 }
 
 /**

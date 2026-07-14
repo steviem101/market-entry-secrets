@@ -1,15 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { filterEvents, COMMUNITY_SOURCE, type EventLike } from "./eventFilters.ts";
+import { filterEvents, type EventLike } from "./eventFilters.ts";
 
 const ev = (p: Partial<EventLike>): EventLike => p;
 
 // `type` values are raw events.type; filterEvents matches on the canonical
 // bucket (MES-130), so "Summit" and "Conference" both fall under `conference`.
 const DATA: EventLike[] = [
-  ev({ type: "Summit", city: "Sydney", sector: "Fintech", source: "curated" }),
-  ev({ type: "Workshop", city: "Melbourne", sector: "SaaS", source: COMMUNITY_SOURCE }),
-  ev({ type: "Conference", city: "Sydney", sector: "Health", source: "curated" }),
+  ev({ type: "Summit", city: "Sydney", sector: "Fintech" }),
+  ev({ type: "Workshop", city: "Melbourne", sector: "SaaS" }),
+  ev({ type: "Conference", city: "Sydney", sector: "Health" }),
 ];
 const base = { type: "all", city: "all", sector: "all" };
 

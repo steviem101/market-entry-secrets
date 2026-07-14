@@ -92,7 +92,6 @@ export const ServiceProvidersDataProvider = ({
           why_work_with_us: provider.why_work_with_us || undefined,
           experienceTiles,
           contactPersons,
-          serves_personas: provider.serves_personas || [],
           // New fields
           slug: provider.slug || undefined,
           tagline: provider.tagline || undefined,

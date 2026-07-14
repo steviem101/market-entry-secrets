@@ -8,6 +8,8 @@ import assert from "node:assert/strict";
 import {
   type FilterSpec,
   clearedFilters,
+  coerceFilters,
+  coerceValue,
   defaultFilters,
   parseFilters,
   parsePage,
@@ -102,4 +104,40 @@ test("presentation dimensions still serialise to the URL when non-default", () =
   assert.equal(params.get("sort"), "views");
   assert.equal(params.get("view"), "list");
   assert.equal(params.has("outcome"), false); // default omitted
+});
+
+test("coerceValue: keeps default, keeps a valid value, drops stale to default", () => {
+  assert.equal(coerceValue("all", ["fintech", "saas"], "all"), "all");
+  assert.equal(coerceValue("fintech", ["fintech", "saas"], "all"), "fintech");
+  assert.equal(coerceValue("manufacturing", ["fintech", "saas"], "all"), "all");
+});
+
+test("coerceValue: case-insensitive match returns the list's canonical casing", () => {
+  // So the coerced value is valid whether the predicate compares case-sensitively or not.
+  assert.equal(coerceValue("Fintech", ["fintech", "saas"], "all"), "fintech");
+  assert.equal(coerceValue("SAAS", ["fintech", "saas"], "all"), "saas");
+});
+
+test("coerceValue: empty/undefined allow-list passes through (data still loading)", () => {
+  assert.equal(coerceValue("fintech", [], "all"), "fintech");
+  assert.equal(coerceValue("fintech", undefined, "all"), "fintech");
+});
+
+test("coerceFilters: only coerces dimensions with an allow-list; returns same ref when unchanged", () => {
+  const values = { search: "acme", type: "vc", location: "Sydney" };
+  // No allowed map → identity (same reference).
+  assert.equal(coerceFilters(SPEC, values), values);
+  // location has an allow-list that includes Sydney; type not listed → left as-is.
+  const out = coerceFilters(SPEC, values, { location: ["Sydney", "Melbourne"] });
+  assert.equal(out, values); // nothing changed → same ref
+});
+
+test("coerceFilters: a stale listed value is coerced to that dimension's default", () => {
+  const values = { search: "", type: "all", location: "Perth" };
+  const out = coerceFilters(SPEC, values, { location: ["Sydney", "Melbourne"] });
+  assert.notEqual(out, values);
+  assert.equal(out.location, "all");
+  // Case-variant valid value is normalised to canonical casing.
+  const out2 = coerceFilters(SPEC, { search: "", type: "all", location: "sydney" }, { location: ["Sydney"] });
+  assert.equal(out2.location, "Sydney");
 });
