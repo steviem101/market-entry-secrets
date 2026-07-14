@@ -35,6 +35,23 @@ employment etc."). Fixing that means introducing a **topic taxonomy** for guides
 `content_categories` or a `guide_topic` field), which is a content-modelling task beyond B3's scope.
 **Recommendation:** spin this out as its own small ticket; do not shoehorn it into MES-177.
 
+## ⚠️ Reconciliation update (2026-07-14) — the untagged set grew to **102**
+
+Re-measured live after Phase B merged: case studies are now **146 total / 44 tagged / 102 untagged**
+(was 102 total / 58 untagged). The MES-178 case-study import (#436, merged before Phase B) added
+~44 new drafts, **all untagged** (58 + 44 = 102). Consequence for B3:
+
+- The reviewed proposal CSV (`case-study-sector-tag-proposal.csv`, **61 rows**) is a valid
+  **partial** — verified live: all 61 exist, are `case_study`, and are **still untagged**; none is
+  already tagged. But **41 untagged case studies are NOT yet in the proposal** (61 covered + 41 gap
+  = 102). So this proposal covers 61/102; it is **not** full coverage.
+- **Open decision (needs owner):** extend the proposal to the full 102 (classify the 41 MES-178
+  drafts too) before the Industry-filter switch, OR sign off the 61 now and treat the 41 imported
+  drafts as a separate tagging pass, OR defer B3 tagging entirely. The imported drafts are new
+  scope, so this is a genuine call — not auto-expanded here.
+- The frontend Industry→canonical-sector filter switch stays **blocked** until whichever untagged
+  set we commit to is tagged (an untagged study drops out of every facet value).
+
 ## Finding 3 — Case studies are only **44/102** tagged → tag the 58 FIRST, then switch the filter
 **Correction (a code-review caught my earlier error):** case studies are **NOT** all tagged. Live:
 **44 tagged / 58 untagged (57%) / 102 total** — the 58 carry an empty `{}` `sector_tags` array (0
