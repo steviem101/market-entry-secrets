@@ -127,3 +127,25 @@ merge (nothing publishes on merge; drafts already in prod, hidden). Condition
 before publish/enrichment-apply: fix W1 in transform, re-apply to the 29 affected
 draft rows, regenerate the enrichment proposal. Rollback: delete `content_items`
 by CSV slug (cascades; drafts = nil public impact); enrichment not applied.
+
+## W1 remediation applied (2026-07-14)
+
+The heading-flattening (W1) is fixed and re-applied. `transform.py` now detects
+each draft's top heading level and maps one-level-deeper headings onto the
+`content_bodies.question` field (an H3 in `ContentBodyRenderer`) instead of
+flattening `#`/`##` to sibling sections. `out/reapply_sections.sql` rebuilt the
+29 already-imported drafts that used the two-level shape (draft-scoped,
+per-target transactions).
+
+Post-fix verification (prod):
+- **0 empty section bodies** across all 44 drafts (was 29 drafts affected).
+- 108 subsection bodies now carried as `question` H3s across the 29 drafts;
+  e.g. DoorDash → 6 clean sections, "Entry strategy" holds its 4 tactics as
+  question subheadings.
+- All 44 drafts still have exactly one `content_company_profiles` row; section
+  counts 5–6 (was up to 10 flattened); 0 null company.
+- `SET ROLE anon` → still 0 drafts visible (RLS unaffected).
+
+W2 (enrichment) also regenerated with the corrected structure — Secretlab,
+ShopBack, WeWork now 6 sections (was 10). The enrichment proposal remains
+**staged, not applied**, per the editorial-sign-off decision.
