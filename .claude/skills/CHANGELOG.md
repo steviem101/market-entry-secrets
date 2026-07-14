@@ -3,6 +3,19 @@
 Log every skill gap, wrong rule, or contradiction you find here (newest first), so it can be
 fixed in a follow-up PR. Format: `- YYYY-MM-DD [skill-name] what was wrong/missing — found while <task>`.
 
+- 2026-07-14 [mes-codebase-conventions] Added the **directory-page bar-anatomy contract** to Playbook
+  item 3 + a self-check item, and refreshed the root `CLAUDE.md` §13.3 directory-pages line to match
+  (MES-177 Phase A close-out). The contract: tabs = one low-cardinality axis (≤~8, zero-hidden,
+  counts) · selects curated/searchable via `curateValues`/`curateOptions` with the junk-sentinel
+  guard (`isJunkValue`) · advanced panel = secondary axes · no persona/audience pill (`PersonaFilter`
+  + `useContextPersonaSeed` deleted; `PersonaContext` untouched) · stale/case-variant URL params
+  coerced against curated options via `useDirectoryFilters(spec, { allowedValues })` (coercion owned
+  by `coerceFilters`/`coerceValue` in `directoryFilters.ts`; kills the phantom "Clear all filters" +
+  URL-reconciles) · canonical sector labels from the single `sectorLabel` (`src/lib/sectorLabels.ts`,
+  slug set derived from `LINKEDIN_SECTORS`, `mentorDisplay.sectorTagLabel` delegates) · case-study
+  outcome presentation centralised in `<OutcomeBadge>` (list + detail). Found while shipping the
+  filter-bar consistency sweep.
+
 - 2026-07-07 [mes-codebase-conventions] `user_intake_forms` and `user_reports` ARE present in the
   generated `src/integrations/supabase/types.ts` (L4675, L4777), so "tables missing from generated
   types use the `(supabase as any)` cast" no longer describes why `reportApi.ts` casts — the cast
