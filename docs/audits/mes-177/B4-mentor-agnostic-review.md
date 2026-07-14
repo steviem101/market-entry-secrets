@@ -1,9 +1,8 @@
 # MES-177 Phase B4 — Mentor `sector_agnostic` invariant fix (REVIEW — awaiting sign-off)
 
-**Status:** proposed, not applied. The migration below is staged in `docs/audits/mes-177/`
-(NOT in `supabase/migrations/`) so it cannot auto-apply. On your sign-off it moves to
-`supabase/migrations/<timestamp>_mes177_mentor_agnostic_flip.sql` (timestamp after
-`20260714093000`) and applies on merge to `main`.
+**Status:** owner-approved 2026-07-14; migration written and included in the Phase B PR at
+`supabase/migrations/20260714100000_mes177_mentor_agnostic_flip.sql`. Applies to prod on merge
+(Supabase GitHub integration); validated on the PR's Supabase preview branch first.
 
 ## The finding (verified live 2026-07-14, project `xhziwveaiuhzdoutpgrh`)
 
@@ -66,8 +65,8 @@ a before/after matcher diff on a sample of real reports before applying (say the
   still commits), and re-runs match 0 rows so there's no repeat embed storm — but it's a small
   unbudgeted embedding cost worth noting, not "matcher only".
 
-## Proposed migration
-See `docs/audits/mes-177/proposed-migration-B4-mentor-agnostic.sql` (staged; not yet applied).
+## Migration
+`supabase/migrations/20260714100000_mes177_mentor_agnostic_flip.sql` (in the Phase B PR).
 
 ## Sign-off
 - [ ] Approve applying the flip to the 114 mentors as specified

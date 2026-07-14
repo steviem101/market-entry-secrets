@@ -1,11 +1,6 @@
--- PROPOSED — MES-177 Phase B4. STAGED FOR REVIEW, NOT YET LIVE.
--- This file lives under docs/audits/mes-177/ so it CANNOT auto-apply. On sign-off,
--- move it to supabase/migrations/<timestamp>_mes177_mentor_agnostic_flip.sql
--- (timestamp strictly after 20260714093000) and merge to main to apply.
---
--- Purpose: restore the MES-110 invariant (sector-tagged ⇒ not sector_agnostic) for the
+-- MES-177 Phase B4: restore the MES-110 invariant (sector-tagged ⇒ not sector_agnostic) for the
 -- 114 mentors that carry both — a residue of an indiscriminate import default (93% of
--- community_members rows were sector_agnostic=true). See B4-mentor-agnostic-review.md.
+-- community_members rows were sector_agnostic=true). See docs/audits/mes-177/B4-mentor-agnostic-review.md.
 --
 -- Properties: guarded · idempotent · precisely reversible · preview-safe (no-op on empty DB).
 -- Behavioural effect: report matcher scoring (generate-report/matchScoring.ts). No RLS/policy,
@@ -14,9 +9,6 @@
 -- (~114 OpenAI embeds via the embed-knowledge cron) — harmless (rebuildable index, exception-guarded
 -- trigger, re-runs are 0-row) but not literally "matcher only". community_members RLS already
 -- restricts writes to service role; this runs as the migration role.
---
--- No explicit begin/commit: the Supabase apply path wraps each migration file in its own
--- transaction (matches all 62 active-ledger migrations), and DDL here is transactional.
 
 -- 1. Reversibility snapshot. Nullable; populated only for the flipped rows. The
 --    community_members_public view uses an explicit column list that does NOT select
@@ -39,10 +31,8 @@ update public.community_members
 -- Expected effect at apply time (verified 2026-07-14): 114 rows flipped; 9 already-false
 -- tagged rows untouched; 11 untagged-agnostic rows (empty {} sector_tags) untouched.
 
--- ── Reverse (place in supabase/rollback/ on apply) ───────────────────────────────
--- begin;
+-- Reverse (supabase/rollback/):
 --   update public.community_members
 --      set sector_agnostic = sector_agnostic_pre_mes177
 --    where sector_agnostic_pre_mes177 is not null;
 --   alter table public.community_members drop column sector_agnostic_pre_mes177;
--- commit;
