@@ -13,7 +13,7 @@ import { SEOHead } from "@/components/common/SEOHead";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterContent } from "@/lib/contentFilters";
-import { curateValues } from "@/lib/filterCuration";
+import { curateValues, coerceToValidOption } from "@/lib/filterCuration";
 import { sectorLabel } from "@/lib/sectorLabels";
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
@@ -60,14 +60,9 @@ const Content = () => {
     () => curateValues(contentItems.flatMap((item) => item.sector_tags || []), { labelFor: sectorLabel }),
     [contentItems]
   );
-  // Coerce a stale ?sector= (value not in the canonical option set) to "all" so
-  // it never silently renders an empty grid — mirrors Investors' safeSector.
-  // (While data loads the option set is empty; don't coerce then.)
-  const validSectors = useMemo(() => new Set(sectorOptions.map((o) => o.value)), [sectorOptions]);
-  const safeSector =
-    filters.sector === "all" || validSectors.size === 0 || validSectors.has(filters.sector)
-      ? filters.sector
-      : "all";
+  // Coerce a stale/case-variant ?sector= to a valid option (or "all") so it
+  // never silently renders an empty grid; derived from the curated options.
+  const safeSector = coerceToValidOption(filters.sector, sectorOptions);
 
   // Only show categories that have at least 1 piece of content.
   const categoriesWithContent = useMemo(

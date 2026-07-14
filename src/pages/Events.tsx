@@ -49,7 +49,10 @@ const Events = () => {
   }, [filters.search, setSearchTerm]);
 
   // Time partition (Upcoming default; Past/All one click away in the bar).
-  const baseEvents = filters.time === "past" ? pastEvents : filters.time === "all" ? events : upcomingEvents;
+  // Coerce an out-of-set ?tab= value so the select can't show the wrong
+  // partition behind its placeholder (e.g. a truncated ?tab=al link).
+  const safeTime = filters.time === "past" || filters.time === "all" ? filters.time : "upcoming";
+  const baseEvents = safeTime === "past" ? pastEvents : safeTime === "all" ? events : upcomingEvents;
 
   // MES-130 curation, computed from the time-partitioned set so tab counts and
   // option lists always describe what selecting them will show. Type is the
@@ -72,15 +75,34 @@ const Events = () => {
   const cityOptions = useMemo(() => curateValues(baseEvents.map((e) => e.city)), [baseEvents]);
   const sectorOptions = useMemo(() => curateValues(baseEvents.map((e) => e.sector)), [baseEvents]);
 
-  // `type` is a canonical bucket; coerce a stale/raw ?type= (old links, e.g.
-  // ?type=Networking) to "all" so it doesn't silently match nothing.
-  const safeType = filters.type === "all" || EVENT_TYPE_BUCKET_LABEL[filters.type] ? filters.type : "all";
-  const effectiveFilters = useMemo(() => ({ ...filters, type: safeType }), [filters, safeType]);
+  // Distinct-locations hero stat is a directory-wide figure, so it's derived
+  // from ALL events — not the time-partitioned cityOptions above (which drives
+  // the select), so it doesn't shrink to upcoming-only or mutate with the tab.
+  const totalLocations = useMemo(() => curateValues(events.map((e) => e.city)).length, [events]);
+
+  // Coerce `type` to "all" unless the selected canonical bucket is actually
+  // present in the CURRENT partition's options. This drops stale/raw ?type=
+  // links AND Object.prototype keys (?type=constructor), and prevents a
+  // valid-but-empty bucket from leaving an invisible active tab after a time
+  // switch. Don't coerce while options are still loading (empty set).
+  const typeValues = useMemo(() => new Set(typeOptions.map((o) => o.value)), [typeOptions]);
+  const safeType =
+    filters.type === "all" || typeValues.size === 0 || typeValues.has(filters.type)
+      ? filters.type
+      : "all";
+  const effectiveFilters = useMemo(
+    () => ({ ...filters, time: safeTime, type: safeType }),
+    [filters, safeTime, safeType],
+  );
 
   const filteredEvents = useMemo(() => filterEvents(baseEvents, effectiveFilters), [baseEvents, effectiveFilters]);
 
   const totalPages = Math.ceil(filteredEvents.length / PAGE_SIZE);
-  const paginatedEvents = filteredEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Clamp an out-of-range ?page= (deep bookmark, or a result set that shrank)
+  // to the last page so it shows results instead of a blank grid — matches the
+  // other directories (InnovationEcosystem/ServiceProviders).
+  const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
+  const paginatedEvents = filteredEvents.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
   const typeTabs: FilterOption[] = useMemo(
     () => [{ value: "all", label: "All", count: baseEvents.length }, ...typeOptions],
@@ -148,7 +170,7 @@ const Events = () => {
 
       <EventsHero
         totalEvents={events.length}
-        totalLocations={cityOptions.length}
+        totalLocations={totalLocations}
         upcomingCount={upcomingEvents.length}
       />
 
@@ -175,7 +197,7 @@ const Events = () => {
             description={
               isSearching
                 ? "Try adjusting your search criteria to find more events."
-                : filters.time === "upcoming"
+                : safeTime === "upcoming"
                   ? "No upcoming events at the moment. Check back soon!"
                   : "There are no events matching your current filters."
             }
@@ -193,7 +215,7 @@ const Events = () => {
               </div>
             </ListingPageGate>
             <ListPagination
-              currentPage={page}
+              currentPage={clampedPage}
               totalPages={totalPages}
               onPageChange={setPage}
             />

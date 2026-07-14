@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { OutcomeBadge } from "@/components/case-studies/OutcomeBadge";
 import { Heart, Globe, Clock, Calendar, Eye, Share2, ExternalLink, ArrowRight, Sparkles, CheckCheck } from "lucide-react";
 import { useCaseStudy, useRelatedCaseStudies } from "@/hooks/useCaseStudies";
 import { useIncrementViewCount } from "@/hooks/useContent";
@@ -191,24 +192,13 @@ const CaseStudyDetail = () => {
                       alt={companyName}
                       className="object-cover"
                     />
-                    <AvatarFallback className="rounded-lg bg-gradient-to-br from-sky-100 to-blue-200 text-blue-700 text-xs font-semibold">
+                    <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-semibold">
                       {companyName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <h2 className="text-sm font-semibold text-foreground">{companyName}</h2>
-                    {outcome && (
-                      <Badge
-                        variant="outline"
-                        className={`text-xs mt-0.5 ${
-                          outcome === "successful"
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                            : "border-red-200 bg-red-50 text-red-700"
-                        }`}
-                      >
-                        {outcome === "successful" ? "Success" : "Failure"}
-                      </Badge>
-                    )}
+                    <OutcomeBadge outcome={outcome} className="text-xs mt-0.5" />
                   </div>
                 </div>
               </div>
@@ -259,7 +249,7 @@ const CaseStudyDetail = () => {
                       alt={companyName}
                       className="object-cover"
                     />
-                    <AvatarFallback className="rounded-xl bg-gradient-to-br from-sky-100 to-blue-200 text-blue-700 text-lg font-bold">
+                    <AvatarFallback className="rounded-xl bg-primary/10 text-primary text-lg font-bold">
                       {companyName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
@@ -268,18 +258,7 @@ const CaseStudyDetail = () => {
                       <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                         {companyName}
                       </h1>
-                      {outcome && (
-                        <Badge
-                          variant="outline"
-                          className={`${
-                            outcome === "successful"
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                              : "border-red-200 bg-red-50 text-red-700"
-                          }`}
-                        >
-                          {outcome === "successful" ? "Success Story" : "Failure Story"}
-                        </Badge>
-                      )}
+                      <OutcomeBadge outcome={outcome} story />
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       <span>Market Entry Case Study</span>
@@ -471,25 +450,14 @@ const CaseStudyDetail = () => {
                                     alt={rProfile?.company_name}
                                     className="object-cover"
                                   />
-                                  <AvatarFallback className="rounded-md bg-gradient-to-br from-sky-100 to-blue-200 text-blue-700 text-xs">
+                                  <AvatarFallback className="rounded-md bg-primary/10 text-primary text-xs">
                                     {(rProfile?.company_name || '?').slice(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
                                 <span className="text-xs font-medium text-muted-foreground truncate">
                                   {rProfile?.company_name}
                                 </span>
-                                {rOutcome && (
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-xs ml-auto flex-shrink-0 ${
-                                      rOutcome === "successful"
-                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                        : "border-red-200 bg-red-50 text-red-700"
-                                    }`}
-                                  >
-                                    {rOutcome === "successful" ? "Success" : "Failure"}
-                                  </Badge>
-                                )}
+                                <OutcomeBadge outcome={rOutcome} className="text-xs ml-auto flex-shrink-0" />
                               </div>
                               <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
                                 {related.title}

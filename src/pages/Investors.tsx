@@ -10,7 +10,7 @@ import { useInvestors } from "@/hooks/useInvestors";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterInvestors } from "@/lib/investorFilters";
-import { curateValues } from "@/lib/filterCuration";
+import { curateValues, coerceToValidOption } from "@/lib/filterCuration";
 import { sectorLabel } from "@/lib/sectorLabels";
 
 const PAGE_SIZE = 12;
@@ -60,15 +60,10 @@ const Investors = () => {
     [investors],
   );
 
-  // Sector now matches canonical sector_tags. Coerce a stale/legacy ?sector=
-  // (old free-text sector_focus value, e.g. "fintech") to "all" so it doesn't
-  // match nothing and silently show an empty directory — mirrors Events' safeType.
-  // (While data is loading the option set is empty; don't coerce then.)
-  const validSectors = useMemo(() => new Set(sectorOptions.map((o) => o.value)), [sectorOptions]);
-  const safeSector =
-    filters.sector === "all" || validSectors.size === 0 || validSectors.has(filters.sector)
-      ? filters.sector
-      : "all";
+  // Sector now matches canonical sector_tags. Coerce a stale/legacy/case-variant
+  // ?sector= (old free-text sector_focus value, e.g. "fintech") to a valid
+  // option (or "all") so it never silently shows an empty directory.
+  const safeSector = coerceToValidOption(filters.sector, sectorOptions);
   const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
 
   const filteredInvestors = useMemo(

@@ -18,7 +18,7 @@ import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterMentors, archetypeToSlug } from "@/lib/mentorFilters";
 import { humanizeSlug } from "@/lib/humanizeSlug";
 import { sectorLabel } from "@/lib/sectorLabels";
-import { curateValues, curateOptions } from "@/lib/filterCuration";
+import { curateValues, curateOptions, coerceToValidOption } from "@/lib/filterCuration";
 import type { Mentor } from "@/hooks/useMentors";
 
 const PAGE_SIZE = 12;
@@ -84,23 +84,6 @@ const MentorsDirectory = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categorySlug]);
 
-  // Coerce a stale ?sector= (value outside the canonical option set) to "all"
-  // so it never silently renders an empty grid — mirrors Investors' safeSector.
-  const validSectors = useMemo(
-    () => new Set(mentors.flatMap((m) => m.sector_tags || [])),
-    [mentors],
-  );
-  const safeSector =
-    filters.sector === "all" || validSectors.size === 0 || validSectors.has(filters.sector)
-      ? filters.sector
-      : "all";
-  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
-
-  const filteredMentors = useMemo(() => filterMentors(mentors, effectiveFilters), [mentors, effectiveFilters]);
-
-  const totalPages = Math.ceil(filteredMentors.length / PAGE_SIZE);
-  const paginatedMentors = filteredMentors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
   // MES-130: popularity-ranked, zero-hidden location options; long tail searchable.
   const locationOptions = useMemo(() => curateValues(mentors.map((m) => m.location)), [mentors]);
   // Sector lives in the main bar (2026-07-14 sweep): canonical sector_tags slugs
@@ -109,6 +92,18 @@ const MentorsDirectory = () => {
     () => curateValues(mentors.flatMap((m) => m.sector_tags || []), { labelFor: sectorLabel }),
     [mentors],
   );
+
+  // Coerce a stale/case-variant ?sector= to a valid option (or "all") so it
+  // never silently renders an empty grid; derived from the curated options so
+  // it stays consistent with the dropdown across every directory.
+  const safeSector = coerceToValidOption(filters.sector, sectorOptions);
+  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
+
+  const filteredMentors = useMemo(() => filterMentors(mentors, effectiveFilters), [mentors, effectiveFilters]);
+
+  const totalPages = Math.ceil(filteredMentors.length / PAGE_SIZE);
+  const paginatedMentors = filteredMentors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const allOrigins = useMemo(() => {
     const origins = new Set<string>();
     mentors.forEach((m) => (m.market_corridors || []).forEach((c) => {

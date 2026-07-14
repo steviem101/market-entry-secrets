@@ -10,7 +10,7 @@ import { useInnovationEcosystem } from "@/hooks/useInnovationEcosystem";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterOrganisations } from "@/lib/innovationFilters";
-import { curateValues } from "@/lib/filterCuration";
+import { curateValues, coerceToValidOption } from "@/lib/filterCuration";
 import { sectorLabel } from "@/lib/sectorLabels";
 
 const PAGE_SIZE = 12;
@@ -29,29 +29,6 @@ const InnovationEcosystem = () => {
 
   const { data: organizations, isLoading, error } = useInnovationEcosystem();
 
-  // Coerce a stale ?sector= (value outside the canonical option set) to "all"
-  // so it never silently renders an empty grid — mirrors Investors' safeSector.
-  const validSectors = useMemo(
-    () => new Set((organizations ?? []).flatMap((org) => org.sector_tags || [])),
-    [organizations],
-  );
-  const safeSector =
-    filters.sector === "all" || validSectors.size === 0 || validSectors.has(filters.sector)
-      ? filters.sector
-      : "all";
-  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
-
-  const filteredOrganizations = useMemo(
-    () => (organizations ? filterOrganisations(organizations, effectiveFilters) : []),
-    [organizations, effectiveFilters]
-  );
-
-  const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
-  // Clamp an out-of-range ?page= (bookmarked deep page, or a result set that
-  // shrank) to the last page so it shows results instead of a blank grid.
-  const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
-  const paginatedOrganizations = filteredOrganizations.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
-
   // MES-130: popularity-ranked, zero-hidden; the long location/service tails are searchable.
   const locationOptions = useMemo(
     () => curateValues((organizations ?? []).map((org) => org.location)),
@@ -67,6 +44,23 @@ const InnovationEcosystem = () => {
     () => curateValues((organizations ?? []).flatMap((org) => org.sector_tags || []), { labelFor: sectorLabel }),
     [organizations]
   );
+
+  // Coerce a stale/case-variant ?sector= to a valid option (or "all") so it
+  // never silently renders an empty grid; derived from the curated options so
+  // it stays consistent with the dropdown.
+  const safeSector = coerceToValidOption(filters.sector, sectorOptions);
+  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
+
+  const filteredOrganizations = useMemo(
+    () => (organizations ? filterOrganisations(organizations, effectiveFilters) : []),
+    [organizations, effectiveFilters]
+  );
+
+  const totalPages = Math.ceil(filteredOrganizations.length / PAGE_SIZE);
+  // Clamp an out-of-range ?page= (bookmarked deep page, or a result set that
+  // shrank) to the last page so it shows results instead of a blank grid.
+  const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
+  const paginatedOrganizations = filteredOrganizations.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
   // Data-driven, MULTI-VALUE Type tabs (MES-100 spin-off): an org's `type[]` can list
   // several roles, so it's counted under each tab. Curated order first, then any novel

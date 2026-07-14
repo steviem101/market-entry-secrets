@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { countValues, curateOptions, curateValues, isJunkValue } from "./filterCuration.ts";
+import { countValues, curateOptions, curateValues, isJunkValue, coerceToValidOption } from "./filterCuration.ts";
 
 test("countValues tallies scalars and ignores null/empty", () => {
   const counted = countValues(["Sydney", "Sydney", "Melbourne", null, "", undefined]);
@@ -109,6 +109,27 @@ test("curateValues maps array-field contents with a label lookup", () => {
     "Financial Services",
   ]);
   assert.equal(out[0].count, 2);
+});
+
+test("coerceToValidOption: keeps a valid value, drops stale/junk to 'all'", () => {
+  const opts = curateValues(["financial-services", "retail", "retail"]);
+  assert.equal(coerceToValidOption("all", opts), "all");
+  assert.equal(coerceToValidOption("retail", opts), "retail");
+  // stale value not in the option set → coerced to all
+  assert.equal(coerceToValidOption("manufacturing", opts), "all");
+});
+
+test("coerceToValidOption: case-insensitive match returns canonical casing", () => {
+  const opts = curateValues(["fintech", "saas"]);
+  // ?sector=Fintech matches canonically → returns the option's own casing so
+  // both case-sensitive and case-insensitive predicates match.
+  assert.equal(coerceToValidOption("Fintech", opts), "fintech");
+  assert.equal(coerceToValidOption("SAAS", opts), "saas");
+});
+
+test("coerceToValidOption: passes value through while options still loading", () => {
+  // Empty options = data not loaded yet; don't wipe a valid deep link.
+  assert.equal(coerceToValidOption("fintech", []), "fintech");
 });
 
 test("full ranked list is returned — nothing is capped away (tail stays reachable)", () => {

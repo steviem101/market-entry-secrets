@@ -20,10 +20,10 @@ import {
   isPositiveOutcome,
   isFailureOutcome,
   outcomeTone,
-  OUTCOME_LABELS,
   REVENUE_RANGES,
   COST_RANGES,
 } from "@/lib/caseStudyFilters";
+import { OutcomeBadge } from "@/components/case-studies/OutcomeBadge";
 import { getCountryFlag } from "@/lib/countryFlags";
 import { curateValues } from "@/lib/filterCuration";
 import { SEOHead } from "@/components/common/SEOHead";
@@ -235,15 +235,11 @@ const CaseStudies = () => {
     const profile = cs.content_company_profiles?.[0];
     const primaryFounder = cs.content_founders?.find((f: any) => f.is_primary) || cs.content_founders?.[0];
     const outcome = profile?.outcome;
-    // Presentation is tone-driven: every positive outcome renders green with its
-    // own label (Success/Scaling/IPO/Acquired); only 'unsuccessful' renders as
-    // Failure; NULL/unknown outcomes get no badge.
+    // Presentation is tone-driven and owned by <OutcomeBadge>: every positive
+    // outcome renders green with its own label (Success/Scaling/IPO/Acquired);
+    // only 'unsuccessful' renders as Failure; NULL/unknown outcomes get no badge.
+    // `tone` here only drives the card's left-border accent.
     const tone = outcomeTone(outcome);
-    const outcomeLabel = tone ? OUTCOME_LABELS[outcome] : null;
-    const outcomeBadgeClass =
-      tone === "positive"
-        ? "border-mes-success/30 bg-mes-success/10 text-mes-success"
-        : "border-destructive/30 bg-destructive/10 text-destructive";
     const borderColor =
       tone === "positive"
         ? "hover:border-l-mes-success"
@@ -278,14 +274,7 @@ const CaseStudies = () => {
                     </p>
                   )}
                 </div>
-                {outcomeLabel && (
-                  <Badge
-                    variant="outline"
-                    className={`text-xs flex-shrink-0 ${outcomeBadgeClass}`}
-                  >
-                    {outcomeLabel}
-                  </Badge>
-                )}
+                <OutcomeBadge outcome={outcome} className="text-xs flex-shrink-0" />
               </div>
 
               {/* Title */}
@@ -368,14 +357,7 @@ const CaseStudies = () => {
                   <h2 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                     {cs.title}
                   </h2>
-                  {outcomeLabel && (
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${outcomeBadgeClass}`}
-                    >
-                      {outcomeLabel}
-                    </Badge>
-                  )}
+                  <OutcomeBadge outcome={outcome} className="text-xs" />
                 </div>
 
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
