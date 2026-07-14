@@ -70,16 +70,6 @@ export interface Mentor {
   is_anonymous: boolean;
 }
 
-export interface MentorCategory {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  display_order: number;
-  is_active: boolean;
-}
-
 const mapMentor = (m: any): Mentor => ({
   id: m.id,
   name: m.name,
@@ -205,30 +195,6 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
       return data ? mapMentor(data) : null;
     },
     enabled: !!mentorSlug,
-  });
-};
-
-export const useMentorCategories = () => {
-  return useQuery({
-    queryKey: ["mentor-categories"],
-    queryFn: async (): Promise<MentorCategory[]> => {
-      try {
-        const { data, error } = await (supabase as any)
-          .from("mentor_categories")
-          .select("*")
-          .eq("is_active", true)
-          .order("display_order", { ascending: true });
-
-        if (error) {
-          // Table may not exist yet — return empty so filters still render
-          return [];
-        }
-
-        return data || [];
-      } catch {
-        return [];
-      }
-    },
   });
 };
 

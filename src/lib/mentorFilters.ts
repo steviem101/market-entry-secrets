@@ -33,8 +33,7 @@ export function archetypeToSlug(archetype: string | null | undefined): string | 
   if (!archetype) return null;
   const slug = archetype
     .toLowerCase()
-    .replace(/&/g, " ")
-    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/[^a-z0-9]+/g, "-") // any non-alphanumeric run (incl. "&", spaces) → one "-"
     .replace(/^-+|-+$/g, "");
   return slug || null;
 }
