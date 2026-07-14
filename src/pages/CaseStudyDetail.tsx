@@ -405,7 +405,6 @@ const CaseStudyDetail = () => {
                   sources={sources}
                   quotes={quotes}
                   subjectName={companyName}
-                  googleFallback
                 />
 
                 {/* Sources list (renders nothing if no sources) */}
