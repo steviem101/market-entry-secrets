@@ -126,6 +126,36 @@ an approximate (`month`/`tbc`) or stale exact date (`overwrite_date` ops,
 visible per-field in `updates.csv`); an approximate CSV date never downgrades a
 live exact date.
 
+## Reviewer decisions (`--resolve`) — adjudicating exceptions
+
+Ambiguous matches and blank-sector rows are never auto-resolved. After
+reviewing a dry run you can feed the decisions back with `--resolve <file>` so
+they are explicit, auditable and reproducible. The file is a CSV keyed by the
+stable Notion page URL (line numbers shift between exports; URLs don't):
+
+```csv
+notion_page_url,decision,sector_tags
+https://app.notion.com/p/<aitd-url>,insert,
+https://app.notion.com/p/<dup-url>,skip,
+https://app.notion.com/p/<blank-sector-url>,,automotive
+```
+
+- **`decision=insert`** — the reviewer confirmed a would-be-ambiguous row is
+  genuinely new (a fuzzy/different-city match is a false positive); force it to
+  insert. Source-URL idempotency still wins, so a re-run after apply binds by
+  key and never double-inserts.
+- **`decision=skip`** — the reviewer confirmed the row duplicates an existing
+  live event; drop it from the batch explicitly (counted as `resolved_skips`,
+  written to `resolved-skips.csv`, not left as an ambiguous exception).
+- **`sector_tags`** — an explicit label (or `;`/`,`-separated labels) for a row
+  the editor left blank, resolved through the same `sector_vocabulary` +
+  `sector-overrides.csv` vocabulary. Rows using it are flagged `sector_resolved`.
+
+The decision file is hashed into `summary.json` (`resolve_sha256`); `--apply`
+refuses if the file differs from (or was added/removed since) the reviewed dry
+run, so the applied decisions are exactly the reviewed ones. Keep the resolve
+file alongside the batch's CSV and artefacts.
+
 ## Batch audit log & provenance
 
 Each applied row writes an `events_staging` record (the existing events

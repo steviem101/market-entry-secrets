@@ -32,7 +32,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   parseCsv, toRecords, buildProposals, toCsv,
   type LiveEvent, type TaxonomyContext, type ProposalSet,
-  type InsertProposal, type UpdateProposal,
+  type InsertProposal, type UpdateProposal, type RowResolution,
 } from "./importLib.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -51,6 +51,7 @@ interface Args {
   rollback?: string;
   fallbackCategory?: string;
   insertStatus?: "approved" | "needs_review";
+  resolve?: string;
   limit?: number;
 }
 
@@ -77,6 +78,7 @@ function parseArgs(argv: string[]): Args {
         if (v !== "approved" && v !== "needs_review") throw new Error(`--insert-status must be approved|needs_review, got "${v}"`);
         args.insertStatus = v; break;
       }
+      case "--resolve": args.resolve = next(); break;
       case "--limit": args.limit = Number(next()); break;
       default: throw new Error(`Unknown argument: ${a}`);
     }
@@ -144,6 +146,36 @@ function loadOverrides(): Array<{ label: string; slugs: string[]; category: stri
   }));
 }
 
+/**
+ * Load a reviewer-decision file: CSV with columns `notion_page_url,decision`
+ * and optional `sector_tags`. `decision` is `insert`|`skip`|blank; `sector_tags`
+ * supplies a sector for a row the editor left blank. Keyed by Notion page URL.
+ */
+function loadResolutions(path: string): Map<string, RowResolution> {
+  const rows = parseCsv(readFileSync(path, "utf-8"));
+  if (rows.length === 0) return new Map();
+  const [header, ...data] = rows;
+  const idx = (name: string) => header.indexOf(name);
+  if (idx("notion_page_url") === -1) {
+    throw new Error("resolve file must have a notion_page_url column (+ optional decision, sector_tags)");
+  }
+  const map = new Map<string, RowResolution>();
+  for (const r of data) {
+    const url = (r[idx("notion_page_url")] ?? "").trim();
+    if (!url) continue;
+    const decisionRaw = idx("decision") >= 0 ? (r[idx("decision")] ?? "").trim().toLowerCase() : "";
+    if (decisionRaw && decisionRaw !== "insert" && decisionRaw !== "skip") {
+      throw new Error(`resolve file: decision must be insert|skip|blank, got "${decisionRaw}" for ${url}`);
+    }
+    const sectorTags = idx("sector_tags") >= 0 ? (r[idx("sector_tags")] ?? "").trim() : "";
+    map.set(url, {
+      ...(decisionRaw ? { decision: decisionRaw as "insert" | "skip" } : {}),
+      ...(sectorTags ? { sectorTags } : {}),
+    });
+  }
+  return map;
+}
+
 async function loadTaxonomy(sb: SupabaseClient | null, snapshotPath?: string): Promise<TaxonomyContext> {
   let snap: TaxonomySnapshot;
   if (snapshotPath) {
@@ -174,7 +206,7 @@ async function loadTaxonomy(sb: SupabaseClient | null, snapshotPath?: string): P
 // Artefacts
 // ---------------------------------------------------------------------------
 
-function writeArtefacts(outDir: string, batchId: string, csvSha: string, csvPath: string, proposals: ProposalSet): void {
+function writeArtefacts(outDir: string, batchId: string, csvSha: string, csvPath: string, proposals: ProposalSet, resolveSha: string): void {
   mkdirSync(outDir, { recursive: true });
   const w = (name: string, content: string) => writeFileSync(join(outDir, name), content);
 
@@ -215,12 +247,18 @@ function writeArtefacts(outDir: string, batchId: string, csvSha: string, csvPath
     proposals.taxonomyExceptions.map((p) => [p.line, p.title, p.issues.join(" | ")]),
   ));
 
+  w("resolved-skips.csv", toCsv(
+    ["line", "title", "notion_page_url"],
+    proposals.resolvedSkips.map((p) => [p.line, p.title, p.notionUrl]),
+  ));
+
   w("proposals.json", JSON.stringify(proposals, null, 2) + "\n");
 
   w("summary.json", JSON.stringify({
     batch_id: batchId,
     csv_file: basename(csvPath),
     csv_sha256: csvSha,
+    resolve_sha256: resolveSha,
     generated_at: new Date().toISOString(),
     counts: {
       inserts: proposals.inserts.length,
@@ -229,6 +267,7 @@ function writeArtefacts(outDir: string, batchId: string, csvSha: string, csvPath
       ambiguous: proposals.ambiguous.length,
       invalid: proposals.invalid.length,
       taxonomy_exceptions: proposals.taxonomyExceptions.length,
+      resolved_skips: proposals.resolvedSkips.length,
     },
     taxonomy_notes: proposals.taxonomyNotes,
   }, null, 2) + "\n");
@@ -377,12 +416,17 @@ async function main(): Promise<void> {
     loadTaxonomy(sb, args.taxonomySnapshot),
   ]);
 
+  const resolveSha = args.resolve
+    ? createHash("sha256").update(readFileSync(args.resolve, "utf-8")).digest("hex")
+    : "none";
+  const resolutions = args.resolve ? loadResolutions(args.resolve) : undefined;
   const records = toRecords(parseCsv(csvText));
   const proposals = buildProposals(records, liveEvents, taxonomy, {
     batchId,
     todayIso: new Date().toISOString().slice(0, 10),
     fallbackCategory: args.fallbackCategory,
     insertStatus: args.insertStatus,
+    resolutions,
   });
 
   const counts = {
@@ -393,10 +437,11 @@ async function main(): Promise<void> {
     ambiguous: proposals.ambiguous.length,
     invalid: proposals.invalid.length,
     taxonomy_exceptions: proposals.taxonomyExceptions.length,
+    resolved_skips: proposals.resolvedSkips.length,
   };
 
   if (!args.apply) {
-    writeArtefacts(outDir, batchId, csvSha, args.csv, proposals);
+    writeArtefacts(outDir, batchId, csvSha, args.csv, proposals, resolveSha);
     console.log(`DRY RUN — no database writes performed.`);
     console.log(`Batch: ${batchId} (csv sha256 ${csvSha.slice(0, 12)}…)`);
     console.log(`Live events inventoried: ${liveEvents.length}`);
@@ -411,9 +456,12 @@ async function main(): Promise<void> {
   if (!existsSync(summaryPath)) {
     throw new Error(`--apply refused: no dry-run artefacts at ${summaryPath}. Run the dry run and review it first.`);
   }
-  const prior = JSON.parse(readFileSync(summaryPath, "utf-8")) as { csv_sha256?: string; batch_id?: string };
+  const prior = JSON.parse(readFileSync(summaryPath, "utf-8")) as { csv_sha256?: string; batch_id?: string; resolve_sha256?: string };
   if (prior.csv_sha256 !== csvSha || prior.batch_id !== batchId) {
     throw new Error(`--apply refused: dry-run artefacts in ${outDir} were generated from different CSV content or batch id. Re-run the dry run.`);
+  }
+  if ((prior.resolve_sha256 ?? "none") !== resolveSha) {
+    throw new Error(`--apply refused: the --resolve decision file differs from the reviewed dry run (or was added/removed). Re-run the dry run with the intended --resolve file.`);
   }
 
   console.log(`APPLY — batch ${batchId}: ${counts.inserts} inserts, ${counts.updates} updates (ambiguous/invalid/taxonomy exceptions are never applied).`);
