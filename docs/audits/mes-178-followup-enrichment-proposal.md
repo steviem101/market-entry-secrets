@@ -69,3 +69,20 @@ Post-apply verification (prod):
 
 Rollback (replace targets only): restore sections/bodies/read_time from
 `pre_apply_snapshot.json`. Fills are reversible by deleting the added rows.
+
+---
+
+## Audit W2 follow-up — staged citation conversion (2026-07-14)
+
+`build_sources.py` converts each enriched draft's `sources_markdown` into
+`case_study_sources` rows so citations match the new bodies
+(`out/enrichment/sources_proposal.sql` + `sources-review.md`, also in
+`docs/audits/mes-178-followup-citation-conversion.md`). **Staged, not applied** —
+`sources_markdown` is editorial-only per the ticket.
+
+- 26 URL-bearing sources emitted across the 9 pages; 23 prose-only references
+  (no URL) are listed per target for an editorial URL.
+- **Additive insert-only:** new rows skip any URL already present and are numbered
+  after the current max; existing citations are never deleted (Ola parses to 0
+  URLs, so a blind replace would have zeroed its citations). Editorial removes the
+  stale pre-enrichment citations on the 7 replace targets by hand.
