@@ -16,6 +16,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterAndSortCaseStudies, parseMoneyToNumber, REVENUE_RANGES, COST_RANGES } from "@/lib/caseStudyFilters";
 import { getCountryFlag } from "@/lib/countryFlags";
+import { curateValues } from "@/lib/filterCuration";
 import { SEOHead } from "@/components/common/SEOHead";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getLogoUrl } from "@/lib/logoUtils";
@@ -89,14 +90,19 @@ const CaseStudies = () => {
 
   const viewMode = filters.view === "list" ? "list" : "grid";
 
-  // Derive unique filter options from data — only show options that have records.
-  const industries = useMemo(() => Array.from(
-    new Set(caseStudies.map(cs => cs.content_company_profiles?.[0]?.industry).filter(Boolean))
-  ).sort() as string[], [caseStudies]);
-
-  const countries = useMemo(() => Array.from(
-    new Set(caseStudies.map(cs => cs.content_company_profiles?.[0]?.origin_country).filter(Boolean))
-  ).sort() as string[], [caseStudies]);
+  // MES-130: popularity-ranked, zero-hidden filter options; the long industry
+  // tail is searchable. Values stay the raw industry/country (predicate unchanged).
+  const industryOptions = useMemo(
+    () => curateValues(caseStudies.map(cs => cs.content_company_profiles?.[0]?.industry)),
+    [caseStudies]
+  );
+  const countryOptions = useMemo(
+    () => curateValues(
+      caseStudies.map(cs => cs.content_company_profiles?.[0]?.origin_country),
+      { labelFor: (c) => `${getCountryFlag(c)} ${c}` },
+    ),
+    [caseStudies]
+  );
 
   const hasRevenueData = useMemo(() =>
     caseStudies.some(cs => parseMoneyToNumber(cs.content_company_profiles?.[0]?.monthly_revenue) > 0),
@@ -129,26 +135,20 @@ const CaseStudies = () => {
     [caseStudies]
   );
 
+  // MES-130: hide zero-count outcome tabs (e.g. "Failure Stories" when no row
+  // carries an 'unsuccessful' outcome) so the row never shows a dead tab.
   const outcomeTabs: FilterOption[] = [
     { value: "all", label: "All", count: caseStudies.length },
     { value: "successful", label: "Success Stories", count: successCount },
     { value: "unsuccessful", label: "Failure Stories", count: failureCount },
-  ];
+  ].filter((t) => t.value === "all" || (t.count ?? 0) > 0);
 
   const selects: SelectFilterConfig[] = [];
-  if (industries.length > 0) {
-    selects.push({
-      key: "industry",
-      allLabel: "Any Industry",
-      options: industries.map((i) => ({ value: i, label: i })),
-    });
+  if (industryOptions.length > 0) {
+    selects.push({ key: "industry", allLabel: "Any Industry", options: industryOptions, searchable: true });
   }
-  if (countries.length > 0) {
-    selects.push({
-      key: "country",
-      allLabel: "Any Country",
-      options: countries.map((c) => ({ value: c, label: `${getCountryFlag(c)} ${c}` })),
-    });
+  if (countryOptions.length > 0) {
+    selects.push({ key: "country", allLabel: "Any Country", options: countryOptions, searchable: true });
   }
 
   const advancedPanel = (hasRevenueData || hasCostsData) ? (
@@ -484,15 +484,15 @@ const CaseStudies = () => {
                 <div className="text-xs text-muted-foreground">Lessons Learned</div>
               </div>
             )}
-            {industries.length > 0 && (
+            {industryOptions.length > 0 && (
               <div className="bg-white/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
-                <div className="text-2xl md:text-3xl font-bold text-violet-600 mb-0.5">{industries.length}</div>
+                <div className="text-2xl md:text-3xl font-bold text-violet-600 mb-0.5">{industryOptions.length}</div>
                 <div className="text-xs text-muted-foreground">Industries</div>
               </div>
             )}
-            {countries.length > 0 && (
+            {countryOptions.length > 0 && (
               <div className="bg-white/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
-                <div className="text-2xl md:text-3xl font-bold text-amber-600 mb-0.5">{countries.length}</div>
+                <div className="text-2xl md:text-3xl font-bold text-amber-600 mb-0.5">{countryOptions.length}</div>
                 <div className="text-xs text-muted-foreground">Origin Countries</div>
               </div>
             )}

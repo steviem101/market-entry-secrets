@@ -18,6 +18,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterMentors } from "@/lib/mentorFilters";
 import { humanizeSlug } from "@/lib/humanizeSlug";
+import { curateValues } from "@/lib/filterCuration";
 import type { Mentor } from "@/hooks/useMentors";
 
 const PAGE_SIZE = 12;
@@ -91,7 +92,8 @@ const MentorsDirectory = () => {
   const totalPages = Math.ceil(filteredMentors.length / PAGE_SIZE);
   const paginatedMentors = filteredMentors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const allLocations = useMemo(() => Array.from(new Set(mentors.map((m) => m.location))).sort(), [mentors]);
+  // MES-130: popularity-ranked, zero-hidden location options; long tail searchable.
+  const locationOptions = useMemo(() => curateValues(mentors.map((m) => m.location)), [mentors]);
   const allSectors = useMemo(() => Array.from(new Set(mentors.flatMap((m) => m.sector_tags || []))).sort(), [mentors]);
   const allOrigins = useMemo(() => {
     const origins = new Set<string>();
@@ -110,7 +112,7 @@ const MentorsDirectory = () => {
   ], [categories, mentors]);
 
   const selects: SelectFilterConfig[] = [
-    { key: "location", allLabel: "All Locations", options: allLocations.map((l) => ({ value: l, label: l })) },
+    { key: "location", allLabel: "All Locations", options: locationOptions, searchable: true },
   ];
 
   const advancedPanel = (allOrigins.length > 0 || allSectors.length > 0) ? (
@@ -187,7 +189,7 @@ const MentorsDirectory = () => {
 
       <MentorsHero
         totalExperts={mentors.length}
-        totalLocations={allLocations.length}
+        totalLocations={locationOptions.length}
       />
 
       <DirectoryFilterBar

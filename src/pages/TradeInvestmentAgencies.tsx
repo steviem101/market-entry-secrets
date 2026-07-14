@@ -10,6 +10,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterAgencies } from "@/lib/agencyFilters";
 import { humanizeSlug } from "@/lib/humanizeSlug";
+import { curateValues } from "@/lib/filterCuration";
 
 const PAGE_SIZE = 12;
 
@@ -36,18 +37,20 @@ const TradeInvestmentAgencies = () => {
   const totalPages = Math.ceil(filteredAgencies.length / PAGE_SIZE);
   const paginatedAgencies = filteredAgencies.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const uniqueLocations = useMemo(
-    () => [...new Set((agencies ?? []).map((a) => a.location).filter(Boolean))].sort() as string[],
+  // MES-130: popularity-ranked, zero-hidden; long location/sector tails searchable.
+  const locationOptions = useMemo(
+    () => curateValues((agencies ?? []).map((a) => a.location)),
     [agencies]
   );
-  const uniqueSectors = useMemo(
-    () => [...new Set(
-      (agencies ?? []).flatMap((a) => (a as any).sectors_supported || []).filter((s: string) => s && s !== "all")
-    )] as string[],
+  const sectorOptions = useMemo(
+    () => curateValues(
+      (agencies ?? []).flatMap((a) => ((a as any).sectors_supported || []).filter((s: string) => s && s !== "all")),
+      { labelFor: humanizeSlug },
+    ),
     [agencies]
   );
-  const uniqueTypes = useMemo(
-    () => [...new Set((agencies ?? []).map((a) => (a as any).organisation_type).filter(Boolean))] as string[],
+  const typeOptions = useMemo(
+    () => curateValues((agencies ?? []).map((a) => (a as any).organisation_type), { labelFor: humanizeSlug }),
     [agencies]
   );
 
@@ -65,9 +68,9 @@ const TradeInvestmentAgencies = () => {
   }, [agencies, categories]);
 
   const selects: SelectFilterConfig[] = [
-    { key: "location", allLabel: "All Locations", options: uniqueLocations.map((l) => ({ value: l, label: l })) },
-    { key: "type", allLabel: "All Types", options: uniqueTypes.map((t) => ({ value: t, label: humanizeSlug(t) })) },
-    { key: "sector", allLabel: "All Sectors", options: uniqueSectors.map((s) => ({ value: s, label: humanizeSlug(s) })) },
+    { key: "location", allLabel: "All Locations", options: locationOptions, searchable: true },
+    { key: "type", allLabel: "All Types", options: typeOptions },
+    { key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true },
   ];
 
   if (error) {
@@ -98,7 +101,7 @@ const TradeInvestmentAgencies = () => {
 
       <TradeInvestmentAgenciesHero
         agencyCount={agencies?.length || 0}
-        locationCount={uniqueLocations.length}
+        locationCount={locationOptions.length}
         categories={categories}
         agencies={agencies || []}
       />

@@ -10,6 +10,7 @@ import { useInnovationEcosystem } from "@/hooks/useInnovationEcosystem";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterOrganisations } from "@/lib/innovationFilters";
+import { curateValues } from "@/lib/filterCuration";
 
 const PAGE_SIZE = 12;
 
@@ -37,12 +38,13 @@ const InnovationEcosystem = () => {
   const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
   const paginatedOrganizations = filteredOrganizations.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
-  const uniqueLocations = useMemo(
-    () => [...new Set((organizations ?? []).map((org) => org.location).filter(Boolean))].sort() as string[],
+  // MES-130: popularity-ranked, zero-hidden; the long location/service tails are searchable.
+  const locationOptions = useMemo(
+    () => curateValues((organizations ?? []).map((org) => org.location)),
     [organizations]
   );
-  const uniqueServices = useMemo(
-    () => [...new Set((organizations ?? []).flatMap((org) => org.services || []))].sort() as string[],
+  const serviceOptions = useMemo(
+    () => curateValues((organizations ?? []).flatMap((org) => org.services || [])),
     [organizations]
   );
 
@@ -70,8 +72,8 @@ const InnovationEcosystem = () => {
   ];
 
   const selects: SelectFilterConfig[] = [
-    { key: "location", allLabel: "All Locations", options: uniqueLocations.map((l) => ({ value: l, label: l })) },
-    { key: "service", allLabel: "All Services", options: uniqueServices.map((s) => ({ value: s, label: s })) },
+    { key: "location", allLabel: "All Locations", options: locationOptions, searchable: true },
+    { key: "service", allLabel: "All Services", options: serviceOptions, searchable: true },
   ];
 
   if (error) {
@@ -102,7 +104,7 @@ const InnovationEcosystem = () => {
 
       <InnovationEcosystemHero
         organizationCount={organizations?.length || 0}
-        locationCount={uniqueLocations.length}
+        locationCount={locationOptions.length}
       />
 
       <DirectoryFilterBar
