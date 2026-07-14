@@ -41,3 +41,31 @@ duplicates). The 6 medium and 6 already-rich live pages are left untouched.
   `content_id`. Rollback of a **replace** target is not automatic — the old thin
   content is dropped, so snapshot those rows before applying if reversibility is
   required.
+
+---
+
+## APPLIED to production (2026-07-14)
+
+The enrichment was applied (user-approved) to all 9 live published rows. A
+pre-apply snapshot of the prior content is kept at
+`scripts/mes-178-case-study-import/out/enrichment/pre_apply_snapshot.json` for
+rollback of the `replace` targets.
+
+Post-apply verification (prod):
+- **fills** (Netflix, Afterpay): were 0-body/empty → now 6 sections, 7 bodies,
+  0 empty; outcome badge = successful; anon can read both pages.
+- **replaces** (Secretlab, ShopBack, Starbucks, Masters, Ola, Topshop, WeWork):
+  6 clean sections each, 0 empty bodies; Secretlab/ShopBack/WeWork carry their 4
+  subsection `question` H3s. Existing `case_study_sources` preserved on every
+  target (3–5 each — FK `SET NULL` detached them from dropped sections, rows
+  survived).
+- Outcome badges now populated where previously blank: Masters/Ola/Starbucks/
+  Topshop → unsuccessful; Secretlab/ShopBack → successful; WeWork stays null
+  (genuinely "mixed"). Profile fields filled only where blank (COALESCE/NULLIF);
+  Afterpay's curated `entry_date` "March 2015" was preserved over the draft's
+  "2014".
+- Published case-study count unchanged (102); the 44 imported drafts still
+  return 0 to the `anon` role.
+
+Rollback (replace targets only): restore sections/bodies/read_time from
+`pre_apply_snapshot.json`. Fills are reversible by deleting the added rows.
