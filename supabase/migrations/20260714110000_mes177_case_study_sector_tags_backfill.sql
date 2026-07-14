@@ -1,0 +1,137 @@
+-- MES-177 Phase B3: backfill canonical sector_tags for the 102 untagged case studies
+-- (content_type='case_study'). Reviewed proposal + method + per-row rationale:
+--   docs/audits/mes-177/case-study-sector-tag-proposal.csv (102 rows; tags are canonical
+--   MES-110 / LINKEDIN_SECTORS slugs — validated, no junk). Owner-approved 2026-07-14.
+--
+-- Properties: guarded (fill-only-empty) · idempotent · id-keyed · preview-safe (0 rows on an
+-- empty DB) · reversible. The untagged rows are a mix of NULL and '{}' sector_tags; the
+-- coalesce(cardinality(...),0)=0 latch covers both and NEVER overwrites an existing tag set,
+-- so the 44 already-tagged case studies are untouched.
+--
+-- Side-effect (documented, not matcher-only): the UPDATE fires the content_items KB-sync
+-- trigger (kb_sync_content_item -> trg_kb_content), re-flagging these 102 case studies for
+-- re-embedding in mes_knowledge_base (~102 OpenAI embeds via the embed-knowledge cron).
+-- Harmless — the KB is a rebuildable index, the trigger is exception-guarded, and re-runs match
+-- 0 rows (no repeat embed storm) — but it is a small unbudgeted embedding cost worth noting.
+-- No RLS/policy/grant/payment change. content_items writes are already service-role-scoped;
+-- this runs as the migration role.
+
+update public.content_items ci
+   set sector_tags = m.tags
+  from (values
+  ('d4be2d20-ce7a-4931-9307-3d8213b194ce'::uuid, array['financial-services']::text[]),
+  ('cf915633-ea9e-414f-8485-f185fa724ffa'::uuid, array['accommodation-and-food-services']::text[]),
+  ('8ab61f12-aee2-440f-bc05-e7a158d6d17c'::uuid, array['consumer-services']::text[]),
+  ('0fa797c6-4507-426e-a03d-d3b2a685793d'::uuid, array['retail']::text[]),
+  ('b264da5d-7266-47d3-87a2-5ab9e40cbe13'::uuid, array['financial-services']::text[]),
+  ('770a3d02-5b7f-4c84-8f3c-91f2bd801c03'::uuid, array['financial-services']::text[]),
+  ('ce0f1e38-9412-4aed-a289-c770379b1d4d'::uuid, array['technology-information-and-media']::text[]),
+  ('c8500587-b71d-4d1d-b3ea-b194cd72eaf3'::uuid, array['accommodation-and-food-services']::text[]),
+  ('aff32a75-684e-4f09-b081-569d5e89a9f6'::uuid, array['retail']::text[]),
+  ('706a94b1-0aa1-4e8f-9f08-362e3dcc347a'::uuid, array['hospitals-and-health-care']::text[]),
+  ('2f605bc6-4d08-444a-8294-263e052ca49a'::uuid, array['transportation-logistics-supply-chain-and-storage']::text[]),
+  ('615016bf-07a5-4d1d-9321-e2427c13dd85'::uuid, array['financial-services']::text[]),
+  ('c05f1270-7334-4bd3-bb7b-83197fcdf86f'::uuid, array['technology-information-and-media']::text[]),
+  ('39c1b251-9516-4242-8fa2-c9e6721605eb'::uuid, array['technology-information-and-media']::text[]),
+  ('e40ccfa2-8567-4b2d-8738-84e35d19481b'::uuid, array['retail']::text[]),
+  ('8c1f44c4-78e2-4716-9cf1-ca3ffe26a250'::uuid, array['consumer-services']::text[]),
+  ('2dc8d3c9-8cf2-4d85-bb43-f470fddaf5f3'::uuid, array['technology-information-and-media']::text[]),
+  ('00443dcb-3d07-400d-8bf9-f16359cb6005'::uuid, array['consumer-services']::text[]),
+  ('5874b24b-920d-48f4-8e40-f8574142262c'::uuid, array['retail']::text[]),
+  ('217911a9-cf5f-4fe7-9c8d-03140d12969d'::uuid, array['technology-information-and-media']::text[]),
+  ('70a06a24-2c04-4ebd-949d-deffc7dc93e4'::uuid, array['financial-services']::text[]),
+  ('50be39a5-b110-43ab-a7dd-e4b3ce36009f'::uuid, array['retail']::text[]),
+  ('eaffa000-dc6a-4c26-a7af-f986ec08cb55'::uuid, array['consumer-services']::text[]),
+  ('912ef093-4191-4f4a-b40a-6d2c7d53a3ed'::uuid, array['accommodation-and-food-services']::text[]),
+  ('b58fecee-c86d-4eb2-b7de-2926d27a0c9d'::uuid, array['retail']::text[]),
+  ('db377804-eec4-48c8-85bb-0e3124cd8e5d'::uuid, array['financial-services']::text[]),
+  ('fc19b651-da7d-432e-9101-6062d1eaad09'::uuid, array['financial-services']::text[]),
+  ('5e89b465-6c83-401b-b263-606a9a060d92'::uuid, array['education']::text[]),
+  ('0b927c90-9756-41f6-b8ec-d3164fea0dce'::uuid, array['technology-information-and-media']::text[]),
+  ('fc4ed870-1ac0-4c8c-9372-b7c2cef93974'::uuid, array['retail']::text[]),
+  ('354b7852-c42b-4379-9848-ad5bb7bf50e0'::uuid, array['consumer-services']::text[]),
+  ('94b0d63f-f872-451f-a402-ab3e0002b03d'::uuid, array['retail']::text[]),
+  ('8e246b4c-f11e-4555-a7e6-cafd40f1d160'::uuid, array['technology-information-and-media']::text[]),
+  ('a58cd7e6-4c89-4732-bbe7-3d0e12f94247'::uuid, array['technology-information-and-media']::text[]),
+  ('1130caf9-905e-4343-b4c7-9b17e1adf3f7'::uuid, array['financial-services']::text[]),
+  ('224ab881-e71d-4967-8e9b-9bb06593c4cb'::uuid, array['construction']::text[]),
+  ('4b4b3833-f597-43df-b5cd-fa543eef1258'::uuid, array['transportation-logistics-supply-chain-and-storage']::text[]),
+  ('c3125575-3074-494f-8dc7-7d34b10e1e8e'::uuid, array['technology-information-and-media']::text[]),
+  ('1c29a8ca-7d54-44c2-a4b3-0b74c92856b5'::uuid, array['consumer-services']::text[]),
+  ('92e85f0b-8317-4831-a38e-d9839b9c0715'::uuid, array['accommodation-and-food-services']::text[]),
+  ('322aa69d-a362-431e-9a58-ec5b08bf53d5'::uuid, array['technology-information-and-media']::text[]),
+  ('1931a8d7-80b0-466d-ad74-3ff78acc0683'::uuid, array['financial-services']::text[]),
+  ('dc4be033-3dd7-489b-9403-d072213351f5'::uuid, array['manufacturing']::text[]),
+  ('0a654e25-ef57-48b2-949a-4e510b926684'::uuid, array['construction']::text[]),
+  ('9279ff9a-cc58-44ca-92c9-2fe398e3fb3b'::uuid, array['financial-services']::text[]),
+  ('16d37d39-bbc9-45a1-bdbc-492483f2541a'::uuid, array['financial-services']::text[]),
+  ('5cd253a3-bcff-4f88-a997-a99120e3588f'::uuid, array['technology-information-and-media']::text[]),
+  ('dde192d8-dc38-45d0-883c-be8cce94642b'::uuid, array['hospitals-and-health-care']::text[]),
+  ('31260565-9750-4dab-af86-d3987807c957'::uuid, array['accommodation-and-food-services']::text[]),
+  ('6d35415a-b59f-4462-bcb0-effac672d8a7'::uuid, array['hospitals-and-health-care']::text[]),
+  ('58fc18e3-8b53-467a-99ce-e4017d955da4'::uuid, array['manufacturing']::text[]),
+  ('7b6e0de9-2d8a-415d-9183-f1ca15235c1b'::uuid, array['financial-services']::text[]),
+  ('0dcb889c-eb46-4ec6-b75b-09127a4c09c4'::uuid, array['retail']::text[]),
+  ('2411a19e-cfb7-4695-b616-28670894798a'::uuid, array['financial-services']::text[]),
+  ('0e417c16-34b3-4413-8d60-1eeca7b3b614'::uuid, array['transportation-logistics-supply-chain-and-storage']::text[]),
+  ('45e2beb6-4c95-4730-97e4-0d6d51bf0a4b'::uuid, array['technology-information-and-media','entertainment-providers']::text[]),
+  ('22d7d55f-92af-4e9a-8e04-1ef3579aa074'::uuid, array['entertainment-providers']::text[]),
+  ('f7763aac-8c81-4dfc-9cee-1f9dd5791402'::uuid, array['manufacturing']::text[]),
+  ('dacca85e-a553-4ec6-9561-f846ce256779'::uuid, array['real-estate-and-equipment-rental-services']::text[]),
+  ('d83917da-d186-4c58-8789-cb29aa9d57b3'::uuid, array['financial-services']::text[]),
+  ('f2b98f42-eb8a-444a-a89f-e52e51adfcaa'::uuid, array['technology-information-and-media','entertainment-providers']::text[]),
+  ('6501f54d-b338-405d-96a5-4ebaa8dc7bf4'::uuid, array['consumer-services']::text[]),
+  ('225d438b-d523-450c-b1aa-dd99497fd1e6'::uuid, array['transportation-logistics-supply-chain-and-storage']::text[]),
+  ('1a52568f-3415-4f6d-b614-eb9777200b99'::uuid, array['manufacturing']::text[]),
+  ('8415f082-094b-4ef4-b174-918f749be087'::uuid, array['technology-information-and-media']::text[]),
+  ('92ebdba6-c9c1-4204-9f52-7045537ac029'::uuid, array['retail']::text[]),
+  ('3a89bb29-b6ce-4c6a-a238-f8bb921733cd'::uuid, array['retail']::text[]),
+  ('3dfa6ba6-6423-4086-9bf8-c23e2875b80e'::uuid, array['transportation-logistics-supply-chain-and-storage']::text[]),
+  ('b778bd72-0bd4-4c8c-ad78-eaaf072d2b90'::uuid, array['technology-information-and-media']::text[]),
+  ('b889033b-5a9a-4999-8f05-18a1660bacc9'::uuid, array['technology-information-and-media']::text[]),
+  ('85f6c178-8e17-430a-845b-6fef33d5fedf'::uuid, array['retail']::text[]),
+  ('5bec10db-fbcf-44f2-9680-807d104f93d5'::uuid, array['technology-information-and-media']::text[]),
+  ('ba1428fb-e7fb-4da0-8efb-e8d24ca3da82'::uuid, array['financial-services']::text[]),
+  ('738a1bcb-7ae2-4980-9b2c-80dffe4215f9'::uuid, array['technology-information-and-media']::text[]),
+  ('c867283b-c2e1-4989-be76-1686adbbe670'::uuid, array['technology-information-and-media']::text[]),
+  ('02624a10-f3f4-4c63-af94-e88e9c38ee8b'::uuid, array['transportation-logistics-supply-chain-and-storage']::text[]),
+  ('2a179f11-bc14-4e0b-a520-5ae590b07a3a'::uuid, array['manufacturing']::text[]),
+  ('7d57ede0-ee19-4597-a895-d517f77bdf66'::uuid, array['financial-services']::text[]),
+  ('f4d9d98a-30a8-4408-aaa6-1d4341873e01'::uuid, array['retail']::text[]),
+  ('9b74c478-b973-4a81-8566-893b7e48fe3a'::uuid, array['accommodation-and-food-services']::text[]),
+  ('7d2b976c-080c-493d-bcda-87f9455e752b'::uuid, array['technology-information-and-media']::text[]),
+  ('c54ce8e3-da1c-48cb-a72e-de28feccfae7'::uuid, array['accommodation-and-food-services']::text[]),
+  ('f8cb94c4-6b5b-4ed4-bc8b-dfca61c26320'::uuid, array['technology-information-and-media']::text[]),
+  ('c0eef5ab-e0cf-4c94-8927-fcbb08645011'::uuid, array['technology-information-and-media']::text[]),
+  ('92b63f40-a035-4a5c-a1e6-3567a4b36e19'::uuid, array['technology-information-and-media']::text[]),
+  ('e15f174e-b890-49d9-8a48-8789f2305473'::uuid, array['utilities']::text[]),
+  ('c8eb3476-af2d-4c48-9233-892d95ac4ce1'::uuid, array['real-estate-and-equipment-rental-services']::text[]),
+  ('830b219f-e7b2-406a-97b5-3ae0b6660de3'::uuid, array['entertainment-providers']::text[]),
+  ('73c6a391-e611-432b-8921-ce260f37cf0c'::uuid, array['technology-information-and-media']::text[]),
+  ('46c12645-55f4-4d0d-96d6-a9d77f057d13'::uuid, array['technology-information-and-media']::text[]),
+  ('1658cc80-52e7-42d7-a970-38311620651b'::uuid, array['technology-information-and-media']::text[]),
+  ('ad8d78c7-4bf6-4dc0-80a0-6698be6ad0e6'::uuid, array['financial-services']::text[]),
+  ('0863e522-f7d8-4907-b72e-8a4e69aea84f'::uuid, array['technology-information-and-media']::text[]),
+  ('6e1aff33-9cf4-4a77-a56c-b3634bb00e88'::uuid, array['technology-information-and-media']::text[]),
+  ('bd9e8978-ce5d-4759-a892-69773734e43f'::uuid, array['entertainment-providers']::text[]),
+  ('7b39730a-2ed3-4f64-b3bf-3ca1b8dc9a69'::uuid, array['technology-information-and-media']::text[]),
+  ('87099e54-74f3-4ec9-aa33-3f65c9ef05ff'::uuid, array['transportation-logistics-supply-chain-and-storage']::text[]),
+  ('f7adc85b-9a67-4643-8277-ba769723c279'::uuid, array['retail']::text[]),
+  ('d9546ae3-739b-4f01-b3ea-97dfbfd4633f'::uuid, array['financial-services']::text[]),
+  ('8f4d1604-11ce-4206-993a-607275557b86'::uuid, array['retail']::text[]),
+  ('fc36405e-3e7c-4389-ab01-3ee99c64d2e8'::uuid, array['technology-information-and-media']::text[]),
+  ('292f96fa-bbc4-498f-8e7e-26abf2f8a8f4'::uuid, array['technology-information-and-media']::text[])
+  ) as m(id, tags)
+ where ci.id = m.id
+   and ci.content_type = 'case_study'
+   and coalesce(cardinality(ci.sector_tags), 0) = 0;
+
+-- Expected at apply time (verified live 2026-07-14): 102 rows tagged; 44 already-tagged case
+-- studies untouched. Preview branch: 0 rows (empty DB), a no-op.
+
+-- Reverse (supabase/rollback/): value-latched, restores the touched rows to an empty array
+-- (NULL and '{}' are equivalent 'untagged' states here) only where the tags still equal what
+-- this migration wrote, so a later human retag is never clobbered:
+--   update public.content_items ci set sector_tags = '{}'
+--     from (values <same id/tags list>) as m(id, tags)
+--    where ci.id = m.id and ci.sector_tags = m.tags;

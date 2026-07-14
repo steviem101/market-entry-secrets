@@ -26,6 +26,7 @@ import {
 import { OutcomeBadge } from "@/components/case-studies/OutcomeBadge";
 import { getCountryFlag } from "@/lib/countryFlags";
 import { curateValues } from "@/lib/filterCuration";
+import { sectorLabel } from "@/lib/sectorLabels";
 import { SEOHead } from "@/components/common/SEOHead";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getLogoUrl } from "@/lib/logoUtils";
@@ -38,7 +39,7 @@ const PAGE_SIZE = 12;
 const CASE_STUDY_FILTER_SPEC: FilterSpec = {
   search: { param: "search", default: "" },
   outcome: { param: "outcome", default: "all" },
-  industry: { param: "industry", default: "all" },
+  sector: { param: "sector", default: "all" },
   country: { param: "country", default: "all" },
   revenue: { param: "revenue", default: "all" },
   costs: { param: "costs", default: "all" },
@@ -94,17 +95,24 @@ const CardSkeleton = ({ isGrid }: { isGrid: boolean }) => (
 
 const CaseStudies = () => {
   const { data: caseStudies = [], isLoading, error } = useCaseStudies();
+  // MES-177 B3: the sector facet is canonical `sector_tags` (friendly labels via
+  // the shared map); stale/case-variant ?sector= coerces to "all" against the
+  // curated options so it never renders a phantom option or an empty grid.
+  const sectorOptions = useMemo(
+    () => curateValues(caseStudies.flatMap(cs => cs.sector_tags || []), { labelFor: sectorLabel }),
+    [caseStudies]
+  );
+  const allowedValues = useMemo(
+    () => ({ sector: sectorOptions.map((o) => o.value) }),
+    [sectorOptions]
+  );
   const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
-    useDirectoryFilters(CASE_STUDY_FILTER_SPEC);
+    useDirectoryFilters(CASE_STUDY_FILTER_SPEC, { allowedValues });
 
   const viewMode = filters.view === "list" ? "list" : "grid";
 
-  // MES-130: popularity-ranked, zero-hidden filter options; the long industry
-  // tail is searchable. Values stay the raw industry/country (predicate unchanged).
-  const industryOptions = useMemo(
-    () => curateValues(caseStudies.map(cs => cs.content_company_profiles?.[0]?.industry)),
-    [caseStudies]
-  );
+  // MES-130: popularity-ranked, zero-hidden country options; the long tail is
+  // searchable. Values stay the raw country (predicate unchanged).
   const countryOptions = useMemo(
     () => curateValues(
       caseStudies.map(cs => cs.content_company_profiles?.[0]?.origin_country),
@@ -154,8 +162,8 @@ const CaseStudies = () => {
   ].filter((t) => t.value === "all" || (t.count ?? 0) > 0);
 
   const selects: SelectFilterConfig[] = [];
-  if (industryOptions.length > 0) {
-    selects.push({ key: "industry", allLabel: "Any Industry", options: industryOptions, searchable: true });
+  if (sectorOptions.length > 0) {
+    selects.push({ key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true });
   }
   if (countryOptions.length > 0) {
     selects.push({ key: "country", allLabel: "Any Country", options: countryOptions, searchable: true });
@@ -478,10 +486,10 @@ const CaseStudies = () => {
                 <div className="text-xs text-muted-foreground">Lessons Learned</div>
               </div>
             )}
-            {industryOptions.length > 0 && (
+            {sectorOptions.length > 0 && (
               <div className="bg-card/80 backdrop-blur-sm rounded-lg px-5 py-3 shadow-sm border">
-                <div className="text-2xl md:text-3xl font-bold text-mes-teal-dark mb-0.5">{industryOptions.length}</div>
-                <div className="text-xs text-muted-foreground">Industries</div>
+                <div className="text-2xl md:text-3xl font-bold text-mes-teal-dark mb-0.5">{sectorOptions.length}</div>
+                <div className="text-xs text-muted-foreground">Sectors</div>
               </div>
             )}
             {countryOptions.length > 0 && (

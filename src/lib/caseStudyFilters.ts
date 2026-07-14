@@ -101,14 +101,19 @@ export interface CaseStudyLike {
   title: string;
   subtitle?: string | null;
   view_count?: number | null;
+  /** Canonical MES-110 sector slugs on the case-study content_item (MES-177 B3). */
+  sector_tags?: string[] | null;
   content_company_profiles?: CaseStudyProfile[] | null;
 }
 
 /**
  * Filter + sort case studies from the shared filter values. Expected keys:
- *   search, outcome, industry, country, revenue, costs, sort
+ *   search, outcome, sector, country, revenue, costs, sort
  * (`sort` ∈ recent | views | alphabetical). Returns a new array; input is not
  * mutated (recent order is assumed already applied by the query).
+ *
+ * MES-177 B3: the facet is canonical `sector_tags` (not the free-text
+ * `content_company_profiles.industry`, which stays searchable via `search`).
  */
 export function filterAndSortCaseStudies<T extends CaseStudyLike>(
   caseStudies: T[],
@@ -117,7 +122,7 @@ export function filterAndSortCaseStudies<T extends CaseStudyLike>(
   const search = (filters.search ?? "").toLowerCase().trim();
   const {
     outcome = "all",
-    industry = "all",
+    sector = "all",
     country = "all",
     revenue = "all",
     costs = "all",
@@ -127,11 +132,13 @@ export function filterAndSortCaseStudies<T extends CaseStudyLike>(
   const filtered = caseStudies.filter((cs) => {
     const profile = cs.content_company_profiles?.[0];
 
+    // Free-text industry stays searchable even though it is no longer a facet.
     const matchesSearch =
       search === "" ||
       cs.title.toLowerCase().includes(search) ||
       (cs.subtitle ?? "").toLowerCase().includes(search) ||
-      (profile?.company_name ?? "").toLowerCase().includes(search);
+      (profile?.company_name ?? "").toLowerCase().includes(search) ||
+      (profile?.industry ?? "").toLowerCase().includes(search);
 
     // The "successful" tab groups every positive outcome (scaling/ipo/acquired
     // included); other values (unsuccessful, or a direct ?outcome=scaling deep
@@ -139,12 +146,12 @@ export function filterAndSortCaseStudies<T extends CaseStudyLike>(
     const matchesOutcome =
       outcome === "all" ||
       (outcome === "successful" ? isPositiveOutcome(profile?.outcome) : profile?.outcome === outcome);
-    const matchesIndustry = industry === "all" || profile?.industry === industry;
+    const matchesSector = sector === "all" || (cs.sector_tags ?? []).includes(sector);
     const matchesCountry = country === "all" || profile?.origin_country === country;
     const matchesRevenue = matchesRevenueRange(profile?.monthly_revenue, revenue);
     const matchesCosts = matchesCostsRange(profile?.startup_costs, costs);
 
-    return matchesSearch && matchesOutcome && matchesIndustry && matchesCountry && matchesRevenue && matchesCosts;
+    return matchesSearch && matchesOutcome && matchesSector && matchesCountry && matchesRevenue && matchesCosts;
   });
 
   const sorted = [...filtered];
