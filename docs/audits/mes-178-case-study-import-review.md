@@ -95,3 +95,35 @@ Sources for fact-checking stay in the CSV's `sources_markdown` column
   shows only the 102 previously published case studies.
 - Import was applied via the Supabase MCP (service-role execution path per the
   ticket); statements are idempotent and safe to re-run.
+
+## Pre-merge audit verdict (2026-07-14) — Approve with conditions
+
+Critical: 0 · Warning: 2 · Suggestion: 3. Read-only audit of branch
+`claude/mes-case-studies-65-xqr97s` (PR #436). Diff is fully additive (scripts +
+docs; no `src/`, no `supabase/`, no RLS, no migrations). Import verified: 44
+drafts applied, idempotent (slug UNIQUE + NOT EXISTS), `SET ROLE anon` sees 0
+drafts (listing/detail/sitemap safe), 0 rows in `mes_knowledge_base`, 102
+published rows untouched, no secrets/PII in the diff.
+
+- **W1 (Confirmed) — heading flattening.** `transform.py` splits `#` and `##`
+  at the same level, but 38/65 drafts use an H1 group header ("Entry strategy" /
+  "What went wrong") with H2 subsections beneath. Result: **29 of 44 imported
+  drafts** carry an empty "Entry strategy" section body (DB-confirmed) and
+  flattened subsections. Zero impact now (drafts hidden); on publish it renders a
+  dangling heading. Fix: nest H2 subsections under the H1 group via the existing
+  (unused) `content_bodies.question` field, then re-apply to the 29 rows. Fix
+  before publishing, not before merge.
+- **W2 (Confirmed) — enrichment proposal inherits W1.** 3 of 9 enrichment
+  targets (secretlab, shopback, wework — all `replace`) carry the empty section;
+  applying as-is would replace coherent thin content with a dangling-heading
+  version (regression). Regenerate after W1 fix; do not apply until then.
+- **Suggestions:** reconcile Afterpay entry_date (draft 2014 vs live
+  "March 2015"); have transform drop/merge any header that resolves to an empty
+  body; `stmts/`/`batch_*.sql` are git-ignored (canonical `import_batch.sql` is
+  committed).
+
+**Merge recommendation: Approve with conditions.** Tooling/docs PR is safe to
+merge (nothing publishes on merge; drafts already in prod, hidden). Condition
+before publish/enrichment-apply: fix W1 in transform, re-apply to the 29 affected
+draft rows, regenerate the enrichment proposal. Rollback: delete `content_items`
+by CSV slug (cascades; drafts = nil public impact); enrichment not applied.
