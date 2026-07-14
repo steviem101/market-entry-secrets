@@ -1,0 +1,58 @@
+-- Reverse of 20260714100200_mes177_case_study_outcomes_backfill.sql (MES-177 B2). Reference only.
+-- Nulls out exactly the 48 rows the backfill set, and only where the value still equals what the
+-- backfill wrote (so a later human correction is never clobbered). Keyed on content_id.
+
+update public.content_company_profiles p
+   set outcome = null
+  from (values
+  ('d4be2d20-ce7a-4931-9307-3d8213b194ce'::uuid, 'unsuccessful'),
+  ('b264da5d-7266-47d3-87a2-5ab9e40cbe13'::uuid, 'successful'),
+  ('95d81b60-4580-405e-a829-c916400b1fb2'::uuid, 'successful'),
+  ('770a3d02-5b7f-4c84-8f3c-91f2bd801c03'::uuid, 'unsuccessful'),
+  ('ce0f1e38-9412-4aed-a289-c770379b1d4d'::uuid, 'successful'),
+  ('c8500587-b71d-4d1d-b3ea-b194cd72eaf3'::uuid, 'unsuccessful'),
+  ('aff32a75-684e-4f09-b081-569d5e89a9f6'::uuid, 'unsuccessful'),
+  ('706a94b1-0aa1-4e8f-9f08-362e3dcc347a'::uuid, 'successful'),
+  ('2f605bc6-4d08-444a-8294-263e052ca49a'::uuid, 'scaling'),
+  ('615016bf-07a5-4d1d-9321-e2427c13dd85'::uuid, 'successful'),
+  ('c05f1270-7334-4bd3-bb7b-83197fcdf86f'::uuid, 'acquired'),
+  ('748543e7-9bfc-43f5-ab95-7bde9bcdb6c8'::uuid, 'successful'),
+  ('e69bd86a-2303-4403-8f47-50982615fa84'::uuid, 'successful'),
+  ('e40ccfa2-8567-4b2d-8738-84e35d19481b'::uuid, 'unsuccessful'),
+  ('8c1f44c4-78e2-4716-9cf1-ca3ffe26a250'::uuid, 'unsuccessful'),
+  ('2dc8d3c9-8cf2-4d85-bb43-f470fddaf5f3'::uuid, 'successful'),
+  ('5874b24b-920d-48f4-8e40-f8574142262c'::uuid, 'unsuccessful'),
+  ('217911a9-cf5f-4fe7-9c8d-03140d12969d'::uuid, 'successful'),
+  ('5dbdda6d-fb45-43e7-9d05-44e1a4b2ac79'::uuid, 'successful'),
+  ('70a06a24-2c04-4ebd-949d-deffc7dc93e4'::uuid, 'scaling'),
+  ('a040e965-46f1-4674-8ff9-77eb52f9e513'::uuid, 'successful'),
+  ('b70a050d-90d5-433b-97b4-5b1592c1bfc5'::uuid, 'unsuccessful'),
+  ('50be39a5-b110-43ab-a7dd-e4b3ce36009f'::uuid, 'unsuccessful'),
+  ('eaffa000-dc6a-4c26-a7af-f986ec08cb55'::uuid, 'unsuccessful'),
+  ('b58fecee-c86d-4eb2-b7de-2926d27a0c9d'::uuid, 'unsuccessful'),
+  ('db377804-eec4-48c8-85bb-0e3124cd8e5d'::uuid, 'ipo'),
+  ('fc19b651-da7d-432e-9101-6062d1eaad09'::uuid, 'unsuccessful'),
+  ('5e89b465-6c83-401b-b263-606a9a060d92'::uuid, 'scaling'),
+  ('354b7852-c42b-4379-9848-ad5bb7bf50e0'::uuid, 'unsuccessful'),
+  ('94b0d63f-f872-451f-a402-ab3e0002b03d'::uuid, 'unsuccessful'),
+  ('8e246b4c-f11e-4555-a7e6-cafd40f1d160'::uuid, 'successful'),
+  ('a58cd7e6-4c89-4732-bbe7-3d0e12f94247'::uuid, 'successful'),
+  ('1130caf9-905e-4343-b4c7-9b17e1adf3f7'::uuid, 'scaling'),
+  ('224ab881-e71d-4967-8e9b-9bb06593c4cb'::uuid, 'scaling'),
+  ('c3125575-3074-494f-8dc7-7d34b10e1e8e'::uuid, 'successful'),
+  ('322aa69d-a362-431e-9a58-ec5b08bf53d5'::uuid, 'scaling'),
+  ('1931a8d7-80b0-466d-ad74-3ff78acc0683'::uuid, 'scaling'),
+  ('0a654e25-ef57-48b2-949a-4e510b926684'::uuid, 'successful'),
+  ('9279ff9a-cc58-44ca-92c9-2fe398e3fb3b'::uuid, 'unsuccessful'),
+  ('dde192d8-dc38-45d0-883c-be8cce94642b'::uuid, 'scaling'),
+  ('6d35415a-b59f-4462-bcb0-effac672d8a7'::uuid, 'scaling'),
+  ('7b6e0de9-2d8a-415d-9183-f1ca15235c1b'::uuid, 'successful'),
+  ('d38ea698-9814-48ec-b6d6-393c6fbd26d5'::uuid, 'scaling'),
+  ('2411a19e-cfb7-4695-b616-28670894798a'::uuid, 'successful'),
+  ('0e417c16-34b3-4413-8d60-1eeca7b3b614'::uuid, 'unsuccessful'),
+  ('142ef77a-d78a-4210-a829-6183b7e77eb5'::uuid, 'unsuccessful'),
+  ('b6a1c7be-1174-432f-aebc-bf67eba9b585'::uuid, 'scaling'),
+  ('d83917da-d186-4c58-8789-cb29aa9d57b3'::uuid, 'successful')
+  ) as m(content_id, outcome)
+ where p.content_id = m.content_id
+   and p.outcome = m.outcome;
