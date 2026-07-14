@@ -85,3 +85,13 @@ company-level duplicates already live in the catalogue.
 
 Sources for fact-checking stay in the CSV's `sources_markdown` column
 (editorial only — never published, not written to the database).
+## Verification (2026-07-14, post-import)
+
+- 44/44 drafts present in `content_items` (`status='draft'`, `content_type='case_study'`).
+- Per-slug `content_sections` / `content_bodies` counts match the generated
+  fixture (`scripts/mes-178-case-study-import/out/expected_counts.json`) exactly;
+  every draft has one `content_company_profiles` row.
+- RLS check as the `anon` role: **0 drafts visible**; the public catalogue still
+  shows only the 102 previously published case studies.
+- Import was applied via the Supabase MCP (service-role execution path per the
+  ticket); statements are idempotent and safe to re-run.
