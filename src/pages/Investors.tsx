@@ -85,12 +85,15 @@ const Investors = () => {
     return counts;
   }, [investors]);
 
+  // MES-130: hide zero-count type tabs (e.g. "Other" with no rows) so the row
+  // only shows tabs that lead somewhere; "All" always stays. Mirrors Case
+  // Studies / Content. While data loads, counts are 0 and only "All" renders.
   const tabOptions: FilterOption[] = useMemo(
     () =>
       INVESTOR_TYPES.map((t) => ({
         ...t,
         count: t.value === "all" ? (investors?.length ?? 0) : (typeCounts[t.value] ?? 0),
-      })),
+      })).filter((t) => t.value === "all" || (t.count ?? 0) > 0),
     [investors, typeCounts],
   );
 
