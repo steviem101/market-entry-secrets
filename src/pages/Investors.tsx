@@ -11,6 +11,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterInvestors } from "@/lib/investorFilters";
 import { curateValues } from "@/lib/filterCuration";
+import { humanizeSlug } from "@/lib/humanizeSlug";
 
 const PAGE_SIZE = 12;
 
@@ -39,14 +40,11 @@ const Investors = () => {
 
   const { data: investors, isLoading, error } = useInvestors();
 
-  const filteredInvestors = useMemo(
-    () => (investors ? filterInvestors(investors, filters) : []),
-    [investors, filters],
-  );
-
-  // MES-130: popularity-ranked, zero-hidden option lists (interim frontend-only
-  // curation on the raw columns — the canonical sector_tags swap is a separate,
-  // approval-gated follow-up that needs investors_public to expose the column).
+  // MES-130: popularity-ranked, zero-hidden option lists. Location/stage curate
+  // the raw free-text columns; sector now uses the canonical sector_tags slugs
+  // (MES-110), exposed on investors_public by the accompanying migration. Falls
+  // back gracefully to an empty list during any deploy window before the view
+  // swap lands (rows simply carry no sector_tags yet).
   const locationOptions = useMemo(
     () => curateValues((investors ?? []).map((inv) => inv.location)),
     [investors],
@@ -58,8 +56,24 @@ const Investors = () => {
   );
 
   const sectorOptions = useMemo(
-    () => curateValues((investors ?? []).flatMap((inv) => inv.sector_focus || [])),
+    () => curateValues((investors ?? []).flatMap((inv) => inv.sector_tags || []), { labelFor: humanizeSlug }),
     [investors],
+  );
+
+  // Sector now matches canonical sector_tags. Coerce a stale/legacy ?sector=
+  // (old free-text sector_focus value, e.g. "fintech") to "all" so it doesn't
+  // match nothing and silently show an empty directory — mirrors Events' safeType.
+  // (While data is loading the option set is empty; don't coerce then.)
+  const validSectors = useMemo(() => new Set(sectorOptions.map((o) => o.value)), [sectorOptions]);
+  const safeSector =
+    filters.sector === "all" || validSectors.size === 0 || validSectors.has(filters.sector)
+      ? filters.sector
+      : "all";
+  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
+
+  const filteredInvestors = useMemo(
+    () => (investors ? filterInvestors(investors, effectiveFilters) : []),
+    [investors, effectiveFilters],
   );
 
   // Per-type counts for the hero cards AND the tab suffixes.
@@ -71,12 +85,15 @@ const Investors = () => {
     return counts;
   }, [investors]);
 
+  // MES-130: hide zero-count type tabs (e.g. "Other" with no rows) so the row
+  // only shows tabs that lead somewhere; "All" always stays. Mirrors Case
+  // Studies / Content. While data loads, counts are 0 and only "All" renders.
   const tabOptions: FilterOption[] = useMemo(
     () =>
       INVESTOR_TYPES.map((t) => ({
         ...t,
         count: t.value === "all" ? (investors?.length ?? 0) : (typeCounts[t.value] ?? 0),
-      })),
+      })).filter((t) => t.value === "all" || (t.count ?? 0) > 0),
     [investors, typeCounts],
   );
 
@@ -115,7 +132,7 @@ const Investors = () => {
       />
 
       <DirectoryFilterBar
-        filters={filters}
+        filters={effectiveFilters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}

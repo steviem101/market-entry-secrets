@@ -15,6 +15,7 @@ const INVESTORS: InvestorLike[] = [
     investor_type: "vc",
     stage_focus: ["seed", "series_a"],
     sector_focus: ["fintech", "saas"],
+    sector_tags: ["financial-services", "technology-information-and-media"],
   },
   {
     name: "Angel Collective",
@@ -23,6 +24,7 @@ const INVESTORS: InvestorLike[] = [
     investor_type: "angel",
     stage_focus: ["pre_seed", "seed"],
     sector_focus: ["healthtech"],
+    sector_tags: ["hospitals-and-health-care"],
   },
   {
     name: "GrantBody",
@@ -55,16 +57,18 @@ test("filters by stage against the stage_focus array", () => {
   assert.deepEqual(out.map((i) => i.name), ["Acme Ventures"]);
 });
 
-test("filters by sector against the sector_focus array", () => {
-  const out = filterInvestors(INVESTORS, { ...base, sector: "healthtech" });
+test("filters by sector against the canonical sector_tags (MES-130)", () => {
+  const out = filterInvestors(INVESTORS, { ...base, sector: "hospitals-and-health-care" });
   assert.deepEqual(out.map((i) => i.name), ["Angel Collective"]);
+  // free-text sector_focus is no longer the sector-filter source
+  assert.equal(filterInvestors(INVESTORS, { ...base, sector: "healthtech" }).length, 0);
 });
 
-test("search matches name, description, location, and sector, case-insensitively", () => {
+test("search still matches name, description, location, and free-text sector_focus, case-insensitively", () => {
   assert.equal(filterInvestors(INVESTORS, { ...base, search: "acme" }).length, 1);
   assert.equal(filterInvestors(INVESTORS, { ...base, search: "syndicate" }).length, 1); // description
   assert.equal(filterInvestors(INVESTORS, { ...base, search: "melbourne" }).length, 1); // location
-  assert.equal(filterInvestors(INVESTORS, { ...base, search: "FINTECH" }).length, 1); // sector, CI
+  assert.equal(filterInvestors(INVESTORS, { ...base, search: "FINTECH" }).length, 1); // sector_focus, CI
 });
 
 test("combines dimensions (AND semantics)", () => {
