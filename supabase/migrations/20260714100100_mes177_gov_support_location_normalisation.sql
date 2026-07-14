@@ -1,6 +1,10 @@
 -- MES-177 Phase B1: normalise trade_investment_agencies.location (reviewed, id-keyed).
 -- Guarded, idempotent, reversible, preview-safe. Reviewed CSV:
---   docs/audits/mes-177/gov-support-location-proposal.csv (149 rows; 7 unresolvable -> NULL).
+--   docs/audits/mes-177/gov-support-location-proposal.csv (149 rows; 7 unresolvable).
+-- NOTE: trade_investment_agencies.location is NOT NULL, so the 7 unresolvable rows are LEFT as
+-- their existing 'Unknown' value (not set to NULL). The A7 junk-sentinel filter guard hides
+-- 'Unknown' from the location filter options anyway, so this is user-facing-equivalent to NULL
+-- while respecting the constraint; the `is distinct from` guard makes those 7 no-ops.
 
 alter table public.trade_investment_agencies
   add column if not exists location_raw text;
@@ -16,7 +20,7 @@ update public.trade_investment_agencies t
   ('3e484652-c08a-4600-b029-6148e5f9652b'::uuid, 'Sydney, NSW'),
   ('74d09037-ee7d-4267-8c53-0955f4efafdb'::uuid, 'Melbourne, VIC'),
   ('fa17d9cf-f33f-413d-a5d4-b7845d71bc1a'::uuid, 'Sydney, NSW'),
-  ('5f944b0d-54f9-4a51-a92f-572f746d6bfa'::uuid, null),
+  ('5f944b0d-54f9-4a51-a92f-572f746d6bfa'::uuid, 'Unknown'),
   ('6c1261f1-7990-4dd3-8586-cbe24a6ff4cf'::uuid, 'Paris, France'),
   ('4e1acc9d-bccd-4279-a592-fcd8c3705800'::uuid, 'Sydney, NSW'),
   ('b4cfe352-b841-43d0-8622-01a8faf220a2'::uuid, 'Auckland, New Zealand'),
@@ -39,20 +43,20 @@ update public.trade_investment_agencies t
   ('6778c4d1-e3a2-4c1b-bd20-ee273fb186aa'::uuid, 'Melbourne, VIC'),
   ('76445490-0be3-43d3-9955-5fd8194a9c23'::uuid, 'Sydney, NSW'),
   ('a68978e5-bcd1-453c-b56e-c3fc6fa2b27c'::uuid, 'Melbourne, VIC'),
-  ('b6c7055c-f7e8-4b9e-af5a-1a8a4726a962'::uuid, null),
+  ('b6c7055c-f7e8-4b9e-af5a-1a8a4726a962'::uuid, 'Unknown'),
   ('f04fbe9a-72d9-4e4b-bfcb-cfbe86384aa4'::uuid, 'Sydney, NSW'),
   ('e0aaa6d6-8c74-4859-9419-1202875bcb82'::uuid, 'Melbourne, VIC'),
   ('8b257c62-06e0-4e05-9ee1-baa631af1921'::uuid, 'Adelaide, SA'),
   ('896f1545-a1a0-4287-8231-c5ad0f125134'::uuid, 'Sydney, NSW'),
-  ('13015877-10d6-4031-8810-7d8499fc5cd6'::uuid, null),
+  ('13015877-10d6-4031-8810-7d8499fc5cd6'::uuid, 'Unknown'),
   ('bd134e54-5792-40a1-8a23-ba69cbc73bff'::uuid, 'Sydney, NSW'),
   ('8698e092-53da-4bbd-aa43-56544e687dfd'::uuid, 'Melbourne, VIC'),
   ('46ed8ed7-5b58-42cb-ace5-f343681a2218'::uuid, 'Sydney, NSW'),
   ('653e7471-d3dd-4b54-8954-d955736f6da7'::uuid, 'Sydney, NSW'),
-  ('9ef10bf3-bbe8-4c76-82a3-fc1c864af1ef'::uuid, null),
+  ('9ef10bf3-bbe8-4c76-82a3-fc1c864af1ef'::uuid, 'Unknown'),
   ('34aef445-6155-4370-b98f-e8af8b5747e1'::uuid, 'Sydney, NSW'),
   ('3f93183c-99a6-474b-ac4d-c82f600c4fc6'::uuid, 'Sydney, NSW'),
-  ('cf78a9f6-f62d-412a-810f-222d56814682'::uuid, null),
+  ('cf78a9f6-f62d-412a-810f-222d56814682'::uuid, 'Unknown'),
   ('11caa386-821a-4c0a-a595-541763449fa4'::uuid, 'Adelaide, SA'),
   ('b9b542f7-47ba-4a01-b019-f62d06bd710b'::uuid, 'Brisbane, QLD'),
   ('3f9181d8-1c40-42a1-85a3-27d3b5edc2e2'::uuid, 'Sydney, NSW'),
@@ -143,7 +147,7 @@ update public.trade_investment_agencies t
   ('82def21b-11dc-4c6b-b78e-d35cf75e23ca'::uuid, 'Adelaide, SA'),
   ('598dcecd-a9ca-44fc-b736-5654e3d719f8'::uuid, 'Perth, WA'),
   ('546bedd4-8e4a-47c4-b54f-34a23797cc4a'::uuid, 'Melbourne, VIC'),
-  ('2dcfeabd-09df-49fc-8239-c95bd3403fc5'::uuid, null),
+  ('2dcfeabd-09df-49fc-8239-c95bd3403fc5'::uuid, 'Unknown'),
   ('965c5767-3493-40c7-ad82-21faec9ff259'::uuid, 'Melbourne, VIC'),
   ('73a201e5-365a-43a6-9fcf-6134638c5f21'::uuid, 'Perth, WA'),
   ('2b101d80-1315-4ccb-8462-23bb11237e76'::uuid, 'Sydney, NSW'),
@@ -157,7 +161,7 @@ update public.trade_investment_agencies t
   ('ed38bb66-f0ec-4db1-94f9-8fc8d3f1df9e'::uuid, 'Ottawa, Canada'),
   ('d1651398-2705-4baf-8099-749f81f94a48'::uuid, 'Sydney, NSW'),
   ('01e87fda-19ad-48b5-9399-64534cd17776'::uuid, 'Canberra, ACT'),
-  ('3cc20d83-0845-4c9d-bc29-20da76428b5a'::uuid, null),
+  ('3cc20d83-0845-4c9d-bc29-20da76428b5a'::uuid, 'Unknown'),
   ('c8fb3a54-0b5f-4ade-a535-89ff93a3daca'::uuid, 'Melbourne, VIC'),
   ('52079868-9eda-40d8-aafd-a9e1a8bd12c2'::uuid, 'Perth, WA')
   ) as m(id, loc)
