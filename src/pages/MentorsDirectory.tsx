@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet-async";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardGridSkeleton } from "@/components/common/CardGridSkeleton";
-import { useMentors, useMentorCategories } from "@/hooks/useMentors";
+import { useMentors } from "@/hooks/useMentors";
 import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
 import { MentorsHero } from "@/components/mentors/MentorsHero";
@@ -16,9 +16,9 @@ import { ListPagination } from "@/components/common/ListPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
-import { filterMentors } from "@/lib/mentorFilters";
+import { filterMentors, archetypeToSlug } from "@/lib/mentorFilters";
 import { humanizeSlug } from "@/lib/humanizeSlug";
-import { curateValues } from "@/lib/filterCuration";
+import { curateValues, curateOptions } from "@/lib/filterCuration";
 import type { Mentor } from "@/hooks/useMentors";
 
 const PAGE_SIZE = 12;
@@ -52,7 +52,6 @@ const originLabel = (o: string) => ORIGIN_LABELS[o] || humanizeSlug(o);
 const MentorsDirectory = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const { data: mentors = [], isLoading, error } = useMentors();
-  const { data: categories = [] } = useMentorCategories();
   const { filters, page, setFilter, setFilters, setPage, clearAll, hasActiveFilters } =
     useDirectoryFilters(MENTOR_FILTER_SPEC);
   const { persona } = usePersona();
@@ -104,12 +103,26 @@ const MentorsDirectory = () => {
     return Array.from(origins).sort();
   }, [mentors]);
 
-  const currentCategory = categories.find((c) => c.slug === filters.category);
+  // Primary tabs are the mentor archetype (MES-130) — the `mentor_categories`
+  // table the old tabs read never existed, so they rendered empty. Curated
+  // (popularity-ranked, zero-hidden); the slug also drives /mentors/:categorySlug.
+  const archetypeMeta = useMemo(() => {
+    const meta: Record<string, { label: string; count: number }> = {};
+    for (const m of mentors) {
+      const slug = archetypeToSlug(m.archetype);
+      if (!slug) continue;
+      if (!meta[slug]) meta[slug] = { label: m.archetype as string, count: 0 };
+      meta[slug].count++;
+    }
+    return meta;
+  }, [mentors]);
+
+  const currentCategoryName = archetypeMeta[filters.category]?.label ?? null;
 
   const categoryTabs: FilterOption[] = useMemo(() => [
     { value: "all", label: "All", count: mentors.length },
-    ...categories.map((c) => ({ value: c.slug, label: c.name, count: mentors.filter((m) => m.category_slug === c.slug).length })),
-  ], [categories, mentors]);
+    ...curateOptions(Object.entries(archetypeMeta).map(([value, m]) => ({ value, label: m.label, count: m.count }))),
+  ], [archetypeMeta, mentors.length]);
 
   const selects: SelectFilterConfig[] = [
     { key: "location", allLabel: "All Locations", options: locationOptions, searchable: true },
@@ -146,11 +159,11 @@ const MentorsDirectory = () => {
     </div>
   ) : undefined;
 
-  const pageTitle = currentCategory
-    ? `${currentCategory.name} Mentors | Market Entry Secrets`
+  const pageTitle = currentCategoryName
+    ? `${currentCategoryName} Mentors | Market Entry Secrets`
     : "Market Entry Mentors & Experts | Market Entry Secrets";
-  const pageDescription = currentCategory
-    ? `Connect with ${currentCategory.name.toLowerCase()} experts helping companies enter the Australian and New Zealand markets.`
+  const pageDescription = currentCategoryName
+    ? `Connect with ${currentCategoryName.toLowerCase()} experts helping companies enter the Australian and New Zealand markets.`
     : "Connect with experienced mentors and experts who help international companies enter the Australian and New Zealand markets.";
 
   if (isLoading) {

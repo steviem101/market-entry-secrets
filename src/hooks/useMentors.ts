@@ -48,6 +48,7 @@ export interface Mentor {
   is_featured: boolean;
   is_active: boolean;
   category_slug: string | null;
+  archetype: string | null;
   image: string | null;
   avatar_url: string | null;
   cover_image_url: string | null;
@@ -106,6 +107,7 @@ const mapMentor = (m: any): Mentor => ({
   is_featured: m.is_featured ?? false,
   is_active: m.is_active ?? true,
   category_slug: m.category_slug || null,
+  archetype: m.archetype || null,
   image: m.image || null,
   avatar_url: m.avatar_url || null,
   cover_image_url: m.cover_image_url || null,

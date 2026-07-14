@@ -13,12 +13,30 @@ export interface MentorLike {
   location: string;
   location_city?: string | null;
   category_slug?: string | null;
+  archetype?: string | null;
   persona_fit?: string[] | null;
   market_corridors?: string[] | null;
   sector_tags?: string[] | null;
   is_featured?: boolean;
   view_count?: number;
   years_experience?: number | null;
+}
+
+/**
+ * The Mentors primary tab dimension is `archetype` (MES-130): the
+ * `mentor_categories` table the old tabs read never existed, and
+ * `category_slug` is null on every row. Slugify the archetype so it can drive
+ * both the tab value and the /mentors/:categorySlug route param.
+ * e.g. "International Founder" → "international-founder", "Trade & Government" → "trade-government".
+ */
+export function archetypeToSlug(archetype: string | null | undefined): string | null {
+  if (!archetype) return null;
+  const slug = archetype
+    .toLowerCase()
+    .replace(/&/g, " ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || null;
 }
 
 /**
@@ -54,7 +72,9 @@ export function filterMentors<T extends MentorLike>(mentors: T[], filters: Filte
       }
     }
 
-    if (category !== "all" && m.category_slug !== category) return false;
+    // Category is the mentor archetype (slugified). category_slug is retained as
+    // a fallback for any legacy row that ever gets one populated.
+    if (category !== "all" && archetypeToSlug(m.archetype) !== category && m.category_slug !== category) return false;
 
     if (sector !== "all") {
       const tags = m.sector_tags || [];
