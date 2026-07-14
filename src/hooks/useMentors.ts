@@ -48,6 +48,7 @@ export interface Mentor {
   is_featured: boolean;
   is_active: boolean;
   category_slug: string | null;
+  archetype: string | null;
   image: string | null;
   avatar_url: string | null;
   cover_image_url: string | null;
@@ -67,16 +68,6 @@ export interface Mentor {
   sector_tags: string[] | null;
   sector_agnostic: boolean;
   is_anonymous: boolean;
-}
-
-export interface MentorCategory {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  display_order: number;
-  is_active: boolean;
 }
 
 const mapMentor = (m: any): Mentor => ({
@@ -106,6 +97,7 @@ const mapMentor = (m: any): Mentor => ({
   is_featured: m.is_featured ?? false,
   is_active: m.is_active ?? true,
   category_slug: m.category_slug || null,
+  archetype: m.archetype || null,
   image: m.image || null,
   avatar_url: m.avatar_url || null,
   cover_image_url: m.cover_image_url || null,
@@ -203,30 +195,6 @@ export const useMentorBySlug = (categorySlug: string | undefined, mentorSlug: st
       return data ? mapMentor(data) : null;
     },
     enabled: !!mentorSlug,
-  });
-};
-
-export const useMentorCategories = () => {
-  return useQuery({
-    queryKey: ["mentor-categories"],
-    queryFn: async (): Promise<MentorCategory[]> => {
-      try {
-        const { data, error } = await (supabase as any)
-          .from("mentor_categories")
-          .select("*")
-          .eq("is_active", true)
-          .order("display_order", { ascending: true });
-
-        if (error) {
-          // Table may not exist yet — return empty so filters still render
-          return [];
-        }
-
-        return data || [];
-      } catch {
-        return [];
-      }
-    },
   });
 };
 

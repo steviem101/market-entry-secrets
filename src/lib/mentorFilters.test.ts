@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { filterMentors, type MentorLike } from "./mentorFilters.ts";
+import { filterMentors, archetypeToSlug, type MentorLike } from "./mentorFilters.ts";
 
 const m = (p: Partial<MentorLike> & { name: string }): MentorLike => ({
   title: "", description: "", location: "Sydney", ...p,
@@ -13,8 +13,32 @@ const DATA: MentorLike[] = [
 ];
 const base = { search: "", persona: "all", category: "all", sector: "all", corridor: "all", location: "all", sort: "featured" };
 
-test("category filter by slug", () => {
+test("category filter by legacy category_slug still works", () => {
   assert.deepEqual(filterMentors(DATA, { ...base, category: "legal" }).map((x) => x.name).sort(), ["Alice", "Carol"]);
+});
+
+test("archetypeToSlug slugifies archetype labels", () => {
+  assert.equal(archetypeToSlug("International Founder"), "international-founder");
+  assert.equal(archetypeToSlug("Trade & Government"), "trade-government");
+  assert.equal(archetypeToSlug("Active Advisor"), "active-advisor");
+  assert.equal(archetypeToSlug(null), null);
+  assert.equal(archetypeToSlug(""), null);
+});
+
+test("category filter matches slugified archetype (the MES-130 primary dimension)", () => {
+  const byArchetype: MentorLike[] = [
+    m({ name: "Dana", archetype: "International Founder" }),
+    m({ name: "Evan", archetype: "Trade & Government" }),
+    m({ name: "Fran", archetype: "International Founder" }),
+  ];
+  assert.deepEqual(
+    filterMentors(byArchetype, { ...base, category: "international-founder" }).map((x) => x.name).sort(),
+    ["Dana", "Fran"],
+  );
+  assert.deepEqual(
+    filterMentors(byArchetype, { ...base, category: "trade-government" }).map((x) => x.name),
+    ["Evan"],
+  );
 });
 test("persona: 'both' matches either; explicit personas match their side", () => {
   assert.deepEqual(filterMentors(DATA, { ...base, persona: "international_entrant" }).map((x) => x.name).sort(), ["Alice", "Bob"]);
