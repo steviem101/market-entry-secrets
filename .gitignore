@@ -86,3 +86,8 @@ supabase/migrations_archive/*import_venture_debt_investors*.sql
 /_ii_dump.sql
 /_ii_load.sql
 /data_ii_*.sql
+
+# MES-160 events importer — local inputs and review artefacts (never committed:
+# input CSVs/snapshots are working data; out/ holds per-batch review artefacts)
+scripts/events-import/input/
+scripts/events-import/out/
