@@ -291,7 +291,12 @@ Owned by skill `mes-ticket-workflow`; the invariants:
 2. React Query with kebab-case keys; `useDebounce(query, 300)` for search; global staleTime 5 min.
 3. Directory pages: Hero → `DirectoryFilterBar` (presentational) + `useDirectoryFilters` (URL-synced
    state) → grid + `ListPagination`; pure filter logic in tested `src/lib/*Filters.ts` modules.
-   `src/pages/Events.tsx` is the reference implementation.
+   `src/pages/Events.tsx` is the reference implementation. **Bar anatomy contract (MES-177):** tabs =
+   ONE low-cardinality primary axis (≤~8 values, zero-hidden, with counts) · selects = curated,
+   popularity-ranked, searchable long tails via `curateValues`/`curateOptions` (junk-sentinel guarded)
+   · advanced panel = secondary axes only · no persona/audience pill · stale/case-variant URL values
+   coerced against the curated options via `useDirectoryFilters(spec, { allowedValues })`. Full contract
+   in skill `mes-codebase-conventions`.
 4. SEO per page: Helmet/`SEOHead` with title, description, canonical, JSON-LD. Crawler posture:
    default-allow incl. AI crawlers (`public/robots.txt`, `public/llms.txt`); private routes
    noindexed — skill `seo-rendering-indexing-and-programmatic-pages`.

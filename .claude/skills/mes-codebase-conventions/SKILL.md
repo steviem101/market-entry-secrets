@@ -3,7 +3,7 @@ name: mes-codebase-conventions
 description: MES repo map and verified stack conventions (React 18 + Vite + TS, Tailwind/shadcn, React Query, Supabase, Lovable). Read FIRST before any MES platform work — code, review, or planning.
 ---
 
-Last verified: 2026-07-07
+Last verified: 2026-07-07 (directory-page bar-anatomy contract added 2026-07-14, MES-177)
 
 # MES Codebase Conventions
 
@@ -33,10 +33,38 @@ code that matches the repo — and so it knows where the root `CLAUDE.md` has dr
    cast (10× in `src/lib/api/reportApi.ts`; also `src/hooks/useAIChat.ts:54`). Never hand-edit
    `src/integrations/supabase/types.ts`.
 3. **Directory pages:** Hero → `DirectoryFilterBar` → results grid + `ListPagination`, gated by
-   `ListingPageGate` (`src/pages/Events.tsx:173-249` is the reference implementation).
-   `DirectoryFilterBar` (`src/components/common/DirectoryFilterBar.tsx:1-13`) is presentational
+   `ListingPageGate` (`src/pages/Events.tsx` is the reference implementation).
+   `DirectoryFilterBar` (`src/components/common/DirectoryFilterBar.tsx`) is presentational
    only; filter state is URL-synced via `useDirectoryFilters(FILTER_SPEC)`; pure filter logic goes
    in a tested `src/lib/*Filters.ts` module.
+
+   **Bar anatomy contract (MES-177, 2026-07-14 — every directory obeys this):**
+   - **Tabs = ONE low-cardinality primary axis** (≤ ~8 values, zero-count values hidden, counts
+     shown). Never a long free-text row. If the natural axis has dozens of values, bucket it to a
+     small canonical set first (Events `type_canonical` → `eventTypeBuckets.ts`) or make it a select.
+   - **Selects = curated, popularity-ranked, searchable long tails.** Build option lists with
+     `curateValues`/`curateOptions` (`src/lib/filterCuration.ts`): count desc, label tie-break,
+     **zero-count hidden**, and a **junk-sentinel guard** so `Unknown`/`N/A`/`-`/blank can never
+     become an option (`isJunkValue`). Long lists set `searchable: true`.
+   - **Advanced panel (children) = secondary axes only** (e.g. mentor corridor, case-study
+     revenue/cost ranges). Not the primary axis.
+   - **No persona/audience pill.** The `audience`/`PersonaFilter` row was removed from the bar;
+     `PersonaContext` (homepage/hero/report intake) is unrelated and stays.
+   - **Stale/case-variant URL params never yield an empty grid.** Pass per-dimension allow-lists to
+     the hook — `useDirectoryFilters(spec, { allowedValues: { sector: sectorOptions.map(o => o.value) }})`.
+     The hook (`coerceFilters`/`coerceValue` in `directoryFilters.ts`) returns the coerced filter set,
+     so `filters`, `hasActiveFilters`, `setFilter` and serialisation all agree (no phantom "Clear all
+     filters"), and a reconcile effect drops the dead param from the URL. Coercion is case-insensitive
+     and returns the option's canonical casing. Memoise `allowedValues`. Events keeps bespoke
+     `safeType`/`safeTime` (partition-dependent) rather than the generic allow-list.
+   - **Canonical sector labels come from one place:** `sectorLabel` (`src/lib/sectorLabels.ts`),
+     whose slug set is derived from `LINKEDIN_SECTORS` (a coverage test makes vocab drift fail loudly).
+     Every canonical-`sector_tags` select AND the mentor cards/profile (`mentorDisplay.sectorTagLabel`
+     delegates) use it, so a slug renders identically platform-wide. Free-text sector columns
+     (e.g. `events.sector`) keep their raw display values.
+   - **Case-study outcome presentation is centralised** in `<OutcomeBadge>`
+     (`src/components/case-studies/OutcomeBadge.tsx`), used by the list AND detail pages, so a positive
+     outcome (`successful`/`scaling`/`ipo`/`acquired`) can never render as "Failure" on one surface.
 4. **SEO:** `react-helmet-async` per page — title, meta description, canonical, JSON-LD
    (`src/pages/Events.tsx:151-171`) or the `SEOHead` wrapper (`src/components/common/SEOHead.tsx`).
 5. **Styling:** HSL semantic tokens only — shadcn set plus `--mes-*` brand and `--rc-*` report
@@ -75,6 +103,9 @@ code that matches the repo — and so it knows where the root `CLAUDE.md` has dr
 - [ ] New page: lazy route in `App.tsx`, Helmet SEO, no double `<Layout>`.
 - [ ] `npm test` + typecheck pass; no NEW lint errors; new pure logic has a `.test.ts`.
 - [ ] UI copy is Australian English.
+- [ ] Directory bar follows the anatomy contract: tabs = one ≤~8-value zero-hidden axis; selects
+      curated via `curateValues` (junk-guarded); no persona pill; canonical sector labels via
+      `sectorLabel`; stale/case-variant params coerced via `useDirectoryFilters` `allowedValues`.
 
 ## Evidence
 Inspected 2026-07-07: `src/App.tsx`, `src/integrations/supabase/client.ts:5-35`,
