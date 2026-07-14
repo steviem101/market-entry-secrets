@@ -38,7 +38,17 @@ PII or entitlements.
 5. **Seeds must be idempotent and self-sufficient** — preview branches replay every migration
    against an *empty* DB; a seed referencing prod-only rows reds every future PR check
    (`docs/migrations.md`, incident `20260704155252`).
-6. After merge, confirm the Supabase integration check is green before assuming it's live.
+6. **The preview branch runs DML against an EMPTY DB, so a data-write migration that would
+   violate a constraint on real rows passes preview and *then* fails on prod — rolling itself
+   back and halting the ledger for every later migration in the batch.** Before merging any
+   bulk `UPDATE`/`INSERT`, check the target columns' constraints against *real* values, not the
+   empty-DB replay: introspect `is_nullable` / CHECK / enum for every column you write, and
+   prefer a `BEGIN; … ROLLBACK;` dry-run against prod data. Live incident (MES-177,
+   `20260714100100`): a backfill set 7 rows' NOT-NULL `trade_investment_agencies.location` to
+   `NULL`; preview was green (0 rows updated on the empty DB), prod rolled B1 back, and B2 never
+   applied until the fix (`20260714100100` edited in place — a rolled-back migration is not in
+   the ledger, so editing it before re-merge is correct, not a rename of applied history).
+7. After merge, confirm the Supabase integration check is green before assuming it's live.
 
 ## Playbook — RLS
 1. Role checks go through `has_role(auth.uid(), 'admin'::app_role)` — SECURITY DEFINER, verified
@@ -79,6 +89,8 @@ PII or entitlements.
 ## Self-check rubric (pass/fail)
 - [ ] Migration named `<timestamp>_snake_name.sql`, timestamp > 20260704095538, applied via PR only.
 - [ ] No applied file renamed; destructive ops approved + rollback plan written.
+- [ ] Data-write migrations: target columns' constraints (NOT NULL / CHECK / enum) checked against
+      **real** rows, not the empty-DB preview — ideally a `BEGIN; … ROLLBACK;` dry-run on prod data.
 - [ ] For each touched table: SELECT policy, write policies, AND grants all reviewed.
 - [ ] PII exposed only via the `*_public` views or a guarded SECURITY DEFINER RPC.
 - [ ] `get_advisors` clean (or diff explained) after apply; seeds replay on an empty DB.
