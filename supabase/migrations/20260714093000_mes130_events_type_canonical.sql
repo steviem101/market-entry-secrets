@@ -64,7 +64,10 @@ AS $$
   END;
 $$;
 
--- Keep type_canonical in lockstep with type on every write.
+-- Keep type_canonical in lockstep with type on every write. The trigger also
+-- fires on direct writes to type_canonical itself, recomputing from type — so
+-- a hand-set/off-vocabulary value can never stick (the column comment's
+-- "do not hand-set" is enforced, not aspirational).
 CREATE OR REPLACE FUNCTION public.events_set_type_canonical()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -78,7 +81,7 @@ $$;
 
 DROP TRIGGER IF EXISTS events_type_canonical ON public.events;
 CREATE TRIGGER events_type_canonical
-  BEFORE INSERT OR UPDATE OF type ON public.events
+  BEFORE INSERT OR UPDATE OF type, type_canonical ON public.events
   FOR EACH ROW
   EXECUTE FUNCTION public.events_set_type_canonical();
 
