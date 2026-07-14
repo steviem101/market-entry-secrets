@@ -25,6 +25,7 @@ import type { CaseStudyQuote, CaseStudySource, QuickFact } from "@/lib/case-stud
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getLogoUrl } from "@/lib/logoUtils";
+import { safeExternalHref } from "@/lib/safeUrl";
 import { getCountryFlag } from "@/lib/countryFlags";
 import { NoIndex } from "@/components/common/NoIndex";
 
@@ -125,6 +126,10 @@ const CaseStudyDetail = () => {
   const companyName = companyProfile?.company_name || caseStudy.title;
   const metaDescription = caseStudy.subtitle || caseStudy.meta_description || caseStudy.title;
   const outcome = companyProfile?.outcome;
+
+  // Scheme-guard DB-sourced links before they reach an anchor href.
+  const companyWebsiteHref = safeExternalHref(companyProfile?.website);
+  const founderLinkedInHref = safeExternalHref(primaryFounder?.social_linkedin);
 
   const sources: CaseStudySource[] = (caseStudy as any).case_study_sources || [];
   const quotes: CaseStudyQuote[] = (caseStudy as any).case_study_quotes || [];
@@ -301,8 +306,8 @@ const CaseStudyDetail = () => {
                     <Button variant="outline" size="sm" onClick={handleShare}>
                       {copied ? <CheckCheck className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
                     </Button>
-                    {companyProfile?.website && (
-                      <a href={companyProfile.website} target="_blank" rel="noopener noreferrer">
+                    {companyWebsiteHref && (
+                      <a href={companyWebsiteHref} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" size="sm">
                           <ExternalLink className="h-4 w-4" />
                         </Button>
@@ -353,8 +358,8 @@ const CaseStudyDetail = () => {
                               <h3 className="text-sm font-semibold text-foreground">{primaryFounder.name}</h3>
                               <p className="text-xs text-muted-foreground">{primaryFounder.title}</p>
                               <div className="flex gap-2 mt-1">
-                                {primaryFounder.social_linkedin && (
-                                  <a href={primaryFounder.social_linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                                {founderLinkedInHref && (
+                                  <a href={founderLinkedInHref} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
                                     <Globe className="w-3.5 h-3.5" />
                                   </a>
                                 )}
@@ -544,10 +549,10 @@ const CaseStudyDetail = () => {
                           <span className="font-medium">{companyProfile.employee_count}</span>
                         </div>
                       )}
-                      {companyProfile.website && (
+                      {companyWebsiteHref && (
                         <div className="pt-2 border-t">
                           <a
-                            href={companyProfile.website}
+                            href={companyWebsiteHref}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:underline text-sm flex items-center gap-1"

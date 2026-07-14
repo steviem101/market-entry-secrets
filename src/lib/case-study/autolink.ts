@@ -8,7 +8,6 @@ import type { LinkerEntry } from "./types";
  *   2. Word-boundary match on the entry name.
  *   3. Case-sensitive (avoids "Pitt" matching "Brad Pitt", etc.).
  *   4. Skip `subjectName` so a case study doesn't link itself.
- *   5. Google fallback for unknown names if `googleFallback: true`.
  *
  * Returns an array of plain text and link tokens. Caller (applyEnhancements)
  * maps tokens to React nodes.
@@ -23,17 +22,7 @@ export interface AutolinkOptions {
   linkedNames: Set<string>;
   subjectName?: string;
   subjectAliases?: string[];
-  googleFallback?: boolean;
-  /**
-   * Heuristic regex for spotting capitalised proper-noun candidates the corpus
-   * doesn't cover. Used only when `googleFallback: true`. Tuned to match
-   * "Capitalised Words" (1–4 tokens) excluding the start of a sentence.
-   */
-  fallbackCandidateRegex?: RegExp;
 }
-
-const DEFAULT_FALLBACK_REGEX =
-  /(?<![\w])((?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}))(?![\w])/g;
 
 function escapeRegex(raw: string): string {
   return raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -58,8 +47,7 @@ export function sortCorpus(corpus: LinkerEntry[]): LinkerEntry[] {
  *
  * Strategy: walk all corpus entries (longest first), and for each, try to find
  * its first un-tokenised match. Replace that span with a link token. Repeat
- * for the rest of the corpus. Then optionally add Google-fallback links to
- * remaining proper-noun candidates.
+ * for the rest of the corpus.
  */
 export function autolinkText(text: string, opts: AutolinkOptions): LinkToken[] {
   if (!text) return [{ kind: "text", text }];
@@ -103,60 +91,5 @@ export function autolinkText(text: string, opts: AutolinkOptions): LinkToken[] {
     tokens = next;
   }
 
-  if (opts.googleFallback) {
-    tokens = addGoogleFallbacks(tokens, opts);
-  }
-
   return tokens;
-}
-
-function addGoogleFallbacks(
-  tokens: LinkToken[],
-  opts: AutolinkOptions,
-): LinkToken[] {
-  const re = new RegExp(
-    (opts.fallbackCandidateRegex || DEFAULT_FALLBACK_REGEX).source,
-    "g",
-  );
-  const out: LinkToken[] = [];
-
-  for (const tok of tokens) {
-    if (tok.kind !== "text") {
-      out.push(tok);
-      continue;
-    }
-    let lastIndex = 0;
-    let m: RegExpExecArray | null;
-    re.lastIndex = 0;
-
-    while ((m = re.exec(tok.text)) !== null) {
-      const candidate = m[1];
-      const key = candidate.toLowerCase();
-
-      if (
-        opts.linkedNames.has(key) ||
-        isSubject(candidate, opts) ||
-        candidate.split(/\s+/).length < 2
-      ) {
-        continue;
-      }
-
-      const before = tok.text.slice(lastIndex, m.index);
-      if (before) out.push({ kind: "text", text: before });
-
-      out.push({
-        kind: "link",
-        text: candidate,
-        href: `https://www.google.com/search?q=${encodeURIComponent(candidate)}`,
-        nofollow: true,
-        type: "person",
-      });
-      opts.linkedNames.add(key);
-      lastIndex = m.index + m[0].length;
-    }
-    const tail = tok.text.slice(lastIndex);
-    if (tail) out.push({ kind: "text", text: tail });
-  }
-
-  return out;
 }

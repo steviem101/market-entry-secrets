@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import type { CaseStudySource } from "@/lib/case-study/types";
+import { safeExternalHref } from "@/lib/safeUrl";
 
 interface SourcesSectionProps {
   sources: CaseStudySource[] | null | undefined;
@@ -33,6 +34,7 @@ export const SourcesSection = ({
       <ol className="space-y-2 text-sm">
         {sorted.map((src, i) => {
           const n = src.citation_number ?? i + 1;
+          const href = safeExternalHref(src.url);
           return (
             <li
               key={src.id}
@@ -41,15 +43,19 @@ export const SourcesSection = ({
             >
               <span className="text-muted-foreground tabular-nums">[{n}]</span>
               <span className="min-w-0">
-                <a
-                  href={src.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline break-words inline-flex items-baseline gap-1"
-                >
-                  {src.label}
-                  <ExternalLink className="h-3 w-3 self-center flex-shrink-0" aria-hidden />
-                </a>
+                {href ? (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline break-words inline-flex items-baseline gap-1"
+                  >
+                    {src.label}
+                    <ExternalLink className="h-3 w-3 self-center flex-shrink-0" aria-hidden />
+                  </a>
+                ) : (
+                  <span className="text-foreground break-words">{src.label}</span>
+                )}
                 {src.accessed_at && (
                   <span className="text-muted-foreground ml-2">
                     · accessed {new Date(src.accessed_at).toLocaleDateString("en-AU", {

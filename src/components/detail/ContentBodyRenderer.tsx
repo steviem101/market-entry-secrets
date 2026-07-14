@@ -86,7 +86,6 @@ interface ContentBodyRendererProps {
   quotes?: CaseStudyQuote[];
   subjectName?: string;
   subjectAliases?: string[];
-  googleFallback?: boolean;
 }
 
 export const ContentBodyRenderer = ({
@@ -98,7 +97,6 @@ export const ContentBodyRenderer = ({
   quotes,
   subjectName,
   subjectAliases,
-  googleFallback,
 }: ContentBodyRendererProps) => {
   const enhanced = linkerCorpus !== undefined;
   // Shared "first match per page wins" set across all bodies in this render.
@@ -112,7 +110,6 @@ export const ContentBodyRenderer = ({
         sources,
         subjectName,
         subjectAliases,
-        googleFallback,
       });
     }
     return <>{parse(DOMPurify.sanitize(text, SANITIZE_OPTS), parserOptions)}</>;
