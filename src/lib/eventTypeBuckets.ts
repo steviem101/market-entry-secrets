@@ -84,3 +84,12 @@ export function bucketForEventType(raw: string | null | undefined): string {
   if (!raw) return "other";
   return EXACT[raw] ?? heuristicBucket(raw);
 }
+
+/**
+ * Resolve an event's canonical bucket: prefer the DB `type_canonical` column
+ * (MES-130 backfill) when present, else compute from the raw `type`. Keeps the
+ * UI correct whether or not the backfill has landed / a row is freshly ingested.
+ */
+export function resolveEventBucket(e: { type_canonical?: string | null; type?: string | null }): string {
+  return e.type_canonical || bucketForEventType(e.type);
+}
