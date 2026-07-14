@@ -40,11 +40,6 @@ const Investors = () => {
 
   const { data: investors, isLoading, error } = useInvestors();
 
-  const filteredInvestors = useMemo(
-    () => (investors ? filterInvestors(investors, filters) : []),
-    [investors, filters],
-  );
-
   // MES-130: popularity-ranked, zero-hidden option lists. Location/stage curate
   // the raw free-text columns; sector now uses the canonical sector_tags slugs
   // (MES-110), exposed on investors_public by the accompanying migration. Falls
@@ -63,6 +58,22 @@ const Investors = () => {
   const sectorOptions = useMemo(
     () => curateValues((investors ?? []).flatMap((inv) => inv.sector_tags || []), { labelFor: humanizeSlug }),
     [investors],
+  );
+
+  // Sector now matches canonical sector_tags. Coerce a stale/legacy ?sector=
+  // (old free-text sector_focus value, e.g. "fintech") to "all" so it doesn't
+  // match nothing and silently show an empty directory — mirrors Events' safeType.
+  // (While data is loading the option set is empty; don't coerce then.)
+  const validSectors = useMemo(() => new Set(sectorOptions.map((o) => o.value)), [sectorOptions]);
+  const safeSector =
+    filters.sector === "all" || validSectors.size === 0 || validSectors.has(filters.sector)
+      ? filters.sector
+      : "all";
+  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
+
+  const filteredInvestors = useMemo(
+    () => (investors ? filterInvestors(investors, effectiveFilters) : []),
+    [investors, effectiveFilters],
   );
 
   // Per-type counts for the hero cards AND the tab suffixes.
@@ -118,7 +129,7 @@ const Investors = () => {
       />
 
       <DirectoryFilterBar
-        filters={filters}
+        filters={effectiveFilters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}
