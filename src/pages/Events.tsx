@@ -17,7 +17,7 @@ import { useContextPersonaSeed } from "@/hooks/useContextPersonaSeed";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterEvents, matchesSource, COMMUNITY_SOURCE, TOPIC_TAGS } from "@/lib/eventFilters";
 import { curateOptions, curateValues } from "@/lib/filterCuration";
-import { bucketForEventType, EVENT_TYPE_BUCKET_LABEL } from "@/lib/eventTypeBuckets";
+import { resolveEventBucket, EVENT_TYPE_BUCKET_LABEL } from "@/lib/eventTypeBuckets";
 
 const PAGE_SIZE = 12;
 
@@ -62,7 +62,7 @@ const Events = () => {
       curateOptions(
         Object.entries(
           events.reduce<Record<string, number>>((acc, e) => {
-            const b = bucketForEventType(e.type);
+            const b = resolveEventBucket(e);
             acc[b] = (acc[b] ?? 0) + 1;
             return acc;
           }, {}),

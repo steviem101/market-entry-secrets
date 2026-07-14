@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bucketForEventType, EVENT_TYPE_BUCKETS, EVENT_TYPE_BUCKET_LABEL } from "./eventTypeBuckets.ts";
+import { bucketForEventType, resolveEventBucket, EVENT_TYPE_BUCKETS, EVENT_TYPE_BUCKET_LABEL } from "./eventTypeBuckets.ts";
 
 // The 20 raw values present in prod 2026-07-13, with expected bucket + count,
 // mirroring docs/audits/mes-130/events-type-value-to-canonical.csv.
@@ -55,6 +55,16 @@ test("null / unknown values fall back to Other; heuristic catches new compounds"
   assert.equal(bucketForEventType("Tech Summit 2027"), "conference"); // lead-token
   assert.equal(bucketForEventType("Virtual Webinar"), "webinar");
   assert.equal(bucketForEventType("Startup Demo Day"), "pitch-demo-day");
+});
+
+test("resolveEventBucket prefers the DB type_canonical column, falls back to raw type", () => {
+  // DB column present → used verbatim (even if it disagrees with the raw type)
+  assert.equal(resolveEventBucket({ type_canonical: "webinar", type: "Conference" }), "webinar");
+  // column absent/null → compute from raw type
+  assert.equal(resolveEventBucket({ type: "Summit + Pitch Night" }), "conference");
+  assert.equal(resolveEventBucket({ type_canonical: null, type: "Pitch Night" }), "pitch-demo-day");
+  assert.equal(resolveEventBucket({ type_canonical: "", type: "Networking" }), "networking");
+  assert.equal(resolveEventBucket({}), "other");
 });
 
 test("every bucket value has a label", () => {

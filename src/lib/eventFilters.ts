@@ -9,7 +9,7 @@
 import type { FilterValues } from "@/lib/directoryFilters";
 // Relative (not "@/") because this module is unit-tested with node --test, whose
 // resolver doesn't understand the Vite alias for runtime (value) imports.
-import { bucketForEventType } from "./eventTypeBuckets.ts";
+import { resolveEventBucket } from "./eventTypeBuckets.ts";
 
 export const COMMUNITY_SOURCE = "apify_events_finder";
 
@@ -24,6 +24,7 @@ export const TOPIC_TAGS = [
 export interface EventLike {
   category?: string | null;
   type?: string | null;
+  type_canonical?: string | null;
   city?: string | null;
   sector?: string | null;
   tags?: string[] | null;
@@ -65,8 +66,9 @@ export function filterEvents<T extends EventLike>(events: T[], filters: FilterVa
 
   return events.filter((event) => {
     const matchesCategory = category === "all" || event.category === category;
-    // `type` is a canonical bucket (MES-130), not the raw events.type value.
-    const matchesType = type === "all" || bucketForEventType(event.type) === type;
+    // `type` is a canonical bucket (MES-130): prefer the DB type_canonical
+    // column, fall back to computing from the raw events.type value.
+    const matchesType = type === "all" || resolveEventBucket(event) === type;
     const matchesCity = city === "all" || event.city === city;
     const matchesSector = sector === "all" || event.sector === sector;
     const matchesTopic = topic === "all" || (event.tags ?? []).includes(topic);

@@ -17,6 +17,7 @@ export interface Event {
   location: string;
   city?: string | null;
   type: string;
+  type_canonical?: string | null;
   category: string;
   attendees: number;
   description: string;
