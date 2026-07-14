@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveSectionModel, sectionModelMap, FLASH_MODEL, isAnthropicModel, anthropicModelId, shouldFallbackToFlash } from "./sectionModel.ts";
+import { resolveSectionModel, sectionModelMap, FLASH_MODEL, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry } from "./sectionModel.ts";
 
 test("isAnthropicModel: claude ids (bare or anthropic/-prefixed) route to Anthropic", () => {
   assert.equal(isAnthropicModel("claude-sonnet-5"), true);
@@ -20,15 +20,26 @@ test("anthropicModelId: strips an optional anthropic/ prefix to the bare id", ()
   assert.equal(anthropicModelId("  claude-haiku-4-5 "), "claude-haiku-4-5");
 });
 
-test("shouldFallbackToFlash: config-resolved Anthropic sections fall back; eval overrides + gateway models do not", () => {
-  // A section promoted via report_templates.model = claude-* on a REAL report → fall back.
-  assert.equal(shouldFallbackToFlash("claude-sonnet-4-6", false), true);
-  assert.equal(shouldFallbackToFlash("anthropic/claude-sonnet-5", false), true);
-  // Same model, but it came from an eval A/B override → do NOT fall back (stay loud for the guard).
-  assert.equal(shouldFallbackToFlash("claude-sonnet-4-6", true), false);
-  // Gateway/flash models never need a flash fallback.
-  assert.equal(shouldFallbackToFlash(FLASH_MODEL, false), false);
-  assert.equal(shouldFallbackToFlash("google/gemini-3-flash-preview", false), false);
+test("isBlankContent: null/undefined/empty/whitespace are blank, real prose is not", () => {
+  assert.equal(isBlankContent(null), true);
+  assert.equal(isBlankContent(undefined), true);
+  assert.equal(isBlankContent(""), true);
+  assert.equal(isBlankContent("   \n\t  "), true);
+  assert.equal(isBlankContent("A"), false);
+  assert.equal(isBlankContent("  real content  "), false);
+});
+
+test("needsFlashRetry: blank config sections retry; blank eval overrides + non-blank do not", () => {
+  // Blank from a normal (non-eval) write → retry on flash.
+  assert.equal(needsFlashRetry("", false), true);
+  assert.equal(needsFlashRetry(null, false), true);
+  assert.equal(needsFlashRetry("   ", false), true);
+  // Blank but from an eval A/B override → do NOT retry (stay loud for the guard).
+  assert.equal(needsFlashRetry("", true), false);
+  assert.equal(needsFlashRetry(null, true), false);
+  // Real content never retries, eval or not.
+  assert.equal(needsFlashRetry("real prose", false), false);
+  assert.equal(needsFlashRetry("real prose", true), false);
 });
 
 test("resolveSectionModel: row override wins, then env default, then flash", () => {
