@@ -8,6 +8,8 @@ export interface LeadDatabase {
   record_count: number | null;
   sector: string | null;
   location: string | null;
+  /** Canonical MES-110 sector slugs (MES-177 C1). */
+  sector_tags: string[] | null;
   quality_score: number | null;
   price_aud: number | null;
   is_free: boolean;

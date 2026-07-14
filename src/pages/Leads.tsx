@@ -17,6 +17,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterAndSortLeads } from "@/lib/leadFilters";
 import { curateValues } from "@/lib/filterCuration";
+import { sectorLabel } from "@/lib/sectorLabels";
 import type { LeadDatabase } from "@/types/leadDatabase";
 
 const PAGE_SIZE = 12;
@@ -36,13 +37,24 @@ const SORT_OPTIONS: FilterOption[] = [
 
 const Leads = () => {
   const { startLeadCheckout } = useLeadCheckout();
-  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
-    useDirectoryFilters(LEAD_FILTER_SPEC);
-  const [previewLead, setPreviewLead] = useState<LeadDatabase | null>(null);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
-
   const { data: leadDatabases, isLoading, error } = useLeadDatabases();
   const { data: stats } = useLeadDatabaseStats();
+
+  // MES-177 C1: the sector facet is canonical `sector_tags` (friendly labels via the
+  // shared map); stale/case-variant ?sector= coerces to "all" against the curated
+  // options so it never renders a phantom option or an empty grid.
+  const sectorOptions = useMemo(
+    () => curateValues((leadDatabases ?? []).flatMap((l) => l.sector_tags || []), { labelFor: sectorLabel }),
+    [leadDatabases]
+  );
+  const allowedValues = useMemo(
+    () => ({ sector: sectorOptions.map((o) => o.value) }),
+    [sectorOptions]
+  );
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(LEAD_FILTER_SPEC, { allowedValues });
+  const [previewLead, setPreviewLead] = useState<LeadDatabase | null>(null);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const sortedLeads = useMemo(
     () => (leadDatabases ? filterAndSortLeads(leadDatabases, filters) : []),
@@ -52,13 +64,9 @@ const Leads = () => {
   const totalPages = Math.ceil(sortedLeads.length / PAGE_SIZE);
   const paginatedLeads = sortedLeads.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // MES-130: popularity-ranked, zero-hidden options; the long sector tail is searchable.
+  // MES-130: popularity-ranked, zero-hidden location options; the long tail is searchable.
   const locationOptions = useMemo(
     () => curateValues((leadDatabases ?? []).map((l) => l.location)),
-    [leadDatabases]
-  );
-  const sectorOptions = useMemo(
-    () => curateValues((leadDatabases ?? []).map((l) => l.sector)),
     [leadDatabases]
   );
 

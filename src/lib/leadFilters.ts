@@ -12,6 +12,8 @@ export interface LeadLike {
   list_type?: string | null;
   location?: string | null;
   sector?: string | null;
+  /** Canonical MES-110 sector slugs (MES-177 C1). */
+  sector_tags?: string[] | null;
   record_count?: number | null;
   created_at: string;
 }
@@ -20,6 +22,9 @@ export interface LeadLike {
  * Filter + sort lead databases from shared filter values. Keys:
  *   search, type (list_type), location, sector, sort (newest | most_records).
  * Returns a new array; input is not mutated.
+ *
+ * MES-177 C1: the sector facet is canonical `sector_tags` (not the free-text
+ * `sector`, which stays searchable via `search`).
  */
 export function filterAndSortLeads<T extends LeadLike>(leads: T[], filters: FilterValues): T[] {
   const search = (filters.search ?? "").toLowerCase().trim();
@@ -31,11 +36,13 @@ export function filterAndSortLeads<T extends LeadLike>(leads: T[], filters: Filt
       lead.title.toLowerCase().includes(search) ||
       (lead.description ?? "").toLowerCase().includes(search) ||
       (lead.short_description ?? "").toLowerCase().includes(search) ||
+      // Free-text sector stays searchable even though the facet is now sector_tags.
+      (lead.sector ?? "").toLowerCase().includes(search) ||
       (lead.tags ?? []).some((t) => t.toLowerCase().includes(search));
 
     const matchesType = type === "all" || lead.list_type === type;
     const matchesLocation = location === "all" || lead.location === location;
-    const matchesSector = sector === "all" || lead.sector === sector;
+    const matchesSector = sector === "all" || (lead.sector_tags ?? []).includes(sector);
 
     return matchesSearch && matchesType && matchesLocation && matchesSector;
   });
