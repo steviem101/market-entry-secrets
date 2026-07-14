@@ -21,15 +21,16 @@ const cs = (
   title: string,
   p: Partial<{ company_name: string; industry: string; origin_country: string; outcome: string; monthly_revenue: string; startup_costs: string }>,
   view_count = 0,
-): CaseStudyLike => ({ title, view_count, content_company_profiles: [p] });
+  sector_tags: string[] = [],
+): CaseStudyLike => ({ title, view_count, sector_tags, content_company_profiles: [p] });
 
 const DATA: CaseStudyLike[] = [
-  cs("Acme enters AU", { company_name: "Acme", industry: "SaaS", origin_country: "United States", outcome: "successful", monthly_revenue: "$40,000", startup_costs: "$60,000" }, 100),
-  cs("Beta pivots", { company_name: "Beta", industry: "Fintech", origin_country: "United Kingdom", outcome: "unsuccessful", monthly_revenue: "$5,000", startup_costs: "$200,000" }, 50),
-  cs("Gamma grows", { company_name: "Gamma", industry: "SaaS", origin_country: "Canada", outcome: "successful", monthly_revenue: "$120,000", startup_costs: "$10,000" }, 200),
+  cs("Acme enters AU", { company_name: "Acme", industry: "SaaS", origin_country: "United States", outcome: "successful", monthly_revenue: "$40,000", startup_costs: "$60,000" }, 100, ["technology-information-and-media"]),
+  cs("Beta pivots", { company_name: "Beta", industry: "Fintech", origin_country: "United Kingdom", outcome: "unsuccessful", monthly_revenue: "$5,000", startup_costs: "$200,000" }, 50, ["financial-services"]),
+  cs("Gamma grows", { company_name: "Gamma", industry: "SaaS", origin_country: "Canada", outcome: "successful", monthly_revenue: "$120,000", startup_costs: "$10,000" }, 200, ["technology-information-and-media"]),
 ];
 
-const base = { search: "", outcome: "all", industry: "all", country: "all", revenue: "all", costs: "all", sort: "recent" };
+const base = { search: "", outcome: "all", sector: "all", country: "all", revenue: "all", costs: "all", sort: "recent" };
 
 test("parseMoneyToNumber strips $ and commas; blank → 0", () => {
   assert.equal(parseMoneyToNumber("$40,000"), 40000);
@@ -97,8 +98,9 @@ test("outcome helpers: positive vs failure vs unknown", () => {
   assert.equal(outcomeTone("pivoted"), null);
 });
 
-test("industry and country filters", () => {
-  assert.deepEqual(filterAndSortCaseStudies(DATA, { ...base, industry: "SaaS" }).map((c) => c.title), ["Acme enters AU", "Gamma grows"]);
+test("sector (canonical sector_tags) and country filters", () => {
+  assert.deepEqual(filterAndSortCaseStudies(DATA, { ...base, sector: "technology-information-and-media" }).map((c) => c.title), ["Acme enters AU", "Gamma grows"]);
+  assert.deepEqual(filterAndSortCaseStudies(DATA, { ...base, sector: "financial-services" }).map((c) => c.title), ["Beta pivots"]);
   assert.deepEqual(filterAndSortCaseStudies(DATA, { ...base, country: "Canada" }).map((c) => c.title), ["Gamma grows"]);
 });
 
@@ -108,9 +110,11 @@ test("revenue + costs range filters combine (AND)", () => {
   assert.deepEqual(out.map((c) => c.title), ["Acme enters AU"]);
 });
 
-test("search matches title and company name, case-insensitively", () => {
+test("search matches title, company name, and free-text industry, case-insensitively", () => {
   assert.equal(filterAndSortCaseStudies(DATA, { ...base, search: "gamma" }).length, 1);
   assert.equal(filterAndSortCaseStudies(DATA, { ...base, search: "BETA" }).length, 1);
+  // free-text industry stays searchable even though it is no longer a facet (MES-177 B3)
+  assert.equal(filterAndSortCaseStudies(DATA, { ...base, search: "fintech" }).length, 1);
 });
 
 test("sort by views (desc) and alphabetical, without mutating input", () => {
