@@ -1,0 +1,74 @@
+# MES-177 Phase B4 — Mentor `sector_agnostic` invariant fix (REVIEW — awaiting sign-off)
+
+**Status:** owner-approved 2026-07-14; migration written and included in the Phase B PR at
+`supabase/migrations/20260714100000_mes177_mentor_agnostic_flip.sql`. Applies to prod on merge
+(Supabase GitHub integration); validated on the PR's Supabase preview branch first.
+
+## The finding (verified live 2026-07-14, project `xhziwveaiuhzdoutpgrh`)
+
+The MES-110 invariant is **sector-tagged ⇒ not `sector_agnostic`**. It's violated:
+
+| Cohort | Count |
+|---|---|
+| Tagged **and** `sector_agnostic=true` (the violation) | **114** |
+| Tagged and `sector_agnostic=false` (correct) | 9 |
+| Untagged and `sector_agnostic=true` (correct — genuinely general) | 11 |
+
+`sector_agnostic=true` sits on **125 of ~134 mentors (93%)** — i.e. it's an indiscriminate
+import default, not a considered per-mentor choice. And the 114 offenders are **focused**, not
+broad: **86 carry a single tag, 20 two tags, 8 three tags** — none near the over-tag threshold (5).
+A single-tag mentor is a specialist signal, so "matches every sector" is the wrong behaviour for it.
+
+## Recommendation: flip the 114 to `sector_agnostic=false`
+
+The owner approved this **direction** (2026-07-14); the **apply-sign-off below is still pending** —
+this is an approval-gated, 114-row write to a PII table (`community_members`), so the staged SQL must
+not be moved into `supabase/migrations/` until the sign-off box is checked. Restores the invariant.
+The 11 genuinely-untagged agnostic mentors and the 9 already-correct specialists are untouched.
+
+## Matcher impact — the behavioural change (`generate-report/matchScoring.ts`)
+
+`sector_agnostic` is *read* **only** by the report matcher (the frontend mentor filter keys off
+`sector_tags`, not `agnostic`; no RLS policy, view, or other consumer branches on it). For each
+flipped mentor:
+
+- **Loses** the `AGNOSTIC_NUDGE` ("eligible for all sectors") that currently makes it score on
+  *every* report regardless of sector.
+- **Gains** `SPECIALIST_BONUS` eligibility for its 1–3 tagged sectors (`specialist = !sector_agnostic
+  && !overTagged && !horizontalOnly && ownMatches > 0`). None of the 114 are over-tagged (max 3
+  tags « threshold 5), so they become clean specialists for their own sector.
+- **Net:** stronger, correctly-ranked matches on in-sector reports; **drops off off-sector reports**
+  (no longer a universal fallback). Report pipelines for niche sectors keep the 11 still-agnostic
+  mentors + location/corridor signals as fallbacks, and mentor cards are capped per report anyway.
+
+This is a precision improvement (specialists surface for their sector instead of every report). The
+only regression risk is fewer mentor matches on a report whose sector has no tagged specialist — call
+that acceptable given the 11 remaining agnostic fallbacks. If you'd rather de-risk further, we can run
+a before/after matcher diff on a sample of real reports before applying (say the word).
+
+## Migration design — guarded · idempotent · reversible · preview-safe
+
+- **Snapshot** the prior value into a nullable `sector_agnostic_pre_mes177` column so the flip is
+  *precisely* reversible (a plain reverse-predicate would wrongly also flip the 9 already-`false`
+  tagged rows). The `community_members_public` view uses an explicit column list that does **not**
+  select this column (verified), so it does not leak.
+- **Guarded predicate** = exactly the 114-row set (`sector_tags` non-empty AND `sector_agnostic
+  is true`), with a `sector_agnostic_pre_mes177 is null` idempotency latch: re-running flips
+  nothing already flipped.
+- **Preview-safe:** on an empty preview DB it updates 0 rows — a no-op (the trigger below never fires).
+- **Reverse** (kept in `supabase/rollback/` on apply): restore `sector_agnostic` from the snapshot
+  where non-null, then drop the snapshot column.
+- **Write side-effect (not matcher-only):** the UPDATE fires the `community_members` KB-sync trigger
+  (`trg_kb_generic → upsert_kb_mentor`), re-upserting the 114 mentors into `mes_knowledge_base` and
+  flagging them for re-embedding (~114 OpenAI embed calls via the `embed-knowledge` cron). Harmless —
+  the KB is a rebuildable index, the trigger is exception-guarded (a KB failure only warns; the flip
+  still commits), and re-runs match 0 rows so there's no repeat embed storm — but it's a small
+  unbudgeted embedding cost worth noting, not "matcher only".
+
+## Migration
+`supabase/migrations/20260714100000_mes177_mentor_agnostic_flip.sql` (in the Phase B PR).
+
+## Sign-off
+- [ ] Approve applying the flip to the 114 mentors as specified
+- [ ] (or) Run a before/after matcher diff on sample reports first
+- [ ] (or) Do not flip — document tagged+agnostic as intentional instead
