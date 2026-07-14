@@ -16,6 +16,8 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import { useContextPersonaSeed } from "@/hooks/useContextPersonaSeed";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterEvents, matchesSource, COMMUNITY_SOURCE, TOPIC_TAGS } from "@/lib/eventFilters";
+import { curateOptions, curateValues } from "@/lib/filterCuration";
+import { bucketForEventType, EVENT_TYPE_BUCKET_LABEL } from "@/lib/eventTypeBuckets";
 
 const PAGE_SIZE = 12;
 
@@ -51,10 +53,30 @@ const Events = () => {
   }, [filters.search, setSearchTerm]);
 
   const categories = useMemo(() => Array.from(new Set(events.map((e) => e.category))).sort(), [events]);
-  const types = useMemo(() => Array.from(new Set(events.map((e) => e.type))).sort(), [events]);
-  const cities = useMemo(() => Array.from(new Set(events.map((e) => e.city).filter(Boolean) as string[])).sort(), [events]);
-  const sectors = useMemo(() => Array.from(new Set(events.map((e) => e.sector).filter(Boolean) as string[])).sort(), [events]);
   const topics = useMemo(() => TOPIC_TAGS.filter((t) => events.some((e) => (e.tags ?? []).includes(t))), [events]);
+
+  // MES-130 curation. Type is bucketed to a small canonical set; city/sector are
+  // popularity-ranked with the long tail searchable + zero-count hidden.
+  const typeOptions = useMemo(
+    () =>
+      curateOptions(
+        Object.entries(
+          events.reduce<Record<string, number>>((acc, e) => {
+            const b = bucketForEventType(e.type);
+            acc[b] = (acc[b] ?? 0) + 1;
+            return acc;
+          }, {}),
+        ).map(([value, count]) => ({ value, label: EVENT_TYPE_BUCKET_LABEL[value] ?? value, count })),
+      ),
+    [events],
+  );
+  const cityOptions = useMemo(() => curateValues(events.map((e) => e.city)), [events]);
+  const sectorOptions = useMemo(() => curateValues(events.map((e) => e.sector)), [events]);
+
+  // `type` is now a canonical bucket; coerce a stale/raw ?type= (old links, e.g.
+  // ?type=Networking) to "all" so it doesn't silently match nothing.
+  const safeType = filters.type === "all" || EVENT_TYPE_BUCKET_LABEL[filters.type] ? filters.type : "all";
+  const effectiveFilters = useMemo(() => ({ ...filters, type: safeType }), [filters, safeType]);
 
   const baseEvents = filters.time === "upcoming" ? upcomingEvents : filters.time === "past" ? pastEvents : events;
   const curatedCount = baseEvents.filter((e) => e.source !== COMMUNITY_SOURCE).length;
@@ -64,7 +86,7 @@ const Events = () => {
     () => baseEvents.filter((e) => matchesSource(e, filters.source)),
     [baseEvents, filters.source]
   );
-  const filteredEvents = useMemo(() => filterEvents(sourceFiltered, filters), [sourceFiltered, filters]);
+  const filteredEvents = useMemo(() => filterEvents(sourceFiltered, effectiveFilters), [sourceFiltered, effectiveFilters]);
 
   const totalPages = Math.ceil(filteredEvents.length / PAGE_SIZE);
   const paginatedEvents = filteredEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -75,9 +97,9 @@ const Events = () => {
   ], [categories, sourceFiltered]);
 
   const selects: SelectFilterConfig[] = [
-    { key: "city", allLabel: "All Locations", options: cities.map((c) => ({ value: c, label: c })) },
-    { key: "type", allLabel: "All Types", options: types.map((t) => ({ value: t, label: t })) },
-    { key: "sector", allLabel: "All Sectors", options: sectors.map((s) => ({ value: s, label: s })) },
+    { key: "city", allLabel: "All Locations", options: cityOptions, searchable: true },
+    { key: "type", allLabel: "All Types", options: typeOptions },
+    { key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true },
   ];
 
   const advancedPanel = topics.length > 0 ? (
@@ -141,12 +163,12 @@ const Events = () => {
 
       <EventsHero
         totalEvents={events.length}
-        totalLocations={cities.length}
+        totalLocations={cityOptions.length}
         upcomingCount={upcomingEvents.length}
       />
 
       <DirectoryFilterBar
-        filters={filters}
+        filters={effectiveFilters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}

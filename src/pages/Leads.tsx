@@ -16,6 +16,7 @@ import { useLeadDatabases, useLeadDatabaseStats } from "@/hooks/useLeadDatabases
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterAndSortLeads } from "@/lib/leadFilters";
+import { curateValues } from "@/lib/filterCuration";
 import type { LeadDatabase } from "@/types/leadDatabase";
 
 const PAGE_SIZE = 12;
@@ -51,12 +52,13 @@ const Leads = () => {
   const totalPages = Math.ceil(sortedLeads.length / PAGE_SIZE);
   const paginatedLeads = sortedLeads.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const locations = useMemo(
-    () => Array.from(new Set((leadDatabases ?? []).map((l) => l.location).filter(Boolean) as string[])).sort(),
+  // MES-130: popularity-ranked, zero-hidden options; the long sector tail is searchable.
+  const locationOptions = useMemo(
+    () => curateValues((leadDatabases ?? []).map((l) => l.location)),
     [leadDatabases]
   );
-  const sectors = useMemo(
-    () => Array.from(new Set((leadDatabases ?? []).map((l) => l.sector).filter(Boolean) as string[])).sort(),
+  const sectorOptions = useMemo(
+    () => curateValues((leadDatabases ?? []).map((l) => l.sector)),
     [leadDatabases]
   );
 
@@ -78,8 +80,8 @@ const Leads = () => {
   ];
 
   const selects: SelectFilterConfig[] = [
-    { key: "location", allLabel: "All Locations", options: locations.map((l) => ({ value: l, label: l })) },
-    { key: "sector", allLabel: "All Sectors", options: sectors.map((s) => ({ value: s, label: s })) },
+    { key: "location", allLabel: "All Locations", options: locationOptions },
+    { key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true },
   ];
 
   const handleCheckout = async (lead: LeadDatabase) => {

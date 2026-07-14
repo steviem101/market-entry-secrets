@@ -4,10 +4,12 @@ import { filterEvents, matchesSource, matchesPersona, COMMUNITY_SOURCE, type Eve
 
 const ev = (p: Partial<EventLike>): EventLike => p;
 
+// `type` values are raw events.type; filterEvents matches on the canonical
+// bucket (MES-130), so "Summit" and "Conference" both fall under `conference`.
 const DATA: EventLike[] = [
-  ev({ category: "Conference", type: "In-person", city: "Sydney", sector: "Fintech", tags: ["Investing"], source: "curated", persona: "international_entrant" }),
-  ev({ category: "Workshop", type: "Online", city: "Melbourne", sector: "SaaS", tags: ["Product"], source: COMMUNITY_SOURCE, persona: "local_founder" }),
-  ev({ category: "Conference", type: "Online", city: "Sydney", sector: "Health", tags: ["AI/ML"], source: "curated", persona: "both" }),
+  ev({ category: "Conference", type: "Summit", city: "Sydney", sector: "Fintech", tags: ["Investing"], source: "curated", persona: "international_entrant" }),
+  ev({ category: "Workshop", type: "Workshop", city: "Melbourne", sector: "SaaS", tags: ["Product"], source: COMMUNITY_SOURCE, persona: "local_founder" }),
+  ev({ category: "Conference", type: "Conference", city: "Sydney", sector: "Health", tags: ["AI/ML"], source: "curated", persona: "both" }),
 ];
 const base = { category: "all", type: "all", city: "all", sector: "all", topic: "all", persona: "all" };
 
@@ -21,9 +23,11 @@ test("matchesSource partitions curated vs community", () => {
 test("category filter", () => {
   assert.equal(filterEvents(DATA, { ...base, category: "Conference" }).length, 2);
 });
-test("city + type + sector filters", () => {
+test("city + type (canonical bucket) + sector filters", () => {
   assert.equal(filterEvents(DATA, { ...base, city: "Sydney" }).length, 2);
-  assert.equal(filterEvents(DATA, { ...base, type: "Online" }).length, 2);
+  // "Summit" and "Conference" both map to the `conference` bucket.
+  assert.equal(filterEvents(DATA, { ...base, type: "conference" }).length, 2);
+  assert.equal(filterEvents(DATA, { ...base, type: "workshop-training" }).length, 1);
   assert.equal(filterEvents(DATA, { ...base, sector: "Fintech" }).length, 1);
 });
 test("topic filter matches tags", () => {

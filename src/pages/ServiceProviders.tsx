@@ -10,6 +10,7 @@ import { UsageBanner } from "@/components/UsageBanner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { mapServicesToSectors } from "@/utils/sectorMapping";
+import { curateValues } from "@/lib/filterCuration";
 import { type PersonaFilterValue } from "@/components/PersonaFilter";
 import { useServiceProviderCategories } from "@/hooks/useServiceProviders";
 import { useDirectoryFilters, type UseDirectoryFiltersResult } from "@/hooks/useDirectoryFilters";
@@ -43,7 +44,6 @@ const ServiceProvidersContent = ({
   filteredCompanies,
   totalCompanies,
   uniqueLocations,
-  uniqueLocationValues,
   totalServices,
   categories,
   filterState,
@@ -52,7 +52,6 @@ const ServiceProvidersContent = ({
   filteredCompanies: any[];
   totalCompanies: number;
   uniqueLocations: number;
-  uniqueLocationValues: string[];
   totalServices: number;
   categories: Category[];
   filterState: UseDirectoryFiltersResult;
@@ -60,8 +59,14 @@ const ServiceProvidersContent = ({
   const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } = filterState;
   const verifiedOnly = filters.verified === "true";
 
-  const sectors = useMemo(
-    () => Array.from(new Set(companies.flatMap((c) => mapServicesToSectors(c.services || [])))).sort(),
+  // MES-130: popularity-ranked, zero-hidden. Sector is derived via the service→
+  // sector mapper; location ranks by how many providers sit in each place.
+  const sectorOptions = useMemo(
+    () => curateValues(companies.flatMap((c) => mapServicesToSectors(c.services || []))),
+    [companies]
+  );
+  const locationOptions = useMemo(
+    () => curateValues(companies.map((c) => c.location)),
     [companies]
   );
 
@@ -78,9 +83,9 @@ const ServiceProvidersContent = ({
   }, [companies, categories]);
 
   const selects: SelectFilterConfig[] = useMemo(() => [
-    { key: "location", allLabel: "All Locations", options: uniqueLocationValues.map((l) => ({ value: l, label: l })) },
-    { key: "sector", allLabel: "All Sectors", options: sectors.map((s) => ({ value: s, label: s })) },
-  ], [uniqueLocationValues, sectors]);
+    { key: "location", allLabel: "All Locations", options: locationOptions, searchable: true },
+    { key: "sector", allLabel: "All Sectors", options: sectorOptions },
+  ], [locationOptions, sectorOptions]);
 
   const totalPages = Math.ceil(filteredCompanies.length / PAGE_SIZE);
   // Clamp an out-of-range page to the last page for display (derived, no
@@ -181,13 +186,12 @@ const ServiceProviders = () => {
         sortBy={filters.sort}
         personaFilter={filters.persona as PersonaFilterValue}
       >
-        {({ companies, filteredCompanies, totalCompanies, uniqueLocations, uniqueLocationValues, totalServices }) => (
+        {({ companies, filteredCompanies, totalCompanies, uniqueLocations, totalServices }) => (
           <ServiceProvidersContent
             companies={companies}
             filteredCompanies={filteredCompanies}
             totalCompanies={totalCompanies}
             uniqueLocations={uniqueLocations}
-            uniqueLocationValues={uniqueLocationValues}
             totalServices={totalServices}
             categories={categories}
             filterState={filterState}

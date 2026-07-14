@@ -86,16 +86,20 @@ const Content = () => {
 
   const featuredContent = useMemo(() => contentItems.filter(item => item.featured), [contentItems]);
 
-  // Per-type counts for the tab suffixes.
+  // Per-type counts for the tab suffixes. MES-130: hide zero-count type tabs
+  // (e.g. Article / Success Story when no such content_type exists) so the row
+  // shows only tabs that lead somewhere; "All" always stays.
   const typeTabs: FilterOption[] = useMemo(() => {
     const counts: Record<string, number> = {};
     contentItems.forEach((item) => {
       if (item.content_type) counts[item.content_type] = (counts[item.content_type] || 0) + 1;
     });
-    return CONTENT_TYPE_TABS.map((t) => ({
-      ...t,
-      count: t.value === "all" ? contentItems.length : (counts[t.value] ?? 0),
-    }));
+    return CONTENT_TYPE_TABS
+      .map((t) => ({
+        ...t,
+        count: t.value === "all" ? contentItems.length : (counts[t.value] ?? 0),
+      }))
+      .filter((t) => t.value === "all" || (t.count ?? 0) > 0);
   }, [contentItems]);
 
   const selects: SelectFilterConfig[] = [
