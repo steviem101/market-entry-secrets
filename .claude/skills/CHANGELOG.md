@@ -3,6 +3,15 @@
 Log every skill gap, wrong rule, or contradiction you find here (newest first), so it can be
 fixed in a follow-up PR. Format: `- YYYY-MM-DD [skill-name] what was wrong/missing — found while <task>`.
 
+- 2026-07-14 [supabase-rls-and-migrations] Added migration rule 6 + a self-check item: the Supabase
+  **preview branch runs DML against an EMPTY DB**, so a data-write migration that would violate a
+  constraint on real rows passes preview and then fails on prod — rolling itself back and **halting
+  the ledger for every later migration in the batch**. Rule: check target columns' constraints
+  (NOT NULL / CHECK / enum) against real values, or `BEGIN; … ROLLBACK;` dry-run on prod data, before
+  merge. Found while shipping MES-177 Phase B — migration `20260714100100` set 7 NOT-NULL
+  `trade_investment_agencies.location` rows to NULL, passed preview (0 rows on empty DB), rolled back
+  on prod, and blocked B2 until fixed (#441).
+
 - 2026-07-14 [mes-codebase-conventions] Added the **directory-page bar-anatomy contract** to Playbook
   item 3 + a self-check item, and refreshed the root `CLAUDE.md` §13.3 directory-pages line to match
   (MES-177 Phase A close-out). The contract: tabs = one low-cardinality axis (≤~8, zero-hidden,
