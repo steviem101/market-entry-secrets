@@ -1,3 +1,4 @@
 stmts/
 batch_*.sql
 reapply_stmts/
+enrichment/stmts/
