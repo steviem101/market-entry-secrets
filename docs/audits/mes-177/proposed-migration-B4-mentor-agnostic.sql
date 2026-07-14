@@ -8,11 +8,15 @@
 -- community_members rows were sector_agnostic=true). See B4-mentor-agnostic-review.md.
 --
 -- Properties: guarded · idempotent · precisely reversible · preview-safe (no-op on empty DB).
--- Behavioural effect: report matcher only (generate-report/matchScoring.ts). No RLS/policy,
--- grant, payment, or frontend change. community_members RLS already restricts writes to
--- service role; this runs as the migration role.
-
-begin;
+-- Behavioural effect: report matcher scoring (generate-report/matchScoring.ts). No RLS/policy,
+-- grant, payment, or frontend change. NOTE the UPDATE also fires the community_members KB-sync
+-- trigger (trg_kb_generic -> upsert_kb_mentor), re-embedding the 114 mentors in mes_knowledge_base
+-- (~114 OpenAI embeds via the embed-knowledge cron) — harmless (rebuildable index, exception-guarded
+-- trigger, re-runs are 0-row) but not literally "matcher only". community_members RLS already
+-- restricts writes to service role; this runs as the migration role.
+--
+-- No explicit begin/commit: the Supabase apply path wraps each migration file in its own
+-- transaction (matches all 62 active-ledger migrations), and DDL here is transactional.
 
 -- 1. Reversibility snapshot. Nullable; populated only for the flipped rows. The
 --    community_members_public view uses an explicit column list that does NOT select
@@ -32,10 +36,8 @@ update public.community_members
    and sector_agnostic is true
    and sector_agnostic_pre_mes177 is null;
 
-commit;
-
 -- Expected effect at apply time (verified 2026-07-14): 114 rows flipped; 9 already-false
--- tagged rows untouched; 11 untagged-agnostic rows untouched.
+-- tagged rows untouched; 11 untagged-agnostic rows (empty {} sector_tags) untouched.
 
 -- ── Reverse (place in supabase/rollback/ on apply) ───────────────────────────────
 -- begin;

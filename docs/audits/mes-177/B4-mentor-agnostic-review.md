@@ -20,15 +20,18 @@ import default, not a considered per-mentor choice. And the 114 offenders are **
 broad: **86 carry a single tag, 20 two tags, 8 three tags** — none near the over-tag threshold (5).
 A single-tag mentor is a specialist signal, so "matches every sector" is the wrong behaviour for it.
 
-## Decision (approved): flip the 114 to `sector_agnostic=false`
+## Recommendation: flip the 114 to `sector_agnostic=false`
 
-Restores the invariant. The 11 genuinely-untagged agnostic mentors and the 9 already-correct
-specialists are untouched.
+The owner approved this **direction** (2026-07-14); the **apply-sign-off below is still pending** —
+this is an approval-gated, 114-row write to a PII table (`community_members`), so the staged SQL must
+not be moved into `supabase/migrations/` until the sign-off box is checked. Restores the invariant.
+The 11 genuinely-untagged agnostic mentors and the 9 already-correct specialists are untouched.
 
-## Matcher impact — the one behavioural change (`generate-report/matchScoring.ts`)
+## Matcher impact — the behavioural change (`generate-report/matchScoring.ts`)
 
-`sector_agnostic` is read **only** by the report matcher (the frontend mentor filter keys off
-`sector_tags`, not `agnostic`). For each flipped mentor:
+`sector_agnostic` is *read* **only** by the report matcher (the frontend mentor filter keys off
+`sector_tags`, not `agnostic`; no RLS policy, view, or other consumer branches on it). For each
+flipped mentor:
 
 - **Loses** the `AGNOSTIC_NUDGE` ("eligible for all sectors") that currently makes it score on
   *every* report regardless of sector.
@@ -53,9 +56,15 @@ a before/after matcher diff on a sample of real reports before applying (say the
 - **Guarded predicate** = exactly the 114-row set (`sector_tags` non-empty AND `sector_agnostic
   is true`), with a `sector_agnostic_pre_mes177 is null` idempotency latch: re-running flips
   nothing already flipped.
-- **Preview-safe:** on an empty preview DB it updates 0 rows — a no-op.
+- **Preview-safe:** on an empty preview DB it updates 0 rows — a no-op (the trigger below never fires).
 - **Reverse** (kept in `supabase/rollback/` on apply): restore `sector_agnostic` from the snapshot
   where non-null, then drop the snapshot column.
+- **Write side-effect (not matcher-only):** the UPDATE fires the `community_members` KB-sync trigger
+  (`trg_kb_generic → upsert_kb_mentor`), re-upserting the 114 mentors into `mes_knowledge_base` and
+  flagging them for re-embedding (~114 OpenAI embed calls via the `embed-knowledge` cron). Harmless —
+  the KB is a rebuildable index, the trigger is exception-guarded (a KB failure only warns; the flip
+  still commits), and re-runs match 0 rows so there's no repeat embed storm — but it's a small
+  unbudgeted embedding cost worth noting, not "matcher only".
 
 ## Proposed migration
 See `docs/audits/mes-177/proposed-migration-B4-mentor-agnostic.sql` (staged; not yet applied).

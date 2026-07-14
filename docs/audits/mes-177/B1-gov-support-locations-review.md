@@ -53,6 +53,12 @@ address string + name first and use `location_state` only to corroborate.
 - **Australia Malaysia Chamber (AMCC)** (→NULL, junk domain) — the enrichment playbook's canonical
   "fabricated/mis-sourced org" pattern; agent quarantined it correctly.
 
+## Formatting choice for you
+NZ cities use the abbreviation **`City, NZ`** (15 rows, e.g. "Auckland, NZ") — consistent with the AU
+`City, ST` abbreviation style (NZ as the ANZ second-home region), but it differs from the foreign-city
+rows that spell the country out ("Paris, France"). Either is defensible; if you'd prefer the filter
+list read uniformly, I'll normalise the 15 to `City, New Zealand` before writing. Your call.
+
 ## Migration design (written after sign-off)
 - Add a **`location_raw`** snapshot column (idempotent), copy the current `location` into it for the
   changed rows, then id-keyed UPDATE `location` from the reviewed CSV (NULL for the 7). Reversal =

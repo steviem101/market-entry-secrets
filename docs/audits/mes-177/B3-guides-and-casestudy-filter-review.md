@@ -7,7 +7,9 @@ with evidence, so read the recommendation before any tagging.
 
 **Count correction:** it's **21** untagged published guides, not the "10" I quoted earlier — my
 interim count used `array_length(sector_tags,1)=0`, which is NULL for an empty `{}` array and so
-missed the empty-array rows. `cardinality()=0` gives the true 21 (matches the ticket's original 21).
+missed the empty-array rows. The correct predicate is **`sector_tags IS NULL OR cardinality(sector_tags)=0`**
+(or `coalesce(cardinality(sector_tags),0)=0`) — `cardinality()=0` alone still has the same NULL blind
+spot. That gives the true 21 = **10 NULL + 11 empty `{}`** (matches the ticket's original 21).
 
 **All 21 are horizontal, cross-sector how-to content**, e.g.:
 - Registration/structure: "Complete Guide to Australian Business Registration", "Choosing Your
@@ -33,26 +35,36 @@ employment etc."). Fixing that means introducing a **topic taxonomy** for guides
 `content_categories` or a `guide_topic` field), which is a content-modelling task beyond B3's scope.
 **Recommendation:** spin this out as its own small ticket; do not shoehorn it into MES-177.
 
-## Finding 3 — Case-study "Industry" filter → canonical sectors (green-light, frontend-only)
-Verified: **all 102 published case studies are already `sector_tags`-tagged, and every tag is
-canonical** (12 distinct: `technology-information-and-media` ×32, `financial-services` ×12,
-`administrative-and-support-services` ×5, `government-administration`, `retail`, … ). So no tagging
-is needed — just the frontend switch:
-- Repoint the Case Studies **"Industry"** filter from the free-text
-  `content_company_profiles.industry` to canonical `sector_tags`, rendered with the shipped
-  `sectorLabel` + `curateValues` pattern (identical to A4). Keep free-text industry **searchable** so
-  nothing is lost. No fourth sector vocabulary survives.
-- This is a small, tested frontend change (pure predicate in `caseStudyFilters.ts` + the page's
-  select) — it can ride in the Phase B frontend PR alongside the B2 outcome-badge data once outcomes
-  land, or ship on its own.
+## Finding 3 — Case studies are only **44/102** tagged → tag the 58 FIRST, then switch the filter
+**Correction (a code-review caught my earlier error):** case studies are **NOT** all tagged. Live:
+**44 tagged / 58 untagged (57%) / 102 total** — the 58 carry an empty `{}` `sector_tags` array (0
+NULL). My earlier "all 102 tagged" came from the same empty-array trap as the guide miscount (a
+distinct-tags query shows only the 12 canonical tags in use, not coverage). The tags that DO exist
+are all canonical (12 distinct: `technology-information-and-media` ×32, `financial-services` ×12, …),
+so the vocabulary is clean — but coverage is not.
+
+**Consequence:** switching the "Industry" filter to `sector_tags` **without tagging the 58 first**
+would silently drop 57% of case studies from every Industry facet value (empty tags → no option).
+The "keep free-text industry searchable" note preserves only text search, not the facet. So Finding 3
+is **not** a free frontend switch — it needs a tagging pass first.
+
+**Revised plan (this restores what the ticket's B2/B3 actually asked for):**
+1. **Tag the 58 untagged case studies** with canonical `sector_tags` — propose→review pass over each
+   study's `content_company_profiles.industry` (24 distinct free-text values) + content, mapped into
+   the MES-110 canonical vocabulary via the existing crosswalk (never keyword-mapped — MES-169). Same
+   guarded, id-keyed, fill-only-empty migration pattern as B2. Produces a reviewed CSV for sign-off.
+2. **Then** repoint the Case Studies "Industry" filter to canonical `sector_tags` (shipped
+   `sectorLabel` + `curateValues` pattern, identical to A4), keeping free-text industry searchable.
+   Small tested frontend change (`caseStudyFilters.ts` predicate + the page select).
 
 ## Net B3 outcome
-- **No guide sector-tagging** (recommended) — the content is horizontal; forcing tags would be wrong.
-- **No case-study tagging** — already canonical.
-- **One frontend change** (case-study Industry filter → canonical sectors) — green-light on your nod.
+- **No guide sector-tagging** (recommended) — the 21 guides are horizontal; forcing tags would be wrong.
+- **Tag the 58 untagged case studies** (propose→review) — required before the filter switch, not a no-op.
+- **Then one frontend change** (case-study Industry filter → canonical sectors).
 - **One spun-out follow-up** — a guide topic taxonomy (the actual item-7 need).
 
 ## Sign-off
 - [ ] Agree: leave the 21 guides untagged (no forced sectors)
-- [ ] Approve the case-study Industry→canonical-sector filter switch (frontend)
+- [ ] Green-light a case-study sector-tagging proposal for the 58 untagged studies (propose→review)
+- [ ] Approve the case-study Industry→canonical-sector filter switch **after** the 58 are tagged
 - [ ] Approve spinning out "guide topic taxonomy" as a separate ticket

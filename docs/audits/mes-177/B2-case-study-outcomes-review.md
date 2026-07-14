@@ -18,8 +18,8 @@ Of the **55 NULL-outcome** published case studies:
 
 I spot-verified a sample against the live content; the classifications are grounded (e.g. Volt Bank's
 title is literally "Collapsed", Sezzle "found itself in an existential crisis by 2022"). The
-author-written titles strongly corroborate the sensitive class: **11 of the 17 `unsuccessful` titles
-literally say** Withdrew / Struggled / Collapsed / Exited / Cancelled / Lost.
+author-written titles strongly corroborate the sensitive class: **16 of the 17 `unsuccessful` titles
+literally say** Withdrew / Struggled / Collapsed / Exited / Cancelled / Lost (all but Deliveroo).
 
 ## ⚠️ Decision 1 — `acquired` vs `successful` (7 rows, the main call)
 `acquired` was proposed wherever a company's *headline corporate outcome* was a buy-out — but for a
@@ -39,23 +39,24 @@ already low-confidence). Your call — I'll apply whatever you decide.
 ## Decision 2 — the 17 `unsuccessful` (please eyeball; this is the public "Failure" label)
 Affirm, Binance Australia Derivatives, Carl's Jr., Catch.com.au, Debenhams, Deliveroo, Esprit,
 Foodora, Gap, Groupon, Kaufland, Laybuy, Menulog, MilkRun, Sezzle, Uber Carshare, Volt Bank.
-13 are high-confidence (clear administration/exit/wind-down). 4 are medium and worth a glance:
+**14** are high-confidence (clear administration/exit/wind-down). **3** are medium and worth a glance:
 **Binance** (AFSL cancelled — the *licensed derivatives* entry ended, the brand persists),
-**Groupon** (became marginal rather than a hard exit), **Sezzle** (scaled back + ASX-delisted —
-effective withdrawal), **Uber Carshare** (exited late 2025). If you'd rather any of these be NULL
-than "Failure", say which.
+**Groupon** (became marginal rather than a hard exit), and **Sezzle** (scaled back + ASX-delisted —
+effective withdrawal). If you'd rather any of these be NULL than "Failure", say which.
 
 ## Migration design (written after sign-off, not now)
-- Guarded, **id-keyed** UPDATE of `content_company_profiles.outcome` from the reviewed CSV, **only
-  `WHERE outcome IS NULL`** (a latch — never overwrites a human value), only for ids with a
-  non-empty proposed outcome.
+- Guarded UPDATE of `content_company_profiles.outcome`, keyed on **`content_id`** — the CSV's `id`
+  column is the `content_items` id, and the profile links via
+  `content_company_profiles.content_id = content_items.id` (NOT `.id`; verified: joining on `id`
+  matches 0 rows). So: `WHERE content_id = <csv id> AND outcome IS NULL` (the `IS NULL` latch never
+  overwrites a human value), only for ids with a non-empty proposed outcome.
 - **Preview-safe** (no matching ids on an empty DB → no-op); **reversible** (reverse sets exactly
   the applied ids back to NULL). Idempotent. Timestamp after `20260714093000`.
 
 ## Note
-MES-178 (#436) merged ~concurrently, importing 65 case-study *drafts*. This pass covers only
-`status='published'` studies, so those drafts are out of scope here (they'll want their own outcome
-pass once published).
+MES-178 (#436) merged ~concurrently, importing case-study *drafts* (44 `status='draft'` rows live
+now). This pass covers only `status='published'` studies, so those drafts are out of scope here
+(they'll want their own outcome pass once published).
 
 ## Sign-off
 - [ ] Decision 1 (acquired vs successful) — confirm the recommendation or amend
