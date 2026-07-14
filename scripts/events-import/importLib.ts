@@ -431,6 +431,13 @@ export interface UnchangedRow {
   targetId: string;
 }
 
+export interface ResolvedSkip {
+  kind: "resolved_skip";
+  line: number;
+  title: string;
+  notionUrl: string;
+}
+
 export interface ProposalSet {
   inserts: InsertProposal[];
   updates: UpdateProposal[];
@@ -438,7 +445,30 @@ export interface ProposalSet {
   invalid: InvalidRow[];
   taxonomyExceptions: TaxonomyException[];
   unchanged: UnchangedRow[];
+  resolvedSkips: ResolvedSkip[];
   taxonomyNotes: string[];
+}
+
+/**
+ * A per-row reviewer decision, keyed by the row's Notion page URL (stable
+ * across re-exports; line numbers are not). Produced by human review of a
+ * prior dry run and fed back in so the decision is explicit, auditable and
+ * reproducible — it NEVER auto-resolves anything the reviewer didn't name.
+ *
+ * - `decision: "insert"` — the reviewer confirmed a would-be-ambiguous row is
+ *   genuinely NEW; force it down the insert path (a fuzzy/different-city match
+ *   is a false positive). Source-URL idempotency still wins, so a re-run after
+ *   apply binds by key and never double-inserts.
+ * - `decision: "skip"` — the reviewer confirmed the row duplicates an existing
+ *   live event; drop it from the batch explicitly (recorded, not an exception).
+ * - `sectorTags` — an explicit sector label (or `;`/`,`-separated labels) to
+ *   use in place of a blank/unpublished CSV `sector_tags`, resolved through the
+ *   same live vocabulary + overrides. Lets a reviewer supply the sector for a
+ *   niche event the editor left blank, without hand-editing the frozen CSV.
+ */
+export interface RowResolution {
+  decision?: "insert" | "skip";
+  sectorTags?: string;
 }
 
 export interface BuildOptions {
@@ -448,6 +478,8 @@ export interface BuildOptions {
   fallbackCategory?: string;
   /** Status new rows land with. Default 'approved' — the human gate is artefact review before --apply. */
   insertStatus?: "approved" | "needs_review";
+  /** Per-row reviewer decisions, keyed by Notion page URL (see RowResolution). */
+  resolutions?: Map<string, RowResolution>;
 }
 
 /** Ambiguity band: below EXACT match but similar enough to need human review. */
@@ -484,7 +516,7 @@ export function buildProposals(
 ): ProposalSet {
   const out: ProposalSet = {
     inserts: [], updates: [], ambiguous: [], invalid: [],
-    taxonomyExceptions: [], unchanged: [], taxonomyNotes: [],
+    taxonomyExceptions: [], unchanged: [], resolvedSkips: [], taxonomyNotes: [],
   };
 
   // Match pool: rejected rows are moderation junk — never resurrect or match them.
@@ -533,6 +565,15 @@ export function buildProposals(
     seenNotionUrls.set(notionUrl!, rec._line);
     if (norm) seenNorms.set(norm, rec._line);
 
+    // Reviewer decision for this row, if any (keyed by the stable Notion URL).
+    const resolution = opts.resolutions?.get(notionUrl!);
+    // An explicit "skip" is honoured up front, whatever the row would resolve
+    // to — the reviewer has removed it from this batch on purpose.
+    if (resolution?.decision === "skip") {
+      out.resolvedSkips.push({ kind: "resolved_skip", line: rec._line, title, notionUrl: notionUrl! });
+      continue;
+    }
+
     // --- taxonomy resolution (gating is branch-specific below) ---
     // A non-blank sector label that resolves nowhere blocks the row outright:
     // it means the mapping table is incomplete and needs a reviewed override.
@@ -541,7 +582,10 @@ export function buildProposals(
     const rawType = sanitizeText(rec.event_type, 60).toLowerCase();
     const mappedType = rawType ? EVENT_TYPE_MAP[rawType] : undefined;
     if (rawType && !mappedType) unmappedEventTypes.add(rawType);
-    const sectors = resolveSectors(rec.sector_tags, taxonomy);
+    // A reviewer-supplied sector label overrides a blank/unpublished CSV value.
+    const sectorField = resolution?.sectorTags?.trim() ? resolution.sectorTags : rec.sector_tags;
+    if (resolution?.sectorTags?.trim()) flags.push("sector_resolved");
+    const sectors = resolveSectors(sectorField, taxonomy);
     if (sectors.unmapped.length > 0) {
       out.taxonomyExceptions.push({
         kind: "taxonomy", line: rec._line, title,
@@ -592,6 +636,11 @@ export function buildProposals(
     let target: LiveEvent | null = null;
     let matchType: "source_url" | "title_exact" | null = null;
 
+    // A would-be-ambiguous decision, deferred so a reviewer decision (insert /
+    // skip) can override it before it's recorded. Source-URL and clean
+    // exact-title matches are unambiguous and bypass this entirely.
+    let ambiguousInfo: Omit<AmbiguousMatch, "kind" | "line" | "title"> | null = null;
+
     if (srcMatch) {
       target = srcMatch;
       matchType = "source_url";
@@ -599,12 +648,10 @@ export function buildProposals(
       target = titleMatches[0];
       matchType = "title_exact";
     } else if (titleMatches.length > 0) {
-      out.ambiguous.push({
-        kind: "ambiguous", line: rec._line, title,
+      ambiguousInfo = {
         reason: titleMatches.length > 1 ? "multiple exact-title matches" : `exact-title match in a different city (${titleMatches[0].city ?? "?"} vs ${city || "?"})`,
         candidates: titleMatches.map((e) => ({ id: e.id, title: e.title, city: e.city, date: e.date, source: e.source, similarity: 1 })),
-      });
-      continue;
+      };
     } else {
       // Fuzzy band: similar-but-not-identical titles need a human decision.
       const scored = pool
@@ -613,11 +660,21 @@ export function buildProposals(
         .sort((a, b) => b.sim - a.sim)
         .slice(0, 3);
       if (scored.length > 0) {
-        out.ambiguous.push({
-          kind: "ambiguous", line: rec._line, title,
+        ambiguousInfo = {
           reason: `similar existing title(s) at ${scored[0].sim.toFixed(2)} similarity — review before import`,
           candidates: scored.map(({ e, sim }) => ({ id: e.id, title: e.title, city: e.city, date: e.date, source: e.source, similarity: Number(sim.toFixed(3)) })),
-        });
+        };
+      }
+    }
+
+    // Apply the reviewer decision (if any) to a would-be-ambiguous row.
+    // "insert" falls through to the insert branch; "skip" drops it explicitly;
+    // no decision leaves it in the ambiguous review file (never auto-merged).
+    if (!target && ambiguousInfo) {
+      if (resolution?.decision === "insert") {
+        // fall through: reviewer confirmed this is a new event.
+      } else {
+        out.ambiguous.push({ kind: "ambiguous", line: rec._line, title, ...ambiguousInfo });
         continue;
       }
     }
