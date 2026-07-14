@@ -12,6 +12,9 @@
  *   - `pin` values are always kept and float to the front in the given order
  *   - null/empty values are never options (rows carrying them stay reachable
  *     via the "All" row)
+ *   - junk sentinels ("Unknown", "N/A", "-", whitespace-only) are treated like
+ *     null engine-wide, so a bad import degrades to "hidden from filters",
+ *     never an "Unknown" dropdown option
  */
 import type { FilterOption } from "@/components/common/DirectoryFilterBar";
 
@@ -30,15 +33,31 @@ export interface CurateConfig {
 }
 
 /**
+ * Junk sentinels that mean "no real value" in imported data. Compared after
+ * trimming, case-insensitively, so "unknown"/"UNKNOWN"/" Unknown " all match.
+ * Rows carrying one stay reachable via the "All" row — they just never become
+ * a filter option.
+ */
+const JUNK_SENTINELS = new Set(["unknown", "n/a", "-", "--", "–", "—"]);
+
+/** True when a raw value should never be emitted as a filter option. */
+export function isJunkValue(value: string | null | undefined): boolean {
+  if (value == null) return true;
+  const normalised = value.trim().toLowerCase();
+  return normalised === "" || JUNK_SENTINELS.has(normalised);
+}
+
+/**
  * Count how often each value appears. Accepts scalar values or the flattened
  * contents of array fields (pass `items.flatMap(i => i.tags ?? [])`). Null,
- * undefined and empty strings are ignored so they never become an option.
+ * undefined, empty/whitespace-only strings and junk sentinels ("Unknown",
+ * "N/A", "-") are ignored so they never become an option.
  */
 export function countValues(values: (string | null | undefined)[]): CountedOption[] {
   const counts = new Map<string, number>();
   for (const v of values) {
-    if (v == null || v === "") continue;
-    counts.set(v, (counts.get(v) ?? 0) + 1);
+    if (isJunkValue(v)) continue;
+    counts.set(v!, (counts.get(v!) ?? 0) + 1);
   }
   return [...counts.entries()].map(([value, count]) => ({ value, label: value, count }));
 }

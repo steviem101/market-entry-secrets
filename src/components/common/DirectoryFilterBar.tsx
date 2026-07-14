@@ -4,9 +4,11 @@
  *
  *   1. Primary category/type TAB row (shadcn Tabs) — optional, with counts
  *   2. Control row: search → selects (location, sector, …) → optional sort
- *   3. Audience pills (PersonaFilter) — optional, only where data supports it
- *   4. Advanced panel (children) — collapsed behind a "Filters" toggle
- *   5. Meta row: always-visible "Showing X of Y {noun}" + clear-all
+ *   3. Advanced panel (children) — collapsed behind a "Filters" toggle
+ *   4. Meta row: always-visible "Showing X of Y {noun}" + clear-all
+ *
+ * (The audience/persona pill row was removed in the 2026-07-14 consistency
+ * sweep — the bar deliberately no longer supports one.)
  *
  * The component is presentational: it renders the values a page holds (usually
  * via `useDirectoryFilters`) and calls back on change. It owns no filter state.
@@ -21,7 +23,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, X, Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PersonaFilter, type PersonaFilterValue } from "@/components/PersonaFilter";
 import type { FilterValues } from "@/lib/directoryFilters";
 
 /** An option for a tab or select. `count` renders as a subtle suffix on tabs. */
@@ -179,9 +180,6 @@ export interface DirectoryFilterBarProps {
   /** Optional sort dropdown (rendered after the selects). */
   sort?: { key: string; options: FilterOption[] };
 
-  /** Audience pills (international entrant vs local startup). */
-  audience?: { key: string };
-
   /** Directory-specific extras rendered in the collapsible advanced panel. */
   children?: React.ReactNode;
 }
@@ -198,7 +196,6 @@ export const DirectoryFilterBar = ({
   search,
   selects = [],
   sort,
-  audience,
   children,
 }: DirectoryFilterBarProps) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -350,15 +347,7 @@ export const DirectoryFilterBar = ({
             )}
           </div>
 
-          {/* 3. Audience pills */}
-          {audience && (
-            <PersonaFilter
-              value={filters[audience.key] as PersonaFilterValue}
-              onChange={(v) => onFilterChange(audience.key, v)}
-            />
-          )}
-
-          {/* 5. Meta row */}
+          {/* 4. Meta row */}
           <div className="flex items-center gap-3">
             <p className="text-sm text-muted-foreground">
               Showing {shownCount} of {totalCount} {noun}
@@ -376,7 +365,7 @@ export const DirectoryFilterBar = ({
         </div>
       </section>
 
-      {/* 4. Advanced panel */}
+      {/* 3. Advanced panel */}
       {children && showAdvanced && (
         <section className="bg-muted/50 border-b">
           <div className="container mx-auto px-4 py-6">{children}</div>

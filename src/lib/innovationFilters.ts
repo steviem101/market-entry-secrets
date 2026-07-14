@@ -14,12 +14,15 @@ export interface OrganisationLike {
   location: string;
   services?: string[] | null;
   type?: string[] | null;
+  sector_tags?: string[] | null;
 }
 
-/** Keys: search, location, service, type (each defaulting to "" / "all"). */
+/** Keys: search, location, service, type, sector (each defaulting to "" / "all").
+ *  `sector` matches the canonical sector_tags slugs (MES-110); untagged orgs
+ *  stay reachable via "all". */
 export function filterOrganisations<T extends OrganisationLike>(orgs: T[], filters: FilterValues): T[] {
   const search = (filters.search ?? "").toLowerCase().trim();
-  const { location = "all", service = "all", type = "all" } = filters;
+  const { location = "all", service = "all", type = "all", sector = "all" } = filters;
   const serviceLc = service.toLowerCase();
 
   return orgs.filter((org) => {
@@ -33,7 +36,8 @@ export function filterOrganisations<T extends OrganisationLike>(orgs: T[], filte
     const matchesService = service === "all" || (org.services ?? []).some((s) => s.toLowerCase() === serviceLc);
     // Multi-value type: the tab value must be one of the org's types.
     const matchesType = type === "all" || (org.type ?? []).includes(type);
+    const matchesSector = sector === "all" || (org.sector_tags ?? []).includes(sector);
 
-    return matchesSearch && matchesLocation && matchesService && matchesType;
+    return matchesSearch && matchesLocation && matchesService && matchesType && matchesSector;
   });
 }

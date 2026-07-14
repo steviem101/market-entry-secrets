@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { countValues, curateOptions, curateValues } from "./filterCuration.ts";
+import { countValues, curateOptions, curateValues, isJunkValue } from "./filterCuration.ts";
 
 test("countValues tallies scalars and ignores null/empty", () => {
   const counted = countValues(["Sydney", "Sydney", "Melbourne", null, "", undefined]);
@@ -8,6 +8,32 @@ test("countValues tallies scalars and ignores null/empty", () => {
   assert.deepEqual(map, { Sydney: 2, Melbourne: 1 });
   // null/empty never become an option
   assert.equal(counted.length, 2);
+});
+
+test("junk sentinels never become options (engine-wide guard)", () => {
+  const counted = countValues([
+    "Sydney", "Unknown", "unknown", " UNKNOWN ", "N/A", "n/a", "-", "--", "–", "—", "   ", "\t",
+  ]);
+  assert.deepEqual(counted.map((o) => o.value), ["Sydney"]);
+});
+
+test("isJunkValue: sentinels and blanks are junk; real values are not", () => {
+  assert.equal(isJunkValue(null), true);
+  assert.equal(isJunkValue(undefined), true);
+  assert.equal(isJunkValue(""), true);
+  assert.equal(isJunkValue("  "), true);
+  assert.equal(isJunkValue("Unknown"), true);
+  assert.equal(isJunkValue("N/A"), true);
+  assert.equal(isJunkValue("-"), true);
+  // Legitimate values that merely resemble sentinels stay.
+  assert.equal(isJunkValue("Sydney"), false);
+  assert.equal(isJunkValue("NA"), false); // could be a real code (e.g. North America)
+  assert.equal(isJunkValue("Un-known Ventures"), false);
+});
+
+test("curateValues filters junk before ranking", () => {
+  const out = curateValues(["Perth", "Perth", "Unknown", "N/A", "-", "Adelaide"]);
+  assert.deepEqual(out.map((o) => o.value), ["Perth", "Adelaide"]);
 });
 
 test("curateOptions ranks by count desc, then label A→Z on ties", () => {

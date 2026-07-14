@@ -11,6 +11,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterOrganisations } from "@/lib/innovationFilters";
 import { curateValues } from "@/lib/filterCuration";
+import { sectorLabel } from "@/lib/sectorLabels";
 
 const PAGE_SIZE = 12;
 
@@ -19,13 +20,35 @@ const INNOVATION_FILTER_SPEC: FilterSpec = {
   type: { param: "type", default: "all" },
   location: { param: "location", default: "all" },
   service: { param: "service", default: "all" },
+  sector: { param: "sector", default: "all" },
 };
 
 const InnovationEcosystem = () => {
-  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
-    useDirectoryFilters(INNOVATION_FILTER_SPEC);
-
   const { data: organizations, isLoading, error } = useInnovationEcosystem();
+
+  // MES-130: popularity-ranked, zero-hidden; the long location/service tails are searchable.
+  const locationOptions = useMemo(
+    () => curateValues((organizations ?? []).map((org) => org.location)),
+    [organizations]
+  );
+  const serviceOptions = useMemo(
+    () => curateValues((organizations ?? []).flatMap((org) => org.services || [])),
+    [organizations]
+  );
+  // Canonical sector_tags (MES-110) with the shared friendly labels; untagged
+  // orgs simply don't contribute options and stay reachable via "All Sectors".
+  // A stale/case-variant ?sector= is coerced against these options by the hook.
+  const sectorOptions = useMemo(
+    () => curateValues((organizations ?? []).flatMap((org) => org.sector_tags || []), { labelFor: sectorLabel }),
+    [organizations]
+  );
+  const allowedValues = useMemo(
+    () => ({ sector: sectorOptions.map((o) => o.value) }),
+    [sectorOptions],
+  );
+
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(INNOVATION_FILTER_SPEC, { allowedValues });
 
   const filteredOrganizations = useMemo(
     () => (organizations ? filterOrganisations(organizations, filters) : []),
@@ -37,16 +60,6 @@ const InnovationEcosystem = () => {
   // shrank) to the last page so it shows results instead of a blank grid.
   const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
   const paginatedOrganizations = filteredOrganizations.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
-
-  // MES-130: popularity-ranked, zero-hidden; the long location/service tails are searchable.
-  const locationOptions = useMemo(
-    () => curateValues((organizations ?? []).map((org) => org.location)),
-    [organizations]
-  );
-  const serviceOptions = useMemo(
-    () => curateValues((organizations ?? []).flatMap((org) => org.services || [])),
-    [organizations]
-  );
 
   // Data-driven, MULTI-VALUE Type tabs (MES-100 spin-off): an org's `type[]` can list
   // several roles, so it's counted under each tab. Curated order first, then any novel
@@ -73,6 +86,7 @@ const InnovationEcosystem = () => {
 
   const selects: SelectFilterConfig[] = [
     { key: "location", allLabel: "All Locations", options: locationOptions, searchable: true },
+    { key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true },
     { key: "service", allLabel: "All Services", options: serviceOptions, searchable: true },
   ];
 

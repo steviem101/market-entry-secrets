@@ -8,6 +8,9 @@
  * whether initials may be derived, so cards and the profile page mask
  * consistently and never leak identity through a fallback path.
  */
+// Relative (not "@/") because this module is unit-tested with node --test, whose
+// resolver doesn't understand the Vite alias for runtime (value) imports.
+import { sectorLabel } from "./sectorLabels.ts";
 
 export interface MentorIdentity {
   name: string;
@@ -86,9 +89,13 @@ export const corridorLabel = (corridor: string): string | null => {
   return `${countryLabel(from)} → ${countryLabel(to)}`;
 };
 
-/** "financial-services" → "Financial Services". */
-export const sectorTagLabel = (tag: string): string =>
-  tag.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+/**
+ * Sector-tag label for mentor cards/profile. Delegates to the shared
+ * `sectorLabel` so canonical slugs render identically to the directory's sector
+ * dropdown (e.g. "hospitals-and-health-care" → "Healthcare"); non-canonical
+ * values fall back to plain humanisation.
+ */
+export const sectorTagLabel = (tag: string): string => sectorLabel(tag);
 
 /**
  * Anonymous mentors' masked location is the raw origin-country slug straight

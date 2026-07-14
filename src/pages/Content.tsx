@@ -13,6 +13,8 @@ import { SEOHead } from "@/components/common/SEOHead";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterContent } from "@/lib/contentFilters";
+import { curateValues } from "@/lib/filterCuration";
+import { sectorLabel } from "@/lib/sectorLabels";
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
   guide: "Guides",
@@ -25,9 +27,9 @@ const CONTENT_TYPE_TABS: FilterOption[] = [
   ...Object.entries(CONTENT_TYPE_LABELS).map(([value, label]) => ({ value, label })),
 ];
 
-// Allowlist so a stale/invalid ?type= (e.g. a retired content_type) falls back
-// to "All" instead of matching nothing and rendering an empty grid.
-const VALID_CONTENT_TYPES = new Set(["all", ...Object.keys(CONTENT_TYPE_LABELS)]);
+// Valid content_type values; a stale/invalid ?type= is coerced to "all" by the
+// filter hook so it can't match nothing and render an empty grid.
+const CONTENT_TYPE_VALUES = Object.keys(CONTENT_TYPE_LABELS);
 
 const CONTENT_FILTER_SPEC: FilterSpec = {
   search: { param: "search", default: "" },
@@ -35,11 +37,10 @@ const CONTENT_FILTER_SPEC: FilterSpec = {
   // Category carries the category slug (MES-100); legacy ?category=<uuid> links
   // are still resolved for back-compat.
   category: { param: "category", default: "all" },
+  sector: { param: "sector", default: "all" },
 };
 
 const Content = () => {
-  const { filters, setFilter, clearAll, hasActiveFilters } = useDirectoryFilters(CONTENT_FILTER_SPEC);
-
   const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems({
     contentType: ['guide', 'article', 'success_story']
   });
@@ -47,9 +48,21 @@ const Content = () => {
   const contentItemIds = useMemo(() => contentItems.map(item => item.id), [contentItems]);
   const { data: attachmentCounts = {} } = useAttachmentCounts(contentItemIds);
 
-  // Coerce an invalid/stale ?type= to "all" so both filtering and the tab
-  // highlight treat it as "All Content" (rather than a phantom active tab).
-  const safeType = VALID_CONTENT_TYPES.has(filters.type) ? filters.type : "all";
+  // Canonical sector_tags (MES-110) with the shared friendly labels. Zero-hidden
+  // curation means untagged items don't produce options and stay under "All".
+  const sectorOptions = useMemo(
+    () => curateValues(contentItems.flatMap((item) => item.sector_tags || []), { labelFor: sectorLabel }),
+    [contentItems]
+  );
+  // The hook coerces a stale ?type= (retired content_type) and a stale/
+  // case-variant ?sector= to "all" so neither renders a phantom tab or empty
+  // grid. Category is slug/uuid-resolved in-page below, so it isn't coerced here.
+  const allowedValues = useMemo(
+    () => ({ type: CONTENT_TYPE_VALUES, sector: sectorOptions.map((o) => o.value) }),
+    [sectorOptions],
+  );
+  const { filters, setFilter, clearAll, hasActiveFilters } =
+    useDirectoryFilters(CONTENT_FILTER_SPEC, { allowedValues });
 
   // Only show categories that have at least 1 piece of content.
   const categoriesWithContent = useMemo(
@@ -69,19 +82,19 @@ const Content = () => {
   const selectedCategoryId = selectedCat?.id ?? null;
 
   // Bar shows the slug (normalised so old ?category=<uuid> links still highlight).
+  // type/sector are already coerced by the hook; only category needs resolving.
   const displayFilters = useMemo(
     () => ({
       ...filters,
-      type: safeType,
       category: selectedCat ? catSlug(selectedCat as any) : (filters.category === "all" ? "all" : filters.category),
     }),
-    [filters, safeType, selectedCat]
+    [filters, selectedCat]
   );
 
   // Filtering matches item.category_id, so pass the resolved id (not the slug).
   const filteredContent = useMemo(
-    () => filterContent(contentItems, { ...filters, type: safeType, category: selectedCategoryId ?? "all" }),
-    [contentItems, filters, safeType, selectedCategoryId]
+    () => filterContent(contentItems, { ...filters, category: selectedCategoryId ?? "all" }),
+    [contentItems, filters, selectedCategoryId]
   );
 
   const featuredContent = useMemo(() => contentItems.filter(item => item.featured), [contentItems]);
@@ -108,6 +121,7 @@ const Content = () => {
       allLabel: "All Categories",
       options: categoriesWithContent.map((c) => ({ value: catSlug(c as any), label: c.name })),
     },
+    { key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true },
   ];
 
   if (itemsLoading || categoriesLoading) {

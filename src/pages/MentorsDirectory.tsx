@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { usePersona } from "@/contexts/PersonaContext";
 import { Helmet } from "react-helmet-async";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,18 +17,20 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterMentors, archetypeToSlug } from "@/lib/mentorFilters";
 import { humanizeSlug } from "@/lib/humanizeSlug";
+import { sectorLabel } from "@/lib/sectorLabels";
 import { curateValues, curateOptions } from "@/lib/filterCuration";
 import type { Mentor } from "@/hooks/useMentors";
 
 const PAGE_SIZE = 12;
 
+// The persona/audience dimension was dropped (2026-07-14 filter bar consistency
+// sweep) — a stale ?persona= param is not in the spec, so it's parsed away silently.
 const MENTOR_FILTER_SPEC: FilterSpec = {
   search: { param: "search", default: "" },
   category: { param: "category", default: "all" },
   location: { param: "location", default: "all" },
   sector: { param: "sector", default: "all" },
   corridor: { param: "corridor", default: "all" },
-  persona: { param: "persona", default: "all" },
   sort: { param: "sort", default: "featured", presentation: true },
 };
 
@@ -52,15 +53,28 @@ const originLabel = (o: string) => ORIGIN_LABELS[o] || humanizeSlug(o);
 const MentorsDirectory = () => {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const { data: mentors = [], isLoading, error } = useMentors();
+
+  // MES-130: popularity-ranked, zero-hidden location options; long tail searchable.
+  const locationOptions = useMemo(() => curateValues(mentors.map((m) => m.location)), [mentors]);
+  // Sector lives in the main bar (2026-07-14 sweep): canonical sector_tags slugs
+  // as values, friendly shared labels for display. Predicate unchanged. A stale/
+  // case-variant ?sector= is coerced against these options by the hook.
+  const sectorOptions = useMemo(
+    () => curateValues(mentors.flatMap((m) => m.sector_tags || []), { labelFor: sectorLabel }),
+    [mentors],
+  );
+  const allowedValues = useMemo(
+    () => ({ sector: sectorOptions.map((o) => o.value) }),
+    [sectorOptions],
+  );
+
   const { filters, page, setFilter, setFilters, setPage, clearAll, hasActiveFilters } =
-    useDirectoryFilters(MENTOR_FILTER_SPEC);
-  const { persona } = usePersona();
+    useDirectoryFilters(MENTOR_FILTER_SPEC, { allowedValues });
   const [rawParams] = useSearchParams();
   const [contactMentor, setContactMentor] = useState<Mentor | null>(null);
 
   // Mount seed (applied atomically so the parts don't clobber each other):
   //  - category from the URL path (/mentors/:categorySlug)
-  //  - audience from the global PersonaContext when ?persona= is absent
   //  - legacy ?q= search param when ?search= is absent (pre-MES-94 links)
   const seededRef = useRef(false);
   useEffect(() => {
@@ -70,7 +84,6 @@ const MentorsDirectory = () => {
     if (categorySlug && categorySlug !== filters.category) seed.category = categorySlug;
     const q = rawParams.get("q");
     if (q && !rawParams.has("search")) seed.search = q;
-    if (persona && !rawParams.has("persona")) seed.persona = persona;
     if (Object.keys(seed).length) setFilters(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -91,9 +104,6 @@ const MentorsDirectory = () => {
   const totalPages = Math.ceil(filteredMentors.length / PAGE_SIZE);
   const paginatedMentors = filteredMentors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // MES-130: popularity-ranked, zero-hidden location options; long tail searchable.
-  const locationOptions = useMemo(() => curateValues(mentors.map((m) => m.location)), [mentors]);
-  const allSectors = useMemo(() => Array.from(new Set(mentors.flatMap((m) => m.sector_tags || []))).sort(), [mentors]);
   const allOrigins = useMemo(() => {
     const origins = new Set<string>();
     mentors.forEach((m) => (m.market_corridors || []).forEach((c) => {
@@ -126,36 +136,21 @@ const MentorsDirectory = () => {
 
   const selects: SelectFilterConfig[] = [
     { key: "location", allLabel: "All Locations", options: locationOptions, searchable: true },
+    { key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true },
   ];
 
-  const advancedPanel = (allOrigins.length > 0 || allSectors.length > 0) ? (
-    <div className="space-y-4">
-      {allOrigins.length > 0 && (
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-sm font-medium text-muted-foreground mr-1">Experience entering from:</span>
-          <Button variant={filters.corridor === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("corridor", "all")}>
-            All origins
-          </Button>
-          {allOrigins.map((o) => (
-            <Button key={o} variant={filters.corridor === o ? "default" : "outline"} size="sm" onClick={() => setFilter("corridor", o)}>
-              {originLabel(o)}
-            </Button>
-          ))}
-        </div>
-      )}
-      {allSectors.length > 0 && (
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-sm font-medium text-muted-foreground mr-1">Sector:</span>
-          <Button variant={filters.sector === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("sector", "all")}>
-            All Sectors
-          </Button>
-          {allSectors.map((s) => (
-            <Button key={s} variant={filters.sector === s ? "default" : "outline"} size="sm" onClick={() => setFilter("sector", s)}>
-              {humanizeSlug(s)}
-            </Button>
-          ))}
-        </div>
-      )}
+  // Corridor (secondary axis) stays in the advanced panel.
+  const advancedPanel = allOrigins.length > 0 ? (
+    <div className="flex flex-wrap gap-2 items-center">
+      <span className="text-sm font-medium text-muted-foreground mr-1">Experience entering from:</span>
+      <Button variant={filters.corridor === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("corridor", "all")}>
+        All origins
+      </Button>
+      {allOrigins.map((o) => (
+        <Button key={o} variant={filters.corridor === o ? "default" : "outline"} size="sm" onClick={() => setFilter("corridor", o)}>
+          {originLabel(o)}
+        </Button>
+      ))}
     </div>
   ) : undefined;
 
@@ -217,7 +212,6 @@ const MentorsDirectory = () => {
         search={{ key: "search", placeholder: "Search mentors, specialties, or locations..." }}
         selects={selects}
         sort={{ key: "sort", options: SORT_OPTIONS }}
-        audience={{ key: "persona" }}
       >
         {advancedPanel}
       </DirectoryFilterBar>

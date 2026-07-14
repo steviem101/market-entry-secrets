@@ -14,7 +14,6 @@ export interface MentorLike {
   location_city?: string | null;
   category_slug?: string | null;
   archetype?: string | null;
-  persona_fit?: string[] | null;
   market_corridors?: string[] | null;
   sector_tags?: string[] | null;
   is_featured?: boolean;
@@ -39,12 +38,14 @@ export function archetypeToSlug(archetype: string | null | undefined): string | 
 }
 
 /**
- * Keys: search, persona, category, sector, corridor, location, sort
+ * Keys: search, category, sector, corridor, location, sort
  * (sort ∈ featured | views | experience | az). Returns a new array.
+ * The persona dimension was retired with the audience pill (2026-07-14 filter
+ * bar consistency sweep) — a stale ?persona= param is simply ignored.
  */
 export function filterMentors<T extends MentorLike>(mentors: T[], filters: FilterValues): T[] {
   const search = (filters.search ?? "").toLowerCase();
-  const { persona = "all", category = "all", sector = "all", corridor = "all", location = "all", sort = "featured" } = filters;
+  const { category = "all", sector = "all", corridor = "all", location = "all", sort = "featured" } = filters;
 
   const result = mentors.filter((m) => {
     if (search) {
@@ -55,20 +56,6 @@ export function filterMentors<T extends MentorLike>(mentors: T[], filters: Filte
         (m.tagline || "").toLowerCase().includes(search) ||
         m.location.toLowerCase().includes(search);
       if (!matchesSearch) return false;
-    }
-
-    // Persona: a "both" mentor serves international entrants AND local startups.
-    if (persona !== "all") {
-      const fits = m.persona_fit || [];
-      if (fits.length > 0) {
-        const wanted =
-          persona === "international_entrant"
-            ? ["international_entrant", "both"]
-            : persona === "local_startup"
-            ? ["local_startup", "both"]
-            : [persona];
-        if (!wanted.some((w) => fits.includes(w))) return false;
-      }
     }
 
     // Category is the mentor archetype (slugified). category_slug is retained as

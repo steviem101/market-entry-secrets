@@ -11,35 +11,31 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { useEvents } from "@/hooks/useEvents";
 import { ListingPageGate } from "@/components/ListingPageGate";
 import { UsageBanner } from "@/components/UsageBanner";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
-import { useContextPersonaSeed } from "@/hooks/useContextPersonaSeed";
 import type { FilterSpec } from "@/lib/directoryFilters";
-import { filterEvents, matchesSource, COMMUNITY_SOURCE, TOPIC_TAGS } from "@/lib/eventFilters";
+import { filterEvents } from "@/lib/eventFilters";
 import { curateOptions, curateValues } from "@/lib/filterCuration";
 import { resolveEventBucket, EVENT_TYPE_BUCKET_LABEL } from "@/lib/eventTypeBuckets";
 
 const PAGE_SIZE = 12;
 
-// `city` param name and `tab` (time) param name are kept for backward-compat
-// with existing shared links. Source + time partition the base set, so they are
-// presentation dimensions (URL-synced, excluded from clear-all / active-filters).
+// 2026-07-14 filter bar consistency sweep: the primary tab axis is the canonical
+// event-type bucket; category/topic/persona/source were retired (stale URL params
+// for them are simply not parsed). `tab` is kept as the time param name and
+// `city` as the location param name for backward-compat with shared links. Time
+// partitions the base set, so it is a presentation dimension (URL-synced,
+// excluded from clear-all / active-filters).
 const EVENT_FILTER_SPEC: FilterSpec = {
   search: { param: "search", default: "" },
-  category: { param: "category", default: "all" },
   type: { param: "type", default: "all" },
   city: { param: "city", default: "all" },
   sector: { param: "sector", default: "all" },
-  topic: { param: "topic", default: "all" },
-  persona: { param: "persona", default: "all" },
-  source: { param: "source", default: "curated", presentation: true },
   time: { param: "tab", default: "upcoming", presentation: true },
 };
 
 const Events = () => {
   const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
     useDirectoryFilters(EVENT_FILTER_SPEC);
-  useContextPersonaSeed(setFilter);
 
   const {
     events, upcomingEvents, pastEvents, loading, searchLoading, error,
@@ -52,69 +48,80 @@ const Events = () => {
     setSearchTerm(filters.search);
   }, [filters.search, setSearchTerm]);
 
-  const categories = useMemo(() => Array.from(new Set(events.map((e) => e.category))).sort(), [events]);
-  const topics = useMemo(() => TOPIC_TAGS.filter((t) => events.some((e) => (e.tags ?? []).includes(t))), [events]);
+  // Time partition (Upcoming default; Past/All one click away in the bar).
+  // Coerce an out-of-set ?tab= value so the select can't show the wrong
+  // partition behind its placeholder (e.g. a truncated ?tab=al link).
+  const safeTime = filters.time === "past" || filters.time === "all" ? filters.time : "upcoming";
+  const baseEvents = safeTime === "past" ? pastEvents : safeTime === "all" ? events : upcomingEvents;
 
-  // MES-130 curation. Type is bucketed to a small canonical set; city/sector are
-  // popularity-ranked with the long tail searchable + zero-count hidden.
+  // MES-130 curation, computed from the time-partitioned set so tab counts and
+  // option lists always describe what selecting them will show. Type is the
+  // small canonical bucket axis (zero-hidden); city/sector are popularity-ranked
+  // with the long tail searchable. Sector here is the raw events.sector display
+  // value (free text), not the canonical sector_tags vocabulary.
   const typeOptions = useMemo(
     () =>
       curateOptions(
         Object.entries(
-          events.reduce<Record<string, number>>((acc, e) => {
+          baseEvents.reduce<Record<string, number>>((acc, e) => {
             const b = resolveEventBucket(e);
             acc[b] = (acc[b] ?? 0) + 1;
             return acc;
           }, {}),
         ).map(([value, count]) => ({ value, label: EVENT_TYPE_BUCKET_LABEL[value] ?? value, count })),
       ),
-    [events],
+    [baseEvents],
   );
-  const cityOptions = useMemo(() => curateValues(events.map((e) => e.city)), [events]);
-  const sectorOptions = useMemo(() => curateValues(events.map((e) => e.sector)), [events]);
+  const cityOptions = useMemo(() => curateValues(baseEvents.map((e) => e.city)), [baseEvents]);
+  const sectorOptions = useMemo(() => curateValues(baseEvents.map((e) => e.sector)), [baseEvents]);
 
-  // `type` is now a canonical bucket; coerce a stale/raw ?type= (old links, e.g.
-  // ?type=Networking) to "all" so it doesn't silently match nothing.
-  const safeType = filters.type === "all" || EVENT_TYPE_BUCKET_LABEL[filters.type] ? filters.type : "all";
-  const effectiveFilters = useMemo(() => ({ ...filters, type: safeType }), [filters, safeType]);
+  // Distinct-locations hero stat is a directory-wide figure, so it's derived
+  // from ALL events — not the time-partitioned cityOptions above (which drives
+  // the select), so it doesn't shrink to upcoming-only or mutate with the tab.
+  const totalLocations = useMemo(() => curateValues(events.map((e) => e.city)).length, [events]);
 
-  const baseEvents = filters.time === "upcoming" ? upcomingEvents : filters.time === "past" ? pastEvents : events;
-  const curatedCount = baseEvents.filter((e) => e.source !== COMMUNITY_SOURCE).length;
-  const communityCount = baseEvents.filter((e) => e.source === COMMUNITY_SOURCE).length;
-
-  const sourceFiltered = useMemo(
-    () => baseEvents.filter((e) => matchesSource(e, filters.source)),
-    [baseEvents, filters.source]
+  // Coerce `type` to "all" unless the selected canonical bucket is actually
+  // present in the CURRENT partition's options. This drops stale/raw ?type=
+  // links AND Object.prototype keys (?type=constructor), and prevents a
+  // valid-but-empty bucket from leaving an invisible active tab after a time
+  // switch. Don't coerce while options are still loading (empty set).
+  const typeValues = useMemo(() => new Set(typeOptions.map((o) => o.value)), [typeOptions]);
+  const safeType =
+    filters.type === "all" || typeValues.size === 0 || typeValues.has(filters.type)
+      ? filters.type
+      : "all";
+  const effectiveFilters = useMemo(
+    () => ({ ...filters, time: safeTime, type: safeType }),
+    [filters, safeTime, safeType],
   );
-  const filteredEvents = useMemo(() => filterEvents(sourceFiltered, effectiveFilters), [sourceFiltered, effectiveFilters]);
+
+  const filteredEvents = useMemo(() => filterEvents(baseEvents, effectiveFilters), [baseEvents, effectiveFilters]);
 
   const totalPages = Math.ceil(filteredEvents.length / PAGE_SIZE);
-  const paginatedEvents = filteredEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Clamp an out-of-range ?page= (deep bookmark, or a result set that shrank)
+  // to the last page so it shows results instead of a blank grid — matches the
+  // other directories (InnovationEcosystem/ServiceProviders).
+  const clampedPage = Math.max(1, Math.min(page, totalPages || 1));
+  const paginatedEvents = filteredEvents.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
-  const categoryTabs: FilterOption[] = useMemo(() => [
-    { value: "all", label: "All", count: sourceFiltered.length },
-    ...categories.map((c) => ({ value: c, label: c, count: sourceFiltered.filter((e) => e.category === c).length })),
-  ], [categories, sourceFiltered]);
+  const typeTabs: FilterOption[] = useMemo(
+    () => [{ value: "all", label: "All", count: baseEvents.length }, ...typeOptions],
+    [baseEvents.length, typeOptions],
+  );
 
   const selects: SelectFilterConfig[] = [
+    {
+      key: "time",
+      allLabel: "All events",
+      options: [
+        { value: "upcoming", label: "Upcoming", count: upcomingEvents.length },
+        { value: "past", label: "Past", count: pastEvents.length },
+      ],
+      widthClass: "w-full sm:w-36",
+    },
     { key: "city", allLabel: "All Locations", options: cityOptions, searchable: true },
-    { key: "type", allLabel: "All Types", options: typeOptions },
     { key: "sector", allLabel: "All Sectors", options: sectorOptions, searchable: true },
   ];
-
-  const advancedPanel = topics.length > 0 ? (
-    <div className="flex flex-wrap gap-2 items-center">
-      <span className="text-sm font-medium text-muted-foreground">Topic:</span>
-      <Button variant={filters.topic === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("topic", "all")}>
-        All Topics
-      </Button>
-      {topics.map((topic) => (
-        <Button key={topic} variant={filters.topic === topic ? "default" : "outline"} size="sm" onClick={() => setFilter("topic", topic)}>
-          {topic}
-        </Button>
-      ))}
-    </div>
-  ) : undefined;
 
   if (loading) {
     return (
@@ -163,7 +170,7 @@ const Events = () => {
 
       <EventsHero
         totalEvents={events.length}
-        totalLocations={cityOptions.length}
+        totalLocations={totalLocations}
         upcomingCount={upcomingEvents.length}
       />
 
@@ -175,37 +182,13 @@ const Events = () => {
         noun="events"
         shownCount={paginatedEvents.length}
         totalCount={filteredEvents.length}
-        tabs={{ key: "category", options: categoryTabs }}
+        tabs={{ key: "type", options: typeTabs }}
         search={{ key: "search", placeholder: "Search events, locations, or organizers...", loading: searchLoading }}
         selects={selects}
-        audience={{ key: "persona" }}
-      >
-        {advancedPanel}
-      </DirectoryFilterBar>
+      />
 
       <div className="container mx-auto px-4 py-8">
         <UsageBanner />
-
-        {/* Source partition: keep editorial (Curated) and scraped (Community) distinct. */}
-        <div className="mb-4">
-          <Tabs value={filters.source} onValueChange={(v) => setFilter("source", v)}>
-            <TabsList>
-              <TabsTrigger value="curated">Curated ({curatedCount})</TabsTrigger>
-              <TabsTrigger value="community">Community ({communityCount})</TabsTrigger>
-              <TabsTrigger value="all">All ({baseEvents.length})</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        <div className="mb-6">
-          <Tabs value={filters.time} onValueChange={(v) => setFilter("time", v)}>
-            <TabsList>
-              <TabsTrigger value="upcoming">Upcoming ({upcomingEvents.length})</TabsTrigger>
-              <TabsTrigger value="past">Past ({pastEvents.length})</TabsTrigger>
-              <TabsTrigger value="all">All ({events.length})</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
 
         {filteredEvents.length === 0 ? (
           <EmptyState
@@ -214,11 +197,9 @@ const Events = () => {
             description={
               isSearching
                 ? "Try adjusting your search criteria to find more events."
-                : filters.source === "community"
-                  ? "No community events match your filters yet. New ones arrive from the weekly scrape."
-                  : filters.time === "upcoming"
-                    ? "No upcoming events at the moment. Check back soon!"
-                    : "There are no events matching your current filters."
+                : safeTime === "upcoming"
+                  ? "No upcoming events at the moment. Check back soon!"
+                  : "There are no events matching your current filters."
             }
             actionLabel={hasActiveFilters ? "Clear all filters" : undefined}
             onAction={hasActiveFilters ? clearAll : undefined}
@@ -234,7 +215,7 @@ const Events = () => {
               </div>
             </ListingPageGate>
             <ListPagination
-              currentPage={page}
+              currentPage={clampedPage}
               totalPages={totalPages}
               onPageChange={setPage}
             />

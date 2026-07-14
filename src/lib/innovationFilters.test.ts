@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { filterOrganisations, type OrganisationLike } from "./innovationFilters.ts";
 
 const DATA: OrganisationLike[] = [
-  { name: "Stone & Chalk", description: "Fintech hub", location: "Sydney", services: ["Incubator", "Coworking"], type: ["Incubator", "Coworking Space"] },
-  { name: "Melbourne Accelerator", description: "Startup programs", location: "Melbourne", services: ["Accelerator"], type: ["Accelerator"] },
+  { name: "Stone & Chalk", description: "Fintech hub", location: "Sydney", services: ["Incubator", "Coworking"], type: ["Incubator", "Coworking Space"], sector_tags: ["financial-services", "technology-information-and-media"] },
+  { name: "Melbourne Accelerator", description: "Startup programs", location: "Melbourne", services: ["Accelerator"], type: ["Accelerator"], sector_tags: ["technology-information-and-media"] },
   { name: "CSIRO Lab", description: "Research institute", location: "Sydney", services: ["Research"], type: ["Research Institute"] },
 ];
-const base = { search: "", location: "all", service: "all", type: "all" };
+const base = { search: "", location: "all", service: "all", type: "all", sector: "all" };
 
 test("no filters → all", () => {
   assert.equal(filterOrganisations(DATA, base).length, 3);
@@ -45,4 +45,22 @@ test("type tab: untyped org (null type) only shows under 'all'", () => {
   const withNull = [{ name: "VC Firm", description: "y", location: "Perth", services: ["Venture Capital"], type: null }];
   assert.equal(filterOrganisations(withNull, { ...base, type: "all" }).length, 1);
   assert.equal(filterOrganisations(withNull, { ...base, type: "Accelerator" }).length, 0);
+});
+
+test("sector filter matches canonical sector_tags membership", () => {
+  assert.deepEqual(
+    filterOrganisations(DATA, { ...base, sector: "technology-information-and-media" }).map((o) => o.name),
+    ["Stone & Chalk", "Melbourne Accelerator"],
+  );
+  assert.deepEqual(
+    filterOrganisations(DATA, { ...base, sector: "financial-services" }).map((o) => o.name),
+    ["Stone & Chalk"],
+  );
+});
+test("sector filter: untagged org only shows under 'all'", () => {
+  assert.equal(filterOrganisations(DATA, { ...base, sector: "all" }).length, 3);
+  assert.equal(
+    filterOrganisations(DATA, { ...base, sector: "manufacturing" }).length,
+    0,
+  );
 });

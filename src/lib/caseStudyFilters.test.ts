@@ -10,6 +10,10 @@ import {
   matchesRevenueRange,
   matchesCostsRange,
   parseMoneyToNumber,
+  isPositiveOutcome,
+  isFailureOutcome,
+  outcomeTone,
+  OUTCOME_LABELS,
   type CaseStudyLike,
 } from "./caseStudyFilters.ts";
 
@@ -52,6 +56,45 @@ test("no filters → all case studies (recent order preserved)", () => {
 test("outcome filter", () => {
   assert.deepEqual(filterAndSortCaseStudies(DATA, { ...base, outcome: "successful" }).map((c) => c.title), ["Acme enters AU", "Gamma grows"]);
   assert.deepEqual(filterAndSortCaseStudies(DATA, { ...base, outcome: "unsuccessful" }).map((c) => c.title), ["Beta pivots"]);
+});
+
+test("the successful tab includes every positive outcome (scaling/ipo/acquired)", () => {
+  const rich: CaseStudyLike[] = [
+    cs("Scaler", { outcome: "scaling" }),
+    cs("Floated", { outcome: "ipo" }),
+    cs("Bought", { outcome: "acquired" }),
+    cs("Won", { outcome: "successful" }),
+    cs("Lost", { outcome: "unsuccessful" }),
+    cs("Unclassified", {}),
+  ];
+  assert.deepEqual(
+    filterAndSortCaseStudies(rich, { ...base, outcome: "successful" }).map((c) => c.title),
+    ["Scaler", "Floated", "Bought", "Won"],
+  );
+  assert.deepEqual(
+    filterAndSortCaseStudies(rich, { ...base, outcome: "unsuccessful" }).map((c) => c.title),
+    ["Lost"],
+  );
+  // A direct deep link to a specific positive outcome still matches by equality.
+  assert.deepEqual(
+    filterAndSortCaseStudies(rich, { ...base, outcome: "scaling" }).map((c) => c.title),
+    ["Scaler"],
+  );
+});
+
+test("outcome helpers: positive vs failure vs unknown", () => {
+  for (const o of ["successful", "scaling", "ipo", "acquired"]) {
+    assert.equal(isPositiveOutcome(o), true, o);
+    assert.equal(outcomeTone(o), "positive", o);
+    assert.notEqual(OUTCOME_LABELS[o], "Failure", o);
+  }
+  assert.equal(isFailureOutcome("unsuccessful"), true);
+  assert.equal(outcomeTone("unsuccessful"), "negative");
+  assert.equal(OUTCOME_LABELS.unsuccessful, "Failure");
+  // NULL / unknown values: no tone → no badge.
+  assert.equal(outcomeTone(null), null);
+  assert.equal(outcomeTone(undefined), null);
+  assert.equal(outcomeTone("pivoted"), null);
 });
 
 test("industry and country filters", () => {

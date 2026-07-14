@@ -11,7 +11,7 @@ import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterInvestors } from "@/lib/investorFilters";
 import { curateValues } from "@/lib/filterCuration";
-import { humanizeSlug } from "@/lib/humanizeSlug";
+import { sectorLabel } from "@/lib/sectorLabels";
 
 const PAGE_SIZE = 12;
 
@@ -35,9 +35,6 @@ const INVESTOR_FILTER_SPEC: FilterSpec = {
 };
 
 const Investors = () => {
-  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
-    useDirectoryFilters(INVESTOR_FILTER_SPEC);
-
   const { data: investors, isLoading, error } = useInvestors();
 
   // MES-130: popularity-ranked, zero-hidden option lists. Location/stage curate
@@ -56,24 +53,23 @@ const Investors = () => {
   );
 
   const sectorOptions = useMemo(
-    () => curateValues((investors ?? []).flatMap((inv) => inv.sector_tags || []), { labelFor: humanizeSlug }),
+    () => curateValues((investors ?? []).flatMap((inv) => inv.sector_tags || []), { labelFor: sectorLabel }),
     [investors],
   );
 
-  // Sector now matches canonical sector_tags. Coerce a stale/legacy ?sector=
-  // (old free-text sector_focus value, e.g. "fintech") to "all" so it doesn't
-  // match nothing and silently show an empty directory — mirrors Events' safeType.
-  // (While data is loading the option set is empty; don't coerce then.)
-  const validSectors = useMemo(() => new Set(sectorOptions.map((o) => o.value)), [sectorOptions]);
-  const safeSector =
-    filters.sector === "all" || validSectors.size === 0 || validSectors.has(filters.sector)
-      ? filters.sector
-      : "all";
-  const effectiveFilters = useMemo(() => ({ ...filters, sector: safeSector }), [filters, safeSector]);
+  // Sector matches canonical sector_tags: a stale/legacy/case-variant ?sector=
+  // (old free-text sector_focus, e.g. "fintech") is coerced against the curated
+  // options by the hook, so it never silently shows an empty directory.
+  const allowedValues = useMemo(
+    () => ({ sector: sectorOptions.map((o) => o.value) }),
+    [sectorOptions],
+  );
+  const { filters, page, setFilter, setPage, clearAll, hasActiveFilters } =
+    useDirectoryFilters(INVESTOR_FILTER_SPEC, { allowedValues });
 
   const filteredInvestors = useMemo(
-    () => (investors ? filterInvestors(investors, effectiveFilters) : []),
-    [investors, effectiveFilters],
+    () => (investors ? filterInvestors(investors, filters) : []),
+    [investors, filters],
   );
 
   // Per-type counts for the hero cards AND the tab suffixes.
@@ -132,7 +128,7 @@ const Investors = () => {
       />
 
       <DirectoryFilterBar
-        filters={effectiveFilters}
+        filters={filters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
         hasActiveFilters={hasActiveFilters}

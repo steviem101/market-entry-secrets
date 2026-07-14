@@ -11,21 +11,20 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { mapServicesToSectors } from "@/utils/sectorMapping";
 import { curateValues } from "@/lib/filterCuration";
-import { type PersonaFilterValue } from "@/components/PersonaFilter";
 import { useServiceProviderCategories } from "@/hooks/useServiceProviders";
 import { useDirectoryFilters, type UseDirectoryFiltersResult } from "@/hooks/useDirectoryFilters";
-import { useContextPersonaSeed } from "@/hooks/useContextPersonaSeed";
 import type { FilterSpec } from "@/lib/directoryFilters";
 
 const PAGE_SIZE = 12;
 
+// The persona/audience dimension was dropped (2026-07-14 filter bar consistency
+// sweep) — a stale ?persona= param is not in the spec, so it's parsed away silently.
 const SP_FILTER_SPEC: FilterSpec = {
   search: { param: "search", default: "" },
   category: { param: "category", default: "all" },
   location: { param: "location", default: "all" },
   sector: { param: "sector", default: "all" },
   verified: { param: "verified", default: "false" },
-  persona: { param: "persona", default: "all" },
   sort: { param: "sort", default: "featured", presentation: true },
 };
 
@@ -113,7 +112,6 @@ const ServiceProvidersContent = ({
         search={{ key: "search", placeholder: "Search service providers..." }}
         selects={selects}
         sort={{ key: "sort", options: SORT_OPTIONS }}
-        audience={{ key: "persona" }}
       >
         <div className="flex items-center gap-2">
           <Switch
@@ -146,7 +144,6 @@ const ServiceProvidersContent = ({
 const ServiceProviders = () => {
   const filterState = useDirectoryFilters(SP_FILTER_SPEC);
   const { filters } = filterState;
-  useContextPersonaSeed(filterState.setFilter);
   const { data: categories = [] } = useServiceProviderCategories();
 
   return (
@@ -184,7 +181,6 @@ const ServiceProviders = () => {
         selectedCategory={filters.category}
         verifiedOnly={filters.verified === "true"}
         sortBy={filters.sort}
-        personaFilter={filters.persona as PersonaFilterValue}
       >
         {({ companies, filteredCompanies, totalCompanies, uniqueLocations, totalServices }) => (
           <ServiceProvidersContent
