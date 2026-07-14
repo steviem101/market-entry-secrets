@@ -1,0 +1,59 @@
+label,sector_slugs,category
+fintech,financial-services;technology-information-and-media,FinTech
+financial technology,financial-services;technology-information-and-media,FinTech
+insurtech,financial-services;technology-information-and-media,FinTech
+regtech,financial-services;technology-information-and-media;professional-services,FinTech
+web3,technology-information-and-media;financial-services,Technology
+financial services,financial-services,Financial Services
+venture capital,financial-services,Venture Capital
+accounting,financial-services;professional-services,Accounting
+medtech,hospitals-and-health-care;technology-information-and-media,HealthTech
+healthtech,hospitals-and-health-care;technology-information-and-media,HealthTech
+healthcare technology,hospitals-and-health-care;technology-information-and-media,HealthTech
+healthcare,hospitals-and-health-care,Healthcare
+pharma,hospitals-and-health-care;manufacturing,Healthcare
+aged care,hospitals-and-health-care,Aged Care
+ai,technology-information-and-media,AI & Data
+cybersecurity,technology-information-and-media,Technology
+technology,technology-information-and-media,Technology
+iot,technology-information-and-media;manufacturing,Technology
+smart cities,government-administration;technology-information-and-media;construction,Technology
+deep tech,technology-information-and-media;professional-services;manufacturing,Deep Tech
+deeptech,technology-information-and-media;professional-services;manufacturing,Deep Tech
+media,technology-information-and-media;entertainment-providers,Media & Creative
+broadcasting,technology-information-and-media;entertainment-providers,Media & Creative
+creative industries,entertainment-providers;professional-services,Media & Creative
+marketing,professional-services,Marketing
+legal,professional-services,Legal
+professional services,professional-services,Professional Services
+human resources,administrative-and-support-services;professional-services,Human Resources
+hr,administrative-and-support-services;professional-services,Human Resources
+workplace safety,administrative-and-support-services,Workplace Safety
+cleantech,utilities;manufacturing;professional-services,Climate & Energy
+energy,utilities;oil-gas-and-mining,Climate & Energy
+utilities,utilities,Utilities
+water,utilities,Utilities
+resources,oil-gas-and-mining;utilities,Mining & Metals
+mining,oil-gas-and-mining,Mining & Metals
+manufacturing,manufacturing,Manufacturing
+defence,government-administration;manufacturing,Defence & Space
+defense,government-administration;manufacturing,Defence & Space
+space,government-administration;technology-information-and-media;manufacturing,Defence & Space
+government,government-administration,Government
+agritech,farming-ranching-forestry;technology-information-and-media,Agriculture
+agriculture,farming-ranching-forestry,Agriculture
+foodtech,manufacturing;accommodation-and-food-services;technology-information-and-media,Food Production
+food & beverage,accommodation-and-food-services;manufacturing,Food Production
+hospitality,accommodation-and-food-services,Tourism & Hospitality
+tourism,accommodation-and-food-services;consumer-services,Tourism & Hospitality
+edtech,education;technology-information-and-media,Education
+education,education,Education
+property,real-estate-and-equipment-rental-services,Real Estate
+real estate,real-estate-and-equipment-rental-services,Real Estate
+construction,construction,Construction
+transport,transportation-logistics-supply-chain-and-storage,Logistics
+logistics,transportation-logistics-supply-chain-and-storage,Logistics
+supply chain,transportation-logistics-supply-chain-and-storage,Logistics
+retail,retail,Retail & eCommerce
+retail & e-commerce,retail,Retail & eCommerce
+wholesale,wholesale,Wholesale & Distribution
