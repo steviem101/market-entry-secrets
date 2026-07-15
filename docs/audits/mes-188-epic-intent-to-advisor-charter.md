@@ -117,7 +117,7 @@ automate what hurts after volume proves it.
 | D4 | Intro caps | Growth 1 mentor + 3 ecosystem · Scale 2 mentors + priority ecosystem · 30-day window |
 | D5 | Refund policy | **No advertised refund copy at checkout.** Internal ops stance for #47: case-by-case, consumed services (held session / made intro) non-refundable. Note: statutory Australian Consumer Law rights exist regardless of silence — Terms page should not contradict them |
 | D6 | Partner + mentor shortlist & SLA | Owner: **Stephen** — mentor opt-in to be obtained pre-launch (critical path while D8 = yes) |
-| D7 | Booking tool | **Calendly** (30-min event exists; a 60-min event is needed for the Scale strategy session before T13 ships) |
+| D7 | Booking tool | **Calendly** — Growth walkthrough: `/stephen-marketentrysecrets/30min` · Scale strategy session: `/stephen-marketentrysecrets/60-minute-meeting` |
 | D8 | Concierge at launch | **Yes** — T8/T13/T7 in the launch bundle; T10/D6 on the critical path |
 | D9 | Intent hero timing | **Fast-follow** (post-launch, first measured change) |
 

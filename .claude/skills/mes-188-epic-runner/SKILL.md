@@ -35,8 +35,14 @@ without ever crossing an approval boundary on its own.
    edits.
 5. **Verify** per the Testing protocol below. A ticket is not "done" until its acceptance
    criteria in backlog §3 are demonstrated, not asserted.
-6. **PR:** open with `Refs MES-<epic-id>` + `Closes MES-<ticket-id>`, describe the matrix row
-   and test evidence, subscribe to PR activity. **Never merge own PRs.**
+6. **Pre-merge QA (mandatory):** run the **`mes-qa`** skill (the pre-merge exam) on the branch,
+   plus `/code-review` at high effort for approval-gated diffs. Fix every confirmed finding or
+   document why it stands; paste the QA verdict into the PR description. No PR is marked ready
+   without it.
+7. **PR:** open with `Refs MES-<epic-id>` + `Closes MES-<ticket-id>`, describe the matrix row,
+   test evidence, and the mes-qa verdict, subscribe to PR activity. **Never merge own PRs** —
+   the owner merges all Wave-1 PRs after reading the evidence.
+8. **Update Notion** and **end turn** as below (steps renumber accordingly).
 7. **Update Notion:** ticket status, branch, PR link, evidence summary, caveats, follow-ups.
 8. **End turn** with a one-paragraph status: what shipped, what's blocked on whom, what's next.
 
@@ -69,10 +75,13 @@ without ever crossing an approval boundary on its own.
 3. **Runtime smoke (UI tickets):** run `vite` dev in the sandbox + the pre-installed Chromium
    (Playwright, `executablePath: '/opt/pw-browsers/chromium'`); walk the affected flow at 1440px
    and 390px; screenshot into the PR.
-4. **Test accounts:** created via the real signup flow using the intake's plus-addressed test
-   domain, flagged per T12's `is_test` policy so they never pollute metrics. Paid-tier state is
-   reached through the **real checkout with the 100% promo code** (MES-140 flow) — this smoke-tests
-   payments end-to-end at $0. Never use a real card; never write tiers directly.
+4. **Test accounts:** created via the real signup flow under `stephen+090*@marketentrysecrets.com`,
+   flagged per T12's `is_test` policy so they never pollute metrics. Email confirmation for
+   is_test accounts is done by **admin-confirm via service role** — approved in intake, codified
+   in T12's plan, and used for is_test accounts ONLY. Paid-tier state is reached through the
+   **real checkout with the 100% promo code** (MES-140 flow; code held in the Notion intake,
+   never in git) — smoke-tests payments end-to-end at $0. Never use a real card; never write
+   tiers directly.
 5. **Cost cap:** full report generations cost real API money — max 2 per ticket, only when the
    ticket touches generation/gating output; otherwise test against existing flagged reports.
 6. **Migrations:** validated by the PR's Supabase integration check (preview replays the
