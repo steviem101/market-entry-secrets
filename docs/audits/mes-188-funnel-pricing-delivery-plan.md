@@ -7,6 +7,35 @@
 > dropped). Per CLAUDE.md §11 this whole programme sits in approval-gated territory
 > (payments/entitlements/RPCs) — **no implementation starts until this plan is signed off.**
 
+## 0. Correction & reframe (2026-07-15): MES is pre-launch
+
+**All production data referenced in this programme is founder test data — there are no public
+users yet.** Consequences, folded into the plan below:
+
+1. **Voided evidence:** the tier distribution (16 Scale / 5 Growth) is not demand data; every
+   "leads outsell mentors" argument is now structural, not empirical. The report-first workflow
+   recommendation stands on its structural reasons alone (checkout requires auth; value before
+   payment; intent friction).
+2. **Sequencing simplifies dramatically.** Pre-launch is the cheapest moment this programme will
+   ever have: no users to migrate, no grandfathering, no live measurement windows to protect.
+   Reframe from "iterate per window" to **define the launch bundle**: ship Workstreams B + C +
+   T2 + T5a (and T8/T9 if concierge is a launch-day promise) as the *launch state*, not as
+   staged changes to a live funnel. The #159 measurement-window caution applies **post-launch
+   only**; MES-158 (hero intent) can join the launch bundle or be the first fast-follow.
+3. **Launch with instrumentation live from day 1** (T5a becomes a launch blocker, not an
+   optimisation): the first real users are the baseline — don't spend them unmeasured.
+4. **New T12 — pre-launch data hygiene (launch blocker, S):** purge or flag founder test data
+   (`user_subscriptions`, `user_reports`, `user_intake_forms`, `payment_webhook_logs`,
+   `report_quality`, `email_leads` etc. — flag-don't-delete where payment records matter) so
+   day-1 metrics, the quality loop, and any "X reports generated" social proof start clean.
+   Interlocks with `EVAL_BYPASS_USER_ID` (the golden-eval user should be permanently excluded
+   from funnel metrics).
+5. **Still real despite the correction:** the ~19% degraded-run rate in `report_quality`
+   (founder runs exercised the real pipeline) — fix or alert on it pre-launch; and the
+   feedback-capture gap (the widget collected almost nothing across 107 test reports —
+   structural, not sentiment, evidence that the feedback mechanism needs to be more prominent
+   before real users arrive).
+
 ## 1. The product decision this plan delivers
 
 Tier model v2 — each tier is a relationship depth, not a feature list:

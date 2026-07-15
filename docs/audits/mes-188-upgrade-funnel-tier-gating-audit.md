@@ -250,6 +250,18 @@ Suggested order: T1 + T3 together (matrix + copy must land in the same release),
   fold into T3 if desired.
 - **No Stripe config changes** are required or recommended by this spike.
 
+## Post-review correction (2026-07-15)
+
+**All production data cited in this audit is founder test data — the platform has not launched
+to the public.** The tier distribution (24 free / 16 scale / 5 growth), report feedback,
+completed-report counts, and payment volumes are pre-launch testing, and must **not** be read as
+market evidence (e.g. "Scale outsells Growth 3:1" is void). What survives unchanged: every
+code/config finding, the gating gap, the post-payment unlock defect, and the payment-plumbing
+smoke evidence (webhook processing worked mechanically regardless of who triggered it). The
+~19% degraded-run rate in `report_quality` also remains a real technical signal — those runs
+exercised the real pipeline. Funnel recommendations in §4 stand on their structural arguments
+(friction, checkout-requires-auth, value-first) rather than the voided demand data.
+
 ## Acceptance-criteria mapping
 
 - Journey map — §1. Gating table + exact sources — §2. Smoke results (Free/Growth/Scale) — §3.
