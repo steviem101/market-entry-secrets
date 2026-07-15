@@ -54,6 +54,25 @@ relationships disclosed.
 Ship T1 + T3 in the same release (matrix and copy must never disagree in prod). T2 can precede
 everything — it's the highest-ROI fix and fully independent.
 
+**Phase 1 addendum — onboarding-modal friction (amends MES-187, reviewed 2026-07-15):**
+`AuthContext.tsx:27-40` renders the welcome `OnboardingDialog` globally the moment
+`onboarding_completed = false`, and the dialog blocks outside-clicks — so report-flow signups get
+a four-field modal over the generating screen asking Company Name / Country / Target Market /
+Use case, **all of which the intake just captured** (`user_intake_forms.company_name`,
+`country_of_origin`, persona; Target Market is always Australia per MES-187). It would also fire
+over Stripe returns once the T5b order-bump exists. Amendments to fold into **MES-187**:
+
+| | Change | Size |
+|---|---|---|
+| A1 | **Derive, don't ask:** report-flow signups get their profile set from the intake at submission (company, country, use_case ← persona, `target_market='Australia'`, `onboarding_completed=true`) — the modal never shows for them | S |
+| A2 | **Suppression guards:** never render the modal on `/report-creator` or `/report/*`, nor on any Stripe-return render (`stripe_status` param); defer to the next MemberHub/dashboard visit | S |
+| A3 | MES-187 v1 as already scoped (Target Market removed, persona first, website field, telemetry) stays — it now serves only directory-entry signups | (as scoped) |
+
+Email-confirmation hop: return-path plumbing already resumes the intake (`AuthCallback` +
+`consumeAuthReturnPath`); the dead-end screen has its own P1 ticket. Do not change auth policy
+(magic-link-first / disabling confirm-email) until T5a instruments
+`signup_started → session_established`.
+
 ### Phase 2 — Stripe, entitlements & fulfilment plumbing
 
 | Ticket | Scope | Size | Risk flags |
@@ -84,6 +103,7 @@ model, which delivers the differentiation commercially instead of in the RPC.
 ```
 Phase 0  D1–D6 sign-off  ──────────────┐
 T2 (unlock fix, independent) ──────────┤
+MES-187 + A1/A2 (independent) ─────────┤
 Phase 1  T1 + T3 (one release) ◄───────┘
 Phase 2  T8 → T9            (needs D3–D5; T8 before T9)
 Phase 3  T5a → T4 + T5b     (instrument first; parallel with Phase 2)
