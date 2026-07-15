@@ -17,9 +17,12 @@ export interface EcosystemStats {
   mentors: number;
   investors: number;
   accelerators: number;
+  innovationEcosystem: number;
   leadDatabases: number;
   events: number;
   guides: number;
+  caseStudies: number;
+  governmentAgencies: number;
 }
 
 const STAT_KEYS: (keyof EcosystemStats)[] = [
@@ -27,9 +30,12 @@ const STAT_KEYS: (keyof EcosystemStats)[] = [
   "mentors",
   "investors",
   "accelerators",
+  "innovationEcosystem",
   "leadDatabases",
   "events",
   "guides",
+  "caseStudies",
+  "governmentAgencies",
 ];
 
 // Core counts that must be > 0 for the hero substantiation line to be credible.

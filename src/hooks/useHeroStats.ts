@@ -13,6 +13,9 @@ interface HeroStatCount {
   guides: number;
   investors: number;
   accelerators: number;
+  innovationEcosystem: number;
+  caseStudies: number;
+  governmentAgencies: number;
 }
 
 export const useHeroStats = () => {
@@ -27,6 +30,9 @@ export const useHeroStats = () => {
         guides: data.guides,
         investors: data.investors,
         accelerators: data.accelerators,
+        innovationEcosystem: data.innovationEcosystem,
+        caseStudies: data.caseStudies,
+        governmentAgencies: data.governmentAgencies,
       }
     : undefined;
 
