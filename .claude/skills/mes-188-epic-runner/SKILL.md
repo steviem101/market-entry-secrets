@@ -35,10 +35,13 @@ without ever crossing an approval boundary on its own.
    edits.
 5. **Verify** per the Testing protocol below. A ticket is not "done" until its acceptance
    criteria in backlog §3 are demonstrated, not asserted.
-6. **Pre-merge QA (mandatory):** run the **`mes-qa`** skill (the pre-merge exam) on the branch,
-   plus `/code-review` at high effort for approval-gated diffs. Fix every confirmed finding or
-   document why it stands; paste the QA verdict into the PR description. No PR is marked ready
-   without it.
+6. **Pre-merge QA (mandatory — the LAST step before the PR):** run the **`mes-qa`** skill (the full
+   pre-merge exam) on the branch, plus `/code-review` at high effort for approval-gated diffs. Fix
+   every confirmed finding or document why it stands; paste the QA verdict — with explicit Critical
+   and Warning counts — into the PR description. This is **enforced** by two PreToolUse hooks on
+   `mcp__github__create_pull_request` (a full-verdict body check + an independent `agent` hook that
+   re-runs the full exam over the diff and blocks on any Critical/Warning), so a PR literally cannot
+   open without it — but run it yourself first; don't rely on the gate to catch a skipped exam.
 7. **PR:** open with `Refs MES-<epic-id>` + `Closes MES-<ticket-id>`, describe the matrix row,
    test evidence, and the mes-qa verdict, subscribe to PR activity. **Never merge own PRs** —
    the owner merges all Wave-1 PRs after reading the evidence.
