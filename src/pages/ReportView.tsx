@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
+import { trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { ReportHeader } from '@/components/report/ReportHeader';
@@ -123,6 +124,35 @@ const ReportViewInner = () => {
       queryClient.invalidateQueries({ queryKey: ['report', reportId] });
     }
   }, [unlockState, reportId, queryClient]);
+
+  // T5a (MES-191) funnel events. report_viewed fires once per report open;
+  // checkout_completed fires once when the post-payment tier flip lands (a Stripe
+  // return lands on ONE surface, so this + PaymentStatusModal never double-count
+  // a single checkout). Fire-and-forget; no PII in the payload.
+  const viewedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const rid = (report as { id?: string } | undefined)?.id;
+    if (rid && viewedRef.current !== rid) {
+      viewedRef.current = rid;
+      trackFunnelEvent('report_viewed', {
+        source: 'report',
+        user_id: user?.id ?? null,
+        metadata: { tier: (report as { tier_at_generation?: string } | undefined)?.tier_at_generation ?? null },
+      });
+    }
+  }, [report, user]);
+
+  const checkoutTrackedRef = useRef(false);
+  useEffect(() => {
+    if (unlockState === 'unlocked' && !checkoutTrackedRef.current) {
+      checkoutTrackedRef.current = true;
+      trackFunnelEvent('checkout_completed', {
+        source: 'report',
+        user_id: user?.id ?? null,
+        metadata: { tier: currentTier },
+      });
+    }
+  }, [unlockState, user, currentTier]);
 
   // Wait for auth to settle before showing report (especially after Stripe redirect)
   if (isLoading || (authLoading && cameFromStripe)) {
