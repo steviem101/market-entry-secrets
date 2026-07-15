@@ -25,14 +25,30 @@ export type IntakeEventType =
   | 'report_completed'
   | 'abandoned';
 
+// Funnel-wide events (MES-191 / T5a). Same table + fire-and-forget pattern as
+// the intake events, plus a `source` attribution field (homepage_hero reserved
+// for MES-158). Kept as one bus so the funnel is queryable end-to-end.
+export type FunnelEventType =
+  | 'gate_impression'
+  | 'gate_click'
+  | 'checkout_started'
+  | 'checkout_completed'
+  | 'signup_started'
+  | 'session_established'
+  | 'report_viewed'
+  | 'section_feedback_opened';
+
+export type FunnelEvent = IntakeEventType | FunnelEventType;
+
 interface IntakeEventRow {
   session_id: string;
   user_id?: string | null;
   intake_form_id?: string | null;
-  event_type: IntakeEventType;
+  event_type: FunnelEvent;
   step?: number | null;
   field_name?: string | null;
   persona?: string | null;
+  source?: string | null;
   metadata?: Record<string, unknown>;
 }
 
@@ -61,12 +77,13 @@ interface TrackOptions {
   step?: number;
   field_name?: string;
   persona?: string;
+  source?: string;
   metadata?: Record<string, unknown>;
   intake_form_id?: string;
   user_id?: string | null;
 }
 
-export function trackIntakeEvent(type: IntakeEventType, opts: TrackOptions = {}): void {
+export function trackIntakeEvent(type: FunnelEvent, opts: TrackOptions = {}): void {
   try {
     const client = supabase as unknown as MinimalInsertClient;
     const row: IntakeEventRow = {
@@ -75,6 +92,7 @@ export function trackIntakeEvent(type: IntakeEventType, opts: TrackOptions = {})
       step: opts.step ?? null,
       field_name: opts.field_name ?? null,
       persona: opts.persona ?? null,
+      source: opts.source ?? null,
       metadata: opts.metadata ?? {},
       intake_form_id: opts.intake_form_id ?? null,
       user_id: opts.user_id ?? null,
@@ -89,4 +107,13 @@ export function trackIntakeEvent(type: IntakeEventType, opts: TrackOptions = {})
   } catch {
     /* ignore */
   }
+}
+
+/**
+ * Funnel-wide event tracker (MES-191 / T5a) — semantic alias over the same
+ * fire-and-forget bus, for the gate/checkout/report/feedback funnel outside the
+ * intake wizard. Pass `source` for attribution (e.g. 'report', 'pricing').
+ */
+export function trackFunnelEvent(type: FunnelEventType, opts: TrackOptions = {}): void {
+  trackIntakeEvent(type, opts);
 }

@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
+
+function checkoutSource(): string {
+  const p = typeof window !== 'undefined' ? window.location.pathname : '';
+  if (p.startsWith('/report')) return 'report';
+  if (p.startsWith('/pricing')) return 'pricing';
+  return 'other';
+}
 
 interface CheckoutOptions {
   tier: 'growth' | 'scale';
@@ -40,6 +48,13 @@ export const useCheckout = () => {
       }
 
       if (data?.url) {
+        // T5a (MES-191): the checkout intent succeeded and we're about to
+        // redirect to Stripe. Fire-and-forget; never blocks the redirect.
+        trackFunnelEvent('checkout_started', {
+          source: checkoutSource(),
+          user_id: user.id,
+          metadata: { tier },
+        });
         // If inside an iframe (e.g. Lovable preview), navigate the
         // parent window. Opening a new tab doesn't work because browser
         // storage partitioning gives the new tab a separate localStorage

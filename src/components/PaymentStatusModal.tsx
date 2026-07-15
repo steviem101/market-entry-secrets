@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
+import { trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 
 interface PaymentStatusModalProps {
   isOpen: boolean;
@@ -61,6 +62,19 @@ export const PaymentStatusModal = ({ isOpen, onClose, status, sessionId, success
     const tier = await refetchSubscription();
     if (tier && tier !== 'free') setActivation('active');
   };
+
+  // T5a (MES-191): fire checkout_completed once the pricing-return activation
+  // confirms server-side (never from the URL param). A Stripe return lands on
+  // ONE surface, so this + ReportView never double-count a single checkout.
+  // Reset per open so a later checkout in the same session can fire again.
+  const completedRef = useRef(false);
+  useEffect(() => { if (!isOpen) completedRef.current = false; }, [isOpen]);
+  useEffect(() => {
+    if (activation === 'active' && !completedRef.current) {
+      completedRef.current = true;
+      trackFunnelEvent('checkout_completed', { source: 'pricing' });
+    }
+  }, [activation]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
