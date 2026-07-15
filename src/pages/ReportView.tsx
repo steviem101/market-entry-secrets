@@ -270,6 +270,14 @@ const ReportViewInner = () => {
               {/* Key Metrics stat cards — only for new reports with metrics */}
               <ReportKeyMetrics metrics={keyMetrics} />
 
+              {/* Prominent one-click feedback at report open (T5a / MES-191).
+                  The fuller notes widget stays at the report footer. */}
+              <ReportFeedback
+                variant="prominent"
+                reportId={report.id}
+                existingScore={report.feedback_score}
+              />
+
               {SECTION_ORDER.map((sectionId) => {
                 const section = sections[sectionId];
                 const requiredTier = TIER_REQUIREMENTS[sectionId];

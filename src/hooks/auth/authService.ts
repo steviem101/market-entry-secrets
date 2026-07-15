@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from './types';
+import { trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 
 export const useAuthService = () => {
   const { toast } = useToast();
@@ -52,6 +53,10 @@ export const useAuthService = () => {
   };
 
   const signUpWithEmail = async (email: string, password: string, metadata?: any) => {
+    // T5a (MES-191): user initiated account creation. Fired before the network
+    // call so an abandoned/failed signup still counts as "started"; the paired
+    // `session_established` (useAuthState, on SIGNED_IN) marks completion. No PII.
+    trackFunnelEvent('signup_started', { source: 'email' });
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
