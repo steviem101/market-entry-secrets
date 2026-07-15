@@ -161,7 +161,15 @@ export const useAuthService = () => {
     }
   };
 
-  const updateProfile = async (updates: Partial<UserProfile>, user: any, setProfile: (profile: UserProfile | null) => void) => {
+  const updateProfile = async (
+    updates: Partial<UserProfile>,
+    user: any,
+    setProfile: (profile: UserProfile | null) => void,
+    // Silent updates skip the success/error toasts — used when we derive the
+    // profile in the background (e.g. from the report intake, MES-187 A1) and a
+    // "Profile Updated" toast mid-generation would be noise.
+    silent = false,
+  ) => {
     if (!user) return { error: 'No user logged in' };
 
     try {
@@ -181,27 +189,33 @@ export const useAuthService = () => {
         .single();
 
       if (error) {
-        toast({
-          title: "Profile Update Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        if (!silent) {
+          toast({
+            title: "Profile Update Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return { error };
       }
 
       setProfile(data);
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
+      if (!silent) {
+        toast({
+          title: "Profile Updated",
+          description: "Your profile has been successfully updated.",
+        });
+      }
 
       return { data };
     } catch (error) {
-      toast({
-        title: "Profile Update Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+      if (!silent) {
+        toast({
+          title: "Profile Update Error",
+          description: "An unexpected error occurred",
+          variant: "destructive",
+        });
+      }
       return { error };
     }
   };

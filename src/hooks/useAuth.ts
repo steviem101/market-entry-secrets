@@ -2,6 +2,7 @@
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useAuthService } from './auth/authService';
 import { useRoleHelpers } from './auth/useRoleHelpers';
+import type { UserProfile } from './auth/types';
 
 export const useAuth = () => {
   const {
@@ -72,6 +73,13 @@ export const useAuth = () => {
     }
   };
 
+  // Silent, background profile derivation (MES-187 A1). Unlike updateProfile it
+  // does NOT toggle global auth loading (which would flicker the report/auth UI
+  // mid-generation) and shows no toast. Best-effort — callers ignore failures.
+  const deriveProfileFromIntake = async (updates: Partial<UserProfile>) => {
+    return await serviceUpdateProfile(updates, user, setProfile, true);
+  };
+
   return {
     user,
     profile,
@@ -84,6 +92,7 @@ export const useAuth = () => {
     signInWithMagicLink,
     signOut,
     updateProfile,
+    deriveProfileFromIntake,
     resetPassword,
     hasRole,
     isAdmin,

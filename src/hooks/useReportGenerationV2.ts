@@ -21,7 +21,7 @@ export const useReportGenerationV2 = () => {
   const [generationStatus, setGenerationStatus] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, deriveProfileFromIntake } = useAuth();
 
   const saveDraft = (data: Partial<IntakeFormDataV2>) => {
     try { localStorage.setItem(LOCALSTORAGE_KEY_V2, JSON.stringify(data)); } catch { /* ignore */ }
@@ -49,6 +49,19 @@ export const useReportGenerationV2 = () => {
 
     try {
       const intakeForm = await reportApi.submitIntakeFormV2(data, user.id);
+
+      // MES-187 A1: derive the member profile from the intake we just collected
+      // so the onboarding modal never asks again for what we already have.
+      // Best-effort + silent — never blocks or fails generation (if it errors,
+      // the modal simply defers to a later non-report visit, still suppressed on
+      // the report flow by the OnboardingGate / A2).
+      void deriveProfileFromIntake({
+        company_name: data.company_name,
+        country: data.country_of_origin,
+        target_market: 'Australia',
+        use_case: data.persona === 'startup' ? 'founder' : 'corporate',
+        onboarding_completed: true,
+      }).catch(() => {});
 
       setGenerationStatus('Starting report generation…');
       const result = await reportApi.generateReport(intakeForm.id);
