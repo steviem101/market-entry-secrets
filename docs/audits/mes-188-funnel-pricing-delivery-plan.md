@@ -191,13 +191,46 @@ sub-ticket support:
 | **B — Frictionless onboarding** | MES-187 + A1–A4 · T11 (A5–A6) | independent; ship early with T2 |
 | **C — Value & gating** | T1 re-gate · T3 copy · T4 intent-aware teasers (#153) | T1+T3 one release; approval-gated |
 | **D — Purchase & activation** | T2 unlock fix (#45) · T8 reprice + entitlements · T9 intro gating | D1–D6 decisions gate T8/T9 |
-| **E — Concierge & delivery** | T10 partner programme · T7 lead delivery (#47) | T10 is calendar-bound; start early |
+| **E — Servicing & fulfilment (post-report)** | T13 booking · T14 refinement boxes · T15 deliverables hub · T16 lifecycle emails · T10 partner programme · T7 lead delivery (#47) | see §3d; T10 is calendar-bound, start early; if concierge is a launch-day promise, T13/T15/T16 join the launch bundle |
 | **F — Measurement spine** | T5a events (incl. MES-158 attribution) · T5b comparison moments | T5a lands **first** — every other workstream reports into it |
 
 Epic-level sequencing: **F(T5a) + B + T2 first** (small, independent, immediate ROI) → **C**
 (one release) → **D** → **A** (post-measurement-window, flagged) → **E** ongoing. Cross-epic
 interlocks: #45 (T2), #47 (T7/T8 refunds), #153 (T4), #159 (workstream A timing), MES-187
 (workstream B).
+
+## 3d. Post-report servicing layer (added 2026-07-15 — the final piece)
+
+The journey must not end at "report rendered". Target end-to-end for paid users:
+**report opens → book your advisor session (entitlement banner + email) → session tunes the ICP
+and books intros → deliverables land in the Member Hub with live statuses → refine
+asynchronously from inside the report**. Much of the skeleton already exists: MemberHub's
+"Requested lists" section already tracks `new → in_progress → delivered` with
+`delivered_database_id` → `/leads/:id` (P1-D), "Mentor Connections" is backed by
+`mentor_contact_requests` (`status`, `admin_notes`), and `LeadListRequestCard` already lives in
+the report's lead-list section. This workstream extends those patterns — it does not invent new
+architecture.
+
+| Ticket | Scope | Size | Risk flags |
+|---|---|---|---|
+| **T13 Advisor booking flow** | Entitlement-driven banner at the top of the report for Growth/Scale ("Your walkthrough call / strategy session is included — book a time") + the same link in the report-ready email; **one** booking tool (HubSpot Meetings if the CRM stays HubSpot, else Calendly — not both); display gated by `service_entitlements` (T8); booking-window fallback when the calendar is full | S–M | Freemium funnel · depends T8 |
+| **T14 Section refinement boxes (mentors + leads)** | One reusable "concierge tuning" component at the top of the mentor and lead sections (below title/first paragraph, per product direction): structured reasons (wrong sector / wrong stage / wrong geography / not enough) + free text + "book time with your advisor" link for entitled users. **Consolidates** `LeadListRequestCard` into the same mechanism and writes to one `report_section_feedback` path feeding the admin ops queue and the quality loop. Shown only where matches are visible (Growth: mentors; Scale: both); free users' locked sections keep the T4 teaser + intent-capture instead | M | Freemium funnel · Touches RLS (new table, owner-insert/read, service-role update) |
+| **T15 Deliverables & introductions hub** | Unify "Requested lists" + "Mentor Connections" + ecosystem-intro tracking into one Member Hub deliverables area: per-item status (`requested → in progress → delivered / intro made → meeting booked`), advisor notes, SLA countdown copy; the report's lead-list section cross-links here once delivered ("your list lives in your dashboard"). Admin updates via existing `/admin` patterns — no partner-facing portal at launch | M | Freemium funnel · Touches RLS |
+| **T16 Post-report lifecycle emails** | Report-ready email **per tier** (Free: report + what your locked sections found; paid: report + book-your-session + what's coming to your hub and when); status-change notifications (list delivered, intro made) via the existing send-email/queue; day-2/day-7 follow-ups (absorbs the retention/WS-G idea; interlocks with the existing Resend comms-audit ticket) | M | Freemium funnel |
+
+**Design decisions inside this workstream:**
+- **Refinement boxes are concierge, not complaint.** Copy frames tuning as part of the paid
+  service ("Not quite your ICP? Tell us — we'll re-tune within 24h, or bring it to your
+  session"), never "was this wrong?". Prominent placement is fine; apologetic framing is not.
+- **"List now, perfect list after."** Scale gets the report-matched list delivered to the hub
+  immediately (automated upload), and the *tuned* list after the advisor session — satisfying
+  both "leads right away" and "the most perfect list possible" without making delivery block on
+  a calendar.
+- **One feedback system.** `ReportFeedback` (whole-report score), the refine boxes, and list
+  requests must converge on one data path — three disconnected feedback tables would fragment
+  the only quality signal MES gets at launch.
+- **SLA copy everywhere expectations are set:** checkout, report banner, hub, and email must
+  quote the same delivery windows.
 
 ## 4. Sequencing
 
