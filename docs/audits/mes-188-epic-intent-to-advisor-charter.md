@@ -52,7 +52,7 @@ party's reply (fallback: advisor proposes alternates).
 ### WS-A — Entry & intent
 | Ticket | Scope | Size | When |
 |---|---|---|---|
-| MES-158 | Hero intent capture V1 (input + chips → sessionStorage prefill → confirm step in intake; intents mapped to `goal_ids`; rule-based classification; "browse now" path for directory-shaped intents) | M | **First post-launch fast-follow** (flagged) |
+| MES-158 | Hero intent capture V1 (input + chips → sessionStorage prefill → confirm step in intake; intents mapped to `goal_ids`; rule-based classification; "browse now" path for directory-shaped intents). **Hubble live-review amendments (2026-07-15):** chips are first-person situational ("I need my first Australian customers"), not imperatives; credibility strip is *partial*-named — named provider/agency/investor cards with logos + anonymised mentor cards that trade names for signal; hero promise stays the report, never "book a call" (the human is what the tiers sell); LeadGenPopup suppressed on the homepage when the intent hero ships | M | **Fast-follow or launch — decision D9** (flagged either way) |
 
 ### WS-B — Frictionless onboarding
 | Ticket | Scope | Size | When |
@@ -119,6 +119,37 @@ automate what hurts after volume proves it.
 | D6 | Partner + mentor shortlist & SLA | Top 20–30 entities appearing in test reports; named contacts; mentor opt-in |
 | D7 | Booking tool | **One** of HubSpot Meetings (if CRM stays HubSpot) or Calendly — never both |
 | D8 | Is concierge a launch-day promise? | **Yes, recommended** — it is the differentiator; requires T8/T13/T7 in the bundle and D6 signed |
+| D9 | Intent hero (MES-158) at launch or first fast-follow? | **Fast-follow, recommended** — launch with the proven single-CTA hero; make the intent hero the first measured change |
+
+## 5b. Design direction notes (Hubble live review, 2026-07-15 + design recommendations)
+
+From the hubble.social teardown (Webflow build; full copy/structure reviewed):
+
+1. **Mirror the posture, not the material.** Outcome-first hero, first-person situational chips,
+   proof-of-answerability strip, "not sure where to start?" topic grid, X-not-Y manifesto copy,
+   3-step how-it-works that ends on the paid product, supply-side recruitment section. Do NOT
+   mirror booking-led conversion (their product is the call; MES's free product is the report).
+2. **X-not-Y copy for T3**, honest because of the grounding invariant: *"Recommendations that
+   trace to real providers — not AI guesses. A plan, not a PDF. Warm introductions, not a
+   contact list."* How-it-works: *Tell us your goal → get your free report → work it with your
+   advisor.*
+3. **Show the product, not claims (top recommendation):** link a real, curated **sample report**
+   from the hero ("See a real report") using the existing share-token infrastructure — near-zero
+   build cost, the strongest trust asset MES owns. Replace/augment the static hero mockup with it.
+4. **Design the generating screen as theatre:** report skeleton assembling with live match counts
+   ("Found 12 providers… 8 mentors…") instead of a spinner — perceived value compounds during
+   the 3-minute wait and sets up the comparison moment (T5b).
+5. **One locked-section metaphor:** redaction bars (the `ReportMatchCard` ████ pattern) over
+   generic blur — redaction reads as "real content underneath"; blur reads as stock UI. Unify.
+6. **Real numbers as design material:** proof strip counts pulled from the DB (post-T12 they're
+   honest), `tabular-nums`, never hand-typed marketing numbers that drift.
+7. **Purchase-confidence microcopy at the $999 moment:** "Secure checkout via Stripe · One-time
+   payment · Tax invoice issued" — AU B2B buyers look for it; costs one line (T3).
+8. **Shared reports get OG cards** (company name + section count + "Australian market entry
+   report") so the share-link viral loop looks credible in Slack/LinkedIn previews (rides T4/SEO).
+9. **Craft floor:** hero renders without layout shift pre-hydration (CSR + prerender-as-anon
+   posture), 390px mobile pass on every new surface, visible focus states, `prefers-reduced-motion`
+   respected, dark theme intentional not inverted.
 
 ## 6. Guardrails (non-negotiable, carried from the audit)
 
