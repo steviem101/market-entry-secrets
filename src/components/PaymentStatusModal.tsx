@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface PaymentStatusModalProps {
   isOpen: boolean;
@@ -14,23 +16,58 @@ interface PaymentStatusModalProps {
 export const PaymentStatusModal = ({ isOpen, onClose, status, sessionId, successActionLabel = 'Get Started' }: PaymentStatusModalProps) => {
   const isSuccess = status === 'success';
   const navigate = useNavigate();
+  const { refetch: refetchSubscription } = useSubscription();
+
+  // Activation is server-truth, never the URL param. `?stripe_status=success`
+  // is client-settable, and — more importantly — the checkout.session.completed
+  // webhook may not have upserted user_subscriptions yet when Stripe redirects.
+  // So we poll the real tier (2s x 15 ≈ 30s, mirroring ReportView) and only
+  // claim the upgrade once it lands. Previously this modal asserted "account
+  // upgraded" straight from the URL param, showing success while the tier was
+  // still 'free' until a reload (MES-192 / MES-111 AUD-011). 'free' is the
+  // pre-purchase default; MES sells one-time free→paid upgrades.
+  // (T5a/MES-191 attaches the `checkout_completed` funnel event here once its
+  // event taxonomy lands — deliberately not forked into this fix.)
+  const [activation, setActivation] = useState<'activating' | 'active' | 'timeout'>('activating');
+
+  useEffect(() => {
+    if (!isOpen || !isSuccess) return;
+    setActivation('activating');
+    let attempts = 0;
+    let cancelled = false;
+    let timerId = window.setTimeout(poll, 2000);
+
+    async function poll() {
+      if (cancelled) return;
+      const tier = await refetchSubscription();
+      attempts++;
+      if (cancelled) return;
+      if (tier && tier !== 'free') {
+        setActivation('active');
+      } else if (attempts < 15) {
+        timerId = window.setTimeout(poll, 2000);
+      } else {
+        setActivation('timeout');
+      }
+    }
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timerId);
+    };
+  }, [isOpen, isSuccess, refetchSubscription]);
+
+  const handleRefreshAccess = async () => {
+    const tier = await refetchSubscription();
+    if (tier && tier !== 'free') setActivation('active');
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex flex-col items-center text-center space-y-4">
-            {isSuccess ? (
-              <>
-                <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <CheckCircle className="w-10 h-10 text-green-500" />
-                </div>
-                <DialogTitle className="text-2xl">Payment Successful!</DialogTitle>
-                <DialogDescription className="text-base">
-                  Thank you for your purchase. Your account has been upgraded and you now have access to premium features.
-                </DialogDescription>
-              </>
-            ) : (
+            {!isSuccess ? (
               <>
                 <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center">
                   <XCircle className="w-10 h-10 text-orange-500" />
@@ -38,6 +75,36 @@ export const PaymentStatusModal = ({ isOpen, onClose, status, sessionId, success
                 <DialogTitle className="text-2xl">Payment Cancelled</DialogTitle>
                 <DialogDescription className="text-base">
                   Your payment was cancelled. No charges were made to your account. You can try again whenever you're ready.
+                </DialogDescription>
+              </>
+            ) : activation === 'active' ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <CheckCircle className="w-10 h-10 text-green-500" />
+                </div>
+                <DialogTitle className="text-2xl">Payment successful!</DialogTitle>
+                <DialogDescription className="text-base">
+                  Thank you for your purchase. Your account has been upgraded and your premium sections are now unlocked.
+                </DialogDescription>
+              </>
+            ) : activation === 'timeout' ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <CheckCircle className="w-10 h-10 text-amber-500" />
+                </div>
+                <DialogTitle className="text-2xl">Payment received</DialogTitle>
+                <DialogDescription className="text-base">
+                  Your payment went through, but activation is taking a little longer than usual. It can take a moment after checkout — refresh access to check again.
+                </DialogDescription>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                </div>
+                <DialogTitle className="text-2xl">Activating your account…</DialogTitle>
+                <DialogDescription className="text-base">
+                  Payment received — we're unlocking your premium features. This usually takes a few seconds.
                 </DialogDescription>
               </>
             )}
@@ -52,7 +119,17 @@ export const PaymentStatusModal = ({ isOpen, onClose, status, sessionId, success
         )}
 
         <div className="flex flex-col gap-2 mt-6">
-          <Button onClick={onClose} className="w-full">
+          {isSuccess && activation === 'timeout' && (
+            <Button onClick={handleRefreshAccess} className="w-full">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh access
+            </Button>
+          )}
+          <Button
+            onClick={onClose}
+            variant={isSuccess && activation === 'timeout' ? 'outline' : 'default'}
+            className="w-full"
+          >
             {isSuccess ? successActionLabel : 'Close'}
           </Button>
           {!isSuccess && (

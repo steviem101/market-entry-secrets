@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
@@ -35,6 +36,7 @@ const ReportViewInner = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
   const { data: report, isLoading, error } = useReport(reportId);
   const { subscription, refetch: refetchSubscription } = useSubscription();
   const currentTier = subscription?.tier || 'free';
@@ -106,6 +108,21 @@ const ReportViewInner = () => {
       toast.info('Payment is still processing. Give it a few more seconds and try again.');
     }
   };
+
+  // When the tier flips to unlocked, the cached report_json is still the
+  // pre-payment, server-stripped payload: get_tier_gated_report strips gated
+  // sections by the caller's tier AT FETCH TIME (reportApi.fetchReport). Bumping
+  // currentTier alone re-renders those sections as "unlocked but empty", which
+  // falls into the legacy ReportRegenerateSection ("Generate a new report")
+  // branch. Invalidate so the RPC re-runs at the new tier and the just-paid-for
+  // sections render inline, no reload needed (MES-192, the concrete #45 case).
+  // (T5a/MES-191 attaches the `checkout_completed` funnel event here once its
+  // event taxonomy lands — deliberately not forked into this fix.)
+  useEffect(() => {
+    if (unlockState === 'unlocked' && reportId) {
+      queryClient.invalidateQueries({ queryKey: ['report', reportId] });
+    }
+  }, [unlockState, reportId, queryClient]);
 
   // Wait for auth to settle before showing report (especially after Stripe redirect)
   if (isLoading || (authLoading && cameFromStripe)) {
