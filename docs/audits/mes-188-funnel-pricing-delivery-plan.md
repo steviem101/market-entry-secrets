@@ -73,6 +73,18 @@ Email-confirmation hop: return-path plumbing already resumes the intake (`AuthCa
 (magic-link-first / disabling confirm-email) until T5a instruments
 `signup_started → session_established`.
 
+**Approved onboarding extensions (2026-07-15 review — approved in conversation):**
+
+| | Change | Where | Size |
+|---|---|---|---|
+| A4 | **Card, not modal:** for anyone the modal would still target (directory-entry signups), replace the blocking dialog with a dismissible "complete your profile" card in MemberHub with a progress meter and stated payoff | MES-187 (same component/release) | S |
+| A5 | **Derive before asking:** persona from `mes_user_persona` localStorage at signup; company from the signup **email domain** via the existing `scrape-company` enrichment (async, silent, per-domain cache, free-mail domains fall back to the ask) — note the intake already does exactly this (`website_prefill_from_email`, `ReportCreatorV2.tsx:126-141`); this extends the pattern to profiles | Fast-follow ticket (T11) | S |
+| A6 | **Navigation, not survey:** if one question survives, it's "What are you here to do?" (generate my report / find providers / find a mentor / list my business) — the answer routes the user *and* sets `use_case`; "list my business" branches supply-side signups (providers/advisors/agencies) to the partner path, which Phase 4 (T10) now cares about | Fast-follow ticket (T11) | S |
+| — | **Hard rule:** nothing may ever gate on `onboarding_completed` — no report generation, directory access, or checkout. Observed-behaviour signal (categories browsed, persona toggle) rides T5a as profile input | Guardrail, all tickets | — |
+
+**T11 (new, fast-follow to MES-187):** email-domain profile enrichment + "what are you here
+to do?" routing question + supply-side branch. S–M. *Freemium funnel.*
+
 ### Phase 2 — Stripe, entitlements & fulfilment plumbing
 
 | Ticket | Scope | Size | Risk flags |
@@ -97,6 +109,66 @@ Email-confirmation hop: return-path plumbing already resumes the intake (`AuthCa
 
 **Dropped:** T6 (partial mentor gating, 1-vs-all RPC machinery) — superseded by the intro-cap
 model, which delivers the differentiation commercially instead of in the RPC.
+
+## 3b. MES-158 review — homepage hero intent capture (analysed 2026-07-15)
+
+MES-158 ("hero asks what the visitor needs → routes to the report generator prefilled") is the
+missing **top** of this funnel and belongs in the same programme. Assessment:
+
+**What's right (keep as scoped):** outcome-first hero; chips over blank-page; the explicit
+"no chatbot in V1" pushback; sessionStorage prefill contract (option 2); the confirm/refine step;
+no anonymous DB writes; gating untouched; analytics events specified.
+
+**What the ticket under-exploits — the intent thread.** Hero intent shouldn't just prefill a
+form; it should be captured **once** and flow through the entire funnel:
+
+1. **Intent → report emphasis (plumbing already exists):** `generate-report` prioritises
+   sections from `goal_ids` (`goalsToPrioritisedSections`, `index.ts:3009`) — map hero intents
+   onto goal ids + sector and the report *leads with* what the visitor asked for. No new
+   machinery.
+2. **Intent → profile (closes the loop with MES-187 A1):** the visitor's hero text is the best
+   `use_case`/persona signal MES will ever get; at signup-at-generate it flows into the derived
+   profile. Intent asked once on the homepage, never re-asked anywhere.
+3. **Intent → tier-aware upsell (connects to T4/T5b):** intents map to tiers. "Find a mentor" →
+   the one section Free locks; "find leads / first customers" → Scale from minute one. The
+   confirmation step and the in-report gate cards must acknowledge the intent honestly
+   ("You asked for a fintech mentor — your report matched 8; Growth unlocks introductions"),
+   and the Review-step order-bump can be intent-aware (lead-intent visitors see Scale first).
+   Done dishonestly this is bait-and-switch; done honestly it's the strongest conversion copy
+   in the funnel — the gate answers the exact thing the visitor typed.
+4. **Intent → attribution:** MES-158's event names must join T5a's spine
+   (`source=homepage_hero` flowing hero → intake → report → gate click → paid), or the epic's
+   core question ("which intents convert to which tier?") stays unanswerable.
+
+**Cautions:** (a) **directory-shaped intents** — "find a startup lawyer" is served *today* by a
+free public directory; routing everything into a 3-minute report can hurt task completion. Keep
+the secondary "browse now" path on the confirmation step for provider/event intents. (b)
+**measurement window** — the #159 homepage ticket warns mid-window hero changes destroy MES-116
+attribution; ship MES-158 behind a flag and sequence after that window closes. (c) chips should
+be curated to intents MES can actually fulfil from directory data (grounding invariant); rule-
+based classification for V1 is right — resist LLM parsing until V2, after the user is in the flow.
+
+## 3c. Epic structure — one programme of record
+
+Recommend converting MES-188 into (or parenting it under) a single epic using the tickets DB's
+sub-ticket support:
+
+> **EPIC: Intent-to-Advisor funnel** — *capture intent once; deliver the free report around it;
+> upsell with the two sections that answer it; fulfil with humans.*
+
+| Workstream | Tickets | Notes |
+|---|---|---|
+| **A — Entry & intent** | MES-158 (hero intent V1, flagged) | sequence after the #159/MES-116 measurement window |
+| **B — Frictionless onboarding** | MES-187 + A1–A4 · T11 (A5–A6) | independent; ship early with T2 |
+| **C — Value & gating** | T1 re-gate · T3 copy · T4 intent-aware teasers (#153) | T1+T3 one release; approval-gated |
+| **D — Purchase & activation** | T2 unlock fix (#45) · T8 reprice + entitlements · T9 intro gating | D1–D6 decisions gate T8/T9 |
+| **E — Concierge & delivery** | T10 partner programme · T7 lead delivery (#47) | T10 is calendar-bound; start early |
+| **F — Measurement spine** | T5a events (incl. MES-158 attribution) · T5b comparison moments | T5a lands **first** — every other workstream reports into it |
+
+Epic-level sequencing: **F(T5a) + B + T2 first** (small, independent, immediate ROI) → **C**
+(one release) → **D** → **A** (post-measurement-window, flagged) → **E** ongoing. Cross-epic
+interlocks: #45 (T2), #47 (T7/T8 refunds), #153 (T4), #159 (workstream A timing), MES-187
+(workstream B).
 
 ## 4. Sequencing
 
