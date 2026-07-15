@@ -339,6 +339,24 @@ function buildReportQualityCard(t: any, intake: any, sub: { score: number; rubri
   return { text: `Report Quality — ${company} — Build ${t.build_health}/100`, blocks, color: band.c };
 }
 
+// Human-readable degraded causes for the ops alert (MES-199, T17). Mirrors the
+// `degraded` conditions in computeReportTelemetry — best-effort labelling; the
+// stored `degraded` flag itself remains authoritative. ~91% of degradations are
+// a failed company scrape, so the cause helps ops triage at a glance.
+// deno-lint-ignore no-explicit-any
+function degradedCauses(t: any): string[] {
+  const s = t.sources ?? {};
+  const ph = s.perplexity_health;
+  const out: string[] = [];
+  if (!s.company_scrape) out.push("company scrape failed");
+  if ((t.tables_hit ?? 0) < 3) out.push(`only ${t.tables_hit ?? 0}/${RAG_SOURCES.length} data tables hit`);
+  if (Array.isArray(t.failed_sections) && t.failed_sections.length) out.push(`failed sections: ${t.failed_sections.join(", ")}`);
+  if (!s.perplexity_used) out.push("Perplexity not used");
+  else if (ph && ph.attempted > 0 && ph.succeeded === 0) out.push(`Perplexity dead (0/${ph.attempted} calls)`);
+  if (t.utilization_rate != null && t.utilization_rate < 0.5) out.push(`low utilization ${Math.round(t.utilization_rate * 100)}%`);
+  return out;
+}
+
 // deno-lint-ignore no-explicit-any
 export async function handleReportQuality(supabase: any, ev: any): Promise<{ text: string; blocks: unknown[]; color: string } | null> {
   const reportId = ev.object_id;
@@ -379,6 +397,36 @@ export async function handleReportQuality(supabase: any, ev: any): Promise<{ tex
     metadata: { company: t.company, words: t.words, sections_visible: t.sections_visible, visible_with_content: t.visible_with_content, failed_sections: t.failed_sections },
   }, { onConflict: "report_id" });
   if (upErr) logErr("upsert", upErr.message);
+
+  // T17 (MES-199): page ops on a DEGRADED completed report — but ONLY for real
+  // users, never is_test accounts (MES-190), so founder/no-website test runs
+  // don't spam the alert. Emits report.quality.degraded into the activity bus
+  // (the dispatch trigger + activity_event_routing do the Slack post, deduped
+  // per report via dedup_key so re-drives don't repeat); routing ships DISABLED.
+  // Best-effort: a failed emit never affects the telemetry system-of-record above.
+  if (t.degraded && t.user_id) {
+    try {
+      const { data: prof } = await supabase.from("profiles").select("is_test").eq("id", t.user_id).maybeSingle();
+      if (!prof?.is_test) {
+        await supabase.from("activity_events").upsert({
+          event_type: "report.quality.degraded",
+          severity: "error",
+          actor_user_id: t.user_id,
+          object_type: "report",
+          object_id: t.report_id,
+          metadata: {
+            company: t.company ?? "(unknown)",
+            cause: degradedCauses(t).join("; ") || "unknown",
+            report_status: t.report_status,
+            report: `${REPORT_BASE_URL}/${t.report_id}`,
+          },
+          dedup_key: `report.quality.degraded:${t.report_id}`,
+        }, { onConflict: "dedup_key", ignoreDuplicates: true });
+      }
+    } catch (e) {
+      logErr("degraded alert emit", e instanceof Error ? e.message : String(e));
+    }
+  }
 
   return buildReportQualityCard(t, intake, sub, reportScore);
 }
