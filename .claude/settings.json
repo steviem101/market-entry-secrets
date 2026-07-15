@@ -104,7 +104,14 @@
             "type": "command",
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/require-mesqa-verdict.js\"",
             "timeout": 10,
-            "statusMessage": "Checking the PR carries a mes-qa verdict..."
+            "statusMessage": "Checking the PR carries a full mes-qa verdict..."
+          },
+          {
+            "type": "agent",
+            "prompt": "A pull request is about to be opened — the LAST step before it is handed off for merge. Run the FULL mes-qa pre-merge exam on this branch's diff now, as an independent adversarial reviewer. The PR base is origin/main, so scope to exactly that: run `git fetch origin main --quiet && git diff origin/main...HEAD --stat` (NOT local `main`, which can be stale), then read EVERY changed file in full, and walk ALL mes-qa phases — ticket alignment, discovery, frontend, backend/edge functions, database/migrations, security, freemium & tier gating, AI/report pipeline, SEO & public routes, integration & regression. Hard-stop rule: an unapproved RLS/policy/grant change or a destructive migration is CRITICAL. Actively try to find the bug, the leak, the regression — do not rubber-stamp. Decision: if you find ANY unresolved Critical or Warning, or the PR body in $ARGUMENTS lacks a full all-phase mes-qa verdict, BLOCK and state each issue with file:line and why. Otherwise allow.",
+            "model": "claude-sonnet-5",
+            "timeout": 300,
+            "statusMessage": "Running full mes-qa before opening the PR..."
           }
         ]
       }

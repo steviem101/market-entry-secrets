@@ -261,6 +261,12 @@ Owned by skill `mes-ticket-workflow`; the invariants:
   `supabase/functions/**/*.test.ts` — no vitest/jest/DOM tests; put logic in pure modules),
   `npx tsc -p tsconfig.app.json --noEmit`, `npm run build`. `npm run lint` has known pre-existing
   errors (MES-111 AUD-051) — the bar is *no new lint errors* in files you touched.
+- **Full `mes-qa` is the LAST step before every PR — enforced, not optional.** After the work is done
+  and the PR is about to be opened, run the full `mes-qa` exam (all phases) and put its verdict —
+  with explicit **Critical** and **Warning** counts — in the PR body. Two PreToolUse hooks on
+  `mcp__github__create_pull_request` gate this: a deterministic check that the body carries a full
+  verdict (`.claude/hooks/require-mesqa-verdict.js`) **and** an independent `agent` hook that re-runs
+  the full exam over `git diff origin/main...HEAD` and blocks on any Critical/Warning. Never open a PR without it.
 
 ## 12. Environment secrets (names + purpose only — never values)
 
