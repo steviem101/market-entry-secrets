@@ -17,7 +17,6 @@ interface ApplyEnhancementsOptions {
   sources?: CaseStudySource[];
   subjectName?: string;
   subjectAliases?: string[];
-  googleFallback?: boolean;
   maxWords?: number;
 }
 
@@ -95,7 +94,6 @@ function transformText(
       linkedNames: opts.linkedNames,
       subjectName: opts.subjectName,
       subjectAliases: opts.subjectAliases,
-      googleFallback: opts.googleFallback,
     });
     out.push(...tokensToReactNodes(tokens, segKey));
   });
