@@ -43,6 +43,7 @@ All 22 skills are live (Waves 1–3 merged). Start with the read-first order bel
 | `mcp-integration-and-capability-boundaries` | P2 | ✅ Wave 3 | Read-only capability design, anon/RLS scope, filter sanitisation |
 | `support-crisp-and-user-debug-tooling` | P3 | ✅ Wave 3 | Crisp (anonymous), error boundary, feature flags, safe identity |
 | `market-entry-secrets-insights` | P3 | ✅ Wave 3 | What makes a genuine MES "secret"; distilling proprietary insight |
+| `karpathy-guidelines` | — | ➕ General | Repo-agnostic LLM coding craft: surgical changes, simplicity, verifiable goals (MES rules still win) |
 
 ## Source-of-truth boundaries
 
