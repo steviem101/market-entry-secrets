@@ -96,6 +96,17 @@
             "statusMessage": "Checking SQL is read-only..."
           }
         ]
+      },
+      {
+        "matcher": "mcp__github__create_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/require-mesqa-verdict.js\"",
+            "timeout": 10,
+            "statusMessage": "Checking the PR carries a mes-qa verdict..."
+          }
+        ]
       }
     ]
   }
