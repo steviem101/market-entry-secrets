@@ -45,6 +45,9 @@ All 22 skills are live (Waves 1–3 merged). Start with the read-first order bel
 | `market-entry-secrets-insights` | P3 | ✅ Wave 3 | What makes a genuine MES "secret"; distilling proprietary insight |
 | `karpathy-guidelines` | — | ➕ General | Repo-agnostic LLM coding craft: surgical changes, simplicity, verifiable goals (MES rules still win) |
 | `webapp-testing` | — | ➕ General | Browser-driven (Playwright) verification of the local web app — frontend checks, UI debugging, screenshots, console logs. Vendored from `anthropics/skills` (Apache-2.0) |
+| `skill-creator` | — | ➕ General | Author, edit, and eval/benchmark skills — includes an eval-driven authoring loop and viewer. Vendored from `anthropics/skills` (Apache-2.0) |
+| `mcp-builder` | — | ➕ General | Guide for building MCP servers (Python FastMCP / Node SDK) + best practices. Note: MES's `mcp` fn is auto-generated (`@lovable.dev/mcp-js`) — reference, not the MES workflow. Vendored from `anthropics/skills` (Apache-2.0) |
+| `frontend-design` | — | ➕ General | Aesthetic direction, typography, non-templated UI choices. Defer to MES HSL-token/shadcn conventions where they conflict. Vendored from `anthropics/skills` (Apache-2.0) |
 
 ## Source-of-truth boundaries
 
