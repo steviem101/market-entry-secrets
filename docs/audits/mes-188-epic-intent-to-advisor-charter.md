@@ -107,19 +107,27 @@ against real user behaviour, not ahead of it. Manual seams at launch (refinement
 form, statuses via existing pattern + manual email, intro counting by hand) are deliberate:
 automate what hurts after volume proves it.
 
-## 5. Decisions required before starting (owner: product)
+## 5. Decisions — DECIDED 2026-07-15 (owner sign-off in session)
 
-| # | Decision | Recommendation |
+| # | Decision | **Decided** |
 |---|---|---|
-| D1 | `first_customers` placement | Gate at **Scale** (named target accounts = mini lead list); do not free it |
-| D2 | `investor_recommendations` free | **Yes** (publicly browsable directory; lock only what's scarce off-platform) |
-| D3 | Growth price | **$199** (covers the human call; $99 is negative-margin) |
-| D4 | Intro caps | **Settled:** Growth 1 mentor + 3 ecosystem · Scale 2 mentors + priority ecosystem · 30-day window |
-| D5 | Refund policy for consumed services | Non-refundable portion, stated at checkout; align with #47 |
-| D6 | Partner + mentor shortlist & SLA | Top 20–30 entities appearing in test reports; named contacts; mentor opt-in |
-| D7 | Booking tool | **One** of HubSpot Meetings (if CRM stays HubSpot) or Calendly — never both |
-| D8 | Is concierge a launch-day promise? | **Yes, recommended** — it is the differentiator; requires T8/T13/T7 in the bundle and D6 signed |
-| D9 | Intent hero (MES-158) at launch or first fast-follow? | **Fast-follow, recommended** — launch with the proven single-CTA hero; make the intent hero the first measured change |
+| D1 | `first_customers` placement | **Scale** |
+| D2 | `investor_recommendations` free | **Yes — free** |
+| D3 | Growth price | **$199** |
+| D4 | Intro caps | Growth 1 mentor + 3 ecosystem · Scale 2 mentors + priority ecosystem · 30-day window |
+| D5 | Refund policy | **No advertised refund copy at checkout.** Internal ops stance for #47: case-by-case, consumed services (held session / made intro) non-refundable. Note: statutory Australian Consumer Law rights exist regardless of silence — Terms page should not contradict them |
+| D6 | Partner + mentor shortlist & SLA | Owner: **Stephen** — mentor opt-in to be obtained pre-launch (critical path while D8 = yes) |
+| D7 | Booking tool | **Calendly** (30-min event exists; a 60-min event is needed for the Scale strategy session before T13 ships) |
+| D8 | Concierge at launch | **Yes** — T8/T13/T7 in the launch bundle; T10/D6 on the critical path |
+| D9 | Intent hero timing | **Fast-follow** (post-launch, first measured change) |
+
+**Ops parameters:** advisor Stephen, 2h/week (≈2 Scale sessions *or* ~4 Growth walkthroughs/week
+— booking copy must reflect limited slots). SLAs: lead list 48h · intros within 7 days of the
+session. Test accounts: `stephen+090*@marketentrysecrets.com`, flagged `is_test` (T12).
+Report-generation cap: 2 per generation-touching ticket. Dry-run: Eva Laverty (owner organises).
+Merge authority: **owner merges all Wave-1 PRs** (runner never merges its own). Approvals: in
+Claude Code sessions. Promo code for $0 checkout smoke tests: held in the Notion intake — never
+in git; cap its redemptions in Stripe.
 
 ## 5b. Design direction notes (Hubble live review, 2026-07-15 + design recommendations)
 
