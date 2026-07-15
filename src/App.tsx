@@ -10,6 +10,7 @@ import { IntroRequestProvider } from "@/components/directory/IntroRequestProvide
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { TrailingSlashRedirect } from "@/components/TrailingSlashRedirect";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OnboardingGate } from "@/components/auth/OnboardingGate";
 import { PersonaProvider } from "@/contexts/PersonaContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Layout from "@/components/Layout";
@@ -90,6 +91,7 @@ const App = () => (
             <BrowserRouter>
               <ScrollToTop />
               <TrailingSlashRedirect />
+              <OnboardingGate />
               <IntroRequestProvider>
               <ErrorBoundary>
               <Layout>

@@ -3,7 +3,6 @@ import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { useAuthState } from '@/hooks/auth/useAuthState';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile, UserRole } from '@/hooks/auth/types';
-import { OnboardingDialog } from '@/components/auth/OnboardingDialog';
 
 interface AuthContextType {
   user: User | null;
@@ -24,20 +23,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user, profile, roles, session, loading, setProfile, setLoading
   }), [user, profile, roles, session, loading, setProfile, setLoading]);
 
-  const showOnboarding = !loading
-    && user !== null
-    && profile !== null
-    && profile.onboarding_completed === false;
-
+  // The onboarding modal is rendered by <OnboardingGate> inside the Router
+  // (MES-187 A2) so it can be route-aware — AuthProvider sits above BrowserRouter
+  // and can't read the location.
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <OnboardingDialog
-        open={showOnboarding}
-        onOpenChange={() => {
-          // Dialog closes when updateProfile sets onboarding_completed = true
-        }}
-      />
     </AuthContext.Provider>
   );
 };
