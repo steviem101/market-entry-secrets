@@ -15,6 +15,8 @@ operating skills**, all live on main. Read `mes-codebase-conventions` before any
 the skill matching your task (RLS/migrations, secrets, tier gating, Stripe, reports, edge
 functions, enrichment, SEO, Slack/ops, admin/moderation, MCP, Crisp/support, QA/exam, ticket
 workflow, research/content). Skills own their topics — this file deliberately does not restate them.
+For general coding craft (surgical diffs, simplicity-first, verifiable goals), also read
+`karpathy-guidelines` — repo-agnostic, and MES-specific rules above still take precedence.
 
 ## 1. Product
 
