@@ -24,7 +24,7 @@
 //   ANTHROPIC_API_KEY        judge model access
 // Optional:
 //   RUN_LABEL                label stored on eval_runs rows (default: local-<iso date>)
-//   EVAL_JUDGE_MODEL         judge override (default claude-sonnet-4-6 — keep pinned; judge drift = rubric drift)
+//   EVAL_JUDGE_MODEL         judge override (default claude-sonnet-5 — keep pinned; judge drift = rubric drift)
 //
 // NOTE: generate-report is rate-limited to 5 reports/60min/user, so a full run
 // of >5 goldens against one eval user will 429 — keep the set <=5 per hour or
@@ -49,7 +49,15 @@ const BASELINES_PATH = new URL("./baselines.json", import.meta.url);
 const POLL_INTERVAL_MS = 10_000;
 const POLL_TIMEOUT_MS = 12 * 60_000;
 const JUDGE_TIMEOUT_MS = 120_000;
-const JUDGE_MODEL = Deno.env.get("EVAL_JUDGE_MODEL") || "claude-sonnet-4-6";
+// Judge repointed claude-sonnet-4-6 -> claude-sonnet-5 (2026-07-16): the old id
+// was deprecated and every judge call 400'd, red-failing golden-eval on every
+// report-pipeline PR. The eval/baselines.json judge_model stays claude-sonnet-4-6
+// on purpose, so the runner's judge-mismatch guard DISABLES the regression gate
+// (loud warn) this run instead of comparing new-judge scores against old-judge
+// baselines. Re-enable the gate by re-baselining under the new judge: dispatch
+// golden-eval with --update-baseline (a nightly/manual run), which re-stamps
+// judge_model + scores to claude-sonnet-5.
+const JUDGE_MODEL = Deno.env.get("EVAL_JUDGE_MODEL") || "claude-sonnet-5";
 
 function requiredEnv(name: string): string | null {
   // Trim: GitHub Actions secrets frequently keep a trailing newline from a

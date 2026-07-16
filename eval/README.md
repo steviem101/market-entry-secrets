@@ -18,7 +18,11 @@ fails the run.
 
 Each section is scored 1–5 on **grounding**, **specificity**, **personalisation**
 and **duplication** (`golden-judge-v1`). The judge model is pinned
-(`claude-sonnet-4-6`) so score movement measures the pipeline, not the judge.
+(`claude-sonnet-5`) so score movement measures the pipeline, not the judge.
+(Repointed from the deprecated `claude-sonnet-4-6` on 2026-07-16 — that id had
+started returning 400 and red-failing every report-pipeline PR. `baselines.json`
+still carries the old `judge_model`, so the regression gate stays DISABLED until
+you re-baseline under the new judge: `--update-baseline` on a manual/nightly run.)
 The runner also records the report's `metadata.verification` totals — the
 Phase 1a acceptance target is zero unverified numerals across 10 consecutive
 golden runs.
