@@ -22,13 +22,10 @@ export type Category = (typeof CATEGORIES)[number];
 
 export const TIER_HIERARCHY = ["free", "growth", "scale", "enterprise"];
 
-// Minimum tier required for each gated section (mirror of TIER_REQUIREMENTS).
+// Minimum tier required for each gated section (mirror of TIER_REQUIREMENTS, MES-193).
 export const TIER_REQUIREMENTS: Record<string, string> = {
-  swot_analysis: "growth",
-  competitor_landscape: "growth",
   mentor_recommendations: "growth",
-  investor_recommendations: "growth",
-  first_customers: "growth",
+  first_customers: "scale",
   lead_list: "scale",
 };
 

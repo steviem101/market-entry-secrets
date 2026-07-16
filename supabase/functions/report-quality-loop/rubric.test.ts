@@ -13,30 +13,37 @@ import {
 
 // --- tier-awareness ------------------------------------------------------------------
 
-test("free tier expects only free sections; growth/scale sections are gated", () => {
+test("free tier expects free sections (incl. swot/competitor/investor); mentor/first_customers/lead_list gated (MES-193)", () => {
   const exp = expectedVisibleSections("free");
   assert.ok(exp.includes("executive_summary"));
   assert.ok(exp.includes("service_providers"));
   assert.ok(exp.includes("events_resources"));
   assert.ok(exp.includes("action_plan"));
   assert.ok(exp.includes("setup_compliance"));
+  // MES-193: swot / competitor / investor are now free for everyone
+  assert.ok(exp.includes("swot_analysis"));
+  assert.ok(exp.includes("competitor_landscape"));
+  assert.ok(exp.includes("investor_recommendations"));
   // gated ones must NOT be expected for free
-  assert.ok(!exp.includes("swot_analysis"));
   assert.ok(!exp.includes("mentor_recommendations"));
+  assert.ok(!exp.includes("first_customers"));
   assert.ok(!exp.includes("lead_list"));
 
   const gated = gatedSections("free");
-  assert.ok(gated.includes("swot_analysis"));
-  assert.ok(gated.includes("competitor_landscape"));
   assert.ok(gated.includes("mentor_recommendations"));
-  assert.ok(gated.includes("investor_recommendations"));
+  assert.ok(gated.includes("first_customers"));
   assert.ok(gated.includes("lead_list"));
+  // MES-193: no longer gated
+  assert.ok(!gated.includes("swot_analysis"));
+  assert.ok(!gated.includes("competitor_landscape"));
+  assert.ok(!gated.includes("investor_recommendations"));
 });
 
-test("growth tier unlocks swot/mentors but still gates lead_list", () => {
+test("growth tier unlocks mentors but still gates first_customers/lead_list (scale-only)", () => {
   const gated = gatedSections("growth");
-  assert.ok(!gated.includes("swot_analysis"));
   assert.ok(!gated.includes("mentor_recommendations"));
+  assert.ok(!gated.includes("swot_analysis")); // free at every tier
+  assert.ok(gated.includes("first_customers")); // scale-only (MES-193)
   assert.ok(gated.includes("lead_list")); // scale-only
 });
 
@@ -68,7 +75,7 @@ test("a legacy 'premium' report is judged as growth-tier, not all-gated", () => 
   assert.equal(tier, "growth");
   assert.ok(expectedVisibleSections(tier).includes("mentor_recommendations")); // growth-gated, now expected
   assert.ok(gatedSections(tier).includes("lead_list")); // still scale-only
-  assert.ok(!gatedSections(tier).includes("swot_analysis")); // growth unlocks swot
+  assert.ok(!gatedSections(tier).includes("swot_analysis")); // swot is free for all (MES-193)
 });
 
 // --- compact input + PII scrubbing ---------------------------------------------------

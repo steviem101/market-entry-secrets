@@ -112,13 +112,12 @@ export const SECTION_ORDER = [
   'setup_compliance', 'lead_list',
 ];
 
-// Minimum subscription tier required for each gated section
+// Minimum subscription tier required for each gated section (MES-193). Free view
+// = everything except these three. Server truth is the get_tier_gated_report /
+// get_shared_report RPCs + report_templates; this mirror + rubric.ts move with them.
 export const TIER_REQUIREMENTS: Record<string, string> = {
-  swot_analysis: 'growth',
-  competitor_landscape: 'growth',
   mentor_recommendations: 'growth',
-  investor_recommendations: 'growth',
-  first_customers: 'growth',
+  first_customers: 'scale',
   lead_list: 'scale',
 };
 
