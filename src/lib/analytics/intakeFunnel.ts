@@ -40,7 +40,14 @@ export type FunnelEventType =
   | 'session_booking_opened'
   | 'onboarding_modal_shown'
   | 'onboarding_modal_completed'
-  | 'onboarding_modal_skipped';
+  | 'onboarding_modal_skipped'
+  // intent-first hero (MES-158 / Wave-2) — source 'homepage_hero'
+  | 'hero_intent_started'
+  | 'hero_intent_submitted'
+  | 'hero_intent_chip_clicked'
+  | 'report_prefill_loaded'
+  | 'report_prefill_confirmed'
+  | 'report_completed_from_hero_intent';
 
 export type FunnelEvent = IntakeEventType | FunnelEventType;
 

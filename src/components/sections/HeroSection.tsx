@@ -2,9 +2,14 @@ import { HeroBackground } from "@/components/hero/HeroBackground";
 import { HeroHeadline } from "@/components/hero/HeroHeadline";
 import { HeroSubheadline } from "@/components/hero/HeroSubheadline";
 import { HeroCTAGroup } from "@/components/hero/HeroCTAGroup";
+import { HeroIntentCapture } from "@/components/hero/HeroIntentCapture";
 import { HeroProductMockup } from "@/components/hero/HeroProductMockup";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 
 export const HeroSection = () => {
+  // MES-158: intent-first hero (flag `intent_hero`, default off). When on, the
+  // free-text/chip capture replaces the classic two-button CTA group.
+  const intentHero = isFeatureEnabled("intent_hero");
   return (
     <section id="hero" className="relative overflow-hidden">
       <HeroBackground />
@@ -22,7 +27,7 @@ export const HeroSection = () => {
             </div>
 
             <div className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-              <HeroCTAGroup />
+              {intentHero ? <HeroIntentCapture /> : <HeroCTAGroup />}
             </div>
           </div>
 

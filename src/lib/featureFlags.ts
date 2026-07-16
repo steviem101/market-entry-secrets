@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -33,6 +33,14 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
     queryKey: 'booking',
     storageKey: 'mes_flag_session_booking_banner',
     defaultValue: true,
+  },
+  // MES-158 (Wave-2) intent-first hero: a free-text/chip intent capture on the
+  // homepage that classifies the ask and prefills the report creator. Ships
+  // dark (default off); ?intent=1 enables it, enable broadly post-launch.
+  intent_hero: {
+    queryKey: 'intent',
+    storageKey: 'mes_flag_intent_hero',
+    defaultValue: false,
   },
 };
 
