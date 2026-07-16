@@ -28,6 +28,7 @@ function makeSupabaseStub(opts: {
   subscriptionUpsertError?: { message: string } | null;
   reportsUpdateError?: { message: string } | null;
   leadUpsertError?: { message: string } | null;
+  entitlementUpsertError?: { message: string } | null;
   // Current user_subscriptions.tier the downgrade-guard read returns (null = no row).
   currentTier?: string | null;
   currentTierError?: { message: string } | null;
@@ -41,6 +42,8 @@ function makeSupabaseStub(opts: {
           calls.push({ table, op: "upsert", payload });
           const error = table === "user_subscriptions"
             ? opts.subscriptionUpsertError ?? null
+            : table === "service_entitlements"
+            ? opts.entitlementUpsertError ?? null
             : opts.leadUpsertError ?? null;
           return Promise.resolve({ error });
         },
@@ -411,4 +414,66 @@ test("isMissingColumnError recognises pre-migration schemas only", () => {
   assert.ok(isMissingColumnError({ code: "PGRST204", message: "Could not find the 'processing_status' column of 'payment_webhook_logs' in the schema cache" }));
   assert.ok(!isMissingColumnError({ code: "23505", message: "duplicate key value violates unique constraint" }));
   assert.ok(!isMissingColumnError(null));
+});
+
+// ── MES-195 (T8) service_entitlements grant ──────────────────────────────────
+
+test("entitlements: flag OFF grants no service_entitlements", async () => {
+  const supabase = makeSupabaseStub();
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }),
+    { supabase }, // entitlementsEnabled undefined → off
+  );
+  assert.ok(outcome.ok);
+  assert.ok(supabase.calls.every((c) => c.table !== "service_entitlements"));
+});
+
+test("entitlements: flag ON grants the growth D4 rows (idempotency key + 30d expiry)", async () => {
+  const supabase = makeSupabaseStub();
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }),
+    { supabase, entitlementsEnabled: true },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
+  const ent = supabase.calls.find((c) => c.table === "service_entitlements" && c.op === "upsert");
+  assert.ok(ent, "service_entitlements upsert happened");
+  const rows = ent!.payload as Array<{ kind: string; granted_count: number; source_purchase: string; user_id: string; expires_at: string }>;
+  assert.deepEqual(
+    rows.map((r) => `${r.kind}:${r.granted_count}`).sort(),
+    ["ecosystem_intro:3", "mentor_intro:1", "walkthrough_call:1"],
+  );
+  // idempotency key + owner + expiry are set on every row
+  assert.ok(rows.every((r) => r.source_purchase === "cs_test_1" && r.user_id === "user-1" && !!r.expires_at));
+});
+
+test("entitlements: flag ON grants the scale D4 rows (2 mentor + 5 ecosystem)", async () => {
+  const supabase = makeSupabaseStub();
+  await processStripeEvent(
+    checkoutEvent({ tier: "scale", supabase_user_id: "user-2" }),
+    { supabase, entitlementsEnabled: true },
+  );
+  const ent = supabase.calls.find((c) => c.table === "service_entitlements" && c.op === "upsert");
+  const rows = ent!.payload as Array<{ kind: string; granted_count: number }>;
+  assert.deepEqual(
+    rows.map((r) => `${r.kind}:${r.granted_count}`).sort(),
+    ["ecosystem_intro:5", "mentor_intro:2", "strategy_session:1"],
+  );
+});
+
+test("entitlements: a grant failure is best-effort and NEVER fails the upgraded event", async () => {
+  const supabase = makeSupabaseStub({ entitlementUpsertError: { message: "boom" } });
+  const outcome = await processStripeEvent(
+    checkoutEvent({ tier: "growth", supabase_user_id: "user-1" }),
+    { supabase, entitlementsEnabled: true },
+  );
+  assert.deepEqual(outcome, { ok: true, action: "tier_upgraded", emailed: false });
+});
+
+test("entitlements: free tier grants nothing even with the flag ON", async () => {
+  const supabase = makeSupabaseStub();
+  await processStripeEvent(
+    checkoutEvent({ tier: "free", supabase_user_id: "user-3" }),
+    { supabase, entitlementsEnabled: true },
+  );
+  assert.ok(supabase.calls.every((c) => c.table !== "service_entitlements"));
 });

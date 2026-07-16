@@ -78,7 +78,30 @@ export interface ProcessDeps {
   }) => Promise<void>;
   log?: (message: string, data?: unknown) => void;
   logError?: (message: string, err?: unknown) => void;
+  /**
+   * MES-195 (T8): when true, grant service_entitlements alongside the tier.
+   * Staged-rollout flag — the caller sets it from ENTITLEMENTS_ENABLED. Both the
+   * webhook and the reconcile cron must set it so a reconcile-replayed event
+   * grants entitlements too (idempotent on (source_purchase, kind)).
+   */
+  entitlementsEnabled?: boolean;
 }
+
+// D4 human-service entitlement grants per paid tier (MES-195 / T8). SERVER-side
+// truth — the webhook NEVER derives these from add-on/client metadata (AUD-005).
+// 30-day expiry is stamped at grant time.
+export const ENTITLEMENT_GRANTS: Record<string, { kind: string; count: number }[]> = {
+  growth: [
+    { kind: "walkthrough_call", count: 1 },
+    { kind: "mentor_intro", count: 1 },
+    { kind: "ecosystem_intro", count: 3 },
+  ],
+  scale: [
+    { kind: "strategy_session", count: 1 },
+    { kind: "mentor_intro", count: 2 },
+    { kind: "ecosystem_intro", count: 5 },
+  ],
+};
 
 /**
  * Summary of a checkout session for the payment_webhook_logs.parsed column.
@@ -264,6 +287,33 @@ export async function processStripeEvent(
 
   if (reportsErr) {
     logError("Error updating user_reports tier_at_generation (non-blocking)", reportsErr);
+  }
+
+  // Human-service entitlements (MES-195 / T8). Granted alongside the tier for
+  // growth/scale from a SERVER-side map (never client/add-on metadata — AUD-005),
+  // idempotent on (source_purchase, kind) so a webhook/reconcile replay can never
+  // double-grant, and BEST-EFFORT: the tier upsert above is the entitlement of
+  // record, so a failure here must not fail an already-charged-and-upgraded event.
+  // Dormant until ENTITLEMENTS_ENABLED (staged rollout with the paid-service go-live).
+  const entitlementGrants = ENTITLEMENT_GRANTS[tier];
+  if (deps.entitlementsEnabled && entitlementGrants && dataObj.id) {
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const rows = entitlementGrants.map((g) => ({
+      user_id: supabaseUserId,
+      source_purchase: String(dataObj.id),
+      tier,
+      kind: g.kind,
+      granted_count: g.count,
+      expires_at: expiresAt,
+    }));
+    const { error: entErr } = await deps.supabase
+      .from("service_entitlements")
+      .upsert(rows, { onConflict: "source_purchase,kind", ignoreDuplicates: true });
+    if (entErr) {
+      logError("Error granting service_entitlements (non-blocking)", entErr);
+    } else {
+      log("Granted service_entitlements", { supabaseUserId, tier, kinds: entitlementGrants.map((g) => g.kind) });
+    }
   }
 
   // Best-effort extras: never change the outcome.
