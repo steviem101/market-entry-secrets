@@ -46,6 +46,9 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const processDeps: ProcessDeps = {
   supabase: supabaseAdmin,
+  // MES-195 (T8): a reconcile-replayed event must grant entitlements too (idempotent
+  // on (source_purchase, kind)); mirror the webhook's ENTITLEMENTS_ENABLED flag.
+  entitlementsEnabled: Deno.env.get("ENTITLEMENTS_ENABLED") === "true",
   retrievePaymentIntent: async (id: string) => {
     const pi = await stripe.paymentIntents.retrieve(id);
     return { amount: pi.amount ?? null, currency: pi.currency ?? null };
