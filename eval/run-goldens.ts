@@ -158,7 +158,15 @@ async function callJudge(prompt: string): Promise<string | null> {
       signal: controller.signal,
     });
     if (!resp.ok) {
-      console.error(`  judge call failed: status ${resp.status}`);
+      // Log the Anthropic error body, not just the status — a 400 here carries
+      // the actual reason (e.g. "prompt is too long: N tokens > max"), which we
+      // were otherwise discarding, leaving the CI failure undiagnosable. The
+      // judge request is structurally identical to the working production
+      // claude-sonnet-4-6 calls (generate-plan etc.), so the only suspected
+      // differentiator is the uncapped 11-section report body in
+      // buildJudgePrompt (judge.ts) — confirm from this body before capping.
+      const errBody = await resp.text().catch(() => "");
+      console.error(`  judge call failed: status ${resp.status}: ${errBody.slice(0, 600)}`);
       return null;
     }
     const data = await resp.json();
