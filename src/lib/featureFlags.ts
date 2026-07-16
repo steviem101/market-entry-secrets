@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -25,6 +25,13 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   report_creator_v2: {
     queryKey: 'v2',
     storageKey: 'mes_flag_report_creator_v2',
+    defaultValue: true,
+  },
+  // MES-196 (T13) advisor-booking banner on ReportView. On by default;
+  // ?booking=0 is the rollback kill switch.
+  session_booking_banner: {
+    queryKey: 'booking',
+    storageKey: 'mes_flag_session_booking_banner',
     defaultValue: true,
   },
 };
