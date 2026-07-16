@@ -6,9 +6,10 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { FreemiumGate } from "@/components/FreemiumGate";
 import { LeadDatabaseDetailHero } from "@/components/leads/detail/LeadDatabaseDetailHero";
 import { LeadDatabaseDetailContent } from "@/components/leads/detail/LeadDatabaseDetailContent";
+import { LeadDatabaseOwnedRecords } from "@/components/leads/detail/LeadDatabaseOwnedRecords";
 import { LeadPreviewModal } from "@/components/leads/LeadPreviewModal";
 import { AuthDialog } from "@/components/auth/AuthDialog";
-import { useLeadDatabaseBySlug, useRelatedLeadDatabases } from "@/hooks/useLeadDatabases";
+import { useLeadDatabaseBySlug, useRelatedLeadDatabases, useLeadDatabaseAccess } from "@/hooks/useLeadDatabases";
 import { useLeadCheckout } from "@/hooks/useLeadCheckout";
 import { NoIndex } from "@/components/common/NoIndex";
 
@@ -21,6 +22,9 @@ const LeadDatabaseDetailPage = () => {
     db?.id || "",
     db?.sector || null
   );
+  // T7 D-B: owners (bought or auto-delivered with a Scale/Enterprise report) see
+  // their full records in place of the sales/preview flow.
+  const { hasAccess } = useLeadDatabaseAccess(db?.id || "");
   const { startLeadCheckout, loading: checkoutLoading } = useLeadCheckout();
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
@@ -87,28 +91,35 @@ const LeadDatabaseDetailPage = () => {
         <link rel="canonical" href={`${window.location.origin}/leads/${db.slug}`} />
       </Helmet>
 
-      <FreemiumGate
-        contentType="leads"
-        itemId={db.id}
-        contentTitle={db.title}
-        contentDescription={db.description || ''}
-      >
+      {hasAccess ? (
+        // Owner view — full records, no paywall/sales flow.
         <main>
-          <LeadDatabaseDetailHero
-            db={db}
-            onCheckout={handleCheckout}
-            onPreview={handlePreview}
-            checkoutLoading={checkoutLoading}
-          />
-          <LeadDatabaseDetailContent
-            db={db}
-            relatedDatabases={relatedDatabases}
-            onCheckout={handleCheckout}
-            onPreview={handlePreview}
-            checkoutLoading={checkoutLoading}
-          />
+          <LeadDatabaseOwnedRecords db={db} />
         </main>
-      </FreemiumGate>
+      ) : (
+        <FreemiumGate
+          contentType="leads"
+          itemId={db.id}
+          contentTitle={db.title}
+          contentDescription={db.description || ''}
+        >
+          <main>
+            <LeadDatabaseDetailHero
+              db={db}
+              onCheckout={handleCheckout}
+              onPreview={handlePreview}
+              checkoutLoading={checkoutLoading}
+            />
+            <LeadDatabaseDetailContent
+              db={db}
+              relatedDatabases={relatedDatabases}
+              onCheckout={handleCheckout}
+              onPreview={handlePreview}
+              checkoutLoading={checkoutLoading}
+            />
+          </main>
+        </FreemiumGate>
+      )}
 
       {/* Preview Modal */}
       <LeadPreviewModal
