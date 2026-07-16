@@ -15,7 +15,7 @@
  */
 
 export const TIER_DISPLAY_PRICE: Record<string, string> = {
-  growth: '$99',
+  growth: '$199',
   scale: '$999',
 };
 
