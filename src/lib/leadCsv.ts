@@ -31,14 +31,19 @@ const COLUMNS: CsvColumn[] = [
   { header: 'Technologies', get: (r) => r.technologies_used },
 ];
 
-/** RFC-4180 field quoting: wrap in quotes and double any embedded quote when the
+/** RFC-4180 field quoting + spreadsheet formula-injection neutralisation.
+ * Lead records are untrusted scraped/enriched third-party data exported to
+ * paying buyers, so a value starting with `= + - @` (or a leading tab/CR) — which
+ * Excel/Sheets evaluate as a formula (CWE-1236: exfiltration/DDE) — is prefixed
+ * with a single quote to force literal text. Then RFC-4180 quote/escape when the
  * value contains a comma, quote, or newline. */
 export function csvEscape(value: unknown): string {
-  const s = value == null
+  const raw = value == null
     ? ''
     : Array.isArray(value)
       ? value.join('; ')
       : String(value);
+  const s = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

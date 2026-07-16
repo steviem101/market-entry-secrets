@@ -3691,13 +3691,15 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       // seeing dataset cards with no record access.
       const scaleIndex = tierHierarchy.indexOf("scale");
       if (leadDeliveryEnabled && intake.user_id && userTierIndex >= scaleIndex) {
-        // Only the lead_databases entries (card_group 'leads') — the section also
-        // carries lemlist_contacts (card_group 'contacts') whose id is NOT a
-        // lead_databases id and must never be granted as a purchase (FK + wrong
-        // entity). Dedupe ids within the report.
+        // Source the matched datasets from the RAW research matches (matches.leads),
+        // NOT sections["lead_list"].matches: a section only carries `.matches` when
+        // its prose write succeeds, and a blanked lead_list section (~5%, gotcha #5)
+        // would otherwise silently withhold a paid buyer's delivery. matches.leads
+        // is the lead_databases catalog set only (lemlist contacts live under a
+        // different key), so every id is a valid lead_database_id. Dedupe within the report.
         const matchedDatasetIds = [...new Set(
-          ((sections["lead_list"]?.matches ?? []) as Array<{ id?: string; card_group?: string }>)
-            .filter((m) => m?.card_group === "leads" && typeof m?.id === "string" && m.id)
+          ((matches.leads ?? []) as Array<{ id?: string }>)
+            .filter((m) => typeof m?.id === "string" && m.id)
             .map((m) => m.id as string),
         )];
         if (matchedDatasetIds.length > 0) {
@@ -3706,14 +3708,20 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
           // the same intake. Dedupe per (buyer, dataset) — never deliver the same
           // dataset to the same buyer twice. (The purchase upsert is separately
           // idempotent on (user_id,lead_database_id).)
-          const { data: alreadyDelivered } = await supabase
+          const { data: alreadyDelivered, error: alreadyDeliveredErr } = await supabase
             .from("lead_list_requests")
             .select("delivered_database_id")
             .eq("user_id", intake.user_id)
             .eq("status", "delivered")
             .in("delivered_database_id", matchedDatasetIds);
+          // Fail CLOSED: if the dedup read errors we cannot tell what's already
+          // delivered, so skip rather than risk duplicate hub rows (the lead_list_requests
+          // insert has no unique guard). A later regeneration retries cleanly.
           const done = new Set((alreadyDelivered ?? []).map((r: { delivered_database_id: string | null }) => r.delivered_database_id));
-          const toDeliver = matchedDatasetIds.filter((id) => !done.has(id));
+          const toDeliver = alreadyDeliveredErr ? [] : matchedDatasetIds.filter((id) => !done.has(id));
+          if (alreadyDeliveredErr) {
+            console.warn("Lead delivery: dedup read failed, skipping to avoid duplicates:", alreadyDeliveredErr.message);
+          }
           for (const datasetId of toDeliver) {
             // Grant record access (idempotent). Buyer-scoped RLS on
             // lead_database_records keys off exactly this row.
@@ -3766,12 +3774,25 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
           // T16a (MES-197): the completion email is tier-aware. For a free
           // report, tease the sections the user has NOT unlocked by count only
           // (never names — that's what gating protects); paid reports get the
-          // booking + hub SLA variant. Counts come from the gated (visible:false)
-          // sections that produced directory matches.
-          const lockedFindings = Object.entries(sections)
-            .filter(([, s]: [string, any]) =>
-              s && s.visible === false && Array.isArray(s.matches) && s.matches.length > 0)
-            .map(([key, s]: [string, any]) => ({ key, count: s.matches.length }));
+          // booking + hub SLA variant. Counts come from the RAW research matches
+          // (getMatchesForSection) so a gated section whose PROSE blanked still
+          // teases; gated sections are identified by tier requirement (not the
+          // stored visible flag, which a failed *free* section also trips). The
+          // lead_list count is datasets only (card_group 'leads'), not the lemlist
+          // contacts that also live in that section.
+          const lockedFindings = (templates ?? [])
+            .filter((t: any) => {
+              const req = tierHierarchy.indexOf(t.visibility_tier);
+              return req !== -1 && userTierIndex < req;
+            })
+            .map((t: any) => {
+              const m = getMatchesForSection(t.section_name, matches);
+              const count = t.section_name === "lead_list"
+                ? m.filter((x: any) => x?.card_group === "leads").length
+                : m.length;
+              return { key: t.section_name, count };
+            })
+            .filter((f: { count: number }) => f.count > 0);
           await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`, {
             method: "POST",
             headers: {

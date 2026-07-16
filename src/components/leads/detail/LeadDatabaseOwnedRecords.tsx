@@ -19,8 +19,10 @@ const dash = (v: unknown) => {
   return Array.isArray(v) ? (v.length ? v.join(', ') : '—') : String(v);
 };
 
+const FULL_FETCH_CAP = 1000; // keep in lockstep with useLeadDatabaseRecords' full-mode limit
+
 export const LeadDatabaseOwnedRecords = ({ db }: { db: LeadDatabase }) => {
-  const { data: records = [], isLoading } = useLeadDatabaseRecords(db.id, { full: true });
+  const { data: records = [], isLoading, isError, refetch } = useLeadDatabaseRecords(db.id, { full: true });
 
   const handleExport = () => {
     const csv = recordsToCsv(records);
@@ -57,6 +59,15 @@ export const LeadDatabaseOwnedRecords = ({ db }: { db: LeadDatabase }) => {
         <div className="mt-6 space-y-2">
           {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
         </div>
+      ) : isError ? (
+        // A genuine fetch/RLS/network failure — distinct from the empty state so
+        // an owner isn't wrongly told their records are still being prepared.
+        <div className="mt-6 flex flex-col gap-3 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            We couldn&rsquo;t load your records just now. Please try again.
+          </p>
+          <Button variant="outline" onClick={() => refetch()} className="shrink-0">Retry</Button>
+        </div>
       ) : records.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">
           Your records are being prepared. If they don&rsquo;t appear shortly, reply to your
@@ -66,9 +77,15 @@ export const LeadDatabaseOwnedRecords = ({ db }: { db: LeadDatabase }) => {
         <>
           <p className="mt-6 text-sm text-muted-foreground">
             {records.length.toLocaleString()} records
-            {typeof db.record_count === 'number' && db.record_count > records.length && (
-              <span> of {db.record_count.toLocaleString()} — showing the first {records.length.toLocaleString()};
-                reply to your confirmation email for the complete export.</span>
+            {/* Surface truncation whenever we hit the fetch cap OR record_count says
+                there are more — never silently drop rows even if record_count is null. */}
+            {(records.length >= FULL_FETCH_CAP ||
+              (typeof db.record_count === 'number' && db.record_count > records.length)) && (
+              <span>
+                {typeof db.record_count === 'number' ? ` of ${db.record_count.toLocaleString()}` : ''} —
+                showing the first {records.length.toLocaleString()}; reply to your confirmation email for the
+                complete export.
+              </span>
             )}
           </p>
           <div className="mt-2 overflow-x-auto rounded-lg border border-border">

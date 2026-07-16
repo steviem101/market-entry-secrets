@@ -70,7 +70,9 @@ function isBookable(row: EntitlementRow, now: Date): boolean {
   if ((row.granted_count ?? 0) - (row.consumed_count ?? 0) <= 0) return false;
   if (row.expires_at) {
     const expiry = Date.parse(row.expires_at);
-    if (!Number.isNaN(expiry) && expiry <= now.getTime()) return false;
+    // Fail closed: a non-null but unparseable expiry (NaN) is treated as expired,
+    // never as "never expires" — a corrupted date must not keep the banner live.
+    if (Number.isNaN(expiry) || expiry <= now.getTime()) return false;
   }
   return true;
 }

@@ -54,6 +54,10 @@ test('null expires_at never expires', () => {
   assert.ok(selectBookableSession([row({ expires_at: null })], NOW));
 });
 
+test('unparseable expires_at fails closed (treated as expired, not never-expires)', () => {
+  assert.equal(selectBookableSession([row({ expires_at: 'not-a-date' })], NOW), null);
+});
+
 test('intro kinds are never bookable sessions', () => {
   const intros: EntitlementRow[] = [
     row({ kind: 'mentor_intro', granted_count: 2 }),
