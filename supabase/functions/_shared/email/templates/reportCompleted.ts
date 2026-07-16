@@ -65,12 +65,18 @@ export function render(data: Record<string, unknown>): RenderResult {
 
   const subject = `Your ${companyPlain} market entry report is ready`;
 
+  // Tier-aware summary: naming gated sections (competitor analysis, mentor
+  // recommendations) as "inside" would contradict the free variant's own
+  // "locked sections" tease below, so free reports describe only what they
+  // actually unlock.
+  const summary = isPaid
+    ? `Your market entry report for ${companyHtml} is ready. Inside you will find the market landscape, competitor analysis, matched service providers, mentor recommendations, and a step by step action plan.`
+    : `Your market entry report for ${companyHtml} is ready. Inside you will find the market landscape, matched service providers, an events and resources shortlist, and a step by step action plan — with more unlocked when you upgrade.`;
+
   const intro =
     h1("Your market entry report is ready") +
     paragraph(`Hi ${nameHtml},`) +
-    paragraph(
-      `Your market entry report for ${companyHtml} is ready. Inside you will find the market landscape, competitor analysis, matched service providers, mentor recommendations, and a step by step action plan.`,
-    ) +
+    paragraph(summary) +
     button("View my report", reportUrl);
 
   let body = "";

