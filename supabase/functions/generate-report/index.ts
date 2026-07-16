@@ -3675,6 +3675,71 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       console.warn("Polish pass skipped after retry (report stays unpolished):", e instanceof Error ? e.message : e);
     }
 
+    // 7b-lead. Automatic lead delivery for Scale (MES-198 / T7). On a Scale
+    // report, the ICP-matched lead datasets are granted to the buyer via
+    // lead_database_purchases (the existing buyer-scoped RLS on
+    // lead_database_records then serves the rows) and surfaced in the member hub
+    // as delivered lead_list_requests. Reuses the existing public catalog
+    // datasets — no private copies, no new read surface. Flag-gated, idempotent
+    // (skips if this report already delivered), best-effort so a delivery failure
+    // never fails the report.
+    try {
+      const leadDeliveryEnabled = Deno.env.get("LEAD_DELIVERY_ENABLED") === "true";
+      if (leadDeliveryEnabled && intake.user_id && userTier === "scale") {
+        // Only the lead_databases entries (card_group 'leads') — the section also
+        // carries lemlist_contacts (card_group 'contacts') whose id is NOT a
+        // lead_databases id and must never be granted as a purchase (FK + wrong
+        // entity).
+        const deliveredDatasets = ((sections["lead_list"]?.matches ?? []) as Array<{ id?: string; card_group?: string }>)
+          .filter((m) => m?.card_group === "leads" && typeof m?.id === "string" && m.id);
+        if (deliveredDatasets.length > 0) {
+          // Idempotency: skip if this report already has delivered rows.
+          const { data: existingDelivered } = await supabase
+            .from("lead_list_requests")
+            .select("id")
+            .eq("report_id", reportId)
+            .eq("status", "delivered")
+            .limit(1);
+          if (!existingDelivered || existingDelivered.length === 0) {
+            for (const ds of deliveredDatasets) {
+              // Grant record access (idempotent). Buyer-scoped RLS on
+              // lead_database_records keys off exactly this row.
+              await supabase
+                .from("lead_database_purchases")
+                .upsert(
+                  { user_id: intake.user_id, lead_database_id: ds.id },
+                  { onConflict: "user_id,lead_database_id", ignoreDuplicates: true },
+                );
+              // Surface in the hub's lists section as an auto-delivered list.
+              await supabase.from("lead_list_requests").insert({
+                user_id: intake.user_id,
+                report_id: reportId,
+                request_text: "Matched to your Scale report",
+                status: "delivered",
+                delivered_database_id: ds.id,
+              });
+            }
+            // Ops-visibility event (routing disabled by default — migration
+            // 20260716230000). PII stays in log_activity's own actor columns.
+            await supabase.rpc("log_activity", {
+              p_event_type: "lead_list.delivered",
+              p_severity: "action",
+              p_actor_user_id: intake.user_id,
+              p_actor_email: null,
+              p_actor_name: null,
+              p_object_type: "user_reports",
+              p_object_id: reportId,
+              p_metadata: { count: deliveredDatasets.length },
+              p_dedup_key: `lld:${reportId}`,
+            });
+            console.log(`Lead delivery: granted ${deliveredDatasets.length} dataset(s) to Scale buyer for report ${reportId}`);
+          }
+        }
+      }
+    } catch (leadErr) {
+      console.warn("Lead delivery skipped (non-blocking):", leadErr instanceof Error ? leadErr.message : leadErr);
+    }
+
     // 7c. Send report completion email — AFTER polish so the user's first
     // view shows the polished prose. If polish failed, we still send the
     // email (the unpolished report is genuinely usable; silence would be
