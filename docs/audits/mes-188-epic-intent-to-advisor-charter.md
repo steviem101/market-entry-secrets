@@ -115,7 +115,7 @@ automate what hurts after volume proves it.
 | D2 | `investor_recommendations` free | **Yes — free** |
 | D3 | Growth price | **$199** |
 | D4 | Intro caps | Growth 1 mentor + 3 ecosystem · Scale 2 mentors + priority ecosystem · 30-day window |
-| D5 | Refund policy | **No advertised refund copy at checkout.** Internal ops stance for #47: case-by-case, consumed services (held session / made intro) non-refundable. Note: statutory Australian Consumer Law rights exist regardless of silence — Terms page should not contradict them |
+| D5 | Refund policy | **DECIDED 2026-07-16 (supersedes the earlier "no advertised copy" placeholder):** a **published** policy ([`docs/refund-policy.md`](../refund-policy.md) → `/refund-policy` page, built in T8). 14-day satisfaction refund on the digital report *if paid sections not substantially accessed*; human deliverables (calls/intros) refundable until delivered, then non-refundable, with a delivered-vs-undelivered split on partial refunds; intros are **brokerage, never a guarantee**; ACL rights paramount. Refunds don't auto-revoke tier → T8 ships a manual refund runbook/admin action. Trade-off accepted: more checkout trust vs a higher refund-request rate (guardrail) |
 | D6 | Partner + mentor shortlist & SLA | Owner: **Stephen** — mentor opt-in to be obtained pre-launch (critical path while D8 = yes) |
 | D7 | Booking tool | **Calendly** — Growth walkthrough: `/stephen-marketentrysecrets/30min` · Scale strategy session: `/stephen-marketentrysecrets/60-minute-meeting` |
 | D8 | Concierge at launch | **Yes** — T8/T13/T7 in the launch bundle; T10/D6 on the critical path |
