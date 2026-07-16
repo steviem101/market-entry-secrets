@@ -3685,40 +3685,54 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     // never fails the report.
     try {
       const leadDeliveryEnabled = Deno.env.get("LEAD_DELIVERY_ENABLED") === "true";
-      if (leadDeliveryEnabled && intake.user_id && userTier === "scale") {
+      // Scale AND above: the lead_list section renders for any tier >= scale
+      // (index-based visibility), so enterprise (a superset of scale) must get the
+      // grant too — gating on the exact string 'scale' would leave enterprise
+      // seeing dataset cards with no record access.
+      const scaleIndex = tierHierarchy.indexOf("scale");
+      if (leadDeliveryEnabled && intake.user_id && userTierIndex >= scaleIndex) {
         // Only the lead_databases entries (card_group 'leads') — the section also
         // carries lemlist_contacts (card_group 'contacts') whose id is NOT a
         // lead_databases id and must never be granted as a purchase (FK + wrong
-        // entity).
-        const deliveredDatasets = ((sections["lead_list"]?.matches ?? []) as Array<{ id?: string; card_group?: string }>)
-          .filter((m) => m?.card_group === "leads" && typeof m?.id === "string" && m.id);
-        if (deliveredDatasets.length > 0) {
-          // Idempotency: skip if this report already has delivered rows.
-          const { data: existingDelivered } = await supabase
+        // entity). Dedupe ids within the report.
+        const matchedDatasetIds = [...new Set(
+          ((sections["lead_list"]?.matches ?? []) as Array<{ id?: string; card_group?: string }>)
+            .filter((m) => m?.card_group === "leads" && typeof m?.id === "string" && m.id)
+            .map((m) => m.id as string),
+        )];
+        if (matchedDatasetIds.length > 0) {
+          // Idempotency ACROSS regenerations: each (re)generation is a new
+          // report_id, so a report_id guard wouldn't stop duplicate hub rows for
+          // the same intake. Dedupe per (buyer, dataset) — never deliver the same
+          // dataset to the same buyer twice. (The purchase upsert is separately
+          // idempotent on (user_id,lead_database_id).)
+          const { data: alreadyDelivered } = await supabase
             .from("lead_list_requests")
-            .select("id")
-            .eq("report_id", reportId)
+            .select("delivered_database_id")
+            .eq("user_id", intake.user_id)
             .eq("status", "delivered")
-            .limit(1);
-          if (!existingDelivered || existingDelivered.length === 0) {
-            for (const ds of deliveredDatasets) {
-              // Grant record access (idempotent). Buyer-scoped RLS on
-              // lead_database_records keys off exactly this row.
-              await supabase
-                .from("lead_database_purchases")
-                .upsert(
-                  { user_id: intake.user_id, lead_database_id: ds.id },
-                  { onConflict: "user_id,lead_database_id", ignoreDuplicates: true },
-                );
-              // Surface in the hub's lists section as an auto-delivered list.
-              await supabase.from("lead_list_requests").insert({
-                user_id: intake.user_id,
-                report_id: reportId,
-                request_text: "Matched to your Scale report",
-                status: "delivered",
-                delivered_database_id: ds.id,
-              });
-            }
+            .in("delivered_database_id", matchedDatasetIds);
+          const done = new Set((alreadyDelivered ?? []).map((r: { delivered_database_id: string | null }) => r.delivered_database_id));
+          const toDeliver = matchedDatasetIds.filter((id) => !done.has(id));
+          for (const datasetId of toDeliver) {
+            // Grant record access (idempotent). Buyer-scoped RLS on
+            // lead_database_records keys off exactly this row.
+            await supabase
+              .from("lead_database_purchases")
+              .upsert(
+                { user_id: intake.user_id, lead_database_id: datasetId },
+                { onConflict: "user_id,lead_database_id", ignoreDuplicates: true },
+              );
+            // Surface in the hub's lists section as an auto-delivered list.
+            await supabase.from("lead_list_requests").insert({
+              user_id: intake.user_id,
+              report_id: reportId,
+              request_text: "Matched to your market-entry report",
+              status: "delivered",
+              delivered_database_id: datasetId,
+            });
+          }
+          if (toDeliver.length > 0) {
             // Ops-visibility event (routing disabled by default — migration
             // 20260716230000). PII stays in log_activity's own actor columns.
             await supabase.rpc("log_activity", {
@@ -3729,10 +3743,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
               p_actor_name: null,
               p_object_type: "user_reports",
               p_object_id: reportId,
-              p_metadata: { count: deliveredDatasets.length },
+              p_metadata: { count: toDeliver.length },
               p_dedup_key: `lld:${reportId}`,
             });
-            console.log(`Lead delivery: granted ${deliveredDatasets.length} dataset(s) to Scale buyer for report ${reportId}`);
+            console.log(`Lead delivery: granted ${toDeliver.length} dataset(s) to buyer for report ${reportId}`);
           }
         }
       }
