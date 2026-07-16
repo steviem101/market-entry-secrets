@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from './types';
 import { fetchUserData } from './userDataService';
+import { trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 
 // "Genuine first signup" heuristic: the account was created within the last
 // 24 hours. Wide enough to survive a delayed email confirmation, narrow
@@ -63,6 +64,16 @@ export const useAuthState = () => {
           const userId = session.user.id;
           queueMicrotask(async () => {
             if (cancelled || currentUserId.current !== userId) return;
+
+            // T5a (MES-191): a real auth session just started (fresh sign-in,
+            // signup, or OAuth) — the completion counterpart to signup_started.
+            // Gated on SIGNED_IN so a page reload that merely RESTORES an existing
+            // session (INITIAL_SESSION / TOKEN_REFRESHED) never re-counts. Deferred
+            // into the microtask to avoid the Supabase auth-callback deadlock. No PII.
+            if (_event === 'SIGNED_IN') {
+              trackFunnelEvent('session_established', { source: 'auth', user_id: userId });
+            }
+
             await fetchUserData(userId, {
               setProfile,
               setRoles,

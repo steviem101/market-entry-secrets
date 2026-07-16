@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lock } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCheckout } from '@/hooks/useCheckout';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 import { tierDisplayPrice } from '@/lib/tierPricing';
 import { TIER_LABELS } from './reportSectionConfig';
+import { trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 
 interface ReportGatedSectionProps {
   id: string;
@@ -20,7 +21,26 @@ export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSecti
   const location = useLocation();
   const navigate = useNavigate();
 
+  // T5a (MES-191) upgrade-gate funnel. One impression per locked section per
+  // mount; fire-and-forget, no PII. `source: 'report'` attributes it to the
+  // report surface (vs the directory freemium gate, source 'directory').
+  const impressionRef = useRef(false);
+  useEffect(() => {
+    if (impressionRef.current) return;
+    impressionRef.current = true;
+    trackFunnelEvent('gate_impression', {
+      source: 'report',
+      field_name: id,
+      metadata: { required_tier: requiredTier },
+    });
+  }, [id, requiredTier]);
+
   const handleUpgradeClick = async () => {
+    trackFunnelEvent('gate_click', {
+      source: 'report',
+      field_name: id,
+      metadata: { required_tier: requiredTier, authenticated: isAuthenticated },
+    });
     if (!isAuthenticated) {
       setShowAuthDialog(true);
       return;

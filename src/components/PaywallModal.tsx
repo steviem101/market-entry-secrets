@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AuthDialog } from './auth/AuthDialog';
 import { Lock, Eye, Users, FileText, Database, TrendingUp } from 'lucide-react';
+import { trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 
 interface PaywallModalProps {
   contentType: string;
@@ -32,6 +33,24 @@ export const PaywallModal = ({ contentType, contentTitle, contentDescription }: 
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const info = contentTypeInfo[contentType as keyof typeof contentTypeInfo] || contentTypeInfo.content;
   const Icon = info.icon;
+
+  // T5a (MES-191) signup-gate funnel. The directory freemium wall (3-free-views)
+  // is a distinct gate from the report upgrade gate — `source: 'directory'`
+  // keeps them separable. One impression per mount; fire-and-forget, no PII.
+  const impressionRef = useRef(false);
+  useEffect(() => {
+    if (impressionRef.current) return;
+    impressionRef.current = true;
+    trackFunnelEvent('gate_impression', {
+      source: 'directory',
+      field_name: contentType,
+    });
+  }, [contentType]);
+
+  const handleSignupClick = () => {
+    trackFunnelEvent('gate_click', { source: 'directory', field_name: contentType });
+    setShowAuthDialog(true);
+  };
 
   return (
     <>
@@ -83,8 +102,8 @@ export const PaywallModal = ({ contentType, contentTitle, contentDescription }: 
                 </li>
               </ul>
             </div>
-            <Button 
-              onClick={() => setShowAuthDialog(true)}
+            <Button
+              onClick={handleSignupClick}
               className="w-full"
               size="lg"
             >

@@ -6,10 +6,16 @@
 > `source` attributes the surface (`report`, `pricing`; `homepage_hero` reserved
 > for MES-158). Read-only; run as service role.
 
-Events emitted (T5a increment 1 wires the **bold** ones; the rest land in increment 2):
-`gate_impression` · `gate_click` · **`checkout_started`** · **`checkout_completed`** ·
-`signup_started` · `session_established` · **`report_viewed`** · `section_feedback_opened`
+Events emitted (all wired as of T5a increment 2):
+`gate_impression` · `gate_click` · `checkout_started` · `checkout_completed` ·
+`signup_started` · `session_established` · `report_viewed` · `section_feedback_opened`
 (plus the existing intake-wizard events).
+
+`source` attribution by event: gate events → `report` (report upgrade gate) or
+`directory` (freemium 3-view wall); `signup_started` → `email`;
+`session_established` → `auth`; `section_feedback_opened` → `report_top`
+(the report-open bar) or `report_footer` (the notes widget); checkout/report →
+`report`/`pricing`.
 
 ## Exclusion predicate (reused by every query below)
 
@@ -87,4 +93,54 @@ left join public.profiles p on p.id = e.user_id
 where e.event_type = 'report_viewed'
   and coalesce(p.is_test, false) = false
 group by 1 order by 1 desc;
+```
+
+## Upgrade-gate conversion (impression → click → checkout) by source
+
+```sql
+-- how many locked-gate impressions turn into upgrade clicks, per gate surface.
+-- 'report'   = report premium-section wall (feeds checkout)
+-- 'directory'= freemium 3-free-views wall (feeds signup)
+select e.source,
+  count(*) filter (where e.event_type = 'gate_impression') as impressions,
+  count(*) filter (where e.event_type = 'gate_click')      as clicks,
+  round(100.0 * count(*) filter (where e.event_type = 'gate_click')
+        / nullif(count(*) filter (where e.event_type = 'gate_impression'), 0), 1) as ctr_pct
+from public.intake_form_events e
+left join public.profiles p on p.id = e.user_id
+where coalesce(p.is_test, false) = false
+  and e.event_type in ('gate_impression', 'gate_click')
+group by e.source
+order by impressions desc;
+```
+
+## Signup funnel (started → session established)
+
+```sql
+-- signup_started is anonymous (no user_id yet); session_established carries the
+-- user_id once the session lands. Test-user exclusion applies to the latter only.
+select
+  count(*) filter (where event_type = 'signup_started')       as signup_started,
+  count(*) filter (where event_type = 'session_established'
+                     and coalesce(p.is_test, false) = false)  as session_established
+from public.intake_form_events e
+left join public.profiles p on p.id = e.user_id
+where e.event_type in ('signup_started', 'session_established')
+  and e.created_at >= now() - interval '30 days';
+```
+
+## Report feedback engagement (opened → scored)
+
+```sql
+-- section_feedback_opened marks first engagement with a feedback prompt,
+-- split by placement (report_top = the report-open bar, report_footer = the
+-- notes widget). Pairs with report_viewed for an engagement rate.
+select e.source,
+  count(*) as feedback_opened
+from public.intake_form_events e
+left join public.profiles p on p.id = e.user_id
+where e.event_type = 'section_feedback_opened'
+  and coalesce(p.is_test, false) = false
+group by e.source
+order by feedback_opened desc;
 ```
