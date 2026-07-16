@@ -10,6 +10,32 @@
 
 ---
 
+## 0. 2026-07-16 Reconciliation (MES-188 / T19) — supersedes the §1 go/no-go below
+
+> The §1 verdict ("CONDITIONAL GO — fix the 5 P1s") is a **2026-07-07 snapshot** and is now **historical**. As of 2026-07-16 **all five P1 launch blockers are remediated in code and merged to `main`**, and the MES-188 conversion epic has shipped (behind default-off flags where risky). What remains gating go-live is **operational (founder dashboard/deploy actions), not code.**
+
+**P1s — all closed:**
+- **AUD-005** paywall bypass → `create-checkout` forces `tier` server-side for lead purchases (`isLeadPurchase`).
+- **AUD-006** missing `lead_database_purchases` → recreated in `20260710130000_restore_lead_database_purchases.sql` (purchase-scoped RLS).
+- **AUD-002** investor PII to authed users → base table admin-only + `investors_public` (mes56 lockdown).
+- **AUD-003** `ingest_state` RLS/anon writes → `20260710120000_ingest_state_rls_lockdown.sql`.
+- **AUD-004** `fetchMyReports` `select('*')` leaking `report_json` → explicit column list (`reportApi.ts`).
+
+**MES-188 epic shipped (all merged):** T12 hygiene, T2 unlock, T5a instrumentation, T17 degraded-run alerts, T1 re-gate (four-place tier sync verified), T3 pricing copy, T8 Growth $199 + `service_entitlements`, T13 booking banner, T16a tier-aware email, A3 onboarding modal, T7 lead delivery (PR-A #472 + PR-B #473).
+
+**LAUNCH BLOCKERS — now human/ops only (ranked):**
+1. **👤 Stripe LIVE cutover** — repoint `STRIPE_GROWTH_PRICE_ID` to the live $199 price, archive the old $99, set the live webhook secret, run a live-mode test purchase (`docs/runbooks/stripe-live-cutover.md`, `mes-195-golive.md`).
+2. **👤 Manually deploy `send-email` (+ `stripe-webhook`, `stripe-webhook-reconcile`)** — not in the auto-deploy workflow; MES-197 report email and MES-195 fulfilment/entitlement grants don't run in prod until deployed.
+3. **👤 Set `ENTITLEMENTS_ENABLED=true`** at go-live (paired with 1–2, per runbook).
+4. **👤 Supabase dashboard hardening** — confirm redirect URLs match `config.toml`, enable "Confirm email" + leaked-password protection, verify prod secrets, enable PITR/backups.
+5. **👤 Ops monitoring** — stripe-webhook 5xx / `payment_webhook_logs` failure alerting + external error monitoring.
+
+**Stays OFF for launch (not blockers):** `LEAD_DELIVERY_ENABLED`, the MES-148 quality/data flags. **Lingering P3 hygiene:** AUD-053 (`.env` tracked in git — clear before any real secret is committed). **Non-blocking:** `golden-eval` CI red (pre-existing judge-400; a quality gate, not a go-live gate).
+
+**Bottom line:** the code side is launch-ready; remaining work is the founder's ops/dashboard checklist above, then the §14 launch-day smoke test (especially the AUD-005 re-test + a live tier purchase).
+
+---
+
 ## 1. Executive Summary
 
 ### Findings count by severity
