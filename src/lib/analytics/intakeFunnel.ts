@@ -36,7 +36,8 @@ export type FunnelEventType =
   | 'signup_started'
   | 'session_established'
   | 'report_viewed'
-  | 'section_feedback_opened';
+  | 'section_feedback_opened'
+  | 'session_booking_opened';
 
 export type FunnelEvent = IntakeEventType | FunnelEventType;
 

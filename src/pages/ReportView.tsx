@@ -17,6 +17,7 @@ import { ReportSources } from '@/components/report/ReportSources';
 import { ReportBackToTop } from '@/components/report/ReportBackToTop';
 import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
 import { ReportKeyMetrics } from '@/components/report/ReportKeyMetrics';
+import { SessionBookingBanner } from '@/components/report/SessionBookingBanner';
 import { useReport } from '@/hooks/useReport';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
@@ -266,6 +267,10 @@ const ReportViewInner = () => {
                   </Button>
                 </div>
               )}
+
+              {/* Advisor-session booking for entitled paid users (MES-196 / T13).
+                  Entitlement-driven: renders nothing for free users. */}
+              <SessionBookingBanner />
 
               {/* Key Metrics stat cards — only for new reports with metrics */}
               <ReportKeyMetrics metrics={keyMetrics} />
