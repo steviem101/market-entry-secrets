@@ -60,6 +60,7 @@ export const HeroIntentCapture = () => {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onFocus={markStarted}
+            maxLength={200}
             placeholder="e.g. a fintech lawyer, investors, market-entry mentors…"
             className="h-12 flex-1 rounded-xl bg-background/90 text-base"
             aria-label="Describe what you need to find"

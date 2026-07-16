@@ -72,6 +72,11 @@ test('explicit persona override wins over keyword hints', () => {
   assert.ok(!r.goalIds.includes('investors'));
 });
 
+test('rawIntent is capped at 200 chars (bounds marker + analytics metadata)', () => {
+  const r = classifyIntent('x'.repeat(300));
+  assert.equal(r.rawIntent.length, 200);
+});
+
 test('toReportFocus trims and caps at 200 chars', () => {
   assert.equal(toReportFocus('  hi  '), 'hi');
   assert.equal(toReportFocus('x'.repeat(300)).length, 200);

@@ -82,7 +82,11 @@ function personaHint(text: string): ReportPersona | null {
  * @param persona optional override (e.g. a chip that is persona-specific).
  */
 export function classifyIntent(raw: string, persona?: ReportPersona): HeroIntent {
-  const rawIntent = (raw ?? '').trim();
+  // Cap rawIntent to the same bound as report_focus so every downstream carrier
+  // (the prefill focus, the origin marker, and the analytics metadata) stays
+  // within the intake_form_events metadata CHECK and the banner never renders
+  // an unbounded paste.
+  const rawIntent = (raw ?? '').trim().slice(0, MAX_FOCUS);
   const text = rawIntent.toLowerCase();
 
   const goalIds: string[] = [];
