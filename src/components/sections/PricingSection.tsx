@@ -8,7 +8,7 @@ import { useCheckout } from "@/hooks/useCheckout";
 import { setPendingCheckout, consumePendingCheckout } from "@/lib/pendingCheckout";
 import { useSectionPersona } from "@/hooks/useSectionPersona";
 import { PERSONA_CONTENT } from "@/config/personaContent";
-import { Clock, DollarSign, ArrowRight } from "lucide-react";
+import { Clock, DollarSign, ArrowRight, ShieldCheck } from "lucide-react";
 
 export const PricingSection = () => {
   const { user } = useAuth();
@@ -111,6 +111,15 @@ export const PricingSection = () => {
             />
           ))}
         </div>
+
+        {/* Purchase-confidence microcopy (T3 / MES-194): trust signals at the
+            checkout moment. Only claims that are true today — MES bills one-time
+            (no subscriptions, CLAUDE.md §8) and checkout runs through Stripe. The
+            GST/tax-invoice wording is held for the Stripe cutover. */}
+        <p className="mt-10 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-sm text-muted-foreground">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+          <span>Secure checkout via Stripe · One-time payment · No subscription</span>
+        </p>
       </div>
 
       <AuthDialog
