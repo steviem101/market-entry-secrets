@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import type { LeadDatabase, LeadDatabaseRecord } from "@/types/leadDatabase";
 
 // lead_databases is NOT in auto-generated types — use (supabase as any) pattern
 const leadDatabasesTable = () => (supabase as any).from('lead_databases');
 const leadDatabaseRecordsTable = () => (supabase as any).from('lead_database_records');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- lead_database_purchases not in generated types (file convention above)
+const leadDatabasePurchasesTable = () => (supabase as any).from('lead_database_purchases');
 
 export const useLeadDatabases = () => {
   return useQuery({
@@ -86,19 +89,58 @@ export const useLeadDatabaseStats = () => {
   });
 };
 
-export const useLeadDatabaseRecords = (leadDatabaseId: string) => {
+export const useLeadDatabaseRecords = (leadDatabaseId: string, options?: { full?: boolean }) => {
+  const full = options?.full ?? false;
   return useQuery({
-    queryKey: ['lead-database-records', leadDatabaseId],
+    queryKey: ['lead-database-records', leadDatabaseId, full ? 'full' : 'preview'],
     queryFn: async () => {
-      const { data, error } = await leadDatabaseRecordsTable()
-        .select('*')
-        .eq('lead_database_id', leadDatabaseId)
-        .eq('is_preview', true)
-        .limit(5);
+      // Preview: the 5 masked sample rows anyone may see (is_preview=true).
+      // Full: the buyer's complete list. The buyer-scoped RLS on
+      // lead_database_records (restore_lead_database_purchases / MES-198) only
+      // returns non-preview rows to a user who holds a lead_database_purchases
+      // entitlement, so a non-owner requesting `full` silently gets nothing —
+      // the gate is server-side, this flag just widens what we ask for.
+      const base = leadDatabaseRecordsTable().select('*').eq('lead_database_id', leadDatabaseId);
+      const q = full
+        ? base.order('company_name', { ascending: true }).limit(1000)
+        : base.eq('is_preview', true).limit(5);
+      const { data, error } = await q;
 
       if (error) throw error;
       return data as LeadDatabaseRecord[];
     },
     enabled: !!leadDatabaseId,
   });
+};
+
+/**
+ * Whether the signed-in user has access to a lead database's full records
+ * (MES-198 / T7 D-B) — i.e. holds a lead_database_purchases entitlement, whether
+ * bought directly or auto-delivered with a Scale/Enterprise report. The read is
+ * owner-scoped by RLS ("Users view own purchases"); the explicit user_id filter
+ * keeps the query tight. Returns false for anon/non-owners.
+ */
+export const useLeadDatabaseAccess = (leadDatabaseId: string) => {
+  const { user } = useAuth();
+  const { data: hasAccess = false, isLoading } = useQuery({
+    queryKey: ['lead-database-access', leadDatabaseId, user?.id],
+    queryFn: async () => {
+      const { data, error } = await leadDatabasePurchasesTable()
+        .select('id')
+        .eq('lead_database_id', leadDatabaseId)
+        .eq('user_id', user!.id)
+        .limit(1);
+      if (error) return false;
+      return (data?.length ?? 0) > 0;
+    },
+    enabled: !!leadDatabaseId && !!user,
+    staleTime: 2 * 60 * 1000,
+  });
+  // `loading` is true ONLY while a signed-in user's access query is genuinely in
+  // flight — never for anon (the query is disabled, so there's nothing to wait
+  // for and the page should render the sales flow immediately). The detail page
+  // gates on this so a real owner never flashes the "Buy Now" hero before the
+  // access check resolves (version-robust: doesn't rely on how react-query
+  // reports isLoading for a disabled query).
+  return { hasAccess, loading: !!user && isLoading };
 };
