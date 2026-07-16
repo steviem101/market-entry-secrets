@@ -420,7 +420,7 @@ const internationalContent: PersonaSectionContent = {
       },
       {
         id: 'growth',
-        price: '$99',
+        price: '$199',
         description: 'For teams building their Australian market-entry playbook.',
         features: [
           'Everything in Free, plus:',
@@ -733,7 +733,7 @@ const startupContent: PersonaSectionContent = {
       },
       {
         id: 'growth',
-        price: '$99',
+        price: '$199',
         description: 'For founders building partnerships and go-to-market plans.',
         features: [
           'Everything in Free, plus:',
@@ -1006,7 +1006,7 @@ const defaultContent: PersonaSectionContent = {
       },
       {
         id: 'growth',
-        price: '$99',
+        price: '$199',
         description: 'For teams building their ANZ playbook.',
         features: [
           'Everything in Free, plus:',

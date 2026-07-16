@@ -97,7 +97,7 @@ export const PricingSection = () => {
           <ArrowRight className="w-4 h-4 text-muted-foreground hidden sm:block" />
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="w-4 h-4 text-emerald-500" />
-            <span>MES Growth plan: <strong className="text-primary">$99 in 3 minutes</strong></span>
+            <span>MES Growth plan: <strong className="text-primary">$199 in 3 minutes</strong></span>
           </div>
         </div>
 
