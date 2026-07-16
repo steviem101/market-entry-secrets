@@ -23,8 +23,10 @@ const LeadDatabaseDetailPage = () => {
     db?.sector || null
   );
   // T7 D-B: owners (bought or auto-delivered with a Scale/Enterprise report) see
-  // their full records in place of the sales/preview flow.
-  const { hasAccess } = useLeadDatabaseAccess(db?.id || "");
+  // their full records in place of the sales/preview flow. `accessLoading` gates
+  // the branch so a real owner never flashes the "Buy Now" hero before the
+  // access check resolves.
+  const { hasAccess, loading: accessLoading } = useLeadDatabaseAccess(db?.id || "");
   const { startLeadCheckout, loading: checkoutLoading } = useLeadCheckout();
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
@@ -91,7 +93,13 @@ const LeadDatabaseDetailPage = () => {
         <link rel="canonical" href={`${window.location.origin}/leads/${db.slug}`} />
       </Helmet>
 
-      {hasAccess ? (
+      {accessLoading ? (
+        // Access check for a signed-in user is in flight — hold on a skeleton so
+        // an owner never sees the sales/checkout hero flash before their records.
+        <main>
+          <PageSkeleton />
+        </main>
+      ) : hasAccess ? (
         // Owner view — full records, no paywall/sales flow.
         <main>
           <LeadDatabaseOwnedRecords db={db} />

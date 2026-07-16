@@ -122,7 +122,7 @@ export const useLeadDatabaseRecords = (leadDatabaseId: string, options?: { full?
  */
 export const useLeadDatabaseAccess = (leadDatabaseId: string) => {
   const { user } = useAuth();
-  const { data: hasAccess = false, isLoading: loading } = useQuery({
+  const { data: hasAccess = false, isLoading } = useQuery({
     queryKey: ['lead-database-access', leadDatabaseId, user?.id],
     queryFn: async () => {
       const { data, error } = await leadDatabasePurchasesTable()
@@ -136,5 +136,11 @@ export const useLeadDatabaseAccess = (leadDatabaseId: string) => {
     enabled: !!leadDatabaseId && !!user,
     staleTime: 2 * 60 * 1000,
   });
-  return { hasAccess, loading };
+  // `loading` is true ONLY while a signed-in user's access query is genuinely in
+  // flight — never for anon (the query is disabled, so there's nothing to wait
+  // for and the page should render the sales flow immediately). The detail page
+  // gates on this so a real owner never flashes the "Buy Now" hero before the
+  // access check resolves (version-robust: doesn't rely on how react-query
+  // reports isLoading for a disabled query).
+  return { hasAccess, loading: !!user && isLoading };
 };
