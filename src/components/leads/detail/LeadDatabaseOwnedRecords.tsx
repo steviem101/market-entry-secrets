@@ -64,7 +64,13 @@ export const LeadDatabaseOwnedRecords = ({ db }: { db: LeadDatabase }) => {
         </p>
       ) : (
         <>
-          <p className="mt-6 text-sm text-muted-foreground">{records.length.toLocaleString()} records</p>
+          <p className="mt-6 text-sm text-muted-foreground">
+            {records.length.toLocaleString()} records
+            {typeof db.record_count === 'number' && db.record_count > records.length && (
+              <span> of {db.record_count.toLocaleString()} — showing the first {records.length.toLocaleString()};
+                reply to your confirmation email for the complete export.</span>
+            )}
+          </p>
           <div className="mt-2 overflow-x-auto rounded-lg border border-border">
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
