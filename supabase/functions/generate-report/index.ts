@@ -3684,6 +3684,15 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         const { data: userData } = await supabase.auth.admin.getUserById(intake.user_id);
         if (userData?.user?.email) {
           const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://marketentrysecrets.com";
+          // T16a (MES-197): the completion email is tier-aware. For a free
+          // report, tease the sections the user has NOT unlocked by count only
+          // (never names — that's what gating protects); paid reports get the
+          // booking + hub SLA variant. Counts come from the gated (visible:false)
+          // sections that produced directory matches.
+          const lockedFindings = Object.entries(sections)
+            .filter(([, s]: [string, any]) =>
+              s && s.visible === false && Array.isArray(s.matches) && s.matches.length > 0)
+            .map(([key, s]: [string, any]) => ({ key, count: s.matches.length }));
           await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`, {
             method: "POST",
             headers: {
@@ -3699,6 +3708,8 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
                 company_name: intake.company_name,
                 report_id: reportId,
                 report_url: `${frontendUrl}/report/${reportId}`,
+                tier: userTier,
+                locked_findings: lockedFindings,
               },
             }),
           });
