@@ -32,7 +32,7 @@ export const useServiceEntitlements = () => {
       const client = supabase as unknown as MinimalSelectClient;
       const { data, error } = await client
         .from('service_entitlements')
-        .select('kind, granted_count, consumed_count, expires_at')
+        .select('id, kind, granted_count, consumed_count, expires_at')
         .eq('user_id', user!.id);
       if (error) return [];
       return data ?? [];

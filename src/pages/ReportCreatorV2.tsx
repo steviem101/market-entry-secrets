@@ -137,6 +137,11 @@ const ReportCreatorV2 = () => {
         persona: p,
         metadata: { raw_intent: marker.rawIntent },
       });
+      // Consume the marker now that this mount has captured it into `heroIntent`
+      // state: prevents a remount (navigate away + back) re-firing prefill_loaded,
+      // and stops the marker leaking to a later non-hero report in the same tab.
+      // Completion attribution keys off the captured state, not the marker.
+      clearHeroIntentMarker();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -301,7 +306,7 @@ const ReportCreatorV2 = () => {
   }
 
   async function runGenerate() {
-    const result = await generate(form.getValues());
+    const result = await generate(form.getValues(), { heroOriginated: !!heroIntent });
     if (result.needsAuth) {
       pendingGenerate.current = true;
       setShowAuth(true);

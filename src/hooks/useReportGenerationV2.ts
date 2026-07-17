@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { reportApi } from '@/lib/api/reportApi';
 import type { IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
 import { trackIntakeEvent, trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
-import { readHeroIntentMarker, clearHeroIntentMarker } from '@/lib/heroIntentPrefill';
 
 /**
  * v2 generation hook. Separate from the legacy useReportGeneration so the live
@@ -39,7 +38,15 @@ export const useReportGenerationV2 = () => {
     try { localStorage.removeItem(LOCALSTORAGE_KEY_V2); } catch { /* ignore */ }
   };
 
-  const generate = async (data: IntakeFormDataV2): Promise<{ needsAuth: boolean }> => {
+  // `heroOriginated` is passed by the caller from its in-memory hero-intent state
+  // (ReportCreatorV2), NOT re-read from the sessionStorage marker here. The marker
+  // is consumed + cleared at report-creator mount, so reading it at completion
+  // would miscredit a later non-hero report in the same tab (and can't survive an
+  // abandoned attempt). Keying off the caller's state attributes THIS generation.
+  const generate = async (
+    data: IntakeFormDataV2,
+    opts?: { heroOriginated?: boolean },
+  ): Promise<{ needsAuth: boolean }> => {
     if (!user) {
       saveDraft(data);
       return { needsAuth: true };
@@ -80,8 +87,8 @@ export const useReportGenerationV2 = () => {
           user_id: user.id,
         });
         // MES-158: attribute completions that originated on the homepage intent
-        // hero, then retire the origin marker so a later report isn't miscredited.
-        if (readHeroIntentMarker()) {
+        // hero (flag from the caller's in-memory state — see the generate() note).
+        if (opts?.heroOriginated) {
           trackFunnelEvent('report_completed_from_hero_intent', {
             source: 'homepage_hero',
             persona: data.persona,
@@ -89,7 +96,6 @@ export const useReportGenerationV2 = () => {
             user_id: user.id,
           });
         }
-        clearHeroIntentMarker();
         toast({ title: 'Report generated!', description: 'Your report is ready to view.' });
         navigate(`/report/${result.report_id}`);
       } else if (pollResult.status === 'failed') {

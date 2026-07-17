@@ -58,3 +58,20 @@ test('unknown entitlement kind falls back to a humanised label', () => {
   const d = entitlementToDeliverable({ kind: 'concierge_call', granted_count: 1, consumed_count: 0, expires_at: null }, NOW);
   assert.equal(d.label, 'concierge call');
 });
+
+test('two entitlements of the same kind get distinct ids and both survive (#6)', () => {
+  // A repeat buyer holds two mentor_intro rows (uniqueness is source_purchase+kind,
+  // not user+kind). Keying on the row id keeps them from colliding into one.
+  const items = buildDeliverables(
+    [
+      { id: 'p1', kind: 'mentor_intro', granted_count: 1, consumed_count: 0, expires_at: inDays(30) },
+      { id: 'p2', kind: 'mentor_intro', granted_count: 1, consumed_count: 0, expires_at: inDays(10) },
+    ],
+    [],
+    NOW,
+  );
+  assert.equal(items.length, 2, 'both grants surface');
+  const ids = items.map((i) => i.id);
+  assert.equal(new Set(ids).size, 2, 'ids are unique (no React key collision)');
+  assert.deepEqual(ids.sort(), ['ent:p1', 'ent:p2']);
+});

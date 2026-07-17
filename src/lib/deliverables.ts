@@ -25,6 +25,11 @@ export interface DeliverableItem {
 }
 
 export interface EntitlementInput {
+  /** Row PK. A user can hold MULTIPLE rows of the same `kind` — service_entitlements
+   * uniqueness is (source_purchase, kind), so a repeat buyer has e.g. two
+   * `mentor_intro` grants. Use this (not `kind`) to key each deliverable so the
+   * rows don't collide into one React key and silently drop. */
+  id?: string;
   kind: string;
   granted_count: number;
   consumed_count: number;
@@ -70,7 +75,9 @@ export function entitlementToDeliverable(e: EntitlementInput, nowMs: number): De
     const days = Number.isFinite(expMs) ? Math.ceil((expMs - nowMs) / DAY_MS) : null;
     detail = `${remaining} of ${e.granted_count ?? 0} available${days != null ? ` · expires in ${days} day${days === 1 ? '' : 's'}` : ''}`;
   }
-  return { id: `ent:${e.kind}`, kind: e.kind, label: entitlementLabel(e.kind), status, detail };
+  // Key on the row PK when present (a user can hold several rows of the same
+  // kind); fall back to kind only when no id was supplied (e.g. bare test input).
+  return { id: `ent:${e.id ?? e.kind}`, kind: e.kind, label: entitlementLabel(e.kind), status, detail };
 }
 
 const LEAD_STATUS: Record<string, DeliverableStatus> = {
