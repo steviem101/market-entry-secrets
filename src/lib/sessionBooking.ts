@@ -20,6 +20,11 @@ export type SessionKind = (typeof SESSION_KINDS)[number];
 
 /** Minimal shape of a service_entitlements row the booking logic needs. */
 export interface EntitlementRow {
+  /** Row PK. Optional here (booking logic doesn't need it) but selected by
+   * useServiceEntitlements so consumers that render one item per row — the
+   * deliverables hub — can key on a stable per-row id (uniqueness is
+   * (source_purchase, kind), so `kind` alone is NOT unique per user). */
+  id?: string;
   kind: string;
   granted_count: number;
   consumed_count: number;

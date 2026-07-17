@@ -34,6 +34,12 @@ export const ReportUpgradeStrip = ({ currentTier }: { currentTier: string }) => 
   const lockedForUser = SPLIT.locked.filter((s) => !userTierMeetsRequirement(currentTier, s.tier));
   const groups = lockedByTier(lockedForUser, TIER_HIERARCHY);
   const active = show && lockedForUser.length > 0;
+  // Sections the viewer already has, derived from their ACTUAL tier — not a
+  // static free-tier count. The strip renders for any viewer with locked
+  // sections above their tier (incl. paid Growth), so the lead-in must not
+  // claim "your free report" to a paying customer.
+  const totalSections = SECTION_ORDER.length;
+  const unlockedForUser = totalSections - lockedForUser.length;
 
   const impressionRef = useRef(false);
   useEffect(() => {
@@ -56,7 +62,7 @@ export const ReportUpgradeStrip = ({ currentTier }: { currentTier: string }) => 
     <section className="rounded-xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
       <h3 className="text-lg font-semibold text-foreground">Unlock the rest of your report</h3>
       <p className="mt-1 text-sm text-muted-foreground">
-        You&rsquo;ve read your free report — {SPLIT.free.length} sections. Upgrading adds{' '}
+        You&rsquo;ve unlocked {unlockedForUser} of {totalSections} sections. Upgrading adds{' '}
         {lockedForUser.length} more, matched to your situation:
       </p>
 
