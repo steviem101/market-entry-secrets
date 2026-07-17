@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
+import { captureError } from '@/lib/errorTracking';
 
 interface Props {
   children: ReactNode;
@@ -35,6 +36,7 @@ class ErrorBoundaryInner extends Component<InnerProps, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught:', error.message, errorInfo.componentStack);
+    captureError(error, { componentStack: errorInfo.componentStack });
   }
 
   render() {

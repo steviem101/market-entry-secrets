@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'error_tracking';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -84,6 +84,13 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
     queryKey: 'intros',
     storageKey: 'mes_flag_concierge_intros',
     defaultValue: false,
+  },
+  // Sentry client error tracking (src/lib/errorTracking.ts). On by default
+  // (still inert until a DSN is set there); ?errtrack=0 is the kill switch.
+  error_tracking: {
+    queryKey: 'errtrack',
+    storageKey: 'mes_flag_error_tracking',
+    defaultValue: true,
   },
 };
 
