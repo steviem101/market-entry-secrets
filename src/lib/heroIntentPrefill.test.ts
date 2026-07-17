@@ -6,7 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPrefillDraft } from './heroIntentPrefill.ts';
+import { buildPrefillDraft, mergeIntentDraft } from './heroIntentPrefill.ts';
 import { classifyIntent } from './intentClassifier.ts';
 
 test('carries persona + goals + capped focus from a classified intent', () => {
@@ -33,4 +33,33 @@ test('goal_ids is a fresh copy (no shared reference into the intent)', () => {
   const draft = buildPrefillDraft(intent);
   assert.notEqual(draft.goal_ids, intent.goalIds);
   assert.deepEqual(draft.goal_ids, intent.goalIds);
+});
+
+// --- mergeIntentDraft: don't persist a persona/goal-inconsistent draft (#11) ---
+
+test('a persona change without new goals drops the stale goal_ids', () => {
+  const existing = { persona: 'startup' as const, goal_ids: ['investors', 'mentors_startup'] };
+  const patch = { persona: 'international' as const, report_focus: 'expanding into Australia' };
+  const merged = mergeIntentDraft(existing, patch);
+  assert.equal(merged.persona, 'international');
+  assert.equal(merged.goal_ids, undefined, 'startup goals not carried under international');
+  assert.equal(merged.report_focus, 'expanding into Australia');
+});
+
+test('a persona change WITH new goals keeps the new goals', () => {
+  const existing = { persona: 'international' as const, goal_ids: ['find_providers'] };
+  const patch = { persona: 'startup' as const, goal_ids: ['investors'] };
+  assert.deepEqual(mergeIntentDraft(existing, patch).goal_ids, ['investors']);
+});
+
+test('same persona keeps the existing in-progress goals', () => {
+  const existing = { persona: 'startup' as const, goal_ids: ['investors'] };
+  const patch = { persona: 'startup' as const, report_focus: 'seed round' };
+  assert.deepEqual(mergeIntentDraft(existing, patch).goal_ids, ['investors']);
+});
+
+test('a fresh draft (no existing persona) just applies the patch', () => {
+  const merged = mergeIntentDraft({}, { persona: 'startup' as const, report_focus: 'x' });
+  assert.equal(merged.persona, 'startup');
+  assert.equal(merged.goal_ids, undefined);
 });
