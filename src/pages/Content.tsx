@@ -12,9 +12,10 @@ import { UsageBanner } from "@/components/UsageBanner";
 import { SEOHead } from "@/components/common/SEOHead";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
-import { filterContent } from "@/lib/contentFilters";
+import { filterContent, type ContentItemLike } from "@/lib/contentFilters";
 import { curateValues } from "@/lib/filterCuration";
 import { sectorLabel } from "@/lib/sectorLabels";
+import { guideTopicLabel } from "@/lib/guideTopics";
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
   guide: "Guides",
@@ -38,6 +39,8 @@ const CONTENT_FILTER_SPEC: FilterSpec = {
   // are still resolved for back-compat.
   category: { param: "category", default: "all" },
   sector: { param: "sector", default: "all" },
+  // Guide topic taxonomy (MES-182) — guides only; non-guides have no topic.
+  topic: { param: "topic", default: "all" },
 };
 
 const Content = () => {
@@ -54,12 +57,27 @@ const Content = () => {
     () => curateValues(contentItems.flatMap((item) => item.sector_tags || []), { labelFor: sectorLabel }),
     [contentItems]
   );
+  // Guide topics (MES-182), count-ranked + zero-hidden like sectors. The cast
+  // is the usual bridge until the generated Supabase types pick up the new
+  // guide_topic column — the select('*') rows carry it at runtime.
+  const topicOptions = useMemo(
+    () => curateValues(
+      contentItems.map((item) => (item as ContentItemLike).guide_topic),
+      { labelFor: guideTopicLabel },
+    ),
+    [contentItems]
+  );
   // The hook coerces a stale ?type= (retired content_type) and a stale/
-  // case-variant ?sector= to "all" so neither renders a phantom tab or empty
-  // grid. Category is slug/uuid-resolved in-page below, so it isn't coerced here.
+  // case-variant ?sector=/?topic= to "all" so none renders a phantom tab or
+  // empty grid. Category is slug/uuid-resolved in-page below, so it isn't
+  // coerced here.
   const allowedValues = useMemo(
-    () => ({ type: CONTENT_TYPE_VALUES, sector: sectorOptions.map((o) => o.value) }),
-    [sectorOptions],
+    () => ({
+      type: CONTENT_TYPE_VALUES,
+      sector: sectorOptions.map((o) => o.value),
+      topic: topicOptions.map((o) => o.value),
+    }),
+    [sectorOptions, topicOptions],
   );
   const { filters, setFilter, clearAll, hasActiveFilters } =
     useDirectoryFilters(CONTENT_FILTER_SPEC, { allowedValues });
@@ -116,6 +134,8 @@ const Content = () => {
   }, [contentItems]);
 
   const selects: SelectFilterConfig[] = [
+    // Topic first — it's the guides' primary browse axis (MES-182).
+    { key: "topic", allLabel: "All Topics", options: topicOptions },
     {
       key: "category",
       allLabel: "All Categories",
