@@ -4,7 +4,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { reportApi } from '@/lib/api/reportApi';
 import type { IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
-import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
+import { trackIntakeEvent, trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
+import { readHeroIntentMarker, clearHeroIntentMarker } from '@/lib/heroIntentPrefill';
 
 /**
  * v2 generation hook. Separate from the legacy useReportGeneration so the live
@@ -78,6 +79,17 @@ export const useReportGenerationV2 = () => {
           intake_form_id: intakeForm.id,
           user_id: user.id,
         });
+        // MES-158: attribute completions that originated on the homepage intent
+        // hero, then retire the origin marker so a later report isn't miscredited.
+        if (readHeroIntentMarker()) {
+          trackFunnelEvent('report_completed_from_hero_intent', {
+            source: 'homepage_hero',
+            persona: data.persona,
+            intake_form_id: intakeForm.id,
+            user_id: user.id,
+          });
+        }
+        clearHeroIntentMarker();
         toast({ title: 'Report generated!', description: 'Your report is ready to view.' });
         navigate(`/report/${result.report_id}`);
       } else if (pollResult.status === 'failed') {

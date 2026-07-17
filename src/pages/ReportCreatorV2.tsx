@@ -22,8 +22,10 @@ import { Step1Company } from '@/components/report-creator/v2/Step1Company';
 import { Step2Goals } from '@/components/report-creator/v2/Step2Goals';
 import { Step3Details } from '@/components/report-creator/v2/Step3Details';
 import { ReviewScreen } from '@/components/report-creator/v2/ReviewScreen';
-import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
+import { trackIntakeEvent, trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 import { corporateWebsiteFromEmail } from '@/lib/corporateDomain';
+import { readHeroIntentMarker, clearHeroIntentMarker } from '@/lib/heroIntentPrefill';
+import { X } from 'lucide-react';
 
 type Screen = 'persona' | 'company' | 'goals' | 'details' | 'review';
 const UI_KEY = 'mes_intake_v2_ui';
@@ -77,6 +79,10 @@ const ReportCreatorV2 = () => {
 
   const [screen, setScreen] = useState<Screen>('persona');
   const [persona, setPersona] = useState<ReportPersona>(urlPersona);
+  // MES-158: raw phrase the visitor entered on the homepage intent hero, shown
+  // as a "we pre-selected this — review it" banner. Null when not from the hero.
+  const [heroIntent, setHeroIntent] = useState<string | null>(null);
+  const [heroBannerDismissed, setHeroBannerDismissed] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [pendingPersona, setPendingPersona] = useState<ReportPersona | null>(null);
   const pendingGenerate = useRef(false);
@@ -119,6 +125,18 @@ const ReportCreatorV2 = () => {
       // treated as having customised and we preserve their saved picks.
       lastAutoGoals.current = DEFAULT_GOALS[p];
       setScreen(savedScreen && savedScreen !== 'persona' ? savedScreen : 'company');
+    }
+
+    // MES-158: if the visitor arrived via the homepage intent hero, its prefill
+    // draft was just restored above. Show the confirm banner + log the load.
+    const marker = readHeroIntentMarker();
+    if (marker) {
+      setHeroIntent(marker.rawIntent);
+      trackFunnelEvent('report_prefill_loaded', {
+        source: 'homepage_hero',
+        persona: p,
+        metadata: { raw_intent: marker.rawIntent },
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -292,6 +310,10 @@ const ReportCreatorV2 = () => {
 
   async function handleGenerate() {
     trackIntakeEvent('generate_clicked', { persona, user_id: user?.id });
+    if (heroIntent) {
+      // The visitor confirmed the hero-seeded prefill by reaching Generate.
+      trackFunnelEvent('report_prefill_confirmed', { source: 'homepage_hero', persona, user_id: user?.id });
+    }
     const ok = await form.trigger();
     if (!ok) {
       // Jump back to the earliest step with an error.
@@ -321,6 +343,27 @@ const ReportCreatorV2 = () => {
           </div>
         ) : (
           <div>
+            {heroIntent && !heroBannerDismissed && (
+              <div className="mx-auto max-w-3xl px-4 pt-6">
+                <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex-1 text-sm text-foreground">
+                    <span className="font-medium">Starting from what you told us:</span>{' '}
+                    <span className="italic text-muted-foreground">“{heroIntent}”</span>
+                    <p className="mt-1 text-muted-foreground">
+                      We&rsquo;ve pre-selected a focus and matching goals — review and adjust anything below before you generate.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Dismiss"
+                    onClick={() => setHeroBannerDismissed(true)}
+                    className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-primary/10 hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
             <StepShell persona={persona} stepIndex={STEP_INDEX[screen]} onSwitchPersona={switchPersona}>
               {screen === 'company' && (
                 <Step1Company persona={persona} form={values} set={set} errors={form.formState.errors} onNext={() => goNextFrom('company')} />
