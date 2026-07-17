@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -74,6 +74,15 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   deliverables_hub: {
     queryKey: 'deliverables',
     storageKey: 'mes_flag_deliverables_hub',
+    defaultValue: false,
+  },
+  // MES-188 T9 concierge intro requests: a paid member can request a
+  // human-facilitated mentor/ecosystem intro, drawn from their D4 allowance
+  // (server-enforced via check_concierge_intro_capacity + fulfil_concierge_intro).
+  // Ships dark (default off); ?intros=1 enables the request UI.
+  concierge_intros: {
+    queryKey: 'intros',
+    storageKey: 'mes_flag_concierge_intros',
     defaultValue: false,
   },
 };
