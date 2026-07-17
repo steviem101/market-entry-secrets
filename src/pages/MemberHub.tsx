@@ -29,6 +29,8 @@ import { useBookmarks } from "@/hooks/useBookmarks";
 import { useMyMentorMatches, useMyReports } from "@/hooks/useReport";
 import { useMyLeadListRequests } from "@/hooks/useLeadListRequests";
 import { getInitials, getDisplayName } from "@/lib/profileUtils";
+import { DeliverablesHub } from "@/components/member/DeliverablesHub";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 import { format } from "date-fns";
 
 const MemberHub = () => {
@@ -207,6 +209,10 @@ const MemberHub = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* T15: deliverables & introductions hub (flag `deliverables_hub`).
+              Self-gates: renders nothing when the member has no deliverables. */}
+          {isFeatureEnabled('deliverables_hub') && <DeliverablesHub />}
 
           {/* Hub Sections Grid */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
