@@ -51,6 +51,28 @@ function jlog(level: string, msg: string, meta: Record<string, unknown> = {}) {
   console.log(JSON.stringify({ fn: "knowledge-search", level, msg, ...meta }));
 }
 
+// Derive the anon rate-limit subject IP. A client can inject arbitrary
+// `x-forwarded-for` values, so keying on the LEFTMOST token lets an attacker mint
+// a fresh 20/min bucket per request and drive unbounded paid embeds (AUD-030).
+// Use the RIGHTMOST hop instead — the address appended by the closest trusted
+// proxy per the XFF append convention. It is never worse than the leftmost and,
+// wherever the platform gateway appends the real peer IP, it is the real client.
+// We deliberately do NOT trust cf-connecting-ip / x-real-ip: if the gateway
+// doesn't set them, a client could spoof one to OVERRIDE a correct XFF hop, which
+// would be a regression. A truly header-less request falls to a shared "0.0.0.0"
+// bucket: conservative (over-throttles unknowns) rather than minting keyspace.
+// NOTE: full robustness depends on the Supabase gateway appending (not passing
+// through) XFF — if it forwards client XFF untouched, keying needs a
+// gateway-controlled signal instead; revisit if abuse is observed.
+function anonClientIp(req: Request): string {
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) {
+    const hops = xff.split(",").map((s) => s.trim()).filter(Boolean);
+    if (hops.length) return hops[hops.length - 1];
+  }
+  return "0.0.0.0";
+}
+
 Deno.serve(async (req: Request) => {
   const cors = corsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
@@ -95,13 +117,14 @@ Deno.serve(async (req: Request) => {
 
   // Rate limit BEFORE the paid embed (AUD-030). Authenticated callers key on
   // their user id (looser); anonymous callers on a hash of their IP (stricter).
-  // Fails open on a limiter DB error (checkRateLimit) — availability over strict
-  // enforcement, matching scrape-company.
+  // Fails CLOSED on a limiter DB error here (failClosed) — this endpoint fires a
+  // paid OpenAI embed per call, so a limiter outage must not become an uncapped-
+  // cost window (unlike scrape-company, which fails open for availability).
   const rateMax = userId ? AUTH_RATE_MAX : ANON_RATE_MAX;
   const rateKey = userId
     ? userId
-    : await hashToUuid(`ks:${(req.headers.get("x-forwarded-for") || "0.0.0.0").split(",")[0].trim()}`);
-  const limited = await checkRateLimit(rateKey, "knowledge-search", rateMax, RATE_WINDOW_MIN);
+    : await hashToUuid(`ks:${anonClientIp(req)}`);
+  const limited = await checkRateLimit(rateKey, "knowledge-search", rateMax, RATE_WINDOW_MIN, true);
   if (limited) { jlog("warn", "rate limited", { authed: !!userId }); return json({ error: "rate_limited", detail: limited }, 429); }
 
   // OpenAI key (env first, Vault fallback)

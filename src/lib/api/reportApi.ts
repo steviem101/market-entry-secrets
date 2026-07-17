@@ -183,13 +183,19 @@ export const reportApi = {
     // Use the server-side tier-gated function to get filtered report_json.
     // T4 (MES-188): request redacted teasers for locked sections when the
     // `report_teasers` flag is on. With it off the RPC strips exactly as before.
+    // Only spread the p_include_teasers arg when the flag is on: the T4 migration
+    // recreated the function as 2-arg (DEFAULT false), so a bare 1-arg call
+    // resolves against BOTH the pre- and post-migration function. Passing the arg
+    // unconditionally would hard-require the new signature, 500ing every report
+    // view in any window where the published SPA runs ahead of the applied
+    // migration (CLAUDE.md §2/§10 — frontend publishes independently of migrate).
     // Cast: the p_include_teasers arg (T4) isn't in the generated types until
     // the migration lands + types regenerate — same `(supabase as any)` style
     // the rest of this module uses for the report tables (CLAUDE.md §5).
     const { data: gatedJson, error: rpcError } = await (supabase as any)
       .rpc('get_tier_gated_report', {
         p_report_id: reportId,
-        p_include_teasers: isFeatureEnabled('report_teasers'),
+        ...(isFeatureEnabled('report_teasers') ? { p_include_teasers: true } : {}),
       });
 
     if (rpcError) throw rpcError;
