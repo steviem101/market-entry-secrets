@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { IntakeFormData } from '@/components/report-creator/intakeSchema';
 import { mapV2ToLegacyIntake, type IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 export const reportApi = {
   /**
@@ -179,9 +180,17 @@ export const reportApi = {
 
     if (metaError) throw metaError;
 
-    // Use the server-side tier-gated function to get filtered report_json
-    const { data: gatedJson, error: rpcError } = await supabase
-      .rpc('get_tier_gated_report', { p_report_id: reportId });
+    // Use the server-side tier-gated function to get filtered report_json.
+    // T4 (MES-188): request redacted teasers for locked sections when the
+    // `report_teasers` flag is on. With it off the RPC strips exactly as before.
+    // Cast: the p_include_teasers arg (T4) isn't in the generated types until
+    // the migration lands + types regenerate — same `(supabase as any)` style
+    // the rest of this module uses for the report tables (CLAUDE.md §5).
+    const { data: gatedJson, error: rpcError } = await (supabase as any)
+      .rpc('get_tier_gated_report', {
+        p_report_id: reportId,
+        p_include_teasers: isFeatureEnabled('report_teasers'),
+      });
 
     if (rpcError) throw rpcError;
 
