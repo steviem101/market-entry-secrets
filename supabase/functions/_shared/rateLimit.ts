@@ -4,13 +4,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  * Check and enforce rate limits for edge functions.
  * Uses the edge_function_rate_limits table (service_role only).
  *
+ * @param failClosed when true, a limiter DB error blocks the request instead of
+ *   allowing it. Use for endpoints where the throttle guards paid spend (e.g.
+ *   knowledge-search's OpenAI embed) — a limiter outage must not become an
+ *   uncapped-cost window. Defaults to false (fail open) so latency-sensitive
+ *   guards like scrape-company keep prioritising availability.
  * @returns null if within limits, or an error message string if rate limited.
  */
 export async function checkRateLimit(
   userId: string,
   functionName: string,
   maxRequests: number,
-  windowMinutes: number
+  windowMinutes: number,
+  failClosed = false
 ): Promise<string | null> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -28,8 +34,10 @@ export async function checkRateLimit(
 
   if (countError) {
     console.error("Rate limit check failed:", countError);
-    // Fail open — don't block the request if the check itself fails
-    return null;
+    // Fail open by default; fail closed when the caller guards paid spend.
+    return failClosed
+      ? `Rate limit check unavailable: max ${maxRequests} requests per ${windowMinutes} minutes`
+      : null;
   }
 
   if ((count ?? 0) >= maxRequests) {
