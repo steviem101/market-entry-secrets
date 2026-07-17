@@ -18,6 +18,7 @@ import { ReportBackToTop } from '@/components/report/ReportBackToTop';
 import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
 import { ReportKeyMetrics } from '@/components/report/ReportKeyMetrics';
 import { SessionBookingBanner } from '@/components/report/SessionBookingBanner';
+import { ReportUpgradeStrip } from '@/components/report/ReportUpgradeStrip';
 import { useReport } from '@/hooks/useReport';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
@@ -402,6 +403,11 @@ const ReportViewInner = () => {
                 reportId={report.id}
                 existingScore={report.feedback_score}
               />
+
+              {/* End-of-report free-vs-paid comparison (MES-188 T5b, behind
+                  `comparison_moments`). Self-gates: renders nothing for the flag
+                  off or a viewer who already has every section. */}
+              <ReportUpgradeStrip currentTier={currentTier} />
             </div>
           </div>
         </div>
