@@ -12,6 +12,8 @@ import { AuthDialog } from "@/components/auth/AuthDialog";
 import { useLeadDatabaseBySlug, useRelatedLeadDatabases, useLeadDatabaseAccess } from "@/hooks/useLeadDatabases";
 import { useLeadCheckout } from "@/hooks/useLeadCheckout";
 import { NoIndex } from "@/components/common/NoIndex";
+import { EntityBreadcrumb } from "@/components/common/EntityBreadcrumb";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 
 const LeadDatabaseDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -90,8 +92,15 @@ const LeadDatabaseDetailPage = () => {
           property="og:description"
           content={db.short_description || db.description?.slice(0, 150) || ''}
         />
-        <link rel="canonical" href={`${window.location.origin}/leads/${db.slug}`} />
+        <link rel="canonical" href={`${publishedOrigin()}/leads/${db.slug}`} />
       </Helmet>
+
+      <EntityBreadcrumb
+        segments={[
+          { label: "Market Leads", href: "/leads" },
+          { label: db.title },
+        ]}
+      />
 
       {accessLoading ? (
         // Access check for a signed-in user is in flight — hold on a skeleton so

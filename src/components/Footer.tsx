@@ -16,6 +16,7 @@ export const Footer = () => {
     { label: "Mentors", href: "/mentors" },
     { label: "Content Library", href: "/content" },
     { label: "Market Leads", href: "/leads" },
+    { label: "Investors", href: "/investors" },
     { label: "Innovation Ecosystem", href: "/innovation-ecosystem" }
   ];
 
@@ -30,6 +31,7 @@ export const Footer = () => {
   ];
 
   const supportLinks = [
+    { label: "Pricing", href: "/pricing" },
     { label: "About Us", href: "/about" },
     { label: "Contact", href: "/contact" },
     { label: "Partner With Us", href: "/partner" },

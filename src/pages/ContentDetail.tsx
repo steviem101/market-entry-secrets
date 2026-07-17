@@ -19,6 +19,7 @@ import { GuideAttachments } from "@/components/content/GuideAttachments";
 import { GuideAttachmentManager } from "@/components/content/GuideAttachmentManager";
 import { useGuideAttachments } from "@/hooks/useGuideAttachments";
 import { getLogoUrl } from "@/lib/logoUtils";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 import { NoIndex } from "@/components/common/NoIndex";
 
 interface ContentSection {
@@ -160,7 +161,7 @@ const ContentDetail = () => {
             publisher: {
               "@type": "Organization",
               name: "Market Entry Secrets",
-              url: typeof window !== "undefined" ? window.location.origin : "https://marketentrysecrets.com"
+              url: publishedOrigin()
             }
           }
         }}

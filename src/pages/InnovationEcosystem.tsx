@@ -12,6 +12,7 @@ import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterOrganisations } from "@/lib/innovationFilters";
 import { curateValues } from "@/lib/filterCuration";
 import { sectorLabel } from "@/lib/sectorLabels";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 
 const PAGE_SIZE = 12;
 
@@ -113,7 +114,7 @@ const InnovationEcosystem = () => {
           property="og:description"
           content="Discover incubators, accelerators, innovation hubs, and startup ecosystems worldwide."
         />
-        <link rel="canonical" href={`${window.location.origin}/innovation-ecosystem`} />
+        <link rel="canonical" href={`${publishedOrigin()}/innovation-ecosystem`} />
       </Helmet>
 
       <InnovationEcosystemHero

@@ -11,6 +11,7 @@ import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterAgencies } from "@/lib/agencyFilters";
 import { humanizeSlug } from "@/lib/humanizeSlug";
 import { curateValues } from "@/lib/filterCuration";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 
 const PAGE_SIZE = 12;
 
@@ -96,7 +97,7 @@ const TradeInvestmentAgencies = () => {
           property="og:description"
           content="Connect with government agencies, industry associations, and chambers supporting market entry into Australia and New Zealand."
         />
-        <link rel="canonical" href={`${window.location.origin}/government-support`} />
+        <link rel="canonical" href={`${publishedOrigin()}/government-support`} />
       </Helmet>
 
       <TradeInvestmentAgenciesHero

@@ -37,8 +37,18 @@ const EventDetailPage = () => {
   const formattedDate = format(new Date(event.date), "d MMMM yyyy");
   const pageDescription = `${event.title} - ${formattedDate}${event.location ? ` in ${event.location}` : ""}. ${(event.description || "").slice(0, 120)}`;
 
+  // Past-dated events are kept accessible to users but noindexed (and dropped
+  // from the sitemap) so expired listings don't dilute the index. Undated /
+  // unparseable dates stay indexable (recurring events).
+  const parsedDate = event.date ? new Date(event.date) : null;
+  const isPastEvent =
+    parsedDate !== null &&
+    !isNaN(parsedDate.getTime()) &&
+    parsedDate < new Date(new Date().toDateString());
+
   return (
     <>
+      {isPastEvent && <NoIndex />}
       <SEOHead
         title={`${event.title} | Market Entry Secrets`}
         description={pageDescription}

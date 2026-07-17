@@ -11,6 +11,7 @@ import {
 import { GeneratingScreenV2 } from '@/components/report-creator/v2/GeneratingScreenV2';
 import { useAuth } from '@/hooks/useAuth';
 import { useReportGenerationV2 } from '@/hooks/useReportGenerationV2';
+import { publishedOrigin } from '@/lib/publishedOrigin';
 import {
   fullIntakeSchema, DEFAULT_GOALS, smartDefaultGoals,
   type IntakeFormDataV2, type ReportPersona,
@@ -339,6 +340,7 @@ const ReportCreatorV2 = () => {
       <Helmet>
         <title>{pageTitle} | Market Entry Secrets</title>
         <meta name="description" content="Get your personalised AI-powered market entry report." />
+        <link rel="canonical" href={`${publishedOrigin()}/report-creator`} />
       </Helmet>
 
       <div className="bg-background">

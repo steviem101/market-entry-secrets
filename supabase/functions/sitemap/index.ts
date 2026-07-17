@@ -111,7 +111,15 @@ const SECTIONS: Section[] = [
     sources: [{
       table: "events",
       path: (s) => `/events/${s}`,
-      filter: (q) => q.eq("status", "approved"), // mirrors events_public_read RLS
+      // mirrors events_public_read RLS, and drops past-dated events so expired
+      // listings don't linger in the sitemap. Undated events (event_date IS
+      // NULL — recurring/typical-month) are kept.
+      filter: (q) => {
+        const today = new Date().toISOString().slice(0, 10);
+        return q
+          .eq("status", "approved")
+          .or(`event_date.gte.${today},event_date.is.null`);
+      },
     }],
   },
   {
