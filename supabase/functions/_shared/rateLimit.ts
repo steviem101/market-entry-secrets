@@ -22,38 +22,27 @@ export async function checkRateLimit(
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceKey);
 
-  const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000).toISOString();
+  // Atomic count-and-record via consume_rate_limit (advisory-locked per key), so
+  // a concurrent burst from one subject can't slip past the cap the way the old
+  // SELECT-count-then-INSERT could (wave-review #5 TOCTOU). Returns true=allowed.
+  const { data: allowed, error } = await supabase.rpc("consume_rate_limit", {
+    p_user_id: userId,
+    p_function_name: functionName,
+    p_max: maxRequests,
+    p_window_min: windowMinutes,
+  });
 
-  // Count recent invocations
-  const { count, error: countError } = await supabase
-    .from("edge_function_rate_limits")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("function_name", functionName)
-    .gte("invoked_at", windowStart);
-
-  if (countError) {
-    console.error("Rate limit check failed:", countError);
+  if (error) {
+    console.error("Rate limit check failed:", error);
     // Fail open by default; fail closed when the caller guards paid spend.
     return failClosed
       ? `Rate limit check unavailable: max ${maxRequests} requests per ${windowMinutes} minutes`
       : null;
   }
 
-  if ((count ?? 0) >= maxRequests) {
-    return `Rate limit exceeded: max ${maxRequests} requests per ${windowMinutes} minutes`;
-  }
-
-  // Record this invocation
-  const { error: insertError } = await supabase
-    .from("edge_function_rate_limits")
-    .insert({ user_id: userId, function_name: functionName });
-
-  if (insertError) {
-    console.error("Rate limit record insert failed:", insertError);
-  }
-
-  return null;
+  return allowed === false
+    ? `Rate limit exceeded: max ${maxRequests} requests per ${windowMinutes} minutes`
+    : null;
 }
 
 /**
