@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -66,6 +66,14 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   section_refinement: {
     queryKey: 'refine',
     storageKey: 'mes_flag_section_refinement',
+    defaultValue: false,
+  },
+  // MES-188 T15 (Wave-2) deliverables & introductions hub on the member hub:
+  // unifies concierge entitlements + custom lead-list requests with statuses.
+  // Ships dark (default off); ?deliverables=1 enables it.
+  deliverables_hub: {
+    queryKey: 'deliverables',
+    storageKey: 'mes_flag_deliverables_hub',
     defaultValue: false,
   },
 };
