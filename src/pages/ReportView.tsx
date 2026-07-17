@@ -19,6 +19,8 @@ import { ReportMobileTOC } from '@/components/report/ReportMobileTOC';
 import { ReportKeyMetrics } from '@/components/report/ReportKeyMetrics';
 import { SessionBookingBanner } from '@/components/report/SessionBookingBanner';
 import { ReportUpgradeStrip } from '@/components/report/ReportUpgradeStrip';
+import { ReportSectionRefinement, SECTION_REFINEMENT_SECTIONS } from '@/components/report/ReportSectionRefinement';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import { useReport } from '@/hooks/useReport';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
@@ -43,6 +45,8 @@ const ReportViewInner = () => {
   const { data: report, isLoading, error } = useReport(reportId);
   const { subscription, refetch: refetchSubscription } = useSubscription();
   const currentTier = subscription?.tier || 'free';
+  // T14: concierge refinement boxes on matched sections (flag `section_refinement`).
+  const showRefinement = isFeatureEnabled('section_refinement');
   const [localShareToken, setLocalShareToken] = useState<string | null>(null);
   // Track if user arrived from Stripe (before we clean the URL params)
   const [cameFromStripe] = useState(
@@ -381,6 +385,15 @@ const ReportViewInner = () => {
                     </div>
                   ) : null;
 
+                // T14: refinement box on matched mentor/investor sections (only
+                // when there are matches to refine), behind `section_refinement`.
+                const refinement =
+                  showRefinement &&
+                  SECTION_REFINEMENT_SECTIONS.includes(sectionId) &&
+                  sectionMatches.length > 0 ? (
+                    <ReportSectionRefinement sectionKey={sectionId} reportId={report.id} />
+                  ) : null;
+
                 return (
                   <ReportSection
                     key={sectionId}
@@ -392,6 +405,7 @@ const ReportViewInner = () => {
                   >
                     {renderMatchArea()}
                     {leadRequest}
+                    {refinement}
                   </ReportSection>
                 );
               })}

@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -58,6 +58,14 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   report_teasers: {
     queryKey: 'teasers',
     storageKey: 'mes_flag_report_teasers',
+    defaultValue: false,
+  },
+  // MES-188 T14 (Wave-2) concierge refinement boxes on matched sections
+  // (mentor/investor): structured reasons + free text → report_section_feedback.
+  // Ships dark (default off); ?refine=1 enables it.
+  section_refinement: {
+    queryKey: 'refine',
+    storageKey: 'mes_flag_section_refinement',
     defaultValue: false,
   },
 };
