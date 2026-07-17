@@ -89,3 +89,44 @@ test('every INTENT_CHIP classifies to at least one valid goal', () => {
     for (const id of r.goalIds) assert.ok(goalIds.has(id));
   }
 });
+
+// --- Regression tests for the wave-review classifier fixes ---
+
+test('tax variants (taxes/taxation) map to service providers (#9 stem fix)', () => {
+  assert.ok(classifyIntent('help with my taxes').goalIds.includes('find_providers'));
+  assert.ok(classifyIntent('corporate taxation advice').goalIds.includes('find_providers'));
+  // singular still works
+  assert.ok(classifyIntent('need a tax advisor').goalIds.includes('find_providers'));
+});
+
+test('bare "capital"/"raisins" no longer misfire the investor rule (#7 over-match fix)', () => {
+  const r = classifyIntent('capital equipment suppliers');
+  assert.ok(!r.goalIds.includes('investors'), 'equipment capital is not fundraising');
+  assert.ok(!classifyIntent('best raisins for baking').goalIds.includes('investors'));
+  // genuine fundraising intents still classify
+  assert.ok(classifyIntent('raising a seed round').goalIds.includes('investors'));
+  assert.ok(classifyIntent('find angel investors').goalIds.includes('investors'));
+});
+
+test('startup-persona shared-vocab intents remap to their startup twins (#8 remap fix)', () => {
+  // find_providers -> growth_providers under startup
+  const hiring = classifyIntent('hiring help for my startup');
+  assert.equal(hiring.persona, 'startup');
+  assert.ok(hiring.goalIds.includes('growth_providers'));
+  assert.equal(hiring.confidence, 'high');
+  // guides -> guides_startup under startup
+  const guides = classifyIntent('growth playbooks for my startup');
+  assert.equal(guides.persona, 'startup');
+  assert.ok(guides.goalIds.includes('guides_startup'));
+});
+
+test('a persona-valid shared goal is not starved by soon-to-be-dropped goals (#10 ordering fix)', () => {
+  // international persona; investors + accelerators are startup-only (dropped),
+  // grants is shared and must survive even though it is matched by a later rule.
+  const r = classifyIntent('lawyer investors accelerators grants');
+  assert.equal(r.persona, 'international');
+  assert.ok(r.goalIds.includes('find_providers'));
+  assert.ok(r.goalIds.includes('grants'), 'shared goal survives the cap');
+  assert.ok(!r.goalIds.includes('investors'));
+  assert.ok(r.goalIds.length <= 3);
+});

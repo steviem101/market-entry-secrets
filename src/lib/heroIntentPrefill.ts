@@ -49,6 +49,27 @@ export function buildPrefillDraft(intent: HeroIntent): Partial<IntakeFormDataV2>
 }
 
 /**
+ * Merge a prefill patch over an existing draft. Pure + unit-testable.
+ *
+ * A new low-confidence intent sets `persona` but NOT `goal_ids` (buildPrefillDraft
+ * only sets goals on a match). A naive `{...existing, ...patch}` would then keep
+ * the PREVIOUS persona's goal_ids under the new persona — a self-inconsistent
+ * draft whose selected goals aren't valid for the persona's grid. So: when the
+ * patch changes persona without supplying its own goal_ids, drop the stale ones
+ * and let the report creator fall back to the new persona's defaults.
+ */
+export function mergeIntentDraft(
+  existing: Partial<IntakeFormDataV2>,
+  patch: Partial<IntakeFormDataV2>,
+): Partial<IntakeFormDataV2> {
+  const merged: Partial<IntakeFormDataV2> = { ...existing, ...patch };
+  if (patch.goal_ids === undefined && existing.persona && existing.persona !== patch.persona) {
+    delete merged.goal_ids;
+  }
+  return merged;
+}
+
+/**
  * Persist the prefill draft (merged over any existing draft so a returning
  * visitor's in-progress answers aren't clobbered) + the origin marker.
  * No-op if storage is unavailable. Safe to call in a browser event handler.
@@ -62,7 +83,7 @@ export function writeIntentPrefill(intent: HeroIntent): void {
       const raw = localStorage.getItem(V2_DRAFT_KEY);
       if (raw) existing = JSON.parse(raw) as Partial<IntakeFormDataV2>;
     } catch { /* corrupt draft — start fresh from the patch */ }
-    localStorage.setItem(V2_DRAFT_KEY, JSON.stringify({ ...existing, ...patch }));
+    localStorage.setItem(V2_DRAFT_KEY, JSON.stringify(mergeIntentDraft(existing, patch)));
   } catch { /* ignore */ }
   try {
     const marker: HeroIntentMarker = { rawIntent: intent.rawIntent };

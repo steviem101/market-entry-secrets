@@ -29,6 +29,21 @@ function goalValidForPersona(id: string, persona: ReportPersona): boolean {
   return persona === 'startup' ? !INTERNATIONAL_ONLY.has(id) : !STARTUP_ONLY.has(id);
 }
 
+// When the resolved persona is 'startup', map the shared-vocabulary rules'
+// international-flavoured goal ids to their startup twins so a startup founder
+// asking for exactly what these describe lands a goal that exists on their grid
+// (instead of it being dropped as international-only). Every source rule below
+// emits one of these ids from vocabulary common to both personas
+// (providers/hiring, mentors, leads, guides). Ids with no startup twin
+// (trade_agencies, compliance, case_studies, associations) are intentionally
+// absent — they stay international-only and drop under a startup persona.
+const STARTUP_REMAP: Readonly<Record<string, string>> = {
+  find_providers: 'growth_providers',
+  mentors_intl: 'mentors_startup',
+  lead_lists_intl: 'lead_lists_startup',
+  guides: 'guides_startup',
+};
+
 export interface HeroIntent {
   /** The raw text the visitor entered (or a chip's phrase). */
   rawIntent: string;
@@ -48,11 +63,11 @@ export interface HeroIntent {
 // singular stem would miss them.
 const RULES: ReadonlyArray<{ re: RegExp; goals: string[]; persona?: ReportPersona }> = [
   { re: /\b(lawyers?|legal|solicitors?|attorneys?|counsel)\b/, goals: ['find_providers'], persona: 'international' },
-  { re: /\b(accountants?|accounting|tax|bookkeep\w*)\b/, goals: ['find_providers'], persona: 'international' },
+  { re: /\b(accountants?|accounting|tax(es|ation)?|bookkeep\w*)\b/, goals: ['find_providers'], persona: 'international' },
   { re: /\b(hr|payroll|employ\w*|hiring|recruit\w*)\b/, goals: ['find_providers'] },
   { re: /\b(providers?|consultants?|agenc\w+|services?)\b/, goals: ['find_providers'] },
   { re: /\b(compliance|regulat\w*|licen[cs]\w*|visas?|immigration)\b/, goals: ['compliance'], persona: 'international' },
-  { re: /\b(investors?|vcs?|ventures?|fund(ing|s)?|rais\w+|capital)\b/, goals: ['investors'], persona: 'startup' },
+  { re: /\b(investors?|vcs?|venture capital|ventures?|fund(ing|s)?|rais(e|es|ing|ed)|angel investors?|seed round)\b/, goals: ['investors'], persona: 'startup' },
   { re: /\b(accelerators?|incubators?)\b/, goals: ['accelerators'], persona: 'startup' },
   { re: /\b(grants?|government funding|r&d|non-dilutive|subsid\w*)\b/, goals: ['grants'] },
   { re: /\b(mentors?|advis[eo]rs?|coach\w*)\b/, goals: ['mentors_intl'] },
@@ -89,28 +104,31 @@ export function classifyIntent(raw: string, persona?: ReportPersona): HeroIntent
   const rawIntent = (raw ?? '').trim().slice(0, MAX_FOCUS);
   const text = rawIntent.toLowerCase();
 
-  const goalIds: string[] = [];
+  // Collect ALL rule matches first — do NOT cap here. The MAX_GOALS cap is
+  // applied last, AFTER persona remap + validity filtering, so a goal that will
+  // be dropped (invalid for the resolved persona) can't consume a cap slot and
+  // starve a valid one that a later rule would have produced.
+  const matched: string[] = [];
   let rulePersona: ReportPersona | null = null;
   for (const rule of RULES) {
     if (rule.re.test(text)) {
-      for (const g of rule.goals) if (!goalIds.includes(g)) goalIds.push(g);
+      for (const g of rule.goals) if (!matched.includes(g)) matched.push(g);
       if (!rulePersona && rule.persona) rulePersona = rule.persona;
     }
-    if (goalIds.length >= MAX_GOALS) break;
   }
 
   const resolvedPersona: ReportPersona =
     persona ?? rulePersona ?? personaHint(text) ?? 'international';
 
-  // Map any generic mentor match to the persona-appropriate goal id so the
-  // prefill lands a goal that actually exists for that persona's grid.
-  const mapped = goalIds.slice(0, MAX_GOALS).map((id) =>
-    id === 'mentors_intl' && resolvedPersona === 'startup' ? 'mentors_startup'
-      : id === 'lead_lists_intl' && resolvedPersona === 'startup' ? 'lead_lists_startup'
-      : id,
+  // Under a startup persona, remap the shared-vocabulary rules' international ids
+  // to their startup twins so the prefill lands a goal that exists on the grid.
+  const remapped = matched.map((id) =>
+    resolvedPersona === 'startup' ? (STARTUP_REMAP[id] ?? id) : id,
   );
-  // Drop any goal that isn't valid for the resolved persona (defensive).
-  const finalGoals = mapped.filter((id) => goalValidForPersona(id, resolvedPersona));
+  // Drop invalids for the resolved persona, dedupe (two ids can remap to one),
+  // then cap — order matters so valid goals aren't starved (see comment above).
+  const finalGoals = [...new Set(remapped.filter((id) => goalValidForPersona(id, resolvedPersona)))]
+    .slice(0, MAX_GOALS);
 
   return {
     rawIntent,
