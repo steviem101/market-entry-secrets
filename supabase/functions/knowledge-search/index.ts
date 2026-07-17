@@ -10,11 +10,20 @@
 // visibility based on the user's subscription tier.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, hashToUuid } from "../_shared/rateLimit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_ENV_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 const EMBED_MODEL = "text-embedding-3-small";
+// Abuse caps (AUD-030): this endpoint is anonymous and fires a paid OpenAI
+// embedding per call. Cap the embedded text, and rate-limit BEFORE embedding so
+// throttled calls cost nothing. Anonymous callers are keyed by IP (stricter);
+// authenticated callers by user id (looser) so a real agent isn't starved.
+const MAX_QUERY_CHARS = 2000;
+const ANON_RATE_MAX = 20;   // requests
+const AUTH_RATE_MAX = 60;   // requests
+const RATE_WINDOW_MIN = 1;  // per minute
 
 const ALLOWED_ORIGINS = [
   Deno.env.get("FRONTEND_URL"),
@@ -58,18 +67,24 @@ Deno.serve(async (req: Request) => {
     query = typeof b?.query === "string" ? b.query.trim() : "";
     if (b?.filter && typeof b.filter === "object") filter = b.filter;
     if (Number.isFinite(b?.top_k)) topK = Math.min(Math.max(1, Math.trunc(b.top_k)), 50);
-    if (Number.isFinite(b?.match_threshold)) threshold = b.match_threshold;
+    // Clamp to match_knowledge's valid cosine range (AUD-030): an out-of-range
+    // threshold (negative, >1, NaN-adjacent) could return everything or nothing.
+    if (Number.isFinite(b?.match_threshold)) threshold = Math.min(Math.max(b.match_threshold, 0), 1);
   } catch (_) { /* bad body */ }
   if (!query) return json({ error: "query (string) is required" }, 400);
+  // Cap the embedded text so an oversized paste can't inflate embedding cost.
+  if (query.length > MAX_QUERY_CHARS) query = query.slice(0, MAX_QUERY_CHARS);
 
   // Visibility from caller auth/plan (anonymous => public only)
   let allowed = ["public"];
+  let userId: string | null = null;
   const authz = req.headers.get("Authorization") ?? "";
   if (authz.toLowerCase().startsWith("bearer ")) {
     const token = authz.slice(7);
     try {
       const { data: { user } } = await supabase.auth.getUser(token);
       if (user) {
+        userId = user.id;
         allowed = ["public", "member"];
         const { data: sub } = await supabase.from("user_subscriptions").select("tier").eq("user_id", user.id).maybeSingle();
         const tier = (sub?.tier ?? "free") as string;
@@ -77,6 +92,17 @@ Deno.serve(async (req: Request) => {
       }
     } catch (_) { /* anon fallback */ }
   }
+
+  // Rate limit BEFORE the paid embed (AUD-030). Authenticated callers key on
+  // their user id (looser); anonymous callers on a hash of their IP (stricter).
+  // Fails open on a limiter DB error (checkRateLimit) — availability over strict
+  // enforcement, matching scrape-company.
+  const rateMax = userId ? AUTH_RATE_MAX : ANON_RATE_MAX;
+  const rateKey = userId
+    ? userId
+    : await hashToUuid(`ks:${(req.headers.get("x-forwarded-for") || "0.0.0.0").split(",")[0].trim()}`);
+  const limited = await checkRateLimit(rateKey, "knowledge-search", rateMax, RATE_WINDOW_MIN);
+  if (limited) { jlog("warn", "rate limited", { authed: !!userId }); return json({ error: "rate_limited", detail: limited }, 429); }
 
   // OpenAI key (env first, Vault fallback)
   let openaiKey = OPENAI_ENV_KEY;

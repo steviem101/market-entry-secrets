@@ -226,3 +226,12 @@ verify_jwt = true
 # Deployed manually (supabase functions deploy import-contact-images) — not in the
 # deploy-edge-functions.yml auto-deploy list.
 verify_jwt = true
+
+[functions.knowledge-search]
+# Canonical RAG search entry point for external MCPs / AI agents (AUD-030/031).
+# Must stay false so anonymous agents can call it with no JWT — a bearer token,
+# when present, is validated in-code (supabase.auth.getUser) to widen visibility.
+# Abuse is bounded in-code: IP/user rate limit + query-length cap + threshold clamp.
+# Manual-deploy (not in deploy-edge-functions.yml); keep the hosted dashboard's
+# verify_jwt in lockstep with this value.
+verify_jwt = false
