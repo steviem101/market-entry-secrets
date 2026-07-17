@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -40,6 +40,15 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   intent_hero: {
     queryKey: 'intent',
     storageKey: 'mes_flag_intent_hero',
+    defaultValue: false,
+  },
+  // MES-188 T5b (Wave-2) comparison moments: free-vs-paid comparison surfaced
+  // during report generation (and later at review / report-end). Ships dark
+  // (default off); ?compare=1 enables it. One funnel change per measurement
+  // window — enable deliberately post-launch.
+  comparison_moments: {
+    queryKey: 'compare',
+    storageKey: 'mes_flag_comparison_moments',
     defaultValue: false,
   },
 };
