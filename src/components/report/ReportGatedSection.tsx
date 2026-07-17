@@ -9,13 +9,40 @@ import { tierDisplayPrice } from '@/lib/tierPricing';
 import { TIER_LABELS } from './reportSectionConfig';
 import { trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 
+export interface SectionTeaser {
+  count: number;
+  samples: Array<Record<string, unknown>>;
+}
+
 interface ReportGatedSectionProps {
   id: string;
   title: string;
   requiredTier: string;
+  /** T4: redacted count + sample for the locked section (server-built, allowlisted). */
+  teaser?: SectionTeaser;
 }
 
-export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSectionProps) => {
+// Human phrasing for the teaser count, per section. Counts only — the samples
+// carry only allowlisted, non-sensitive fields (see report_section_teaser).
+const TEASER_NOUN: Record<string, (n: number) => string> = {
+  mentor_recommendations: (n) => `${n} mentor${n === 1 ? '' : 's'} matched to your situation`,
+  first_customers: (n) => `${n} target customer${n === 1 ? '' : 's'} identified`,
+  lead_list: (n) => `${n} lead source${n === 1 ? '' : 's'} for your buyers`,
+};
+
+/** Flatten a redacted sample's array values into display chips (safe: samples
+ *  only ever hold allowlisted expertise/sector arrays + scalar counts). */
+function sampleChips(samples: Array<Record<string, unknown>>): string[] {
+  const chips: string[] = [];
+  for (const s of samples) {
+    for (const v of Object.values(s)) {
+      if (Array.isArray(v)) v.forEach((x) => typeof x === 'string' && x && chips.push(x));
+    }
+  }
+  return Array.from(new Set(chips)).slice(0, 6);
+}
+
+export const ReportGatedSection = ({ id, title, requiredTier, teaser }: ReportGatedSectionProps) => {
   const { startCheckout, loading, isAuthenticated } = useCheckout();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const location = useLocation();
@@ -65,6 +92,29 @@ export const ReportGatedSection = ({ id, title, requiredTier }: ReportGatedSecti
           <CardTitle className="text-xl">{title}</CardTitle>
         </CardHeader>
         <CardContent>
+          {/* T4 intent-aware teaser: what the locked section FOUND (count +
+              redacted sample), so the gate previews value instead of a blank
+              wall. Only renders when the server supplied a teaser with matches. */}
+          {teaser && teaser.count > 0 && (
+            <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+              <p className="text-sm font-semibold text-foreground">
+                {(TEASER_NOUN[id] ?? ((n: number) => `${n} matches`))(teaser.count)}
+              </p>
+              {sampleChips(teaser.samples).length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {sampleChips(teaser.samples).map((chip) => (
+                    <span
+                      key={chip}
+                      className="rounded-full bg-background px-2 py-0.5 text-xs text-muted-foreground border border-border"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Blurred placeholder content */}
           <div className="filter blur-md select-none space-y-3 mb-6 pointer-events-none">
             <div className="h-4 bg-muted rounded w-full" />

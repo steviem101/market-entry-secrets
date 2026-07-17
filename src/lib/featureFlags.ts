@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -49,6 +49,15 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   comparison_moments: {
     queryKey: 'compare',
     storageKey: 'mes_flag_comparison_moments',
+    defaultValue: false,
+  },
+  // MES-188 T4 (Wave-2) intent-aware teasers: locked report sections show a
+  // count + a redacted sample (served by get_tier_gated_report when this flag
+  // asks for it). Ships dark (default off); ?teasers=1 enables it. With it off,
+  // the tier-gating RPC returns exactly what it did before.
+  report_teasers: {
+    queryKey: 'teasers',
+    storageKey: 'mes_flag_report_teasers',
     defaultValue: false,
   },
 };

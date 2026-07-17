@@ -298,6 +298,7 @@ const ReportViewInner = () => {
                       id={sectionId}
                       title={SECTION_LABELS[sectionId]}
                       requiredTier={requiredTier || 'growth'}
+                      teaser={(section as { teaser?: { count: number; samples: Array<Record<string, unknown>> } } | undefined)?.teaser}
                     />
                   );
                 }
