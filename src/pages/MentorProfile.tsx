@@ -24,6 +24,7 @@ import { ContactAvatar } from "@/components/shared/ContactAvatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookmarkButton } from "@/components/BookmarkButton";
 import { MentorContactModal } from "@/components/mentors/MentorContactModal";
+import { ConciergeIntroButton } from "@/components/concierge/ConciergeIntroButton";
 import CompanyLogo from "@/components/shared/CompanyLogo";
 import { domainToWebsite } from "@/lib/logoUtils";
 import {
@@ -596,6 +597,12 @@ const MentorProfile = () => {
                   <Handshake className="w-4 h-4 mr-2" />
                   Get warm intro
                 </Button>
+                {/* T9: concierge intro for paid members with an allowance (dark). */}
+                <ConciergeIntroButton
+                  entityType="mentor"
+                  entityId={mentor.id}
+                  entityName={displayName}
+                />
               </CardContent>
             </Card>
           </div>
