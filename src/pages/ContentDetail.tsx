@@ -19,6 +19,7 @@ import { GuideAttachments } from "@/components/content/GuideAttachments";
 import { GuideAttachmentManager } from "@/components/content/GuideAttachmentManager";
 import { useGuideAttachments } from "@/hooks/useGuideAttachments";
 import { getLogoUrl } from "@/lib/logoUtils";
+import { CONTENT_LIBRARY_TYPES } from "@/lib/contentFilters";
 import { NoIndex } from "@/components/common/NoIndex";
 
 interface ContentSection {
@@ -48,7 +49,7 @@ const ContentDetail = () => {
 
   // Fetch related content (same category, different slug)
   const { data: allContent = [] } = useContentItems({
-    contentType: ['guide', 'article', 'success_story']
+    contentType: [...CONTENT_LIBRARY_TYPES]
   });
   const relatedGuides = content && content.category_id
     ? allContent

@@ -8,6 +8,22 @@
  */
 import type { FilterValues } from "@/lib/directoryFilters";
 
+/**
+ * The content_type values the content library (/content) fetches and tabs over.
+ * Matches the live vocabulary (verified against prod, MES-182 audit §3) plus the
+ * `article`/`success_story` values MES-108 may re-introduce — zero-count tabs are
+ * hidden, so carrying them is free. `case_study` is deliberately absent: case
+ * studies live on /case-studies.
+ */
+export const CONTENT_LIBRARY_TYPES: readonly string[] = [
+  "guide",
+  "article",
+  "success_story",
+  "compliance",
+  "interview",
+  "best_practice",
+];
+
 export interface ContentItemLike {
   title: string;
   subtitle?: string | null;
