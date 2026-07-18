@@ -18,9 +18,12 @@ export interface BreadcrumbSegment {
 interface EntityBreadcrumbProps {
   segments: BreadcrumbSegment[];
   className?: string;
+  /** Set when the page already emits its own BreadcrumbList JSON-LD (e.g.
+   *  country pages via CountryStructuredData) to avoid a duplicate block. */
+  suppressJsonLd?: boolean;
 }
 
-export const EntityBreadcrumb = ({ segments, className }: EntityBreadcrumbProps) => {
+export const EntityBreadcrumb = ({ segments, className, suppressJsonLd }: EntityBreadcrumbProps) => {
   // Emit BreadcrumbList JSON-LD alongside the visible trail so every detail /
   // taxonomy page that renders this component gets crawlable breadcrumb schema.
   // Per schema.org guidance the final (current) crumb may omit `item`.
@@ -39,11 +42,13 @@ export const EntityBreadcrumb = ({ segments, className }: EntityBreadcrumbProps)
 
   return (
     <nav className={`container mx-auto px-4 py-4 ${className || ""}`} aria-label="Breadcrumb">
-      <Helmet>
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbJsonLd)}
-        </script>
-      </Helmet>
+      {!suppressJsonLd && (
+        <Helmet>
+          <script type="application/ld+json">
+            {JSON.stringify(breadcrumbJsonLd)}
+          </script>
+        </Helmet>
+      )}
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
