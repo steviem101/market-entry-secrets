@@ -27,13 +27,14 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
     storageKey: 'mes_flag_report_creator_v2',
     defaultValue: true,
   },
-  // report_v2: the redesigned report renderer (Phase A). OFF by default and
-  // stays off for every customer until PARITY.md is signed; the ReportView
-  // wiring is added at the flag-flip step (STEP 7). ?reportv2=1 opts in.
+  // report_v2: the redesigned report renderer (Phase A). ENABLED by default
+  // (owner activation, 2026-07-18 — PARITY signed off) for viewers whose tier
+  // unlocks every section; gated viewers stay on the legacy renderer until the
+  // Phase-B teaser states land. ?reportv2=0 is the rollback kill switch.
   report_v2: {
     queryKey: 'reportv2',
     storageKey: 'mes_flag_report_v2',
-    defaultValue: false,
+    defaultValue: true,
   },
   // MES-196 (T13) advisor-booking banner on ReportView. On by default;
   // ?booking=0 is the rollback kill switch.
