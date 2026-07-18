@@ -74,21 +74,23 @@ const Index = () => {
       {/* Hero — headline, platform definition, single CTA pair, report graphic */}
       <HeroSection />
 
-      {/* MES-162 value journey: report → matched providers/leads → introductions */}
-      {isFeatureEnabled("hero_journey") && (
-        <Suspense fallback={null}>
-          <HeroJourneySection />
-        </Suspense>
-      )}
-
       {/* Real featured-organisation logos (renders only once records are curated) */}
       <LogoCloud />
 
       {/* Live directory counts — the one source of numbers on the page */}
       <ProofStrip />
 
-      {/* How It Works — 3-step process, single CTA */}
-      <HowItWorksSection />
+      {/* 7-section restructure (18 Jul, flag-composed): with the journey on,
+          the journey section (which ends on the manifesto) replaces
+          How-it-works — the two told the same story. Flag off keeps the
+          classic order untouched. */}
+      {isFeatureEnabled("hero_journey") ? (
+        <Suspense fallback={null}>
+          <HeroJourneySection />
+        </Suspense>
+      ) : (
+        <HowItWorksSection />
+      )}
 
       {/* What's in your report — mirrors real report sections + tier gating */}
       <WhatsInYourReport />

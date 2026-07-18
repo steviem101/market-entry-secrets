@@ -7,7 +7,6 @@ import {
   FileText,
   Globe,
   Handshake,
-  Lock,
   Users,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -25,10 +24,9 @@ import { trackFunnelEvent } from "@/lib/analytics/intakeFunnel";
 import {
   SECTION_ORDER,
   SECTION_LABELS,
-  SECTION_CONFIG,
   TIER_REQUIREMENTS,
-  TIER_LABELS,
 } from "@/components/report/reportSectionConfig";
+import { ManifestoStrip } from "@/components/sections/ManifestoStrip";
 import { REPORT_CREATOR_PATH } from "@/config/reportCta";
 
 const JOURNEY_SOURCE = "homepage_hero";
@@ -92,7 +90,12 @@ const PanelShell = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-/** Step 1 — the generated report, in its real anatomy. */
+/**
+ * Step 1 — the generated report as prose-quality proof. The full section
+ * checklist lives in the hero graphic directly above, so this panel doesn't
+ * repeat it (MES homepage de-dup, 18 Jul): it leads with the worked SWOT
+ * example and a one-line summary instead.
+ */
 const ReportPanel = () => {
   const gatedSections = SECTION_ORDER.filter((s) => TIER_REQUIREMENTS[s]);
   const freeCount = SECTION_ORDER.length - gatedSections.length;
@@ -106,71 +109,42 @@ const ReportPanel = () => {
         <div>
           <div className="text-sm font-semibold text-foreground">Your report is generated</div>
           <div className="text-xs text-muted-foreground">
-            {SECTION_ORDER.length} sections &middot; {freeCount} free
+            {SECTION_ORDER.length} sections &middot; {freeCount} free &middot; written for your company, not a template
           </div>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {/* SWOT snippet — real quadrants from the swot_analysis section, with a
-            worked example (Canva) so the block reads as real report prose.
-            Qualitative only: no invented figures, clearly labelled Example. */}
-        <div className="rounded-lg border border-border bg-muted/30 p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-foreground">
-              {SECTION_LABELS.swot_analysis}
-            </span>
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              Example: Canva
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {[
-              { q: "Strengths", text: "Globally recognised brand with a proven self-serve freemium motion" },
-              { q: "Weaknesses", text: "Enterprise sales coverage still maturing against incumbent suites" },
-              { q: "Opportunities", text: "Government and education procurement partnerships across ANZ" },
-              { q: "Threats", text: "Entrenched incumbent vendors with deep channel lock-in" },
-            ].map(({ q, text }) => (
-              <div key={q} className="rounded-md bg-background border border-border px-2 py-1.5">
-                <div className="text-[10px] font-medium text-muted-foreground">{q}</div>
-                <p className="mt-1 text-[10px] leading-snug text-foreground/80">{text}</p>
-              </div>
-            ))}
-          </div>
+      {/* SWOT — real quadrants from the swot_analysis section, with a worked
+          example (Canva) so the block reads as real report prose. Qualitative
+          only: no invented figures, clearly labelled Example. */}
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-foreground">
+            {SECTION_LABELS.swot_analysis}
+          </span>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            Example: Canva
+          </span>
         </div>
-
-        {/* Section run-down — names, icons and gating from the real config */}
-        <ul className="space-y-1.5" aria-label="Report sections">
-          {["executive_summary", "competitor_landscape", "action_plan", ...gatedSections.slice(0, 2)].map(
-            (sectionId) => {
-              const config = SECTION_CONFIG[sectionId];
-              const Icon = config?.icon ?? FileText;
-              const requiredTier = TIER_REQUIREMENTS[sectionId];
-              return (
-                <li
-                  key={sectionId}
-                  className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5"
-                >
-                  <span className={`flex h-5 w-5 items-center justify-center rounded ${config?.accentBg ?? "bg-muted"}`}>
-                    <Icon className="h-3 w-3" />
-                  </span>
-                  <span className="flex-1 truncate text-xs text-foreground">
-                    {SECTION_LABELS[sectionId] ?? sectionId}
-                  </span>
-                  {requiredTier ? (
-                    <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                      <Lock className="h-2.5 w-2.5" />
-                      {TIER_LABELS[requiredTier] ?? requiredTier}
-                    </span>
-                  ) : (
-                    <CheckCircle2 className="h-3 w-3 text-emerald-500" aria-label="Included free" />
-                  )}
-                </li>
-              );
-            },
-          )}
-        </ul>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {[
+            { q: "Strengths", text: "Globally recognised brand with a proven self-serve freemium motion" },
+            { q: "Weaknesses", text: "Enterprise sales coverage still maturing against incumbent suites" },
+            { q: "Opportunities", text: "Government and education procurement partnerships across ANZ" },
+            { q: "Threats", text: "Entrenched incumbent vendors with deep channel lock-in" },
+          ].map(({ q, text }) => (
+            <div key={q} className="rounded-md bg-background border border-border px-3 py-2">
+              <div className="text-xs font-medium text-muted-foreground">{q}</div>
+              <p className="mt-1 text-xs leading-snug text-foreground/80">{text}</p>
+            </div>
+          ))}
+        </div>
       </div>
+
+      <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+        Every section is grounded in live market data and real directory records.
+      </p>
     </PanelShell>
   );
 };
@@ -465,6 +439,10 @@ export const HeroJourneySection = () => {
             <IntroductionsPanel />
           </TabsContent>
         </Tabs>
+
+        {/* Closing argument — the X-not-Y manifesto (moved here from the
+            retired How-it-works section; renders once per page). */}
+        <ManifestoStrip className="mx-auto mt-10 max-w-3xl" />
 
         <div className="mt-8 text-center">
           <Link

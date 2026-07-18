@@ -2,6 +2,7 @@ import { Handshake, Database, Phone, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReportCTAButton } from "@/components/cta/ReportCTAButton";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 import {
   SECTION_CONFIG,
   SECTION_LABELS,
@@ -50,9 +51,10 @@ const ACTIVATION_CARDS: ActivationCard[] = [
     icon: Handshake,
     title: "Warm introductions",
     description:
-      "Request warm intros to the providers, mentors and investors in the MES network, matched to your report.",
+      "Request warm intros to the providers, mentors and investors in the MES network, matched to your report. Open enquiries are free; Growth and Scale add advisor-brokered introductions.",
     // The intro request itself is free (public submission funnel); deeper
-    // report matches unlock with Growth. "Free" is the honest entry badge.
+    // report matches unlock with Growth. "Free" is the honest entry badge —
+    // the copy distinguishes free enquiries from paid concierge intros.
     badge: { label: TIER_LABELS.free, className: "bg-accent/10 text-accent border-accent/20" },
     accent: "border-t-primary",
     iconWrap: "bg-primary/10 text-primary",
@@ -88,6 +90,11 @@ export const WhatsInYourReport = () => {
   const reportCards = REPORT_KEYS.filter(
     (key) => SECTION_CONFIG[key] && SECTION_LABELS[key]
   );
+  // 7-section restructure (18 Jul, flag-composed): with the journey section
+  // on, the report's contents are already shown twice above (hero graphic +
+  // journey tab 1), so this section drops its "In your report" row and
+  // becomes the free→paid bridge only.
+  const unlocksOnly = isFeatureEnabled("hero_journey");
 
   return (
     <section className="py-20 bg-gradient-to-b from-background to-muted/20">
@@ -96,51 +103,55 @@ export const WhatsInYourReport = () => {
           {/* Section Header */}
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Your report, and what it unlocks
+              {unlocksOnly ? "What your report unlocks" : "Your report, and what it unlocks"}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Every report is generated for your company from live market data.
-              It's also the front door to the platform: the intros, lead data,
-              and adviser support that turn a plan into traction.
+              {unlocksOnly
+                ? "The free report is the front door to the platform: the intros, lead data, and adviser support that turn a plan into traction."
+                : "Every report is generated for your company from live market data. It's also the front door to the platform: the intros, lead data, and adviser support that turn a plan into traction."}
             </p>
           </div>
 
-          {/* A — In your report */}
-          <GroupLabel>In your report</GroupLabel>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            {reportCards.map((key) => {
-              const config = SECTION_CONFIG[key];
-              const Icon = config.icon;
-              const tier = reportTier(key);
-              return (
-                <Card key={key} className={`border-t-4 ${config.accentColor}`}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`p-2.5 rounded-lg ${config.accentBg}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <Badge variant="secondary" className={`text-xs font-medium ${tier.className}`}>
-                        {tier.label}
-                      </Badge>
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      {SECTION_LABELS[key]}
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {key === "swot_analysis"
-                        ? "Strengths, weaknesses, opportunities and threats for your specific move into ANZ."
-                        : key === "competitor_landscape"
-                          ? "Who you're up against locally, how they position, and where the gaps are."
-                          : "Vetted legal, accounting and growth partners matched to your industry and target region."}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          {/* A — In your report (hidden when the journey section already shows the contents) */}
+          {!unlocksOnly && (
+            <>
+              <GroupLabel>In your report</GroupLabel>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                {reportCards.map((key) => {
+                  const config = SECTION_CONFIG[key];
+                  const Icon = config.icon;
+                  const tier = reportTier(key);
+                  return (
+                    <Card key={key} className={`border-t-4 ${config.accentColor}`}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className={`p-2.5 rounded-lg ${config.accentBg}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <Badge variant="secondary" className={`text-xs font-medium ${tier.className}`}>
+                            {tier.label}
+                          </Badge>
+                        </div>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">
+                          {SECTION_LABELS[key]}
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {key === "swot_analysis"
+                            ? "Strengths, weaknesses, opportunities and threats for your specific move into ANZ."
+                            : key === "competitor_landscape"
+                              ? "Who you're up against locally, how they position, and where the gaps are."
+                              : "Vetted legal, accounting and growth partners matched to your industry and target region."}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
           {/* B — What it unlocks */}
-          <GroupLabel>What it unlocks</GroupLabel>
+          {!unlocksOnly && <GroupLabel>What it unlocks</GroupLabel>}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {ACTIVATION_CARDS.map((card) => {
               const Icon = card.icon;

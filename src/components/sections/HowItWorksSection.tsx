@@ -1,5 +1,6 @@
 import { ClipboardList, FileText, Handshake } from "lucide-react";
 import { ReportCTAButton } from "@/components/cta/ReportCTAButton";
+import { ManifestoStrip } from "@/components/sections/ManifestoStrip";
 
 interface Step {
   icon: typeof ClipboardList;
@@ -35,13 +36,6 @@ const STEPS: Step[] = [
   },
 ];
 
-// X-not-Y manifesto (charter §5b) — honest because of the grounding invariant:
-// every recommendation traces to a directory record.
-const MANIFESTO: { x: string; y: string }[] = [
-  { x: "Recommendations that trace to real providers", y: "not AI guesses" },
-  { x: "A plan", y: "not a PDF" },
-  { x: "Warm introductions", y: "not a contact list" },
-];
 
 export const HowItWorksSection = () => {
   return (
@@ -94,14 +88,7 @@ export const HowItWorksSection = () => {
           </div>
 
           {/* X-not-Y manifesto strip */}
-          <ul className="mt-16 grid grid-cols-1 gap-4 border-t border-border/50 pt-10 text-center sm:grid-cols-3">
-            {MANIFESTO.map((line) => (
-              <li key={line.y} className="text-sm leading-relaxed">
-                <span className="font-semibold text-foreground">{line.x}</span>
-                <span className="text-muted-foreground"> — {line.y}.</span>
-              </li>
-            ))}
-          </ul>
+          <ManifestoStrip className="mt-16 border-t border-border/50 pt-10" />
 
           {/* Single CTA */}
           <ReportCTAButton className="mt-12" />
