@@ -6,7 +6,9 @@ import Rich from "./Rich";
 /** "43.5%" renders the % at reduced size, matching the reference hero stat. */
 const HeroValue = ({ value }: { value: string }) => {
   const m = value.match(/^(.*?)(%|[A-Za-z]+)$/);
-  if (!m || !m[1]) return <>{value}</>;
+  // Only shrink the suffix of a numeric stat; a textual value like "Not
+  // disclosed" must render whole, not split at its last word.
+  if (!m || !/\d/.test(m[1])) return <>{value}</>;
   return (
     <>
       {m[1]}
@@ -47,7 +49,7 @@ const ExecSummarySection = ({ report }: { report: Report }) => {
           {showCallout && (
             <div className="mt-7 rounded-xl border border-report-tint-border bg-report-tint px-[30px] py-6">
               <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-report-action">
-                YOUR KEY QUESTION — ANSWERED · “{meta.keyQuestion}”
+                YOUR KEY QUESTION — ANSWERED{meta.keyQuestion ? ` · “${meta.keyQuestion}”` : ""}
               </p>
               {exec.keyQuestionAnswer.trim() !== "" && (
                 <Rich text={exec.keyQuestionAnswer} className="text-[13.5px] leading-[1.75] text-report-ink-soft" />
@@ -58,14 +60,18 @@ const ExecSummarySection = ({ report }: { report: Report }) => {
                   {exec.highlights.map((h, i) => (
                     <span key={i}>
                       {i > 0 && " · "}
-                      <a
-                        href={h.url}
-                        target="_blank"
-                        rel="noopener"
-                        className="font-bold text-report-action hover:underline"
-                      >
-                        {h.name}
-                      </a>
+                      {h.url ? (
+                        <a
+                          href={h.url}
+                          target="_blank"
+                          rel="noopener"
+                          className="font-bold text-report-action hover:underline"
+                        >
+                          {h.name}
+                        </a>
+                      ) : (
+                        <b className="font-bold">{h.name}</b>
+                      )}
                       {h.why ? ` (${h.why})` : ""}
                     </span>
                   ))}

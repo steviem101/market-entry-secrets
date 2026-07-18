@@ -1,8 +1,27 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "node:path";
+import fs from "node:fs";
 import { componentTagger } from "lovable-tagger";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
+
+// Dev-only: serve the report_v2 harness's real-report drop from a gitignored
+// repo-root `dev-fixtures/` dir. Deliberately NOT under `public/` — Vite copies
+// public/ verbatim into dist, which would publish real (tier-ungated) customer
+// report content at a static URL. This middleware only exists on the dev server.
+const devFixturesPlugin = (): Plugin => ({
+  name: "report-v2-dev-fixtures",
+  apply: "serve",
+  configureServer(server) {
+    server.middlewares.use("/dev-fixtures", (req, res, next) => {
+      const name = path.basename(req.url ?? "");
+      const file = path.resolve(__dirname, "dev-fixtures", name);
+      if (!name.endsWith(".json") || !fs.existsSync(file)) return next();
+      res.setHeader("Content-Type", "application/json");
+      fs.createReadStream(file).pipe(res);
+    });
+  },
+});
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -14,6 +33,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' &&
     componentTagger(),
+    mode === 'development' && devFixturesPlugin(),
     mcpPlugin(),
   ].filter(Boolean),
   build: {

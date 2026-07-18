@@ -92,5 +92,8 @@ supabase/migrations_archive/*import_venture_debt_investors*.sql
 scripts/events-import/input/
 scripts/events-import/out/
 
-# report_v2 dev harness — real production report drop (never commit customer report content)
-public/dev-fixtures/
+# report_v2 dev harness — real production report drop (never commit customer report
+# content). NOT under public/ — public/ is copied verbatim into dist and would
+# publish tier-ungated report content at a static URL. Served dev-only via a Vite
+# middleware (see vite.config.ts devFixturesPlugin).
+dev-fixtures/

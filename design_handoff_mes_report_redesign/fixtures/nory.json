@@ -3,9 +3,9 @@
   "cover": { "kicker": "MARKET ENTRY REPORT · IRISH SAAS ENTERING AUSTRALIA", "headline": "Australia's restaurants have already adopted AI. The operating-system layer is still open.", "scope": "Nory's agentic AI — autonomous demand prediction, staffing plans, inventory and payroll — maps directly onto what Sydney operations leaders are actively spending to solve." },
   "exec": {
     "narrative": ["Australia's hospitality market is valued at **USD 37.45B in 2025**, projected to USD 70.93B by 2034 {chip:sourced} — and AI adoption is mainstream: **65% of restaurants** deployed some form of AI, 42% of SMB venues specifically to manage staff costs {chip:sourced}. Clients such as **Dave's Hot Chicken, Oakberry and Black Sheep Coffee** prove Nory serves exactly the multi-location brands proliferating across Sydney.", "The **EU–Australia FTA** (concluded March 2026) eliminates 99%+ of tariffs and opens digital trade to Irish companies {chip:sourced}; Enterprise Ireland and IDA Ireland actively support the corridor. Sydney/NSW addressable opportunity: **low hundreds of millions AUD** {chip:est}. Near-term levers: Pty Ltd incorporation unlocking the **43.5% R&DTI**, SOC 2 / ISO 27001, and Xero + MYOB connectors."],
-    "keyQuestionAnswer": "The two most actionable starting points: **Enterprise Ireland's Sydney office** and the **Restaurant & Catering Industry Association (R&CA)** — the peak foodservice body and primary gateway to operator networks. Key investor matches: [SproutX](/hubs/sproutx) (leading foodtech hub) and [Aura Ventures](/investors/aura-ventures) (Sydney VC targeting AI-enabled B2B software).",
+    "keyQuestionAnswer": "The two most actionable starting points: **Enterprise Ireland's Sydney office** and the **Restaurant & Catering Industry Association (R&CA)** — the peak foodservice body and primary gateway to operator networks. Key investor matches: [SproutX](/innovation-ecosystem/sproutx) (leading foodtech hub) and [Aura Ventures](/investors/aura-ventures) (Sydney VC targeting AI-enabled B2B software).",
     "highlights": [
-      { "name": "SproutX", "url": "/hubs/sproutx", "kind": "hub", "why": "Direct access to hospitality networks and specialised sector investors" },
+      { "name": "SproutX", "url": "/innovation-ecosystem/sproutx", "kind": "hub", "why": "Direct access to hospitality networks and specialised sector investors" },
       { "name": "Aura Ventures", "url": "/investors/aura-ventures", "kind": "investor", "why": "AI-enabled B2B software thesis — aligned with Nory's agentic-AI profile" }
     ],
     "heroStat": { "label": "MOST MATERIAL FINANCIAL INCENTIVE", "value": "43.5%", "caption": "Refundable R&D Tax Incentive on eligible AI/software development conducted in Australia — unlocked by incorporating a Pty Ltd.", "chip": "sourced" },
@@ -51,43 +51,43 @@
   "providers": {
     "intro": "Given the entry sequence — entity setup, then R&DTI, then enterprise sales — the three below map to the first 90 days. All nine are credible matches.",
     "ourRead": [
-      { "rank": 1, "name": "MinterEllison", "url": "/providers/minterellison", "kind": "provider", "meta": "Sydney · law firm", "why": "Foreign investment and employment law for the incorporation: Pty Ltd via ASIC Form 201 (AUD $3–8k + ~$660), resident-director structuring, Privacy Act compliance.", "roleTag": "ENTITY SETUP", "logoUrl": "platform:minterellison" },
-      { "rank": 2, "name": "Fullstack Advisory", "url": "/providers/fullstack-advisory", "kind": "provider", "meta": "Sydney · tech accounting", "why": "R&DTI consulting and virtual CFO — the named route to the 43.5% offset, plus double-tax-treaty structuring.", "roleTag": "R&DTI + CFO" },
-      { "rank": 3, "name": "ADAPT", "url": "/providers/adapt", "kind": "provider", "meta": "Sydney · market intelligence", "why": "A/NZ customer intelligence; qualified lead lists and invitation-only executive roundtables — direct access to enterprise operations leaders.", "roleTag": "ENTERPRISE ACCESS" }
+      { "rank": 1, "name": "MinterEllison", "url": "/service-providers/minterellison", "kind": "provider", "meta": "Sydney · law firm", "why": "Foreign investment and employment law for the incorporation: Pty Ltd via ASIC Form 201 (AUD $3–8k + ~$660), resident-director structuring, Privacy Act compliance.", "roleTag": "ENTITY SETUP", "logoUrl": "platform:minterellison" },
+      { "rank": 2, "name": "Fullstack Advisory", "url": "/service-providers/fullstack-advisory", "kind": "provider", "meta": "Sydney · tech accounting", "why": "R&DTI consulting and virtual CFO — the named route to the 43.5% offset, plus double-tax-treaty structuring.", "roleTag": "R&DTI + CFO" },
+      { "rank": 3, "name": "ADAPT", "url": "/service-providers/adapt", "kind": "provider", "meta": "Sydney · market intelligence", "why": "A/NZ customer intelligence; qualified lead lists and invitation-only executive roundtables — direct access to enterprise operations leaders.", "roleTag": "ENTERPRISE ACCESS" }
     ],
     "all": [
-      { "name": "NEXTGEN Group", "url": "/providers/nextgen-group", "kind": "provider", "tag": "DISTRIBUTION", "description": "North Sydney growth engine — Sales as a Service and reseller networks; a named answer to the distribution challenge." },
-      { "name": "Stone & Chalk", "url": "/providers/stone-and-chalk", "kind": "provider", "tag": "COMMUNITY", "description": "Australia's largest innovation community — mentorship, investor access, suggested first base over CBD leases." },
-      { "name": "TechVisa", "url": "/providers/techvisa", "kind": "provider", "tag": "IMMIGRATION", "description": "Tech-sector visa specialists — 482/408 assessment for relocating Irish staff." },
-      { "name": "Accenture Australia", "url": "/providers/accenture-australia", "kind": "provider", "tag": "SI / ENTERPRISE", "description": "Systems-integration muscle for multi-site deals needing PMS/ERP connectivity." },
-      { "name": "EverestEngineering", "url": "/providers/everestengineering", "kind": "provider", "tag": "ENGINEERING", "description": "Product localisation and AI data enablement in the AU technical landscape." },
-      { "name": "Granton", "url": "/providers/granton", "kind": "provider", "tag": "GRANTS", "description": "Grant matching and writing — EMDG and open NSW innovation rounds." }
+      { "name": "NEXTGEN Group", "url": "/service-providers/nextgen-group", "kind": "provider", "tag": "DISTRIBUTION", "description": "North Sydney growth engine — Sales as a Service and reseller networks; a named answer to the distribution challenge." },
+      { "name": "Stone & Chalk", "url": "/service-providers/stone-and-chalk", "kind": "provider", "tag": "COMMUNITY", "description": "Australia's largest innovation community — mentorship, investor access, suggested first base over CBD leases." },
+      { "name": "TechVisa", "url": "/service-providers/techvisa", "kind": "provider", "tag": "IMMIGRATION", "description": "Tech-sector visa specialists — 482/408 assessment for relocating Irish staff." },
+      { "name": "Accenture Australia", "url": "/service-providers/accenture-australia", "kind": "provider", "tag": "SI / ENTERPRISE", "description": "Systems-integration muscle for multi-site deals needing PMS/ERP connectivity." },
+      { "name": "EverestEngineering", "url": "/service-providers/everestengineering", "kind": "provider", "tag": "ENGINEERING", "description": "Product localisation and AI data enablement in the AU technical landscape." },
+      { "name": "Granton", "url": "/service-providers/granton", "kind": "provider", "tag": "GRANTS", "description": "Grant matching and writing — EMDG and open NSW innovation rounds." }
     ]
   },
   "govAndHubs": {
     "gov": [
-      { "name": "Investment NSW", "url": "/organisations/investment-nsw", "why": "State agency for international landings — matchmaking, site selection, government liaison; engage early" },
-      { "name": "Irish Australian Chamber of Commerce", "url": "/organisations/irish-australian-chamber-of-commerce", "why": "Bilateral networking — the direct channel into the Irish-Australian business community" },
-      { "name": "Export Connect", "url": "/organisations/export-connect", "why": "Sydney F&B consultancy — pre-qualified buyers and AU SaaS pricing benchmarking" }
+      { "name": "Investment NSW", "url": "/government-support/investment-nsw", "why": "State agency for international landings — matchmaking, site selection, government liaison; engage early" },
+      { "name": "Irish Australian Chamber of Commerce", "url": "/government-support/irish-australian-chamber-of-commerce", "why": "Bilateral networking — the direct channel into the Irish-Australian business community" },
+      { "name": "Export Connect", "url": "/government-support/export-connect", "why": "Sydney F&B consultancy — pre-qualified buyers and AU SaaS pricing benchmarking" }
     ],
     "hubs": [
-      { "name": "SproutX", "url": "/hubs/sproutx", "kind": "hub", "tag": "", "focusTag": "FOODTECH", "description": "National foodtech accelerator; mentors and investors across the hospitality supply chain. Flagged in your key-question answer." },
-      { "name": "UNSW Founders 10x", "url": "/hubs/unsw-founders-10x", "kind": "hub", "tag": "", "focusTag": "SEED + MENTORS", "description": "Sydney flagship accelerator; seed investment and capital-raise support." },
-      { "name": "Haymarket HQ", "url": "/hubs/haymarket-hq", "kind": "hub", "tag": "", "focusTag": "HUB + CO-WORK", "description": "Central-Sydney hub; scale-up/corporate/investor networking; co-working alternative." },
-      { "name": "H2 Ventures", "url": "/hubs/h2-ventures", "kind": "hub", "tag": "", "focusTag": "AI/DATA + VC", "description": "AI/data specialist; regulatory guidance and a dedicated VC network." }
+      { "name": "SproutX", "url": "/innovation-ecosystem/sproutx", "kind": "hub", "tag": "", "focusTag": "FOODTECH", "description": "National foodtech accelerator; mentors and investors across the hospitality supply chain. Flagged in your key-question answer." },
+      { "name": "UNSW Founders 10x", "url": "/innovation-ecosystem/unsw-founders-10x", "kind": "hub", "tag": "", "focusTag": "SEED + MENTORS", "description": "Sydney flagship accelerator; seed investment and capital-raise support." },
+      { "name": "Haymarket HQ", "url": "/innovation-ecosystem/haymarket-hq", "kind": "hub", "tag": "", "focusTag": "HUB + CO-WORK", "description": "Central-Sydney hub; scale-up/corporate/investor networking; co-working alternative." },
+      { "name": "H2 Ventures", "url": "/innovation-ecosystem/h2-ventures", "kind": "hub", "tag": "", "focusTag": "AI/DATA + VC", "description": "AI/data specialist; regulatory guidance and a dedicated VC network." }
     ],
     "alsoNamed": "Also named: **Enterprise Ireland (Sydney office)**, **Austrade**, **R&CA** (57,000+ venues), **Australian Hotels Association**, and the **Lansdowne Club** — Sydney's premier Irish-Australian business network."
   },
   "mentors": {
     "intro": "All five have Irish-Australian corridor experience — mitigating exactly the risks the SWOT flags: local hiring, pricing localisation, payments regulation.",
     "primary": [
-      { "name": "Ben Morrisroe", "url": "/mentors/ben-morrisroe", "kind": "mentor", "role": "CEO, OXBOW · SYDNEY · IRISH FOUNDER", "why": "The most direct match: advises on localising payroll and inventory modules — Nory's two core surfaces.", "headshotUrl": "platform:ben-morrisroe" },
-      { "name": "Ronan Lehane", "url": "/mentors/ronan-lehane", "kind": "mentor", "role": "CO-FOUNDER, CARRARA CAPITAL", "why": "Fundraising within the Irish-Australian corridor — sounding board before the investor list." },
-      { "name": "Navaid Khatib", "url": "/mentors/navaid-khatib", "kind": "mentor", "role": "BOARD MEMBER, AUSPAYNET", "why": "Australian payments regulation — payroll automation crosses into regulated territory." }
+      { "name": "Ben Morrisroe", "url": "/mentors/experts/ben-morrisroe", "kind": "mentor", "role": "CEO, OXBOW · SYDNEY · IRISH FOUNDER", "why": "The most direct match: advises on localising payroll and inventory modules — Nory's two core surfaces.", "headshotUrl": "platform:ben-morrisroe" },
+      { "name": "Ronan Lehane", "url": "/mentors/experts/ronan-lehane", "kind": "mentor", "role": "CO-FOUNDER, CARRARA CAPITAL", "why": "Fundraising within the Irish-Australian corridor — sounding board before the investor list." },
+      { "name": "Navaid Khatib", "url": "/mentors/experts/navaid-khatib", "kind": "mentor", "role": "BOARD MEMBER, AUSPAYNET", "why": "Australian payments regulation — payroll automation crosses into regulated territory." }
     ],
     "extra": [
-      { "name": "Dónal Brady", "url": "/mentors/donal-brady", "kind": "mentor", "role": "CO-FOUNDER, WORK FROM ANYWHERE", "why": "Remote-work compliance and international team scaling for Dublin↔Sydney." },
-      { "name": "Ian Corbally", "url": "/mentors/ian-corbally", "kind": "mentor", "role": "CEO, MORFLESS (MELBOURNE)", "why": "Irish founder; refining technical infrastructure costs in AU." }
+      { "name": "Dónal Brady", "url": "/mentors/experts/donal-brady", "kind": "mentor", "role": "CO-FOUNDER, WORK FROM ANYWHERE", "why": "Remote-work compliance and international team scaling for Dublin↔Sydney." },
+      { "name": "Ian Corbally", "url": "/mentors/experts/ian-corbally", "kind": "mentor", "role": "CEO, MORFLESS (MELBOURNE)", "why": "Irish founder; refining technical infrastructure costs in AU." }
     ]
   },
   "investors": {
@@ -119,9 +119,9 @@
   "actionPlan": {
     "intro": "Three phases over six months. The default map — pace and emphasis set together in the strategy session.",
     "phases": [
-      { "period": "MONTHS 1–2 · FOUNDATION", "title": "Legal, compliance & entity setup", "body": "Incorporate Pty Ltd via [MinterEllison](/providers/minterellison) · resident director; 482/408 via [TechVisa](/providers/techvisa) · ABN, GST, TFN · Privacy Act: data flows, DPA, NDB · IP Australia trademarks · register R&DTI immediately · contact [Investment NSW](/organisations/investment-nsw) · setup outlay AUD $10–20k ex-rent." },
-      { "period": "MONTHS 2–4 · ESTABLISH", "title": "Team, space & network", "body": "Base at [Stone & Chalk](/providers/stone-and-chalk) or [Haymarket HQ](/hubs/haymarket-hq) · hire Sydney Head of Sales (AUD $120–160k + super) · [Fullstack Advisory](/providers/fullstack-advisory) for CFO/R&DTI · [Irish Australian Chamber](/organisations/irish-australian-chamber-of-commerce) + Enterprise Ireland · [Export Connect](/organisations/export-connect) pricing benchmark · join [ADAPT](/providers/adapt); explore [UNSW Founders 10x](/hubs/unsw-founders-10x), [H2 Ventures](/hubs/h2-ventures)." },
-      { "period": "MONTHS 4–6 · LAUNCH", "title": "Go-to-market & sales", "body": "Priority: [Merivale](/accounts/merivale) and [AVC](/accounts/australian-venue-co) · integrate Xero, MYOB, Lightspeed before outbound · SOC 2 / ISO 27001 · [NEXTGEN Group](/providers/nextgen-group) distribution · [Accenture](/providers/accenture-australia) / [EverestEngineering](/providers/everestengineering) SI support · [SproutX](/hubs/sproutx) + [Granton](/providers/granton) grants · pipeline at Fine Food Australia · lead with labour-savings and waste ROI." }
+      { "period": "MONTHS 1–2 · FOUNDATION", "title": "Legal, compliance & entity setup", "body": "Incorporate Pty Ltd via [MinterEllison](/service-providers/minterellison) · resident director; 482/408 via [TechVisa](/service-providers/techvisa) · ABN, GST, TFN · Privacy Act: data flows, DPA, NDB · IP Australia trademarks · register R&DTI immediately · contact [Investment NSW](/government-support/investment-nsw) · setup outlay AUD $10–20k ex-rent." },
+      { "period": "MONTHS 2–4 · ESTABLISH", "title": "Team, space & network", "body": "Base at [Stone & Chalk](/service-providers/stone-and-chalk) or [Haymarket HQ](/innovation-ecosystem/haymarket-hq) · hire Sydney Head of Sales (AUD $120–160k + super) · [Fullstack Advisory](/service-providers/fullstack-advisory) for CFO/R&DTI · [Irish Australian Chamber](/government-support/irish-australian-chamber-of-commerce) + Enterprise Ireland · [Export Connect](/government-support/export-connect) pricing benchmark · join [ADAPT](/service-providers/adapt); explore [UNSW Founders 10x](/innovation-ecosystem/unsw-founders-10x), [H2 Ventures](/innovation-ecosystem/h2-ventures)." },
+      { "period": "MONTHS 4–6 · LAUNCH", "title": "Go-to-market & sales", "body": "Priority: [Merivale](/accounts/merivale) and [AVC](/accounts/australian-venue-co) · integrate Xero, MYOB, Lightspeed before outbound · SOC 2 / ISO 27001 · [NEXTGEN Group](/service-providers/nextgen-group) distribution · [Accenture](/service-providers/accenture-australia) / [EverestEngineering](/service-providers/everestengineering) SI support · [SproutX](/innovation-ecosystem/sproutx) + [Granton](/service-providers/granton) grants · pipeline at Fine Food Australia · lead with labour-savings and waste ROI." }
     ]
   },
   "compliance": {
@@ -149,10 +149,10 @@
   "guides": {
     "intro": "Each answers a question this report raises — cultural fit, partner-led distribution, enterprise AI positioning.",
     "cards": [
-      { "title": "How Starbucks struggled in the Australian market", "url": "/guides/starbucks-australia-struggle", "summary": "Misjudging the independent café culture — the cost of imported operating assumptions.", "relevantBecause": "Your buyers ARE that culture — localisation isn't optional." },
-      { "title": "How Shopify won Australian merchants with partner-led growth", "url": "/guides/shopify-partner-led-growth-australia", "summary": "Penetration through a local partner ecosystem.", "relevantBecause": "The report's distribution read follows this model." },
-      { "title": "How Anthropic entered the Australian market", "url": "/guides/anthropic-australian-market-entry", "summary": "Relationship-first enterprise wins.", "relevantBecause": "Maps to the Merivale / AVC tier of your account list." },
-      { "title": "How UiPath entered the Australian market", "url": "/guides/uipath-australian-market-entry", "summary": "Deep technical partnerships; agentic AI in the AU landscape.", "relevantBecause": "The closest precedent — agentic automation sold into AU enterprise." }
+      { "title": "How Starbucks struggled in the Australian market", "url": "/content/starbucks-australia-struggle", "summary": "Misjudging the independent café culture — the cost of imported operating assumptions.", "relevantBecause": "Your buyers ARE that culture — localisation isn't optional." },
+      { "title": "How Shopify won Australian merchants with partner-led growth", "url": "/content/shopify-partner-led-growth-australia", "summary": "Penetration through a local partner ecosystem.", "relevantBecause": "The report's distribution read follows this model." },
+      { "title": "How Anthropic entered the Australian market", "url": "/content/anthropic-australian-market-entry", "summary": "Relationship-first enterprise wins.", "relevantBecause": "Maps to the Merivale / AVC tier of your account list." },
+      { "title": "How UiPath entered the Australian market", "url": "/content/uipath-australian-market-entry", "summary": "Deep technical partnerships; agentic AI in the AU landscape.", "relevantBecause": "The closest precedent — agentic automation sold into AU enterprise." }
     ]
   },
   "leads": {

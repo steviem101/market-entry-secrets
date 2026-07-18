@@ -3,10 +3,10 @@
   "cover": { "kicker": "MARKET ENTRY REPORT · SCALING A PROVEN WORKFLOW INTO A READY MARKET", "headline": "The engagement layer is wide open — and Melbourne is the right place to fund it.", "scope": "Floats replaces static PDF and Word CVs with trackable, interactive candidate presentation links, powered by the SOLA AI assistant. This report maps the market, the buyers, and everything the ecosystem offers — with light recommendations where the research points clearly." },
   "exec": {
     "narrative": ["Floats is not starting from zero — it is scaling a proven workflow into a market structurally ready to adopt it. Early client validation from **Ivy Tech Recruitment, Kappa Executive Search and Dental Industry Recruitment** anchors a tightly differentiated proposition. The Australian AI recruiting software market is valued at **USD 3.1 billion** {chip:est}, growing at 15.5% CAGR through 2033.", "Victoria raised **$2.2B in startup funding in 2025** — 2.9× year-on-year, overtaking NSW for the first time {chip:sourced}. Agencies buy through direct sales and peer referral, not RFPs. The three procurement filters: **ATS integration** (JobAdder, Bullhorn), **data residency** under the APPs, and **cost-per-consultant ROI**."],
-    "keyQuestionAnswer": "For seed capital: [Rampersand](/investors/rampersand) ($500K–$3M, AI-native SaaS) and [Era VC](/investors/era-vc) ($25K–$2M) are the most directly matched active funds; [Melbourne Angels](/investors/melbourne-angels) co-invest. For recruitment mentorship, [Startmate](/hubs/startmate)'s alumni network reaches deep into Australian HR tech.",
+    "keyQuestionAnswer": "For seed capital: [Rampersand](/investors/rampersand) ($500K–$3M, AI-native SaaS) and [Era VC](/investors/era-vc) ($25K–$2M) are the most directly matched active funds; [Melbourne Angels](/investors/melbourne-angels) co-invest. For recruitment mentorship, [Startmate](/innovation-ecosystem/startmate)'s alumni network reaches deep into Australian HR tech.",
     "highlights": [
-      { "name": "Boab", "url": "/hubs/boab", "kind": "hub", "why": "Melbourne AI accelerator, seed investment" },
-      { "name": "Sinead Connolly", "url": "/mentors/sinead-connolly", "kind": "mentor", "why": "Top recruitment leader; agency networks Floats needs" }
+      { "name": "Boab", "url": "/innovation-ecosystem/boab", "kind": "hub", "why": "Melbourne AI accelerator, seed investment" },
+      { "name": "Sinead Connolly", "url": "/mentors/experts/sinead-connolly", "kind": "mentor", "why": "Top recruitment leader; agency networks Floats needs" }
     ],
     "heroStat": { "label": "MOST IMMEDIATE NON-DILUTIVE CASH", "value": "43.5%", "caption": "Refundable R&D Tax Incentive offset on eligible AI/SaaS development spend. Registration deadline 30 April; minimum $20,000 spend.", "chip": "sourced" },
     "sequence": { "label": "THE REPORT'S 12-MONTH SHAPE", "rows": [ { "period": "1–3", "text": "ATS integrations locked, R&DTI registered, 10–15 agency pilots on existing logos" }, { "period": "4–8", "text": "Pilots convert to paid; engagement data sharpens PMF narrative; investor conversations open" }, { "period": "9–12", "text": "Seed round closes; national expansion; EMDG ahead of APAC (19.18% CAGR {chip:est})" } ], "caveat": "A suggested shape, not a prescription — sequencing is the core agenda for your advisory session." }
@@ -50,40 +50,40 @@
   "providers": {
     "intro": "Given your stated priority — seed capital — the three below map most directly to the raise. All nine are credible matches.",
     "ourRead": [
-      { "rank": 1, "name": "Fullstack Advisory", "url": "/providers/fullstack-advisory", "kind": "provider", "meta": "Sydney · tech accounting", "why": "Virtual CFO, financial modelling for the round, and R&DTI consulting — the named route to the 43.5% claim.", "roleTag": "CAPITAL RAISE + R&DTI" },
-      { "rank": 2, "name": "Treadstone", "url": "/providers/treadstone", "kind": "provider", "meta": "Melbourne · grant advisory", "why": "Government grant and R&D tax specialists — non-dilutive funding stacking with the equity round.", "roleTag": "NON-DILUTIVE STACK" },
-      { "rank": 3, "name": "Stone & Chalk", "url": "/providers/stone-and-chalk", "kind": "provider", "meta": "Melbourne · innovation community", "why": "Investment access and mentorship; residency puts you inside a network navigating the same GTM transition. ~A$600/person/mo {chip:est}", "roleTag": "NETWORK + RESIDENCY" }
+      { "rank": 1, "name": "Fullstack Advisory", "url": "/service-providers/fullstack-advisory", "kind": "provider", "meta": "Sydney · tech accounting", "why": "Virtual CFO, financial modelling for the round, and R&DTI consulting — the named route to the 43.5% claim.", "roleTag": "CAPITAL RAISE + R&DTI" },
+      { "rank": 2, "name": "Treadstone", "url": "/service-providers/treadstone", "kind": "provider", "meta": "Melbourne · grant advisory", "why": "Government grant and R&D tax specialists — non-dilutive funding stacking with the equity round.", "roleTag": "NON-DILUTIVE STACK" },
+      { "rank": 3, "name": "Stone & Chalk", "url": "/service-providers/stone-and-chalk", "kind": "provider", "meta": "Melbourne · innovation community", "why": "Investment access and mentorship; residency puts you inside a network navigating the same GTM transition. ~A$600/person/mo {chip:est}", "roleTag": "NETWORK + RESIDENCY" }
     ],
     "all": [
-      { "name": "Hatch Quarter", "url": "/providers/hatch-quarter", "kind": "provider", "tag": "ADVISORY", "description": "North Melbourne hub — startup consulting, partnerships, PMF refinement for data-driven AI." },
-      { "name": "NEXTGEN Group", "url": "/providers/nextgen-group", "kind": "provider", "tag": "SALES", "description": "Growth engine for enterprise tech — sales-as-a-service, advisory, lead lists across ANZ." },
-      { "name": "Granton", "url": "/providers/granton", "kind": "provider", "tag": "GRANTS", "description": "Funding consultancy for innovation grants incl. EMDG; curated lead lists for mid-market outreach." },
-      { "name": "ADAPT", "url": "/providers/adapt", "kind": "provider", "tag": "RESEARCH", "description": "A/NZ market research and benchmarking; roundtables with enterprise recruitment and HR leaders." },
-      { "name": "Cloud Recruit", "url": "/providers/cloud-recruit", "kind": "provider", "tag": "DUAL ROLE", "description": "Melbourne tech-recruitment specialist — potential platform partner and hiring source." },
-      { "name": "EverestEngineering", "url": "/providers/everestengineering", "kind": "provider", "tag": "ENGINEERING", "description": "Melbourne engineering partner scaling products with AI — technical credibility with enterprise buyers." }
+      { "name": "Hatch Quarter", "url": "/service-providers/hatch-quarter", "kind": "provider", "tag": "ADVISORY", "description": "North Melbourne hub — startup consulting, partnerships, PMF refinement for data-driven AI." },
+      { "name": "NEXTGEN Group", "url": "/service-providers/nextgen-group", "kind": "provider", "tag": "SALES", "description": "Growth engine for enterprise tech — sales-as-a-service, advisory, lead lists across ANZ." },
+      { "name": "Granton", "url": "/service-providers/granton", "kind": "provider", "tag": "GRANTS", "description": "Funding consultancy for innovation grants incl. EMDG; curated lead lists for mid-market outreach." },
+      { "name": "ADAPT", "url": "/service-providers/adapt", "kind": "provider", "tag": "RESEARCH", "description": "A/NZ market research and benchmarking; roundtables with enterprise recruitment and HR leaders." },
+      { "name": "Cloud Recruit", "url": "/service-providers/cloud-recruit", "kind": "provider", "tag": "DUAL ROLE", "description": "Melbourne tech-recruitment specialist — potential platform partner and hiring source." },
+      { "name": "EverestEngineering", "url": "/service-providers/everestengineering", "kind": "provider", "tag": "ENGINEERING", "description": "Melbourne engineering partner scaling products with AI — technical credibility with enterprise buyers." }
     ]
   },
   "govAndHubs": {
     "gov": [
-      { "name": "ARAIN", "url": "/organisations/arain", "why": "National AI Adopt Centre — AI maturity assessments demonstrating technical validity to investors" },
-      { "name": "Global Victoria", "url": "/organisations/global-victoria", "why": "State trade agency — market intelligence, export advice, LaunchVic program introductions" },
-      { "name": "Startup Victoria", "url": "/organisations/startup-victoria", "why": "Cornerstone of the Melbourne ecosystem — founder resources connecting mentors and seed investors" },
-      { "name": "Export Finance Australia", "url": "/organisations/export-finance-australia", "why": "Loans, guarantees and grants for international contracts — a safety net for global expansion" }
+      { "name": "ARAIN", "url": "/government-support/arain", "why": "National AI Adopt Centre — AI maturity assessments demonstrating technical validity to investors" },
+      { "name": "Global Victoria", "url": "/government-support/global-victoria", "why": "State trade agency — market intelligence, export advice, LaunchVic program introductions" },
+      { "name": "Startup Victoria", "url": "/government-support/startup-victoria", "why": "Cornerstone of the Melbourne ecosystem — founder resources connecting mentors and seed investors" },
+      { "name": "Export Finance Australia", "url": "/government-support/export-finance-australia", "why": "Loans, guarantees and grants for international contracts — a safety net for global expansion" }
     ],
     "hubs": [
-      { "name": "ON Accelerate", "url": "/hubs/on-accelerate", "kind": "hub", "tag": "", "focusTag": "NON-DILUTIVE", "description": "Deep-tech accelerator; up to A$80k non-dilutive + investor networking." },
-      { "name": "Boab", "url": "/hubs/boab", "kind": "hub", "tag": "", "focusTag": "SEED FUNDING", "description": "Melbourne AI scaleup accelerator; seed funding + staffing-agency partnership channel." },
-      { "name": "Startmate", "url": "/hubs/startmate", "kind": "hub", "tag": "", "focusTag": "CAPITAL + MENTORS", "description": "Capital access plus the mentor network most relevant for recruitment-specific mentorship." },
-      { "name": "H2 Ventures", "url": "/hubs/h2-ventures", "kind": "hub", "tag": "", "focusTag": "PROGRAM + SEED", "description": "20-week AI/data program; warm paths to seed funds." },
-      { "name": "DSPANZ", "url": "/hubs/dspanz", "kind": "hub", "tag": "", "focusTag": "ASSOCIATION", "description": "Industry association for business-software providers; regulatory guidance." }
+      { "name": "ON Accelerate", "url": "/innovation-ecosystem/on-accelerate", "kind": "hub", "tag": "", "focusTag": "NON-DILUTIVE", "description": "Deep-tech accelerator; up to A$80k non-dilutive + investor networking." },
+      { "name": "Boab", "url": "/innovation-ecosystem/boab", "kind": "hub", "tag": "", "focusTag": "SEED FUNDING", "description": "Melbourne AI scaleup accelerator; seed funding + staffing-agency partnership channel." },
+      { "name": "Startmate", "url": "/innovation-ecosystem/startmate", "kind": "hub", "tag": "", "focusTag": "CAPITAL + MENTORS", "description": "Capital access plus the mentor network most relevant for recruitment-specific mentorship." },
+      { "name": "H2 Ventures", "url": "/innovation-ecosystem/h2-ventures", "kind": "hub", "tag": "", "focusTag": "PROGRAM + SEED", "description": "20-week AI/data program; warm paths to seed funds." },
+      { "name": "DSPANZ", "url": "/innovation-ecosystem/dspanz", "kind": "hub", "tag": "", "focusTag": "ASSOCIATION", "description": "Industry association for business-software providers; regulatory guidance." }
     ]
   },
   "mentors": {
     "intro": "Success for a recruitment SaaS in Australia often depends on insider validation from established agency leaders who act as both early adopters and strategic advisors.",
     "primary": [
-      { "name": "Sinead Connolly", "url": "/mentors/sinead-connolly", "kind": "mentor", "role": "FOUNDER / BOARD MEMBER, LOTUS PEOPLE", "why": "The buyer's perspective Floats needs for PMF — deep HR expertise to refine SOLA around high-performing agencies' pain points." },
-      { "name": "Daniel Grindrod", "url": "/mentors/daniel-grindrod", "kind": "mentor", "role": "CO-FOUNDER, LAUNCHPAD · SAAS GTM", "why": "GTM strategy and tech sales for the seed-to-growth transition; runs Tech Talks Australia." },
-      { "name": "Louise Furlong", "url": "/mentors/louise-furlong", "kind": "mentor", "role": "FOUNDER & DIRECTOR, EMERALD RECRUITMENT", "why": "Hands-on agency operations — a live testing ground for interactive profiles and engagement tracking." }
+      { "name": "Sinead Connolly", "url": "/mentors/experts/sinead-connolly", "kind": "mentor", "role": "FOUNDER / BOARD MEMBER, LOTUS PEOPLE", "why": "The buyer's perspective Floats needs for PMF — deep HR expertise to refine SOLA around high-performing agencies' pain points." },
+      { "name": "Daniel Grindrod", "url": "/mentors/experts/daniel-grindrod", "kind": "mentor", "role": "CO-FOUNDER, LAUNCHPAD · SAAS GTM", "why": "GTM strategy and tech sales for the seed-to-growth transition; runs Tech Talks Australia." },
+      { "name": "Louise Furlong", "url": "/mentors/experts/louise-furlong", "kind": "mentor", "role": "FOUNDER & DIRECTOR, EMERALD RECRUITMENT", "why": "Hands-on agency operations — a live testing ground for interactive profiles and engagement tracking." }
     ],
     "advice": "Move beyond the elevator pitch; arrive with a specific question about recruitment workflow bottlenecks. Real-time engagement data from existing clients is the strongest artefact to bring."
   },
@@ -104,7 +104,7 @@
       { "name": "Croc Pitch", "url": "/investors/croc-pitch", "kind": "investor", "tag": "", "stageTag": "PITCH COMP", "description": "Darwin; winners can secure up to $1M from Paspalis." },
       { "name": "Smart50 Awards", "url": "/investors/smart50-awards", "kind": "investor", "tag": "", "stageTag": "AWARDS", "description": "Social proof that attracts Tier-1 VCs for the next round." }
     ],
-    "alsoNamed": "Also active in AU seed-stage tech: [Black Nova](/investors/black-nova-venture-capital), [Scalare Partners](/investors/scalare-partners), [Perth Angels](/investors/perth-angels), [Galileo Ventures](/investors/galileo-ventures), and accelerator [Antler Australia](/hubs/antler-australia)."
+    "alsoNamed": "Also active in AU seed-stage tech: [Black Nova](/investors/black-nova-venture-capital), [Scalare Partners](/investors/scalare-partners), [Perth Angels](/investors/perth-angels), [Galileo Ventures](/investors/galileo-ventures), and accelerator [Antler Australia](/innovation-ecosystem/antler-australia)."
   },
   "events": {
     "cards": [
@@ -117,9 +117,9 @@
   "actionPlan": {
     "intro": "The research organises the near term into three phases. Treat it as the default map — pace and emphasis get set together in the advisory session.",
     "phases": [
-      { "period": "MONTHS 1–2 · FOUNDATION", "title": "Compliance & immediate funding", "body": "Confirm APP compliance and document ADM workflows ahead of 10 Dec 2026 {chip:sourced} · register R&D activities before 30 April · bias audit with documented methodology · review APP 8 · contact [Global Victoria](/organisations/global-victoria) · apply to [H2 Ventures and Startup Victoria](/hubs/h2-ventures); register with [Melbourne Angels](/investors/melbourne-angels)." },
-      { "period": "MONTHS 2–4 · ESTABLISH", "title": "Team, space & network", "body": "Base at [Stone & Chalk or Hatch Quarter](/providers/stone-and-chalk) (~$600/person/mo) · budget $16,200+/mo for a 3-person team at 1.4× load · hire via [Cloud Recruit](/providers/cloud-recruit); target the post-Atlassian/WiseTech wave (3,600 engineers, Mar 2026 {chip:sourced}) · join [ON Accelerate](/hubs/on-accelerate) · engage [ARAIN](/organisations/arain) · connect with [Boab](/hubs/boab)." },
-      { "period": "MONTHS 4–6 · LAUNCH", "title": "Go-to-market & revenue", "body": "Approach [Adecco](/accounts/adecco-australia), [Hays](/accounts/hays-australia), [Chandler Macleod](/accounts/chandler-macleod) · direct outbound demos over RFPs (4–8 week cycles) · publish JobAdder + Bullhorn API docs · market AU data residency · attend [Startup Victoria and ADAPT](/organisations/startup-victoria) events · [Granton](/providers/granton) for lead lists; [EverestEngineering](/providers/everestengineering) for credibility." }
+      { "period": "MONTHS 1–2 · FOUNDATION", "title": "Compliance & immediate funding", "body": "Confirm APP compliance and document ADM workflows ahead of 10 Dec 2026 {chip:sourced} · register R&D activities before 30 April · bias audit with documented methodology · review APP 8 · contact [Global Victoria](/government-support/global-victoria) · apply to [H2 Ventures and Startup Victoria](/innovation-ecosystem/h2-ventures); register with [Melbourne Angels](/investors/melbourne-angels)." },
+      { "period": "MONTHS 2–4 · ESTABLISH", "title": "Team, space & network", "body": "Base at [Stone & Chalk or Hatch Quarter](/service-providers/stone-and-chalk) (~$600/person/mo) · budget $16,200+/mo for a 3-person team at 1.4× load · hire via [Cloud Recruit](/service-providers/cloud-recruit); target the post-Atlassian/WiseTech wave (3,600 engineers, Mar 2026 {chip:sourced}) · join [ON Accelerate](/innovation-ecosystem/on-accelerate) · engage [ARAIN](/government-support/arain) · connect with [Boab](/innovation-ecosystem/boab)." },
+      { "period": "MONTHS 4–6 · LAUNCH", "title": "Go-to-market & revenue", "body": "Approach [Adecco](/accounts/adecco-australia), [Hays](/accounts/hays-australia), [Chandler Macleod](/accounts/chandler-macleod) · direct outbound demos over RFPs (4–8 week cycles) · publish JobAdder + Bullhorn API docs · market AU data residency · attend [Startup Victoria and ADAPT](/government-support/startup-victoria) events · [Granton](/service-providers/granton) for lead lists; [EverestEngineering](/service-providers/everestengineering) for credibility." }
     ]
   },
   "compliance": {
@@ -148,11 +148,11 @@
   "guides": {
     "intro": "Each answers a question this report raises — scaling models, partner-led growth, enterprise entry, data-residency narrative.",
     "cards": [
-      { "title": "How SafetyCulture scaled from a Townsville garage to a $2.5B global safety platform", "url": "/guides/safetyculture-townsville-to-global", "summary": "The roadmap from niche tool to global platform — the arc a seed deck implicitly claims.", "relevantBecause": "Shows admin-support tooling scaling into a multi-billion-dollar enterprise." },
-      { "title": "How Shopify won Australian merchants with partner-led growth", "url": "/guides/shopify-partner-led-growth-australia", "summary": "Winning through ecosystem partnerships rather than direct sales alone.", "relevantBecause": "Agencies buy on peer referral — the growth loop this study documents." },
-      { "title": "How Anthropic entered the Australian market", "url": "/guides/anthropic-australian-market-entry", "summary": "Relationship-first strategies and enterprise wins with major institutions.", "relevantBecause": "Maps to the Adecco / Chandler Macleod tier of your account list." },
-      { "title": "How Zoho played the long game in Australia with local data centres", "url": "/guides/zoho-long-game-australia", "summary": "Local data centres as the trust narrative.", "relevantBecause": "The research suggests this narrative for data-residency concerns." },
-      { "title": "How GitHub entered the Australian market", "url": "/guides/github-australian-market-entry", "summary": "Paired with Zoho as a local-data-narrative resource.", "relevantBecause": "Enterprise sales conversations on data handling." }
+      { "title": "How SafetyCulture scaled from a Townsville garage to a $2.5B global safety platform", "url": "/content/safetyculture-townsville-to-global", "summary": "The roadmap from niche tool to global platform — the arc a seed deck implicitly claims.", "relevantBecause": "Shows admin-support tooling scaling into a multi-billion-dollar enterprise." },
+      { "title": "How Shopify won Australian merchants with partner-led growth", "url": "/content/shopify-partner-led-growth-australia", "summary": "Winning through ecosystem partnerships rather than direct sales alone.", "relevantBecause": "Agencies buy on peer referral — the growth loop this study documents." },
+      { "title": "How Anthropic entered the Australian market", "url": "/content/anthropic-australian-market-entry", "summary": "Relationship-first strategies and enterprise wins with major institutions.", "relevantBecause": "Maps to the Adecco / Chandler Macleod tier of your account list." },
+      { "title": "How Zoho played the long game in Australia with local data centres", "url": "/content/zoho-long-game-australia", "summary": "Local data centres as the trust narrative.", "relevantBecause": "The research suggests this narrative for data-residency concerns." },
+      { "title": "How GitHub entered the Australian market", "url": "/content/github-australian-market-entry", "summary": "Paired with Zoho as a local-data-narrative resource.", "relevantBecause": "Enterprise sales conversations on data handling." }
     ]
   },
   "leads": {

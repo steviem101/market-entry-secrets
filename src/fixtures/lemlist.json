@@ -3,9 +3,9 @@
   "cover": { "kicker": "MARKET ENTRY REPORT · FRENCH SAAS ENTERING AUSTRALIA", "headline": "Australia's AI-sales market is growing 18.5% a year — and none of the incumbents are local.", "scope": "lemlist's AI-powered outbound platform — lemlist and lemAgent — helps 20,000+ sales teams find leads, detect buying intent, and run personalised multichannel campaigns while actively avoiding spam." },
   "exec": {
     "narrative": ["Australia's AI sales tools segment is valued at **USD 2.5 billion (2024)**, forecast to USD 10.8B by 2033 at **18.5% CAGR** {chip:est}; marketing automation — lemlist's core territory — is the fastest-expanding sub-segment at 14.80% {chip:sourced}. **NSW attracted AUD 1.7B across 160 deals in 2025**, with AI-native SaaS the dominant theme {chip:sourced}.", "Australian buyers prioritise **human-approved AI outreach, local data residency, and APAC timezone support**. The R&DTI offers a **43.5% refundable offset** (under AUD 20M turnover) on AI development conducted locally; **EMDG** can reimburse up to 50% of eligible export marketing spend {chip:sourced}."],
-    "keyQuestionAnswer": "NSW is deploying capital into AI-native SaaS right now — AI drove **61% of national startup funding** {chip:sourced}. Most relevant at your stage: Blackbird, AirTree, Tidal, OIF and Antler (AU$250K–10M tickets); corporate venture arms (Telstra, Westpac, CBA) co-invest alongside pilots. Key highlights: [Cheryl Mack](/mentors/cheryl-mack) (CEO, Aussie Angels) and [1V (OneVentures)](/investors/onevntures) (Sydney VC, $1B+, Series B+ — your stage).",
+    "keyQuestionAnswer": "NSW is deploying capital into AI-native SaaS right now — AI drove **61% of national startup funding** {chip:sourced}. Most relevant at your stage: Blackbird, AirTree, Tidal, OIF and Antler (AU$250K–10M tickets); corporate venture arms (Telstra, Westpac, CBA) co-invest alongside pilots. Key highlights: [Cheryl Mack](/mentors/experts/cheryl-mack) (CEO, Aussie Angels) and [1V (OneVentures)](/investors/onevntures) (Sydney VC, $1B+, Series B+ — your stage).",
     "highlights": [
-      { "name": "Cheryl Mack", "url": "/mentors/cheryl-mack", "kind": "mentor", "why": "Directly connects founders to Australia's largest active angel network" },
+      { "name": "Cheryl Mack", "url": "/mentors/experts/cheryl-mack", "kind": "mentor", "why": "Directly connects founders to Australia's largest active angel network" },
       { "name": "1V (OneVentures)", "url": "/investors/onevntures", "kind": "investor", "why": "$1B+ Sydney VC; high-growth scale-ups at lemlist's stage" }
     ],
     "heroStat": { "label": "AI SHARE OF AU STARTUP FUNDING, 2025", "value": "61%", "caption": "AI drove 61% of total national startup funding — the raise window is open now.", "chip": "sourced" },
@@ -53,39 +53,39 @@
   "providers": {
     "intro": "Given your stated priority — the raise — the three below map most directly to investor readiness. All six are credible matches.",
     "ourRead": [
-      { "rank": 1, "name": "Fullstack Advisory", "url": "/providers/fullstack-advisory", "kind": "provider", "meta": "Sydney · tech accounting", "why": "Capital-raise support, financial modelling, and R&DTI claims — register AI/ML development within ten months of financial year-end to preserve eligibility.", "roleTag": "RAISE + R&DTI" },
-      { "rank": 2, "name": "oSpace (NEXTGEN)", "url": "/providers/ospace-nextgen", "kind": "provider", "meta": "North Sydney · prospecting-as-a-service", "why": "A local sales footprint — prospecting and intent-data analysis — without immediate office overhead; the bridge while the Sydney entity stands up.", "roleTag": "FOOTPRINT, NO OVERHEAD" },
-      { "rank": 3, "name": "ADAPT", "url": "/providers/adapt", "kind": "provider", "meta": "Sydney · market intelligence", "why": "Private roundtables with CIO/CMO buyers in BFSI and retail — the two largest CRM marketing services segments.", "roleTag": "ENTERPRISE ACCESS" }
+      { "rank": 1, "name": "Fullstack Advisory", "url": "/service-providers/fullstack-advisory", "kind": "provider", "meta": "Sydney · tech accounting", "why": "Capital-raise support, financial modelling, and R&DTI claims — register AI/ML development within ten months of financial year-end to preserve eligibility.", "roleTag": "RAISE + R&DTI" },
+      { "rank": 2, "name": "oSpace (NEXTGEN)", "url": "/service-providers/ospace-nextgen", "kind": "provider", "meta": "North Sydney · prospecting-as-a-service", "why": "A local sales footprint — prospecting and intent-data analysis — without immediate office overhead; the bridge while the Sydney entity stands up.", "roleTag": "FOOTPRINT, NO OVERHEAD" },
+      { "rank": 3, "name": "ADAPT", "url": "/service-providers/adapt", "kind": "provider", "meta": "Sydney · market intelligence", "why": "Private roundtables with CIO/CMO buyers in BFSI and retail — the two largest CRM marketing services segments.", "roleTag": "ENTERPRISE ACCESS" }
     ],
     "all": [
-      { "name": "NEXTGEN Group", "url": "/providers/nextgen-group", "kind": "provider", "tag": "DISTRIBUTION", "description": "Sales-as-a-service and reseller network across ANZ enterprise accounts." },
-      { "name": "Stone & Chalk", "url": "/providers/stone-and-chalk", "kind": "provider", "tag": "COMMUNITY", "description": "Australia's largest innovation community; private suites ~$3–6k/mo; resident corporate venture arms (Westpac, CBA)." },
-      { "name": "Accenture Australia", "url": "/providers/accenture-australia", "kind": "provider", "tag": "SI / ENTERPRISE", "description": "Integration partner — CRM implementation holds 32.41% of the CRM marketing services market." }
+      { "name": "NEXTGEN Group", "url": "/service-providers/nextgen-group", "kind": "provider", "tag": "DISTRIBUTION", "description": "Sales-as-a-service and reseller network across ANZ enterprise accounts." },
+      { "name": "Stone & Chalk", "url": "/service-providers/stone-and-chalk", "kind": "provider", "tag": "COMMUNITY", "description": "Australia's largest innovation community; private suites ~$3–6k/mo; resident corporate venture arms (Westpac, CBA)." },
+      { "name": "Accenture Australia", "url": "/service-providers/accenture-australia", "kind": "provider", "tag": "SI / ENTERPRISE", "description": "Integration partner — CRM implementation holds 32.41% of the CRM marketing services market." }
     ]
   },
   "govAndHubs": {
     "gov": [
-      { "name": "Business France", "url": "/organisations/business-france", "why": "Tailored support, market introductions and investment guidance for French entrants — the corridor body for this entry" },
-      { "name": "AiGroup", "url": "/organisations/aigroup", "why": "Industry advocacy + employer compliance guidance (super, Fair Work, bargaining)" },
-      { "name": "Export Connect", "url": "/organisations/export-connect", "why": "B2B lead qualification and export business-development strategy" }
+      { "name": "Business France", "url": "/government-support/business-france", "why": "Tailored support, market introductions and investment guidance for French entrants — the corridor body for this entry" },
+      { "name": "AiGroup", "url": "/government-support/aigroup", "why": "Industry advocacy + employer compliance guidance (super, Fair Work, bargaining)" },
+      { "name": "Export Connect", "url": "/government-support/export-connect", "why": "B2B lead qualification and export business-development strategy" }
     ],
     "hubs": [
-      { "name": "Stone & Chalk", "url": "/providers/stone-and-chalk", "kind": "hub", "tag": "", "focusTag": "HUB + CVC ACCESS", "description": "Premier venue for mentors and investment access; bank CVC partners in residence." },
-      { "name": "H2 Ventures", "url": "/hubs/h2-ventures", "kind": "hub", "tag": "", "focusTag": "AI/DATA + SEED", "description": "AI and data specialist; seed funding and regulatory guidance." },
-      { "name": "UNSW Founders 10x", "url": "/hubs/unsw-founders-10x", "kind": "hub", "tag": "", "focusTag": "SAFE + MENTORS", "description": "Capital-raise support and mentorship via SAFE notes; founder-to-founder VC credibility." },
-      { "name": "SproutX", "url": "/hubs/sproutx", "kind": "hub", "tag": "", "focusTag": "COMMERCIALISATION", "description": "National accelerator; commercialisation model and industry mentors." }
+      { "name": "Stone & Chalk", "url": "/service-providers/stone-and-chalk", "kind": "hub", "tag": "", "focusTag": "HUB + CVC ACCESS", "description": "Premier venue for mentors and investment access; bank CVC partners in residence." },
+      { "name": "H2 Ventures", "url": "/innovation-ecosystem/h2-ventures", "kind": "hub", "tag": "", "focusTag": "AI/DATA + SEED", "description": "AI and data specialist; seed funding and regulatory guidance." },
+      { "name": "UNSW Founders 10x", "url": "/innovation-ecosystem/unsw-founders-10x", "kind": "hub", "tag": "", "focusTag": "SAFE + MENTORS", "description": "Capital-raise support and mentorship via SAFE notes; founder-to-founder VC credibility." },
+      { "name": "SproutX", "url": "/innovation-ecosystem/sproutx", "kind": "hub", "tag": "", "focusTag": "COMMERCIALISATION", "description": "National accelerator; commercialisation model and industry mentors." }
     ]
   },
   "mentors": {
     "intro": "Mentors who understand the local SaaS landscape accelerate fundraising — these five offer pathways to capital and enterprise sales expertise.",
     "primary": [
-      { "name": "Cheryl Mack", "url": "/mentors/cheryl-mack", "kind": "mentor", "role": "CEO, AUSSIE ANGELS", "why": "Access to angel syndicates and VCs — Australia's largest active angel network; flagged in your key-question answer." },
-      { "name": "Daniel Grindrod", "url": "/mentors/daniel-grindrod", "kind": "mentor", "role": "CO-FOUNDER, LAUNCHPAD · UK→APAC", "why": "Outbound strategy refinement; experience helping European founders with APAC expansion." },
-      { "name": "Navaid Khatib", "url": "/mentors/navaid-khatib", "kind": "mentor", "role": "BOARD MEMBER, AUSPAYNET", "why": "Cross-border product management; local regulatory and payments landscape." }
+      { "name": "Cheryl Mack", "url": "/mentors/experts/cheryl-mack", "kind": "mentor", "role": "CEO, AUSSIE ANGELS", "why": "Access to angel syndicates and VCs — Australia's largest active angel network; flagged in your key-question answer." },
+      { "name": "Daniel Grindrod", "url": "/mentors/experts/daniel-grindrod", "kind": "mentor", "role": "CO-FOUNDER, LAUNCHPAD · UK→APAC", "why": "Outbound strategy refinement; experience helping European founders with APAC expansion." },
+      { "name": "Navaid Khatib", "url": "/mentors/experts/navaid-khatib", "kind": "mentor", "role": "BOARD MEMBER, AUSPAYNET", "why": "Cross-border product management; local regulatory and payments landscape." }
     ],
     "extra": [
-      { "name": "Dónal Brady", "url": "/mentors/donal-brady", "kind": "mentor", "role": "CO-FOUNDER, WORK FROM ANYWHERE", "why": "Scaling platforms across APAC with operational discipline." },
-      { "name": "Ben Morrisroe", "url": "/mentors/ben-morrisroe", "kind": "mentor", "role": "CEO, OXBOW · SYDNEY", "why": "Relocating a tech business to Australia — infrastructure perspective." }
+      { "name": "Dónal Brady", "url": "/mentors/experts/donal-brady", "kind": "mentor", "role": "CO-FOUNDER, WORK FROM ANYWHERE", "why": "Scaling platforms across APAC with operational discipline." },
+      { "name": "Ben Morrisroe", "url": "/mentors/experts/ben-morrisroe", "kind": "mentor", "role": "CEO, OXBOW · SYDNEY", "why": "Relocating a tech business to Australia — infrastructure perspective." }
     ]
   },
   "investors": {
@@ -120,18 +120,18 @@
     "intro": "Three phases over six months — the default map; pace set together in the strategy session.",
     "phases": [
       { "period": "MONTHS 1–2 · FOUNDATION", "title": "Legal, compliance & investor signals", "groups": [
-        { "title": "Legal & structural", "body": "Pty Ltd via ASIC (~$310/yr) · ABN + GST over $75k · [Fullstack Advisory](/providers/fullstack-advisory) registers AI/ML under R&DTI — 43.5% refundable, up to $4M/yr cash." },
+        { "title": "Legal & structural", "body": "Pty Ltd via ASIC (~$310/yr) · ABN + GST over $75k · [Fullstack Advisory](/service-providers/fullstack-advisory) registers AI/ML under R&DTI — 43.5% refundable, up to $4M/yr cash." },
         { "title": "Compliance", "body": "Audit AI features against the Privacy Act; ADM disclosures before Dec 2026 · Spam Act: inferred consent, 5-day unsubscribes, sender ID · DNCR checks for voice." },
-        { "title": "Investor groundwork", "body": "Map Series A/B profile against Blackbird, AirTree, Tidal, Antler · [Business France](/organisations/business-france) warm introductions · apply to [H2 Ventures](/hubs/h2-ventures) + [SproutX](/hubs/sproutx)." }
+        { "title": "Investor groundwork", "body": "Map Series A/B profile against Blackbird, AirTree, Tidal, Antler · [Business France](/government-support/business-france) warm introductions · apply to [H2 Ventures](/innovation-ecosystem/h2-ventures) + [SproutX](/innovation-ecosystem/sproutx)." }
       ] },
       { "period": "MONTHS 2–4 · ESTABLISH", "title": "Office, team & network", "groups": [
-        { "title": "Presence", "body": "Base at [Stone & Chalk](/providers/stone-and-chalk) ($3–6k/mo suites; Westpac + CBA CVC in residence) · budget $80–150k/mo burn for a 3–5 person team ($100–180k salaries + 12% super)." },
-        { "title": "Team & partners", "body": "Hire an AI-fluent Sydney Head of Sales (national quota attainment: 46% — favour RevOps/GTM-engineer backgrounds) · [ADAPT](/providers/adapt) CIO/CMO community · [AiGroup](/organisations/aigroup) employer compliance." },
-        { "title": "Investor momentum", "body": "[UNSW Founders 10x](/hubs/unsw-founders-10x) events for founder-to-founder VC credibility · pursue CVC pilots via Stone & Chalk's bank partners." }
+        { "title": "Presence", "body": "Base at [Stone & Chalk](/service-providers/stone-and-chalk) ($3–6k/mo suites; Westpac + CBA CVC in residence) · budget $80–150k/mo burn for a 3–5 person team ($100–180k salaries + 12% super)." },
+        { "title": "Team & partners", "body": "Hire an AI-fluent Sydney Head of Sales (national quota attainment: 46% — favour RevOps/GTM-engineer backgrounds) · [ADAPT](/service-providers/adapt) CIO/CMO community · [AiGroup](/government-support/aigroup) employer compliance." },
+        { "title": "Investor momentum", "body": "[UNSW Founders 10x](/innovation-ecosystem/unsw-founders-10x) events for founder-to-founder VC credibility · pursue CVC pilots via Stone & Chalk's bank partners." }
       ] },
       { "period": "MONTHS 4–6 · LAUNCH", "title": "Go-to-market & revenue", "groups": [
         { "title": "Sales motion", "body": "B2B SaaS heads of sales first (1–3 month cycles) · fixed-price milestone pilots · human-approval loops in all AI outreach." },
-        { "title": "Channels", "body": "[NEXTGEN Group](/providers/nextgen-group) reseller network · [Export Connect](/organisations/export-connect) lead qualification · [Accenture Australia](/providers/accenture-australia) as SI partner." },
+        { "title": "Channels", "body": "[NEXTGEN Group](/service-providers/nextgen-group) reseller network · [Export Connect](/government-support/export-connect) lead qualification · [Accenture Australia](/service-providers/accenture-australia) as SI partner." },
         { "title": "Pricing & EMDG", "body": "Pilot usage/outcome pricing alongside seats (75% of vendors are shifting) · localise case studies before enterprise procurement · submit EMDG for up to 50% of eligible launch marketing spend." }
       ] }
     ]
@@ -161,11 +161,11 @@
   "guides": {
     "intro": "Each answers a question this report raises — enterprise AI positioning, partner-led growth, data-residency expectations.",
     "cards": [
-      { "title": "How Anthropic entered the Australian market", "url": "/guides/anthropic-australian-market-entry", "summary": "Relationship-first strategies and cloud partnerships behind enterprise wins (Canva, CBA).", "relevantBecause": "The playbook for AI credibility with AU enterprise buyers." },
-      { "title": "How UiPath entered the Australian market", "url": "/guides/uipath-australian-market-entry", "summary": "Long-term partnerships to scale agentic AI locally.", "relevantBecause": "The closest automation precedent to lemAgent." },
-      { "title": "How Shopify won Australian merchants with partner-led growth", "url": "/guides/shopify-partner-led-growth-australia", "summary": "Penetration through ecosystem partners over direct sales.", "relevantBecause": "Maps to the NEXTGEN/Accenture channel strategy in §10." },
-      { "title": "How GitHub entered the Australian market", "url": "/guides/github-australian-market-entry", "summary": "Data residency and local engineering support in enterprise AI sales.", "relevantBecause": "Data residency is a stated AU buyer filter for lemlist." },
-      { "title": "How Zoho played the long game in Australia with local data centres", "url": "/guides/zoho-long-game-australia", "summary": "Infrastructure expectations on data sovereignty.", "relevantBecause": "The narrative for security-conscious enterprise procurement." }
+      { "title": "How Anthropic entered the Australian market", "url": "/content/anthropic-australian-market-entry", "summary": "Relationship-first strategies and cloud partnerships behind enterprise wins (Canva, CBA).", "relevantBecause": "The playbook for AI credibility with AU enterprise buyers." },
+      { "title": "How UiPath entered the Australian market", "url": "/content/uipath-australian-market-entry", "summary": "Long-term partnerships to scale agentic AI locally.", "relevantBecause": "The closest automation precedent to lemAgent." },
+      { "title": "How Shopify won Australian merchants with partner-led growth", "url": "/content/shopify-partner-led-growth-australia", "summary": "Penetration through ecosystem partners over direct sales.", "relevantBecause": "Maps to the NEXTGEN/Accenture channel strategy in §10." },
+      { "title": "How GitHub entered the Australian market", "url": "/content/github-australian-market-entry", "summary": "Data residency and local engineering support in enterprise AI sales.", "relevantBecause": "Data residency is a stated AU buyer filter for lemlist." },
+      { "title": "How Zoho played the long game in Australia with local data centres", "url": "/content/zoho-long-game-australia", "summary": "Infrastructure expectations on data sovereignty.", "relevantBecause": "The narrative for security-conscious enterprise procurement." }
     ]
   },
   "leads": {

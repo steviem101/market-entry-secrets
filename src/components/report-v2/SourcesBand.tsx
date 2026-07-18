@@ -1,12 +1,5 @@
 import type { Report } from "@/types/report";
-
-const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-
-const formatDate = (iso: string): string => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso.toUpperCase();
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-};
+import { formatReportDate } from "@/lib/report-v2/format";
 
 const TIERS = [
   { key: "regulator", heading: "● REGULATOR / STATUTE", headingClass: "text-report-sky-soft" },
@@ -28,7 +21,7 @@ const SourcesBand = ({ report }: { report: Report }) => {
           EVIDENCE — {meta.sourceCount} SOURCES, WEIGHTED
         </span>
         <span className="text-[9.5px] font-medium uppercase">
-          {meta.customer} · {formatDate(meta.date)} · MARKET ENTRY SECRETS
+          {meta.customer} · {formatReportDate(meta.date, "short")} · MARKET ENTRY SECRETS
         </span>
       </div>
       <div className="grid grid-cols-3 gap-7 text-[11px] leading-[1.8]">

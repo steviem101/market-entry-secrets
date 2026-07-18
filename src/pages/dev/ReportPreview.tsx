@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import type { Report } from "@/types/report";
 import { REPORT_V2_SECTIONS } from "@/components/report-v2/sectionRegistry";
@@ -20,6 +20,18 @@ const FIXTURES: Record<string, Report> = {
 
 const FIXTURE_NAMES = Object.keys(FIXTURES);
 
+/** Recursively collect every string in the report that carries a chip token. */
+function collectChipStrings(value: unknown, out: string[] = []): string[] {
+  if (typeof value === "string") {
+    if (value.includes("{chip:")) out.push(value);
+  } else if (Array.isArray(value)) {
+    for (const item of value) collectChipStrings(item, out);
+  } else if (value && typeof value === "object") {
+    for (const item of Object.values(value)) collectChipStrings(item, out);
+  }
+  return out;
+}
+
 /**
  * Dev-only acceptance harness for the report_v2 renderer (DECISIONS #13).
  * Loads a fixture through the Report type and renders every section in
@@ -33,12 +45,15 @@ const ReportPreview = () => {
   const [realError, setRealError] = useState<string | null>(null);
 
   // ?fixture=real — PARITY row 19: render a REAL production report through the
-  // adapter. Drop the pipeline report_json at public/dev-fixtures/real-report.json
-  // (gitignored, local-only, never committed/shipped) and the adapter maps it
-  // on load; the mismatch log prints to the console.
+  // adapter. Drop the pipeline report_json (or a whole user_reports row) at
+  // dev-fixtures/real-report.json (repo root, gitignored, served only by the
+  // dev server — never copied into a build); the mismatch log prints to the
+  // console.
   useEffect(() => {
     if (fixtureKey !== "real") return;
     let cancelled = false;
+    setRealReport(null);
+    setRealError(null);
     Promise.all([
       fetch("/dev-fixtures/real-report.json").then((r) => {
         if (!r.ok) throw new Error(String(r.status));
@@ -48,22 +63,45 @@ const ReportPreview = () => {
     ])
       .then(([raw, { adaptPipelineReport }]) => {
         if (cancelled) return;
-        const { report: adapted, mismatches } = adaptPipelineReport(
-          (raw.report_json ?? raw) as never,
-          (raw.context ?? {}) as never
-        );
+        // Accept either a bare report_json or a whole user_reports row (whose
+        // report_json may itself be a JSON string in some exports).
+        let reportJson: unknown = raw.report_json ?? raw;
+        if (typeof reportJson === "string") {
+          try {
+            reportJson = JSON.parse(reportJson);
+          } catch {
+            setRealError("dev-fixtures/real-report.json: report_json is a string that isn't valid JSON.");
+            return;
+          }
+        }
+        const context = raw.context ?? {
+          tier: raw.tier_at_generation,
+          date: raw.created_at,
+          domain: raw.website_url,
+          keyQuestion: raw.report_focus,
+        };
+        const { report: adapted, mismatches } = adaptPipelineReport(reportJson as never, context as never);
         console.info(`[report-v2 adapter] ${mismatches.length} mismatches`, mismatches);
         setRealReport(adapted);
       })
       .catch(() => {
-        if (!cancelled) setRealError("No public/dev-fixtures/real-report.json found — drop a production report_json there (path is gitignored).");
+        if (!cancelled) {
+          setRealError("No dev-fixtures/real-report.json found — drop a production report_json there (path is gitignored, dev-only).");
+        }
       });
     return () => {
       cancelled = true;
     };
   }, [fixtureKey]);
 
-  const report = fixtureKey === "real" ? realReport : FIXTURES[fixtureKey];
+  const report =
+    fixtureKey === "real"
+      ? realReport
+      : Object.prototype.hasOwnProperty.call(FIXTURES, fixtureKey)
+        ? FIXTURES[fixtureKey]
+        : undefined;
+
+  const chipSpecimens = useMemo(() => (report ? collectChipStrings(report).slice(0, 6) : []), [report]);
 
   if (fixtureKey === "real" && !report) {
     return (
@@ -94,7 +132,7 @@ const ReportPreview = () => {
         <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Dev harness · fixture:
         </span>
-        {FIXTURE_NAMES.map((name) => (
+        {[...FIXTURE_NAMES, "real"].map((name) => (
           <Link
             key={name}
             to={`/dev/report-preview?fixture=${name}`}
@@ -112,7 +150,7 @@ const ReportPreview = () => {
         </span>
       </div>
 
-      {/* Dev-only specimen strip: every fixture paragraph carrying a {chip:} token,
+      {/* Dev-only specimen strip: fixture paragraphs carrying a {chip:} token,
           rendered through Rich so chipped numbers are reviewable before their
           sections are built (ticket 2 done-check). */}
       <div className="mx-auto mb-6 max-w-[1240px] rounded-lg border border-border bg-muted/50 px-4 py-3">
@@ -120,15 +158,15 @@ const ReportPreview = () => {
           Chip specimens · <EvidenceChip chip="sourced" /> sourced · <EvidenceChip chip="est" /> ·{" "}
           <EvidenceChip chip="inferred" />
         </p>
-        {JSON.stringify(report)
-          .match(/"[^"]*\{chip:(?:sourced|est|inferred)\}[^"]*"/g)
-          ?.slice(0, 6)
-          .map((quoted, i) => (
-            <Rich key={i} text={JSON.parse(quoted)} className="text-[13px] leading-[1.65] text-report-ink" />
-          ))}
+        {chipSpecimens.map((text, i) => (
+          <Rich key={i} text={text} className="text-[13px] leading-[1.65] text-report-ink" />
+        ))}
       </div>
 
-      <ReportShell>
+      {/* key on fixture identity so switching fixtures remounts the section
+          tree, clearing per-card interaction state (star/request/asset-load)
+          that would otherwise stick to tree position. */}
+      <ReportShell key={fixtureKey}>
         {REPORT_V2_SECTIONS.map(({ id, label, Component }) =>
           Component ? (
             <Component key={id} report={report} />

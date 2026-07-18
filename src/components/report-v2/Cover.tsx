@@ -1,18 +1,8 @@
 import { useState } from "react";
 import type { Report } from "@/types/report";
 import { getLogoDevUrl } from "@/lib/logoUtils";
+import { formatReportDate } from "@/lib/report-v2/format";
 import Rich from "./Rich";
-
-const MONTHS = [
-  "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
-  "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER",
-];
-
-const formatCoverDate = (iso: string): string => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso.toUpperCase();
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-};
 
 /**
  * Customer cover mark: logo.dev from meta.domain when present, monogram
@@ -59,7 +49,7 @@ const Cover = ({ report }: { report: Report }) => {
         <div className="text-right text-[10px] font-medium uppercase leading-[1.7] text-report-caption">
           MARKET ENTRY SECRETS
           <br />
-          {formatCoverDate(meta.date)} · {meta.plan.toUpperCase()} PLAN
+          {formatReportDate(meta.date, "long")} · {meta.plan.toUpperCase()} PLAN
         </div>
       </div>
 
@@ -89,7 +79,9 @@ const Cover = ({ report }: { report: Report }) => {
         <span>
           <b className="text-report-grey-soft">○</b> INFERRED
         </span>
-        <span className="ml-auto uppercase">YOUR QUESTION: “{meta.keyQuestion}”</span>
+        {meta.keyQuestion && (
+          <span className="ml-auto uppercase">YOUR QUESTION: “{meta.keyQuestion}”</span>
+        )}
       </div>
     </section>
   );

@@ -1,4 +1,5 @@
 import { tokenizeParagraph } from "@/lib/reportRich";
+import { isPlatformPath } from "@/lib/report-v2/format";
 import type { Paragraph } from "@/types/report";
 import EvidenceChip from "./EvidenceChip";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,11 @@ const Rich = ({ text, className, as: Tag = "p" }: RichProps) => (
             </strong>
           );
         case "link":
-          return (
+          // Defense in depth: links embedded in LLM section prose never pass
+          // through the adapter's URL sanitizer, so a non-platform-relative
+          // href (javascript:, external, protocol-relative) is neutralised to
+          // plain text here rather than rendered as a live anchor.
+          return isPlatformPath(token.url) ? (
             <a
               key={i}
               href={token.url}
@@ -37,6 +42,8 @@ const Rich = ({ text, className, as: Tag = "p" }: RichProps) => (
             >
               {token.text}
             </a>
+          ) : (
+            <span key={i}>{token.text}</span>
           );
         case "chip":
           return <EvidenceChip key={i} chip={token.chip} />;

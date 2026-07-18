@@ -57,8 +57,13 @@ const AccountCard = ({ account }: { account: AccountBrief }) => (
   </div>
 );
 
-/** Dashed gap card for an intake account without a usable brief (R5: never apology prose). */
-const GapCard = ({ name, reason }: { name: string; reason: string }) => {
+/**
+ * Dashed gap card for an intake account without a usable brief (R5: never
+ * apology prose). onRequest is the ticket-14 persistence/ops-notification
+ * seam — the same contract as RequestHook.onRequest — so a brief request is
+ * recorded, not client-side theatre.
+ */
+const GapCard = ({ name, reason, onRequest }: { name: string; reason: string; onRequest?: () => void }) => {
   const [requested, setRequested] = useState(false);
   return (
     <div className="flex items-center gap-4 rounded-xl border border-dashed border-report-dash bg-report-hook-bg px-7 py-[22px]">
@@ -71,7 +76,10 @@ const GapCard = ({ name, reason }: { name: string; reason: string }) => {
       ) : (
         <button
           type="button"
-          onClick={() => setRequested(true)}
+          onClick={() => {
+            setRequested(true);
+            onRequest?.();
+          }}
           className="whitespace-nowrap rounded-lg border border-report-sky bg-white px-[18px] py-2.5 text-[12px] font-bold text-report-action transition-colors hover:bg-report-tint"
         >
           Request the brief
@@ -101,7 +109,7 @@ const AccountsSection = ({ report }: { report: Report }) => {
       {accounts.briefed.length > 0 && (
         <div className="grid grid-cols-3 gap-[22px]">
           {accounts.briefed.map((account, i) => (
-            <AccountCard key={i} account={account} />
+            <AccountCard key={account.url || account.name || i} account={account} />
           ))}
         </div>
       )}
@@ -146,7 +154,7 @@ const AccountsSection = ({ report }: { report: Report }) => {
 
       <div className={`mt-[22px] grid gap-[22px] ${unbriefed.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
         {unbriefed.map((u, i) => (
-          <GapCard key={i} name={u.name} reason={u.reason} />
+          <GapCard key={u.name || i} name={u.name} reason={u.reason} />
         ))}
         {accounts.worthKnowing && (
           <div className="rounded-xl border border-report-tint-border bg-report-tint px-7 py-[22px] text-[12.5px] leading-[1.65] text-report-ink-soft">

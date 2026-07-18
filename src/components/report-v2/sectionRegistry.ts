@@ -20,7 +20,7 @@ import SourcesBand from "./SourcesBand";
  */
 export interface ReportSectionDef {
   id: string;
-  /** Mono-caps section label, e.g. "05 · SERVICE PROVIDERS" (DECISIONS #9). */
+  /** Caps section label, e.g. "05 · SERVICE PROVIDERS" (DECISIONS #9). */
   label: string;
   Component?: React.ComponentType<{ report: Report }>;
 }

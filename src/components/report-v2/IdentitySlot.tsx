@@ -1,13 +1,5 @@
 import { useState } from "react";
-
-const initialsOf = (name: string): string =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+import { entityInitials } from "@/lib/report-v2/format";
 
 interface IdentitySlotProps {
   name: string;
@@ -52,7 +44,7 @@ const IdentitySlot = ({ name, kind, src }: IdentitySlotProps) => {
           : "bg-report-company-bg text-[10px] font-bold text-report-muted"
       }`}
     >
-      {initialsOf(name)}
+      {entityInitials(name)}
     </span>
   );
 };

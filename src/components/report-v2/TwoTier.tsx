@@ -54,7 +54,7 @@ export const NumberedProse = ({ items }: { items: { label: string; text: Paragra
 );
 
 interface GridCard extends MatchCard {
-  /** Optional extra mono-caps line under the description (e.g. cheque size). */
+  /** Optional extra caps line under the description (e.g. cheque size). */
   extraLine?: string;
 }
 
