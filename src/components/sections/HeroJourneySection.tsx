@@ -57,7 +57,10 @@ const useJourneyMentors = () =>
         .from("community_members_public")
         .select("id, name, title, is_anonymous, avatar_url, image")
         .eq("is_active", true)
-        .order("is_featured", { ascending: false })
+        // Curated set only: an admin has deliberately flagged these profiles
+        // for prominence, which is a stronger consent posture than surfacing
+        // an arbitrary top-3 of the directory on the homepage.
+        .eq("is_featured", true)
         .limit(3);
       if (error) throw error;
       return data ?? [];
