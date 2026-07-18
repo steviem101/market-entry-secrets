@@ -142,8 +142,14 @@ Deno.serve(async (req: Request) => {
         const userTier = subscription?.tier || "free";
         const isPaid = userTier !== "free";
 
-        // Skip the upgrade email entirely for paid users
-        if (isPaid && currentStepConfig.template_name === "nurture_upgrade") {
+        // Skip upgrade-pitch emails entirely for paid users. Covers the generic
+        // nurture_upgrade step AND the report_followup_* steps (conversion plan
+        // step 4) — once they've bought, the goal is achieved and a "here's
+        // what's locked" email would be wrong as well as annoying.
+        const isUpgradePitch =
+          currentStepConfig.template_name === "nurture_upgrade" ||
+          currentStepConfig.template_name.startsWith("report_followup");
+        if (isPaid && isUpgradePitch) {
           // Advance past this step
           const nextStep = seq.current_step + 1;
           const nextStepConfig = steps.find(
@@ -187,6 +193,25 @@ Deno.serve(async (req: Request) => {
           current_tier: userTier,
           ...dynamicData,
         };
+
+        // 4d-ii. report_followup steps carry the member's own report context:
+        // link + locked-section match COUNTS (never names — that's what gating
+        // protects), recomputed fresh from their latest completed report so a
+        // regenerated report is reflected. Zero-match (or no-report) users skip
+        // the step silently — "unlock 0 mentors" is negative advertising.
+        if (currentStepConfig.template_name.startsWith("report_followup")) {
+          const followupData = await fetchReportFollowupData(supabase, seq.user_id);
+          if (!followupData) {
+            await advanceSequence(supabase, seq, steps);
+            log("process-email-queue", "Skipped report_followup (no report / zero locked matches)", {
+              user_id: seq.user_id,
+              step: seq.current_step,
+            });
+            skipped++;
+            continue;
+          }
+          Object.assign(templateData, followupData);
+        }
 
         // 4e. Send via send-email
         const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
@@ -273,6 +298,95 @@ Deno.serve(async (req: Request) => {
 });
 
 // ── Helpers ──────────────────────────────────────────────────────
+
+/**
+ * Advance a sequence past its current step WITHOUT sending (used when a step is
+ * skipped — paid user, or a report_followup step with nothing to tease). Same
+ * delta semantics as the post-send advance (4f): next_send_at = now + the gap
+ * between the two steps' delay_days, minimum 1 day. Completes the sequence when
+ * there is no next step.
+ */
+// deno-lint-ignore no-explicit-any
+async function advanceSequence(supabase: any, seq: SequenceRow, steps: StepConfig[]): Promise<void> {
+  const current = steps.find((s: StepConfig & { step_number?: number }) => (s as any).step_number === seq.current_step);
+  const nextStep = seq.current_step + 1;
+  const next = steps.find((s: StepConfig & { step_number?: number }) => (s as any).step_number === nextStep);
+  if (next) {
+    const delayDays = Math.max((next as any).delay_days - ((current as any)?.delay_days ?? 0), 1);
+    await supabase
+      .from("email_sequences")
+      .update({
+        current_step: nextStep,
+        next_send_at: new Date(Date.now() + delayDays * 86400000).toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", seq.id);
+  } else {
+    await supabase
+      .from("email_sequences")
+      .update({ completed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("id", seq.id);
+  }
+}
+
+/**
+ * Report context for the report_followup steps: the member's latest completed
+ * report's URL + locked-section match COUNTS (never names — that is what tier
+ * gating protects; same counts-only rule as the T16a completion email).
+ * Recomputed fresh at send time so a regenerated report is reflected. Returns
+ * null when there is no completed report or every gated section matched
+ * nothing (callers skip the step — teasing zero matches is negative
+ * advertising). Recipients here are always free-tier (paid users are skipped
+ * before this runs), so "locked" = any section whose visibility_tier != free.
+ */
+// deno-lint-ignore no-explicit-any
+async function fetchReportFollowupData(supabase: any, userId: string): Promise<Record<string, unknown> | null> {
+  const { data: report } = await supabase
+    .from("user_reports")
+    .select("id, report_json, intake_form_id")
+    .eq("user_id", userId)
+    .eq("status", "completed")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!report?.id) return null;
+
+  const { data: templates } = await supabase
+    .from("report_templates")
+    .select("section_name, visibility_tier")
+    .neq("visibility_tier", "free");
+
+  const sections = (report.report_json as Record<string, any> | null)?.sections ?? {};
+  const lockedFindings = (templates ?? [])
+    .map((t: { section_name: string }) => {
+      const matches = sections[t.section_name]?.matches;
+      const arr = Array.isArray(matches) ? matches : [];
+      const count = t.section_name === "lead_list"
+        ? arr.filter((x: any) => x?.card_group === "leads").length
+        : arr.length;
+      return { key: t.section_name, count };
+    })
+    .filter((f: { count: number }) => f.count > 0);
+  if (lockedFindings.length === 0) return null;
+
+  const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://marketentrysecrets.com";
+  // company_name for the D2 copy, best-effort from the intake.
+  let companyName: string | null = null;
+  if (report.intake_form_id) {
+    const { data: intake } = await supabase
+      .from("user_intake_forms")
+      .select("company_name")
+      .eq("id", report.intake_form_id)
+      .maybeSingle();
+    companyName = intake?.company_name ?? null;
+  }
+
+  return {
+    report_url: `${frontendUrl}/report/${report.id}`,
+    locked_findings: lockedFindings,
+    ...(companyName ? { company_name: companyName } : {}),
+  };
+}
 
 async function fetchDynamicData(
   // Bare `ReturnType<typeof createClient>` resolves the schema generics to

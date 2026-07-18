@@ -3848,6 +3848,40 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       console.warn("report.completed activity emit failed (non-blocking):", activityErr);
     }
 
+    // 7e. Enrol FREE-tier members in the D2/D7 report_followup nurture
+    // (conversion plan step 4; steps seeded by migration 20260717070000).
+    // Only when at least one gated section actually matched something — teasing
+    // zero matches is negative advertising, and process-email-queue re-checks
+    // both the counts and the tier at send time anyway (skips upgraded users).
+    // unique (user_id, sequence_name) + ignoreDuplicates makes this once per
+    // user for life; non-blocking.
+    try {
+      if (intake.user_id && userTier === "free") {
+        const hasLockedMatches = (templates ?? []).some((t: any) => {
+          const req = tierHierarchy.indexOf(t.visibility_tier);
+          if (req === -1 || userTierIndex >= req) return false;
+          const m = getMatchesForSection(t.section_name, matches);
+          const count = t.section_name === "lead_list"
+            ? m.filter((x: any) => x?.card_group === "leads").length
+            : m.length;
+          return count > 0;
+        });
+        if (hasLockedMatches) {
+          await supabase.from("email_sequences").upsert(
+            {
+              user_id: intake.user_id,
+              sequence_name: "report_followup",
+              current_step: 1,
+              next_send_at: new Date(Date.now() + 2 * 86400000).toISOString(),
+            },
+            { onConflict: "user_id,sequence_name", ignoreDuplicates: true },
+          );
+        }
+      }
+    } catch (nurtureErr) {
+      console.warn("report_followup enrolment failed (non-blocking):", nurtureErr);
+    }
+
     console.log(`Report ${reportId} fully done (polish_applied=${polishApplied}) in ${Date.now() - startTime}ms`);
   } catch (e) {
     console.error("Background report generation failed:", e);

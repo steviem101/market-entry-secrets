@@ -13,6 +13,8 @@ import * as nurtureAiReport from "./templates/nurtureAiReport.ts";
 import * as nurtureEvents from "./templates/nurtureEvents.ts";
 import * as nurtureUpgradeFree from "./templates/nurtureUpgradeFree.ts";
 import * as nurtureUpgradePaid from "./templates/nurtureUpgradePaid.ts";
+import * as reportFollowupD2 from "./templates/reportFollowupD2.ts";
+import * as reportFollowupD7 from "./templates/reportFollowupD7.ts";
 
 export interface RenderResult {
   subject: string;
@@ -31,6 +33,8 @@ const REGISTRY: Record<string, Renderer> = {
   nurture_events: nurtureEvents.render,
   nurture_upgrade_free: nurtureUpgradeFree.render,
   nurture_upgrade_paid: nurtureUpgradePaid.render,
+  report_followup_d2: reportFollowupD2.render,
+  report_followup_d7: reportFollowupD7.render,
 };
 
 /**

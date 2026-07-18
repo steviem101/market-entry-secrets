@@ -37,7 +37,9 @@ const LOCKED_LABELS: Record<string, (n: number) => string> = {
   competitor_landscape: (n) => `${n} competitor${n === 1 ? "" : "s"} analysed`,
 };
 
-function lockedFindingLabel(key: string, count: number): string {
+// Exported for reuse by the report_followup nurture templates — one phrasing
+// for locked-finding counts across the report email family.
+export function lockedFindingLabel(key: string, count: number): string {
   const fn = LOCKED_LABELS[key];
   if (fn) return fn(count);
   return `${count} ${key.replace(/_/g, " ")}`;
