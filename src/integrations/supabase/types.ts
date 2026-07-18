@@ -526,6 +526,7 @@ export type Database = {
           company: string | null
           contact: string | null
           created_at: string
+          data_health: number | null
           description: string
           experience: string
           experience_tiles: Json | null
@@ -534,6 +535,7 @@ export type Database = {
           is_active: boolean | null
           is_anonymous: boolean
           is_featured: boolean | null
+          last_verified: string | null
           linkedin_url: string | null
           location: string
           location_id: string | null
@@ -542,6 +544,7 @@ export type Database = {
           origin_country: string | null
           persona_fit: string[] | null
           sector_agnostic: boolean | null
+          sector_agnostic_pre_mes177: boolean | null
           sector_tags: string[] | null
           slug: string
           specialties: string[]
@@ -560,6 +563,7 @@ export type Database = {
           company?: string | null
           contact?: string | null
           created_at?: string
+          data_health?: number | null
           description: string
           experience: string
           experience_tiles?: Json | null
@@ -568,6 +572,7 @@ export type Database = {
           is_active?: boolean | null
           is_anonymous?: boolean
           is_featured?: boolean | null
+          last_verified?: string | null
           linkedin_url?: string | null
           location: string
           location_id?: string | null
@@ -576,6 +581,7 @@ export type Database = {
           origin_country?: string | null
           persona_fit?: string[] | null
           sector_agnostic?: boolean | null
+          sector_agnostic_pre_mes177?: boolean | null
           sector_tags?: string[] | null
           slug: string
           specialties?: string[]
@@ -594,6 +600,7 @@ export type Database = {
           company?: string | null
           contact?: string | null
           created_at?: string
+          data_health?: number | null
           description?: string
           experience?: string
           experience_tiles?: Json | null
@@ -602,6 +609,7 @@ export type Database = {
           is_active?: boolean | null
           is_anonymous?: boolean
           is_featured?: boolean | null
+          last_verified?: string | null
           linkedin_url?: string | null
           location?: string
           location_id?: string | null
@@ -610,6 +618,7 @@ export type Database = {
           origin_country?: string | null
           persona_fit?: string[] | null
           sector_agnostic?: boolean | null
+          sector_agnostic_pre_mes177?: boolean | null
           sector_tags?: string[] | null
           slug?: string
           specialties?: string[]
@@ -623,6 +632,73 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      concierge_intro_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          entitlement_id: string | null
+          id: string
+          intro_kind: string
+          report_id: string | null
+          request_text: string | null
+          status: string
+          target_entity_id: string | null
+          target_entity_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          entitlement_id?: string | null
+          id?: string
+          intro_kind: string
+          report_id?: string | null
+          request_text?: string | null
+          status?: string
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          entitlement_id?: string | null
+          id?: string
+          intro_kind?: string
+          report_id?: string | null
+          request_text?: string | null
+          status?: string
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concierge_intro_requests_entitlement_id_fkey"
+            columns: ["entitlement_id"]
+            isOneToOne: false
+            referencedRelation: "service_entitlements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "concierge_intro_requests_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "concierge_intro_requests_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports_clean"
             referencedColumns: ["id"]
           },
         ]
@@ -929,6 +1005,7 @@ export type Database = {
           content_type: string
           created_at: string
           featured: boolean | null
+          guide_topic: string | null
           hero_image_alt: string | null
           hero_image_credit: string | null
           hero_image_url: string | null
@@ -958,6 +1035,7 @@ export type Database = {
           content_type?: string
           created_at?: string
           featured?: boolean | null
+          guide_topic?: string | null
           hero_image_alt?: string | null
           hero_image_credit?: string | null
           hero_image_url?: string | null
@@ -987,6 +1065,7 @@ export type Database = {
           content_type?: string
           created_at?: string
           featured?: boolean | null
+          guide_topic?: string | null
           hero_image_alt?: string | null
           hero_image_credit?: string | null
           hero_image_url?: string | null
@@ -1508,6 +1587,165 @@ export type Database = {
           },
         ]
       }
+      directory_demand_signals: {
+        Row: {
+          created_at: string
+          demand_count: number
+          evidence: Json
+          gap_score: number
+          id: string
+          reviewed_at: string | null
+          run_id: string | null
+          sample_regions: string[]
+          sample_sectors: string[]
+          signal_type: string
+          status: string
+          supply_count: number
+          term_label: string
+          term_slug: string
+          updated_at: string
+          window_days: number
+        }
+        Insert: {
+          created_at?: string
+          demand_count?: number
+          evidence?: Json
+          gap_score?: number
+          id?: string
+          reviewed_at?: string | null
+          run_id?: string | null
+          sample_regions?: string[]
+          sample_sectors?: string[]
+          signal_type?: string
+          status?: string
+          supply_count?: number
+          term_label: string
+          term_slug: string
+          updated_at?: string
+          window_days: number
+        }
+        Update: {
+          created_at?: string
+          demand_count?: number
+          evidence?: Json
+          gap_score?: number
+          id?: string
+          reviewed_at?: string | null
+          run_id?: string | null
+          sample_regions?: string[]
+          sample_sectors?: string[]
+          signal_type?: string
+          status?: string
+          supply_count?: number
+          term_label?: string
+          term_slug?: string
+          updated_at?: string
+          window_days?: number
+        }
+        Relationships: []
+      }
+      directory_discovery_staging: {
+        Row: {
+          candidate_domain: string | null
+          candidate_name: string
+          candidate_url: string | null
+          created_at: string
+          demand_signal_id: string | null
+          description: string | null
+          directory_table: string
+          evidence: Json
+          id: string
+          imported_at: string | null
+          reviewed_at: string | null
+          run_id: string | null
+          source_query: string | null
+          status: string
+          term_slug: string | null
+        }
+        Insert: {
+          candidate_domain?: string | null
+          candidate_name: string
+          candidate_url?: string | null
+          created_at?: string
+          demand_signal_id?: string | null
+          description?: string | null
+          directory_table?: string
+          evidence?: Json
+          id?: string
+          imported_at?: string | null
+          reviewed_at?: string | null
+          run_id?: string | null
+          source_query?: string | null
+          status?: string
+          term_slug?: string | null
+        }
+        Update: {
+          candidate_domain?: string | null
+          candidate_name?: string
+          candidate_url?: string | null
+          created_at?: string
+          demand_signal_id?: string | null
+          description?: string | null
+          directory_table?: string
+          evidence?: Json
+          id?: string
+          imported_at?: string | null
+          reviewed_at?: string | null
+          run_id?: string | null
+          source_query?: string | null
+          status?: string
+          term_slug?: string | null
+        }
+        Relationships: []
+      }
+      directory_steward_staging: {
+        Row: {
+          applied_at: string | null
+          change_class: string
+          computed_health: number | null
+          created_at: string
+          directory_table: string
+          evidence: Json
+          field_diffs: Json
+          id: string
+          record_id: string
+          reviewed_at: string | null
+          run_id: string | null
+          source_url: string | null
+          status: string
+        }
+        Insert: {
+          applied_at?: string | null
+          change_class: string
+          computed_health?: number | null
+          created_at?: string
+          directory_table: string
+          evidence?: Json
+          field_diffs?: Json
+          id?: string
+          record_id: string
+          reviewed_at?: string | null
+          run_id?: string | null
+          source_url?: string | null
+          status?: string
+        }
+        Update: {
+          applied_at?: string | null
+          change_class?: string
+          computed_health?: number | null
+          created_at?: string
+          directory_table?: string
+          evidence?: Json
+          field_diffs?: Json
+          id?: string
+          record_id?: string
+          reviewed_at?: string | null
+          run_id?: string | null
+          source_url?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       directory_submissions: {
         Row: {
           contact_email: string
@@ -1654,6 +1892,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_test: boolean
           source: string | null
           updated_at: string
         }
@@ -1661,6 +1900,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          is_test?: boolean
           source?: string | null
           updated_at?: string
         }
@@ -1668,6 +1908,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_test?: boolean
           source?: string | null
           updated_at?: string
         }
@@ -1784,6 +2025,63 @@ export type Database = {
         }
         Relationships: []
       }
+      eval_runs: {
+        Row: {
+          baseline: boolean
+          created_at: string
+          golden_id: string
+          id: string
+          judge_model: string
+          overall: number | null
+          report_id: string | null
+          rubric_version: string
+          run_label: string
+          sections: Json
+          verification: Json | null
+        }
+        Insert: {
+          baseline?: boolean
+          created_at?: string
+          golden_id: string
+          id?: string
+          judge_model: string
+          overall?: number | null
+          report_id?: string | null
+          rubric_version?: string
+          run_label: string
+          sections?: Json
+          verification?: Json | null
+        }
+        Update: {
+          baseline?: boolean
+          created_at?: string
+          golden_id?: string
+          id?: string
+          judge_model?: string
+          overall?: number | null
+          report_id?: string | null
+          rubric_version?: string
+          run_label?: string
+          sections?: Json
+          verification?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eval_runs_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eval_runs_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports_clean"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           attendees: number
@@ -1832,6 +2130,7 @@ export type Database = {
           time: string | null
           title: string
           type: string
+          type_canonical: string | null
           typical_month: string | null
           updated_at: string
           venue: string | null
@@ -1884,6 +2183,7 @@ export type Database = {
           time?: string | null
           title: string
           type: string
+          type_canonical?: string | null
           typical_month?: string | null
           updated_at?: string
           venue?: string | null
@@ -1936,6 +2236,7 @@ export type Database = {
           time?: string | null
           title?: string
           type?: string
+          type_canonical?: string | null
           typical_month?: string | null
           updated_at?: string
           venue?: string | null
@@ -2906,12 +3207,14 @@ export type Database = {
           contact: string | null
           contact_persons: Json | null
           created_at: string
+          data_health: number | null
           description: string
           domain: string | null
           employees: string
           experience_tiles: Json | null
           founded: string
           id: string
+          last_verified: string | null
           location: string
           location_id: string | null
           logo: string | null
@@ -2931,12 +3234,14 @@ export type Database = {
           contact?: string | null
           contact_persons?: Json | null
           created_at?: string
+          data_health?: number | null
           description: string
           domain?: string | null
           employees: string
           experience_tiles?: Json | null
           founded: string
           id?: string
+          last_verified?: string | null
           location: string
           location_id?: string | null
           logo?: string | null
@@ -2956,12 +3261,14 @@ export type Database = {
           contact?: string | null
           contact_persons?: Json | null
           created_at?: string
+          data_health?: number | null
           description?: string
           domain?: string | null
           employees?: string
           experience_tiles?: Json | null
           founded?: string
           id?: string
+          last_verified?: string | null
           location?: string
           location_id?: string | null
           logo?: string | null
@@ -3034,6 +3341,7 @@ export type Database = {
           metadata: Json | null
           persona: string | null
           session_id: string
+          source: string | null
           step: number | null
           user_id: string | null
         }
@@ -3046,6 +3354,7 @@ export type Database = {
           metadata?: Json | null
           persona?: string | null
           session_id: string
+          source?: string | null
           step?: number | null
           user_id?: string | null
         }
@@ -3058,6 +3367,7 @@ export type Database = {
           metadata?: Json | null
           persona?: string | null
           session_id?: string
+          source?: string | null
           step?: number | null
           user_id?: string | null
         }
@@ -3067,6 +3377,13 @@ export type Database = {
             columns: ["intake_form_id"]
             isOneToOne: false
             referencedRelation: "user_intake_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_form_events_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms_clean"
             referencedColumns: ["id"]
           },
         ]
@@ -3083,12 +3400,14 @@ export type Database = {
           country: string | null
           created_at: string | null
           currently_investing: boolean | null
+          data_health: number | null
           description: string
           details: Json | null
           fund_size: string | null
           id: string
           investor_type: string
           is_featured: boolean | null
+          last_verified: string | null
           leads_deals: boolean | null
           linkedin_url: string | null
           location: string
@@ -3118,12 +3437,14 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           currently_investing?: boolean | null
+          data_health?: number | null
           description: string
           details?: Json | null
           fund_size?: string | null
           id?: string
           investor_type: string
           is_featured?: boolean | null
+          last_verified?: string | null
           leads_deals?: boolean | null
           linkedin_url?: string | null
           location: string
@@ -3153,12 +3474,14 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           currently_investing?: boolean | null
+          data_health?: number | null
           description?: string
           details?: Json | null
           fund_size?: string | null
           id?: string
           investor_type?: string
           is_featured?: boolean | null
+          last_verified?: string | null
           leads_deals?: boolean | null
           linkedin_url?: string | null
           location?: string
@@ -3367,6 +3690,7 @@ export type Database = {
           record_count: number | null
           sample_fields: string[] | null
           sector: string | null
+          sector_tags: string[] | null
           short_description: string | null
           slug: string
           status: string | null
@@ -3392,6 +3716,7 @@ export type Database = {
           record_count?: number | null
           sample_fields?: string[] | null
           sector?: string | null
+          sector_tags?: string[] | null
           short_description?: string | null
           slug: string
           status?: string | null
@@ -3417,6 +3742,7 @@ export type Database = {
           record_count?: number | null
           sample_fields?: string[] | null
           sector?: string | null
+          sector_tags?: string[] | null
           short_description?: string | null
           slug?: string
           status?: string | null
@@ -3473,6 +3799,13 @@ export type Database = {
             columns: ["report_id"]
             isOneToOne: false
             referencedRelation: "user_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_list_requests_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports_clean"
             referencedColumns: ["id"]
           },
         ]
@@ -4133,6 +4466,7 @@ export type Database = {
           email_sent: boolean
           event_type: string | null
           id: string
+          is_test: boolean
           last_error: string | null
           parsed: Json | null
           processed_at: string | null
@@ -4146,6 +4480,7 @@ export type Database = {
           email_sent?: boolean
           event_type?: string | null
           id?: string
+          is_test?: boolean
           last_error?: string | null
           parsed?: Json | null
           processed_at?: string | null
@@ -4159,6 +4494,7 @@ export type Database = {
           email_sent?: boolean
           event_type?: string | null
           id?: string
+          is_test?: boolean
           last_error?: string | null
           parsed?: Json | null
           processed_at?: string | null
@@ -4178,6 +4514,7 @@ export type Database = {
           first_name: string | null
           id: string
           is_email_subscribed: boolean | null
+          is_test: boolean
           last_name: string | null
           location: string | null
           onboarding_completed: boolean
@@ -4197,6 +4534,7 @@ export type Database = {
           first_name?: string | null
           id: string
           is_email_subscribed?: boolean | null
+          is_test?: boolean
           last_name?: string | null
           location?: string | null
           onboarding_completed?: boolean
@@ -4216,6 +4554,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           is_email_subscribed?: boolean | null
+          is_test?: boolean
           last_name?: string | null
           location?: string | null
           onboarding_completed?: boolean
@@ -4227,6 +4566,150 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      prompt_ab_proposals: {
+        Row: {
+          candidate_mean: number | null
+          candidate_n: number
+          candidate_version: number
+          control_mean: number | null
+          control_n: number
+          created_at: string
+          evidence: Json
+          grounding_lift: number | null
+          id: string
+          lift: number | null
+          reviewed_at: string | null
+          run_id: string | null
+          section_name: string
+          status: string
+          verdict: string
+        }
+        Insert: {
+          candidate_mean?: number | null
+          candidate_n: number
+          candidate_version: number
+          control_mean?: number | null
+          control_n: number
+          created_at?: string
+          evidence?: Json
+          grounding_lift?: number | null
+          id?: string
+          lift?: number | null
+          reviewed_at?: string | null
+          run_id?: string | null
+          section_name: string
+          status?: string
+          verdict: string
+        }
+        Update: {
+          candidate_mean?: number | null
+          candidate_n?: number
+          candidate_version?: number
+          control_mean?: number | null
+          control_n?: number
+          created_at?: string
+          evidence?: Json
+          grounding_lift?: number | null
+          id?: string
+          lift?: number | null
+          reviewed_at?: string | null
+          run_id?: string | null
+          section_name?: string
+          status?: string
+          verdict?: string
+        }
+        Relationships: []
+      }
+      prompt_versions: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          notes: string | null
+          section_name: string
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          section_name: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          section_name?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      report_claims: {
+        Row: {
+          as_of: string | null
+          claim_id: string
+          confidence: string
+          created_at: string
+          id: string
+          report_id: string
+          source_url: string | null
+          stage: string
+          statement: string
+          unit: string | null
+          value: string | null
+        }
+        Insert: {
+          as_of?: string | null
+          claim_id: string
+          confidence?: string
+          created_at?: string
+          id?: string
+          report_id: string
+          source_url?: string | null
+          stage: string
+          statement: string
+          unit?: string | null
+          value?: string | null
+        }
+        Update: {
+          as_of?: string | null
+          claim_id?: string
+          confidence?: string
+          created_at?: string
+          id?: string
+          report_id?: string
+          source_url?: string | null
+          stage?: string
+          statement?: string
+          unit?: string | null
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_claims_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_claims_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports_clean"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       report_quality: {
         Row: {
@@ -4404,11 +4887,122 @@ export type Database = {
           },
         ]
       }
+      report_run_artifacts: {
+        Row: {
+          artifact: Json
+          created_at: string
+          id: string
+          intake_form_id: string
+          report_id: string
+          stage: string
+        }
+        Insert: {
+          artifact?: Json
+          created_at?: string
+          id?: string
+          intake_form_id: string
+          report_id: string
+          stage: string
+        }
+        Update: {
+          artifact?: Json
+          created_at?: string
+          id?: string
+          intake_form_id?: string
+          report_id?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_run_artifacts_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_run_artifacts_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms_clean"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_run_artifacts_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_run_artifacts_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports_clean"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_section_feedback: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          note: string | null
+          reason_tags: string[]
+          report_id: string | null
+          section_key: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason_tags?: string[]
+          report_id?: string | null
+          section_key: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason_tags?: string[]
+          report_id?: string | null
+          section_key?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_section_feedback_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_section_feedback_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports_clean"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_templates: {
         Row: {
           created_at: string
           id: string
           is_active: boolean
+          model: string | null
           prompt_body: string
           section_name: string
           updated_at: string
@@ -4420,6 +5014,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          model?: string | null
           prompt_body: string
           section_name: string
           updated_at?: string
@@ -4431,6 +5026,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          model?: string | null
           prompt_body?: string
           section_name?: string
           updated_at?: string
@@ -4514,6 +5110,42 @@ export type Database = {
           description?: string
           groups?: string[]
           is_active?: boolean
+        }
+        Relationships: []
+      }
+      service_entitlements: {
+        Row: {
+          consumed_count: number
+          created_at: string
+          expires_at: string | null
+          granted_count: number
+          id: string
+          kind: string
+          source_purchase: string | null
+          tier: string
+          user_id: string
+        }
+        Insert: {
+          consumed_count?: number
+          created_at?: string
+          expires_at?: string | null
+          granted_count?: number
+          id?: string
+          kind: string
+          source_purchase?: string | null
+          tier: string
+          user_id: string
+        }
+        Update: {
+          consumed_count?: number
+          created_at?: string
+          expires_at?: string | null
+          granted_count?: number
+          id?: string
+          kind?: string
+          source_purchase?: string | null
+          tier?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -4653,11 +5285,13 @@ export type Database = {
           contact: string | null
           contact_persons: Json | null
           created_at: string
+          data_health: number | null
           description: string
           employees: string
           experience_tiles: Json | null
           founded: string
           id: string
+          last_verified: string | null
           location: string
           location_id: string | null
           logo: string | null
@@ -4675,11 +5309,13 @@ export type Database = {
           contact?: string | null
           contact_persons?: Json | null
           created_at?: string
+          data_health?: number | null
           description: string
           employees: string
           experience_tiles?: Json | null
           founded: string
           id?: string
+          last_verified?: string | null
           location: string
           location_id?: string | null
           logo?: string | null
@@ -4697,11 +5333,13 @@ export type Database = {
           contact?: string | null
           contact_persons?: Json | null
           created_at?: string
+          data_health?: number | null
           description?: string
           employees?: string
           experience_tiles?: Json | null
           founded?: string
           id?: string
+          last_verified?: string | null
           location?: string
           location_id?: string | null
           logo?: string | null
@@ -4723,6 +5361,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_terms: {
+        Row: {
+          applies_to: string[]
+          category: string | null
+          created_at: string
+          id: string
+          label: string
+          slug: string
+          synonyms: string[]
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string[]
+          category?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          slug: string
+          synonyms?: string[]
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string[]
+          category?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          slug?: string
+          synonyms?: string[]
+          updated_at?: string
+        }
+        Relationships: []
       }
       testimonials: {
         Row: {
@@ -4831,6 +5502,7 @@ export type Database = {
           contact_persons: Json | null
           country_iso2: string | null
           created_at: string
+          data_health: number | null
           description: string
           description_full: string | null
           domain: string | null
@@ -4850,11 +5522,13 @@ export type Database = {
           is_verified: boolean | null
           jurisdiction: string[] | null
           last_updated_at: string | null
+          last_verified: string | null
           linkedin_url: string | null
           location: string
           location_city: string | null
           location_country: string | null
           location_id: string | null
+          location_raw: string | null
           location_state: string | null
           logo: string | null
           max_grant_aud: number | null
@@ -4888,6 +5562,7 @@ export type Database = {
           contact_persons?: Json | null
           country_iso2?: string | null
           created_at?: string
+          data_health?: number | null
           description: string
           description_full?: string | null
           domain?: string | null
@@ -4907,11 +5582,13 @@ export type Database = {
           is_verified?: boolean | null
           jurisdiction?: string[] | null
           last_updated_at?: string | null
+          last_verified?: string | null
           linkedin_url?: string | null
           location: string
           location_city?: string | null
           location_country?: string | null
           location_id?: string | null
+          location_raw?: string | null
           location_state?: string | null
           logo?: string | null
           max_grant_aud?: number | null
@@ -4945,6 +5622,7 @@ export type Database = {
           contact_persons?: Json | null
           country_iso2?: string | null
           created_at?: string
+          data_health?: number | null
           description?: string
           description_full?: string | null
           domain?: string | null
@@ -4964,11 +5642,13 @@ export type Database = {
           is_verified?: boolean | null
           jurisdiction?: string[] | null
           last_updated_at?: string | null
+          last_verified?: string | null
           linkedin_url?: string | null
           location?: string
           location_city?: string | null
           location_country?: string | null
           location_id?: string | null
+          location_raw?: string | null
           location_state?: string | null
           logo?: string | null
           max_grant_aud?: number | null
@@ -5174,6 +5854,13 @@ export type Database = {
             columns: ["intake_form_id"]
             isOneToOne: false
             referencedRelation: "user_intake_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reports_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms_clean"
             referencedColumns: ["id"]
           },
         ]
@@ -5455,6 +6142,60 @@ export type Database = {
           },
         ]
       }
+      intake_form_events_clean: {
+        Row: {
+          created_at: string | null
+          event_type: string | null
+          field_name: string | null
+          id: string | null
+          intake_form_id: string | null
+          metadata: Json | null
+          persona: string | null
+          session_id: string | null
+          step: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type?: string | null
+          field_name?: string | null
+          id?: string | null
+          intake_form_id?: string | null
+          metadata?: Json | null
+          persona?: string | null
+          session_id?: string | null
+          step?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string | null
+          field_name?: string | null
+          id?: string | null
+          intake_form_id?: string | null
+          metadata?: Json | null
+          persona?: string | null
+          session_id?: string | null
+          step?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intake_form_events_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intake_form_events_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms_clean"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intake_funnel_v2: {
         Row: {
           authed: number | null
@@ -5492,7 +6233,9 @@ export type Database = {
           meta_title: string | null
           name: string | null
           portfolio_companies: string[] | null
+          sector_agnostic: boolean | null
           sector_focus: string[] | null
+          sector_tags: string[] | null
           slug: string | null
           stage_focus: string[] | null
           updated_at: string | null
@@ -5520,7 +6263,9 @@ export type Database = {
           meta_title?: string | null
           name?: string | null
           portfolio_companies?: string[] | null
+          sector_agnostic?: boolean | null
           sector_focus?: string[] | null
+          sector_tags?: string[] | null
           slug?: string | null
           stage_focus?: string[] | null
           updated_at?: string | null
@@ -5548,13 +6293,114 @@ export type Database = {
           meta_title?: string | null
           name?: string | null
           portfolio_companies?: string[] | null
+          sector_agnostic?: boolean | null
           sector_focus?: string[] | null
+          sector_tags?: string[] | null
           slug?: string | null
           stage_focus?: string[] | null
           updated_at?: string | null
           website?: string | null
           why_work_with_us?: string | null
           year_fund_closed?: string | null
+        }
+        Relationships: []
+      }
+      report_quality_clean: {
+        Row: {
+          build_health: number | null
+          cost: Json | null
+          created_at: string | null
+          degraded: boolean | null
+          generation_time_ms: number | null
+          groundedness: number | null
+          id: string | null
+          insights: Json | null
+          intake_form_id: string | null
+          match_counts: Json | null
+          metadata: Json | null
+          presentation: Json | null
+          prompt_version: string | null
+          rag_hit_rate: number | null
+          report_id: string | null
+          report_score: number | null
+          report_status: string | null
+          score_completeness: number | null
+          score_coverage: number | null
+          score_plumbing: number | null
+          score_presentation: number | null
+          score_substance: number | null
+          sources: Json | null
+          substance: Json | null
+          tables_hit: number | null
+          total_matches: number | null
+          user_feedback: number | null
+          user_id: string | null
+          utilization: Json | null
+          utilization_rate: number | null
+        }
+        Insert: {
+          build_health?: number | null
+          cost?: Json | null
+          created_at?: string | null
+          degraded?: boolean | null
+          generation_time_ms?: number | null
+          groundedness?: number | null
+          id?: string | null
+          insights?: Json | null
+          intake_form_id?: string | null
+          match_counts?: Json | null
+          metadata?: Json | null
+          presentation?: Json | null
+          prompt_version?: string | null
+          rag_hit_rate?: number | null
+          report_id?: string | null
+          report_score?: number | null
+          report_status?: string | null
+          score_completeness?: number | null
+          score_coverage?: number | null
+          score_plumbing?: number | null
+          score_presentation?: number | null
+          score_substance?: number | null
+          sources?: Json | null
+          substance?: Json | null
+          tables_hit?: number | null
+          total_matches?: number | null
+          user_feedback?: number | null
+          user_id?: string | null
+          utilization?: Json | null
+          utilization_rate?: number | null
+        }
+        Update: {
+          build_health?: number | null
+          cost?: Json | null
+          created_at?: string | null
+          degraded?: boolean | null
+          generation_time_ms?: number | null
+          groundedness?: number | null
+          id?: string | null
+          insights?: Json | null
+          intake_form_id?: string | null
+          match_counts?: Json | null
+          metadata?: Json | null
+          presentation?: Json | null
+          prompt_version?: string | null
+          rag_hit_rate?: number | null
+          report_id?: string | null
+          report_score?: number | null
+          report_status?: string | null
+          score_completeness?: number | null
+          score_coverage?: number | null
+          score_plumbing?: number | null
+          score_presentation?: number | null
+          score_substance?: number | null
+          sources?: Json | null
+          substance?: Json | null
+          tables_hit?: number | null
+          total_matches?: number | null
+          user_feedback?: number | null
+          user_id?: string | null
+          utilization?: Json | null
+          utilization_rate?: number | null
         }
         Relationships: []
       }
@@ -5602,18 +6448,241 @@ export type Database = {
           },
         ]
       }
+      user_intake_forms_clean: {
+        Row: {
+          budget_level: string | null
+          buying_motion: string | null
+          challenge_other: string | null
+          challenge_tags: string[] | null
+          company_name: string | null
+          company_stage: string | null
+          country_of_origin: string | null
+          created_at: string | null
+          customer_size: string | null
+          customer_type: string | null
+          employee_count: string | null
+          end_buyer_industries: string[] | null
+          end_buyers: Json | null
+          enriched_input: Json | null
+          goal_ids: string[] | null
+          id: string | null
+          industry_sector: string[] | null
+          key_challenges: string | null
+          known_competitors: Json | null
+          primary_goals: string | null
+          raw_input: Json | null
+          report_focus: string | null
+          revenue_stage: string | null
+          services_needed: string[] | null
+          status: string | null
+          target_regions: string[] | null
+          timeline: string | null
+          updated_at: string | null
+          user_id: string | null
+          website_scrape_accepted: boolean | null
+          website_url: string | null
+        }
+        Insert: {
+          budget_level?: string | null
+          buying_motion?: string | null
+          challenge_other?: string | null
+          challenge_tags?: string[] | null
+          company_name?: string | null
+          company_stage?: string | null
+          country_of_origin?: string | null
+          created_at?: string | null
+          customer_size?: string | null
+          customer_type?: string | null
+          employee_count?: string | null
+          end_buyer_industries?: string[] | null
+          end_buyers?: Json | null
+          enriched_input?: Json | null
+          goal_ids?: string[] | null
+          id?: string | null
+          industry_sector?: string[] | null
+          key_challenges?: string | null
+          known_competitors?: Json | null
+          primary_goals?: string | null
+          raw_input?: Json | null
+          report_focus?: string | null
+          revenue_stage?: string | null
+          services_needed?: string[] | null
+          status?: string | null
+          target_regions?: string[] | null
+          timeline?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website_scrape_accepted?: boolean | null
+          website_url?: string | null
+        }
+        Update: {
+          budget_level?: string | null
+          buying_motion?: string | null
+          challenge_other?: string | null
+          challenge_tags?: string[] | null
+          company_name?: string | null
+          company_stage?: string | null
+          country_of_origin?: string | null
+          created_at?: string | null
+          customer_size?: string | null
+          customer_type?: string | null
+          employee_count?: string | null
+          end_buyer_industries?: string[] | null
+          end_buyers?: Json | null
+          enriched_input?: Json | null
+          goal_ids?: string[] | null
+          id?: string | null
+          industry_sector?: string[] | null
+          key_challenges?: string | null
+          known_competitors?: Json | null
+          primary_goals?: string | null
+          raw_input?: Json | null
+          report_focus?: string | null
+          revenue_stage?: string | null
+          services_needed?: string[] | null
+          status?: string | null
+          target_regions?: string[] | null
+          timeline?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website_scrape_accepted?: boolean | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      user_reports_clean: {
+        Row: {
+          created_at: string | null
+          feedback_notes: string | null
+          feedback_score: number | null
+          firecrawl_ops: number | null
+          firecrawl_scrape_ok: boolean | null
+          generation_time_ms: number | null
+          id: string | null
+          intake_form_id: string | null
+          perplexity_ok: boolean | null
+          polish_applied: boolean | null
+          report_json: Json | null
+          sections_generated: string[] | null
+          share_token: string | null
+          status: string | null
+          tier_at_generation: string | null
+          total_matches: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feedback_notes?: string | null
+          feedback_score?: number | null
+          firecrawl_ops?: number | null
+          firecrawl_scrape_ok?: boolean | null
+          generation_time_ms?: number | null
+          id?: string | null
+          intake_form_id?: string | null
+          perplexity_ok?: boolean | null
+          polish_applied?: boolean | null
+          report_json?: Json | null
+          sections_generated?: string[] | null
+          share_token?: string | null
+          status?: string | null
+          tier_at_generation?: string | null
+          total_matches?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feedback_notes?: string | null
+          feedback_score?: number | null
+          firecrawl_ops?: number | null
+          firecrawl_scrape_ok?: boolean | null
+          generation_time_ms?: number | null
+          id?: string | null
+          intake_form_id?: string | null
+          perplexity_ok?: boolean | null
+          polish_applied?: boolean | null
+          report_json?: Json | null
+          sections_generated?: string[] | null
+          share_token?: string | null
+          status?: string | null
+          tier_at_generation?: string | null
+          total_matches?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reports_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reports_intake_form_id_fkey"
+            columns: ["intake_form_id"]
+            isOneToOne: false
+            referencedRelation: "user_intake_forms_clean"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_subscriptions_clean: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          tier: Database["public"]["Enums"]["subscription_tier"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       any_sector_agnostic: { Args: { raws: string[] }; Returns: boolean }
+      cleanup_edge_function_rate_limits: { Args: never; Returns: undefined }
+      consume_rate_limit: {
+        Args: {
+          p_function_name: string
+          p_max: number
+          p_user_id: string
+          p_window_min: number
+        }
+        Returns: boolean
+      }
       current_chat_session_id: { Args: never; Returns: string }
       detect_funnel_gate_hits: { Args: never; Returns: number }
       event_local_time_label: {
         Args: { p_city: string; p_ts: string }
         Returns: string
       }
+      event_type_to_canonical: { Args: { p_type: string }; Returns: string }
       find_duplicate_event: {
         Args: { p_city: string; p_event_date: string; p_title: string }
         Returns: string
+      }
+      fulfil_concierge_intro: {
+        Args: {
+          p_admin_notes?: string
+          p_entitlement_id: string
+          p_request_id: string
+        }
+        Returns: undefined
       }
       generate_slug: { Args: { input_text: string }; Returns: string }
       get_country_directory: { Args: never; Returns: Json }
@@ -5636,7 +6705,10 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_tier_gated_report: { Args: { p_report_id: string }; Returns: Json }
+      get_tier_gated_report: {
+        Args: { p_include_teasers?: boolean; p_report_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5648,6 +6720,7 @@ export type Database = {
         Args: { attachment_id: string }
         Returns: undefined
       }
+      is_test_user: { Args: { uid: string }; Returns: boolean }
       kb_check_secret: { Args: { p_candidate: string }; Returns: boolean }
       kb_external_source_id: {
         Args: { p_source_project: string; p_source_ref: string }
@@ -5777,6 +6850,7 @@ export type Database = {
           title: string
         }[]
       }
+      reap_stuck_reports: { Args: never; Returns: number }
       recent_ii_content: {
         Args: {
           canonical_only?: boolean
@@ -5813,6 +6887,10 @@ export type Database = {
           summary: string
           tags: string[]
         }[]
+      }
+      report_section_teaser: {
+        Args: { p_matches: Json; p_section_key: string }
+        Returns: Json
       }
       roll_forward_month_precision_events: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
