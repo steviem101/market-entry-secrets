@@ -3,6 +3,8 @@ import type { Report } from "@/types/report";
 import Cover from "./Cover";
 import CloseSection from "./CloseSection";
 import AccountsSection from "./AccountsSection";
+import ActionPlanSection from "./ActionPlanSection";
+import ComplianceSection from "./ComplianceSection";
 import CompetitorSection from "./CompetitorSection";
 import EventsSection from "./EventsSection";
 import ExecSummarySection from "./ExecSummarySection";
@@ -38,8 +40,8 @@ export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "mentors", label: "07 · MENTOR RECOMMENDATIONS", Component: MentorsSection },
   { id: "investors", label: "08 · INVESTOR RECOMMENDATIONS", Component: InvestorsSection },
   { id: "events", label: "09 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER", Component: EventsSection },
-  { id: "actionPlan", label: "10 · ACTION PLAN" },
-  { id: "compliance", label: "11 · SETUP & COMPLIANCE" },
+  { id: "actionPlan", label: "10 · PHASED ACTION PLAN", Component: ActionPlanSection },
+  { id: "compliance", label: "11 · SETUP & COMPLIANCE", Component: ComplianceSection },
   { id: "guides", label: "12 · CASE STUDIES & RESOURCES", Component: GuidesSection },
   { id: "leads", label: "13 · LEAD LIST" },
   { id: "close", label: "14 · NEXT: YOUR ADVISORY SESSION", Component: CloseSection },
