@@ -6,11 +6,11 @@ export const TestimonialsSection = () => {
   const { data: testimonials = [], isLoading } = useTestimonials();
   const content = PERSONA_CONTENT.default.testimonials;
 
-  // Use DB testimonials when available, otherwise fallbacks. Show at most
-  // three — a static grid, not a carousel, keeps the section scannable.
-  const displayTestimonials = (
-    testimonials.length > 0 ? testimonials : content.fallbackTestimonials
-  ).slice(0, 3);
+  // Real testimonials table rows ONLY (18 Jul homepage-honesty pass): the
+  // hardcoded persona fallbacks were fabricated personas, which undermined a
+  // page that is otherwise rigorously verifiable. With zero real rows the
+  // section renders nothing rather than inventing social proof.
+  const displayTestimonials = testimonials.slice(0, 3);
 
   if (isLoading) {
     return (

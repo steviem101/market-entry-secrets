@@ -1,4 +1,4 @@
-import { Building2, FileText, Users } from "lucide-react";
+import { Building2, FileText } from "lucide-react";
 import { useEcosystemStats } from "@/hooks/useEcosystemStats";
 import { displayCount } from "@/lib/heroStatsDisplay";
 
@@ -40,18 +40,8 @@ export const HeroCredibilityBadges = () => {
           </div>
         </div>
       )}
-
-      <div
-        className="absolute top-1/2 right-4 lg:-right-4 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20 hidden lg:block"
-        style={{ animationDelay: "3.5s" }}
-      >
-        <div className="flex items-center gap-1.5">
-          <Users className="w-3.5 h-3.5 text-accent" />
-          <span className="text-xs font-semibold text-foreground">
-            {displayCount(stats.mentors)}+ mentors
-          </span>
-        </div>
-      </div>
+      {/* Two badges max — the ProofStrip below the hero owns the full count
+          set, so the hero doesn't restate it (de-dup, 18 Jul). */}
     </>
   );
 };

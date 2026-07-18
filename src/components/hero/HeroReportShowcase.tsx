@@ -6,8 +6,6 @@ import {
   TIER_REQUIREMENTS,
   TIER_LABELS,
 } from "@/components/report/reportSectionConfig";
-import { useEcosystemStats } from "@/hooks/useEcosystemStats";
-import { displayCount } from "@/lib/heroStatsDisplay";
 import { HeroCredibilityBadges } from "./HeroCredibilityBadges";
 
 // How many section rows the static frame shows before the "+ N more" line.
@@ -22,8 +20,6 @@ const VISIBLE_SECTIONS = 6;
  * frame by design so the hero's LCP content renders immediately.
  */
 export const HeroReportShowcase = () => {
-  const { stats, isReady } = useEcosystemStats();
-
   const visibleSections = SECTION_ORDER.slice(0, VISIBLE_SECTIONS);
   const remaining = SECTION_ORDER.length - VISIBLE_SECTIONS;
 
@@ -96,17 +92,8 @@ export const HeroReportShowcase = () => {
               + {remaining} more sections in the full report
             </div>
           )}
-
-          {/* Live grounding line — real counts, matching the directory pages */}
-          {isReady && stats && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground border-t border-border pt-3">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>
-                Matched against {displayCount(stats.serviceProviders)}+ providers,{" "}
-                {displayCount(stats.mentors)}+ mentors and {displayCount(stats.investors)}+ investors
-              </span>
-            </div>
-          )}
+          {/* Numbers deliberately absent here — the ProofStrip directly below
+              the hero is the page's single source of counts (de-dup, 18 Jul). */}
         </div>
       </div>
 
