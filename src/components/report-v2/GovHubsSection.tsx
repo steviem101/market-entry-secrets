@@ -1,11 +1,11 @@
 import type { Report } from "@/types/report";
 import SectionCard from "./SectionCard";
-import CompanyMark from "./CompanyMark";
+import IdentitySlot from "./IdentitySlot";
 import Rich from "./Rich";
 
 const EntityName = ({ name, url }: { name: string; url: string }) => (
   <span>
-    <CompanyMark name={name} />
+    <IdentitySlot name={name} kind="company" />
     {url ? (
       <a href={url} target="_blank" rel="noopener" className="text-inherit">
         <b>{name} ↗</b>

@@ -107,6 +107,9 @@ export default {
 					'warn-accent': '#f5b84b',
 					'warn-tint': '#fdf5e7',
 					risk:    '#dc2626',
+					// identity-slot monogram fills (README identity assets)
+					'person-bg': '#e3f2fb',
+					'company-bg': '#eef4f8',
 					// sources-band tier headers + inferred pill (reference markup)
 					'sky-soft':  '#7cc9ef',
 					'grey-soft': '#b4bcc8',
