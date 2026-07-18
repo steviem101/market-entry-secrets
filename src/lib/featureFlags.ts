@@ -88,13 +88,14 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
     defaultValue: false,
   },
   // MES-162 homepage hero credibility: static real report-output panel in the
-  // hero + the three-step value-journey proof section below it. Ships dark
-  // (default off) so it can be enabled in its own measurement window after
-  // MES-158's, and disabled independently; ?journey=1 enables it.
+  // hero + the three-step value-journey proof section below it (which also
+  // drives the 7-section homepage restructure). ENABLED by default
+  // (owner-approved, 2026-07-18 — its measurement window is now open);
+  // ?journey=0 is the rollback kill switch.
   hero_journey: {
     queryKey: 'journey',
     storageKey: 'mes_flag_hero_journey',
-    defaultValue: false,
+    defaultValue: true,
   },
 };
 
