@@ -25,10 +25,15 @@ const PrintStatic = ({ className }: { className?: string }) => (
 const RequestHook = ({ copy, buttonLabel, confirmation, onRequest, className }: RequestHookProps) => {
   const [requested, setRequested] = useState(false);
   if (requested) {
+    // The green confirmation is on-screen only; the PDF still needs the static
+    // one-liner so a hook clicked during the session doesn't print blank.
     return (
-      <div className="mt-3 rounded-[10px] border border-report-confirm-border bg-report-confirm-bg px-[22px] py-3 text-[12.5px] font-medium leading-[1.6] text-report-confirm-text print:hidden">
-        {confirmation}
-      </div>
+      <>
+        <PrintStatic className={`mt-3 ${className ?? ""}`} />
+        <div className="mt-3 rounded-[10px] border border-report-confirm-border bg-report-confirm-bg px-[22px] py-3 text-[12.5px] font-medium leading-[1.6] text-report-confirm-text print:hidden">
+          {confirmation}
+        </div>
+      </>
     );
   }
   return (

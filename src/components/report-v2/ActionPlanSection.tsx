@@ -32,7 +32,7 @@ const ActionPlanSection = ({ report }: { report: Report }) => {
               </div>
             )}
             {phase.title && <div className="my-2 text-[17px] font-bold">{phase.title}</div>}
-            {phase.groups ? (
+            {phase.groups && phase.groups.length > 0 ? (
               <div className="flex flex-col gap-3.5">
                 {phase.groups.map((group, g) => (
                   <div key={g}>

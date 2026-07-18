@@ -35,7 +35,9 @@ const ComplianceSection = ({ report }: { report: Report }) => {
             <span>PRACTICAL NOTE</span>
           </div>
           {compliance.table.map((row, i) => {
-            const sev = SEVERITY[row.severity];
+            // Fail-safe: an unexpected severity (real-report adapter path) must
+            // not throw and take the whole report down — default to grey.
+            const sev = SEVERITY[row.severity] ?? SEVERITY.grey;
             return (
               <div key={i} className={`${GRID} ${sev.width} ${sev.border} py-[18px] text-[12.5px] leading-[1.65]`}>
                 <span>

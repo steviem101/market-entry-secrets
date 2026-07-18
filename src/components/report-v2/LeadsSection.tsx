@@ -14,10 +14,17 @@ const LeadRequestBox = ({ onRequest }: { onRequest?: (icp: string) => void }) =>
   const [icp, setIcp] = useState("");
   const [sent, setSent] = useState(false);
   if (sent) {
+    // Confirmation is on-screen only; the PDF keeps the static instruction so a
+    // request submitted during the session doesn't leak transient UI to print.
     return (
-      <div className="mt-[22px] rounded-xl border border-report-confirm-border bg-report-confirm-bg px-[30px] py-6 text-[12.5px] font-medium leading-[1.6] text-report-confirm-text">
-        Request sent — we'll confirm scope within one business day and the list will appear in this section.
-      </div>
+      <>
+        <p className="mt-[22px] hidden text-[12px] italic text-report-muted print:block">
+          Reply to this report with your ideal customer profile and we'll build the list.
+        </p>
+        <div className="mt-[22px] rounded-xl border border-report-confirm-border bg-report-confirm-bg px-[30px] py-6 text-[12.5px] font-medium leading-[1.6] text-report-confirm-text print:hidden">
+          Request sent — we'll confirm scope within one business day and the list will appear in this section.
+        </div>
+      </>
     );
   }
   return (

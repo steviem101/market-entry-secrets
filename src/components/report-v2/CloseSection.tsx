@@ -51,7 +51,7 @@ const CloseSection = ({ report }: { report: Report }) => {
         {starred.length > 0 ? (
           <>
             <div className="flex flex-wrap gap-2.5">
-              {starred.map((item, i) => {
+              {starred.map((item) => {
                 const inner = (
                   <>
                     <Heart className="h-3 w-3 fill-current text-red-500" />
@@ -60,12 +60,15 @@ const CloseSection = ({ report }: { report: Report }) => {
                 );
                 const cls =
                   "inline-flex items-center gap-1.5 rounded-full border border-report-tint-border bg-report-tint px-4 py-2 text-[12px] font-semibold text-report-action";
+                // Key by entity identity (url, else name) — the shortlist is a
+                // mutable add/remove list, so index keys would misreconcile.
+                const key = item.url || item.name;
                 return item.url ? (
-                  <a key={i} href={item.url} target="_blank" rel="noopener" className={`${cls} hover:underline`}>
+                  <a key={key} href={item.url} target="_blank" rel="noopener" className={`${cls} hover:underline`}>
                     {inner}
                   </a>
                 ) : (
-                  <span key={i} className={cls}>
+                  <span key={key} className={cls}>
                     {inner}
                   </span>
                 );
@@ -76,10 +79,17 @@ const CloseSection = ({ report }: { report: Report }) => {
             </p>
           </>
         ) : (
-          <p className="text-[12.5px] leading-[1.65] text-report-caption">
-            Tap the ♥ next to any provider, hub, mentor, investor or event above to build your own
-            shortlist — it collects here and sets the agenda for the advisory session.
-          </p>
+          <>
+            <p className="text-[12.5px] leading-[1.65] text-report-caption print:hidden">
+              Tap the ♥ next to any provider, hub, mentor, investor or event above to build your own
+              shortlist — it collects here and sets the agenda for the advisory session.
+            </p>
+            {/* Print has no interactive hearts — state the mechanic without "tap". */}
+            <p className="hidden text-[12.5px] leading-[1.65] text-report-caption print:block">
+              Saved providers, hubs, mentors, investors and events collect here in your online report
+              and set the agenda for the advisory session.
+            </p>
+          </>
         )}
       </div>
     </SectionCard>

@@ -77,7 +77,7 @@ const GapCard = ({ name, reason, onRequest }: { name: string; reason: string; on
         <b>{name} isn't fully covered.</b> {reason}
       </span>
       {requested ? (
-        <span className="whitespace-nowrap text-[10px] font-bold text-report-confirm-text">REQUEST SENT ✓</span>
+        <span className="whitespace-nowrap text-[10px] font-bold text-report-confirm-text print:hidden">REQUEST SENT ✓</span>
       ) : (
         <button
           type="button"
@@ -90,11 +90,11 @@ const GapCard = ({ name, reason, onRequest }: { name: string; reason: string; on
           Request the brief
         </button>
       )}
-      {!requested && (
-        <span className="hidden whitespace-nowrap text-[10px] font-bold italic text-report-muted print:inline">
-          Contact us to request
-        </span>
-      )}
+      {/* Static print line renders regardless of session click state so the PDF
+          always shows a contact instruction, never a live button or "SENT". */}
+      <span className="hidden whitespace-nowrap text-[10px] font-bold italic text-report-muted print:inline">
+        Contact us to request
+      </span>
     </div>
   );
 };

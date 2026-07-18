@@ -49,6 +49,10 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
 
   useEffect(() => {
     let cancelled = false;
+    // Clear prior report/harness state on a source switch so the reload never
+    // shows the previous report's shortlist (and never writes a star against
+    // the new report from stale state) while the fetch is in flight.
+    setStarred([]);
     if (reportId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any)
@@ -69,7 +73,10 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
     } else {
       try {
         const raw = localStorage.getItem(lsKey);
-        if (raw && !cancelled) setStarred(JSON.parse(raw) as ShortlistItem[]);
+        const parsed = raw ? JSON.parse(raw) : null;
+        // Validate the shape — valid-but-wrong JSON ("null", an object) would
+        // otherwise poison `starred` and crash downstream .map/.some/.length.
+        if (Array.isArray(parsed) && !cancelled) setStarred(parsed as ShortlistItem[]);
       } catch {
         /* ignore malformed local state */
       }
