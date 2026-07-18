@@ -13,6 +13,15 @@ import {
 
 // --- tier-awareness ------------------------------------------------------------------
 
+test("sections introduced after a report's generation are not expected of it (MES-210a)", () => {
+  // Pre-introduction report: case_studies_guides must not count against it.
+  const before = expectedVisibleSections("free", "2026-07-01T00:00:00Z");
+  assert.ok(!before.includes("case_studies_guides"));
+  // Post-introduction and undated (today's set) both expect it.
+  assert.ok(expectedVisibleSections("free", "2026-07-19T00:00:00Z").includes("case_studies_guides"));
+  assert.ok(expectedVisibleSections("free").includes("case_studies_guides"));
+});
+
 test("free tier expects free sections (incl. swot/competitor/investor); mentor/first_customers/lead_list gated (MES-193)", () => {
   const exp = expectedVisibleSections("free");
   assert.ok(exp.includes("executive_summary"));
