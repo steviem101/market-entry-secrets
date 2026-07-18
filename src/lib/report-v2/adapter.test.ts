@@ -78,7 +78,7 @@ test("adaptPipelineReport maps a realistic pipeline JSON without throwing and lo
   assert.equal(report.meta.customer, "Floats");
   assert.equal(report.meta.plan, "scale");
   assert.equal(report.meta.sourceCount, 3);
-  assert.equal(report.cover.headline, "Floats is scaling into a ready market .");
+  assert.equal(report.cover.headline, "Floats is scaling into a ready market.");
   assert.equal(report.exec.narrative.length, 2);
   assert.match(report.exec.narrative[0], /\{chip:sourced\}/);
   assert.equal(report.exec.highlights[0].url, "/investors/aura-ventures");
@@ -97,6 +97,33 @@ test("adaptPipelineReport maps a realistic pipeline JSON without throwing and lo
   assert.ok(mismatches.some((m) => m.path === "meta.archetype"));
   assert.ok(mismatches.some((m) => m.path.startsWith("competitors.rows[0]")));
   assert.ok(mismatches.some((m) => m.path === "swot"));
+});
+
+test("headline skips heading-only leads but keeps in-sentence bold", () => {
+  const { report } = adaptPipelineReport(
+    { sections: { executive_summary: { content: "## Executive Summary\n\n**lemlist** is ready to scale [1]. More prose." } } },
+    {}
+  );
+  assert.equal(report.cover.headline, "lemlist is ready to scale.");
+});
+
+test("R11 relevance gate drops non-commercial competitor matches and logs", () => {
+  const { report, mismatches } = adaptPipelineReport(
+    {
+      sections: {
+        competitor_landscape: {
+          content: "x",
+          matches: [
+            { name: "Clay Aiken", link: "https://clayaiken.com", subtitle: "American singer and entertainer." },
+            { name: "Apollo.io", link: "https://apollo.io", subtitle: "Sales intelligence platform." },
+          ],
+        },
+      },
+    },
+    {}
+  );
+  assert.deepEqual(report.competitors.rows.map((r) => r.name), ["Apollo.io"]);
+  assert.ok(mismatches.some((m) => m.issue.includes('R11 relevance gate dropped "Clay Aiken"')));
 });
 
 test("adaptPipelineReport survives an empty report_json", () => {

@@ -223,6 +223,24 @@ const firstSentence = (text: string): string => {
   return (m ? m[0] : text).trim();
 };
 
+/**
+ * R11 relevance gate (contracts.md), conservative Phase-A form: drop matches
+ * whose description marks them as plainly non-commercial (the documented real
+ * case: the singer "Clay Aiken" surfaced as a sales-tech competitor). Logged,
+ * never rendered. The full sector-relevance linter lands in Phase B (t20).
+ */
+const R11_NON_COMMERCIAL_RE =
+  /\b(singer|entertainer|musician|actor|actress|celebrity|athlete|footballer|politician)\b/i;
+
+export function passesRelevanceGate(m: PipelineMatch, path: string, log: Log): boolean {
+  const description = matchDescription(m);
+  if (R11_NON_COMMERCIAL_RE.test(description)) {
+    log(path, `R11 relevance gate dropped "${matchName(m)}" (non-commercial match)`);
+    return false;
+  }
+  return true;
+}
+
 const metricToTile = (m: KeyMetric): StatTile => ({
   value: m.value ?? "",
   chip: (m.estimated ? "est" : "sourced") as Chip,
@@ -253,8 +271,19 @@ export function adaptPipelineReport(
     log("exec.narrative", "stripped pipeline lead-in trailer for key-question picks");
   }
   const narrative = toParagraphs(execRaw, "exec.narrative", log);
-  const firstPara = narrative[0] ?? "";
-  const headline = firstSentence(firstPara.replace(/\{chip:[a-z]+\}/g, "").replace(/\*\*/g, ""));
+  // Cover headline/scope come from the first SUBSTANTIVE paragraph — skipping
+  // heading-only leads ("**Executive Summary**") and stripping chips/bold.
+  let headline = "";
+  let firstPara = "";
+  for (const para of narrative) {
+    if (/^\*\*[^*]+\*\*$/.test(para.trim())) continue; // heading-only lead
+    const plain = para.replace(/\s*\{chip:[a-z]+\}/g, "").replace(/\*\*/g, "").trim();
+    if (plain) {
+      headline = firstSentence(plain);
+      firstPara = para;
+      break;
+    }
+  }
   if (!headline) log("cover.headline", "no executive summary to derive a headline from");
   log("cover", "cover derived from executive summary (pipeline has no cover fields until Phase B)");
 
@@ -282,7 +311,9 @@ export function adaptPipelineReport(
     headshotUrl: typeof m.avatar_url === "string" && m.avatar_url ? m.avatar_url : undefined,
   }));
 
-  const competitorRows: CompetitorRow[] = (sections.competitor_landscape?.matches ?? []).map((m, i) => ({
+  const competitorRows: CompetitorRow[] = (sections.competitor_landscape?.matches ?? [])
+    .filter((m, i) => passesRelevanceGate(m, `competitors.rows[${i}]`, log))
+    .map((m, i) => ({
     name: matchName(m),
     url: sanitizeContractPath(m.link, `competitors.rows[${i}].link`, log),
     kind: "competitor" as const,
@@ -295,7 +326,9 @@ export function adaptPipelineReport(
     log("competitors.rows", "strengths/differs verdict columns unavailable until Phase B");
   }
 
-  const briefed: AccountBrief[] = (sections.first_customers?.matches ?? []).map((m, i) => ({
+  const briefed: AccountBrief[] = (sections.first_customers?.matches ?? [])
+    .filter((m, i) => passesRelevanceGate(m, `accounts.briefed[${i}]`, log))
+    .map((m, i) => ({
     name: matchName(m),
     url: sanitizeContractPath(m.link, `accounts.briefed[${i}].link`, log),
     kind: "account" as const,
