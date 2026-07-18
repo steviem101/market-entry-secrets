@@ -1,4 +1,4 @@
--- Rollback for 20260718100000_intel_secure_match_knowledge_revoke_anon.sql
+-- Rollback for 20260718130000_intel_secure_match_knowledge_revoke_anon.sql
 -- Restores the pre-clamp grant surface: anon + authenticated regain EXECUTE on
 -- match_knowledge. WARNING: this re-opens the visibility bypass documented in the
 -- forward migration (anon can request allowed_visibility := ['internal']). Only
