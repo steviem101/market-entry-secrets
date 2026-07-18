@@ -29,7 +29,7 @@ const GovHubsSection = ({ report }: { report: Report }) => {
   const { govAndHubs } = report;
   return (
     <SectionCard label="06 · GOVERNMENT, TRADE SUPPORT & ACCELERATORS" className="pb-[60px]">
-      <div className="mt-6 grid grid-cols-2 gap-16">
+      <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
         <div>
           <h3 className="mb-3.5 text-[16px] font-bold text-report-good">
             Government &amp; trade bodies — free to engage

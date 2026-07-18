@@ -32,7 +32,7 @@ const ExecSummarySection = ({ report }: { report: Report }) => {
   const showSequence = exec.sequence.rows.length > 0;
   return (
     <SectionCard label="01 · EXECUTIVE SUMMARY" className="pb-[60px]">
-      <div className="mt-6 grid grid-cols-[1fr_320px] gap-16">
+      <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px] lg:gap-16">
         <div>
           {exec.narrative.map((para, i) => (
             <Rich

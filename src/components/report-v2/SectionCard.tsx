@@ -20,7 +20,7 @@ const SectionCard = ({ label, id, className, labelClassName, children }: Section
   <section
     id={id}
     className={cn(
-      "rounded-[14px] border-t-[3px] border-t-report-sky bg-white px-20 py-16 text-report-ink",
+      "rounded-[14px] border-t-[3px] border-t-report-sky bg-white px-5 py-8 text-report-ink lg:px-20 lg:py-16",
       className
     )}
   >

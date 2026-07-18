@@ -5,7 +5,9 @@ import StarToggle from "./StarToggle";
 import Rich from "./Rich";
 import { useReportInteractions } from "./ReportInteractionsProvider";
 
-const GRID = "grid grid-cols-[180px_1fr_1fr_1fr] gap-[18px] px-[22px]";
+// Below md the table stacks (README: tables → cards, never horizontal scroll).
+const GRID = "grid grid-cols-1 gap-2 px-[22px] md:grid-cols-[180px_1fr_1fr_1fr] md:gap-[18px]";
+const MLABEL = "mb-0.5 block text-[8px] font-bold uppercase tracking-[0.08em] text-report-muted md:hidden";
 
 const PlayerCell = ({ row, tagClass }: { row: CompetitorRow; tagClass: string }) => {
   const isCustomer = row.positionTag.startsWith("YOU");
@@ -42,7 +44,7 @@ const CompetitorSection = ({ report }: { report: Report }) => {
       />
 
       <div className="overflow-hidden rounded-xl border border-report-border">
-        <div className={`${GRID} bg-report-bg py-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-report-muted`}>
+        <div className={`hidden bg-report-bg py-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-report-muted md:grid md:grid-cols-[180px_1fr_1fr_1fr] md:gap-[18px] md:px-[22px]`}>
           <span>PLAYER</span>
           <span>MARKET POSITION</span>
           <span>STRENGTHS</span>
@@ -51,22 +53,25 @@ const CompetitorSection = ({ report }: { report: Report }) => {
 
         <div className={`${GRID} border-t-2 border-t-report-sky bg-report-tint py-[18px] text-[12.5px] leading-[1.6]`}>
           <PlayerCell row={competitors.you} tagClass="text-report-action" />
-          <span>{competitors.you.position}</span>
-          <span>{competitors.you.strengths}</span>
-          <span className="text-[10px] font-bold uppercase text-report-action">{competitors.you.differs}</span>
+          <span><span className={MLABEL}>Market position</span>{competitors.you.position}</span>
+          <span><span className={MLABEL}>Strengths</span>{competitors.you.strengths}</span>
+          <span className="text-[10px] font-bold uppercase text-report-action">
+            <span className={MLABEL}>Where {meta.customer} differs</span>
+            {competitors.you.differs}
+          </span>
         </div>
 
         {competitors.rows.map((row, i) => (
           <div key={i} className={`${GRID} border-t border-report-rule py-[18px] text-[12.5px] leading-[1.6]`}>
             <PlayerCell row={row} tagClass="text-report-caption" />
-            <span>{row.position}</span>
-            <span>{row.strengths}</span>
-            <span>{row.differs}</span>
+            <span><span className={MLABEL}>Market position</span>{row.position}</span>
+            <span><span className={MLABEL}>Strengths</span>{row.strengths}</span>
+            <span><span className={MLABEL}>Where {meta.customer} differs</span>{row.differs}</span>
           </div>
         ))}
       </div>
 
-      <div className="mt-7 grid grid-cols-2 gap-11">
+      <div className="mt-7 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-11">
         <div>
           <h3 className="mb-2.5 text-[13px] font-bold">Market gaps the research identifies</h3>
           <Rich text={competitors.gaps} className="text-[12.5px] leading-[1.75] text-report-ink-soft" />

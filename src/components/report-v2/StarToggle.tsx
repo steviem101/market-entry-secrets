@@ -1,25 +1,31 @@
+import { Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useReportInteractions, type ShortlistItem } from "./ReportInteractionsProvider";
 
 /**
- * Shortlist star on a matched-entity card header (README interactions).
- * ☆ (idle) → ★ (starred, amber). The glyph is small but the button carries a
- * ≥24px tap target inline; ticket 15's mobile pass widens it to 44px. The
- * starred set collects as chips in §14.
+ * Shortlist bookmark on a matched-entity card header (README interactions),
+ * using the same heart affordance as the app's directory-card bookmarks
+ * (lucide Heart, red + filled when saved). ≥44px tap target on mobile
+ * (MOBILE_AND_PDF.md), tightened inline on desktop. The saved set collects
+ * as chips in §14.
  */
 const StarToggle = ({ name, url, section }: ShortlistItem) => {
   const { isStarred, toggleStar } = useReportInteractions();
-  const on = isStarred(url || name);
+  const saved = isStarred(url || name);
   return (
     <button
       type="button"
-      aria-label={on ? `Remove ${name} from shortlist` : `Save ${name} to shortlist`}
-      aria-pressed={on}
+      aria-label={saved ? `Remove ${name} from shortlist` : `Save ${name} to shortlist`}
+      aria-pressed={saved}
       onClick={() => toggleStar({ name, url, section })}
-      className={`ml-1.5 inline-flex min-h-[24px] min-w-[24px] items-center justify-center align-[1px] text-[15px] leading-none ${
-        on ? "text-report-warn-accent" : "text-report-dash"
-      }`}
+      className="ml-1 inline-flex h-11 w-11 -my-3 items-center justify-center align-middle md:my-0 md:h-6 md:w-6"
     >
-      {on ? "★" : "☆"}
+      <Heart
+        className={cn(
+          "h-[15px] w-[15px] text-report-dash transition-colors",
+          saved && "fill-current text-red-500"
+        )}
+      />
     </button>
   );
 };

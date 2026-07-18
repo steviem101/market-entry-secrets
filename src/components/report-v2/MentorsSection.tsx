@@ -32,7 +32,7 @@ const MentorsSection = ({ report }: { report: Report }) => {
         text={mentors.intro}
         className="mb-7 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
       />
-      <div className="grid grid-cols-3 gap-[22px]">
+      <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
         {mentors.primary.map((person, i) => (
           <div key={i} className="rounded-xl border border-report-border px-[30px] py-7">
             <PersonName person={person} />
@@ -42,7 +42,7 @@ const MentorsSection = ({ report }: { report: Report }) => {
         ))}
       </div>
       {extras.length > 0 && (
-        <div className="mt-[22px] grid grid-cols-2 gap-[22px]">
+        <div className="mt-[22px] grid grid-cols-1 gap-[22px] md:grid-cols-2">
           {extras.map((person, i) => (
             <div
               key={i}

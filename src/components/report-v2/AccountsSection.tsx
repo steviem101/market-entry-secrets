@@ -113,7 +113,7 @@ const AccountsSection = ({ report }: { report: Report }) => {
       />
 
       {accounts.briefed.length > 0 && (
-        <div className="grid grid-cols-3 gap-[22px]">
+        <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
           {accounts.briefed.map((account, i) => (
             <AccountCard key={account.url || account.name || i} account={account} />
           ))}
@@ -159,7 +159,7 @@ const AccountsSection = ({ report }: { report: Report }) => {
         </>
       )}
 
-      <div className={`mt-[22px] grid gap-[22px] ${unbriefed.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
+      <div className={`mt-[22px] grid grid-cols-1 gap-[22px] ${unbriefed.length > 0 ? "md:grid-cols-2" : ""}`}>
         {unbriefed.map((u, i) => (
           <GapCard
             key={u.name || i}

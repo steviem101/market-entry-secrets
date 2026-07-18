@@ -8,7 +8,7 @@ export const RankedRows = ({ items, section }: { items: RankedItem[]; section: s
     {items.map((item, i) => (
       <div
         key={i}
-        className={`grid grid-cols-[32px_210px_1fr_130px] items-baseline gap-4 py-4 ${
+        className={`grid grid-cols-[32px_1fr] items-baseline gap-x-4 gap-y-1.5 py-4 md:grid-cols-[32px_210px_1fr_130px] md:gap-y-4 ${
           i === 0 ? "border-t-2 border-t-report-ink" : "border-t border-report-border"
         } last:border-b last:border-b-report-border`}
       >
@@ -27,8 +27,14 @@ export const RankedRows = ({ items, section }: { items: RankedItem[]; section: s
           <br />
           <span className="text-[10.5px] text-report-caption">{item.meta}</span>
         </span>
-        <Rich as="span" text={item.why} className="text-[13px] leading-[1.65] text-report-ink-soft" />
-        <span className="text-right text-[9.5px] font-bold uppercase text-report-action">{item.roleTag}</span>
+        <Rich
+          as="span"
+          text={item.why}
+          className="col-start-2 text-[13px] leading-[1.65] text-report-ink-soft md:col-start-auto"
+        />
+        <span className="col-start-2 text-[9.5px] font-bold uppercase text-report-action md:col-start-auto md:text-right">
+          {item.roleTag}
+        </span>
       </div>
     ))}
   </div>
@@ -74,7 +80,13 @@ export const MatchGrid = ({
 }) => (
   <>
     <p className="mb-3.5 text-[10px] font-bold tracking-[0.12em] text-report-muted">{header}</p>
-    <div className={`grid gap-4 ${columns === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
+    <div
+      className={`grid gap-4 ${
+        columns === 4
+          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+      }`}
+    >
       {cards.map((card, i) => (
         <div key={i} className="rounded-xl border border-report-border px-[22px] py-[18px]">
           <div className="flex justify-between gap-2">

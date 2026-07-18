@@ -37,8 +37,8 @@ const CoverMark = ({ customer, domain }: { customer: string; domain?: string }) 
 const Cover = ({ report }: { report: Report }) => {
   const { meta, cover } = report;
   return (
-    <section className="overflow-hidden rounded-[14px] bg-report-surface px-20 pb-14 pt-[72px]">
-      <div className="flex items-start justify-between">
+    <section className="overflow-hidden rounded-[14px] bg-report-surface px-5 pb-10 pt-12 lg:px-20 lg:pb-14 lg:pt-[72px]">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <CoverMark customer={meta.customer} domain={meta.domain} />
           <div>
@@ -57,7 +57,7 @@ const Cover = ({ report }: { report: Report }) => {
         <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-report-sky-soft">
           {cover.kicker}
         </p>
-        <h1 className="text-[42px] font-extrabold leading-[1.15] tracking-[-0.015em] text-white [text-wrap:pretty]">
+        <h1 className="text-[30px] font-extrabold leading-[1.15] tracking-[-0.015em] text-white [text-wrap:pretty] lg:text-[42px]">
           {cover.headline}
         </h1>
         <Rich

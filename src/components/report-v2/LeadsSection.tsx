@@ -21,7 +21,7 @@ const LeadRequestBox = ({ onRequest }: { onRequest?: (icp: string) => void }) =>
     );
   }
   return (
-    <div className="mt-[22px] grid grid-cols-[1fr_auto] items-end gap-7 rounded-xl border border-report-border px-[30px] py-[26px]">
+    <div className="mt-[22px] grid grid-cols-1 items-stretch gap-5 md:grid-cols-[1fr_auto] md:items-end md:gap-7 rounded-xl border border-report-border px-[30px] py-[26px]">
       <div>
         <p className="mb-2.5 text-[10px] font-bold tracking-[0.12em] text-report-action">
           TELL US WHAT LEAD LIST YOU NEED
@@ -64,7 +64,7 @@ const LeadsSection = ({ report }: { report: Report }) => {
   const { recordRequest } = useReportInteractions();
   return (
     <SectionCard label="13 · LEAD LIST & MARKET DATA" className="pb-14">
-      <div className="mt-6 grid grid-cols-2 items-stretch gap-[22px]">
+      <div className="mt-6 grid grid-cols-1 items-stretch gap-[22px] md:grid-cols-2">
         {leads.dataset ? (
           <div className="rounded-xl border border-report-tint-border bg-report-tint px-[30px] py-[26px]">
             <div className="flex items-baseline justify-between gap-2.5">

@@ -9,7 +9,9 @@ const SEVERITY: Record<"red" | "amber" | "grey", { border: string; width: string
   grey: { border: "border-t-report-rule", width: "border-t", tag: "text-report-muted" },
 };
 
-const GRID = "grid grid-cols-[230px_1fr_1fr] gap-[18px] px-[22px]";
+// Below md the table stacks (README: tables → cards, never horizontal scroll).
+const GRID = "grid grid-cols-1 gap-1.5 px-[22px] md:grid-cols-[230px_1fr_1fr] md:gap-[18px]";
+const MLABEL = "mb-0.5 block text-[8px] font-bold uppercase tracking-[0.08em] text-report-muted md:hidden";
 
 /**
  * §11 setup & compliance: exposure/requirement table with severity-colored
@@ -27,7 +29,7 @@ const ComplianceSection = ({ report }: { report: Report }) => {
 
       {compliance.table.length > 0 && (
         <div className="mb-11 overflow-hidden rounded-xl border border-report-border">
-          <div className={`${GRID} bg-report-bg py-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-report-muted`}>
+          <div className={`hidden bg-report-bg py-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-report-muted md:grid md:grid-cols-[230px_1fr_1fr] md:gap-[18px] md:px-[22px]`}>
             <span>REQUIREMENT</span>
             <span>WHAT THE RESEARCH SAYS</span>
             <span>PRACTICAL NOTE</span>
@@ -41,15 +43,15 @@ const ComplianceSection = ({ report }: { report: Report }) => {
                   <br />
                   <span className={`text-[9px] font-medium uppercase ${sev.tag}`}>{row.tag}</span>
                 </span>
-                <span>{row.finding}</span>
-                <span>{row.note}</span>
+                <span><span className={MLABEL}>What the research says</span>{row.finding}</span>
+                <span><span className={MLABEL}>Practical note</span>{row.note}</span>
               </div>
             );
           })}
         </div>
       )}
 
-      <div className="grid grid-cols-[360px_1fr] items-start gap-16">
+      <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[360px_1fr] lg:gap-16">
         {compliance.stats.length > 0 && (
           <div className="flex flex-col gap-5 border-l-2 border-l-report-ink pl-[26px]">
             {compliance.stats.map((stat, i) => (
@@ -65,7 +67,7 @@ const ComplianceSection = ({ report }: { report: Report }) => {
         {compliance.checklist.length > 0 && (
           <div>
             <h3 className="mb-3.5 text-[17px] font-bold">Readiness checklist</h3>
-            <div className="grid grid-cols-2 gap-x-10 text-[12.5px] leading-[1.65] text-report-ink-soft">
+            <div className="grid grid-cols-1 gap-x-10 md:grid-cols-2 text-[12.5px] leading-[1.65] text-report-ink-soft">
               {compliance.checklist.map((item, i) => (
                 <div key={i} className="border-t border-report-border py-3">
                   <b>{item.lead}</b> — {item.text}

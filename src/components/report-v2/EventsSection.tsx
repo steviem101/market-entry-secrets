@@ -13,7 +13,7 @@ const EventsSection = ({ report }: { report: Report }) => {
   const { events } = report;
   return (
     <SectionCard label="09 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER" className="pb-[60px]">
-      <div className="mt-2 grid grid-cols-3 gap-[22px]">
+      <div className="mt-2 grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
         {events.cards.map((event, i) => (
           <div key={event.url || event.name || i} className="rounded-xl border border-report-border px-[30px] py-7">
             <div className="text-[10px] font-bold uppercase text-report-warn">

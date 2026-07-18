@@ -16,7 +16,7 @@ const GuidesSection = ({ report }: { report: Report }) => {
         text={guides.intro}
         className="mb-7 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
       />
-      <div className="grid grid-cols-3 gap-[22px]">
+      <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
         {guides.cards.map((guide, i) => (
           <div
             key={guide.url || guide.title || i}

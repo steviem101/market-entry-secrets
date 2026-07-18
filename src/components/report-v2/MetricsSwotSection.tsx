@@ -46,7 +46,7 @@ const MetricsSwotSection = ({ report }: { report: Report }) => {
   return (
     <SectionCard label="02 · KEY MARKET METRICS & STRATEGIC POSITION" className="pb-[60px]">
       {metrics.tiles.length > 0 && (
-        <div className="mb-5 mt-6 grid grid-cols-3 gap-[22px]">
+        <div className="mb-5 mt-6 grid grid-cols-1 gap-[22px] sm:grid-cols-2 md:grid-cols-3">
           {metrics.tiles.map((tile, i) => (
             <div key={i} className="rounded-xl border border-report-border px-7 py-6 text-center">
               <div className="text-[32px] font-extrabold leading-tight text-report-action">
@@ -64,7 +64,7 @@ const MetricsSwotSection = ({ report }: { report: Report }) => {
       {quads.length > 0 && (
         <>
           <h2 className="mb-5 text-[18px] font-bold">SWOT — where {meta.customer} stands</h2>
-          <div className="grid grid-cols-2 gap-[22px]">
+          <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2">
             {quads.map(({ key, ...rest }) => (
               <SwotQuadrant key={key} items={swot[key]} {...rest} />
             ))}

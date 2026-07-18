@@ -15,7 +15,7 @@ const TIERS = [
 const SourcesBand = ({ report }: { report: Report }) => {
   const { sources, meta } = report;
   return (
-    <section className="rounded-[14px] bg-report-surface px-20 pb-14 pt-12 text-report-caption">
+    <section className="rounded-[14px] bg-report-surface px-5 pb-10 pt-10 text-report-caption lg:px-20 lg:pb-14 lg:pt-12">
       <div className="mb-[18px] flex items-baseline justify-between">
         <span className="text-[10px] font-bold tracking-[0.12em] text-report-border">
           EVIDENCE — {meta.sourceCount} SOURCES, WEIGHTED
@@ -24,7 +24,7 @@ const SourcesBand = ({ report }: { report: Report }) => {
           {meta.customer} · {formatReportDate(meta.date, "short")} · MARKET ENTRY SECRETS
         </span>
       </div>
-      <div className="grid grid-cols-3 gap-7 text-[11px] leading-[1.8]">
+      <div className="grid grid-cols-1 gap-7 text-[11px] leading-[1.8] md:grid-cols-3">
         {TIERS.map(({ key, heading, headingClass }) => (
           <div key={key}>
             <b className={`text-[9px] font-bold ${headingClass}`}>{heading}</b>
