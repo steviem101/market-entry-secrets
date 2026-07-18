@@ -21,7 +21,7 @@ const SectionCard = ({ label, id, className, children }: SectionCardProps) => (
       className
     )}
   >
-    <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-report-action">
+    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-report-action">
       {label}
     </p>
     {children}

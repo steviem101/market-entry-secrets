@@ -48,7 +48,7 @@ const ReportPreview = () => {
   return (
     <div>
       <div className="mx-auto my-6 flex max-w-[1240px] flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/50 px-4 py-3">
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Dev harness · fixture:
         </span>
         {FIXTURE_NAMES.map((name) => (
@@ -57,14 +57,14 @@ const ReportPreview = () => {
             to={`/dev/report-preview?fixture=${name}`}
             className={
               name === fixtureKey
-                ? "font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-primary"
-                : "font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground underline"
+                ? "text-[11px] font-bold uppercase tracking-[0.14em] text-primary"
+                : "text-[11px] uppercase tracking-[0.14em] text-muted-foreground underline"
             }
           >
             {name}
           </Link>
         ))}
-        <span className="ml-auto font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="ml-auto text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
           {report.meta.customer} · {report.meta.archetype}
         </span>
       </div>
@@ -73,7 +73,7 @@ const ReportPreview = () => {
           rendered through Rich so chipped numbers are reviewable before their
           sections are built (ticket 2 done-check). */}
       <div className="mx-auto mb-6 max-w-[1240px] rounded-lg border border-border bg-muted/50 px-4 py-3">
-        <p className="mb-1 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Chip specimens · <EvidenceChip chip="sourced" /> sourced · <EvidenceChip chip="est" /> ·{" "}
           <EvidenceChip chip="inferred" />
         </p>

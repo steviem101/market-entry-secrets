@@ -14,7 +14,7 @@ interface EvidenceChipProps {
 const EvidenceChip = ({ chip, className }: EvidenceChipProps) => {
   if (chip === "sourced") {
     return (
-      <span aria-label="sourced" className={cn("font-mono text-[8.5px] font-bold text-report-good", className)}>
+      <span aria-label="sourced" className={cn("text-[8.5px] font-bold text-report-good", className)}>
         ●
       </span>
     );
@@ -24,7 +24,7 @@ const EvidenceChip = ({ chip, className }: EvidenceChipProps) => {
       <span
         aria-label="estimated"
         className={cn(
-          "rounded [vertical-align:1px] bg-report-warn-tint px-1.5 py-0.5 font-mono text-[8.5px] font-bold text-report-warn",
+          "rounded [vertical-align:1px] bg-report-warn-tint px-1.5 py-0.5 text-[8.5px] font-bold text-report-warn",
           className
         )}
       >
@@ -36,7 +36,7 @@ const EvidenceChip = ({ chip, className }: EvidenceChipProps) => {
     <span
       aria-label="inferred"
       className={cn(
-        "rounded [vertical-align:1px] bg-report-inferred-bg px-1.5 py-0.5 font-mono text-[8.5px] font-semibold text-report-inferred-text",
+        "rounded [vertical-align:1px] bg-report-inferred-bg px-1.5 py-0.5 text-[8.5px] font-semibold text-report-inferred-text",
         className
       )}
     >
