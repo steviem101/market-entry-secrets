@@ -13,11 +13,12 @@ export const REPORT_CTA_MICROCOPY = "Free · No credit card · Ready in about 3 
 
 // "See a real report" trust link (charter §5b design rec #3). Set this to the
 // share_token of a curated, publicly-shareable completed report and the hero
-// renders a "See a real report" link to /report/shared/<token>. Left EMPTY by
-// design — choosing which report is public is an owner decision (privacy), so
-// the link never appears until a token is deliberately pinned here. The shared
-// route is noindexed (private-by-obscurity) — expected for a linked sample.
-export const SAMPLE_REPORT_SHARE_TOKEN = "";
+// renders a "See a real report" link to /report/shared/<token>. Choosing which
+// report is public is an owner decision (privacy) — this token was pinned on
+// owner instruction (18 Jul): the Floats Scale-tier report (verified to resolve
+// via get_shared_report). The shared route is noindexed (private-by-obscurity)
+// — expected for a linked sample. Set back to "" to remove the link.
+export const SAMPLE_REPORT_SHARE_TOKEN = "9aeafc52-6441-444a-9756-af4624525805";
 
 /** Public share path for the pinned sample report, or null when none is set. */
 export const sampleReportPath = (): string | null =>
