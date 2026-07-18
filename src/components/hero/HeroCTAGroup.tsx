@@ -3,6 +3,7 @@ import { ArrowRight, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HERO_CONTENT } from "./heroContent";
 import { trackFunnelEvent } from "@/lib/analytics/intakeFunnel";
+import { SampleReportLink } from "@/components/hero/SampleReportLink";
 import {
   REPORT_CREATOR_STARTUP_PATH,
   REPORT_CTA_MICROCOPY,
@@ -48,9 +49,12 @@ export const HeroCTAGroup = () => {
       </div>
 
       {/* Trust micro-label — directly beneath buttons */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Shield className="w-3.5 h-3.5 text-accent" />
-        <span>{REPORT_CTA_MICROCOPY}</span>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Shield className="w-3.5 h-3.5 text-accent" />
+          <span>{REPORT_CTA_MICROCOPY}</span>
+        </div>
+        <SampleReportLink />
       </div>
 
       {/* Persona deep-link for the local-founder journey */}
