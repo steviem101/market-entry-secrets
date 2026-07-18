@@ -5,6 +5,7 @@ import CloseSection from "./CloseSection";
 import AccountsSection from "./AccountsSection";
 import CompetitorSection from "./CompetitorSection";
 import ExecSummarySection from "./ExecSummarySection";
+import GovHubsSection from "./GovHubsSection";
 import InvestorsSection from "./InvestorsSection";
 import ProvidersSection from "./ProvidersSection";
 import MetricsSwotSection from "./MetricsSwotSection";
@@ -30,7 +31,7 @@ export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "competitors", label: "03 · COMPETITOR LANDSCAPE", Component: CompetitorSection },
   { id: "accounts", label: "04 · YOUR FIRST CUSTOMERS", Component: AccountsSection },
   { id: "providers", label: "05 · SERVICE PROVIDERS", Component: ProvidersSection },
-  { id: "govAndHubs", label: "06 · GOVERNMENT & ACCELERATORS" },
+  { id: "govAndHubs", label: "06 · GOVERNMENT, TRADE SUPPORT & ACCELERATORS", Component: GovHubsSection },
   { id: "mentors", label: "07 · MENTORS" },
   { id: "investors", label: "08 · INVESTOR RECOMMENDATIONS", Component: InvestorsSection },
   { id: "events", label: "09 · EVENTS" },
