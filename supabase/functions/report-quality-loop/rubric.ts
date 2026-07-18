@@ -31,8 +31,8 @@ export const TIER_REQUIREMENTS: Record<string, string> = {
 
 export const SECTION_ORDER = [
   "executive_summary", "swot_analysis", "competitor_landscape", "first_customers", "service_providers",
-  "mentor_recommendations", "investor_recommendations", "events_resources", "action_plan",
-  "setup_compliance", "lead_list",
+  "mentor_recommendations", "investor_recommendations", "events_resources", "case_studies_guides",
+  "action_plan", "setup_compliance", "lead_list",
 ];
 
 // Legacy tier values still present in user_reports.tier_at_generation: the app remaps
@@ -66,6 +66,7 @@ export function gatedSections(tier: string): string[] {
 
 const RAG_LABELS: Record<string, string> = {
   service_providers: "Providers", community_members: "Mentors", events: "Events", content_items: "Content",
+  case_studies: "Case Studies",
   leads: "Leads", innovation_ecosystem: "Innovation", trade_investment_agencies: "Agencies", investors: "Investors",
 };
 

@@ -42,6 +42,25 @@ test("groupSectionCards: events_resources split (tagged + legacy heuristic)", ()
   assert.deepEqual(legacy!.map((g) => [g.key, g.items.length]), [["events", 1], ["resources", 1]]);
 });
 
+test("groupSectionCards: case_studies_guides splits case studies from guides (tagged + heuristic)", () => {
+  const tagged = groupSectionCards("case_studies_guides", [
+    { name: "Canva's US entry", card_group: "case_studies" },
+    { name: "Hiring guide", card_group: "guides" },
+  ]);
+  assert.deepEqual(tagged!.map((g) => [g.key, g.label, g.items.length]), [
+    ["case_studies", "Companies Like You", 1],
+    ["guides", "Guides & Resources", 1],
+  ]);
+  const heuristic = groupSectionCards("case_studies_guides", [
+    { name: "Case", link: "/case-studies/canva" },
+    { name: "Guide", link: "/content/guide" },
+  ]);
+  assert.deepEqual(heuristic!.map((g) => [g.key, g.items.length]), [
+    ["case_studies", 1],
+    ["guides", 1],
+  ]);
+});
+
 test("groupSectionCards: lead_list separates lemlist contacts from datasets", () => {
   const groups = groupSectionCards("lead_list", [
     { name: "500 Fintech DMs", card_group: "leads" },

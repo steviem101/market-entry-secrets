@@ -33,7 +33,13 @@ const SECTION_GROUP_ORDER: Record<string, Array<[string, string]>> = {
   ],
   events_resources: [
     ["events", "Upcoming Events"],
+    // Legacy reports only — new reports (MES-210a) carry events here and render
+    // case studies + guides in the dedicated case_studies_guides section.
     ["resources", "Case Studies & Resources"],
+  ],
+  case_studies_guides: [
+    ["case_studies", "Companies Like You"],
+    ["guides", "Guides & Resources"],
   ],
   lead_list: [
     ["leads", "Lead Databases"],
@@ -55,6 +61,9 @@ function groupKeyOf(sectionId: string, c: SectionCard): string {
     case "events_resources":
       if (c.linkLabel === "Read More" || (typeof c.link === "string" && c.link.startsWith("/content/"))) return "resources";
       return "events";
+    case "case_studies_guides":
+      if (typeof c.link === "string" && c.link.startsWith("/case-studies")) return "case_studies";
+      return "guides";
     default:
       return "";
   }
