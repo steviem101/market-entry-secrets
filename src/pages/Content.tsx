@@ -12,7 +12,7 @@ import { UsageBanner } from "@/components/UsageBanner";
 import { SEOHead } from "@/components/common/SEOHead";
 import { useDirectoryFilters } from "@/hooks/useDirectoryFilters";
 import type { FilterSpec } from "@/lib/directoryFilters";
-import { filterContent, type ContentItemLike } from "@/lib/contentFilters";
+import { filterContent, CONTENT_LIBRARY_TYPES, type ContentItemLike } from "@/lib/contentFilters";
 import { curateValues } from "@/lib/filterCuration";
 import { sectorLabel } from "@/lib/sectorLabels";
 import { guideTopicLabel } from "@/lib/guideTopics";
@@ -21,6 +21,9 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   guide: "Guides",
   article: "Articles",
   success_story: "Success Stories",
+  compliance: "Compliance",
+  interview: "Interviews",
+  best_practice: "Best Practices",
 };
 
 const CONTENT_TYPE_TABS: FilterOption[] = [
@@ -45,7 +48,7 @@ const CONTENT_FILTER_SPEC: FilterSpec = {
 
 const Content = () => {
   const { data: contentItems = [], isLoading: itemsLoading, error: itemsError } = useContentItems({
-    contentType: ['guide', 'article', 'success_story']
+    contentType: [...CONTENT_LIBRARY_TYPES]
   });
   const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useContentCategories();
   const contentItemIds = useMemo(() => contentItems.map(item => item.id), [contentItems]);

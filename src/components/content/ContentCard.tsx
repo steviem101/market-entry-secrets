@@ -19,6 +19,9 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   article: "Article",
   success_story: "Success Story",
   case_study: "Case Study",
+  compliance: "Compliance",
+  interview: "Interview",
+  best_practice: "Best Practice",
 };
 
 // Fixed color classes to avoid Tailwind dynamic class purging
