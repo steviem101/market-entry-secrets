@@ -105,7 +105,13 @@ export default {
 					good:    '#0ea371',
 					warn:    '#d97706',
 					'warn-accent': '#f5b84b',
-					risk:    '#dc2626'
+					'warn-tint': '#fdf5e7',
+					risk:    '#dc2626',
+					// sources-band tier headers + inferred pill (reference markup)
+					'sky-soft':  '#7cc9ef',
+					'grey-soft': '#b4bcc8',
+					'inferred-text': '#57606d',
+					'inferred-bg':  '#eef0f3'
 				}
 			},
 			fontFamily: {

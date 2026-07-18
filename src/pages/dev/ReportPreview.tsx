@@ -3,6 +3,8 @@ import type { Report } from "@/types/report";
 import { REPORT_V2_SECTIONS } from "@/components/report-v2/sectionRegistry";
 import ReportShell from "@/components/report-v2/ReportShell";
 import SectionCard from "@/components/report-v2/SectionCard";
+import EvidenceChip from "@/components/report-v2/EvidenceChip";
+import Rich from "@/components/report-v2/Rich";
 import floatsJson from "@/fixtures/floats.json";
 import noryJson from "@/fixtures/nory.json";
 import lemlistJson from "@/fixtures/lemlist.json";
@@ -65,6 +67,22 @@ const ReportPreview = () => {
         <span className="ml-auto font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
           {report.meta.customer} · {report.meta.archetype}
         </span>
+      </div>
+
+      {/* Dev-only specimen strip: every fixture paragraph carrying a {chip:} token,
+          rendered through Rich so chipped numbers are reviewable before their
+          sections are built (ticket 2 done-check). */}
+      <div className="mx-auto mb-6 max-w-[1240px] rounded-lg border border-border bg-muted/50 px-4 py-3">
+        <p className="mb-1 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Chip specimens · <EvidenceChip chip="sourced" /> sourced · <EvidenceChip chip="est" /> ·{" "}
+          <EvidenceChip chip="inferred" />
+        </p>
+        {JSON.stringify(report)
+          .match(/"[^"]*\{chip:(?:sourced|est|inferred)\}[^"]*"/g)
+          ?.slice(0, 6)
+          .map((quoted, i) => (
+            <Rich key={i} text={JSON.parse(quoted)} className="text-[13px] leading-[1.65] text-report-ink" />
+          ))}
       </div>
 
       <ReportShell>

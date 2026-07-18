@@ -1,5 +1,6 @@
 import type React from "react";
 import type { Report } from "@/types/report";
+import SourcesBand from "./SourcesBand";
 
 /**
  * Ordered section registry for the report_v2 renderer (README "Page anatomy").
@@ -30,5 +31,5 @@ export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "guides", label: "12 · CASE STUDIES & GUIDES" },
   { id: "leads", label: "13 · LEAD LIST" },
   { id: "close", label: "14 · ADVISORY SESSION" },
-  { id: "sources", label: "SOURCES" },
+  { id: "sources", label: "SOURCES", Component: SourcesBand },
 ];
