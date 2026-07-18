@@ -13,6 +13,40 @@
 
 A max-effort `/code-review` over the branch surfaced 15 CONFIRMED findings; all correctness/security items were fixed before continuing. Notable: the adapter read `matches.lead_databases` but the pipeline stores `matches.leads` (§13 dataset card never rendered); `Rich` rendered unsanitized hrefs for links in LLM prose (now guarded by `isPlatformPath`); `public/dev-fixtures/` shipped into `dist` (moved to a gitignored repo-root `dev-fixtures/` served only by a dev-only Vite middleware); `mapPlan` covered paid `growth` reports as "FREE PLAN" (now paid→scale, unknown→free fail-closed); citation `[n]` markers minted "sourced" chips without validation (now range-checked against the source list); the exec hero stat duplicated metric tile 1 (now omitted until Phase B); report dates rendered the UTC day for an ANZ audience (now Australia/Sydney via a shared `formatReportDate`). Fixture entity links were remapped to real routes (providers→service-providers, hubs→innovation-ecosystem, organisations→government-support, guides→content, mentors→mentors/experts). Open items deferred to their tickets: competitor/account links are external-by-construction and unsatisfiable as platform-relative paths (needs a Phase-B contract decision); pipeline selects omit `avatar_url`/`logo_url` so assets stay monogram (Phase-B pipeline change) — both now LOGGED by the adapter.
 
+## Code-review fixes (max-effort review round 2, 2026-07-18 — tickets 10–16)
+
+A second max-effort review over the post-ticket-9 range (interactions +
+migration + print path) fixed eight correctness/robustness items. **Print
+path** (ticket-16 gaps): every request hook's clicked/confirmation state now
+carries a static PDF fallback — before, a hook used during the session printed
+blank (`RequestHook`) or leaked transient "REQUEST SENT ✓" / "Request sent…"
+text (`GapCard`, `LeadRequestBox`); the §14 shortlist empty-state gets
+print-specific copy that doesn't say "tap the ♥" (hearts are `display:none` in
+print). **Renderer robustness**: `ComplianceSection` defaults an out-of-enum
+`severity` to grey instead of throwing and taking the whole report down (the
+real-report adapter path); `ActionPlanSection` length-guards `phase.groups` so
+a `groups:[]` phase doesn't silently drop its flat body;
+`ReportInteractionsProvider` validates the localStorage shape with
+`Array.isArray` and resets `starred` on a report/source switch (no stale
+shortlist shown or written against the wrong report); `CloseSection` keys
+shortlist chips by entity identity, not list index. The migration was verified
+sound — RLS enabled, owner-scoped INSERT via `user_reports`, column-level
+grants, no client UPDATE/DELETE, `log_activity` call + routing insert match the
+`emit_lead_list_request_activity` reference, routing rows disabled by default.
+Verified: tsc, 776 tests, build, no new lint warnings; print fallbacks and
+footer clearance confirmed by Chromium PDF render across all three fixtures.
+
+**Deferred to sign-off / Phase B (design decisions, not fixed):** (1) request
+hooks and star toggles are optimistic — the confirmation/filled-heart shows
+before the Supabase insert resolves and the insert error is swallowed, so a
+failed write (expired session, RLS deny on a shared report, network) shows
+"sent"/saved without persisting or notifying ops; a proper error/retry UX is a
+design choice for whoever wires `ReportView`. (2) shortlist identity is
+`url || name`, so two url-less entities sharing a display name collapse to one
+star/chip (rare — most starrable entities carry a profile URL). (3) the star
+load has no `.limit()` and orders ascending, so a report with >1000 star events
+would reduce stale state (implausible for a shortlist; noted for completeness).
+
 Review each row in `/dev/report-preview` against the reference HTML (and screenshots when shared). A row passes when layout, tone rules, links, chips, and the named degradation state all match. Do not enable `report_v2` for any customer until every row is ticked.
 
 | # | Section | floats | nory | lemlist | Degradation state to verify |
