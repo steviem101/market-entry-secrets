@@ -12,6 +12,7 @@ import type {
 
 export interface CountryLinkedMentor {
   id: string;
+  slug: string | null;
   name: string;
   title: string | null;
   company: string | null;

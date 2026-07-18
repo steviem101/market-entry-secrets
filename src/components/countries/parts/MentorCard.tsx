@@ -4,6 +4,7 @@ import { CardCTA } from "@/components/directory/CardCTA";
 interface MentorCardProps {
   mentor: {
     id: string;
+    slug?: string | null;
     name: string;
     title?: string | null;
     company?: string | null;
@@ -17,6 +18,10 @@ interface MentorCardProps {
 }
 
 export const MentorCard = ({ mentor }: MentorCardProps) => {
+  // Crawlable link to the mentor detail page. Canonical mentor URL is
+  // /mentors/experts/<slug> (matches the sitemap + directory). Without a slug
+  // the secondary CTA is simply hidden (no dead-end button).
+  const profileHref = mentor.slug ? `/mentors/experts/${mentor.slug}` : undefined;
   return (
     <DirectoryCard compact>
       <div className="flex items-center gap-3">
@@ -71,7 +76,8 @@ export const MentorCard = ({ mentor }: MentorCardProps) => {
         <CardCTA
           entity="mentor"
           target={{ entity: "mentor", id: mentor.id, name: mentor.name }}
-          hideSecondary
+          secondaryHref={profileHref}
+          hideSecondary={!profileHref}
         />
       </div>
     </DirectoryCard>

@@ -16,6 +16,7 @@ import type { FilterSpec } from "@/lib/directoryFilters";
 import { filterEvents } from "@/lib/eventFilters";
 import { curateOptions, curateValues } from "@/lib/filterCuration";
 import { resolveEventBucket, EVENT_TYPE_BUCKET_LABEL } from "@/lib/eventTypeBuckets";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 
 const PAGE_SIZE = 12;
 
@@ -152,7 +153,7 @@ const Events = () => {
           name="description"
           content="Discover upcoming events, conferences, and networking opportunities for companies entering the Australian and New Zealand markets."
         />
-        <link rel="canonical" href={`${typeof window !== "undefined" ? window.location.origin : "https://marketentrysecrets.com"}/events`} />
+        <link rel="canonical" href={`${publishedOrigin()}/events`} />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",

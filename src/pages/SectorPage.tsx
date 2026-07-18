@@ -41,7 +41,29 @@ const SectorPage = () => {
     );
   }
 
-  if (error || !sectorConfig) {
+  // A transient query failure must NOT render a 404 for a live sector (that
+  // would signal deindex on a DB blip). Only a settled, genuinely-empty result
+  // (maybeSingle → null, no error) is a real not-found. Mirrors CountryPage.
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Unable to load this sector</h1>
+          <p className="text-muted-foreground mb-6">
+            Something went wrong loading this page. Please try again.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-primary underline"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!sectorConfig) {
     return <NotFound />;
   }
 

@@ -144,6 +144,7 @@ const CountryPage = () => {
             { label: "Countries", href: "/countries" },
             { label: country.name },
           ]}
+          suppressJsonLd
         />
 
         <CountryHero

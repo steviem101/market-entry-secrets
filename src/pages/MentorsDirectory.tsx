@@ -20,6 +20,7 @@ import { humanizeSlug } from "@/lib/humanizeSlug";
 import { sectorLabel } from "@/lib/sectorLabels";
 import { curateValues, curateOptions } from "@/lib/filterCuration";
 import type { Mentor } from "@/hooks/useMentors";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 
 const PAGE_SIZE = 12;
 
@@ -192,7 +193,7 @@ const MentorsDirectory = () => {
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
-        <link rel="canonical" href={`${window.location.origin}/mentors${categorySlug ? `/${categorySlug}` : ""}`} />
+        <link rel="canonical" href={`${publishedOrigin()}/mentors${categorySlug ? `/${categorySlug}` : ""}`} />
       </Helmet>
 
       <MentorsHero

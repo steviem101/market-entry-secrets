@@ -38,7 +38,12 @@ const CommunityMembersSection = ({ communityMembers }: CommunityMembersSectionPr
               image: member.image,
               company: member.company,
               isAnonymous: member.is_anonymous,
-              experienceTiles: Array.isArray(member.experience_tiles) ? member.experience_tiles : []
+              experienceTiles: Array.isArray(member.experience_tiles) ? member.experience_tiles : [],
+              slug: member.slug,
+              // Canonical mentor URL is /mentors/experts/<slug> (matches the
+              // sitemap + directory); category_slug is null on every row, so
+              // PersonCard defaults the segment to "experts".
+              categorySlug: member.category_slug || undefined
             }}
             onViewProfile={handleViewProfile}
             onContact={handleContact}

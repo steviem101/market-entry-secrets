@@ -13,6 +13,7 @@ import { useReportGeneration } from '@/hooks/useReportGeneration';
 import { useAuth } from '@/hooks/useAuth';
 import { fullIntakeSchema, step1Schema, step2Schema, type IntakeFormData, type ReportPersona } from '@/components/report-creator/intakeSchema';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { publishedOrigin } from '@/lib/publishedOrigin';
 import ReportCreatorV2 from './ReportCreatorV2';
 
 const ReportCreatorLegacy = () => {
@@ -134,6 +135,7 @@ const ReportCreatorLegacy = () => {
       <Helmet>
         <title>{pageTitle} | Market Entry Secrets</title>
         <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={`${publishedOrigin()}/report-creator`} />
       </Helmet>
 
 

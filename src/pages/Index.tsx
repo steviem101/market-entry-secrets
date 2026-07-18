@@ -6,12 +6,13 @@ import { WhatsInYourReport } from "@/components/sections/WhatsInYourReport";
 import { SearchSection } from "@/components/sections/SearchSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { CTASection } from "@/components/sections/CTASection";
+import { publishedOrigin } from "@/lib/publishedOrigin";
 
-
-const FALLBACK_URL = "https://marketentrysecrets.com";
 
 const Index = () => {
-  const siteUrl = typeof window !== "undefined" ? window.location.origin : FALLBACK_URL;
+  // Preview-safe origin (canonical host on lovable.app/localhost) — avoids
+  // emitting a preview-host canonical/JSON-LD url (AUD-037).
+  const siteUrl = publishedOrigin();
 
   const JSON_LD_ORGANIZATION = {
     "@context": "https://schema.org",
