@@ -7,6 +7,7 @@
 3. **Request-hook notifications:** Slack via the existing `dispatch_activity_event` → `slack-notify` path (an `activity_event_routing` row), in addition to `report_interactions` persistence.
 4. **`platform:<slug>` asset resolution:** entity row's stored `logo_url`/`avatar_url` column → logo.dev derived from the entity's website domain (`src/lib/logoUtils.ts`) → monogram. Customer cover mark = logo.dev from `meta.domain`.
 5. **Branch:** `claude/message-report-redesign-gx8pn3` (harness-pinned, off latest main). Mapping note: the package's suggested `report-v2` branch holds the raw handoff snapshot; this directory is its canonical in-repo copy. Ticket scoping = one commit scope per ticket on this branch.
+6. **Font (owner deviation from DECISIONS #1, 2026-07-18, ticket-2 review):** the report body uses the app's default system sans stack (`font-sans`), not Plus Jakarta Sans — owner instructed the report to match the current MES app font, accepting drift from the prototypes' type metrics. JetBrains Mono stays for labels/data.
 
 Review each row in `/dev/report-preview` against the reference HTML (and screenshots when shared). A row passes when layout, tone rules, links, chips, and the named degradation state all match. Do not enable `report_v2` for any customer until every row is ticked.
 
