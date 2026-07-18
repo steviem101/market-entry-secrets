@@ -35,30 +35,32 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
     defaultValue: true,
   },
   // MES-158 (Wave-2) intent-first hero: a free-text/chip intent capture on the
-  // homepage that classifies the ask and prefills the report creator. Ships
-  // dark (default off); ?intent=1 enables it, enable broadly post-launch.
+  // homepage that classifies the ask and prefills the report creator.
+  // ENABLED by default (conversion baseline batch, 2026-07-17 — owner-approved);
+  // ?intent=0 is the rollback kill switch.
   intent_hero: {
     queryKey: 'intent',
     storageKey: 'mes_flag_intent_hero',
-    defaultValue: false,
+    defaultValue: true,
   },
   // MES-188 T5b (Wave-2) comparison moments: free-vs-paid comparison surfaced
-  // during report generation (and later at review / report-end). Ships dark
-  // (default off); ?compare=1 enables it. One funnel change per measurement
-  // window — enable deliberately post-launch.
+  // during report generation + the end-of-report upgrade strip.
+  // ENABLED by default (conversion baseline batch, 2026-07-17 — owner-approved);
+  // ?compare=0 is the rollback kill switch.
   comparison_moments: {
     queryKey: 'compare',
     storageKey: 'mes_flag_comparison_moments',
-    defaultValue: false,
+    defaultValue: true,
   },
   // MES-188 T4 (Wave-2) intent-aware teasers: locked report sections show a
   // count + a redacted sample (served by get_tier_gated_report when this flag
-  // asks for it). Ships dark (default off); ?teasers=1 enables it. With it off,
-  // the tier-gating RPC returns exactly what it did before.
+  // asks for it — the RPC + RLS redaction are live on prod, migration
+  // 20260717010000). ENABLED by default (conversion baseline batch, 2026-07-17
+  // — owner-approved); ?teasers=0 is the rollback kill switch.
   report_teasers: {
     queryKey: 'teasers',
     storageKey: 'mes_flag_report_teasers',
-    defaultValue: false,
+    defaultValue: true,
   },
   // MES-188 T14 (Wave-2) concierge refinement boxes on matched sections
   // (mentor/investor): structured reasons + free text → report_section_feedback.
