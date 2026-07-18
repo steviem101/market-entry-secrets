@@ -2,6 +2,7 @@ import type React from "react";
 import type { Report } from "@/types/report";
 import Cover from "./Cover";
 import CloseSection from "./CloseSection";
+import MetricsSwotSection from "./MetricsSwotSection";
 import SourcesBand from "./SourcesBand";
 
 /**
@@ -20,7 +21,7 @@ export interface ReportSectionDef {
 export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "cover", label: "COVER", Component: Cover },
   { id: "exec", label: "01 · EXECUTIVE SUMMARY" },
-  { id: "metricsSwot", label: "02 · MARKET METRICS & SWOT" },
+  { id: "metricsSwot", label: "02 · KEY MARKET METRICS & STRATEGIC POSITION", Component: MetricsSwotSection },
   { id: "competitors", label: "03 · COMPETITOR LANDSCAPE" },
   { id: "accounts", label: "04 · FIRST CUSTOMERS" },
   { id: "providers", label: "05 · SERVICE PROVIDERS" },

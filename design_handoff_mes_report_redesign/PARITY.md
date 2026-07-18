@@ -15,8 +15,8 @@ Review each row in `/dev/report-preview` against the reference HTML (and screens
 |---|---------|--------|------|---------|------------------------------|
 | 0 | Cover + evidence legend | ☑ | ☑ | ☑ | missing `meta.domain` → monogram cover mark |
 | 1 | 01 Executive summary + key question | ☐ | ☐ | ☐ | highlights render as linked entities, never re-quoted question |
-| 2 | 02 Metric tiles + footnote | ☐ | ☐ | ☐ | <6 tiles reflow; ◐ EST pill full-size |
-| 3 | 02 SWOT quad | ☐ | ☐ | ☐ | 3 vs 4 items per quadrant |
+| 2 | 02 Metric tiles + footnote | ☑ | ☑ | ☑ | <6 tiles reflow; ◐ EST pill full-size |
+| 3 | 02 SWOT quad | ☑ | ☑ | ☑ | 3 vs 4 items per quadrant |
 | 4 | 03 Competitor table + scan hook | ☐ | ☐ | ☐ | n=3 vs n=5 vs n=6; customer row first + tinted |
 | 5 | 04 Accounts | ☐ | ☐ | ☐ | floats: +1 unbriefed · nory: GYG gap card · lemlist: briefed=[] → ICP card |
 | 6 | 05 Providers (two-tier) | ☐ | ☐ | ☐ | ranked 3 + grid 6 vs grid 3 |
