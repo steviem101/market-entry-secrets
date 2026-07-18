@@ -4,12 +4,17 @@ import { HeroSubheadline } from "@/components/hero/HeroSubheadline";
 import { HeroCTAGroup } from "@/components/hero/HeroCTAGroup";
 import { HeroIntentCapture } from "@/components/hero/HeroIntentCapture";
 import { HeroProductMockup } from "@/components/hero/HeroProductMockup";
+import { HeroReportShowcase } from "@/components/hero/HeroReportShowcase";
 import { isFeatureEnabled } from "@/lib/featureFlags";
 
 export const HeroSection = () => {
   // MES-158: intent-first hero (flag `intent_hero`, default off). When on, the
   // free-text/chip capture replaces the classic two-button CTA group.
   const intentHero = isFeatureEnabled("intent_hero");
+  // MES-162 (flag `hero_journey`, placement Option B): static real
+  // report-output panel instead of the auto-cycling mockup. Composes with
+  // either intent_hero state — the flags gate opposite hero columns.
+  const heroJourney = isFeatureEnabled("hero_journey");
   return (
     <section id="hero" className="relative overflow-hidden">
       <HeroBackground />
@@ -31,9 +36,9 @@ export const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right column: Report mockup */}
+          {/* Right column: report output (real anatomy) or legacy mockup */}
           <div className="animate-fade-in-up lg:pl-4" style={{ animationDelay: "100ms" }}>
-            <HeroProductMockup />
+            {heroJourney ? <HeroReportShowcase /> : <HeroProductMockup />}
           </div>
         </div>
       </div>

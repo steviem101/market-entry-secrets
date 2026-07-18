@@ -1,6 +1,13 @@
+import { lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { LogoCloud } from "@/components/sections/LogoCloud";
 import { ProofStrip } from "@/components/sections/ProofStrip";
+import { isFeatureEnabled } from "@/lib/featureFlags";
+
+// Below-the-fold and flag-gated — lazy so the journey section never costs the
+// hero's LCP anything while `hero_journey` is dark (MES-162).
+const HeroJourneySection = lazy(() => import("@/components/sections/HeroJourneySection"));
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { WhatsInYourReport } from "@/components/sections/WhatsInYourReport";
 import { SearchSection } from "@/components/sections/SearchSection";
@@ -64,8 +71,18 @@ const Index = () => {
         </script>
       </Helmet>
 
-      {/* Hero — headline, platform definition, single CTA pair, report mockup */}
+      {/* Hero — headline, platform definition, single CTA pair, report graphic */}
       <HeroSection />
+
+      {/* MES-162 value journey: report → matched providers/leads → introductions */}
+      {isFeatureEnabled("hero_journey") && (
+        <Suspense fallback={null}>
+          <HeroJourneySection />
+        </Suspense>
+      )}
+
+      {/* Real featured-organisation logos (renders only once records are curated) */}
+      <LogoCloud />
 
       {/* Live directory counts — the one source of numbers on the page */}
       <ProofStrip />
