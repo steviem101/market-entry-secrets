@@ -12,6 +12,7 @@ import GovHubsSection from "./GovHubsSection";
 import GuidesSection from "./GuidesSection";
 import MentorsSection from "./MentorsSection";
 import InvestorsSection from "./InvestorsSection";
+import LeadsSection from "./LeadsSection";
 import ProvidersSection from "./ProvidersSection";
 import MetricsSwotSection from "./MetricsSwotSection";
 import SourcesBand from "./SourcesBand";
@@ -43,7 +44,7 @@ export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "actionPlan", label: "10 · PHASED ACTION PLAN", Component: ActionPlanSection },
   { id: "compliance", label: "11 · SETUP & COMPLIANCE", Component: ComplianceSection },
   { id: "guides", label: "12 · CASE STUDIES & RESOURCES", Component: GuidesSection },
-  { id: "leads", label: "13 · LEAD LIST" },
+  { id: "leads", label: "13 · LEAD LIST & MARKET DATA", Component: LeadsSection },
   { id: "close", label: "14 · NEXT: YOUR ADVISORY SESSION", Component: CloseSection },
   { id: "sources", label: "SOURCES", Component: SourcesBand },
 ];
