@@ -112,6 +112,12 @@ export default {
 					'grey-soft': '#b4bcc8',
 					'surface-rule': '#2a3140',
 					'ink-soft': '#434b56',
+					// request hooks + confirmations (README interactions)
+					dash: '#c9d2da',
+					'hook-bg': '#fafbfc',
+					'confirm-bg': '#e9f7f1',
+					'confirm-border': '#b9e4d2',
+					'confirm-text': '#0b7a55',
 					'inferred-text': '#57606d',
 					'inferred-bg':  '#eef0f3'
 				}
