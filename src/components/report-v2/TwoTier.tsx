@@ -15,7 +15,7 @@ export const RankedRows = ({ items, section }: { items: RankedItem[]; section: s
         <span className={`text-[15px] font-bold ${i === 0 ? "text-report-action" : "text-report-muted"}`}>
           {String(item.rank).padStart(2, "0")}
         </span>
-        <span>
+        <span className="min-w-0 break-words">
           {item.url ? (
             <a href={item.url} target="_blank" rel="noopener" className="text-inherit">
               <b className="text-[14px] font-bold">{item.name} ↗</b>
@@ -90,7 +90,7 @@ export const MatchGrid = ({
       {cards.map((card, i) => (
         <div key={i} className="rounded-xl border border-report-border px-[22px] py-[18px]">
           <div className="flex justify-between gap-2">
-            <span className="text-[13px] font-bold">
+            <span className="min-w-0 break-words text-[13px] font-bold">
               {card.url ? (
                 <a href={card.url} target="_blank" rel="noopener" className="text-inherit">
                   {card.name} ↗
@@ -101,10 +101,10 @@ export const MatchGrid = ({
               <StarToggle name={card.name} url={card.url} section={section} />
             </span>
             {card.tag && (
-              <span className="whitespace-nowrap text-[8.5px] font-bold uppercase text-report-muted">{card.tag}</span>
+              <span className="shrink-0 whitespace-nowrap text-[8.5px] font-bold uppercase text-report-muted">{card.tag}</span>
             )}
           </div>
-          <div className="mt-1.5 text-[11.5px] leading-[1.6] text-report-muted">{card.description}</div>
+          <div className="mt-1.5 break-words text-[11.5px] leading-[1.6] text-report-muted">{card.description}</div>
           {card.extraLine && (
             <div className="mt-1.5 text-[8.5px] font-bold uppercase tracking-[0.08em] text-report-caption">
               {card.extraLine}
