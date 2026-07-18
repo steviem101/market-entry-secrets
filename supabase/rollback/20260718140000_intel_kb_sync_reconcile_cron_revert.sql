@@ -1,4 +1,4 @@
--- Rollback for 20260718120000_intel_kb_sync_reconcile_cron.sql
+-- Rollback for 20260718140000_intel_kb_sync_reconcile_cron.sql
 -- Unschedules the weekly reconcile job (pg_cron-guarded so it no-ops where pg_cron
 -- isn't installed or the job was never scheduled).
 do $$
