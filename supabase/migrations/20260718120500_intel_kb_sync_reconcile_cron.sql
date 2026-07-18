@@ -16,7 +16,9 @@
 -- Mirrors 20260621060400_kb_sync_incremental_cron.sql: reads the guard secret from Vault
 -- ('kb_sync_secret'), pg_cron-guarded (no-op on preview branches), idempotent by jobname.
 -- Scheduled Sundays 04:47 UTC, offset from the 03:17 incremental slot to avoid overlap.
--- Rollback: supabase/rollback/20260718120000_..._revert.sql (unschedules the job).
+-- Rollback: supabase/rollback/20260718120500_..._revert.sql (unschedules the job).
+-- NB: renumbered 120000 -> 120500 to resolve a duplicate-version collision with
+-- 20260718120000_case_studies_guides_section.sql (never applied before the bump).
 do $$
 begin
   if not exists (select 1 from pg_extension where extname = 'pg_cron') then
