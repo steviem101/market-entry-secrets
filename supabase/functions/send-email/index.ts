@@ -38,6 +38,8 @@ function buildIdempotencyKey(
     case "nurture_ai_report":
     case "nurture_events":
     case "nurture_upgrade":
+    case "report_followup_d2":
+    case "report_followup_d7":
       return userId ? `${emailType}:${userId}` : null;
     default:
       return null;
