@@ -47,7 +47,10 @@ export type FunnelEventType =
   | 'hero_intent_chip_clicked'
   | 'report_prefill_loaded'
   | 'report_prefill_confirmed'
-  | 'report_completed_from_hero_intent';
+  | 'report_completed_from_hero_intent'
+  // homepage hero credibility (MES-162) — source 'homepage_hero'
+  | 'hero_cta_clicked'
+  | 'hero_journey_step_viewed';
 
 export type FunnelEvent = IntakeEventType | FunnelEventType;
 

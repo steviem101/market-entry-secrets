@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'hero_journey';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -85,6 +85,15 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   concierge_intros: {
     queryKey: 'intros',
     storageKey: 'mes_flag_concierge_intros',
+    defaultValue: false,
+  },
+  // MES-162 homepage hero credibility: static real report-output panel in the
+  // hero + the three-step value-journey proof section below it. Ships dark
+  // (default off) so it can be enabled in its own measurement window after
+  // MES-158's, and disabled independently; ?journey=1 enables it.
+  hero_journey: {
+    queryKey: 'journey',
+    storageKey: 'mes_flag_hero_journey',
     defaultValue: false,
   },
 };

@@ -3,13 +3,11 @@ import {
   FileText,
   Building2,
   ClipboardList,
-  Star,
-  Clock,
-  TrendingUp,
   CheckCircle2,
   MapPin,
 } from "lucide-react";
 import { HERO_CONTENT } from "./heroContent";
+import { HeroCredibilityBadges } from "./HeroCredibilityBadges";
 
 // --- Mockup view: Report Preview ---
 const ReportPreview = () => {
@@ -291,38 +289,8 @@ export const HeroProductMockup = () => {
         </div>
       </div>
 
-      {/* Floating accent badges */}
-      <div
-        className="absolute -top-3 right-4 lg:-right-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
-        style={{ animationDelay: "0.5s" }}
-      >
-        <div className="flex items-center gap-1.5">
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-          <span className="text-xs font-semibold text-foreground">97% match</span>
-        </div>
-      </div>
-
-      <div
-        className="absolute -bottom-2 left-4 lg:-left-3 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20"
-        style={{ animationDelay: "2s" }}
-      >
-        <div className="flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-primary" />
-          <span className="text-xs font-semibold text-foreground">
-            Report in 3 min
-          </span>
-        </div>
-      </div>
-
-      <div
-        className="absolute top-1/2 right-4 lg:-right-4 bg-background/90 backdrop-blur-sm border border-border rounded-xl px-3 py-2 shadow-md animate-float z-20 hidden lg:block"
-        style={{ animationDelay: "3.5s" }}
-      >
-        <div className="flex items-center gap-1.5">
-          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-          <span className="text-xs font-semibold text-foreground">4.9/5</span>
-        </div>
-      </div>
+      {/* Floating badges — live, verifiable stats only (MES-162) */}
+      <HeroCredibilityBadges />
     </div>
   );
 };
