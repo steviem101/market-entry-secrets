@@ -20,7 +20,9 @@
 -- report pipeline are unaffected. The intended public entry point remains the
 -- knowledge-search edge function, which derives allowed_visibility from caller auth.
 --
--- Rollback: supabase/rollback/20260718100000_..._revert.sql (re-grants anon+authenticated).
+-- Rollback: supabase/rollback/20260718130000_..._revert.sql (re-grants anon+authenticated).
+-- (Renumbered from 20260718100000 to resolve a version collision with an unrelated
+--  migration that merged to main first; this clamp never applied before the rename.)
 -- Applies via the PR/merge flow only (CLAUDE.md §10); idempotent for replays.
 
 REVOKE EXECUTE ON FUNCTION public.match_knowledge(vector, text, integer, double precision, jsonb, text[])
