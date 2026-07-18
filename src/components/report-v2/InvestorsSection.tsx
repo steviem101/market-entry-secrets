@@ -19,6 +19,7 @@ const InvestorsSection = ({ report }: { report: Report }) => {
       <NumberedProse items={investors.approachOrder} />
       <MatchGrid
         header="ALL MATCHED INVESTORS, GRANTS & AWARDS"
+        section="Investor"
         columns={4}
         cards={investors.all.map(({ stageTag, checkSize, ...card }) => ({
           ...card,

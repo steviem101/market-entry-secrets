@@ -1,6 +1,7 @@
 import type { Report } from "@/types/report";
 import { formatReportDate } from "@/lib/report-v2/format";
 import SectionCard from "./SectionCard";
+import StarToggle from "./StarToggle";
 import Rich from "./Rich";
 
 /**
@@ -26,6 +27,7 @@ const EventsSection = ({ report }: { report: Report }) => {
               ) : (
                 event.name
               )}
+              <StarToggle name={event.name} url={event.url} section="Event" />
             </div>
             <Rich text={event.why} className="text-[12.5px] leading-[1.7] text-report-ink-soft" />
           </div>

@@ -1,23 +1,29 @@
 import type { CompetitorRow, Report } from "@/types/report";
 import SectionCard from "./SectionCard";
 import RequestHook from "./RequestHook";
+import StarToggle from "./StarToggle";
 import Rich from "./Rich";
+import { useReportInteractions } from "./ReportInteractionsProvider";
 
 const GRID = "grid grid-cols-[180px_1fr_1fr_1fr] gap-[18px] px-[22px]";
 
-const PlayerCell = ({ row, tagClass }: { row: CompetitorRow; tagClass: string }) => (
-  <span>
-    {row.url ? (
-      <a href={row.url} target="_blank" rel="noopener" className="text-inherit">
-        <b>{row.name} ↗</b>
-      </a>
-    ) : (
-      <b className={row.positionTag.startsWith("YOU") ? "font-extrabold" : "font-bold"}>{row.name}</b>
-    )}
-    <br />
-    <span className={`text-[9.5px] font-medium ${tagClass}`}>{row.positionTag}</span>
-  </span>
-);
+const PlayerCell = ({ row, tagClass }: { row: CompetitorRow; tagClass: string }) => {
+  const isCustomer = row.positionTag.startsWith("YOU");
+  return (
+    <span>
+      {row.url ? (
+        <a href={row.url} target="_blank" rel="noopener" className="text-inherit">
+          <b>{row.name} ↗</b>
+        </a>
+      ) : (
+        <b className={isCustomer ? "font-extrabold" : "font-bold"}>{row.name}</b>
+      )}
+      {!isCustomer && <StarToggle name={row.name} url={row.url} section="Competitor" />}
+      <br />
+      <span className={`text-[9.5px] font-medium ${tagClass}`}>{row.positionTag}</span>
+    </span>
+  );
+};
 
 /**
  * §03 competitor landscape: ruled table with the customer row first (sky
@@ -27,6 +33,7 @@ const PlayerCell = ({ row, tagClass }: { row: CompetitorRow; tagClass: string })
  */
 const CompetitorSection = ({ report }: { report: Report }) => {
   const { competitors, meta } = report;
+  const { recordRequest } = useReportInteractions();
   return (
     <SectionCard label="03 · COMPETITOR LANDSCAPE" className="pb-[60px]">
       <Rich
@@ -82,6 +89,7 @@ const CompetitorSection = ({ report }: { report: Report }) => {
           }
           buttonLabel="Request scan"
           confirmation="Scan requested — the expanded competitor set will be added to this section."
+          onRequest={() => recordRequest("scan_request")}
         />
       )}
     </SectionCard>

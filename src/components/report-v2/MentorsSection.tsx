@@ -1,6 +1,7 @@
 import type { PersonCard, Report } from "@/types/report";
 import SectionCard from "./SectionCard";
 import IdentitySlot from "./IdentitySlot";
+import StarToggle from "./StarToggle";
 import Rich from "./Rich";
 
 const PersonName = ({ person }: { person: PersonCard }) => (
@@ -13,6 +14,7 @@ const PersonName = ({ person }: { person: PersonCard }) => (
     ) : (
       <b className="text-[15.5px] font-bold">{person.name}</b>
     )}
+    <StarToggle name={person.name} url={person.url} section="Mentor" />
   </span>
 );
 

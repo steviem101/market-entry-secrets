@@ -2,7 +2,9 @@ import { useState } from "react";
 import type { AccountBrief, Report } from "@/types/report";
 import SectionCard from "./SectionCard";
 import RequestHook from "./RequestHook";
+import StarToggle from "./StarToggle";
 import Rich from "./Rich";
+import { useReportInteractions } from "./ReportInteractionsProvider";
 
 const CHIP_LABELS: Record<AccountBrief["statusChips"][number], string> = {
   hiring: "HIRING NOW",
@@ -12,13 +14,16 @@ const CHIP_LABELS: Record<AccountBrief["statusChips"][number], string> = {
 const AccountCard = ({ account }: { account: AccountBrief }) => (
   <div className="rounded-xl border border-report-border px-[30px] py-7">
     <div className="flex items-baseline justify-between gap-2.5">
-      {account.url ? (
-        <a href={account.url} target="_blank" rel="noopener" className="text-inherit">
-          <b className="text-[15.5px] font-bold">{account.name} ↗</b>
-        </a>
-      ) : (
-        <b className="text-[15.5px] font-bold">{account.name}</b>
-      )}
+      <span className="text-[15.5px] font-bold">
+        {account.url ? (
+          <a href={account.url} target="_blank" rel="noopener" className="text-inherit">
+            <b>{account.name} ↗</b>
+          </a>
+        ) : (
+          <b>{account.name}</b>
+        )}
+        <StarToggle name={account.name} url={account.url} section="Account" />
+      </span>
       {account.statusChips.length > 0 && (
         <span
           className={`text-[8.5px] font-bold ${
@@ -97,6 +102,7 @@ const GapCard = ({ name, reason, onRequest }: { name: string; reason: string; on
  */
 const AccountsSection = ({ report }: { report: Report }) => {
   const { accounts } = report;
+  const { recordRequest } = useReportInteractions();
   const unbriefed = accounts.unbriefed ?? [];
   const zeroBriefed = accounts.briefed.length === 0;
   return (
@@ -148,13 +154,19 @@ const AccountsSection = ({ report }: { report: Report }) => {
             }
             buttonLabel="Name your targets"
             confirmation="Request sent — reply with your target accounts and their briefs will be added to this report."
+            onRequest={() => recordRequest("brief_request")}
           />
         </>
       )}
 
       <div className={`mt-[22px] grid gap-[22px] ${unbriefed.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
         {unbriefed.map((u, i) => (
-          <GapCard key={u.name || i} name={u.name} reason={u.reason} />
+          <GapCard
+            key={u.name || i}
+            name={u.name}
+            reason={u.reason}
+            onRequest={() => recordRequest("brief_request", { accountName: u.name })}
+          />
         ))}
         {accounts.worthKnowing && (
           <div className="rounded-xl border border-report-tint-border bg-report-tint px-7 py-[22px] text-[12.5px] leading-[1.65] text-report-ink-soft">

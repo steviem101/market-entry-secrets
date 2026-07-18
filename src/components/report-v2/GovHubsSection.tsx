@@ -1,9 +1,10 @@
 import type { Report } from "@/types/report";
 import SectionCard from "./SectionCard";
 import IdentitySlot from "./IdentitySlot";
+import StarToggle from "./StarToggle";
 import Rich from "./Rich";
 
-const EntityName = ({ name, url }: { name: string; url: string }) => (
+const EntityName = ({ name, url, section }: { name: string; url: string; section: string }) => (
   <span>
     <IdentitySlot name={name} kind="company" />
     {url ? (
@@ -13,6 +14,7 @@ const EntityName = ({ name, url }: { name: string; url: string }) => (
     ) : (
       <b>{name}</b>
     )}
+    <StarToggle name={name} url={url} section={section} />
   </span>
 );
 
@@ -38,7 +40,7 @@ const GovHubsSection = ({ report }: { report: Report }) => {
                 key={i}
                 className="grid grid-cols-[190px_1fr] items-center gap-3 border-t border-report-border py-3 last:border-b"
               >
-                <EntityName name={g.name} url={g.url} />
+                <EntityName name={g.name} url={g.url} section="Gov & Trade" />
                 <span>{g.why}</span>
               </div>
             ))}
@@ -57,7 +59,7 @@ const GovHubsSection = ({ report }: { report: Report }) => {
                 }`}
               >
                 <span className="text-[12.5px] leading-[1.6]">
-                  <EntityName name={hub.name} url={hub.url} /> — {hub.description}
+                  <EntityName name={hub.name} url={hub.url} section="Accelerator" /> — {hub.description}
                 </span>
                 {hub.focusTag && (
                   <span className="text-right text-[9px] font-bold uppercase text-report-action">

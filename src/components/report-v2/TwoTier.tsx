@@ -1,8 +1,9 @@
 import type { MatchCard, Paragraph, RankedItem } from "@/types/report";
 import Rich from "./Rich";
+import StarToggle from "./StarToggle";
 
 /** Ranked "our read" ruled rows: 2px ink top rule, sky 01, muted 02+. */
-export const RankedRows = ({ items }: { items: RankedItem[] }) => (
+export const RankedRows = ({ items, section }: { items: RankedItem[]; section: string }) => (
   <div className="mb-9 flex flex-col">
     {items.map((item, i) => (
       <div
@@ -22,6 +23,7 @@ export const RankedRows = ({ items }: { items: RankedItem[] }) => (
           ) : (
             <b className="text-[14px] font-bold">{item.name}</b>
           )}
+          <StarToggle name={item.name} url={item.url} section={section} />
           <br />
           <span className="text-[10.5px] text-report-caption">{item.meta}</span>
         </span>
@@ -59,20 +61,33 @@ interface GridCard extends MatchCard {
 }
 
 /** Full match set — nothing the matcher surfaced is dropped (DECISIONS #3). */
-export const MatchGrid = ({ header, cards, columns = 3 }: { header: string; cards: GridCard[]; columns?: 3 | 4 }) => (
+export const MatchGrid = ({
+  header,
+  cards,
+  section,
+  columns = 3,
+}: {
+  header: string;
+  cards: GridCard[];
+  section: string;
+  columns?: 3 | 4;
+}) => (
   <>
     <p className="mb-3.5 text-[10px] font-bold tracking-[0.12em] text-report-muted">{header}</p>
     <div className={`grid gap-4 ${columns === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
       {cards.map((card, i) => (
         <div key={i} className="rounded-xl border border-report-border px-[22px] py-[18px]">
           <div className="flex justify-between gap-2">
-            {card.url ? (
-              <a href={card.url} target="_blank" rel="noopener" className="text-[13px] font-bold text-inherit">
-                {card.name} ↗
-              </a>
-            ) : (
-              <span className="text-[13px] font-bold">{card.name}</span>
-            )}
+            <span className="text-[13px] font-bold">
+              {card.url ? (
+                <a href={card.url} target="_blank" rel="noopener" className="text-inherit">
+                  {card.name} ↗
+                </a>
+              ) : (
+                card.name
+              )}
+              <StarToggle name={card.name} url={card.url} section={section} />
+            </span>
             {card.tag && (
               <span className="whitespace-nowrap text-[8.5px] font-bold uppercase text-report-muted">{card.tag}</span>
             )}

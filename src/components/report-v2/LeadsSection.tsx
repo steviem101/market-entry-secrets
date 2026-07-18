@@ -1,7 +1,9 @@
 import { useState } from "react";
 import type { Report } from "@/types/report";
 import SectionCard from "./SectionCard";
+import StarToggle from "./StarToggle";
 import Rich from "./Rich";
+import { useReportInteractions } from "./ReportInteractionsProvider";
 
 /**
  * Custom lead-list request box: ICP textarea + Send request → inline
@@ -59,6 +61,7 @@ const LeadRequestBox = ({ onRequest }: { onRequest?: (icp: string) => void }) =>
  */
 const LeadsSection = ({ report }: { report: Report }) => {
   const { leads } = report;
+  const { recordRequest } = useReportInteractions();
   return (
     <SectionCard label="13 · LEAD LIST & MARKET DATA" className="pb-14">
       <div className="mt-6 grid grid-cols-2 items-stretch gap-[22px]">
@@ -80,6 +83,7 @@ const LeadsSection = ({ report }: { report: Report }) => {
               ) : (
                 leads.dataset.name
               )}
+              <StarToggle name={leads.dataset.name} url={leads.dataset.url} section="Leads" />
             </div>
             <Rich text={leads.dataset.description} className="text-[13px] leading-[1.7] text-report-ink-soft" />
           </div>
@@ -103,7 +107,7 @@ const LeadsSection = ({ report }: { report: Report }) => {
         </div>
       </div>
 
-      <LeadRequestBox />
+      <LeadRequestBox onRequest={(icp) => recordRequest("lead_request", { icpDescription: icp })} />
     </SectionCard>
   );
 };

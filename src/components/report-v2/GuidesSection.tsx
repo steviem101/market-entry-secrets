@@ -1,5 +1,6 @@
 import type { Report } from "@/types/report";
 import SectionCard from "./SectionCard";
+import StarToggle from "./StarToggle";
 import Rich from "./Rich";
 
 /**
@@ -29,6 +30,7 @@ const GuidesSection = ({ report }: { report: Report }) => {
               ) : (
                 guide.title
               )}
+              <StarToggle name={guide.title} url={guide.url} section="Guide" />
             </div>
             <div className="text-[12.5px] leading-[1.7] text-report-ink-soft">{guide.summary}</div>
             {guide.relevantBecause && (

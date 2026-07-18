@@ -15,8 +15,8 @@ const ProvidersSection = ({ report }: { report: Report }) => {
         text={providers.intro}
         className="mb-6 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
       />
-      <RankedRows items={providers.ourRead} />
-      <MatchGrid header="ALL MATCHED PROVIDERS — EXPLORE FREELY" cards={providers.all} columns={3} />
+      <RankedRows items={providers.ourRead} section="Provider" />
+      <MatchGrid header="ALL MATCHED PROVIDERS — EXPLORE FREELY" cards={providers.all} section="Provider" columns={3} />
     </SectionCard>
   );
 };

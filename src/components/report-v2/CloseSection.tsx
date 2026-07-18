@@ -1,16 +1,18 @@
 import type { Report } from "@/types/report";
 import SectionCard from "./SectionCard";
 import Rich from "./Rich";
+import { useReportInteractions } from "./ReportInteractionsProvider";
 
 /**
  * §14 advisory-session close: headline + deferral body (tone rule — strategy
  * decided together), "worth arriving with a view on" rail, and the shortlist
- * strip region. Plan-specific session copy arrives in the contract data
- * (close.body / cover.scope); the renderer stays data-driven. The strip shows
- * its static empty state here — star chips + persistence land in ticket 13.
+ * strip — starred entities collect here as linked chips (ticket 13); the empty
+ * state explains the ☆ mechanic. Plan-specific session copy arrives in the
+ * contract data (close.body / cover.scope); the renderer stays data-driven.
  */
 const CloseSection = ({ report }: { report: Report }) => {
   const { close } = report;
+  const { starred } = useReportInteractions();
   return (
     <SectionCard
       label="14 · NEXT: YOUR ADVISORY SESSION"
@@ -45,10 +47,40 @@ const CloseSection = ({ report }: { report: Report }) => {
         <p className="mb-3.5 text-[10px] font-bold uppercase tracking-[0.12em] text-report-action">
           YOUR SHORTLIST — STARRED FROM THIS REPORT
         </p>
-        <p className="text-[12.5px] leading-[1.65] text-report-caption">
-          Tap the ☆ next to any provider, hub, mentor, investor or event above to build your own
-          shortlist — it collects here and sets the agenda for the advisory session.
-        </p>
+        {starred.length > 0 ? (
+          <>
+            <div className="flex flex-wrap gap-2.5">
+              {starred.map((item, i) =>
+                item.url ? (
+                  <a
+                    key={i}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener"
+                    className="rounded-full border border-report-tint-border bg-report-tint px-4 py-2 text-[12px] font-semibold text-report-action hover:underline"
+                  >
+                    ★ {item.name} · {item.section}
+                  </a>
+                ) : (
+                  <span
+                    key={i}
+                    className="rounded-full border border-report-tint-border bg-report-tint px-4 py-2 text-[12px] font-semibold text-report-action"
+                  >
+                    ★ {item.name} · {item.section}
+                  </span>
+                )
+              )}
+            </div>
+            <p className="mt-3 text-[11.5px] leading-[1.6] text-report-caption">
+              This set pre-frames your advisory session — we'll arrive prepared on exactly these.
+            </p>
+          </>
+        ) : (
+          <p className="text-[12.5px] leading-[1.65] text-report-caption">
+            Tap the ☆ next to any provider, hub, mentor, investor or event above to build your own
+            shortlist — it collects here and sets the agenda for the advisory session.
+          </p>
+        )}
       </div>
     </SectionCard>
   );
