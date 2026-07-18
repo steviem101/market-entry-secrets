@@ -11,16 +11,26 @@ function checkoutSource(): string {
   return 'other';
 }
 
+// Attribution source names are free text but keep them short + stable — they
+// become Stripe session metadata and land in payment_webhook_logs, so renaming
+// one breaks conversion reporting continuity. Clamped defensively below.
+const sanitiseSource = (s: string): string =>
+  s.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40) || 'other';
+
 interface CheckoutOptions {
   tier: 'growth' | 'scale';
   returnUrl?: string;
+  /** Which surface initiated this checkout (e.g. 'report_gated_section',
+   * 'pricing_page'). Falls back to a pathname-derived coarse source. Flows to
+   * Stripe session metadata so completed purchases are attributable. */
+  source?: string;
 }
 
 export const useCheckout = () => {
   const { user, session } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const startCheckout = async ({ tier, returnUrl }: CheckoutOptions) => {
+  const startCheckout = async ({ tier, returnUrl, source }: CheckoutOptions) => {
     if (!user || !session?.access_token) {
       toast.info('Sign in to continue — checkout will resume automatically afterwards.');
       return { needsAuth: true };
@@ -34,11 +44,18 @@ export const useCheckout = () => {
         ? `${window.location.origin}${returnUrl}`
         : undefined;
 
+      // Conversion attribution: carried via create-checkout's metadata
+      // passthrough into the Stripe session (tier/supabase_user_id are
+      // server-enforced AFTER the spread, so this can never escalate — AUD-005),
+      // then retained in payment_webhook_logs' stored payload on completion.
+      const attributionSource = sanitiseSource(source ?? checkoutSource());
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           tier,
           supabase_user_id: user.id,
           return_url: fullReturnUrl,
+          metadata: { source: attributionSource },
         },
       });
 
@@ -51,7 +68,7 @@ export const useCheckout = () => {
         // T5a (MES-191): the checkout intent succeeded and we're about to
         // redirect to Stripe. Fire-and-forget; never blocks the redirect.
         trackFunnelEvent('checkout_started', {
-          source: checkoutSource(),
+          source: attributionSource,
           user_id: user.id,
           metadata: { tier },
         });

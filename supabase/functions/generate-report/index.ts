@@ -3819,6 +3819,35 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       console.warn("Failed to send report completion email (non-blocking):", emailErr);
     }
 
+    // 7d. Founder follow-up ping (conversion plan step 3): emit a
+    // report.completed activity event so ops/Slack can trigger a personal
+    // follow-up per finished report (docs/runbooks/founder-followup-loop.md).
+    // Routing row ships DISABLED (migration 20260717060000) — no Slack traffic
+    // until an operator enables it. Non-blocking; PII stays in log_activity's
+    // actor columns (never in metadata), matching the other producers.
+    try {
+      if (intake.user_id) {
+        const { data: actorData } = await supabase.auth.admin.getUserById(intake.user_id);
+        await supabase.rpc("log_activity", {
+          p_event_type: "report.completed",
+          p_severity: "action",
+          p_actor_user_id: intake.user_id,
+          p_actor_email: actorData?.user?.email ?? null,
+          p_actor_name: actorData?.user?.user_metadata?.full_name ?? null,
+          p_object_type: "user_reports",
+          p_object_id: reportId,
+          p_metadata: {
+            company_name: intake.company_name ?? null,
+            tier: userTier,
+            report_path: `/report/${reportId}`,
+          },
+          p_dedup_key: `rc:${reportId}`,
+        });
+      }
+    } catch (activityErr) {
+      console.warn("report.completed activity emit failed (non-blocking):", activityErr);
+    }
+
     // 7e. Enrol FREE-tier members in the D2/D7 report_followup nurture
     // (conversion plan step 4; steps seeded by migration 20260717070000).
     // Only when at least one gated section actually matched something — teasing

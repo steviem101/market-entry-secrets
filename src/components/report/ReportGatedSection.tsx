@@ -82,6 +82,7 @@ export const ReportGatedSection = ({ id, title, requiredTier, teaser }: ReportGa
     await startCheckout({
       tier: checkoutTier,
       returnUrl: location.pathname,
+      source: 'report_gated_section',
     });
   };
 

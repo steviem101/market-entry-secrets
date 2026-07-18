@@ -28,7 +28,7 @@ export const PricingSection = () => {
     const pendingTier = consumePendingCheckout();
     if (pendingTier) {
       setShowAuthDialog(false);
-      void startCheckout({ tier: pendingTier, returnUrl: window.location.pathname });
+      void startCheckout({ tier: pendingTier, returnUrl: window.location.pathname, source: 'pricing_page' });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -49,6 +49,7 @@ export const PricingSection = () => {
         const result = await startCheckout({
           tier: tierId as 'growth' | 'scale',
           returnUrl: window.location.pathname,
+          source: 'pricing_page',
         });
         if (result?.needsAuth) {
           setPendingCheckout(tierId as 'growth' | 'scale');

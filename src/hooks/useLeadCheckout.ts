@@ -43,7 +43,7 @@ export const useLeadCheckout = () => {
           price_id: lead.stripe_price_id,
           supabase_user_id: user.id,
           return_url: fullReturnUrl,
-          metadata: { lead_database_id: lead.id },
+          metadata: { lead_database_id: lead.id, source: 'lead_database_page' },
         },
       });
 
