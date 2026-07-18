@@ -27,10 +27,10 @@ Review each row in `/dev/report-preview` against the reference HTML (and screens
 | 7 | 06 Gov & hubs | ☑ | ☑ | ☑ | corridor bodies only on foreign_entrant, per `meta.origin` |
 | 8 | 07 Mentors | ☑ | ☑ | ☑ | headshot present vs monogram; extra row |
 | 9 | 08 Investors | ☑ | ☑ | ☑ | checkSize omitted when unknown (R12) |
-| 10 | 09 Events | ☐ | ☐ | ☐ | lemlist: maximise tips block; others: none |
+| 10 | 09 Events | ☑ | ☑ | ☑ | lemlist: maximise tips block; others: none |
 | 11 | 10 Action plan | ☐ | ☐ | ☐ | flat body (floats/nory) vs grouped (lemlist) |
 | 12 | 11 Compliance table + stats + checklist | ☐ | ☐ | ☐ | severity border colors; archetype-specific rows |
-| 13 | 12 Guides | ☐ | ☐ | ☐ | "Relevant because:" footer on every card |
+| 13 | 12 Guides | ☑ | ☑ | ☑ | "Relevant because:" footer on every card |
 | 14 | 13 Leads | ☐ | ☐ | ☐ | dataset card (nory) vs gap card (floats/lemlist); request box always |
 | 15 | 14 Close + shortlist strip | ☐ | ☐ | ☐ | empty-state copy; starred chips persist after refresh |
 | 16 | Sources band | ☑ | ☑ | ☑ | grouped by tier, never raw domains |

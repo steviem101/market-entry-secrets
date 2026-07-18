@@ -4,8 +4,10 @@ import Cover from "./Cover";
 import CloseSection from "./CloseSection";
 import AccountsSection from "./AccountsSection";
 import CompetitorSection from "./CompetitorSection";
+import EventsSection from "./EventsSection";
 import ExecSummarySection from "./ExecSummarySection";
 import GovHubsSection from "./GovHubsSection";
+import GuidesSection from "./GuidesSection";
 import MentorsSection from "./MentorsSection";
 import InvestorsSection from "./InvestorsSection";
 import ProvidersSection from "./ProvidersSection";
@@ -35,10 +37,10 @@ export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "govAndHubs", label: "06 · GOVERNMENT, TRADE SUPPORT & ACCELERATORS", Component: GovHubsSection },
   { id: "mentors", label: "07 · MENTOR RECOMMENDATIONS", Component: MentorsSection },
   { id: "investors", label: "08 · INVESTOR RECOMMENDATIONS", Component: InvestorsSection },
-  { id: "events", label: "09 · EVENTS" },
+  { id: "events", label: "09 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER", Component: EventsSection },
   { id: "actionPlan", label: "10 · ACTION PLAN" },
   { id: "compliance", label: "11 · SETUP & COMPLIANCE" },
-  { id: "guides", label: "12 · CASE STUDIES & GUIDES" },
+  { id: "guides", label: "12 · CASE STUDIES & RESOURCES", Component: GuidesSection },
   { id: "leads", label: "13 · LEAD LIST" },
   { id: "close", label: "14 · NEXT: YOUR ADVISORY SESSION", Component: CloseSection },
   { id: "sources", label: "SOURCES", Component: SourcesBand },
