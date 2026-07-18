@@ -72,4 +72,4 @@ Review each row in `/dev/report-preview` against the reference HTML (and screens
 | 18 | PDF print | ☑ | ☑ | ☑ | section page-breaks; hooks static; footer every page |
 | 19 | Adapter on a REAL production report | ☑ | — | — | renders without renderer changes; mismatches logged |
 
-Sign-off: __________  Date: __________
+Sign-off: Owner (in-session instruction: "merge them and activate")  Date: 2026-07-18

@@ -21,6 +21,9 @@ import { SessionBookingBanner } from '@/components/report/SessionBookingBanner';
 import { ReportUpgradeStrip } from '@/components/report/ReportUpgradeStrip';
 import { ReportSectionRefinement, SECTION_REFINEMENT_SECTIONS } from '@/components/report/ReportSectionRefinement';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import ReportV2Renderer from '@/components/report-v2/ReportV2Renderer';
+import { adaptPipelineReport } from '@/lib/report-v2/adapter';
+import type { Report as ReportV2Contract } from '@/types/report';
 import { useReport } from '@/hooks/useReport';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
@@ -208,6 +211,57 @@ const ReportViewInner = () => {
   const reportJson = report.report_json as any;
   const sections = reportJson?.sections || {};
   const companyName = reportJson?.company_name || 'Market Entry Report';
+  const shareToken = localShareToken ?? (report as { share_token?: string | null }).share_token ?? null;
+
+  // ── report_v2 (Phase A activation) ────────────────────────────────────
+  // The redesigned renderer serves viewers whose tier unlocks EVERY section.
+  // Viewers with gated sections stay on the legacy view: Phase A has no
+  // gated-section teaser/upsell, so routing them into v2 would silently drop
+  // the upgrade CTAs (funnel regression). ?reportv2=0 is the kill switch.
+  const fullyUnlocked = SECTION_ORDER.every((id) => {
+    const req = TIER_REQUIREMENTS[id];
+    return !req || userTierMeetsRequirement(currentTier, req);
+  });
+  let reportV2: ReportV2Contract | null = null;
+  if (isFeatureEnabled('report_v2') && fullyUnlocked && reportJson) {
+    try {
+      const { report: adapted, mismatches } = adaptPipelineReport(reportJson, {
+        date: report.created_at,
+        tier: report.tier_at_generation,
+      });
+      if (import.meta.env.DEV && mismatches.length > 0) {
+        console.debug('[report_v2] adapter mismatches', mismatches);
+      }
+      reportV2 = adapted;
+    } catch (e) {
+      // Adapter is designed never to throw; if it somehow does, the legacy
+      // renderer below is the fallback — a broken report page is never shipped.
+      if (import.meta.env.DEV) console.debug('[report_v2] adapter failed, using legacy renderer', e);
+    }
+  }
+  if (reportV2) {
+    return (
+      <>
+        <Helmet>
+          <title>{companyName} - Market Entry Report | Market Entry Secrets</title>
+        </Helmet>
+        {/* Header stays for share/export controls; the v2 cover renders below. */}
+        <ReportHeader
+          companyName={companyName}
+          generatedAt={report.created_at}
+          tier={report.tier_at_generation}
+          perplexityUsed={Boolean(reportJson?.metadata?.perplexity_used)}
+          reportId={report.id}
+          shareToken={shareToken}
+          onShareTokenChange={setLocalShareToken}
+          readingTimeMinutes={estimateReadingTime(sections)}
+        />
+        <ReportV2Renderer report={reportV2} reportId={report.id} />
+      </>
+    );
+  }
+  // ── legacy renderer ───────────────────────────────────────────────────
+
   const matches = reportJson?.matches || {};
   const perplexityCitations = reportJson?.metadata?.perplexity_citations || [];
   const perplexityUsed = reportJson?.metadata?.perplexity_used || false;
@@ -238,7 +292,7 @@ const ReportViewInner = () => {
         tier={report.tier_at_generation}
         perplexityUsed={perplexityUsed}
         reportId={report.id}
-        shareToken={localShareToken ?? (report as any).share_token ?? null}
+        shareToken={shareToken}
         onShareTokenChange={setLocalShareToken}
         readingTimeMinutes={readingTime}
       />
