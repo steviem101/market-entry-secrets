@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { shouldShowOnboarding } from './onboardingGate.ts';
+import { shouldShowOnboarding, shouldShowOnboardingCard } from './onboardingGate.ts';
 
 test('onboardingGate: hidden when onboarding is not needed', () => {
   assert.equal(shouldShowOnboarding('/dashboard', '', false), false);
@@ -26,4 +26,16 @@ test('onboardingGate: suppressed on a Stripe return anywhere', () => {
 
 test('onboardingGate: /my-reports (dashboard list, not the flow) still shows it', () => {
   assert.equal(shouldShowOnboarding('/my-reports', '', true), true);
+});
+
+test('onboardingCard (A4): follows the modal route rules when not dismissed', () => {
+  assert.equal(shouldShowOnboardingCard('/mentors', '', true, false), true);
+  assert.equal(shouldShowOnboardingCard('/report-creator', '', true, false), false);
+  assert.equal(shouldShowOnboardingCard('/pricing', '?stripe_status=success', true, false), false);
+  assert.equal(shouldShowOnboardingCard('/mentors', '', false, false), false);
+});
+
+test('onboardingCard (A4): a session dismissal hides it everywhere', () => {
+  assert.equal(shouldShowOnboardingCard('/mentors', '', true, true), false);
+  assert.equal(shouldShowOnboardingCard('/member-hub', '', true, true), false);
 });
