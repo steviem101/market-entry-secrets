@@ -85,7 +85,28 @@ export default {
 				'rc-canvas':      'hsl(var(--rc-canvas))',
 				'rc-sky-soft':    'hsl(var(--rc-sky-soft))',
 				'rc-sky-tint':    'hsl(var(--rc-sky-tint))',
-				'rc-success':     'hsl(var(--rc-success))'
+				'rc-success':     'hsl(var(--rc-success))',
+				// report_v2 renderer palette — fixed print-faithful hexes mapped from
+				// the redesign prototypes (design_handoff_mes_report_redesign/tokens.md).
+				// report.sky intentionally equals --primary; the report surface never
+				// theme-inverts, so these stay literal rather than HSL vars.
+				report: {
+					sky:     '#29a3e3',
+					action:  '#178fc9',
+					ink:     '#23272e',
+					surface: '#171c26',
+					bg:      '#f4f6f8',
+					border:  '#e8ecef',
+					rule:    '#eef1f4',
+					muted:   '#67707e',
+					caption: '#8a94a3',
+					tint:    '#f2f9fd',
+					'tint-border': '#cfe6f4',
+					good:    '#0ea371',
+					warn:    '#d97706',
+					'warn-accent': '#f5b84b',
+					risk:    '#dc2626'
+				}
 			},
 			fontFamily: {
 				mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],

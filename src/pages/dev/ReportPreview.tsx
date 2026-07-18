@@ -1,6 +1,8 @@
 import { useSearchParams, Link } from "react-router-dom";
 import type { Report } from "@/types/report";
 import { REPORT_V2_SECTIONS } from "@/components/report-v2/sectionRegistry";
+import ReportShell from "@/components/report-v2/ReportShell";
+import SectionCard from "@/components/report-v2/SectionCard";
 import floatsJson from "@/fixtures/floats.json";
 import noryJson from "@/fixtures/nory.json";
 import lemlistJson from "@/fixtures/lemlist.json";
@@ -42,8 +44,8 @@ const ReportPreview = () => {
   }
 
   return (
-    <div className="mx-auto max-w-[1240px] px-6 py-10">
-      <div className="mb-8 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/50 px-4 py-3">
+    <div>
+      <div className="mx-auto my-6 flex max-w-[1240px] flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/50 px-4 py-3">
         <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
           Dev harness · fixture:
         </span>
@@ -65,25 +67,19 @@ const ReportPreview = () => {
         </span>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <ReportShell>
         {REPORT_V2_SECTIONS.map(({ id, label, Component }) =>
           Component ? (
             <Component key={id} report={report} />
           ) : (
-            <div
-              key={id}
-              className="rounded-[14px] border border-dashed border-border bg-card px-8 py-10"
-            >
-              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-primary">
-                {label}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
+            <SectionCard key={id} label={label}>
+              <p className="mt-2 text-sm text-report-caption">
                 Placeholder — component not built yet.
               </p>
-            </div>
+            </SectionCard>
           )
         )}
-      </div>
+      </ReportShell>
     </div>
   );
 };
