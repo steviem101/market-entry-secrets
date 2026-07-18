@@ -31,6 +31,10 @@ export interface Person {
   company?: string;
   isAnonymous?: boolean;
   serves_personas?: string[] | null;
+  /** Mentor slug + category slug — when present, "View profile" becomes a
+   *  crawlable link to the mentor detail page instead of a JS-only handler. */
+  slug?: string | null;
+  categorySlug?: string | null;
 }
 
 interface PersonCardProps {
@@ -44,6 +48,12 @@ const PersonCard = memo(({ person, onViewProfile }: PersonCardProps) => {
   // For anonymous people the view masks `name` to the alias (the richer, safe
   // label); real names only reach here for non-anonymous people.
   const displayName = person.name;
+
+  // Crawlable link to the mentor detail page (mirrors the mentors directory
+  // card). Only when a slug is present — otherwise fall back to onViewProfile.
+  const profileHref = person.slug
+    ? `/mentors/${person.categorySlug || "experts"}/${person.slug}`
+    : undefined;
 
   return (
     <DirectoryCard className="min-w-0">
@@ -132,6 +142,7 @@ const PersonCard = memo(({ person, onViewProfile }: PersonCardProps) => {
       <CardCTA
         entity="mentor"
         target={{ entity: "mentor", id: person.id, name: displayName }}
+        secondaryHref={profileHref}
         onSecondary={() => onViewProfile(person)}
       />
     </DirectoryCard>
