@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { classifyIntent, INTENT_CHIPS } from "@/lib/intentClassifier";
 import { writeIntentPrefill } from "@/lib/heroIntentPrefill";
 import { trackFunnelEvent } from "@/lib/analytics/intakeFunnel";
+import { SampleReportLink } from "@/components/hero/SampleReportLink";
 import { REPORT_CREATOR_PATH, REPORT_CTA_MICROCOPY } from "@/config/reportCta";
 import type { ReportPersona } from "@/components/report-creator/intakeSchema.v2";
 
@@ -22,6 +23,7 @@ export const HeroIntentCapture = () => {
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const startedRef = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const markStarted = () => {
     if (startedRef.current) return;
@@ -43,7 +45,13 @@ export const HeroIntentCapture = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = value.trim();
-    if (!trimmed) return;
+    // Never sit disabled (reads as "broken" at rest); an empty submit just
+    // nudges focus back to the input instead of navigating.
+    if (!trimmed) {
+      markStarted();
+      inputRef.current?.focus();
+      return;
+    }
     go(trimmed, undefined, "typed");
   };
 
@@ -57,6 +65,7 @@ export const HeroIntentCapture = () => {
         <div className="flex flex-col sm:flex-row gap-2">
           <Input
             id="hero-intent"
+            ref={inputRef}
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onFocus={markStarted}
@@ -68,7 +77,6 @@ export const HeroIntentCapture = () => {
           <Button
             type="submit"
             size="lg"
-            disabled={!value.trim()}
             className="h-12 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-6 rounded-xl soft-shadow hover:shadow-lg transition-all duration-300 group"
           >
             <span className="flex items-center gap-2">
@@ -102,9 +110,12 @@ export const HeroIntentCapture = () => {
       </div>
 
       {/* Trust micro-label (mirrors the classic CTA group). */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Shield className="w-3.5 h-3.5 text-accent" />
-        <span>{REPORT_CTA_MICROCOPY}</span>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Shield className="w-3.5 h-3.5 text-accent" />
+          <span>{REPORT_CTA_MICROCOPY}</span>
+        </div>
+        <SampleReportLink />
       </div>
     </div>
   );
