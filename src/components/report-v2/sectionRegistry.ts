@@ -1,5 +1,7 @@
 import type React from "react";
 import type { Report } from "@/types/report";
+import Cover from "./Cover";
+import CloseSection from "./CloseSection";
 import SourcesBand from "./SourcesBand";
 
 /**
@@ -16,7 +18,7 @@ export interface ReportSectionDef {
 }
 
 export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
-  { id: "cover", label: "COVER" },
+  { id: "cover", label: "COVER", Component: Cover },
   { id: "exec", label: "01 · EXECUTIVE SUMMARY" },
   { id: "metricsSwot", label: "02 · MARKET METRICS & SWOT" },
   { id: "competitors", label: "03 · COMPETITOR LANDSCAPE" },
@@ -30,6 +32,6 @@ export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "compliance", label: "11 · SETUP & COMPLIANCE" },
   { id: "guides", label: "12 · CASE STUDIES & GUIDES" },
   { id: "leads", label: "13 · LEAD LIST" },
-  { id: "close", label: "14 · ADVISORY SESSION" },
+  { id: "close", label: "14 · NEXT: YOUR ADVISORY SESSION", Component: CloseSection },
   { id: "sources", label: "SOURCES", Component: SourcesBand },
 ];

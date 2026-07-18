@@ -6,6 +6,8 @@ interface SectionCardProps {
   label: string;
   id?: string;
   className?: string;
+  /** Override label colour, e.g. the close section's muted label. */
+  labelClassName?: string;
   children?: React.ReactNode;
 }
 
@@ -13,7 +15,7 @@ interface SectionCardProps {
  * report_v2 section card: white surface, 14px radius, 3px sky top accent,
  * 64/80 padding, mono section label (reference/*.dc.html §01–§14).
  */
-const SectionCard = ({ label, id, className, children }: SectionCardProps) => (
+const SectionCard = ({ label, id, className, labelClassName, children }: SectionCardProps) => (
   <section
     id={id}
     className={cn(
@@ -21,7 +23,7 @@ const SectionCard = ({ label, id, className, children }: SectionCardProps) => (
       className
     )}
   >
-    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-report-action">
+    <p className={cn("text-[11px] font-bold uppercase tracking-[0.14em] text-report-action", labelClassName)}>
       {label}
     </p>
     {children}

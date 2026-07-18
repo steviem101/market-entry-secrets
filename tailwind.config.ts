@@ -110,6 +110,8 @@ export default {
 					// sources-band tier headers + inferred pill (reference markup)
 					'sky-soft':  '#7cc9ef',
 					'grey-soft': '#b4bcc8',
+					'surface-rule': '#2a3140',
+					'ink-soft': '#434b56',
 					'inferred-text': '#57606d',
 					'inferred-bg':  '#eef0f3'
 				}

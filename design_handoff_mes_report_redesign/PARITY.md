@@ -13,7 +13,7 @@ Review each row in `/dev/report-preview` against the reference HTML (and screens
 
 | # | Section | floats | nory | lemlist | Degradation state to verify |
 |---|---------|--------|------|---------|------------------------------|
-| 0 | Cover + evidence legend | ☐ | ☐ | ☐ | missing `meta.domain` → monogram cover mark |
+| 0 | Cover + evidence legend | ☑ | ☑ | ☑ | missing `meta.domain` → monogram cover mark |
 | 1 | 01 Executive summary + key question | ☐ | ☐ | ☐ | highlights render as linked entities, never re-quoted question |
 | 2 | 02 Metric tiles + footnote | ☐ | ☐ | ☐ | <6 tiles reflow; ◐ EST pill full-size |
 | 3 | 02 SWOT quad | ☐ | ☐ | ☐ | 3 vs 4 items per quadrant |
