@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Archivo:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+body { margin: 0; background: #e9ecef; font-family: "Plus Jakarta Sans", system-ui, sans-serif; color: #23272e; }
+a { color: #1787cf; text-decoration: none; } a:hover { color: #1169a3; text-decoration: underline; }
+</style>
+</helmet>
+<section data-screen-label="Turn 8 — Final review: risks, cuts, ship plan" style="padding: 48px 56px 72px; display: flex; flex-direction: column; gap: 32px; min-width: 3080px; border-bottom: 2px solid #d4d9df">
+
+  <div style="max-width: 1180px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0.14em; color: #6b7280">TURN 8 · FINAL REVIEW — WHAT SURVIVES CONTACT WITH REALITY</div>
+    <div style="font: 700 30px/1.15 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em">Step back: three pushbacks on our own redesign, then the ship plan</div>
+    <div style="font: 400 15px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 920px">Seven turns produced ~15 components. The design is right; the risk is now execution sequencing and one structural dependency nobody should paper over.</div>
+  </div>
+
+  <div style="display: flex; gap: 32px; align-items: flex-start">
+
+    <div id="8a" data-screen-label="8a Pushbacks" style="width: 720px; background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 24px 28px">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #b91c1c; color: #fff; border-radius: 6px; padding: 3px 9px">8a</span><span style="font: 800 17px 'Plus Jakarta Sans', sans-serif">Three pushbacks on the redesign itself</span></div>
+      <div style="display: flex; flex-direction: column; gap: 14px; font: 400 12.5px/1.6 'Plus Jakarta Sans', sans-serif; color: #424a56">
+        <div><b style="color: #23272e">1 · The renderer is not the bottleneck — the pipeline is.</b> Half the new components (rank + why-lines, exclusions, opportunity math, the money paragraph, archetype selection) require <i>content the current pipeline doesn't produce</i>. The single worst outcome is beautiful empty opinion slots — a polished template with hedged filler is MORE damning at $1,000 than the current design. Rule: <b>no component ships without its linter rule and degradation path in the same PR</b>, and the renderer refuses to render an unfilled opinion slot (drops the section, logs it) rather than faking one.</div>
+        <div><b style="color: #23272e">2 · Generated opinion is the riskiest surface we added.</b> Why-lines, exclusions and "if this were our money" are LLM judgments; one confidently wrong exclusion ("skip Startmate") that a founder acts on is worse than the old say-everything hedge. Mitigations, non-optional: opinions may only cite evidence <i>inside the report</i> (bounded-claim rule, add as R11); every judgment wears ◐; the money paragraph goes through human review for the first N reports until the register and error rate are known.</div>
+        <div><b style="color: #23272e">3 · Don't build the pretty parts first.</b> The temptation is the Map and logo.dev theming — screenshotable, demo-able. But the rubric shows the gap is trust (evidence 4/15, math 0/15), not glamour. A customer forgives plain typography; they don't forgive an uncited 70%. P0 is genuinely P0.</div>
+      </div>
+    </div>
+
+    <div id="8b" data-screen-label="8b Cuts and keeps" style="width: 560px; background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 24px 28px">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">8b</span><span style="font: 800 17px 'Plus Jakarta Sans', sans-serif">Final cuts &amp; consolidations</span></div>
+      <div style="display: flex; flex-direction: column; gap: 10px; font: 400 12.5px/1.6 'Plus Jakarta Sans', sans-serif; color: #424a56">
+        <div><b style="color: #0e8a5f">KEEP, unchanged</b> — evidence system with tiers · exec brief + opportunity math · ecosystem directory (<a href="#7a">7a</a>) · archetype spine · rubric gate · money paragraph.</div>
+        <div><b style="color: #b45309">CONSOLIDATE</b> — Market Entry Map v1 ships as the <i>scorecard fallback only</i> (bars, no scatter): the axis-registry per archetype is real design work and the scatter needs ≥4 well-scored competitors to not look sparse; FINEOS-grade data earns the full map in v2. · <a href="#7b">7b</a> dense ledger is not a separate build — same component, density prop.</div>
+        <div><b style="color: #b91c1c">CUT from v1</b> — living-document strip (needs refresh infrastructure that doesn't exist; empty "next review" dates would be another intake-apology) · logo.dev theming beyond the cover mark (accent-clamp QA across arbitrary brand colors is a rabbit hole) · TOC per-section verdicts (needs the verdict slots proven first).</div>
+        <div style="border-top: 1px solid #eef0f3; padding-top: 10px"><b style="color: #23272e">One addition</b> — R11 (bounded claims): generated opinions must be traceable to evidence rendered in the same report; the linter rejects opinions citing nothing. This is the rule that makes 1–3 safe.</div>
+      </div>
+    </div>
+
+    <div id="8c" data-screen-label="8c Ship plan" style="width: 560px; background: #23272e; color: #e8eaed; border-radius: 10px; padding: 24px 28px">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #fff; color: #23272e; border-radius: 6px; padding: 3px 9px">8c</span><span style="font: 800 17px 'Plus Jakarta Sans', sans-serif; color: #fff">Ship plan — two releases, ramped gate</span></div>
+      <div style="display: flex; flex-direction: column; gap: 12px; font: 400 12.5px/1.6 'Plus Jakarta Sans', sans-serif; color: #c9ced6">
+        <div><b style="color: #fff; font: 700 11px 'JetBrains Mono', monospace">V1 — TRUST RELEASE · GATE ≥ 60</b><br>P0 items 1–4 + exec brief + opportunity math + ecosystem directory + scorecard + R1–R11 linter. Acceptance: regenerate FINEOS, CreditLogic and Floats; all three pass the linter with zero manual edits and score ≥60 on the rubric. That regeneration test — not a demo — is the definition of done.</div>
+        <div><b style="color: #fff; font: 700 11px 'JetBrains Mono', monospace">V2 — SIGNATURE RELEASE · GATE ≥ 75</b><br>Full Market Entry Map + archetype axis registry · money paragraph out of human review · TOC verdicts · living-document strip · full logo.dev theming. Ships only after ~10 real customer reports have passed v1's gate.</div>
+        <div style="border-top: 1px solid #3a3f47; padding-top: 10px"><b style="color: #fff">Success metric</b> — not the rubric score (that's the floor): a customer screenshots the exec brief or the money paragraph unprompted. Instrument report shares; that's the number that justifies the price.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Turn 7 — Provider presentation redesign" style="padding: 48px 56px 72px; display: flex; flex-direction: column; gap: 32px; min-width: 3080px; border-bottom: 2px solid #d4d9df">
+
+  <div style="max-width: 1180px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0.14em; color: #6b7280">TURN 7 · PROVIDER TILES → EDITORIAL DIRECTORY</div>
+    <div style="font: 700 30px/1.15 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em">Kill the cube tiles — rank, compress, editorialise</div>
+    <div style="font: 400 15px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 920px">The current cards spend ~180px of height per provider saying nothing a row couldn't. Two directions below, both rendered from the same Floats data (18 entities): <a href="#7a">7a</a> is the full three-component ecosystem section per the <a href="#6a">6a</a> contract; <a href="#7b">7b</a> is a maximum-density single-ledger alternative. Both fit all 18 entities in less space than four of the old tiles.</div>
+  </div>
+
+  <div style="display: flex; gap: 32px; align-items: flex-start">
+
+    <div id="7a" data-screen-label="7a Ranked ecosystem section" style="width: 860px; background: #fdfcfa; border: 1px solid #e5e8ec; border-radius: 10px; padding: 36px 44px; box-shadow: 0 2px 12px rgba(20,24,30,0.06)">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">7a</span><span style="font: 800 15px 'Plus Jakarta Sans', sans-serif; color: #6b7280">RANKED ECOSYSTEM · THREE COMPONENTS, ONE FRAME</span></div>
+
+      <div style="font: 700 11px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.12em; color: #b45309; margin-bottom: 4px">WHO TO HIRE</div>
+      <div style="font: 600 22px 'Source Serif 4', serif; margin-bottom: 14px">Three engagements worth paying for now</div>
+      <div style="display: flex; flex-direction: column">
+        <div style="display: grid; grid-template-columns: 34px 200px 1fr 96px; gap: 14px; align-items: baseline; padding: 11px 0; border-top: 2px solid #23272e">
+          <span style="font: 700 15px 'JetBrains Mono', monospace">01</span>
+          <span><b style="font: 700 14px 'Plus Jakarta Sans', sans-serif">Fullstack Advisory</b><br><span style="font: 400 10.5px 'Plus Jakarta Sans', sans-serif; color: #8a919c">Sydney · tech accounting</span></span>
+          <span style="font: 400 13px/1.5 'Source Serif 4', serif; color: #333a44">The raise is the constraint. Virtual CFO + R&amp;D tax incentive filing directly funds SOLA development — engage before the next round's diligence starts.</span>
+          <span style="font: 700 9.5px 'JetBrains Mono', monospace; color: #b45309; text-align: right">HIRE · Q3</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 34px 200px 1fr 96px; gap: 14px; align-items: baseline; padding: 11px 0; border-top: 1px solid #e5e8ec">
+          <span style="font: 700 15px 'JetBrains Mono', monospace; color: #6b7280">02</span>
+          <span><b style="font: 700 14px 'Plus Jakarta Sans', sans-serif">Treadstone</b><br><span style="font: 400 10.5px 'Plus Jakarta Sans', sans-serif; color: #8a919c">Melbourne · grants advisory</span></span>
+          <span style="font: 400 13px/1.5 'Source Serif 4', serif; color: #333a44">Non-dilutive money first: R&amp;D tax incentive + Victorian software grants stack with the raise rather than competing with it.</span>
+          <span style="font: 700 9.5px 'JetBrains Mono', monospace; color: #b45309; text-align: right">HIRE · Q3</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 34px 200px 1fr 96px; gap: 14px; align-items: baseline; padding: 11px 0; border-top: 1px solid #e5e8ec; border-bottom: 1px solid #e5e8ec">
+          <span style="font: 700 15px 'JetBrains Mono', monospace; color: #6b7280">03</span>
+          <span><b style="font: 700 14px 'Plus Jakarta Sans', sans-serif">Stone &amp; Chalk</b><br><span style="font: 400 10.5px 'Plus Jakarta Sans', sans-serif; color: #8a919c">Sydney/Melbourne · residency</span></span>
+          <span style="font: 400 13px/1.5 'Source Serif 4', serif; color: #333a44">Residency buys the investor network and a desk in the ecosystem — cheaper than a BD hire while the team is four people.</span>
+          <span style="font: 700 9.5px 'JetBrains Mono', monospace; color: #b45309; text-align: right">JOIN · Q4</span>
+        </div>
+      </div>
+      <div style="font: 400 11.5px/1.6 'Plus Jakarta Sans', sans-serif; color: #6b7280; padding: 10px 0 0">Also credible, not now: <b>Hatch Quarter</b>, <b>NEXTGEN Group</b> (sales-as-a-service is a post-raise motion), <b>Granton</b>, <b>ADAPT</b>. <b style="color: #b91c1c">Excluded:</b> Cloud Recruit (a channel partner, not a provider — moved to Partnerships) · EverestEngineering (build stays in-house at seed).</div>
+
+      <div style="display: flex; gap: 32px; margin-top: 28px">
+        <div style="flex: 1">
+          <div style="font: 700 11px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.12em; color: #0e8a5f; margin-bottom: 8px">WHAT YOU'RE ENTITLED TO — FREE</div>
+          <div style="font: 400 12px/1.5 'Plus Jakarta Sans', sans-serif; color: #333a44">
+            <div style="display: grid; grid-template-columns: 150px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid #e5e8ec"><b>Global Victoria</b><span>Export advice + market intel; use the Saudiworks base as the export story</span></div>
+            <div style="display: grid; grid-template-columns: 150px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid #e5e8ec"><b>Export Finance Aus.</b><span>Loans/guarantees once an international contract exists — file, don't chase</span></div>
+            <div style="display: grid; grid-template-columns: 150px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid #e5e8ec"><b>ARAIN</b><span>AI maturity assessment — free diligence artefact for the raise</span></div>
+            <div style="display: grid; grid-template-columns: 150px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid #e5e8ec; border-bottom: 1px solid #e5e8ec"><b>Startup Victoria</b><span>Founder events; join, attend two, judge by who you meet</span></div>
+          </div>
+        </div>
+        <div style="flex: 1">
+          <div style="font: 700 11px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.12em; color: #1d4ed8; margin-bottom: 8px">WHAT TO APPLY FOR — COMPETITIVE</div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="border: 1px solid #dbe3f0; border-radius: 6px; padding: 10px 14px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; background: #fff"><span style="font: 400 12px/1.45 'Plus Jakarta Sans', sans-serif"><b>ON Accelerate</b> — $80k non-dilutive, deep-tech. Strongest fit for validating matching tech.</span><span style="font: 700 9px 'JetBrains Mono', monospace; color: #1d4ed8; text-align: right">APPLY<br>0% DILUTION</span></div>
+            <div style="border: 1px solid #dbe3f0; border-radius: 6px; padding: 10px 14px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; background: #fff"><span style="font: 400 12px/1.45 'Plus Jakarta Sans', sans-serif"><b>Boab</b> — AI scaleup accelerator, seed cheque, Victorian ecosystem.</span><span style="font: 700 9px 'JetBrains Mono', monospace; color: #6b7280; text-align: right">APPLY<br>EQUITY ◐</span></div>
+            <div style="border: 1px solid #dbe3f0; border-radius: 6px; padding: 10px 14px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; background: #fff"><span style="font: 400 12px/1.45 'Plus Jakarta Sans', sans-serif"><b>H2 Ventures</b> — 20-wk data/AI program; investor network skews fintech — partial fit.</span><span style="font: 700 9px 'JetBrains Mono', monospace; color: #6b7280; text-align: right">BACKUP<br>EQUITY ◐</span></div>
+          </div>
+          <div style="font: 400 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #6b7280; margin-top: 8px">DSPANZ → footnoted under compliance, not listed as an opportunity.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="7b" data-screen-label="7b Single-ledger index" style="width: 640px; background: #fdfcfa; border: 1px solid #e5e8ec; border-radius: 10px; padding: 36px 40px; box-shadow: 0 2px 12px rgba(20,24,30,0.06)">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">7b</span><span style="font: 800 15px 'Plus Jakarta Sans', sans-serif; color: #6b7280">SINGLE LEDGER · ALL 18 IN ONE INDEX</span></div>
+      <div style="font: 600 22px 'Source Serif 4', serif; margin-bottom: 4px">Melbourne ecosystem index</div>
+      <div style="font: 400 12px/1.5 'Plus Jakarta Sans', sans-serif; color: #6b7280; margin-bottom: 14px">One line per entity, sorted by our priority — engagement class as a mark, not a heading. Web version: rows expand on click; PDF prints as-is.</div>
+      <div style="font: 400 11.5px/1.45 'Plus Jakarta Sans', sans-serif; color: #333a44">
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 5px 0; font: 600 8.5px 'JetBrains Mono', monospace; color: #8a919c; border-bottom: 2px solid #23272e"><span>#</span><span>ENTITY · WHY</span><span>USE FOR</span><span>CLASS</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3; background: #f2f7f4"><b>1</b><span><b>Fullstack Advisory</b> — CFO + R&amp;D incentives for the raise</span><span style="color: #6b7280">Capital raise, Q3</span><span style="font: 700 8.5px 'JetBrains Mono', monospace; color: #b45309">HIRE</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3"><b>2</b><span><b>Treadstone</b> — non-dilutive grants stack with the round</span><span style="color: #6b7280">R&amp;D funding, Q3</span><span style="font: 700 8.5px 'JetBrains Mono', monospace; color: #b45309">HIRE</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3"><b>3</b><span><b>ON Accelerate</b> — $80k, no equity, deep-tech validation</span><span style="color: #6b7280">Tech credibility</span><span style="font: 700 8.5px 'JetBrains Mono', monospace; color: #1d4ed8">APPLY</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3"><b>4</b><span><b>Stone &amp; Chalk</b> — residency = investor network + desk</span><span style="color: #6b7280">Network, Q4</span><span style="font: 700 8.5px 'JetBrains Mono', monospace; color: #b45309">JOIN</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3"><b>5</b><span><b>ARAIN</b> — free AI maturity assessment, diligence artefact</span><span style="color: #6b7280">Raise support</span><span style="font: 700 8.5px 'JetBrains Mono', monospace; color: #0e8a5f">FREE</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3"><b>6</b><span><b>Global Victoria</b> — export advice off the Saudiworks base</span><span style="color: #6b7280">Intl. growth</span><span style="font: 700 8.5px 'JetBrains Mono', monospace; color: #0e8a5f">FREE</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3"><b>7</b><span><b>Boab</b> — AI scaleup accelerator, Victorian</span><span style="color: #6b7280">Seed funding</span><span style="font: 700 8.5px 'JetBrains Mono', monospace; color: #1d4ed8">APPLY</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3"><b>8</b><span><b>Startup Victoria</b> — founder events, mentor pool</span><span style="color: #6b7280">Network</span><span style="font: 700 8.5px 'JetBrains Mono', monospace; color: #0e8a5f">FREE</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eef0f3; color: #8a919c"><span>9</span><span>Hatch Quarter · H2 Ventures · Granton · ADAPT · NEXTGEN · Export Finance Aus. · DSPANZ — monitored, not actioned this quarter</span><span></span><span style="font: 700 8.5px 'JetBrains Mono', monospace">—</span></div>
+        <div style="display: grid; grid-template-columns: 26px 1fr 148px 44px; gap: 10px; padding: 6px 0; border-bottom: 2px solid #23272e; color: #b91c1c"><span>✕</span><span><b>Cloud Recruit</b> (channel partner → Partnerships) · <b>EverestEngineering</b> (build stays in-house)</span><span></span><span style="font: 700 8.5px 'JetBrains Mono', monospace">EXCL</span></div>
+      </div>
+      <div style="font: 400 11px/1.55 'Plus Jakarta Sans', sans-serif; color: #6b7280; margin-top: 14px">18 entities in ~340px of height — vs ~1,600px of tiles. Links live behind entity names on web; the PDF drops them silently.</div>
+    </div>
+
+    <div style="width: 460px; display: flex; flex-direction: column; gap: 14px; font: 400 13px/1.6 'Plus Jakarta Sans', sans-serif; color: #424a56">
+      <div style="font: 800 15px 'Plus Jakarta Sans', sans-serif; color: #23272e">Pushback &amp; recommendation</div>
+      <div><b>The tiles fail for four reasons</b>, only one of which is size: equal visual weight implies no opinion; chips leak raw DB tags (a $1,000 tell); two CTAs per card is web-app grammar, not report grammar; and 2-col card grids force ~180px per entity regardless of importance.</div>
+      <div><b>Recommendation: 7a as the default component</b>, because it keeps the three engagement classes (per <a href="#6a">6a</a>) visible and gives the top picks editorial why-lines — the thing customers screenshot. <b>7b becomes the appendix/dense mode</b>: same data contract, used when a report has 25+ entities or in the PDF appendix.</div>
+      <div><b>Both need the same pipeline fix:</b> a rank + one-sentence "why now" per entity and a display-name cleanup pass. Chips die entirely — the "use for" column and class mark carry that information with opinion attached. Adding both as one component (two density modes) to the <a href="#6d">6d</a> build list, P1 item 5.</div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Turn 6 — Handoff pack" style="padding: 48px 56px 72px; display: flex; flex-direction: column; gap: 32px; min-width: 3080px; border-bottom: 2px solid #d4d9df">
+
+  <div style="max-width: 1180px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0.14em; color: #6b7280">TURN 6 · HANDOFF PACK · SPEC + STYLE GUIDE + RUBRIC + BUILD LIST</div>
+    <div style="font: 700 30px/1.15 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em">Handoff — everything the renderer and pipeline need</div>
+    <div style="font: 400 15px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 920px">Folds in the consultancy-grade pushback: a falsifiable position (the money paragraph), composed numbers (opportunity math), and source-tiered evidence. All components are React 18 + Tailwind + shadcn implementable; the PDF renders the same spec through the existing print path.</div>
+  </div>
+
+  <div style="display: flex; gap: 32px; align-items: flex-start">
+
+    <div id="6a" data-screen-label="6a Component spec" style="width: 700px; background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 24px 28px">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">6a</span><span style="font: 800 17px 'Plus Jakarta Sans', sans-serif">Component spec</span></div>
+      <div style="display: flex; flex-direction: column; gap: 10px; font: 400 12px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56">
+        <div><b style="color: #23272e">Type scale</b> · Source Serif 4 display 34/26/19 + body 13/1.6; Plus Jakarta Sans labels 700 @ 9.5–13 tracked; JetBrains Mono data 9–11. Max 2 weights per family per page. PDF min 11px body.</div>
+        <div><b style="color: #23272e">Evidence chips</b> · confidence {● sourced, ◐ est., ○ inferred} × source tier {T1 regulator/filing, T2 analyst, T3 vendor/press}. Headline numbers <b>require</b> tier or wear ◐ at full size — the FINEOS "70%" rule. Per-page evidence count in the footer.</div>
+        <div><b style="color: #23272e">Callouts</b> · risk strip (2px ink rule) · NEXT action bar (sky tint, match-linked, bookable) · DO / TALK TO / BY WHEN close · <b>"If this were our money"</b> — one signed paragraph, serif italic, no citations, closes every report; the forwardable opinion.</div>
+        <div><b style="color: #23272e">Opportunity math block</b> · cost → accounts × ACV × win-rate → payback quarter; every operand chipped; assumptions row collapsible on web, footnoted in PDF. Contract: <span style="font: 500 10px 'JetBrains Mono', monospace">{cost, funnel{n, acv_lo, acv_hi, win_rate ◐}, payback_q}</span>. Absence of a model fails the rubric.</div>
+        <div><b style="color: #23272e">Tables/charts</b> · ruled matrix (customer row first, tinted) · ranked list (excluded options stated) · owned-SVG bars/timeline · Market Entry Map (<a href="#5a">5a</a>). One full-bleed moment per report (Map or the number) — rhythm rule against the new template tell.</div>
+        <div><b style="color: #23272e">Opinion is a lens, never a wall</b> · rank and recommend, but ALWAYS render the complete match set in a compact explore tier (chip row / bench list), every entity keeping its live profile link. Exclusions are stated reads with reasons ("our read — profiles stay live"), never deletions: the customer is exploring, and the matcher's breadth is part of the product's value. R8 amended: ranked + ≥1 named counter-read, full set rendered.</div>
+        <div><b style="color: #23272e">Ecosystem sections</b> · never merge provider classes into one list. Split by engagement model, one component each: <i>commercial providers</i> → ranked cards + named exclusions (R8); <i>government/trade support</i> → compact entitlement table; <i>accelerators/hubs</i> → application cards {deadline, amount, dilution, fit verdict}. Maps ≈1:1 to DB modules but headed in the reader's frame ("Who to hire / What you're entitled to / What to apply for"). Thin module (T-1) → collapses to a row in a combined Ecosystem section, never an anaemic heading.</div>
+        <div><b style="color: #23272e">Identity</b> · cover (<a href="#1a">1a</a>) with logo.dev mark + oklch-clamped accent · TOC with per-section one-line verdicts · running footer {customer · date · page/total · evidence counts} · <b>living-document strip</b>: thesis review triggers + next-refresh date (web premium surface).</div>
+      </div>
+    </div>
+
+    <div style="width: 660px; display: flex; flex-direction: column; gap: 32px">
+      <div id="6b" data-screen-label="6b Style guide" style="background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 24px 28px">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">6b</span><span style="font: 800 17px 'Plus Jakarta Sans', sans-serif">One-page style guide — linter-enforceable</span></div>
+        <div style="font: 500 10.5px/1.9 'JetBrains Mono', monospace; color: #424a56">
+          R1 labels: no [-_] compound keys; title-case ≤48ch<br>
+          R2 verdict slot: key_question renders component, never ""quotes""<br>
+          R3 claims: 1 fact = 1 registry value; conflict → block or range<br>
+          R4 metrics: ≤4 on p.1, same geography+scope, related visually<br>
+          R5 no intake/apology strings in body — gap cards only (T-1)<br>
+          R6 angle/why-fit MUST match product.usp_terms<br>
+          R7 spine from archetype; each opener states why-for-you ≤140ch<br>
+          R8 recommendations ranked; ≥1 named exclusion per list section<br>
+          R9 headline numbers carry tier chip; ◐ never smaller than 9px<br>
+          R10 sparse: n=1→row, n=0→boundary; no empty scaffolding<br>
+          R12 every database entity links to its profile (target=_blank)
+        </div>
+      </div>
+
+      <div id="6c" data-screen-label="6c Design rubric" style="background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 24px 28px">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">6c</span><span style="font: 800 17px 'Plus Jakarta Sans', sans-serif">100-pt design rubric — quality-loop shape · ship ≥ 75</span></div>
+        <div style="border: 1px solid #e5e8ec; border-radius: 6px; overflow: hidden; font: 400 11px/1.4 'Plus Jakarta Sans', sans-serif">
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; background: #f4f6f8; font: 600 8.5px 'JetBrains Mono', monospace; color: #6b7280; padding: 6px 12px; gap: 8px"><span>DIMENSION</span><span>PTS</span><span>FINEOS</span><span>CRDTLG</span><span>FLOATS</span><span>REDESIGN</span></div>
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; padding: 6px 12px; gap: 8px; border-top: 1px solid #eef0f3"><span>Hierarchy &amp; opening sequence</span><span>15</span><span>4</span><span>4</span><span>3</span><b style="color: #0e8a5f">13</b></div>
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; padding: 6px 12px; gap: 8px; border-top: 1px solid #eef0f3"><span>Scannability (3-min test)</span><span>15</span><span>5</span><span>5</span><span>4</span><b style="color: #0e8a5f">14</b></div>
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; padding: 6px 12px; gap: 8px; border-top: 1px solid #eef0f3"><span>Data-viz &amp; opportunity math</span><span>15</span><span>0</span><span>0</span><span>0</span><b style="color: #0e8a5f">13</b></div>
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; padding: 6px 12px; gap: 8px; border-top: 1px solid #eef0f3"><span>Evidence craft (tiers, claims)</span><span>15</span><span>4</span><span>3</span><span>3</span><b style="color: #0e8a5f">13</b></div>
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; padding: 6px 12px; gap: 8px; border-top: 1px solid #eef0f3"><span>Personalisation &amp; identity</span><span>10</span><span>2</span><span>2</span><span>2</span><b style="color: #0e8a5f">9</b></div>
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; padding: 6px 12px; gap: 8px; border-top: 1px solid #eef0f3"><span>Craft &amp; typography</span><span>10</span><span>4</span><span>4</span><span>4</span><b style="color: #0e8a5f">9</b></div>
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; padding: 6px 12px; gap: 8px; border-top: 1px solid #eef0f3"><span>De-templating / archetype fit</span><span>10</span><span>3</span><span>2</span><span>1</span><b style="color: #0e8a5f">9</b></div>
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; padding: 6px 12px; gap: 8px; border-top: 1px solid #eef0f3"><span>Action &amp; product surfacing</span><span>10</span><span>3</span><span>4</span><span>3</span><b style="color: #0e8a5f">9</b></div>
+          <div style="display: grid; grid-template-columns: 1fr 44px 52px 52px 52px 62px; padding: 7px 12px; gap: 8px; border-top: 2px solid #23272e; font-weight: 800"><span>TOTAL · ship ≥ 75</span><span>100</span><span style="color: #b91c1c">25</span><span style="color: #b91c1c">24</span><span style="color: #b91c1c">20</span><span style="color: #0e8a5f">89</span></div>
+        </div>
+        <div style="font: 400 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #6b7280; margin-top: 8px">Same dimension/weight/score shape as <span style="font: 500 10px 'JetBrains Mono', monospace">report-quality-loop/rubric.ts</span> — lands as a second scorer in the existing Edge Function, gating publish alongside the Part A content linter.</div>
+      </div>
+    </div>
+
+    <div id="6d" data-screen-label="6d Build list" style="width: 620px; background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 24px 28px">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">6d</span><span style="font: 800 17px 'Plus Jakarta Sans', sans-serif">Prioritised build list — ready to cut as tickets</span></div>
+      <div style="display: flex; flex-direction: column; gap: 12px; font: 400 12px/1.5 'Plus Jakarta Sans', sans-serif; color: #424a56">
+        <div><div style="font: 700 10px 'JetBrains Mono', monospace; color: #b91c1c; letter-spacing: 0.1em; margin-bottom: 4px">P0 — TRUST FLOOR (BLOCKS $1,000 CREDIBILITY)</div>
+        1. Evidence system: chips + source tiers + claims-registry render (kills R3/R9 failures)<br>2. Exec brief component per <a href="#4a">4a</a> contract — thesis, moves, number, math block<br>3. Document identity: cover, TOC-with-verdicts, running footer; print path<br>4. Label/skeleton/apology linter (R1, R2, R5) in generate-report</div>
+        <div><div style="font: 700 10px 'JetBrains Mono', monospace; color: #b45309; letter-spacing: 0.1em; margin-bottom: 4px">P1 — VALUE LAYER</div>
+        5. Comparison matrix + account cards + gap cards (T-1/T-2 degradation); ecosystem directory (<a href="#7a">7a</a> default, <a href="#7b">7b</a> dense mode) replaces provider tiles<br>6. Opportunity math block + ranked-with-exclusions list (R8)<br>7. Archetype spine selector (<a href="#3c">3c</a>) + section openers<br>8. Market Entry Map from pipeline data (<a href="#5a">5a</a> contract)</div>
+        <div><div style="font: 700 10px 'JetBrains Mono', monospace; color: #0e8a5f; letter-spacing: 0.1em; margin-bottom: 4px">P2 — PREMIUM SURFACE</div>
+        9. logo.dev theming + oklch accent clamp + monogram fallback<br>10. "If this were our money" closer + living-document strip (web)<br>11. Design-rubric scorer in report-quality-loop, publish gate ≥ 75</div>
+        <div style="border-top: 1px solid #eef0f3; padding-top: 10px; font: 400 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #6b7280"><b style="color: #23272e">Contracts index</b> — exec brief <a href="#4a">4a</a> · matrix <a href="#4b">4b</a> · accounts <a href="#4c">4c</a>/<a href="#4f">4f</a> · map <a href="#5a">5a</a> · archetype <a href="#3c">3c</a>. Dependencies on the teardown ticket: claims registry (R3), archetype field, usp_terms, source-tier metadata.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Turn 5 — Signature visual: Market Entry Map" style="padding: 48px 56px 72px; display: flex; flex-direction: column; gap: 36px; min-width: 3080px; border-bottom: 2px solid #d4d9df">
+
+  <div style="max-width: 1180px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0.14em; color: #6b7280">TURN 5 · SIGNATURE MES VISUAL · CONVERGED DIRECTION, ITERATION 2</div>
+    <div style="font: 700 30px/1.15 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em">The Market Entry Map — one chart, any customer, no art direction</div>
+    <div style="font: 400 15px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 920px">MES's Magic-Quadrant moment: a 2×2 plotting the customer against every profiled entity on <b>entry-relevant axes selected by archetype</b> (<a href="#3c">3c</a>). The customer is the only coloured mark — logo via logo.dev, accent clamped to the MES chroma band. Below: the same component rendered from all three samples' pipeline data unchanged.</div>
+    <div id="5a" style="display: flex; gap: 24px; background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 18px 24px; max-width: 1180px; font: 400 12px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56">
+      <div style="flex: 1"><b style="color: #23272e">Data contract</b> · <span style="font: 500 10.5px 'JetBrains Mono', monospace">{axes{x, y} ← archetype, entities[2..9]{name, domain?, x∈0..1, y∈0..1, evidence}, customer_id, trajectory?{dx, dy, label}}</span></div>
+      <div style="flex: 1"><b style="color: #23272e">Theming</b> · logo.dev by intake domain → dominant hue → oklch clamp; missing logo → monogram tile; non-customer marks always neutral grey.</div>
+      <div style="flex: 1"><b style="color: #23272e">Degradation</b> · n&lt;2 entities → no map; render the positioning row (<a href="#2c">2c</a> T-2). Axis scores below evidence threshold → entity plots hollow with ○ INFERRED chip.</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start">
+
+    <div id="5b" data-screen-label="5b Map — FINEOS" style="width: 560px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 26px 30px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">5b</span><span style="font: 600 9px 'JetBrains Mono', monospace; color: #9aa2ad">ARCHETYPE: INCUMBENT</span></div>
+      <div style="font: 700 19px 'Source Serif 4', serif; margin-top: 10px">Market Entry Map — FINEOS</div>
+      <div style="font: 400 11px/1.5 'Source Serif 4', serif; color: #57606d; margin-top: 2px">Every credible rival is P&amp;C-first; only one has landed.</div>
+      <div style="position: relative; height: 320px; margin: 18px 0 6px; border-left: 1.5px solid #23272e; border-bottom: 1.5px solid #23272e; background: linear-gradient(#eef0f3 1px, transparent 1px) 0 0 / 100% 25%, linear-gradient(90deg, #eef0f3 1px, transparent 1px) 0 0 / 25% 100%">
+        <div style="position: absolute; top: 6px; right: 8px; font: 600 8.5px 'JetBrains Mono', monospace; color: #c3c9d1">WIN ZONE</div>
+        <div style="position: absolute; left: 72%; top: 12%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 6px"><div style="width: 26px; height: 26px; border-radius: 6px; background: #123a5c; color: #fff; display: flex; align-items: center; justify-content: center; font: 800 12px 'Plus Jakarta Sans', sans-serif; box-shadow: 0 0 0 3px #b8e0f5">F</div><span style="font: 700 11px 'Plus Jakarta Sans', sans-serif; color: #1787cf">FINEOS — you</span></div>
+        <div style="position: absolute; left: 26%; top: 38%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 5px"><div style="width: 11px; height: 11px; border-radius: 50%; background: #6b7280"></div><span style="font: 600 10px 'Plus Jakarta Sans', sans-serif; color: #57606d">Duck Creek</span></div>
+        <div style="position: absolute; left: 20%; top: 74%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 5px"><div style="width: 11px; height: 11px; border-radius: 50%; background: #9aa2ad"></div><span style="font: 600 10px 'Plus Jakarta Sans', sans-serif; color: #57606d">Guidewire</span></div>
+        <div style="position: absolute; left: 42%; top: 82%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 5px"><div style="width: 11px; height: 11px; border-radius: 50%; background: #9aa2ad"></div><span style="font: 600 10px 'Plus Jakarta Sans', sans-serif; color: #57606d">Sapiens</span></div>
+        <div style="position: absolute; left: 28%; top: 90%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 5px"><div style="width: 11px; height: 11px; border-radius: 50%; background: #c3c9d1"></div><span style="font: 600 10px 'Plus Jakarta Sans', sans-serif; color: #6b7280">DXC · Majesco</span></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; font: 600 9px 'JetBrains Mono', monospace; color: #6b7280"><span>Y · LOCAL PROOF (NONE → DOMINANT)</span><span>X · LINES COVERED (P&amp;C-ONLY → FULL LA&amp;H)</span></div>
+    </div>
+
+    <div id="5c" data-screen-label="5c Map — CreditLogic" style="width: 560px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 26px 30px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">5c</span><span style="font: 600 9px 'JetBrains Mono', monospace; color: #9aa2ad">ARCHETYPE: FOREIGN ENTRANT</span></div>
+      <div style="font: 700 19px 'Source Serif 4', serif; margin-top: 10px">Market Entry Map — CreditLogic</div>
+      <div style="font: 400 11px/1.5 'Source Serif 4', serif; color: #57606d; margin-top: 2px">The incumbent owns relationships; the pilot buys proof.</div>
+      <div style="position: relative; height: 320px; margin: 18px 0 6px; border-left: 1.5px solid #23272e; border-bottom: 1.5px solid #23272e; background: linear-gradient(#eef0f3 1px, transparent 1px) 0 0 / 100% 25%, linear-gradient(90deg, #eef0f3 1px, transparent 1px) 0 0 / 25% 100%">
+        <div style="position: absolute; top: 6px; right: 8px; font: 600 8.5px 'JetBrains Mono', monospace; color: #c3c9d1">WIN ZONE</div>
+        <div style="position: absolute; left: 34%; top: 22%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 5px"><div style="width: 11px; height: 11px; border-radius: 50%; background: #6b7280"></div><span style="font: 600 10px 'Plus Jakarta Sans', sans-serif; color: #57606d">Simpology</span></div>
+        <div style="position: absolute; left: 76%; top: 78%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 6px"><div style="width: 26px; height: 26px; border-radius: 6px; background: #1f5c46; color: #fff; display: flex; align-items: center; justify-content: center; font: 800 12px 'Plus Jakarta Sans', sans-serif; box-shadow: 0 0 0 3px #cdeee0">C</div><span style="font: 700 11px 'Plus Jakarta Sans', sans-serif; color: #0e8a5f">CreditLogic — you</span></div>
+        <div style="position: absolute; left: 76%; top: 30%; height: 42%; border-left: 1.5px dashed #0e8a5f"></div>
+        <div style="position: absolute; left: 78%; top: 44%; font: 600 9px 'JetBrains Mono', monospace; color: #0e8a5f">↑ PILOT → REFERENCE</div>
+      </div>
+      <div style="display: flex; justify-content: space-between; font: 600 9px 'JetBrains Mono', monospace; color: #6b7280"><span>Y · LOCAL PROOF (NONE → EMBEDDED)</span><span>X · GOVERNED DECISIONING (BLACK-BOX → AUDIT-READY)</span></div>
+    </div>
+
+    <div id="5d" data-screen-label="5d Map — Floats" style="width: 560px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 26px 30px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 3px 9px">5d</span><span style="font: 600 9px 'JetBrains Mono', monospace; color: #9aa2ad">ARCHETYPE: DOMESTIC STARTUP</span></div>
+      <div style="font: 700 19px 'Source Serif 4', serif; margin-top: 10px">Market Entry Map — Floats</div>
+      <div style="font: 400 11px/1.5 'Source Serif 4', serif; color: #57606d; margin-top: 2px">The wedge is empty; the ATS row is where integrations live.</div>
+      <div style="position: relative; height: 320px; margin: 18px 0 6px; border-left: 1.5px solid #23272e; border-bottom: 1.5px solid #23272e; background: linear-gradient(#eef0f3 1px, transparent 1px) 0 0 / 100% 25%, linear-gradient(90deg, #eef0f3 1px, transparent 1px) 0 0 / 25% 100%">
+        <div style="position: absolute; top: 6px; right: 8px; font: 600 8.5px 'JetBrains Mono', monospace; color: #c3c9d1">WIN ZONE</div>
+        <div style="position: absolute; left: 40%; top: 16%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 6px"><div style="width: 26px; height: 26px; border-radius: 6px; background: #5b3a8f; color: #fff; display: flex; align-items: center; justify-content: center; font: 800 12px 'Plus Jakarta Sans', sans-serif; box-shadow: 0 0 0 3px #e4d9f5">FL</div><span style="font: 700 11px 'Plus Jakarta Sans', sans-serif; color: #7c3aed">Floats — you</span></div>
+        <div style="position: absolute; left: 78%; top: 62%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 5px"><div style="width: 11px; height: 11px; border-radius: 50%; background: #6b7280"></div><span style="font: 600 10px 'Plus Jakarta Sans', sans-serif; color: #57606d">JobAdder</span></div>
+        <div style="position: absolute; left: 30%; top: 80%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 5px"><div style="width: 11px; height: 11px; border-radius: 50%; background: #9aa2ad"></div><span style="font: 600 10px 'Plus Jakarta Sans', sans-serif; color: #57606d">Indeed</span></div>
+        <div style="position: absolute; left: 62%; top: 74%; transform: translate(-50%,-50%); display: flex; align-items: center; gap: 5px"><div style="width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid #9aa2ad; background: #fff"></div><span style="font: 600 10px 'Plus Jakarta Sans', sans-serif; color: #6b7280">SEEK AI <span style="font: 600 8px 'JetBrains Mono', monospace; background: #eef0f3; border-radius: 2px; padding: 0 3px">○ INFERRED</span></span></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; font: 600 9px 'JetBrains Mono', monospace; color: #6b7280"><span>Y · ENGAGEMENT WEDGE (NONE → TRACKABLE)</span><span>X · ATS/WORKFLOW DEPTH (NONE → SYSTEM OF RECORD)</span></div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Turn 4 — Before/after: 3 key sections" style="padding: 48px 56px 72px; display: flex; flex-direction: column; gap: 36px; min-width: 3080px; border-bottom: 2px solid #d4d9df">
+
+  <div style="max-width: 1180px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0.14em; color: #6b7280">TURN 4 · BEFORE / AFTER · CONVERGED DIRECTION, ITERATION 1 · FINEOS DATA</div>
+    <div style="font: 700 30px/1.15 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em">Before / after — executive summary, competitor landscape, target accounts</div>
+    <div style="font: 400 15px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 900px">Current renderer output (reconstructed from the live components) against the converged direction. Every "after" is a data-shaped component — the content contract each section must emit is stated under it, feeding the teardown ticket. Degradation insets show the sparse cases from CreditLogic and Floats.</div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start">
+
+    <!-- 4a exec summary -->
+    <div id="4a" data-screen-label="4a Exec summary before/after" style="width: 700px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">4a</span><span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">Executive summary</span></div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #b91c1c">BEFORE — CURRENT RENDERER</div>
+      <div style="width: 640px; background: #fff; border: 1px solid #e5e8ec; border-top: 3px solid #3b82f6; border-radius: 12px; padding: 22px 24px">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px"><div style="width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font: 700 14px 'Plus Jakarta Sans', sans-serif">▤</div><div style="font: 700 20px 'Plus Jakarta Sans', sans-serif">Executive Summary</div></div>
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #424a56"><b>FINEOS already holds a commanding position in Australia — 70% market share of group insurance</b>, an ASX listing (ASX: FCL), and a Melbourne Capability Centre… The strategic imperative now is to convert that structural dominance into expanded revenue across life, accident, and health lines — particularly in Sydney/NSW, where the majority of Australia's major insurer headquarters… <span style="background: #eff6ff; color: #2563eb; font-size: 9px; border-radius: 3px; padding: 1px 4px">[1]</span><span style="background: #eff6ff; color: #2563eb; font-size: 9px; border-radius: 3px; padding: 1px 4px">[2]</span></div>
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #424a56; margin-top: 8px">The market conditions strongly favour acceleration. The Australian insurtech market is valued at USD 377 million in 2025 and projected to reach USD 4.2 billion by 2034, representing a 30.68% CAGR <span style="background: #eff6ff; color: #2563eb; font-size: 9px; border-radius: 3px; padding: 1px 4px">[1]</span> … <i style="color: #9aa2ad">+ three more paragraphs; thesis, cost and return never surfaced</i></div>
+      </div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #0e8a5f; margin-top: 6px">AFTER — CONVERGED (SEE <a href="#1a" style="color: #0e8a5f">1a</a> FULL PAGE; STRUCTURE BELOW)</div>
+      <div style="width: 640px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 26px 30px">
+        <div style="font: 700 22px/1.2 'Source Serif 4', serif">This is not market entry. FINEOS is under-monetising a market it already leads.</div>
+        <div style="display: flex; gap: 18px; margin-top: 14px">
+          <div style="flex: 1.4; font: 400 11.5px/1.55 'Source Serif 4', serif; color: #424a56">One serif thesis · one paragraph of context · three moves as ruled rows with owners and quarters · risk strip · DO / TALK TO / BY WHEN close.</div>
+          <div style="width: 150px; border-left: 1px solid #e5e8ec; padding-left: 16px"><div style="font: 600 9px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">SHARE HELD ●</div><div style="font: 700 34px 'Source Serif 4', serif">70%</div><div style="font: 600 9px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280; margin-top: 8px">YR-1 COST <span style="color: #b45309">◐</span></div><div style="font: 700 16px 'Source Serif 4', serif">AUD 550k</div></div>
+        </div>
+      </div>
+      <div style="font: 400 11.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #6b7280; width: 640px"><b style="color: #23272e">Content contract:</b> <span style="font: 500 10.5px 'JetBrains Mono', monospace">{thesis ≤120ch, context ≤400ch, moves[3]{action, owner, quarter}, the_number{value, label, confidence}, cost{value, confidence}, return{value, confidence}, risks[≤3]{risk, mitigation}, next_action{verb, match_id, deadline}}</span> — no field, no render; missing optional fields collapse their row.</div>
+    </div>
+
+    <!-- 4b competitor landscape -->
+    <div id="4b" data-screen-label="4b Competitor landscape before/after" style="width: 700px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">4b</span><span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">Competitor landscape</span></div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #b91c1c">BEFORE — CURRENT RENDERER</div>
+      <div style="width: 640px; background: #fff; border: 1px solid #e5e8ec; border-top: 3px solid #a855f7; border-radius: 12px; padding: 22px 24px">
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #424a56"><b>Duck Creek Technologies</b><br>Market Position: A leading SaaS provider for core systems…<br>Strengths: Highly efficient and flexible…<br>Weaknesses: Primarily P&amp;C-centric…<br>Australian presence: Significant local investment including a Sydney office…</div>
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #9aa2ad; margin-top: 8px"><i>× 5 more identical prose blocks; "No Australian presence evident" repeated four times; then a "COMPETITOR PROFILES" card grid re-listing all six</i></div>
+      </div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #0e8a5f; margin-top: 6px">AFTER — ONE MATRIX, CUSTOMER ROW FIRST</div>
+      <div style="width: 640px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 24px 28px">
+        <div style="font: 700 17px 'Source Serif 4', serif; margin-bottom: 12px">Six rivals, one with boots in Sydney.</div>
+        <div style="border: 1px solid #e5e8ec; border-radius: 6px; overflow: hidden; font: 400 11px/1.4 'Plus Jakarta Sans', sans-serif">
+          <div style="display: grid; grid-template-columns: 130px 1fr 110px 90px; background: #f4f6f8; font: 600 9px 'JetBrains Mono', monospace; color: #6b7280; padding: 6px 12px; gap: 10px"><span>VENDOR</span><span>FOCUS</span><span>AU PRESENCE</span><span>THREAT</span></div>
+          <div style="display: grid; grid-template-columns: 130px 1fr 110px 90px; padding: 8px 12px; gap: 10px; background: #f0f8fd; border-top: 2px solid #29a3e3"><span style="font-weight: 800; color: #1787cf">FINEOS — you</span><span>Purpose-built LA&amp;H · policy → claims → absence</span><span style="font-weight: 700">70% share, ASX</span><span style="color: #6b7280">—</span></div>
+          <div style="display: grid; grid-template-columns: 130px 1fr 110px 90px; padding: 8px 12px; gap: 10px; border-top: 1px solid #eef0f3"><span style="font-weight: 700">Duck Creek</span><span>P&amp;C core, workers' comp templates</span><span style="font-weight: 700; color: #b91c1c">Sydney office</span><span style="font-weight: 700; color: #b91c1c">HIGH ▲</span></div>
+          <div style="display: grid; grid-template-columns: 130px 1fr 110px 90px; padding: 8px 12px; gap: 10px; border-top: 1px solid #eef0f3"><span style="font-weight: 700">Guidewire</span><span>P&amp;C InsuranceSuite, heavy installs</span><span style="color: #6b7280">None evident</span><span style="color: #b45309">MED</span></div>
+          <div style="display: grid; grid-template-columns: 130px 1fr 110px 90px; padding: 8px 12px; gap: 10px; border-top: 1px solid #eef0f3"><span style="font-weight: 700">Sapiens</span><span>Broad P&amp;C + Life portfolio</span><span style="color: #6b7280">None evident</span><span style="color: #b45309">MED</span></div>
+          <div style="display: grid; grid-template-columns: 130px 1fr 110px 90px; padding: 8px 12px; gap: 10px; border-top: 1px solid #eef0f3"><span style="font-weight: 700">DXC · Majesco</span><span>Legacy scale / cloud P&amp;C-Life</span><span style="color: #6b7280">None evident</span><span style="color: #0e8a5f">LOW</span></div>
+        </div>
+        <div style="font: 400 11px/1.5 'Source Serif 4', serif; color: #57606d; margin-top: 10px">Wedge: every credible rival is P&amp;C-first. Own the LA&amp;H narrative before Duck Creek localises it.</div>
+      </div>
+      <div style="font: 400 11.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #6b7280; width: 640px"><b style="color: #23272e">Content contract:</b> <span style="font: 500 10.5px 'JetBrains Mono', monospace">{headline ≤80ch, rows[1..8]{vendor, focus ≤60ch, au_presence{level, evidence}, threat ∈ {high, med, low}}, wedge ≤160ch}</span>. Degradation: n=1 → positioning row (<a href="#2c">2c</a> rule T-2); n=0 → stated research boundary, no section.</div>
+    </div>
+
+    <!-- 4c target accounts -->
+    <div id="4c" data-screen-label="4c Target accounts before/after" style="width: 700px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">4c</span><span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">Target accounts</span></div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #b91c1c">BEFORE — CURRENT RENDERER</div>
+      <div style="width: 640px; background: #fff; border: 1px solid #e5e8ec; border-top: 3px solid #f43f5e; border-radius: 12px; padding: 22px 24px">
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #424a56"><b>Macquarie Group</b><br>Macquarie Group is a global financial services powerhouse with over A$722.1 billion in assets under management. They maintain a dominant position in retail and business banking… <i style="color: #9aa2ad">six prose fields per account, contacts and angle buried at the bottom; AMP's brief interrupted by "ensure the website (amp.com.au) is attached to your intake"</i></div>
+      </div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #0e8a5f; margin-top: 6px">AFTER — ACCOUNT CARD + DESIGNED PARTIAL BRIEF</div>
+      <div style="width: 640px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 24px 28px; display: flex; flex-direction: column; gap: 12px">
+        <div style="border: 1px solid #e5e8ec; border-radius: 6px; padding: 14px 16px; background: #fff">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font: 700 15px 'Plus Jakarta Sans', sans-serif">Macquarie Group <span style="font: 400 11px 'Plus Jakarta Sans', sans-serif; color: #6b7280">· A$722bn AUM</span></span><span style="font: 600 9px 'JetBrains Mono', monospace; background: #e7f6ef; color: #0e8a5f; border-radius: 3px; padding: 1px 5px">● FULL BRIEF</span></div>
+          <div style="display: flex; gap: 14px; margin-top: 8px; font: 400 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #424a56">
+            <div style="flex: 1"><b style="font-size: 9.5px; letter-spacing: 0.08em; color: #6b7280">WHY NOW</b><br>Procurement prioritising compliant, enterprise-risk-grade suppliers; wealth divisions scaling</div>
+            <div style="flex: 1"><b style="font-size: 9.5px; letter-spacing: 0.08em; color: #6b7280">DOOR</b><br>Head of Insurance · COO Banking &amp; Financial Services — via IT Procurement Principal</div>
+            <div style="flex: 1"><b style="font-size: 9.5px; letter-spacing: 0.08em; color: #6b7280">ANGLE</b><br>Consolidate fragmented legacy into one compliant cloud core — TCO story</div>
+          </div>
+          <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; background: #f0f8fd; border-radius: 4px; padding: 7px 10px"><span style="font: 700 9px 'JetBrains Mono', monospace; color: #1787cf">NEXT</span><span style="font: 600 11px 'Plus Jakarta Sans', sans-serif">Brief your Sales Director candidate on this account in round 2 interviews — book via matches ↗</span></div>
+        </div>
+        <div style="border: 1px solid #e5e8ec; border-radius: 6px; padding: 14px 16px; background: #fcfcfd">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font: 700 15px 'Plus Jakarta Sans', sans-serif">AMP Limited</span><span style="font: 600 9px 'JetBrains Mono', monospace; background: #eef0f3; color: #57606d; border-radius: 3px; padding: 1px 5px">○ PARTIAL BRIEF</span></div>
+          <div style="font: 400 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #424a56; margin-top: 6px">"Simplification costs" dominate recent reporting — high appetite for risk-reducing admin technology; new Lifetime income products need complex policy administration. Tech signals and named contacts pending — <b>add amp.com.au to your intake ↗</b> to complete this brief.</div>
+        </div>
+      </div>
+      <div style="font: 400 11.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #6b7280; width: 640px"><b style="color: #23272e">Content contract:</b> <span style="font: 500 10.5px 'JetBrains Mono', monospace">{account{name, scale_fact}, why_now ≤180ch, door[1..3]{title}, angle ≤140ch, next_action{verb, match_id}, brief_level ∈ {full, partial}}</span> — <b>why-they-fit must reference the customer's USP</b> (kills the Floats wrong-product briefs); partial briefs render the gap card, never intake error text.</div>
+    </div>
+  </div>
+
+  <div style="max-width: 1180px; font: 700 14px 'Plus Jakarta Sans', sans-serif; color: #424a56; border-top: 1px solid #d4d9df; padding-top: 24px">Same three sections on the Floats sample — the sparse/seed-stage stress test</div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start">
+
+    <!-- 4d Floats exec -->
+    <div id="4d" data-screen-label="4d Floats exec before/after" style="width: 700px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">4d</span><span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">Executive summary — Floats</span></div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #b91c1c">BEFORE — CURRENT RENDERER</div>
+      <div style="width: 640px; background: #fff; border: 1px solid #e5e8ec; border-top: 3px solid #3b82f6; border-radius: 12px; padding: 22px 24px">
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #424a56"><b>Floats enters the Australian market with a tightly differentiated value proposition:</b> replacing static PDF and Word CV attachments with trackable, interactive candidate presentation links… Powered by its SOLA AI assistant for natural language candidate search… <span style="background: #eff6ff; color: #2563eb; font-size: 9px; border-radius: 3px; padding: 1px 4px">[2]</span></div>
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #9aa2ad; margin-top: 8px"><i>"Floats enters the Australian market" — a Melbourne company. Four paragraphs; the 43.5% offset, the $500K–$3M round and the 12-month plan all mid-prose. Metric wall above it leads with "Australia-AI-powered-online-recruitment-platforms market size".</i></div>
+      </div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #0e8a5f; margin-top: 6px">AFTER — CONVERGED (FULL PAGE AT <a href="#3b" style="color: #0e8a5f">3b</a>; STRUCTURE BELOW)</div>
+      <div style="width: 640px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 26px 30px">
+        <div style="font: 700 22px/1.2 'Source Serif 4', serif">Raise on proof, not promise.</div>
+        <div style="display: flex; gap: 18px; margin-top: 14px">
+          <div style="flex: 1.4; font: 400 11.5px/1.55 'Source Serif 4', serif; color: #424a56">Archetype = domestic startup, so the brief opens on the raise, not the "entry": integrations → pilots → round, each with owner and month. Corridor copy gone; capital section promoted.</div>
+          <div style="width: 150px; border-left: 1px solid #e5e8ec; padding-left: 16px"><div style="font: 600 9px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">CASH BACK NOW ●</div><div style="font: 700 34px 'Source Serif 4', serif">43.5%</div><div style="font: 600 9px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280; margin-top: 8px">THE ROUND ●</div><div style="font: 700 16px 'Source Serif 4', serif">$500K–$3M</div></div>
+        </div>
+      </div>
+      <div style="font: 400 11.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #6b7280; width: 640px">Same contract as <a href="#4a">4a</a> — one component serves both archetypes; only <span style="font: 500 10.5px 'JetBrains Mono', monospace">archetype</span> changes which fields lead.</div>
+    </div>
+
+    <!-- 4e Floats competitors -->
+    <div id="4e" data-screen-label="4e Floats competitors before/after" style="width: 700px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">4e</span><span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">Competitor landscape — Floats (n=2)</span></div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #b91c1c">BEFORE — CURRENT RENDERER</div>
+      <div style="width: 640px; background: #fff; border: 1px solid #e5e8ec; border-top: 3px solid #a855f7; border-radius: 12px; padding: 22px 24px">
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #424a56"><b>Indeed</b><br>Strengths: Massive data sets on trending searches across Australian states and suburbs; localized search filters for "Aboriginal identified" roles… <i style="color: #9aa2ad">scrape residue ("Adelaide Airport (SA)", "Agnes Water (QLD)") typeset as competitive insight; two profiles inside architecture headed "Primary Competitors in the Australian Market"</i></div>
+      </div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #0e8a5f; margin-top: 6px">AFTER — MATRIX AT N=2, WEDGE FIRST</div>
+      <div style="width: 640px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 24px 28px">
+        <div style="font: 700 17px 'Source Serif 4', serif; margin-bottom: 12px">Nobody owns the presentation layer — yet.</div>
+        <div style="border: 1px solid #e5e8ec; border-radius: 6px; overflow: hidden; font: 400 11px/1.4 'Plus Jakarta Sans', sans-serif">
+          <div style="display: grid; grid-template-columns: 120px 1fr 140px 90px; background: #f4f6f8; font: 600 9px 'JetBrains Mono', monospace; color: #6b7280; padding: 6px 12px; gap: 10px"><span>VENDOR</span><span>THEIR GROUND</span><span>PRESENTATION LAYER</span><span>THREAT</span></div>
+          <div style="display: grid; grid-template-columns: 120px 1fr 140px 90px; padding: 8px 12px; gap: 10px; background: #f0f8fd; border-top: 2px solid #29a3e3"><span style="font-weight: 800; color: #1787cf">Floats — you</span><span>Trackable interactive profiles + SOLA search</span><span style="font-weight: 700">The product</span><span style="color: #6b7280">—</span></div>
+          <div style="display: grid; grid-template-columns: 120px 1fr 140px 90px; padding: 8px 12px; gap: 10px; border-top: 1px solid #eef0f3"><span style="font-weight: 700">JobAdder</span><span>Agency ATS/CRM of record, Adder Intelligence</span><span style="color: #6b7280">None — integrate, don't fight</span><span style="font-weight: 700; color: #b91c1c">HIGH ▲</span></div>
+          <div style="display: grid; grid-template-columns: 120px 1fr 140px 90px; padding: 8px 12px; gap: 10px; border-top: 1px solid #eef0f3"><span style="font-weight: 700">Indeed</span><span>Volume aggregation + broad matching</span><span style="color: #6b7280">None — different buyer</span><span style="color: #0e8a5f">LOW</span></div>
+        </div>
+        <div style="font: 400 11px/1.5 'Source Serif 4', serif; color: #57606d; margin-top: 10px">Research boundary stated in-line: two commercial vendors profiled; SEEK's AI assistants tracked as a watch item, not a profile.</div>
+      </div>
+      <div style="font: 400 11.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #6b7280; width: 640px">Contract addition: <span style="font: 500 10.5px 'JetBrains Mono', monospace">au_presence</span> column swaps to the axis that matters per archetype (here: presentation-layer coverage) — column semantics come from the wedge, evidence fields exclude scrape artifacts by linter rule.</div>
+    </div>
+
+    <!-- 4f Floats accounts -->
+    <div id="4f" data-screen-label="4f Floats accounts before/after" style="width: 700px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px"><span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">4f</span><span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">Target accounts — Floats</span></div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #b91c1c">BEFORE — CURRENT RENDERER</div>
+      <div style="width: 640px; background: #fff; border: 1px solid #e5e8ec; border-top: 3px solid #f43f5e; border-radius: 12px; padding: 22px 24px">
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #424a56"><b>Hays Australia</b><br>1) Who they are: A premier professional recruitment agency…<br>4) Why they fit Floats: Floats is well-positioned to assist with the complexities of <b style="color: #b91c1c">large-scale contractor payroll</b>…<br>5) WHO TO APPROACH: Head of Sales.</div>
+        <div style="font: 400 11px/1.7 'Plus Jakarta Sans', sans-serif; color: #9aa2ad; margin-top: 8px"><i>Numbered prompt skeleton in print; "why they fit" pitches payroll — a product Floats doesn't sell; "Note: A fourth account… is not covered due to data availability."</i></div>
+      </div>
+      <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #0e8a5f; margin-top: 6px">AFTER — USP-ANCHORED CARD + GAP CARD</div>
+      <div style="width: 640px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 24px 28px; display: flex; flex-direction: column; gap: 12px">
+        <div style="border: 1px solid #e5e8ec; border-radius: 6px; padding: 14px 16px; background: #fff">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font: 700 15px 'Plus Jakarta Sans', sans-serif">Adecco Australia <span style="font: 400 11px 'Plus Jakarta Sans', sans-serif; color: #6b7280">· global workforce leader</span></span><span style="font: 600 9px 'JetBrains Mono', monospace; background: #e7f6ef; color: #0e8a5f; border-radius: 3px; padding: 1px 5px">● FULL BRIEF</span></div>
+          <div style="display: flex; gap: 14px; margin-top: 8px; font: 400 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #424a56">
+            <div style="flex: 1"><b style="font-size: 9.5px; letter-spacing: 0.08em; color: #6b7280">WHY NOW</b><br>Scaling "human-centred AI recruitment"; hiring recruiters + employer-services staff</div>
+            <div style="flex: 1"><b style="font-size: 9.5px; letter-spacing: 0.08em; color: #6b7280">DOOR</b><br>Head of Sales · enterprise tech procurement — demo route</div>
+            <div style="flex: 1"><b style="font-size: 9.5px; letter-spacing: 0.08em; color: #6b7280">ANGLE</b><br>Trackable candidate presentation inside their VMS flow — engagement data their AI stack lacks</div>
+          </div>
+          <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px; background: #f0f8fd; border-radius: 4px; padding: 7px 10px"><span style="font: 700 9px 'JetBrains Mono', monospace; color: #1787cf">NEXT</span><span style="font: 600 11px 'Plus Jakarta Sans', sans-serif">30-day pilot offer with engagement-report deliverable — template in your matches ↗</span></div>
+        </div>
+        <div style="border: 1px solid #e5e8ec; border-radius: 6px; padding: 14px 16px; background: #fcfcfd">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font: 700 15px 'Plus Jakarta Sans', sans-serif">Fourth intake account</span><span style="font: 600 9px 'JetBrains Mono', monospace; background: #eef0f3; color: #57606d; border-radius: 3px; padding: 1px 5px">○ AWAITING DATA</span></div>
+          <div style="font: 400 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #424a56; margin-top: 6px">Named in your intake but below the brief threshold. <b>Add their website to your intake ↗</b> and this card completes on the next refresh — no silent omission, no footnote apology.</div>
+        </div>
+      </div>
+      <div style="font: 400 11.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #6b7280; width: 640px">The USP-anchor rule from <a href="#4c">4c</a> would have blocked the Hays payroll pitch at generation time: <span style="font: 500 10.5px 'JetBrains Mono', monospace">angle MUST reference product.usp_terms</span> — a linter check, not an editorial judgment.</div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Turn 3 — Floats like-for-like review" style="padding: 48px 56px 72px; display: flex; flex-direction: column; gap: 36px; min-width: 3080px; border-bottom: 2px solid #d4d9df">
+
+  <div style="max-width: 1180px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0.14em; color: #6b7280">TURN 3 · FLOATS SAMPLE (22 PP, SCALE PLAN, DOMESTIC AU STARTUP) · LIKE-FOR-LIKE REVIEW</div>
+    <div style="font: 700 30px/1.15 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em">Floats audit — the archetype test</div>
+    <div style="font: 400 15px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 900px">Third sample, third archetype: a Melbourne seed-stage startup with no market to "enter". It confirms two failure classes as pipeline-wide (machine-key labels, empty-state sections) and exposes the biggest structural finding of the review: <b>the report spine doesn't adapt to entrant type</b> — a domestic startup receives foreign-entrant modules that apologise for existing. <a href="#3a">3a</a> audit · <a href="#3b">3b</a> converged brief on seed-stage data · <a href="#3c">3c</a> the adaptive spine that fixes de-templating at the root.</div>
+  </div>
+
+  <div id="3a" style="max-width: 1180px; background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 28px 32px 24px">
+    <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px">
+      <span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">3a</span>
+      <div style="font: 700 18px 'Plus Jakarta Sans', sans-serif">Top 10 presentation failures — Floats sample</div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px">
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{ auditFLLeft }}" as="f" hint-placeholder-count="5">
+          <div style="display: flex; gap: 14px; padding: 11px 0; border-top: 1px solid #eef0f3">
+            <div style="font: 700 20px 'Source Serif 4', serif; color: #c3c9d1; min-width: 30px; text-align: right">{{ f.rank }}</div>
+            <div style="flex: 1">
+              <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap">
+                <span style="font: 700 13.5px 'Plus Jakarta Sans', sans-serif">{{ f.title }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.tagColor }}; border: 1px solid currentColor; border-radius: 3px; padding: 1px 5px">{{ f.tag }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.scopeColor }}; background: #f4f6f8; border-radius: 3px; padding: 1px 5px">{{ f.scope }}</span>
+              </div>
+              <div style="font: 400 12.5px/1.5 'Plus Jakarta Sans', sans-serif; color: #57606d; margin-top: 2px">{{ f.evidence }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{ auditFLRight }}" as="f" hint-placeholder-count="5">
+          <div style="display: flex; gap: 14px; padding: 11px 0; border-top: 1px solid #eef0f3">
+            <div style="font: 700 20px 'Source Serif 4', serif; color: #c3c9d1; min-width: 30px; text-align: right">{{ f.rank }}</div>
+            <div style="flex: 1">
+              <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap">
+                <span style="font: 700 13.5px 'Plus Jakarta Sans', sans-serif">{{ f.title }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.tagColor }}; border: 1px solid currentColor; border-radius: 3px; padding: 1px 5px">{{ f.tag }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.scopeColor }}; background: #f4f6f8; border-radius: 3px; padding: 1px 5px">{{ f.scope }}</span>
+              </div>
+              <div style="font: 400 12.5px/1.5 'Plus Jakarta Sans', sans-serif; color: #57606d; margin-top: 2px">{{ f.evidence }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="margin-top: 14px; border-top: 1px solid #eef0f3; padding-top: 12px; font: 400 12.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 1020px"><b>Three-sample synthesis:</b> five failures now recur across all samples (opening, exec prose, verdict slot, no data viz, directory dump) — renderer components fix them once. Two are confirmed linter classes (machine-key labels, claim/scope hygiene). The new class here is <b>archetype fit</b>: section spine, module copy and "why they fit" fields must derive from entrant type + product USP — that's a content contract, enforced upstream of design.</div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start">
+    <!-- 3b converged exec brief — Floats -->
+    <div id="3b" data-screen-label="3b Converged exec brief — Floats" style="width: 700px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">3b</span>
+        <span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">Converged direction — seed-stage exec brief</span>
+      </div>
+      <div style="width: 640px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 34px 40px 26px; display: flex; flex-direction: column">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.12em; color: #6b7280">
+          <span>EXECUTIVE BRIEF · DOMESTIC SCALE-UP</span>
+          <span style="display: flex; gap: 5px">
+            <span style="font: 600 9px 'JetBrains Mono', monospace; background: #e7f6ef; color: #0e8a5f; border-radius: 3px; padding: 1px 5px">● SOURCED</span>
+            <span style="font: 600 9px 'JetBrains Mono', monospace; background: #fdf1e0; color: #b45309; border-radius: 3px; padding: 1px 5px">◐ EST.</span>
+          </span>
+        </div>
+        <div style="height: 1px; background: #23272e; margin: 10px 0 20px"></div>
+        <div style="font: 700 26px/1.2 'Source Serif 4', serif; letter-spacing: -0.005em">Raise on proof, not promise.</div>
+        <div style="font: 400 13px/1.6 'Source Serif 4', serif; color: #424a56; margin-top: 10px">Floats already has named clients and an uncontested wedge — the engagement layer incumbents don't build. The round closes when 10–15 agency pilots become engagement data. Agencies buy on relationships in 4–8-week cycles: speed, not procurement, is the constraint.</div>
+        <div style="display: flex; gap: 26px; margin-top: 20px">
+          <div style="flex: 1.5">
+            <div style="font: 700 11px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; margin-bottom: 4px">THE THREE MOVES</div>
+            <div style="display: flex; flex-direction: column">
+              <div style="display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid #e5e8ec">
+                <div style="font: 700 15px 'Source Serif 4', serif; color: #1787cf">1</div>
+                <div><div style="font: 700 12.5px 'Plus Jakarta Sans', sans-serif">Ship JobAdder + Bullhorn integrations</div>
+                <div style="font: 400 11.5px/1.5 'Source Serif 4', serif; color: #57606d">Months 1–3. The non-negotiable buyer filter for Australian agencies — nothing else converts without it.</div></div>
+              </div>
+              <div style="display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid #e5e8ec">
+                <div style="font: 700 15px 'Source Serif 4', serif; color: #1787cf">2</div>
+                <div><div style="font: 700 12.5px 'Plus Jakarta Sans', sans-serif">Run 10–15 pilots off existing logos</div>
+                <div style="font: 400 11.5px/1.5 'Source Serif 4', serif; color: #57606d">Ivy Tech, Kappa, Dental Industry Recruitment as social proof; engagement data becomes the PMF narrative.</div></div>
+              </div>
+              <div style="display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid #e5e8ec; border-bottom: 1px solid #e5e8ec">
+                <div style="font: 700 15px 'Source Serif 4', serif; color: #1787cf">3</div>
+                <div><div style="font: 700 12.5px 'Plus Jakarta Sans', sans-serif">Fund the runway before the round</div>
+                <div style="font: 400 11.5px/1.5 'Source Serif 4', serif; color: #57606d">R&amp;D offset registration before 30 April; then Rampersand / Era VC / Melbourne Angels by month 9–12.</div></div>
+              </div>
+            </div>
+          </div>
+          <div style="width: 172px; border-left: 1px solid #e5e8ec; padding-left: 20px">
+            <div style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">CASH BACK NOW ●</div>
+            <div style="font: 700 34px/1.05 'Source Serif 4', serif; margin-top: 4px">43.5%</div>
+            <div style="font: 400 11px/1.5 'Source Serif 4', serif; color: #57606d">refundable R&amp;D offset on SOLA development — non-dilutive runway</div>
+            <div style="height: 1px; background: #e5e8ec; margin: 13px 0 11px"></div>
+            <div style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">THE ROUND ●</div>
+            <div style="font: 700 20px 'Source Serif 4', serif; margin-top: 2px">$500K–$3M</div>
+            <div style="font: 400 11px/1.45 'Source Serif 4', serif; color: #57606d">Rampersand's AI-SaaS seed range, Melbourne</div>
+            <div style="height: 1px; background: #e5e8ec; margin: 13px 0 11px"></div>
+            <div style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">MARKET <span style="color: #b45309">◐</span></div>
+            <div style="font: 700 20px 'Source Serif 4', serif; margin-top: 2px">USD 3.1bn</div>
+            <div style="font: 400 11px/1.45 'Source Serif 4', serif; color: #57606d">AU AI-recruiting software, 15.5% CAGR to 2033</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 18px">
+          <div style="flex: 1; background: #fff; border: 2px solid #23272e; padding: 11px 14px">
+            <div style="font: 800 13px 'Plus Jakarta Sans', sans-serif; color: #1787cf">DO</div>
+            <div style="font: 600 11.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 2px">File the R&amp;D registration</div>
+          </div>
+          <div style="flex: 1; background: #f4f6f8; padding: 11px 14px">
+            <div style="font: 800 13px 'Plus Jakarta Sans', sans-serif">TALK TO</div>
+            <div style="font: 600 11.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 2px">Sinead Connolly — the buyer's-side mentor in your matches</div>
+          </div>
+          <div style="flex: 1; background: #f4f6f8; padding: 11px 14px">
+            <div style="font: 800 13px 'Plus Jakarta Sans', sans-serif">BY WHEN</div>
+            <div style="font: 600 11.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 2px">Integrations live by month 3</div>
+          </div>
+        </div>
+        <div style="margin-top: 16px; background: #f4f6f8; border-left: 2px solid #23272e; padding: 10px 14px">
+          <span style="font: 700 10px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">RISKS · </span>
+          <span style="font: 400 11.5px/1.55 'Source Serif 4', serif; color: #424a56">ADM transparency rules land 10 Dec 2026 (fines to $50M) — ship the disclosure early as a sales asset. SEEK and JobAdder are bolting on AI — hold the presentation-layer wedge, don't fight the ATS. A selective market: ROI per consultant, or it's a nice-to-have.</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 14px; font: 500 9px 'JetBrains Mono', monospace; color: #9aa2ad"><span>MARKET ENTRY SECRETS</span><span>FLOATS · JULY 2026</span><span>02 / 13</span></div>
+      </div>
+    </div>
+
+    <!-- 3c adaptive spine -->
+    <div id="3c" data-screen-label="3c Adaptive report spine" style="width: 640px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">3c</span>
+        <span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">One spine, three archetypes — de-templating at the root</span>
+      </div>
+      <div style="background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 22px 24px">
+        <div style="font: 400 12.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; margin-bottom: 14px">The three samples prove the spine is fixed regardless of who the customer is. Rule: <b>entrant archetype selects the module plan</b>; each section opener must state why it exists for this customer, or the module is dropped.</div>
+        <div style="border: 1px solid #e5e8ec; border-radius: 6px; overflow: hidden; font: 400 11.5px/1.45 'Plus Jakarta Sans', sans-serif">
+          <div style="display: grid; grid-template-columns: 150px 1fr 1fr 1fr; background: #f4f6f8; font: 600 9.5px 'JetBrains Mono', monospace; color: #6b7280; padding: 7px 12px; gap: 12px">
+            <span>SPINE SLOT</span><span>INCUMBENT — FINEOS</span><span>FOREIGN ENTRANT — CREDITLOGIC</span><span>DOMESTIC STARTUP — FLOATS</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 150px 1fr 1fr 1fr; padding: 9px 12px; gap: 12px; border-top: 1px solid #eef0f3">
+            <span style="font-weight: 700">Opening thesis</span><span>Deepen, don't enter</span><span>Pilot, not platform sale</span><span>Raise on proof, not promise</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 150px 1fr 1fr 1fr; padding: 9px 12px; gap: 12px; border-top: 1px solid #eef0f3">
+            <span style="font-weight: 700">Setup &amp; compliance</span><span style="color: #57606d">Compliance <i>posture</i> refresh only</span><span>Full module — entity, licences, AUSTRAC</span><span style="color: #b91c1c">Swap → investor-readiness (ESOP, IP, governance)</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 150px 1fr 1fr 1fr; padding: 9px 12px; gap: 12px; border-top: 1px solid #eef0f3">
+            <span style="font-weight: 700">Corridor modules</span><span>EU-FTA + Enterprise Ireland as sales asset</span><span>Full corridor — EI, IACC, FTA timeline</span><span style="color: #b91c1c">Drop — replace with state ecosystem (LaunchVic, Global Victoria)</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 150px 1fr 1fr 1fr; padding: 9px 12px; gap: 12px; border-top: 1px solid #eef0f3">
+            <span style="font-weight: 700">Capital section</span><span style="color: #57606d">De-emphasise — funds the hire, not the entry</span><span>Credibility capital — local investors as trust</span><span>Promote to lead section — it IS the key question</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 150px 1fr 1fr 1fr; padding: 9px 12px; gap: 12px; border-top: 1px solid #eef0f3">
+            <span style="font-weight: 700">Signature visual axes</span><span>Share held vs lines covered</span><span>Regulatory readiness vs local proof</span><span>Integration depth vs engagement wedge</span>
+          </div>
+        </div>
+        <div style="font: 400 11.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #6b7280; margin-top: 12px">Feeds the teardown ticket as a content contract: <span style="font: 500 10.5px 'JetBrains Mono', monospace">report.archetype ∈ {incumbent, foreign_entrant, domestic_startup}</span> drives module plan, section openers and the signature-visual axis pair. Design renders the same components in every case — no per-report art direction.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Turn 2 — CreditLogic like-for-like review" style="padding: 48px 56px 72px; display: flex; flex-direction: column; gap: 36px; min-width: 3080px; border-bottom: 2px solid #d4d9df">
+
+  <div style="max-width: 1180px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0.14em; color: #6b7280">TURN 2 · CREDITLOGIC SAMPLE (23 PP, SCALE PLAN, TRUE NEW ENTRANT) · LIKE-FOR-LIKE REVIEW</div>
+    <div style="font: 700 30px/1.15 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em">CreditLogic audit + converged direction, stress-tested on a real entrant</div>
+    <div style="font: 400 15px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 900px">The better test case: no incumbency to lean on, one competitor profile, a leaked intake placeholder, and contradictory figures. Failures are tagged <b style="color: #7c3aed">PIPELINE-WIDE</b> (also in FINEOS — fix once in the renderer) vs <b>THIS REPORT</b> (new failure modes this sample exposes). <a href="#2b">2b</a> shows the converged direction (<a href="#1a">1a</a> register + <a href="#1b">1b</a> evidence + <a href="#1c">1c</a> actions) rebuilt from CreditLogic pipeline data; <a href="#2c">2c</a> shows the graceful-degradation rules its sparse sections demand.</div>
+  </div>
+
+  <div id="2a" style="max-width: 1180px; background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 28px 32px 24px">
+    <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px">
+      <span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">2a</span>
+      <div style="font: 700 18px 'Plus Jakarta Sans', sans-serif">Top 10 presentation failures — CreditLogic sample</div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px">
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{ auditCLLeft }}" as="f" hint-placeholder-count="5">
+          <div style="display: flex; gap: 14px; padding: 11px 0; border-top: 1px solid #eef0f3">
+            <div style="font: 700 20px 'Source Serif 4', serif; color: #c3c9d1; min-width: 30px; text-align: right">{{ f.rank }}</div>
+            <div style="flex: 1">
+              <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap">
+                <span style="font: 700 13.5px 'Plus Jakarta Sans', sans-serif">{{ f.title }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.tagColor }}; border: 1px solid currentColor; border-radius: 3px; padding: 1px 5px">{{ f.tag }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.scopeColor }}; background: #f4f6f8; border-radius: 3px; padding: 1px 5px">{{ f.scope }}</span>
+              </div>
+              <div style="font: 400 12.5px/1.5 'Plus Jakarta Sans', sans-serif; color: #57606d; margin-top: 2px">{{ f.evidence }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{ auditCLRight }}" as="f" hint-placeholder-count="5">
+          <div style="display: flex; gap: 14px; padding: 11px 0; border-top: 1px solid #eef0f3">
+            <div style="font: 700 20px 'Source Serif 4', serif; color: #c3c9d1; min-width: 30px; text-align: right">{{ f.rank }}</div>
+            <div style="flex: 1">
+              <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap">
+                <span style="font: 700 13.5px 'Plus Jakarta Sans', sans-serif">{{ f.title }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.tagColor }}; border: 1px solid currentColor; border-radius: 3px; padding: 1px 5px">{{ f.tag }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.scopeColor }}; background: #f4f6f8; border-radius: 3px; padding: 1px 5px">{{ f.scope }}</span>
+              </div>
+              <div style="font: 400 12.5px/1.5 'Plus Jakarta Sans', sans-serif; color: #57606d; margin-top: 2px">{{ f.evidence }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="margin-top: 14px; border-top: 1px solid #eef0f3; padding-top: 12px; font: 400 12.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 1020px"><b>Cross-sample read:</b> five of ten failures recur verbatim across both reports — those are renderer fixes, not content fixes. CreditLogic adds three failure classes FINEOS couldn't show: label hygiene (raw pipeline keys), claims consistency (same fact, two values), and sparse-data collapse (1-of-6 competitor, placeholder apology). All three become content contracts + linter rules, not design polish.</div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start">
+    <!-- 2b converged exec brief -->
+    <div id="2b" data-screen-label="2b Converged exec brief — CreditLogic" style="width: 700px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">2b</span>
+        <span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">Converged direction — new-entrant exec brief</span>
+      </div>
+      <div style="width: 640px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 34px 40px 26px; display: flex; flex-direction: column">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.12em; color: #6b7280">
+          <span>EXECUTIVE BRIEF · MARKET ENTRY</span>
+          <span style="display: flex; gap: 5px">
+            <span style="font: 600 9px 'JetBrains Mono', monospace; background: #e7f6ef; color: #0e8a5f; border-radius: 3px; padding: 1px 5px">● SOURCED</span>
+            <span style="font: 600 9px 'JetBrains Mono', monospace; background: #fdf1e0; color: #b45309; border-radius: 3px; padding: 1px 5px">◐ EST.</span>
+          </span>
+        </div>
+        <div style="height: 1px; background: #23272e; margin: 10px 0 20px"></div>
+        <div style="font: 700 26px/1.2 'Source Serif 4', serif; letter-spacing: -0.005em">Enter through a pilot, not a platform sale.</div>
+        <div style="font: 400 13px/1.6 'Source Serif 4', serif; color: #424a56; margin-top: 10px">Australian lenders buy through staged pilots before 3–5-year agreements. CreditLogic's first customer is a scoped proof-of-concept with a non-bank lender or Tier-2 bank, aimed at one measurable pain: mortgage document processing time and audit-readiness — not a Cognita platform deployment.</div>
+        <div style="display: flex; gap: 26px; margin-top: 20px">
+          <div style="flex: 1.5">
+            <div style="font: 700 11px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; margin-bottom: 4px">THE THREE MOVES</div>
+            <div style="display: flex; flex-direction: column">
+              <div style="display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid #e5e8ec">
+                <div style="font: 700 15px 'Source Serif 4', serif; color: #1787cf">1</div>
+                <div><div style="font: 700 12.5px 'Plus Jakarta Sans', sans-serif">Stand up the entity — 90 days</div>
+                <div style="font: 400 11.5px/1.5 'Source Serif 4', serif; color: #57606d">Pty Ltd + resident director, AUSTRAC enrolment (by 29 Jul 2026), R&amp;D offset registration. Via Fullstack Advisory / Dentons.</div></div>
+              </div>
+              <div style="display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid #e5e8ec">
+                <div style="font: 700 15px 'Source Serif 4', serif; color: #1787cf">2</div>
+                <div><div style="font: 700 12.5px 'Plus Jakarta Sans', sans-serif">Land the pilot through the reverse pitch</div>
+                <div style="font: 400 11.5px/1.5 'Source Serif 4', serif; color: #57606d">FinTech Australia Banking Reverse Pitch (ANZ, Westpac, 1835i) — the one structured channel to bank decision-makers. Warm entry via Navaid Khatib (AusPayNet / HSBC).</div></div>
+              </div>
+              <div style="display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid #e5e8ec; border-bottom: 1px solid #e5e8ec">
+                <div style="font: 700 15px 'Source Serif 4', serif; color: #1787cf">3</div>
+                <div><div style="font: 700 12.5px 'Plus Jakarta Sans', sans-serif">Be visibly local before procurement asks</div>
+                <div style="font: 400 11.5px/1.5 'Source Serif 4', serif; color: #57606d">Stone &amp; Chalk desk, Enterprise Ireland Sydney, Future of Financial Services: Data &amp; AI (30 Oct 2026).</div></div>
+              </div>
+            </div>
+          </div>
+          <div style="width: 172px; border-left: 1px solid #e5e8ec; padding-left: 20px">
+            <div style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">FIRST CONTRACT ●</div>
+            <div style="font: 700 34px/1.05 'Source Serif 4', serif; margin-top: 4px">AUD 25–500k</div>
+            <div style="font: 400 11px/1.5 'Source Serif 4', serif; color: #57606d">typical Sydney fintech ACV — pilot-sized is commercially real</div>
+            <div style="height: 1px; background: #e5e8ec; margin: 13px 0 11px"></div>
+            <div style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">YEAR-1 COST <span style="color: #b45309">◐</span></div>
+            <div style="font: 700 20px 'Source Serif 4', serif; margin-top: 2px">AUD ~400k</div>
+            <div style="font: 400 11px/1.45 'Source Serif 4', serif; color: #57606d">entity + 2 hires + hub desk, before licensing</div>
+            <div style="height: 1px; background: #e5e8ec; margin: 13px 0 11px"></div>
+            <div style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">SIGNED BY ●</div>
+            <div style="font: 700 20px 'Source Serif 4', serif; margin-top: 2px">Month 12–18</div>
+            <div style="font: 400 11px/1.45 'Source Serif 4', serif; color: #57606d">12–24-mo buying cycles, compressed by the PoC wedge</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 18px">
+          <div style="flex: 1; background: #fff; border: 2px solid #23272e; padding: 11px 14px">
+            <div style="font: 800 13px 'Plus Jakarta Sans', sans-serif; color: #1787cf">DO</div>
+            <div style="font: 600 11.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 2px">Apply to the Banking Reverse Pitch</div>
+          </div>
+          <div style="flex: 1; background: #f4f6f8; padding: 11px 14px">
+            <div style="font: 800 13px 'Plus Jakarta Sans', sans-serif">TALK TO</div>
+            <div style="font: 600 11.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 2px">Navaid Khatib — in your matches</div>
+          </div>
+          <div style="flex: 1; background: #f4f6f8; padding: 11px 14px">
+            <div style="font: 800 13px 'Plus Jakarta Sans', sans-serif">BY WHEN</div>
+            <div style="font: 600 11.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 2px">Entity filed inside 90 days</div>
+          </div>
+        </div>
+        <div style="margin-top: 16px; background: #f4f6f8; border-left: 2px solid #23272e; padding: 10px 14px">
+          <span style="font: 700 10px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">RISKS · </span>
+          <span style="font: 400 11.5px/1.55 'Source Serif 4', serif; color: #424a56">ACL/AFSL runs 6–12 months and up to $250k — use an Authorised-Representative arrangement to defer it. Simpology owns the Big-Four relationships — sell the intelligence layer, not an origination system. Post-HSBC-penalty risk aversion — lead with governed, auditable decisioning.</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 14px; font: 500 9px 'JetBrains Mono', monospace; color: #9aa2ad"><span>MARKET ENTRY SECRETS</span><span>CREDITLOGIC · JULY 2026</span><span>02 / 13</span></div>
+      </div>
+    </div>
+
+    <!-- 2c degradation rules -->
+    <div id="2c" data-screen-label="2c Graceful degradation rules" style="width: 620px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">2c</span>
+        <span style="font: 800 18px 'Plus Jakarta Sans', sans-serif">Graceful degradation — what sparse data renders instead</span>
+      </div>
+      <div style="background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 22px 24px; display: flex; flex-direction: column; gap: 16px">
+        <div>
+          <div style="font: 600 10px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #b91c1c; margin-bottom: 6px">TODAY — CREDITLOGIC P.7: INTAKE ERROR AS ANALYSIS</div>
+          <div style="border: 1px dashed #d4d9df; border-radius: 6px; padding: 12px 14px; font: 400 12px/1.5 'Plus Jakarta Sans', sans-serif; color: #6b7280"><b style="color: #23272e">Pepper Money</b><br>"Please attach a website for Pepper Money in your intake to unlock a full brief, including specific tech signals, hiring data…"</div>
+        </div>
+        <div>
+          <div style="font: 600 10px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #0e8a5f; margin-bottom: 6px">RULE T-1 — BELOW CONTRACT MINIMUM → DESIGNED DATA-GAP CARD</div>
+          <div style="border: 1px solid #e5e8ec; border-radius: 6px; padding: 12px 14px; background: #fcfcfd">
+            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font: 700 13px 'Plus Jakarta Sans', sans-serif">Pepper Money <span style="font: 400 11px 'Plus Jakarta Sans', sans-serif; color: #6b7280">· non-bank lender</span></span><span style="font: 600 9px 'JetBrains Mono', monospace; background: #eef0f3; color: #57606d; border-radius: 3px; padding: 1px 5px">○ PARTIAL BRIEF</span></div>
+            <div style="font: 400 11.5px/1.5 'Plus Jakarta Sans', sans-serif; color: #424a56; margin-top: 4px">Fits the mid-market wedge: non-bank lenders need document intelligence without a platform overhaul. Tech signals and named contacts pending — <a href="#2c" style="font-weight: 600">add their website to your intake ↗</a> to complete this brief.</div>
+          </div>
+        </div>
+        <div>
+          <div style="font: 600 10px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #0e8a5f; margin-bottom: 6px">RULE T-2 — COMPETITOR N=1 → COLLAPSE GRID TO A POSITIONING ROW</div>
+          <div style="border: 1px solid #e5e8ec; border-radius: 6px; overflow: hidden">
+            <div style="display: flex; background: #f4f6f8; font: 600 9.5px 'JetBrains Mono', monospace; color: #6b7280; padding: 6px 12px; gap: 12px"><span style="width: 100px">INCUMBENT</span><span style="flex: 1">THEIR GROUND</span><span style="flex: 1">YOUR WEDGE</span></div>
+            <div style="display: flex; padding: 9px 12px; gap: 12px; font: 400 11.5px/1.45 'Plus Jakarta Sans', sans-serif; background: #fcfcfd"><span style="width: 100px; font-weight: 700">Simpology</span><span style="flex: 1; color: #424a56">End-to-end origination, embedded with the Big Four + 8 named lenders</span><span style="flex: 1; color: #424a56">Modular intelligence layer for the mid-tier — no rip-and-replace</span></div>
+          </div>
+          <div style="font: 400 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #6b7280; margin-top: 6px">One profile never renders inside a six-slot grid: the section retitles to "Positioning vs the incumbent" and states the research boundary in one line.</div>
+        </div>
+        <div>
+          <div style="font: 600 10px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #0e8a5f; margin-bottom: 6px">RULE T-3 — CONFLICTING CLAIMS → SINGLE VALUE OR VISIBLE RANGE</div>
+          <div style="font: 400 12px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56">Every number renders from the claims registry, once. Two sourced values for one fact (R&amp;D 43.5% vs 15–20%) block render until reconciled or display as an explicit range with both citations — never as two confident numbers ten pages apart.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Turn 1 — Audit + 3 art directions" style="padding: 48px 56px 96px; display: flex; flex-direction: column; gap: 40px; min-width: 3080px">
+
+  <div style="max-width: 1180px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0.14em; color: #6b7280">MES REPORT DESIGN REVIEW · TURN 1 · FINEOS SAMPLE (25 PP, SCALE PLAN)</div>
+    <div style="font: 700 30px/1.15 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em">Design audit &amp; three art directions</div>
+    <div style="font: 400 15px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 860px">Each direction is proven on the artifact that matters most — the board-forwardable executive one-pager — built from real FINEOS pipeline data, then critiqued against the benchmark set (McKinsey/BCG deliverables, CB&nbsp;Insights, a16z, Stripe letters, Gartner). Converge + iteration rounds follow in turn 2.</div>
+  </div>
+
+  <div style="max-width: 1180px; background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 28px 32px 24px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px">
+      <div style="font: 700 18px 'Plus Jakarta Sans', sans-serif">Top 10 presentation failures — FINEOS sample, ranked by impact on perceived value at $1,000</div>
+      <div style="font: 500 11px 'JetBrains Mono', monospace; color: #6b7280; white-space: nowrap">TAGS: TRUST · SCAN · VALUE</div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px">
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{ auditLeft }}" as="f" hint-placeholder-count="5">
+          <div style="display: flex; gap: 14px; padding: 11px 0; border-top: 1px solid #eef0f3">
+            <div style="font: 700 20px 'Source Serif 4', serif; color: #c3c9d1; min-width: 30px; text-align: right">{{ f.rank }}</div>
+            <div style="flex: 1">
+              <div style="display: flex; align-items: baseline; gap: 8px">
+                <span style="font: 700 13.5px 'Plus Jakarta Sans', sans-serif">{{ f.title }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.tagColor }}; border: 1px solid currentColor; border-radius: 3px; padding: 1px 5px">{{ f.tag }}</span>
+              </div>
+              <div style="font: 400 12.5px/1.5 'Plus Jakarta Sans', sans-serif; color: #57606d; margin-top: 2px">{{ f.evidence }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column">
+        <sc-for list="{{ auditRight }}" as="f" hint-placeholder-count="5">
+          <div style="display: flex; gap: 14px; padding: 11px 0; border-top: 1px solid #eef0f3">
+            <div style="font: 700 20px 'Source Serif 4', serif; color: #c3c9d1; min-width: 30px; text-align: right">{{ f.rank }}</div>
+            <div style="flex: 1">
+              <div style="display: flex; align-items: baseline; gap: 8px">
+                <span style="font: 700 13.5px 'Plus Jakarta Sans', sans-serif">{{ f.title }}</span>
+                <span style="font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{ f.tagColor }}; border: 1px solid currentColor; border-radius: 3px; padding: 1px 5px">{{ f.tag }}</span>
+              </div>
+              <div style="font: 400 12.5px/1.5 'Plus Jakarta Sans', sans-serif; color: #57606d; margin-top: 2px">{{ f.evidence }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: flex-start">
+
+    <!-- ============ 1a THE BROADSHEET ============ -->
+    <div id="1a" data-screen-label="1a The Broadsheet" style="width: 960px; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">1a</span>
+        <span style="font: 800 20px 'Plus Jakarta Sans', sans-serif">The Broadsheet</span>
+        <span style="font: 400 13px 'Plus Jakarta Sans', sans-serif; color: #6b7280">Editorial consultancy · serif judgment, ink-first, accent reserved for the customer</span>
+      </div>
+      <div style="display: flex; gap: 18px">
+        <!-- cover -->
+        <div style="width: 300px; height: 424px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 34px 30px; display: flex; flex-direction: column">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <div style="font: 700 10px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.16em; color: #23272e">MARKET ENTRY SECRETS</div>
+            <div style="font: 500 9px 'JetBrains Mono', monospace; color: #9aa2ad">JUL 2026</div>
+          </div>
+          <div style="height: 1px; background: #23272e; margin: 14px 0 0"></div>
+          <div style="margin-top: 84px; font: 400 13px 'Source Serif 4', serif; color: #57606d; font-style: italic">Market Deepening Report</div>
+          <div style="font: 700 40px/1.05 'Source Serif 4', serif; letter-spacing: -0.01em; margin-top: 6px">FINEOS in Australia</div>
+          <div style="font: 400 12.5px/1.55 'Source Serif 4', serif; color: #424a56; margin-top: 14px">Converting a 70% group-insurance incumbency into the full life, accident &amp; health market.</div>
+          <div style="margin-top: auto">
+            <div style="font: 600 10px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">PREPARED FOR</div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px">
+              <div style="width: 22px; height: 22px; border-radius: 4px; background: #123a5c; color: #fff; display: flex; align-items: center; justify-content: center; font: 800 11px 'Plus Jakarta Sans', sans-serif">F</div>
+              <div style="font: 700 14px 'Plus Jakarta Sans', sans-serif">FINEOS <span style="font-weight: 400; color: #6b7280">· ASX: FCL</span></div>
+            </div>
+            <div style="height: 1px; background: #e5e8ec; margin: 14px 0 10px"></div>
+            <div style="display: flex; justify-content: space-between; font: 500 9px 'JetBrains Mono', monospace; color: #9aa2ad"><span>SCALE PLAN</span><span>13 PAGES</span><span>CONFIDENTIAL</span></div>
+          </div>
+        </div>
+        <!-- exec one-pager -->
+        <div style="width: 640px; background: #fcfcfd; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 36px 40px 28px; display: flex; flex-direction: column; gap: 0">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.12em; color: #6b7280">
+            <span>EXECUTIVE BRIEF</span><span>FINEOS · AUSTRALIA · P.02</span>
+          </div>
+          <div style="height: 1px; background: #23272e; margin: 10px 0 22px"></div>
+          <div style="display: flex; gap: 28px">
+            <div style="flex: 1.5">
+              <div style="font: 700 27px/1.18 'Source Serif 4', serif; letter-spacing: -0.005em">This is not market entry. FINEOS is under-monetising a market it already leads.</div>
+              <div style="font: 400 13px/1.6 'Source Serif 4', serif; color: #424a56; margin-top: 12px">With 70% of Australian group insurance and an ASX listing, credibility is not the constraint — pipeline is. The decisions that unlock full life, accident &amp; health coverage are made in Sydney, where FINEOS has no senior sales presence.</div>
+              <div style="font: 700 11px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #23272e; margin: 24px 0 6px">THE THREE MOVES</div>
+              <div style="display: flex; flex-direction: column">
+                <div style="display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid #e5e8ec">
+                  <div style="font: 700 15px 'Source Serif 4', serif; color: #1787cf">1</div>
+                  <div><div style="font: 700 13px 'Plus Jakarta Sans', sans-serif">Hire the Sydney Sales Director</div>
+                  <div style="font: 400 12px/1.5 'Source Serif 4', serif; color: #57606d">AUD 200–250k, close by Q3 2026. Search via James Bergl, Bluebird APAC.</div></div>
+                </div>
+                <div style="display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid #e5e8ec">
+                  <div style="font: 700 15px 'Source Serif 4', serif; color: #1787cf">2</div>
+                  <div><div style="font: 700 13px 'Plus Jakarta Sans', sans-serif">Formalise the NSW partner network</div>
+                  <div style="font: 400 12px/1.5 'Source Serif 4', serif; color: #57606d">Accenture Australia + NEXTGEN. Local implementation partners are a decisive RFP criterion.</div></div>
+                </div>
+                <div style="display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid #e5e8ec; border-bottom: 1px solid #e5e8ec">
+                  <div style="font: 700 15px 'Source Serif 4', serif; color: #1787cf">3</div>
+                  <div><div style="font: 700 13px 'Plus Jakarta Sans', sans-serif">Hold the incumbent narrative</div>
+                  <div style="font: 400 12px/1.5 'Source Serif 4', serif; color: #57606d">SFA Conference (Nov 2026), Insurtech Australia, ADAPT roundtables — visible before RFPs open.</div></div>
+                </div>
+              </div>
+            </div>
+            <div style="width: 176px; display: flex; flex-direction: column; gap: 0; border-left: 1px solid #e5e8ec; padding-left: 22px">
+              <div style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">SHARE HELD TODAY</div>
+              <div style="font: 700 58px/1 'Source Serif 4', serif; letter-spacing: -0.02em; margin-top: 4px">70<span style="font-size: 30px">%</span></div>
+              <div style="font: 400 11px/1.5 'Source Serif 4', serif; color: #57606d">of Australian group insurance runs on FINEOS.</div>
+              <div style="height: 1px; background: #e5e8ec; margin: 16px 0 14px"></div>
+              <div style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">YEAR-1 COST <span style="color: #b45309">EST.</span></div>
+              <div style="font: 700 21px 'Source Serif 4', serif; margin-top: 3px">AUD 550k</div>
+              <div style="font: 400 11px/1.45 'Source Serif 4', serif; color: #57606d">director comp + serviced office + programs</div>
+              <div style="height: 1px; background: #e5e8ec; margin: 16px 0 14px"></div>
+              <div style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">MARKET IN PLAY</div>
+              <div style="font: 700 21px 'Source Serif 4', serif; margin-top: 3px">USD 4.2bn</div>
+              <div style="font: 400 11px/1.45 'Source Serif 4', serif; color: #57606d">AU insurtech by 2034, 30.68% CAGR</div>
+            </div>
+          </div>
+          <div style="margin-top: 22px; background: #f4f6f8; border-left: 2px solid #23272e; padding: 12px 16px">
+            <span style="font: 700 10px 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.1em; color: #6b7280">RISKS WE ARE WATCHING · </span>
+            <span style="font: 400 12px/1.55 'Source Serif 4', serif; color: #424a56">Duck Creek is the only rival with a Sydney office — own the LA&amp;H narrative before it does. Sydney talent war raises hire cost — use retained search. ASIC RG 271 mandates explainable AI — position compliance-first.</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 18px; font: 500 9px 'JetBrains Mono', monospace; color: #9aa2ad"><span>MARKET ENTRY SECRETS</span><span>FINEOS · JULY 2026</span><span>02 / 13</span></div>
+        </div>
+      </div>
+      <!-- component strip -->
+      <div style="background: #fff; border: 1px solid #e5e8ec; border-radius: 8px; padding: 16px 20px; display: flex; gap: 28px; align-items: center">
+        <div><div style="font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #9aa2ad; margin-bottom: 4px">TYPE</div>
+        <div style="font: 700 16px 'Source Serif 4', serif">Source Serif 4 <span style="font: 500 12px 'Plus Jakarta Sans', sans-serif; color: #57606d">+ Plus Jakarta Sans labels</span></div></div>
+        <div><div style="font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #9aa2ad; margin-bottom: 4px">CONFIDENCE</div>
+        <div style="display: flex; gap: 6px"><span style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; border: 1px solid #15b27b; color: #0e8a5f; border-radius: 3px; padding: 2px 6px">SOURCED [3]</span><span style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; border: 1px solid #d97706; color: #b45309; border-radius: 3px; padding: 2px 6px">EST.</span></div></div>
+        <div style="flex: 1"><div style="font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #9aa2ad; margin-bottom: 4px">TABLE ROW</div>
+        <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid #23272e; border-bottom: 1px solid #e5e8ec; padding: 6px 2px"><span style="font: 700 12px 'Plus Jakarta Sans', sans-serif; width: 110px">Duck Creek</span><span style="font: 400 11.5px 'Source Serif 4', serif; color: #57606d; flex: 1">P&amp;C-first · Sydney office</span><span style="font: 600 9.5px 'Plus Jakarta Sans', sans-serif; color: #b91c1c">THREAT ▲</span></div></div>
+      </div>
+      <sc-if value="{{ showCritiques }}" hint-placeholder-val="{{ true }}">
+      <div style="background: #171c26; color: #dfe3e9; border-radius: 8px; padding: 20px 24px">
+        <div style="font: 700 11px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #8fb8d8; margin-bottom: 10px">BENCHMARK CRITIQUE — 1a</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; font: 400 12px/1.55 'Plus Jakarta Sans', sans-serif">
+          <div><b style="color: #fff">vs McKinsey/BCG:</b> holds its own — serif verdicts + hairline rules read as senior judgment, not template output.</div>
+          <div><b style="color: #fff">vs Stripe letters:</b> shares the calm editorial register; strongest "commissioned, not generated" signal of the three.</div>
+          <div><b style="color: #fff">vs CB Insights:</b> loses on data density — charts must carry more weight or it reads text-only again.</div>
+          <div><b style="color: #fff">Pipeline fit:</b> easiest to render — pure typography, zero per-report art. <b style="color: #fff">Risk:</b> may feel "old consultancy" to SaaS founders.</div>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+
+    <!-- ============ 1b THE DATA ROOM ============ -->
+    <div id="1b" data-screen-label="1b The Data Room" style="width: 960px; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">1b</span>
+        <span style="font: 800 20px 'Plus Jakarta Sans', sans-serif">The Data Room</span>
+        <span style="font: 400 13px 'Plus Jakarta Sans', sans-serif; color: #6b7280">Evidence-forward · mono labels, confidence chips, charts as the spine</span>
+      </div>
+      <div style="display: flex; gap: 18px">
+        <!-- cover -->
+        <div style="width: 300px; height: 424px; background: #171c26; color: #fff; box-shadow: 0 8px 28px rgba(20,28,40,0.18); padding: 30px 28px; display: flex; flex-direction: column">
+          <div style="display: flex; justify-content: space-between; font: 500 9px 'JetBrains Mono', monospace; color: #7d8794"><span>MES / REPORT.2026.07</span><span>SCALE</span></div>
+          <div style="margin-top: 66px; font: 500 11px 'JetBrains Mono', monospace; color: #8fb8d8; letter-spacing: 0.08em">MARKET DEEPENING · AUSTRALIA</div>
+          <div style="font: 800 38px/1.08 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em; margin-top: 8px">FINEOS<span style="color: #29a3e3">.</span></div>
+          <div style="font: 400 12px/1.6 'Plus Jakarta Sans', sans-serif; color: #aeb6c0; margin-top: 10px">70% incumbency → full LA&amp;H coverage, run from Sydney.</div>
+          <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid #2b3342; padding-top: 8px; font: 500 10px 'JetBrains Mono', monospace"><span style="color: #7d8794">SHARE.GROUP_INS</span><span style="color: #fff">70%</span></div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid #2b3342; padding-top: 8px; font: 500 10px 'JetBrains Mono', monospace"><span style="color: #7d8794">TAM.2034</span><span style="color: #fff">USD 4.2BN</span></div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid #2b3342; padding-top: 8px; font: 500 10px 'JetBrains Mono', monospace"><span style="color: #7d8794">ACTION.PRIMARY</span><span style="color: #29a3e3">HIRE SYD SALES DIR</span></div>
+          </div>
+        </div>
+        <!-- exec one-pager -->
+        <div style="width: 640px; background: #fff; border: 1px solid #e5e8ec; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 30px 36px 24px; display: flex; flex-direction: column">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <div style="font: 700 10px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #1787cf">01 / EXECUTIVE BRIEF</div>
+            <div style="display: flex; gap: 5px">
+              <span style="font: 600 9px 'JetBrains Mono', monospace; background: #e7f6ef; color: #0e8a5f; border-radius: 3px; padding: 2px 6px">● SOURCED</span>
+              <span style="font: 600 9px 'JetBrains Mono', monospace; background: #fdf1e0; color: #b45309; border-radius: 3px; padding: 2px 6px">◐ EST.</span>
+              <span style="font: 600 9px 'JetBrains Mono', monospace; background: #eef0f3; color: #57606d; border-radius: 3px; padding: 2px 6px">○ INFERRED</span>
+            </div>
+          </div>
+          <div style="font: 800 24px/1.2 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em; margin-top: 14px">Deepen, don't enter: convert 70% incumbency into the full LA&amp;H market.</div>
+          <!-- KPI band -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e5e8ec; border: 1px solid #e5e8ec; border-radius: 6px; overflow: hidden; margin-top: 16px">
+            <div style="background: #fff; padding: 10px 12px"><div style="font: 500 8.5px 'JetBrains Mono', monospace; color: #6b7280">SHARE HELD ●</div><div style="font: 800 22px 'Plus Jakarta Sans', sans-serif; color: #1787cf">70%</div><div style="font: 400 9.5px 'Plus Jakarta Sans', sans-serif; color: #6b7280">AU group insurance</div></div>
+            <div style="background: #fff; padding: 10px 12px"><div style="font: 500 8.5px 'JetBrains Mono', monospace; color: #6b7280">TAM 2034 ●</div><div style="font: 800 22px 'Plus Jakarta Sans', sans-serif">4.2bn</div><div style="font: 400 9.5px 'Plus Jakarta Sans', sans-serif; color: #6b7280">USD · 30.68% CAGR</div></div>
+            <div style="background: #fff; padding: 10px 12px"><div style="font: 500 8.5px 'JetBrains Mono', monospace; color: #b45309">YR-1 COST ◐</div><div style="font: 800 22px 'Plus Jakarta Sans', sans-serif">550k</div><div style="font: 400 9.5px 'Plus Jakarta Sans', sans-serif; color: #6b7280">AUD · hire + office</div></div>
+            <div style="background: #fff; padding: 10px 12px"><div style="font: 500 8.5px 'JetBrains Mono', monospace; color: #6b7280">R&amp;D OFFSET ●</div><div style="font: 800 22px 'Plus Jakarta Sans', sans-serif; color: #0e8a5f">43.5%</div><div style="font: 400 9.5px 'Plus Jakarta Sans', sans-serif; color: #6b7280">on local eligible spend</div></div>
+          </div>
+          <div style="display: flex; gap: 24px; margin-top: 18px">
+            <div style="flex: 1">
+              <div style="font: 700 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #6b7280; margin-bottom: 8px">MOVES / OWNERS / WHEN</div>
+              <div style="display: flex; flex-direction: column">
+                <div style="display: flex; gap: 10px; align-items: baseline; padding: 8px 0; border-top: 1px solid #eef0f3"><span style="font: 700 10px 'JetBrains Mono', monospace; color: #1787cf">M1</span><span style="font: 600 12px 'Plus Jakarta Sans', sans-serif; flex: 1">Hire Sydney Sales Director <span style="font-weight: 400; color: #6b7280">— via J. Bergl, Bluebird APAC</span></span><span style="font: 600 10px 'JetBrains Mono', monospace; color: #57606d">Q3'26</span></div>
+                <div style="display: flex; gap: 10px; align-items: baseline; padding: 8px 0; border-top: 1px solid #eef0f3"><span style="font: 700 10px 'JetBrains Mono', monospace; color: #1787cf">M2</span><span style="font: 600 12px 'Plus Jakarta Sans', sans-serif; flex: 1">Formalise NSW partner network <span style="font-weight: 400; color: #6b7280">— Accenture, NEXTGEN</span></span><span style="font: 600 10px 'JetBrains Mono', monospace; color: #57606d">Q4'26</span></div>
+                <div style="display: flex; gap: 10px; align-items: baseline; padding: 8px 0; border-top: 1px solid #eef0f3; border-bottom: 1px solid #eef0f3"><span style="font: 700 10px 'JetBrains Mono', monospace; color: #1787cf">M3</span><span style="font: 600 12px 'Plus Jakarta Sans', sans-serif; flex: 1">Own incumbent narrative <span style="font-weight: 400; color: #6b7280">— SFA Conf, Insurtech AU</span></span><span style="font: 600 10px 'JetBrains Mono', monospace; color: #57606d">Q4'26→</span></div>
+              </div>
+              <div style="font: 700 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #6b7280; margin: 14px 0 6px">RISK REGISTER</div>
+              <div style="font: 400 11.5px/1.55 'Plus Jakarta Sans', sans-serif; color: #424a56">Duck Creek = only rival with a Sydney office · Sydney talent war inflates comp · RG 271 explainable-AI rules — sell compliance-first.</div>
+            </div>
+            <div style="width: 218px">
+              <div style="font: 700 9.5px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #6b7280; margin-bottom: 8px">MARKETS IN PLAY · USD</div>
+              <div style="display: flex; flex-direction: column; gap: 9px">
+                <div><div style="display: flex; justify-content: space-between; font: 500 9.5px 'JetBrains Mono', monospace; color: #57606d"><span>INSURTECH '25 ●</span><span>0.38bn</span></div><div style="height: 10px; background: #eef0f3; border-radius: 2px; margin-top: 3px"><div style="width: 9%; height: 100%; background: #29a3e3; border-radius: 2px"></div></div></div>
+                <div><div style="display: flex; justify-content: space-between; font: 500 9.5px 'JetBrains Mono', monospace; color: #57606d"><span>AGENCY MGMT ●</span><span>2.5bn</span></div><div style="height: 10px; background: #eef0f3; border-radius: 2px; margin-top: 3px"><div style="width: 60%; height: 100%; background: #1787cf; border-radius: 2px"></div></div></div>
+                <div><div style="display: flex; justify-content: space-between; font: 500 9.5px 'JetBrains Mono', monospace; color: #57606d"><span>INSURTECH '34 ◐</span><span>4.2bn</span></div><div style="height: 10px; background: #eef0f3; border-radius: 2px; margin-top: 3px"><div style="width: 100%; height: 100%; background: linear-gradient(90deg, #29a3e3, #b8e0f5); border-radius: 2px"></div></div></div>
+              </div>
+              <div style="margin-top: 14px; background: #f0f8fd; border: 1px solid #cfe9f8; border-radius: 6px; padding: 10px 12px">
+                <div style="font: 700 9px 'JetBrains Mono', monospace; color: #1787cf; letter-spacing: 0.1em">NEXT ACTION</div>
+                <div style="font: 600 11.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 3px">Book intro → James Bergl, sales-leadership search</div>
+                <div style="font: 500 10px 'JetBrains Mono', monospace; color: #1787cf; margin-top: 4px">VIA YOUR MES MATCHES ↗</div>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 16px; font: 500 9px 'JetBrains Mono', monospace; color: #9aa2ad"><span>MES / FINEOS / AUS</span><span>SOURCED ● 14 · EST ◐ 3 · INFERRED ○ 1</span><span>02/13</span></div>
+        </div>
+      </div>
+      <div style="background: #fff; border: 1px solid #e5e8ec; border-radius: 8px; padding: 16px 20px; display: flex; gap: 28px; align-items: center">
+        <div><div style="font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #9aa2ad; margin-bottom: 4px">TYPE</div>
+        <div style="font: 800 16px 'Plus Jakarta Sans', sans-serif">Plus Jakarta Sans <span style="font: 500 12px 'JetBrains Mono', monospace; color: #57606d">+ JetBrains Mono data</span></div></div>
+        <div><div style="font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #9aa2ad; margin-bottom: 4px">CONFIDENCE (3-STATE)</div>
+        <div style="display: flex; gap: 6px"><span style="font: 600 9.5px 'JetBrains Mono', monospace; background: #e7f6ef; color: #0e8a5f; border-radius: 3px; padding: 2px 6px">● SOURCED</span><span style="font: 600 9.5px 'JetBrains Mono', monospace; background: #fdf1e0; color: #b45309; border-radius: 3px; padding: 2px 6px">◐ EST.</span><span style="font: 600 9.5px 'JetBrains Mono', monospace; background: #eef0f3; color: #57606d; border-radius: 3px; padding: 2px 6px">○ INFERRED</span></div></div>
+        <div style="flex: 1"><div style="font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #9aa2ad; margin-bottom: 4px">CHART GRAMMAR</div>
+        <div style="font: 400 12px/1.5 'Plus Jakarta Sans', sans-serif; color: #57606d">Owned SVG bars/dots only — sky scale on paper, customer always highlighted in primary, everything else neutral.</div></div>
+      </div>
+      <sc-if value="{{ showCritiques }}" hint-placeholder-val="{{ true }}">
+      <div style="background: #171c26; color: #dfe3e9; border-radius: 8px; padding: 20px 24px">
+        <div style="font: 700 11px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #8fb8d8; margin-bottom: 10px">BENCHMARK CRITIQUE — 1b</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; font: 400 12px/1.55 'Plus Jakarta Sans', sans-serif">
+          <div><b style="color: #fff">vs CB Insights/Gartner:</b> matches data authority; the 3-state confidence system and per-page source counts exceed the benchmark.</div>
+          <div><b style="color: #fff">vs McKinsey:</b> less boardroom warmth — the CEO one-pager wins on scannability, loses a little gravitas.</div>
+          <div><b style="color: #fff">AI-slop guard:</b> mono labels must stay a capped vocabulary (~12 terms) or it drifts into dashboard noise.</div>
+          <div><b style="color: #fff">Pipeline fit:</b> medium — needs the owned chart primitives + chip system, all data-driven. Best fit for the signature Market Entry Map.</div>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+
+    <!-- ============ 1c THE FIELD GUIDE ============ -->
+    <div id="1c" data-screen-label="1c The Field Guide" style="width: 960px; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="font: 700 13px 'JetBrains Mono', monospace; background: #23272e; color: #fff; border-radius: 6px; padding: 4px 10px">1c</span>
+        <span style="font: 800 20px 'Plus Jakarta Sans', sans-serif">The Field Guide</span>
+        <span style="font: 400 13px 'Plus Jakarta Sans', sans-serif; color: #6b7280">Operator's playbook · big numerals, warm paper, action blocks first</span>
+      </div>
+      <div style="display: flex; gap: 18px">
+        <!-- cover -->
+        <div style="width: 300px; height: 424px; background: #faf8f4; border: 1px solid #e8e4da; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 30px 28px; display: flex; flex-direction: column">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <div style="font: 900 12px 'Archivo', sans-serif; letter-spacing: 0.05em">MES</div>
+            <div style="font: 600 9px 'JetBrains Mono', monospace; color: #8a8375">FIELD REPORT · AU</div>
+          </div>
+          <div style="font: 900 116px/0.95 'Archivo', sans-serif; letter-spacing: -0.04em; margin-top: 58px; color: #23272e">70<span style="color: #1787cf">%</span></div>
+          <div style="font: 700 15px/1.3 'Archivo', sans-serif; margin-top: 12px">of Australian group insurance already runs on FINEOS.</div>
+          <div style="font: 500 12.5px/1.5 'Plus Jakarta Sans', sans-serif; color: #6d675b; margin-top: 8px">This report is about collecting on that position.</div>
+          <div style="margin-top: auto; border-top: 2px solid #23272e; padding-top: 10px; display: flex; justify-content: space-between; align-items: center">
+            <div style="font: 800 13px 'Archivo', sans-serif">FINEOS · Market Deepening</div>
+            <div style="font: 600 9px 'JetBrains Mono', monospace; color: #8a8375">JUL '26</div>
+          </div>
+        </div>
+        <!-- exec one-pager -->
+        <div style="width: 640px; background: #faf8f4; border: 1px solid #e8e4da; box-shadow: 0 8px 28px rgba(20,28,40,0.10); padding: 30px 36px 24px; display: flex; flex-direction: column">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <div style="font: 900 11px 'Archivo', sans-serif; letter-spacing: 0.08em; background: #23272e; color: #faf8f4; padding: 3px 8px">THE BRIEF</div>
+            <div style="font: 600 9.5px 'JetBrains Mono', monospace; color: #8a8375">READ IN 3 MIN · ACT THIS QUARTER</div>
+          </div>
+          <div style="font: 900 30px/1.1 'Archivo', sans-serif; letter-spacing: -0.02em; margin-top: 16px">You've already won the beachhead.<br>Now staff the expansion.</div>
+          <div style="font: 500 13px/1.55 'Plus Jakarta Sans', sans-serif; color: #57606d; margin-top: 10px">FINEOS holds 70% of AU group insurance but has no senior seller in Sydney — where every national procurement decision is made. One hire unlocks the pipeline; two programs protect it.</div>
+          <div style="display: flex; gap: 14px; margin-top: 18px">
+            <div style="flex: 1; background: #fff; border: 2px solid #23272e; padding: 14px 16px">
+              <div style="font: 900 22px 'Archivo', sans-serif; color: #1787cf">DO</div>
+              <div style="font: 700 12.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 4px">Hire the Sydney Sales Director</div>
+              <div style="font: 500 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #6d675b; margin-top: 3px">AUD 200–250k · close Q3 2026</div>
+            </div>
+            <div style="flex: 1; background: #fff; border: 1px solid #d9d4c8; padding: 14px 16px">
+              <div style="font: 900 22px 'Archivo', sans-serif; color: #23272e">TALK TO</div>
+              <div style="font: 700 12.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 4px">James Bergl — Bluebird APAC</div>
+              <div style="font: 500 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #6d675b; margin-top: 3px">100+ AU sales-leadership hires · in your matches</div>
+            </div>
+            <div style="flex: 1; background: #fff; border: 1px solid #d9d4c8; padding: 14px 16px">
+              <div style="font: 900 22px 'Archivo', sans-serif; color: #23272e">BY WHEN</div>
+              <div style="font: 700 12.5px/1.4 'Plus Jakarta Sans', sans-serif; margin-top: 4px">Shortlist in 30 days</div>
+              <div style="font: 500 11px/1.5 'Plus Jakarta Sans', sans-serif; color: #6d675b; margin-top: 3px">be on carrier longlists 6–12&nbsp;mo before RFPs</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 24px; margin-top: 20px">
+            <div style="flex: 1">
+              <div style="font: 900 11px 'Archivo', sans-serif; letter-spacing: 0.08em; margin-bottom: 8px">THEN, IN ORDER</div>
+              <div style="font: 500 12px/1.7 'Plus Jakarta Sans', sans-serif; color: #424a56"><b>2.</b> Lock NSW implementation partners (Accenture, NEXTGEN) — the RFP criterion rivals can't fake.<br><b>3.</b> Show up as the incumbent — SFA Conference Nov '26, Insurtech Australia, ADAPT roundtables.</div>
+              <div style="font: 900 11px 'Archivo', sans-serif; letter-spacing: 0.08em; margin: 14px 0 6px">WATCH</div>
+              <div style="font: 500 12px/1.6 'Plus Jakarta Sans', sans-serif; color: #424a56">Duck Creek's Sydney office · talent-war comp inflation · RG 271 explainable-AI rules.</div>
+            </div>
+            <div style="width: 200px; border-left: 3px solid #1787cf; padding-left: 16px; align-self: stretch; display: flex; flex-direction: column; justify-content: center">
+              <div style="font: 900 34px/1 'Archivo', sans-serif">AUD 550k<span style="font: 700 11px 'JetBrains Mono', monospace; color: #b45309; vertical-align: super"> EST.</span></div>
+              <div style="font: 500 11.5px/1.5 'Plus Jakarta Sans', sans-serif; color: #6d675b; margin-top: 4px">year-1 cost to open a USD 2.5bn adjacent segment growing 10.3%/yr</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 18px; border-top: 1px solid #d9d4c8; padding-top: 8px; font: 600 9px 'JetBrains Mono', monospace; color: #8a8375"><span>MES FIELD REPORT</span><span>FINEOS · AUSTRALIA</span><span>PAGE 02 OF 13</span></div>
+        </div>
+      </div>
+      <div style="background: #fff; border: 1px solid #e5e8ec; border-radius: 8px; padding: 16px 20px; display: flex; gap: 28px; align-items: center">
+        <div><div style="font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #9aa2ad; margin-bottom: 4px">TYPE</div>
+        <div style="font: 900 16px 'Archivo', sans-serif">Archivo Black <span style="font: 500 12px 'Plus Jakarta Sans', sans-serif; color: #57606d">+ Plus Jakarta Sans body</span></div></div>
+        <div><div style="font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #9aa2ad; margin-bottom: 4px">SIGNATURE COMPONENT</div>
+        <div style="font: 400 12px 'Plus Jakarta Sans', sans-serif; color: #57606d">DO / TALK TO / BY WHEN action block — repeats per section, MES matches as the product</div></div>
+        <div style="flex: 1"><div style="font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #9aa2ad; margin-bottom: 4px">SURFACE</div>
+        <div style="font: 400 12px 'Plus Jakarta Sans', sans-serif; color: #57606d">Warm paper #faf8f4, hard 2px borders on the primary action only — hierarchy by weight, not colour count.</div></div>
+      </div>
+      <sc-if value="{{ showCritiques }}" hint-placeholder-val="{{ true }}">
+      <div style="background: #171c26; color: #dfe3e9; border-radius: 8px; padding: 20px 24px">
+        <div style="font: 700 11px 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: #8fb8d8; margin-bottom: 10px">BENCHMARK CRITIQUE — 1c</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; font: 400 12px/1.55 'Plus Jakarta Sans', sans-serif">
+          <div><b style="color: #fff">vs a16z reports:</b> matches conviction and 3-minute scannability; the DO/TALK TO/BY WHEN block is the most ownable component of the three.</div>
+          <div><b style="color: #fff">vs board-forwardable test:</b> weakest — a FINEOS-scale (ASX-listed) CEO may read the register as startup-y.</div>
+          <div><b style="color: #fff">AI-slop guard:</b> big numerals demand strong data behind them; sparse reports would expose the format (needs the degradation rules).</div>
+          <div><b style="color: #fff">Pipeline fit:</b> easy-medium — blocks are pure data shape (action, contact, quarter); already matches the content-contract idea.</div>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="max-width: 1180px; background: #fff; border: 1px solid #e5e8ec; border-radius: 10px; padding: 22px 32px">
+    <div style="font: 700 15px 'Plus Jakarta Sans', sans-serif; margin-bottom: 8px">Reviewer's read — where this converges</div>
+    <div style="font: 400 13px/1.6 'Plus Jakarta Sans', sans-serif; color: #424a56; max-width: 980px">Strongest single direction against the full benchmark set: <a href="#1b">1b</a>'s evidence system (confidence chips, source counts, customer-highlighted charts) is the trust engine, but <a href="#1a">1a</a> wins the "commissioned, not generated" test and <a href="#1c">1c</a> owns the action layer. Recommended converged direction for turn 2: <b>1a's editorial serif register as the base</b>, carrying 1b's confidence/chart grammar for all data and 1c's DO/TALK-TO/BY-WHEN block for every section close. Tell me if you'd rather converge elsewhere.</div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showCritiques&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Review&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const T = { trust: ['TRUST', '#b45309'], scan: ['SCAN', '#1787cf'], value: ['VALUE', '#0e8a5f'] };
+    const f = (rank, title, evidence, tag) => ({ rank, title, evidence, tag: T[tag][0], tagColor: T[tag][1] });
+    const audit = [
+      f('01', 'No opening sequence', 'Page 1 is the web app printed to PDF — site nav bar, hamburger icon, "SM" avatar. No cover, no TOC, no page identity for a 25-page document.', 'trust'),
+      f('02', 'Executive summary is a prose wall', 'Four dense paragraphs; thesis, cost and return are not extractable in a scan. The one-glance takeaway ("deepening, not entry") is buried mid-paragraph.', 'scan'),
+      f('03', 'Zero data visualisation', 'Six market figures, three CAGRs and a phased timeline — all prose. Metric cards give three different markets identical visual weight.', 'value'),
+      f('04', 'One template, eleven sections', 'Every section is the same card + icon + rainbow top-border; SWOT is a generic bullet grid. The format tells "pipeline", not "analyst".', 'trust'),
+      f('05', 'The key recommendation is typeset worst', 'The single most important message renders as a quoted string — ""HIRE SALES DIRECTOR"" — with less design than a metric card.', 'value'),
+      f('06', 'Paragraphs where tables belong', 'Six competitor profiles repeat the same 4-field structure as prose; "No Australian presence evident" appears four times instead of one comparison matrix.', 'scan'),
+      f('07', 'Confidence system is invisible', 'EST. is a 10px badge; [1][2] markers litter every line. No visual distinction between sourced, estimated and inferred claims.', 'trust'),
+      f('08', 'Actions and people are buried', 'Named contacts, quarters and next steps live mid-prose; MES matches — the proprietary product — are dumped as card grids after each section.', 'value'),
+      f('09', 'Repetition as filler', '"70% share" and "hire a Sales Director" are re-established in nearly every section opener — machine-stitched context, no narrative spine.', 'trust'),
+      f('10', 'Uniform density, no wayfinding', 'Pages 10–16 are directory listings printed at the same weight as strategy. Nothing signals what matters; no running footers or page numbers.', 'scan'),
+    ];
+    const g = (rank, title, evidence, tag, scope) => ({ ...f(rank, title, evidence, tag), scope: scope === 'sys' ? 'PIPELINE-WIDE' : 'THIS REPORT', scopeColor: scope === 'sys' ? '#7c3aed' : '#57606d' });
+    const auditCL = [
+      g('01', 'Machine keys leak as display labels', '"Australia-Fintech-B2B-Segment Market Size", "Australia-FinTech-Wealth-Management-SaaS" — raw pipeline identifiers typeset as headings on page 1. The hardest template tell in either sample.', 'trust', 'this'),
+      g('02', 'Metric wall conflates five markets', 'B2B fintech USD 2.5B, NSW ≈1.1–1.3B, BaaS 300M, wealth SaaS 1.2B, embedded finance US$11.51B — mixed units (≈/USD/US$), no relation shown; the 11.51B figure dwarfs the actual addressable and misleads at a glance.', 'value', 'this'),
+      g('03', 'Contradictory numbers survive to print', 'R&D incentive is "43.5% refundable offset" in the exec summary but "15–20% cash refund" in SWOT; CBD rent is $732–986/sqm in SWOT, $900–1,163 in the action plan. No claims reconciliation.', 'trust', 'this'),
+      g('04', 'Placeholder apology ships mid-deliverable', 'Target account #3 is literally "Please attach a website for Pepper Money in your intake to unlock a full brief" — an intake error message typeset as analysis.', 'trust', 'this'),
+      g('05', 'Section scaffolding built for 6, filled with 1', 'Competitor landscape keeps its full "Primary Competitor Analysis" architecture for a single profile (Simpology) — the empty-chair problem the degradation rules exist for.', 'scan', 'this'),
+      g('06', 'No opening sequence', 'Same app-chrome print: site nav, "SM" avatar, no cover, no TOC — for a first-time entrant where trust is the entire sale.', 'trust', 'sys'),
+      g('07', 'Exec summary buries the sequenced plan', 'The genuinely good 90-day / 2–6-month / 6-month+ plan is paragraph four of a prose wall; thesis, cost and first-contract target are not scannable.', 'scan', 'sys'),
+      g('08', 'Key answer typeset as a quoted string', '""Finding my first direct customer"" — the purchased question gets less design than a metric card. Identical failure to FINEOS.', 'value', 'sys'),
+      g('09', 'No opportunity math anywhere', 'ACV AUD 25–500k, 12–24-month cycles, year-1 costs — all present as prose, never composed into the cost → pilot → return picture a first-entrant CEO needs most.', 'value', 'sys'),
+      g('10', 'Directory dump at strategy weight', 'Pages 9–16 are provider/mentor/investor card listings at identical density to the entry strategy; MES matches read as filler, not product.', 'scan', 'sys'),
+    ];
+    const auditFL = [
+      g('01', 'Wrong entrant archetype, same spine', 'Floats is a Melbourne startup, yet it gets the foreign-entrant module set: "Setup & Compliance" opens by admitting the company can "bypass the initial hurdles of foreign market entry" — a section apologising for its own existence.', 'trust', 'this'),
+      g('02', 'Prompt skeleton typeset verbatim', 'Target accounts print the generation scaffold: "1) Who they are:… 5) WHO TO APPROACH:" — numbered fields, inconsistent casing, raw template structure as finished analysis.', 'trust', 'this'),
+      g('03', 'Briefs pitch a product Floats doesn\u2019t sell', 'Hays brief proposes "contractor payroll"; Chandler Macleod gets "workforce management and scheduling tools" — Floats sells candidate presentation. The why-they-fit field isn\u2019t anchored to the USP.', 'value', 'this'),
+      g('04', 'Paid section ships as an empty state', 'Lead List (Scale tier) opens: "We did not find matching pre-built lead datasets…" and points at /leads — an apology where the product should be. Rule T-1 case three.', 'value', 'this'),
+      g('05', 'Scrape artifacts as analysis', 'Indeed profile cites trending searches for "Adelaide Airport (SA)" and "Agnes Water (QLD)" — crawler residue at the same weight as competitive insight. A Werribee meetup shares billing with CDAO Melbourne.', 'trust', 'this'),
+      g('06', 'Machine keys as labels — confirmed class', '"Australia-AI-powered-online-recruitment-platforms market size" — same failure as CreditLogic, now 2 of 3 samples. A linter rule, not a one-off.', 'trust', 'sys'),
+      g('07', 'Metric wall mixes scopes 4.4\u00d7 apart', 'AU platforms USD 700M sits beside AU AI-recruiting USD 3.1B EST with no reconciliation, padded by two global figures in an Australia report.', 'value', 'sys'),
+      g('08', 'Key question as quoted string', '""seed investors and recruitment mentors"" — third sample, same untyped verdict slot. The purchased answer still has no component.', 'value', 'sys'),
+      g('09', 'No opportunity math for a raise', 'The report\u2019s own numbers — 43.5% offset, $500K–$3M seed range, 10–15 pilots, 4–8-week cycles — are never composed into the runway-to-round picture a seed founder needs.', 'scan', 'sys'),
+      g('10', 'App-chrome print, prose exec, directory dump', 'No cover or TOC; exec summary is four paragraphs; pages 9–17 are card listings at strategy weight. All three samples, unchanged.', 'scan', 'sys'),
+    ];
+    return {
+      auditFLLeft: auditFL.slice(0, 5),
+      auditFLRight: auditFL.slice(5),
+      auditCLLeft: auditCL.slice(0, 5),
+      auditCLRight: auditCL.slice(5),
+      auditLeft: audit.slice(0, 5),
+      auditRight: audit.slice(5),
+      showCritiques: this.props.showCritiques ?? true,
+    };
+  }
+}
+</script>
+</body>
+</html>

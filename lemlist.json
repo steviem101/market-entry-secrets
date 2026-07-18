@@ -1,0 +1,185 @@
+{
+  "meta": { "customer": "lemlist", "domain": "lemlist.com", "location": "Paris, France → Sydney, NSW", "descriptor": "PARIS, FRANCE → SYDNEY, NSW · 51–200 · AI OUTBOUND PLATFORM", "date": "2026-07-18", "plan": "scale", "archetype": "foreign_entrant", "origin": "France", "keyQuestion": "Find investors for my startup", "sourceCount": 14 },
+  "cover": { "kicker": "MARKET ENTRY REPORT · FRENCH SAAS ENTERING AUSTRALIA", "headline": "Australia's AI-sales market is growing 18.5% a year — and none of the incumbents are local.", "scope": "lemlist's AI-powered outbound platform — lemlist and lemAgent — helps 20,000+ sales teams find leads, detect buying intent, and run personalised multichannel campaigns while actively avoiding spam." },
+  "exec": {
+    "narrative": ["Australia's AI sales tools segment is valued at **USD 2.5 billion (2024)**, forecast to USD 10.8B by 2033 at **18.5% CAGR** {chip:est}; marketing automation — lemlist's core territory — is the fastest-expanding sub-segment at 14.80% {chip:sourced}. **NSW attracted AUD 1.7B across 160 deals in 2025**, with AI-native SaaS the dominant theme {chip:sourced}.", "Australian buyers prioritise **human-approved AI outreach, local data residency, and APAC timezone support**. The R&DTI offers a **43.5% refundable offset** (under AUD 20M turnover) on AI development conducted locally; **EMDG** can reimburse up to 50% of eligible export marketing spend {chip:sourced}."],
+    "keyQuestionAnswer": "NSW is deploying capital into AI-native SaaS right now — AI drove **61% of national startup funding** {chip:sourced}. Most relevant at your stage: Blackbird, AirTree, Tidal, OIF and Antler (AU$250K–10M tickets); corporate venture arms (Telstra, Westpac, CBA) co-invest alongside pilots. Key highlights: [Cheryl Mack](/mentors/cheryl-mack) (CEO, Aussie Angels) and [1V (OneVentures)](/investors/onevntures) (Sydney VC, $1B+, Series B+ — your stage).",
+    "highlights": [
+      { "name": "Cheryl Mack", "url": "/mentors/cheryl-mack", "kind": "mentor", "why": "Directly connects founders to Australia's largest active angel network" },
+      { "name": "1V (OneVentures)", "url": "/investors/onevntures", "kind": "investor", "why": "$1B+ Sydney VC; high-growth scale-ups at lemlist's stage" }
+    ],
+    "heroStat": { "label": "AI SHARE OF AU STARTUP FUNDING, 2025", "value": "61%", "caption": "AI drove 61% of total national startup funding — the raise window is open now.", "chip": "sourced" },
+    "sequence": { "label": "THE REPORT'S ENTRY SEQUENCE", "rows": [ { "period": "0–60 days", "text": "Local entity + APAC support capability; R&DTI registration; Spam Act audit" }, { "period": "Months 2–6", "text": "Two to three AU reference customers in SaaS or BFSI; pilot-attached corporate venture conversations" }, { "period": "12–18 months", "text": "Sydney traction anchors the next round; national expansion" } ], "caveat": "A suggested shape, not a prescription — sequencing is the core agenda for your strategy session." }
+  },
+  "metrics": { "tiles": [
+    { "value": "USD 2.5B", "chip": "est", "caption": "Australia AI sales tools, 2024 — → USD 10.8B by 2033" },
+    { "value": "18.5%", "chip": "sourced", "caption": "CAGR 2026–2033, AU AI sales tools" },
+    { "value": "USD 1.95B", "chip": "est", "caption": "Australia digital-marketing software, 2025" },
+    { "value": "14.80%", "chip": "sourced", "caption": "CAGR, marketing automation — lemlist's core sub-segment" },
+    { "value": "24.18%", "chip": "sourced", "caption": "Marketing-automation share of CRM marketing services, 2025" },
+    { "value": "AUD 1.7B", "chip": "sourced", "caption": "NSW startup funding 2025 across 160 deals — AI-native SaaS dominant" }
+  ], "footnote": "EST = model-derived estimate from the available research." },
+  "swot": {
+    "strengths": [ { "lead": "AI-native multichannel", "text": "Automated prospect research + intent-based outreach match the AI-first workflow shift" }, { "lead": "Proven scale-up maturity", "text": "51–200 staff; enterprise segment holds 68.43% of CRM marketing services spend" }, { "lead": "Bilateral trade", "text": "France–Australia corridor + EU-Australia FTA ease cross-border SaaS" }, { "lead": "Intent enrichment", "text": "80% of B2B interactions projected digital by 2026 — tools that cut noise win" } ],
+    "weaknesses": [ { "lead": "Sydney burn", "text": "Growth-stage burn AUD $120–250k/mo; senior AI engineers to $180k+" }, { "lead": "Pricing transition", "text": "75% of vendors moving off per-seat toward usage/outcome pricing — mid-shift entry" }, { "lead": "Local awareness", "text": "Stack-anchor incumbents (Salesforce, HubSpot) demand brand-authority investment" } ],
+    "opportunities": [ { "lead": "AI investment surge", "text": "$1.2B AI-focused VC in Sydney in 18 months {chip:sourced}" }, { "lead": "SME & mid-market", "text": "SME automation adoption growing 16.21% CAGR — the self-serve fit" }, { "lead": "R&DTI", "text": "43.5% refundable offset on AU-conducted AI development" }, { "lead": "Retail/e-commerce", "text": "17.53% CAGR vertical for personalisation tooling" } ],
+    "threats": [ { "lead": "ADM transparency rules", "text": "Mandatory AI disclosure by Dec 2026; penalties to $50M {chip:sourced}" }, { "lead": "Spam Act 2003", "text": "ACMA aggressively enforces inferred-consent rules; unsubscribes within 5 working days" }, { "lead": "Talent competition", "text": "8,000+ Sydney AI engineers heavily contested" }, { "lead": "Buyer autonomy", "text": "61% of B2B buyers prefer rep-free — outbound volume alone won't land" } ]
+  },
+  "competitors": {
+    "intro": "The AU sales-tech landscape is shifting to agentic workflows, yet remains dominated by legacy US platforms — and none of the surfaced competitors shows a dedicated Australian footprint. That absence of localised presence IS the gap.",
+    "you": { "name": "lemlist", "url": "", "kind": "competitor", "positionTag": "YOU · SCALE-UP", "position": "AI outbound platform — lead discovery, intent signals, multichannel sequencing, spam avoidance", "strengths": "AI agents research and engage on autopilot; deliverability moat", "differs": "EXECUTION LAYER, NOT JUST DATA — AI AGENT AUTOPILOT" },
+    "rows": [
+      { "name": "Apollo.io", "url": "/competitors/apollo-io", "kind": "competitor", "positionTag": "ALL-IN-ONE · SMB", "position": "Lead discovery + outbound in one; high value-to-cost for SMBs", "strengths": "Massive database with built-in sequencing", "differs": "Data quality inconsistent; less agentic research depth", "auPresence": false },
+      { "name": "Salesloft", "url": "/competitors/salesloft", "kind": "competitor", "positionTag": "ENTERPRISE ENGAGEMENT", "position": "Enterprise predictive revenue system", "strengths": "Deep enterprise CRM integration; AI deal-risk management", "differs": "Heavy and pricey for agile growth-stage teams", "auPresence": false },
+      { "name": "ZoomInfo", "url": "/competitors/zoominfo", "kind": "competitor", "positionTag": "GTM DATA · LEADER", "position": "Global leader in enterprise GTM intelligence", "strengths": "Unparalleled data depth", "differs": "Expensive, long onboarding; overkill for outbound automation", "auPresence": false },
+      { "name": "Lusha", "url": "/competitors/lusha", "kind": "competitor", "positionTag": "B2B DATA", "position": "Verified contact data + buyer intent", "strengths": "GDPR compliance; 85% direct-dial accuracy", "differs": "Data provider — no multichannel sequencing or agents", "auPresence": false },
+      { "name": "Cognism", "url": "/competitors/cognism", "kind": "competitor", "positionTag": "SALES INTELLIGENCE", "position": "Premium international mobile data + compliance", "strengths": "Phone-verified data — mobile outreach matters in AU", "differs": "Data layer, not execution/agent layer", "auPresence": false },
+      { "name": "Agentforce Sales", "url": "/competitors/agentforce-sales", "kind": "competitor", "positionTag": "CRM-NATIVE AI", "position": "AI sales automation inside the Salesforce ecosystem", "strengths": "Seamless CRM integration; predictive insights from customer data", "differs": "Restrictive outside Salesforce; no specialised outbound", "auPresence": false }
+    ],
+    "gaps": "**1 · No localised presence** among any major global competitor — a Sydney footprint is itself a moat. **2 · Data vs execution** — most rivals sell data for humans; agentic execution is uncontested. **3 · Deliverability** — spam avoidance is a technical moat generic sequencers lack.",
+    "positioningRead": "Position as the **AI Outbound Partner for the Australian SaaS Ecosystem** — pitch 'Automated Personalisation at Scale' (the fastest-growing CRM application, 18.49% CAGR) to move from tool to revenue engine. Note: the matcher also surfaced two low-relevance profiles (an entertainer's personal site and an inbound-only tool) — excluded here by the relevance gate (R11).",
+    "scanHookCopy": "We can profile adjacent players — Outreach, Instantly, Smartlead, Reply.io — on request."
+  },
+  "accounts": {
+    "intro": "No target companies were named in your intake, so no account briefs could be built — the ICP profile below is the research's read on where to aim first.",
+    "briefed": [],
+    "icpGuidance": {
+      "targetRoles": ["Head of Sales", "Sales Operations Manager", "Growth Lead"],
+      "sectorFocus": "Australian B2B SaaS companies expanding their GTM teams (1–3 month buying cycles, lightweight RFP) — then BFSI and retail/e-commerce enterprise (6–12 month cycles, data-residency proof required).",
+      "angle": "Position lemlist as the efficiency layer for CRM marketing services (24.18% market share) — automated personalisation that solves the sales-talent shortage."
+    },
+    "worthKnowing": "Australian buyers favour fixed-price pilots with milestone definitions over time-and-materials, and regulated-sector buyers require human-approval loops in AI outreach under Spam Act scrutiny."
+  },
+  "providers": {
+    "intro": "Given your stated priority — the raise — the three below map most directly to investor readiness. All six are credible matches.",
+    "ourRead": [
+      { "rank": 1, "name": "Fullstack Advisory", "url": "/providers/fullstack-advisory", "kind": "provider", "meta": "Sydney · tech accounting", "why": "Capital-raise support, financial modelling, and R&DTI claims — register AI/ML development within ten months of financial year-end to preserve eligibility.", "roleTag": "RAISE + R&DTI" },
+      { "rank": 2, "name": "oSpace (NEXTGEN)", "url": "/providers/ospace-nextgen", "kind": "provider", "meta": "North Sydney · prospecting-as-a-service", "why": "A local sales footprint — prospecting and intent-data analysis — without immediate office overhead; the bridge while the Sydney entity stands up.", "roleTag": "FOOTPRINT, NO OVERHEAD" },
+      { "rank": 3, "name": "ADAPT", "url": "/providers/adapt", "kind": "provider", "meta": "Sydney · market intelligence", "why": "Private roundtables with CIO/CMO buyers in BFSI and retail — the two largest CRM marketing services segments.", "roleTag": "ENTERPRISE ACCESS" }
+    ],
+    "all": [
+      { "name": "NEXTGEN Group", "url": "/providers/nextgen-group", "kind": "provider", "tag": "DISTRIBUTION", "description": "Sales-as-a-service and reseller network across ANZ enterprise accounts." },
+      { "name": "Stone & Chalk", "url": "/providers/stone-and-chalk", "kind": "provider", "tag": "COMMUNITY", "description": "Australia's largest innovation community; private suites ~$3–6k/mo; resident corporate venture arms (Westpac, CBA)." },
+      { "name": "Accenture Australia", "url": "/providers/accenture-australia", "kind": "provider", "tag": "SI / ENTERPRISE", "description": "Integration partner — CRM implementation holds 32.41% of the CRM marketing services market." }
+    ]
+  },
+  "govAndHubs": {
+    "gov": [
+      { "name": "Business France", "url": "/organisations/business-france", "why": "Tailored support, market introductions and investment guidance for French entrants — the corridor body for this entry" },
+      { "name": "AiGroup", "url": "/organisations/aigroup", "why": "Industry advocacy + employer compliance guidance (super, Fair Work, bargaining)" },
+      { "name": "Export Connect", "url": "/organisations/export-connect", "why": "B2B lead qualification and export business-development strategy" }
+    ],
+    "hubs": [
+      { "name": "Stone & Chalk", "url": "/providers/stone-and-chalk", "kind": "hub", "tag": "", "focusTag": "HUB + CVC ACCESS", "description": "Premier venue for mentors and investment access; bank CVC partners in residence." },
+      { "name": "H2 Ventures", "url": "/hubs/h2-ventures", "kind": "hub", "tag": "", "focusTag": "AI/DATA + SEED", "description": "AI and data specialist; seed funding and regulatory guidance." },
+      { "name": "UNSW Founders 10x", "url": "/hubs/unsw-founders-10x", "kind": "hub", "tag": "", "focusTag": "SAFE + MENTORS", "description": "Capital-raise support and mentorship via SAFE notes; founder-to-founder VC credibility." },
+      { "name": "SproutX", "url": "/hubs/sproutx", "kind": "hub", "tag": "", "focusTag": "COMMERCIALISATION", "description": "National accelerator; commercialisation model and industry mentors." }
+    ]
+  },
+  "mentors": {
+    "intro": "Mentors who understand the local SaaS landscape accelerate fundraising — these five offer pathways to capital and enterprise sales expertise.",
+    "primary": [
+      { "name": "Cheryl Mack", "url": "/mentors/cheryl-mack", "kind": "mentor", "role": "CEO, AUSSIE ANGELS", "why": "Access to angel syndicates and VCs — Australia's largest active angel network; flagged in your key-question answer." },
+      { "name": "Daniel Grindrod", "url": "/mentors/daniel-grindrod", "kind": "mentor", "role": "CO-FOUNDER, LAUNCHPAD · UK→APAC", "why": "Outbound strategy refinement; experience helping European founders with APAC expansion." },
+      { "name": "Navaid Khatib", "url": "/mentors/navaid-khatib", "kind": "mentor", "role": "BOARD MEMBER, AUSPAYNET", "why": "Cross-border product management; local regulatory and payments landscape." }
+    ],
+    "extra": [
+      { "name": "Dónal Brady", "url": "/mentors/donal-brady", "kind": "mentor", "role": "CO-FOUNDER, WORK FROM ANYWHERE", "why": "Scaling platforms across APAC with operational discipline." },
+      { "name": "Ben Morrisroe", "url": "/mentors/ben-morrisroe", "kind": "mentor", "role": "CEO, OXBOW · SYDNEY", "why": "Relocating a tech business to Australia — infrastructure perspective." }
+    ]
+  },
+  "investors": {
+    "intro": "The research suggests targeting institutional VCs for growth-stage depth plus strategic angels for local networks — the order below is one possible read; which doors first is the strategy-session conversation.",
+    "approachOrder": [
+      { "label": "Institutional depth first", "text": "[1V (OneVentures)](/investors/onevntures) ($1B+, Series B+ — the stage match) and [Grok Ventures](/investors/grok-ventures) for capital depth and APAC credibility." },
+      { "label": "AI-thesis validation", "text": "[77 Partners](/investors/77-partners) (AI & Data focus, AU$100k min) to validate PMF within the AU AI sales vertical." },
+      { "label": "Strategic angels", "text": "[Stephane Chatonsky](/investors/stephane-chatonsky) ($50–100k; 25 yrs PE, SaaS) bridging French origins and the AU landscape; [Mick Liubinskas](/investors/mick-liubinskas) ($25k; serial operator) for local operational depth." }
+    ],
+    "all": [
+      { "name": "1V (OneVentures)", "url": "/investors/onevntures", "kind": "investor", "tag": "", "stageTag": "VC · GROWTH / B+", "description": "Sydney; $1B+ under management; high-growth scale-ups — the primary stage match." },
+      { "name": "Grok Ventures", "url": "/investors/grok-ventures", "kind": "investor", "tag": "", "stageTag": "PRIVATE · EARLY–LATE", "description": "Fast-growing tech-enabled businesses across stages." },
+      { "name": "77 Partners", "url": "/investors/77-partners", "kind": "investor", "tag": "", "stageTag": "VC · PRE-SEED–SEED", "description": "Brisbane; AI & Data thesis — high-signal for the core platform.", "checkSize": "AU$100k min" },
+      { "name": "Stephane Chatonsky", "url": "/investors/stephane-chatonsky", "kind": "investor", "tag": "", "stageTag": "ANGEL · SEED–A", "description": "25+ years PE; SaaS focus; mentor-investor for the expansion.", "checkSize": "A$50–100k" },
+      { "name": "Mick Liubinskas", "url": "/investors/mick-liubinskas", "kind": "investor", "tag": "", "stageTag": "ANGEL · PRE-SEED", "description": "Sydney serial founder-operator; SaaS and professional services.", "checkSize": "A$25k" }
+    ],
+    "alsoNamed": "Also active per the research: **Blackbird, AirTree, Tidal, OIF, Antler Australia** (AU$250K–10M AI/SaaS tickets) and corporate venture arms of **Telstra, Westpac, CBA** — pilot-attached capital."
+  },
+  "events": {
+    "cards": [
+      { "date": "2026-07-27", "venue": "Hilton Sydney", "name": "Venture & Capital 2026", "url": "/events/venture-capital-2026", "why": "Concentrated HNW and institutional investors — a growth-stage company with revenue stands out among earlier-stage pitches." },
+      { "date": "2026-09-01", "venue": "Sydney", "name": "Startup To Scaleup Summit", "url": "/events/startup-to-scaleup-summit", "why": "Dual-track: enterprise clients for PMF validation + pitch sessions drawing angel syndicates and venture scouts." },
+      { "date": "2027-02-23", "venue": "Sydney", "name": "Venture Capital World Summit", "url": "/events/vc-world-summit-sydney", "why": "Global and local VCs — the room to frame AI outbound against AU productivity challenges." }
+    ],
+    "maximise": [
+      { "lead": "Pre-event outreach with your own product", "text": "Run a lemlist multichannel campaign targeting speakers and registered investors of Venture & Capital 2026 two weeks prior — the product demo IS the outreach." },
+      { "lead": "Demonstrate local traction", "text": "Australian investors are risk-averse — bring AU pilot results or case studies to the Scaleup Summit." },
+      { "lead": "The French Tech narrative", "text": "Position European origins as strength in data privacy and AI ethics — increasingly weighted by AU institutional investors." }
+    ]
+  },
+  "actionPlan": {
+    "intro": "Three phases over six months — the default map; pace set together in the strategy session.",
+    "phases": [
+      { "period": "MONTHS 1–2 · FOUNDATION", "title": "Legal, compliance & investor signals", "groups": [
+        { "title": "Legal & structural", "body": "Pty Ltd via ASIC (~$310/yr) · ABN + GST over $75k · [Fullstack Advisory](/providers/fullstack-advisory) registers AI/ML under R&DTI — 43.5% refundable, up to $4M/yr cash." },
+        { "title": "Compliance", "body": "Audit AI features against the Privacy Act; ADM disclosures before Dec 2026 · Spam Act: inferred consent, 5-day unsubscribes, sender ID · DNCR checks for voice." },
+        { "title": "Investor groundwork", "body": "Map Series A/B profile against Blackbird, AirTree, Tidal, Antler · [Business France](/organisations/business-france) warm introductions · apply to [H2 Ventures](/hubs/h2-ventures) + [SproutX](/hubs/sproutx)." }
+      ] },
+      { "period": "MONTHS 2–4 · ESTABLISH", "title": "Office, team & network", "groups": [
+        { "title": "Presence", "body": "Base at [Stone & Chalk](/providers/stone-and-chalk) ($3–6k/mo suites; Westpac + CBA CVC in residence) · budget $80–150k/mo burn for a 3–5 person team ($100–180k salaries + 12% super)." },
+        { "title": "Team & partners", "body": "Hire an AI-fluent Sydney Head of Sales (national quota attainment: 46% — favour RevOps/GTM-engineer backgrounds) · [ADAPT](/providers/adapt) CIO/CMO community · [AiGroup](/organisations/aigroup) employer compliance." },
+        { "title": "Investor momentum", "body": "[UNSW Founders 10x](/hubs/unsw-founders-10x) events for founder-to-founder VC credibility · pursue CVC pilots via Stone & Chalk's bank partners." }
+      ] },
+      { "period": "MONTHS 4–6 · LAUNCH", "title": "Go-to-market & revenue", "groups": [
+        { "title": "Sales motion", "body": "B2B SaaS heads of sales first (1–3 month cycles) · fixed-price milestone pilots · human-approval loops in all AI outreach." },
+        { "title": "Channels", "body": "[NEXTGEN Group](/providers/nextgen-group) reseller network · [Export Connect](/organisations/export-connect) lead qualification · [Accenture Australia](/providers/accenture-australia) as SI partner." },
+        { "title": "Pricing & EMDG", "body": "Pilot usage/outcome pricing alongside seats (75% of vendors are shifting) · localise case studies before enterprise procurement · submit EMDG for up to 50% of eligible launch marketing spend." }
+      ] }
+    ]
+  },
+  "compliance": {
+    "intro": "The Australia–France Tax Treaty (2006) and the concluded EU-Australia FTA smooth the corridor; the structural requirements are the same gate every foreign entrant passes.",
+    "table": [
+      { "requirement": "Resident director", "severity": "red", "tag": "ASIC · BLOCKING", "finding": "At least one director ordinarily resident in Australia; Director ID for non-residents takes 4–6 weeks (paper process)", "note": "Start first; local hire or nominee director" },
+      { "requirement": "Tax & GST", "severity": "amber", "tag": "ATO · ●", "finding": "GST over A$75k (10%); ABN 1–14 days, TFN up to 28 days", "note": "France treaty reduces withholding on dividends/royalties; R&DTI 43.5% under A$20M turnover" },
+      { "requirement": "Spam Act 2003", "severity": "red", "tag": "ACMA · ●", "finding": "Aggressive enforcement; inferred-consent rules; unsubscribe within 5 working days", "note": "Existential for an outbound platform — audit every sequence before launch; embed human approval" },
+      { "requirement": "People & banking", "severity": "grey", "tag": "FAIR WORK · ●", "finding": "482 (up to 4 yrs) / 400 (short-term setup) visas; 12% super; modern awards set pay scales", "note": "Airwallex / Wise Business interim banking while overseas-director verification clears" }
+    ],
+    "stats": [
+      { "value": "A$120–250k/mo", "chip": "sourced", "caption": "Growth-stage Sydney burn benchmark" },
+      { "value": "A$100–180k", "chip": "sourced", "caption": "Senior hire salaries + 12% superannuation" },
+      { "value": "A$3–6k/mo", "chip": "sourced", "caption": "Stone & Chalk private suites" }
+    ],
+    "checklist": [
+      { "lead": "ADM disclosures", "text": "AI lead-scoring/outreach transparency before Dec 2026; penalties to $50M" },
+      { "lead": "Spam Act audit", "text": "Every automated sequence; DNCR for voice" },
+      { "lead": "Data residency", "text": "A stated enterprise buyer filter — address in GTM positioning" },
+      { "lead": "Human-approval loops", "text": "Regulated-sector buyers require them explicitly" },
+      { "lead": "R&DTI registration", "text": "Within ten months of financial year-end" },
+      { "lead": "EMDG claim", "text": "Up to 50% of eligible export marketing spend" }
+    ]
+  },
+  "guides": {
+    "intro": "Each answers a question this report raises — enterprise AI positioning, partner-led growth, data-residency expectations.",
+    "cards": [
+      { "title": "How Anthropic entered the Australian market", "url": "/guides/anthropic-australian-market-entry", "summary": "Relationship-first strategies and cloud partnerships behind enterprise wins (Canva, CBA).", "relevantBecause": "The playbook for AI credibility with AU enterprise buyers." },
+      { "title": "How UiPath entered the Australian market", "url": "/guides/uipath-australian-market-entry", "summary": "Long-term partnerships to scale agentic AI locally.", "relevantBecause": "The closest automation precedent to lemAgent." },
+      { "title": "How Shopify won Australian merchants with partner-led growth", "url": "/guides/shopify-partner-led-growth-australia", "summary": "Penetration through ecosystem partners over direct sales.", "relevantBecause": "Maps to the NEXTGEN/Accenture channel strategy in §10." },
+      { "title": "How GitHub entered the Australian market", "url": "/guides/github-australian-market-entry", "summary": "Data residency and local engineering support in enterprise AI sales.", "relevantBecause": "Data residency is a stated AU buyer filter for lemlist." },
+      { "title": "How Zoho played the long game in Australia with local data centres", "url": "/guides/zoho-long-game-australia", "summary": "Infrastructure expectations on data sovereignty.", "relevantBecause": "The narrative for security-conscious enterprise procurement." }
+    ]
+  },
+  "leads": {
+    "gapCopy": "No matching pre-built lead datasets for your industry exist in the directory today.",
+    "customBuildCopy": "A bespoke build can target: Australian Series B+ VCs · B2B SaaS companies expanding GTM teams · BFSI and retail/e-commerce marketing-automation buyers."
+  },
+  "close": {
+    "headline": "This report is the map. The route gets chosen together.",
+    "body": "What it deliberately doesn't do is lock in strategy: sequencing the raise against reference-customer wins, pilot pricing, and which investors to approach first are worked through in your included 60-minute strategy session.",
+    "arriveWith": [ "Raise first vs land two reference customers first", "Mid-market self-serve vs BFSI enterprise as the beachhead", "Per-seat vs usage-based pricing for the AU market", "Which two funds and which angel to approach first" ]
+  },
+  "sources": {
+    "regulator": ["ASIC incorporation requirements", "ATO R&DTI + GST provisions", "Privacy Act 1988 + Dec 2026 ADM rules", "Spam Act 2003 / ACMA enforcement", "Australia–France Tax Treaty (2006)", "EU-Australia FTA (concluded Mar 2026)", "EMDG programme"],
+    "analyst": ["Mordor Intelligence — AU digital-marketing + CRM services sizing", "AI sales tools market projections", "NSW/Sydney funding data 2025", "Salary + burn benchmarks", "B2B buyer behaviour projections"],
+    "vendor": ["Lusha, Salesloft, Apollo.io, ZoomInfo, Cognism, Agentforce product materials", "Investor/accelerator public profiles", "lemlist platform materials (20,000+ teams)"]
+  }
+}
