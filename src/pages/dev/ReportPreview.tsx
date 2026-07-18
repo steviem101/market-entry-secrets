@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import type { Report } from "@/types/report";
 import { REPORT_V2_SECTIONS } from "@/components/report-v2/sectionRegistry";
@@ -28,7 +29,49 @@ const FIXTURE_NAMES = Object.keys(FIXTURES);
 const ReportPreview = () => {
   const [searchParams] = useSearchParams();
   const fixtureKey = searchParams.get("fixture") ?? "floats";
-  const report = FIXTURES[fixtureKey];
+  const [realReport, setRealReport] = useState<Report | null>(null);
+  const [realError, setRealError] = useState<string | null>(null);
+
+  // ?fixture=real — PARITY row 19: render a REAL production report through the
+  // adapter. Drop the pipeline report_json at public/dev-fixtures/real-report.json
+  // (gitignored, local-only, never committed/shipped) and the adapter maps it
+  // on load; the mismatch log prints to the console.
+  useEffect(() => {
+    if (fixtureKey !== "real") return;
+    let cancelled = false;
+    Promise.all([
+      fetch("/dev-fixtures/real-report.json").then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      }),
+      import("@/lib/report-v2/adapter"),
+    ])
+      .then(([raw, { adaptPipelineReport }]) => {
+        if (cancelled) return;
+        const { report: adapted, mismatches } = adaptPipelineReport(
+          (raw.report_json ?? raw) as never,
+          (raw.context ?? {}) as never
+        );
+        console.info(`[report-v2 adapter] ${mismatches.length} mismatches`, mismatches);
+        setRealReport(adapted);
+      })
+      .catch(() => {
+        if (!cancelled) setRealError("No public/dev-fixtures/real-report.json found — drop a production report_json there (path is gitignored).");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [fixtureKey]);
+
+  const report = fixtureKey === "real" ? realReport : FIXTURES[fixtureKey];
+
+  if (fixtureKey === "real" && !report) {
+    return (
+      <div className="mx-auto max-w-3xl px-6 py-16">
+        <p className="text-sm text-muted-foreground">{realError ?? "Adapting real report…"}</p>
+      </div>
+    );
+  }
 
   if (!report) {
     return (
