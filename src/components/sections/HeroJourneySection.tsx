@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -164,11 +164,20 @@ const EXAMPLE_LEAD_ROWS: { company: string; role: string }[] = [
   { company: "Telstra", role: "Enterprise Sales Director" },
 ];
 
-const MaskedCell = () => (
-  <span
-    className="inline-block h-2 w-14 rounded-sm bg-muted"
-    aria-label="Masked in this example"
-  />
+// Masked placeholder cells: shaped like the real column (email / phone /
+// LinkedIn) but obviously redacted with bullets — reads as "there's a contact
+// here" without inventing or implying any real person's details (MES-162 PII
+// rule; the panel's footnote says as much).
+const MASKED_PLACEHOLDER = {
+  email: "••••@••••.com",
+  phone: "+61 4•• ••• •••",
+  linkedin: "/in/••••••",
+} as const;
+
+const MaskedCell = ({ kind }: { kind: keyof typeof MASKED_PLACEHOLDER }) => (
+  <span className="tracking-tight text-muted-foreground/70" aria-label="Masked in this example">
+    {MASKED_PLACEHOLDER[kind]}
+  </span>
 );
 
 /** Step 2 — the matched provider / lead list the report produces. Categories,
@@ -177,9 +186,13 @@ const LeadsPanel = () => {
   const { stats, isReady } = useEcosystemStats();
   const { data: logos } = useFeaturedLogos();
   const { data: leadStats } = useLeadDatabaseStats();
+  // Drop any logo whose image fails to load (Logo.dev coverage miss) so it
+  // never renders as a broken-image glyph — mirrors the main LogoCloud. Filter
+  // before slicing so survivors backfill the row up to 6.
+  const [failedLogos, setFailedLogos] = useState<ReadonlySet<string>>(new Set());
 
   const categories = topLeadCategories(leadStats?.countsByType, 4);
-  const logoRow = (logos ?? []).slice(0, 6);
+  const logoRow = (logos ?? []).filter((l) => !failedLogos.has(l.key)).slice(0, 6);
 
   return (
     <PanelShell>
@@ -210,6 +223,13 @@ const LeadsPanel = () => {
                 loading="lazy"
                 decoding="async"
                 className="h-8 w-auto max-w-[110px] object-contain opacity-80 grayscale transition-all duration-300 hover:opacity-100 hover:grayscale-0"
+                onError={() =>
+                  setFailedLogos((prev) => {
+                    const next = new Set(prev);
+                    next.add(logo.key);
+                    return next;
+                  })
+                }
               />
             </li>
           ))}
@@ -240,9 +260,9 @@ const LeadsPanel = () => {
                 <tr key={row.company} className="border-t border-border">
                   <td className="px-3 py-2 font-medium text-foreground">{row.company}</td>
                   <td className="px-3 py-2 text-muted-foreground">{row.role}</td>
-                  <td className="px-3 py-2"><MaskedCell /></td>
-                  <td className="px-3 py-2"><MaskedCell /></td>
-                  <td className="px-3 py-2"><MaskedCell /></td>
+                  <td className="px-3 py-2"><MaskedCell kind="email" /></td>
+                  <td className="px-3 py-2"><MaskedCell kind="phone" /></td>
+                  <td className="px-3 py-2"><MaskedCell kind="linkedin" /></td>
                 </tr>
               ))}
             </tbody>
