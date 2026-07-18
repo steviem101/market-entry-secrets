@@ -54,9 +54,24 @@ export function tierMeets(userTier: string, requiredTier: string): boolean {
   return u >= r;
 }
 
-// Sections that SHOULD be visible at this tier — the fair denominator for completeness.
-export function expectedVisibleSections(tier: string): string[] {
-  return SECTION_ORDER.filter((s) => tierMeets(tier, TIER_REQUIREMENTS[s] ?? "free"));
+// Sections introduced after launch, keyed to the date their template went live.
+// A report generated BEFORE a section existed must not be judged as missing it —
+// without this gate, every section rollout makes the loop flag all
+// lookback-window reports as incomplete and spam #report-quality (MES-210a).
+export const SECTION_INTRODUCED_AT: Record<string, string> = {
+  case_studies_guides: "2026-07-18",
+};
+
+// Sections that SHOULD be visible at this tier — the fair denominator for
+// completeness. Pass the report's generation timestamp (created_at) so sections
+// that postdate the report are excluded; omitted = today's full section set.
+export function expectedVisibleSections(tier: string, generatedAtIso?: string): string[] {
+  return SECTION_ORDER.filter((s) => {
+    if (!tierMeets(tier, TIER_REQUIREMENTS[s] ?? "free")) return false;
+    const introduced = SECTION_INTRODUCED_AT[s];
+    if (introduced && generatedAtIso && String(generatedAtIso) < introduced) return false;
+    return true;
+  });
 }
 
 // Sections gated ABOVE this tier — must never be flagged as "missing"/"not actioned".
@@ -159,7 +174,7 @@ export function buildCompactInput(rq: any, report: any, intake: any): CompactInp
       report_focus: String(intake?.report_focus ?? "").slice(0, 200),
       additional_notes: String(intake?.additional_notes ?? "").slice(0, 300),
     },
-    expected_sections: expectedVisibleSections(tier),
+    expected_sections: expectedVisibleSections(tier, report?.created_at),
     gated_sections: gatedSections(tier),
     sections,
     match_counts: matchCounts,

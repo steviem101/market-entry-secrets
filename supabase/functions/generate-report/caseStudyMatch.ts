@@ -30,6 +30,7 @@ export interface CaseStudyRow {
   sector_tags?: string[] | null;
   sector_agnostic?: boolean | null;
   publish_date?: string | null;
+  meta_description?: string | null;
   profile?: CaseStudyProfile | null;
 }
 
@@ -44,9 +45,24 @@ export interface CaseStudyContext {
   targetRegionTokens: string[];
 }
 
-// Outcomes that count as proof of a successful entry (mirrors the positive set
-// centralised in the frontend's OutcomeBadge).
+// Outcomes that count as proof of a successful entry. Mirror of the canonical
+// POSITIVE_OUTCOMES / isPositiveOutcome() in src/lib/caseStudyFilters.ts (the
+// edge runtime cannot import src/lib) — keep the two sets in sync when the
+// outcome vocabulary changes.
 const POSITIVE_OUTCOMES = new Set(["successful", "scaling", "ipo", "acquired"]);
+
+// Reason string for the outcome-only signal. Exported so callers can tell a
+// corridor-grade match (origin/sector/target reasons) from a row that scored
+// on outcome alone — the latter must never be presented as "like you".
+export const OUTCOME_REASON = "Successful entry";
+
+/** True when the row matched on at least one corridor signal (origin, sector,
+ *  industry, or target market) — not merely on a positive outcome. */
+export function hasCorridorReason(reasons: string[] | null | undefined): boolean {
+  return (reasons || []).some((r) => r !== OUTCOME_REASON);
+}
+
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export interface ScoredCaseStudy {
   row: CaseStudyRow;
@@ -90,10 +106,12 @@ export function scoreCaseStudy(row: CaseStudyRow, ctx: CaseStudyContext): Scored
 
   // Target market — entered the same state/city the reader is targeting. Generic
   // national targets contribute no token (expandTargetRegions drops them), matching
-  // the location semantics of the wider matcher.
+  // the location semantics of the wider matcher. Word-boundary match, not bare
+  // substring: the 3-letter state tokens ("act", "tas") must not fire inside
+  // unrelated words ("manufACTuring").
   if (ctx.targetRegionTokens.length && p.target_market) {
     const tm = String(p.target_market).toLowerCase();
-    const hit = ctx.targetRegionTokens.find((t) => tm.includes(t));
+    const hit = ctx.targetRegionTokens.find((t) => new RegExp(`\\b${escapeRegex(t)}\\b`).test(tm));
     if (hit) {
       score += 1;
       reasons.push(`Entered ${p.target_market}`);
@@ -105,7 +123,7 @@ export function scoreCaseStudy(row: CaseStudyRow, ctx: CaseStudyContext): Scored
   const outcome = String(p.outcome || "").toLowerCase().trim();
   if (POSITIVE_OUTCOMES.has(outcome)) {
     score += 1;
-    reasons.push("Successful entry");
+    reasons.push(OUTCOME_REASON);
   }
 
   return { row, score, reasons };

@@ -7,11 +7,12 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const AI_MODEL = "google/gemini-3-flash-preview";
 
 const RAG_SOURCES = [
-  "service_providers", "community_members", "events", "content_items",
+  "service_providers", "community_members", "events", "content_items", "case_studies",
   "leads", "innovation_ecosystem", "trade_investment_agencies", "investors",
 ];
 const RAG_LABELS: Record<string, string> = {
   service_providers: "Providers", community_members: "Mentors", events: "Events", content_items: "Content",
+  case_studies: "Case Studies",
   leads: "Leads", innovation_ecosystem: "Innovation", trade_investment_agencies: "Agencies", investors: "Investors",
 };
 const BAND = (s: number) => (s >= 80 ? { e: "🟢", c: "#2eb67d" } : s >= 60 ? { e: "🟡", c: "#ECB22E" } : { e: "🔴", c: "#e01e5a" });

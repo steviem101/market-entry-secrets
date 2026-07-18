@@ -107,7 +107,10 @@ export const SECTION_LABELS: Record<string, string> = {
   service_providers: 'Service Provider Recommendations',
   mentor_recommendations: 'Mentor Recommendations',
   investor_recommendations: 'Investor Recommendations',
-  events_resources: 'Events & Resources',
+  // "Events & Networking" for new (events-only) reports; legacy reports that still
+  // carry resources here render them under their own sub-header, so the shorter
+  // title stays accurate for both vintages.
+  events_resources: 'Events & Networking',
   case_studies_guides: 'Case Studies & Guides',
   action_plan: 'Action Plan & Timeline',
   setup_compliance: 'Setup & Compliance Guide',
