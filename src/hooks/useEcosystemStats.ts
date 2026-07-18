@@ -23,6 +23,8 @@ export interface EcosystemStats {
   guides: number;
   caseStudies: number;
   governmentAgencies: number;
+  /** Completed reports (MES-162) — 0 until migration 20260718100100 is live. */
+  reportsGenerated: number;
 }
 
 const STAT_KEYS: (keyof EcosystemStats)[] = [
@@ -36,6 +38,7 @@ const STAT_KEYS: (keyof EcosystemStats)[] = [
   "guides",
   "caseStudies",
   "governmentAgencies",
+  "reportsGenerated",
 ];
 
 // Core counts that must be > 0 for the hero substantiation line to be credible.

@@ -1,5 +1,4 @@
 
-import { Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -31,12 +30,10 @@ export const TestimonialCard = ({
   return (
     <Card className="group hover:shadow-xl transition-all duration-500 border-border/40 bg-card/60 backdrop-blur-sm hover:bg-card/80 hover:border-primary/30 hover:-translate-y-2">
       <CardContent className="p-6">
-        {/* 5-star rating */}
-        <div className="flex items-center mb-4">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-          ))}
-        </div>
+        {/* No star row: the testimonials table has no rating column, so a
+            hardcoded 5-star render was an unverifiable claim (same class as
+            the removed "4.9/5" hero badge — MES-162 rule: ratings only if
+            real ratings exist). */}
 
         {/* Testimonial quote */}
         <blockquote className="text-muted-foreground mb-6 leading-relaxed">

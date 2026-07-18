@@ -10,6 +10,7 @@ import {
   Landmark,
   ClipboardCheck,
   Handshake,
+  BookOpen,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -61,9 +62,16 @@ export const SECTION_CONFIG: Record<string, SectionConfig> = {
     icon: CalendarDays,
     accentColor: 'border-t-orange-500',
     accentBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
-    // Generic label — the section render also splits resources under their
-    // own "Case Studies & Resources" sub-header so "Events" stays accurate.
+    // New reports carry events only (MES-210a moved case studies/guides to their
+    // own section); legacy reports still split a "Case Studies & Resources"
+    // sub-header via reportCardGroups, so "Events" stays accurate for both.
     matchLabel: 'Events',
+  },
+  case_studies_guides: {
+    icon: BookOpen,
+    accentColor: 'border-t-pink-500',
+    accentBg: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
+    matchLabel: 'Case Studies & Guides',
   },
   action_plan: {
     icon: ListChecks,
@@ -99,7 +107,11 @@ export const SECTION_LABELS: Record<string, string> = {
   service_providers: 'Service Provider Recommendations',
   mentor_recommendations: 'Mentor Recommendations',
   investor_recommendations: 'Investor Recommendations',
-  events_resources: 'Events & Resources',
+  // "Events & Networking" for new (events-only) reports; legacy reports that still
+  // carry resources here render them under their own sub-header, so the shorter
+  // title stays accurate for both vintages.
+  events_resources: 'Events & Networking',
+  case_studies_guides: 'Case Studies & Guides',
   action_plan: 'Action Plan & Timeline',
   setup_compliance: 'Setup & Compliance Guide',
   lead_list: 'Lead List',
@@ -108,8 +120,8 @@ export const SECTION_LABELS: Record<string, string> = {
 
 export const SECTION_ORDER = [
   'executive_summary', 'swot_analysis', 'competitor_landscape', 'first_customers', 'service_providers',
-  'mentor_recommendations', 'investor_recommendations', 'events_resources', 'action_plan',
-  'setup_compliance', 'lead_list',
+  'mentor_recommendations', 'investor_recommendations', 'events_resources', 'case_studies_guides',
+  'action_plan', 'setup_compliance', 'lead_list',
 ];
 
 // Minimum subscription tier required for each gated section (MES-193). Free view

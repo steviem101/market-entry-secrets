@@ -1,5 +1,6 @@
-import { ClipboardList, Cpu, Users } from "lucide-react";
+import { ClipboardList, FileText, Handshake } from "lucide-react";
 import { ReportCTAButton } from "@/components/cta/ReportCTAButton";
+import { ManifestoStrip } from "@/components/sections/ManifestoStrip";
 
 interface Step {
   icon: typeof ClipboardList;
@@ -8,29 +9,33 @@ interface Step {
   description: string;
 }
 
+// MES-194 (T3 increment 2): the 3-step narrative ends on the paid product —
+// the advisor — per the epic charter §5b ("Tell us your goal → get your free
+// report → work it with your advisor").
 const STEPS: Step[] = [
   {
     icon: ClipboardList,
     iconColor: "from-primary/15 to-primary/5 text-primary",
-    title: "Tell us about your company",
+    title: "Tell us your goal",
     description:
-      "Answer a few quick questions about your industry, target region, and goals. No credit card required.",
+      "Answer a few quick questions about your company, market and goals. No credit card, no sales call.",
   },
   {
-    icon: Cpu,
+    icon: FileText,
     iconColor: "from-primary/15 to-accent/5 text-primary",
-    title: "AI builds your market entry plan",
+    title: "Get your free report",
     description:
-      "Our engine scrapes live data, analyses competitors, maps the market, and matches you with vetted providers, all in minutes, not months.",
+      "Live market intelligence, competitor landscape, SWOT and an action plan — matched to real providers, mentors and investors from our directories, in minutes.",
   },
   {
-    icon: Users,
+    icon: Handshake,
     iconColor: "from-accent/15 to-accent/5 text-accent",
-    title: "Get matched with the right people",
+    title: "Work it with your advisor",
     description:
-      "Receive a custom report with SWOT analysis, provider and mentor matches, and a step-by-step action plan.",
+      "Upgrade when you're ready: a walkthrough call or strategy session with an MES advisor, warm mentor introductions, and your lead list delivered to your hub.",
   },
 ];
+
 
 export const HowItWorksSection = () => {
   return (
@@ -43,7 +48,7 @@ export const HowItWorksSection = () => {
               How it works
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              From a few quick questions to a ready-to-act plan
+              Tell us your goal, get your free report, then work it with your advisor
             </p>
           </div>
 
@@ -82,8 +87,11 @@ export const HowItWorksSection = () => {
             })}
           </div>
 
+          {/* X-not-Y manifesto strip */}
+          <ManifestoStrip className="mt-16 border-t border-border/50 pt-10" />
+
           {/* Single CTA */}
-          <ReportCTAButton className="mt-14" />
+          <ReportCTAButton className="mt-12" />
         </div>
       </div>
     </section>

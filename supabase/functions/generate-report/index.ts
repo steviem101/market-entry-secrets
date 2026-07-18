@@ -32,6 +32,7 @@ import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buil
 import { parseAbPercent, inCandidateBucket } from "./promptAb.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry, FLASH_MODEL } from "./sectionModel.ts";
+import { selectCaseStudies, hasCorridorReason, type CaseStudyRow } from "./caseStudyMatch.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -1602,9 +1603,23 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
     }));
   } catch (e) { console.error("Events search error:", e); }
 
-  // Content items — sector (+ agnostic); no location dimension
+  // Content items — sector (+ agnostic); no location dimension. Case studies are
+  // EXCLUDED here (MES-210a): they surface via the dedicated corridor-matched pool
+  // (searchCaseStudies) and their own report section, so this pool is guides/other
+  // content only. Ordered by publish_date so the candidate set is deterministic —
+  // the audit (MES-210 RC3) found an unordered .limit() returned an arbitrary
+  // subset of the qualifying rows before ranking ever saw them.
   try {
-    let ciQuery = supabase.from("content_items").select("id, title, slug, content_type, sector_tags, meta_description, sector_agnostic").eq("status", "published").limit(CAND);
+    let ciQuery = supabase.from("content_items")
+      .select("id, title, slug, content_type, sector_tags, meta_description, sector_agnostic")
+      .eq("status", "published")
+      .neq("content_type", "case_study")
+      // nullsFirst:false — Postgres DESC defaults to NULLS FIRST, which would let
+      // undated rows occupy the head of the window; id tiebreak keeps equal dates
+      // deterministic.
+      .order("publish_date", { ascending: false, nullsFirst: false })
+      .order("id")
+      .limit(CAND);
     ciQuery = ciQuery.or(buildOr({ location: false }));
     const { data: ci, error: ciErr } = await ciQuery;
     if (ciErr) console.error("Content query error:", ciErr);
@@ -1775,6 +1790,99 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
   return { matches, ctx };
 }
 
+// ── Like-for-like case studies (MES-210a) ─────────────────────────────────
+// Case studies were reachable only through the shared content pool (cap 5, mixed
+// with guides, arbitrary 40-row fetch) — the MES-210 audit measured 39% of reports
+// shipping with ZERO case-study cards while 146 published rows existed. This pool
+// fetches the newest 300 published rows — comfortable headroom over the current
+// 146, with a fail-loud warning if the cap is ever hit — joined to
+// content_company_profiles, and ranks with the pure corridor scorer (origin
+// country, sector, target market, outcome). Feeds the dedicated
+// case_studies_guides section; failure degrades to an empty pool.
+const CASE_STUDY_FETCH_CAP = 300;
+
+async function searchCaseStudies(supabase: any, intake: any): Promise<any[]> {
+  const { data: rows, error } = await supabase.from("content_items")
+    .select("id, title, slug, sector_tags, sector_agnostic, meta_description, publish_date, content_company_profiles(company_name, origin_country, target_market, industry, outcome)")
+    .eq("status", "published")
+    .eq("content_type", "case_study")
+    .order("publish_date", { ascending: false, nullsFirst: false })
+    .order("id")
+    .limit(CASE_STUDY_FETCH_CAP);
+  if (error) {
+    console.error("Case studies query error (pool will be empty):", error);
+    return [];
+  }
+  if ((rows || []).length >= CASE_STUDY_FETCH_CAP) {
+    console.warn(`case studies: fetch hit the ${CASE_STUDY_FETCH_CAP}-row cap — oldest rows are no longer scored; raise the cap`);
+  }
+
+  const userSectors = industryGroupsToSectorSlugs(intake.industry_sector);
+  const sellsToSectors = industryGroupsToSectorSlugs(intake.end_buyer_industries);
+  const candidates: CaseStudyRow[] = (rows || []).map((r: any) => ({
+    id: r.id,
+    title: r.title,
+    slug: r.slug,
+    sector_tags: r.sector_tags,
+    sector_agnostic: r.sector_agnostic,
+    publish_date: r.publish_date,
+    meta_description: r.meta_description,
+    // content_company_profiles is a one-to-many embed keyed by content_id; case
+    // studies carry exactly one profile row, so take the first.
+    profile: Array.isArray(r.content_company_profiles) ? r.content_company_profiles[0] : r.content_company_profiles,
+  }));
+
+  // The "case studies" intake goal finally moves its own lever: a wider slate for
+  // users who explicitly asked for case studies (was a provider-tag-only goal).
+  const wantsCaseStudies = (intake.goal_ids || []).includes("case_studies") ||
+    (intake.services_needed || []).includes("Access market entry case studies and success stories");
+
+  const picked = selectCaseStudies(candidates, {
+    userCountryKey: normalizeCountry(intake.country_of_origin),
+    userSectors,
+    sellsToSectors,
+    targetRegionTokens: expandTargetRegions(intake.target_regions),
+  }, wantsCaseStudies ? 6 : 4);
+
+  console.log(`case studies: ${candidates.length} published → ${picked.length} selected (${picked.map((p) => p.score).join(",")})`);
+  return picked.map(({ row, score, reasons }) => {
+    const p = row.profile || {};
+    return {
+      id: row.id,
+      name: row.title,
+      title: row.title,
+      slug: row.slug,
+      content_type: "case_study",
+      meta_description: row.meta_description,
+      company_name: p.company_name,
+      origin_country: p.origin_country,
+      target_market: p.target_market,
+      industry: p.industry,
+      outcome: p.outcome,
+      match_score: score,
+      match_reasons: reasons,
+      link: row.slug ? `/case-studies/${row.slug}` : "/case-studies",
+      linkLabel: "Read Case Study",
+      // metaLine drops junk tokens ("n/a", "null", "-") and returns undefined for
+      // an all-blank line — the render contract every other card surface honours.
+      subtitle: metaLine([
+        p.origin_country ? `${p.origin_country} → ${p.target_market || "Australia"}` : p.target_market,
+        p.industry,
+      ]),
+      tags: [p.industry, humanizeOutcome(p.outcome)].filter(Boolean).slice(0, 2),
+    };
+  });
+}
+
+/** Display-ready outcome chip ('successful' → 'Successful') — cards must never
+ *  show the raw lowercase enum the DB stores. */
+function humanizeOutcome(outcome?: string | null): string | undefined {
+  const o = String(outcome || "").trim();
+  if (!o) return undefined;
+  if (o.toLowerCase() === "ipo") return "IPO";
+  return o.charAt(0).toUpperCase() + o.slice(1).toLowerCase();
+}
+
 // ── Semantic directory matching (mes_knowledge_base) ─────────────────────
 // Recall upgrade over the .cs.{} array-overlap path: embed the intake, ask the
 // unified KB (match_knowledge) for the most relevant entities across types, then
@@ -1842,7 +1950,11 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
   await Promise.all(Object.entries(ranked).map(async ([tbl, items]) => {
     const cfg = SEMANTIC_CFG[tbl];
     // Overfetch (2× cap) so post-hydrate filtering still leaves a full slate.
-    const ids = (items as Array<{ id: string }>).slice(0, cfg.cap * 2).map((x) => x.id);
+    // content_items gets 4× — case studies (chunk-heavy in the KB) are filtered
+    // out AFTER hydrate, and at 2× they could occupy most of the slice and starve
+    // the guides slate for sectors where case studies dominate the top hits.
+    const over = tbl === "content_items" ? 4 : 2;
+    const ids = (items as Array<{ id: string }>).slice(0, cfg.cap * over).map((x) => x.id);
     if (ids.length === 0) return;
     try {
       const { data: rows } = await supabase.from(cfg.table).select(cfg.select).in("id", ids);
@@ -1873,6 +1985,11 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
         // overlap path now blocks.
         const dateFiltered = ordered.filter((e: any) => !e.date || e.date >= todayIso);
         ordered = regionFilterAndDedupeEvents(dateFiltered, locationPatterns, cfg.cap);
+      } else if (tbl === "content_items") {
+        // MES-210a: case studies surface via the dedicated corridor-matched pool
+        // + section; mirror the overlap path's exclusion so the semantic path
+        // can't double-serve the same row into the guides/resources pool.
+        ordered = ordered.filter((c: any) => c.content_type !== "case_study");
       }
 
       out[tbl] = ordered.slice(0, cfg.cap).map(cfg.decorate);
@@ -1919,6 +2036,14 @@ async function fetchLinkedInSignal(supabase: any, intake: any): Promise<string> 
  *  is unset or the KB call fails, semantic returns {} and the (now bug-fixed)
  *  overlap path carries the whole report. */
 async function searchMatches(supabase: any, intake: any, serviceTermIndex: ServiceTermIndex | null = null): Promise<Record<string, any[]>> {
+  // MES-210a: dedicated like-for-like case-study pool (fetch-everything + pure
+  // corridor scorer). Independent of both paths below, so it is STARTED first and
+  // awaited last — no serialized roundtrip on the report critical path. A failure
+  // leaves the pool empty rather than affecting any other surface.
+  const caseStudiesPromise = searchCaseStudies(supabase, intake).catch((e: unknown) => {
+    console.error("case-study search failed (section renders empty):", e);
+    return [] as any[];
+  });
   const { matches: overlap, ctx } = await searchMatchesOverlap(supabase, intake, serviceTermIndex);
   let semantic: Record<string, any[]> = {};
   try {
@@ -1926,6 +2051,7 @@ async function searchMatches(supabase: any, intake: any, serviceTermIndex: Servi
   } catch (e) {
     console.error("semantic matches failed; using array-overlap only", e);
   }
+  overlap.case_studies = await caseStudiesPromise;
 
   // Re-rank the UNION of overlap + semantic candidates through the rebalanced scorer,
   // so semantic search boosts RECALL while the explainable rebalance (specialist bonus,
@@ -2216,7 +2342,11 @@ async function searchMatches(supabase: any, intake: any, serviceTermIndex: Servi
   return merged;
 }
 
-function getMatchesForSection(sectionName: string, matches: Record<string, any[]>): any[] {
+function getMatchesForSection(
+  sectionName: string,
+  matches: Record<string, any[]>,
+  opts: { legacyResources?: boolean } = {},
+): any[] {
   switch (sectionName) {
     // Service Providers is the free/always-visible "who can help you" section. Trade &
     // investment agencies (government support) and innovation hubs/accelerators are the
@@ -2237,9 +2367,24 @@ function getMatchesForSection(sectionName: string, matches: Record<string, any[]
       ...(matches.innovation_ecosystem || []).map((r: any) => ({ ...r, card_group: "innovation" })),
     ], (r: any) => (r?.name || r?.title || r?.company_name || "").toString().toLowerCase().trim());
     case "mentor_recommendations": return matches.community_members || [];
-    case "events_resources": return [
-      ...(matches.events || []).map((r: any) => ({ ...r, card_group: "events" })),
-      ...(matches.content_items || []).map((r: any) => ({ ...r, card_group: "resources" })),
+    // MES-210a: events keep their own section; case studies + guides moved to the
+    // dedicated case_studies_guides section below (previously ≤5 mixed "resources"
+    // cards buried here — the audit's headline under-surfacing finding).
+    // legacyResources covers the deploy-skew window where this code is live but the
+    // case_studies_guides template row is not: content falls back to its old home
+    // here, so no window ever ships reports with zero case-study/guide cards.
+    case "events_resources": {
+      const ev = (matches.events || []).map((r: any) => ({ ...r, card_group: "events" }));
+      if (!opts.legacyResources) return ev;
+      return [
+        ...ev,
+        ...(matches.case_studies || []).map((r: any) => ({ ...r, card_group: "resources" })),
+        ...(matches.content_items || []).map((r: any) => ({ ...r, card_group: "resources" })),
+      ];
+    }
+    case "case_studies_guides": return [
+      ...(matches.case_studies || []).map((r: any) => ({ ...r, card_group: "case_studies" })),
+      ...(matches.content_items || []).map((r: any) => ({ ...r, card_group: "guides" })),
     ];
     case "lead_list": return [
       ...(matches.leads || []).map((r: any) => ({ ...r, card_group: "leads" })),
@@ -2405,6 +2550,21 @@ async function generateReportInBackground(
         citations: [], used: false, health: { attempted: 0, succeeded: 0, statuses: [] },
       };
       matches = resumedResearch.matches ?? {};
+      // MES-210a back-compat for pre-split artifacts: their content pool still
+      // contains case-study rows (now mislabelled as guides by the section split)
+      // and has no case_studies pool at all. Strip the former and rebuild the
+      // latter live — searchCaseStudies is a single cheap DB query with none of
+      // the Firecrawl/Perplexity spend the artifact exists to protect.
+      if (Array.isArray(matches.content_items)) {
+        matches.content_items = matches.content_items.filter((c: any) => c.content_type !== "case_study");
+      }
+      if (!Array.isArray(matches.case_studies) || matches.case_studies.length === 0) {
+        try {
+          matches.case_studies = await searchCaseStudies(supabase, intake);
+        } catch (e) {
+          console.error("resume: case-study refresh failed (section renders empty):", e);
+        }
+      }
       competitorResult = resumedResearch.competitorResult ?? { competitors: [], raw_results: [], competitor_depth: false };
       endBuyerScrapeResult = resumedResearch.endBuyerScrapeResult ?? [];
       endBuyerProcurementResearch = resumedResearch.endBuyerProcurementResearch ?? "";
@@ -2746,6 +2906,15 @@ async function generateReportInBackground(
       .eq("is_active", true)
       .order("section_name");
 
+    // MES-210a deploy-skew guard: if this build is live before the migration that
+    // seeds the case_studies_guides template, fall back to the legacy shape —
+    // content renders under events_resources — instead of dropping case studies
+    // and guides from the report entirely.
+    const hasCsgTemplate = (templates || []).some((t: any) => t.section_name === "case_studies_guides");
+    if (!hasCsgTemplate) {
+      console.warn("case_studies_guides template row missing — rendering content under events_resources (legacy fallback)");
+    }
+
     // 5. Build template variables
     const tierHierarchy = ["free", "growth", "scale", "enterprise"];
     const userTierIndex = Math.max(0, tierHierarchy.indexOf(userTier)); // Default to free (0) if unknown
@@ -2830,6 +2999,7 @@ async function generateReportInBackground(
       matched_mentors_json: JSON.stringify(matches.community_members || []),
       matched_events_json: JSON.stringify(matches.events || []),
       matched_content_json: JSON.stringify(matches.content_items || []),
+      matched_case_studies_json: JSON.stringify(matches.case_studies || []),
       matched_leads_json: JSON.stringify(matches.leads || []),
       country_profile_json: countryProfile ? JSON.stringify(countryProfile) : "",
       matched_country_faqs_json: JSON.stringify(countryFaqs),
@@ -2963,6 +3133,22 @@ async function generateReportInBackground(
     // renders as a new-tab external link via CitationRenderer.
     const competitorLinkNote = competitorResult.competitors.length > 0
       ? `\n\nCOMPETITOR LINKS (this section): The competitor data includes a "url" field for many competitors. The FIRST time you name each competitor in the prose, hyperlink it in Markdown as [Competitor Name](url) using ONLY the exact url provided for that competitor in the data. If a competitor has no url in the data, leave its name as plain text — never invent, guess, or reuse another competitor's URL.`
+      : "";
+
+    // MES-210a: like-for-like proof. The top corridor-matched case studies are the
+    // strongest trust signal the directory holds ("a company like you did this") —
+    // surface the best 1–2 to the executive summary and action plan so the narrative
+    // can cite them, grounded strictly in the provided rows. Only rows with a real
+    // corridor reason qualify (hasCorridorReason): a row that scored on outcome
+    // alone must never be presented as "closest to your corridor". Each entry
+    // carries its link VERBATIM so the hyperlink instruction is satisfiable without
+    // inventing a URL. The dedicated case_studies_guides section still renders the
+    // full slate as cards.
+    const csProof = (matches.case_studies || [])
+      .filter((c: any) => (c.match_score || 0) > 0 && hasCorridorReason(c.match_reasons))
+      .slice(0, 2);
+    const caseStudyProofNote = csProof.length
+      ? `\n\nLIKE-FOR-LIKE PROOF (grounding): The directory's closest case-study matches to ${intake.company_name}'s corridor are: ${csProof.map((c: any) => `"${c.name}"${c.company_name ? ` (${[c.company_name, c.origin_country ? `from ${c.origin_country}` : "", c.industry].filter(Boolean).join(", ")})` : ""} — link: ${c.link}`).join("; ")}. Where it genuinely strengthens the argument, reference ONE of them briefly as proof that comparable companies have made this work (e.g. "as ${csProof[0]?.company_name || "the matched case study"} did"), formatting the case-study title as a Markdown link using EXACTLY the link value given above for that case study. Use ONLY these provided case studies and ONLY these link values — never invent, import, or generalise other company examples or URLs. Do not force a reference where irrelevant.`
       : "";
 
     // Phase C (RQ refs 3f27c7ed / 340c7245): the providers list may include trade/government
@@ -3143,7 +3329,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
@@ -3200,7 +3386,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
               sectionMatches = keyQuestionPicks;
               sectionContent = `${content}\n\n**Who from your matches can help with this:**`;
             } else {
-              sectionMatches = getMatchesForSection(tmpl.section_name, matches);
+              sectionMatches = getMatchesForSection(tmpl.section_name, matches, { legacyResources: !hasCsgTemplate });
             }
 
             // Record the A/B variant only now that the candidate actually produced
@@ -3516,6 +3702,13 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // Empty array on a healthy report; a non-empty list means a "completed"
         // report is genuinely short those sections (fail-loud, never silent — §14.5).
         empty_sections: emptySections,
+        // MES-210a: per-table surfacing telemetry. The MES-210 audit had to mine
+        // report_json.matches to learn that 39% of reports shipped zero case-study
+        // cards — persist the per-pool counts so under-surfacing is a query, not
+        // an excavation. Counts only (no content) — safe past the tier strip.
+        match_counts: Object.fromEntries(
+          Object.entries(matches).map(([k, v]) => [k, Array.isArray(v) ? v.length : 0]),
+        ),
         // MES-148 Phase 4: which arm of the prompt A/B this report ran in.
         // bucket=false is the control (active prompts); variants lists the
         // candidate version actually written per section (empty on control /

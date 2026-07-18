@@ -124,8 +124,8 @@ export const GOAL_SECTION_MAP: Record<string, string[]> = {
   // International
   find_providers: ["service_providers"],
   trade_agencies: ["service_providers"],               // agencies surface within the providers section
-  case_studies: ["events_resources"],
-  guides: ["events_resources"],
+  case_studies: ["case_studies_guides"],   // MES-210a: dedicated section, split from events
+  guides: ["case_studies_guides"],
   market_research: ["executive_summary", "competitor_landscape"],
   associations: ["service_providers"],
   events: ["events_resources"],
@@ -141,7 +141,7 @@ export const GOAL_SECTION_MAP: Record<string, string[]> = {
   grants: ["action_plan"],
   lead_lists_startup: ["lead_list"],
   founders: ["mentor_recommendations", "events_resources"],
-  guides_startup: ["events_resources"],
+  guides_startup: ["case_studies_guides"],
 };
 
 /** The set of report sections the user's selected goals map to (deduped). Empty for

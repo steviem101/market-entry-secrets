@@ -1,6 +1,13 @@
+import { lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { LogoCloud } from "@/components/sections/LogoCloud";
 import { ProofStrip } from "@/components/sections/ProofStrip";
+import { isFeatureEnabled } from "@/lib/featureFlags";
+
+// Below-the-fold and flag-gated — lazy so the journey section never costs the
+// hero's LCP anything while `hero_journey` is dark (MES-162).
+const HeroJourneySection = lazy(() => import("@/components/sections/HeroJourneySection"));
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { WhatsInYourReport } from "@/components/sections/WhatsInYourReport";
 import { SearchSection } from "@/components/sections/SearchSection";
@@ -64,14 +71,26 @@ const Index = () => {
         </script>
       </Helmet>
 
-      {/* Hero — headline, platform definition, single CTA pair, report mockup */}
+      {/* Hero — headline, platform definition, single CTA pair, report graphic */}
       <HeroSection />
+
+      {/* Real featured-organisation logos (renders only once records are curated) */}
+      <LogoCloud />
 
       {/* Live directory counts — the one source of numbers on the page */}
       <ProofStrip />
 
-      {/* How It Works — 3-step process, single CTA */}
-      <HowItWorksSection />
+      {/* 7-section restructure (18 Jul, flag-composed): with the journey on,
+          the journey section (which ends on the manifesto) replaces
+          How-it-works — the two told the same story. Flag off keeps the
+          classic order untouched. */}
+      {isFeatureEnabled("hero_journey") ? (
+        <Suspense fallback={null}>
+          <HeroJourneySection />
+        </Suspense>
+      ) : (
+        <HowItWorksSection />
+      )}
 
       {/* What's in your report — mirrors real report sections + tier gating */}
       <WhatsInYourReport />

@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'report_v2';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'report_v2' | 'hero_journey';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -94,6 +94,16 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
     queryKey: 'intros',
     storageKey: 'mes_flag_concierge_intros',
     defaultValue: false,
+  },
+  // MES-162 homepage hero credibility: static real report-output panel in the
+  // hero + the three-step value-journey proof section below it (which also
+  // drives the 7-section homepage restructure). ENABLED by default
+  // (owner-approved, 2026-07-18 — its measurement window is now open);
+  // ?journey=0 is the rollback kill switch.
+  hero_journey: {
+    queryKey: 'journey',
+    storageKey: 'mes_flag_hero_journey',
+    defaultValue: true,
   },
 };
 

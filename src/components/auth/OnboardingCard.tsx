@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { COUNTRY_OPTIONS } from '@/components/report-creator/intakeSchema';
 import { corporateWebsiteFromEmail } from '@/lib/corporateDomain';
@@ -28,12 +27,20 @@ const USE_CASE_OPTIONS = [
   { value: 'other', label: 'Other' },
 ] as const;
 
-interface OnboardingDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface OnboardingCardProps {
+  /** Hide the card for this session only — the profile stays incomplete. */
+  onDismiss: () => void;
 }
 
-export const OnboardingDialog = ({ open, onOpenChange }: OnboardingDialogProps) => {
+/**
+ * MES-187 A4 — card, not modal. Directory-entry signups get a dismissible
+ * floating card instead of a click-blocking dialog, so browsing is never
+ * interrupted. Form fields, write paths and telemetry are identical to the A3
+ * modal (events keep their names for funnel continuity; metadata.surface
+ * distinguishes the card); "Skip for now" still persists the skipped profile
+ * (target_market = Australia), while the X merely defers to the next session.
+ */
+export const OnboardingCard = ({ onDismiss }: OnboardingCardProps) => {
   const { user, updateProfile, loading } = useAuth();
   const [formData, setFormData] = useState({
     use_case: '',
@@ -44,20 +51,20 @@ export const OnboardingDialog = ({ open, onOpenChange }: OnboardingDialogProps) 
   const [deriving, setDeriving] = useState(false);
   const derivedForRef = useRef<string | null>(null);
 
-  // Fire the shown event once per open, and prefill the website from the user's
-  // corporate email domain (free-mail returns null → field starts empty).
+  // Fire the shown event once per mount, and prefill the website from the
+  // user's corporate email domain (free-mail returns null → field starts empty).
   const shownRef = useRef(false);
   useEffect(() => {
-    if (!open) {
-      shownRef.current = false;
-      return;
-    }
     if (shownRef.current) return;
     shownRef.current = true;
-    trackFunnelEvent('onboarding_modal_shown', { source: 'onboarding', user_id: user?.id ?? null });
+    trackFunnelEvent('onboarding_modal_shown', {
+      source: 'onboarding',
+      user_id: user?.id ?? null,
+      metadata: { surface: 'card' },
+    });
     const guessed = corporateWebsiteFromEmail(user?.email);
     if (guessed) setFormData((prev) => (prev.website ? prev : { ...prev, website: guessed }));
-  }, [open, user]);
+  }, [user]);
 
   // Derive the company name from the website via the existing scrape-company
   // seam. Non-blocking and silent: on failure/empty the manual name field is the
@@ -87,31 +94,52 @@ export const OnboardingDialog = ({ open, onOpenChange }: OnboardingDialogProps) 
         source: 'onboarding',
         user_id: user?.id ?? null,
         persona: formData.use_case || null,
+        metadata: { surface: 'card' },
       });
-      onOpenChange(false);
     }
+    // On success the profile flips onboarding_completed → the gate unmounts us.
   };
 
   const handleSkip = async () => {
     const result = await updateProfile(buildSkippedOnboardingProfile());
     if (!result.error) {
-      trackFunnelEvent('onboarding_modal_skipped', { source: 'onboarding', user_id: user?.id ?? null });
-      onOpenChange(false);
+      trackFunnelEvent('onboarding_modal_skipped', {
+        source: 'onboarding',
+        user_id: user?.id ?? null,
+        metadata: { surface: 'card' },
+      });
     }
   };
 
   const isValid = isOnboardingComplete(formData);
 
   return (
-    <Dialog open={open} onOpenChange={() => { /* prevent closing without completing */ }}>
-      <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Welcome to Market Entry Secrets</DialogTitle>
-          <DialogDescription>
-            A few quick details (about 20 seconds) so we can match you with the right providers,
-            mentors and build your Australia market-entry plan.
-          </DialogDescription>
-        </DialogHeader>
+    <aside
+      aria-labelledby="onboarding-card-title"
+      // bottom-20 keeps the Crisp chat launcher (fixed bottom-right, loaded in
+      // index.html) unobscured on every breakpoint.
+      className="fixed inset-x-4 bottom-20 z-40 max-h-[75vh] overflow-y-auto rounded-2xl border border-border bg-card shadow-xl sm:inset-x-auto sm:right-6 sm:w-[380px]"
+    >
+      <div className="p-5">
+        <div className="mb-1 flex items-start justify-between gap-2">
+          <h2 id="onboarding-card-title" className="text-base font-semibold text-foreground">
+            Welcome to Market Entry Secrets
+          </h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="-mr-2 -mt-2 h-8 w-8 shrink-0 text-muted-foreground"
+            aria-label="Dismiss — finish later"
+            onClick={onDismiss}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <p className="mb-4 text-sm text-muted-foreground">
+          A few quick details (about 20 seconds) so we can match you with the right providers,
+          mentors and build your Australia market-entry plan.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -186,7 +214,7 @@ export const OnboardingDialog = ({ open, onOpenChange }: OnboardingDialogProps) 
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </aside>
   );
 };
