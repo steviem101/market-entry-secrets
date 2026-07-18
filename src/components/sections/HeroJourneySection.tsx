@@ -47,23 +47,41 @@ interface JourneyMentor {
   is_anonymous: boolean | null;
   avatar_url: string | null;
   image: string | null;
+  slug: string | null;
 }
+
+// Owner-picked example mentors (18 Jul): shown in this order. All three are
+// real, active, non-anonymous public profiles with photos — same PII-safe view
+// the /mentors directory renders from. If a pinned profile is deactivated or
+// anonymised it silently drops out and the curated is_featured pool backfills.
+const PINNED_MENTOR_SLUGS = ["duco-van-breemen", "colm-dolan", "jacqui-duncan"];
 
 const useJourneyMentors = () =>
   useQuery({
-    queryKey: ["hero-journey-mentors"],
+    queryKey: ["hero-journey-mentors", PINNED_MENTOR_SLUGS],
     queryFn: async (): Promise<JourneyMentor[]> => {
       const { data, error } = await supabase
         .from("community_members_public")
-        .select("id, name, title, is_anonymous, avatar_url, image")
+        .select("id, name, title, is_anonymous, avatar_url, image, slug")
         .eq("is_active", true)
-        // Curated set only: an admin has deliberately flagged these profiles
-        // for prominence, which is a stronger consent posture than surfacing
-        // an arbitrary top-3 of the directory on the homepage.
+        .in("slug", PINNED_MENTOR_SLUGS);
+      if (error) throw error;
+      const pinned = (data ?? [])
+        .slice()
+        .sort(
+          (a, b) =>
+            PINNED_MENTOR_SLUGS.indexOf(a.slug ?? "") - PINNED_MENTOR_SLUGS.indexOf(b.slug ?? ""),
+        );
+      if (pinned.length >= 3) return pinned.slice(0, 3);
+      // Backfill from the admin-curated featured pool if a pinned profile is gone.
+      const { data: fallback } = await supabase
+        .from("community_members_public")
+        .select("id, name, title, is_anonymous, avatar_url, image, slug")
+        .eq("is_active", true)
         .eq("is_featured", true)
         .limit(3);
-      if (error) throw error;
-      return data ?? [];
+      const seen = new Set(pinned.map((m) => m.slug));
+      return [...pinned, ...(fallback ?? []).filter((m) => !seen.has(m.slug))].slice(0, 3);
     },
     staleTime: 30 * 60 * 1000,
   });
@@ -94,19 +112,28 @@ const ReportPanel = () => {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {/* SWOT snippet — real quadrants from the swot_analysis section */}
+        {/* SWOT snippet — real quadrants from the swot_analysis section, with a
+            worked example (Canva) so the block reads as real report prose.
+            Qualitative only: no invented figures, clearly labelled Example. */}
         <div className="rounded-lg border border-border bg-muted/30 p-3">
-          <div className="mb-2 text-xs font-medium text-foreground">
-            {SECTION_LABELS.swot_analysis}
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-xs font-medium text-foreground">
+              {SECTION_LABELS.swot_analysis}
+            </span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              Example: Canva
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-1.5">
-            {["Strengths", "Weaknesses", "Opportunities", "Threats"].map((q) => (
+            {[
+              { q: "Strengths", text: "Globally recognised brand with a proven self-serve freemium motion" },
+              { q: "Weaknesses", text: "Enterprise sales coverage still maturing against incumbent suites" },
+              { q: "Opportunities", text: "Government and education procurement partnerships across ANZ" },
+              { q: "Threats", text: "Entrenched incumbent vendors with deep channel lock-in" },
+            ].map(({ q, text }) => (
               <div key={q} className="rounded-md bg-background border border-border px-2 py-1.5">
                 <div className="text-[10px] font-medium text-muted-foreground">{q}</div>
-                <div className="mt-1 space-y-1">
-                  <div className="h-1.5 w-full rounded-full bg-muted" />
-                  <div className="h-1.5 w-3/4 rounded-full bg-muted/70" />
-                </div>
+                <p className="mt-1 text-[10px] leading-snug text-foreground/80">{text}</p>
               </div>
             ))}
           </div>
@@ -147,6 +174,28 @@ const ReportPanel = () => {
     </PanelShell>
   );
 };
+
+/**
+ * Example lead-list rows illustrating the delivered CSV's format. Recognisable
+ * Australian companies carry the credibility; the person-level cells (contact,
+ * email, phone, LinkedIn) render as redaction bars — the same masking the real
+ * lead-list previews use — so the panel never fabricates or implies possession
+ * of any real individual's contact details (MES-162 PII rule). Clearly
+ * labelled as an example of the format, not inventory.
+ */
+const EXAMPLE_LEAD_ROWS: { company: string; role: string }[] = [
+  { company: "Atlassian", role: "Head of Partnerships" },
+  { company: "Canva", role: "Procurement Lead" },
+  { company: "Qantas", role: "Head of Innovation" },
+  { company: "Telstra", role: "Enterprise Sales Director" },
+];
+
+const MaskedCell = () => (
+  <span
+    className="inline-block h-2 w-14 rounded-sm bg-muted"
+    aria-label="Masked in this example"
+  />
+);
 
 /** Step 2 — the matched provider / lead list the report produces. Categories,
  * counts and confirmed-featured logos only — never real lead or user records. */
@@ -193,6 +242,40 @@ const LeadsPanel = () => {
         </ul>
       )}
 
+      {/* Example CSV rows — the format a delivered lead list follows */}
+      <div className="mb-4">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-foreground">Your delivered CSV</span>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            Example format
+          </span>
+        </div>
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-muted/40 text-muted-foreground">
+              <tr>
+                <th scope="col" className="px-3 py-2 font-medium">Company</th>
+                <th scope="col" className="px-3 py-2 font-medium">Role</th>
+                <th scope="col" className="px-3 py-2 font-medium">Email</th>
+                <th scope="col" className="px-3 py-2 font-medium">Phone</th>
+                <th scope="col" className="px-3 py-2 font-medium">LinkedIn</th>
+              </tr>
+            </thead>
+            <tbody>
+              {EXAMPLE_LEAD_ROWS.map((row) => (
+                <tr key={row.company} className="border-t border-border">
+                  <td className="px-3 py-2 font-medium text-foreground">{row.company}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{row.role}</td>
+                  <td className="px-3 py-2"><MaskedCell /></td>
+                  <td className="px-3 py-2"><MaskedCell /></td>
+                  <td className="px-3 py-2"><MaskedCell /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {categories.length > 0 && (
         <div className="mb-4">
           <div className="mb-2 text-xs font-medium text-foreground">Lead list categories</div>
@@ -210,8 +293,9 @@ const LeadsPanel = () => {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Recommendations trace to real directory records — categories and counts shown here, never
-        individual lead or member data.
+        Illustrative rows — company-level examples only. Real deliveries contain your matched
+        contacts; recommendations trace to real directory records, and we never display individual
+        lead or member data here.
       </p>
     </PanelShell>
   );
