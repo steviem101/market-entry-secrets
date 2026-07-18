@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'hero_journey';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'report_v2' | 'hero_journey';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -26,6 +26,14 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
     queryKey: 'v2',
     storageKey: 'mes_flag_report_creator_v2',
     defaultValue: true,
+  },
+  // report_v2: the redesigned report renderer (Phase A). OFF by default and
+  // stays off for every customer until PARITY.md is signed; the ReportView
+  // wiring is added at the flag-flip step (STEP 7). ?reportv2=1 opts in.
+  report_v2: {
+    queryKey: 'reportv2',
+    storageKey: 'mes_flag_report_v2',
+    defaultValue: false,
   },
   // MES-196 (T13) advisor-booking banner on ReportView. On by default;
   // ?booking=0 is the rollback kill switch.

@@ -85,7 +85,45 @@ export default {
 				'rc-canvas':      'hsl(var(--rc-canvas))',
 				'rc-sky-soft':    'hsl(var(--rc-sky-soft))',
 				'rc-sky-tint':    'hsl(var(--rc-sky-tint))',
-				'rc-success':     'hsl(var(--rc-success))'
+				'rc-success':     'hsl(var(--rc-success))',
+				// report_v2 renderer palette — fixed print-faithful hexes mapped from
+				// the redesign prototypes (design_handoff_mes_report_redesign/tokens.md).
+				// report.sky intentionally equals --primary; the report surface never
+				// theme-inverts, so these stay literal rather than HSL vars.
+				report: {
+					sky:     '#29a3e3',
+					action:  '#178fc9',
+					ink:     '#23272e',
+					surface: '#171c26',
+					bg:      '#f4f6f8',
+					border:  '#e8ecef',
+					rule:    '#eef1f4',
+					muted:   '#67707e',
+					caption: '#8a94a3',
+					tint:    '#f2f9fd',
+					'tint-border': '#cfe6f4',
+					good:    '#0ea371',
+					warn:    '#d97706',
+					'warn-accent': '#f5b84b',
+					'warn-tint': '#fdf5e7',
+					risk:    '#dc2626',
+					// identity-slot monogram fills (README identity assets)
+					'person-bg': '#e3f2fb',
+					'company-bg': '#eef4f8',
+					// sources-band tier headers + inferred pill (reference markup)
+					'sky-soft':  '#7cc9ef',
+					'grey-soft': '#b4bcc8',
+					'surface-rule': '#2a3140',
+					'ink-soft': '#434b56',
+					// request hooks + confirmations (README interactions)
+					dash: '#c9d2da',
+					'hook-bg': '#fafbfc',
+					'confirm-bg': '#e9f7f1',
+					'confirm-border': '#b9e4d2',
+					'confirm-text': '#0b7a55',
+					'inferred-text': '#57606d',
+					'inferred-bg':  '#eef0f3'
+				}
 			},
 			fontFamily: {
 				mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],

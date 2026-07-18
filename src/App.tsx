@@ -64,6 +64,13 @@ const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const AdminSubmissions = React.lazy(() => import("./pages/AdminSubmissions"));
 const AdminMentors = React.lazy(() => import("./pages/AdminMentors"));
 
+// Dev-only report_v2 acceptance harness (DECISIONS #13). The DEV guard is
+// statically replaced at build time, so neither the route nor its chunk
+// exists in production builds.
+const DevReportPreview = import.meta.env.DEV
+  ? React.lazy(() => import("./pages/dev/ReportPreview"))
+  : null;
+
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[400px]">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -146,6 +153,9 @@ const App = () => (
                   <Route path="/admin/submissions" element={<AdminSubmissions />} />
                   <Route path="/admin/mentors" element={<AdminMentors />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  {DevReportPreview && (
+                    <Route path="/dev/report-preview" element={<DevReportPreview />} />
+                  )}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

@@ -1,0 +1,172 @@
+{
+  "meta": { "customer": "Nory", "domain": "nory.ai", "location": "Dublin, Ireland → Sydney, NSW", "descriptor": "DUBLIN, IRELAND → SYDNEY, NSW · AGENTIC AI RESTAURANT OS", "date": "2026-07-18", "plan": "scale", "archetype": "foreign_entrant", "origin": "Ireland", "keyQuestion": "Industry associations and investors relevant to my company", "sourceCount": 13 },
+  "cover": { "kicker": "MARKET ENTRY REPORT · IRISH SAAS ENTERING AUSTRALIA", "headline": "Australia's restaurants have already adopted AI. The operating-system layer is still open.", "scope": "Nory's agentic AI — autonomous demand prediction, staffing plans, inventory and payroll — maps directly onto what Sydney operations leaders are actively spending to solve." },
+  "exec": {
+    "narrative": ["Australia's hospitality market is valued at **USD 37.45B in 2025**, projected to USD 70.93B by 2034 {chip:sourced} — and AI adoption is mainstream: **65% of restaurants** deployed some form of AI, 42% of SMB venues specifically to manage staff costs {chip:sourced}. Clients such as **Dave's Hot Chicken, Oakberry and Black Sheep Coffee** prove Nory serves exactly the multi-location brands proliferating across Sydney.", "The **EU–Australia FTA** (concluded March 2026) eliminates 99%+ of tariffs and opens digital trade to Irish companies {chip:sourced}; Enterprise Ireland and IDA Ireland actively support the corridor. Sydney/NSW addressable opportunity: **low hundreds of millions AUD** {chip:est}. Near-term levers: Pty Ltd incorporation unlocking the **43.5% R&DTI**, SOC 2 / ISO 27001, and Xero + MYOB connectors."],
+    "keyQuestionAnswer": "The two most actionable starting points: **Enterprise Ireland's Sydney office** and the **Restaurant & Catering Industry Association (R&CA)** — the peak foodservice body and primary gateway to operator networks. Key investor matches: [SproutX](/innovation-ecosystem/sproutx) (leading foodtech hub) and [Aura Ventures](/investors/aura-ventures) (Sydney VC targeting AI-enabled B2B software).",
+    "highlights": [
+      { "name": "SproutX", "url": "/innovation-ecosystem/sproutx", "kind": "hub", "why": "Direct access to hospitality networks and specialised sector investors" },
+      { "name": "Aura Ventures", "url": "/investors/aura-ventures", "kind": "investor", "why": "AI-enabled B2B software thesis — aligned with Nory's agentic-AI profile" }
+    ],
+    "heroStat": { "label": "MOST MATERIAL FINANCIAL INCENTIVE", "value": "43.5%", "caption": "Refundable R&D Tax Incentive on eligible AI/software development conducted in Australia — unlocked by incorporating a Pty Ltd.", "chip": "sourced" },
+    "sequence": { "label": "THE REPORT'S ENTRY SEQUENCE", "rows": [ { "period": "0–90 days", "text": "Incorporate Pty Ltd, ABN, resident director; engage a local Head of Sales" }, { "period": "Months 2–6", "text": "Two to three anchor wins among Sydney multi-location restaurant groups" }, { "period": "Then", "text": "Reference clients accelerate POS/PMS channel partnerships; national expansion" } ], "caveat": "A suggested shape, not a prescription — sequencing is the core agenda for your strategy session." }
+  },
+  "metrics": { "tiles": [
+    { "value": "USD 1.2B", "chip": "sourced", "caption": "Australia hospitality LMS software market, 2024 — adjacent training/compliance layer" },
+    { "value": "12.5%", "chip": "sourced", "caption": "CAGR 2026–2033, AU hospitality LMS software" },
+    { "value": "USD 6.38B", "chip": "sourced", "caption": "Global AI-in-restaurants software revenue, 2025 (48.3% of total)" },
+    { "value": "22.6%", "chip": "sourced", "caption": "CAGR 2026–2034, global AI-in-restaurants market" },
+    { "value": "USD 37.45B", "chip": "sourced", "caption": "Australia hospitality market 2025 → USD 70.93B by 2034" },
+    { "value": "65%", "chip": "sourced", "caption": "Australian restaurants already using some form of AI" }
+  ], "footnote": "Also sized: AU tour-operator software USD 30.60M @ 9.74% CAGR — a secondary adjacency." },
+  "swot": {
+    "strengths": [ { "lead": "Agentic AI maturity", "text": "Autonomous forecasting/staffing/payroll align with the AI-native trend of the 2026 AU landscape" }, { "lead": "ROI vs NSW labour costs", "text": "Restaurant managers at AUD $75–95k make automation a hedge" }, { "lead": "Bilateral trade momentum", "text": "EU–Australia FTA framework — e-signature recognition, no duties on digital products" }, { "lead": "Vertical specialisation", "text": "P&L focus addresses the 42% of SMB venues seeking AI for staff costs" } ],
+    "weaknesses": [ { "lead": "Setup cost", "text": "AUD $10–20k for legal/registration/compliance before rent" }, { "lead": "Taxation differential", "text": "Ireland 15% vs Australia 30% (25% base-rate)" }, { "lead": "Resident director", "text": "At least one director must ordinarily reside in Australia" } ],
+    "opportunities": [ { "lead": "LMS integration", "text": "AUD $1.2B hospitality LMS adjacency for AI-augmented training" }, { "lead": "Waste-reduction demand", "text": "AI waste tracking cuts food waste up to 25% {chip:sourced}" }, { "lead": "NSW incentives", "text": "MVP Ventures / ETCF-class programs (round status varies)" } ],
+    "threats": [ { "lead": "Sydney CBD real estate", "text": "Rents up 9.8% YoY, premium to AUD $1,492/sqm" }, { "lead": "Compliance burden", "text": "Privacy Act 1988 + NDB scheme over AUD $3M turnover" }, { "lead": "Talent war", "text": "AI/ML engineers AUD $130–180k+ vs incumbents and hyperscalers" } ]
+  },
+  "competitors": {
+    "intro": "The AU hospitality stack is transitioning from fragmented point solutions to integrated AI ecosystems. The gap: a platform connecting predicted inventory needs directly to labour requirements — the 'Autonomous Restaurant Brain' sitting above existing tools.",
+    "you": { "name": "Nory", "url": "", "kind": "competitor", "positionTag": "YOU · SCALE-UP", "position": "Agentic AI operating system — demand, staffing, inventory, payroll in one", "strengths": "Autonomous actions, not just analytics; ingests POS data to drive decisions", "differs": "FULL-STACK P&L AUTOPILOT" },
+    "rows": [
+      { "name": "Ordermentum", "url": "/competitors/ordermentum", "kind": "competitor", "positionTag": "PROCUREMENT · AU", "position": "Dominant AU hospitality procurement; 'Australia's #1 platform for venues & suppliers'", "strengths": "Massive local network effects", "differs": "Transactions, not P&L or payroll — also a channel to register on", "auPresence": true },
+      { "name": "OrderMate", "url": "/competitors/ordermate", "kind": "competitor", "positionTag": "POS · AU", "position": "Australian-born POS — the operational heartbeat of many NSW venues", "strengths": "Strong local support; guest-data integrations", "differs": "No predictive agentic layer — Nory sits on top, not against", "auPresence": true },
+      { "name": "SevenRooms", "url": "/competitors/sevenrooms", "kind": "competitor", "positionTag": "GUEST EXPERIENCE", "position": "Premium global guest-experience platform", "strengths": "Direct guest relationships", "differs": "Front-of-house only — inventory and payroll left to others" },
+      { "name": "Netstock", "url": "/competitors/netstock", "kind": "competitor", "positionTag": "SUPPLY PLANNING", "position": "Specialist AI supply-and-demand planning", "strengths": "Predictive analytics; Opportunity Engine", "differs": "Horizontal, multi-industry — no hospitality assistants" },
+      { "name": "Prediko", "url": "/competitors/prediko", "kind": "competitor", "positionTag": "INVENTORY", "position": "AI-driven inventory management and demand planning", "strengths": "Raw materials + automated restocking; NSW 3PL integrations", "differs": "Inventory only — no staffing or payroll", "auPresence": true }
+    ],
+    "gaps": "**1 · Award-wage complexity** — NSW groups struggle with award wages and payroll compliance. **2 · Inventory→labour in one workflow** — nobody connects them. **3 · The integrator seat** — value sits above the POS layer.",
+    "positioningRead": "Market as **P&L Autopilot** — managing Australian labour costs and demand volatility — rather than competing as a POS. POS-partnership depth vs direct enterprise sales is a strategy-session discussion.",
+    "scanHookCopy": "This table covers the five primary alternatives. We can profile adjacent players — Lightspeed, Deputy, Tanda, workforce-management point tools — on request."
+  },
+  "accounts": {
+    "intro": "High-priority targets where Nory's operating system solves immediate operational complexity.",
+    "briefed": [
+      { "name": "Merivale", "url": "/accounts/merivale", "kind": "account", "meta": "80+ PREMIUM VENUES · SYDNEY & COASTAL NSW", "statusChips": ["tech"], "signals": "Expansion — new CBD freeholds, major mixed-use precinct; focus on resolving historical labour-compliance challenges", "stack": "AWS (S3), WordPress", "fit": "Diverse concepts align with managing labour, inventory and performance in one platform", "approach": ["Head of Operations", "Group Operations Manager", "Director of People and Culture"], "angle": "Radical transparency in labour cost + automated compliance", "logoUrl": "platform:merivale" },
+      { "name": "Australian Venue Co", "url": "/accounts/australian-venue-co", "kind": "account", "meta": "200+ PUBS, BARS & RESTAURANTS · AU + NZ", "statusChips": ["hiring", "tech"], "signals": "Actively hiring; rapid acquisition and integration of new venues demands standardised ops tech", "stack": "Workday (HR) + proprietary loyalty platform 'The Pass'", "fit": "Deployable quickly into acquired sites; consolidates scheduling and analytics estate-wide", "approach": ["COO", "Head of Operations", "National Operations Manager"], "angle": "The integration layer for acquisitions — instant standardisation", "logoUrl": "platform:australian-venue-co" }
+    ],
+    "unbriefed": [ { "name": "Guzman y Gomez", "reason": "No verified website domain on intake — send the domain to unlock a full brief" } ],
+    "worthKnowing": "Registered clubs (RSLs, sporting clubs) operate massive high-margin hospitality footprints — reachable via the Australasian Gaming Expo. Enterprise procurement treats Xero/MYOB/Lightspeed integration and SOC 2 / ISO 27001 as baseline."
+  },
+  "providers": {
+    "intro": "Given the entry sequence — entity setup, then R&DTI, then enterprise sales — the three below map to the first 90 days. All nine are credible matches.",
+    "ourRead": [
+      { "rank": 1, "name": "MinterEllison", "url": "/service-providers/minterellison", "kind": "provider", "meta": "Sydney · law firm", "why": "Foreign investment and employment law for the incorporation: Pty Ltd via ASIC Form 201 (AUD $3–8k + ~$660), resident-director structuring, Privacy Act compliance.", "roleTag": "ENTITY SETUP", "logoUrl": "platform:minterellison" },
+      { "rank": 2, "name": "Fullstack Advisory", "url": "/service-providers/fullstack-advisory", "kind": "provider", "meta": "Sydney · tech accounting", "why": "R&DTI consulting and virtual CFO — the named route to the 43.5% offset, plus double-tax-treaty structuring.", "roleTag": "R&DTI + CFO" },
+      { "rank": 3, "name": "ADAPT", "url": "/service-providers/adapt", "kind": "provider", "meta": "Sydney · market intelligence", "why": "A/NZ customer intelligence; qualified lead lists and invitation-only executive roundtables — direct access to enterprise operations leaders.", "roleTag": "ENTERPRISE ACCESS" }
+    ],
+    "all": [
+      { "name": "NEXTGEN Group", "url": "/service-providers/nextgen-group", "kind": "provider", "tag": "DISTRIBUTION", "description": "North Sydney growth engine — Sales as a Service and reseller networks; a named answer to the distribution challenge." },
+      { "name": "Stone & Chalk", "url": "/service-providers/stone-and-chalk", "kind": "provider", "tag": "COMMUNITY", "description": "Australia's largest innovation community — mentorship, investor access, suggested first base over CBD leases." },
+      { "name": "TechVisa", "url": "/service-providers/techvisa", "kind": "provider", "tag": "IMMIGRATION", "description": "Tech-sector visa specialists — 482/408 assessment for relocating Irish staff." },
+      { "name": "Accenture Australia", "url": "/service-providers/accenture-australia", "kind": "provider", "tag": "SI / ENTERPRISE", "description": "Systems-integration muscle for multi-site deals needing PMS/ERP connectivity." },
+      { "name": "EverestEngineering", "url": "/service-providers/everestengineering", "kind": "provider", "tag": "ENGINEERING", "description": "Product localisation and AI data enablement in the AU technical landscape." },
+      { "name": "Granton", "url": "/service-providers/granton", "kind": "provider", "tag": "GRANTS", "description": "Grant matching and writing — EMDG and open NSW innovation rounds." }
+    ]
+  },
+  "govAndHubs": {
+    "gov": [
+      { "name": "Investment NSW", "url": "/government-support/investment-nsw", "why": "State agency for international landings — matchmaking, site selection, government liaison; engage early" },
+      { "name": "Irish Australian Chamber of Commerce", "url": "/government-support/irish-australian-chamber-of-commerce", "why": "Bilateral networking — the direct channel into the Irish-Australian business community" },
+      { "name": "Export Connect", "url": "/government-support/export-connect", "why": "Sydney F&B consultancy — pre-qualified buyers and AU SaaS pricing benchmarking" }
+    ],
+    "hubs": [
+      { "name": "SproutX", "url": "/innovation-ecosystem/sproutx", "kind": "hub", "tag": "", "focusTag": "FOODTECH", "description": "National foodtech accelerator; mentors and investors across the hospitality supply chain. Flagged in your key-question answer." },
+      { "name": "UNSW Founders 10x", "url": "/innovation-ecosystem/unsw-founders-10x", "kind": "hub", "tag": "", "focusTag": "SEED + MENTORS", "description": "Sydney flagship accelerator; seed investment and capital-raise support." },
+      { "name": "Haymarket HQ", "url": "/innovation-ecosystem/haymarket-hq", "kind": "hub", "tag": "", "focusTag": "HUB + CO-WORK", "description": "Central-Sydney hub; scale-up/corporate/investor networking; co-working alternative." },
+      { "name": "H2 Ventures", "url": "/innovation-ecosystem/h2-ventures", "kind": "hub", "tag": "", "focusTag": "AI/DATA + VC", "description": "AI/data specialist; regulatory guidance and a dedicated VC network." }
+    ],
+    "alsoNamed": "Also named: **Enterprise Ireland (Sydney office)**, **Austrade**, **R&CA** (57,000+ venues), **Australian Hotels Association**, and the **Lansdowne Club** — Sydney's premier Irish-Australian business network."
+  },
+  "mentors": {
+    "intro": "All five have Irish-Australian corridor experience — mitigating exactly the risks the SWOT flags: local hiring, pricing localisation, payments regulation.",
+    "primary": [
+      { "name": "Ben Morrisroe", "url": "/mentors/experts/ben-morrisroe", "kind": "mentor", "role": "CEO, OXBOW · SYDNEY · IRISH FOUNDER", "why": "The most direct match: advises on localising payroll and inventory modules — Nory's two core surfaces.", "headshotUrl": "platform:ben-morrisroe" },
+      { "name": "Ronan Lehane", "url": "/mentors/experts/ronan-lehane", "kind": "mentor", "role": "CO-FOUNDER, CARRARA CAPITAL", "why": "Fundraising within the Irish-Australian corridor — sounding board before the investor list." },
+      { "name": "Navaid Khatib", "url": "/mentors/experts/navaid-khatib", "kind": "mentor", "role": "BOARD MEMBER, AUSPAYNET", "why": "Australian payments regulation — payroll automation crosses into regulated territory." }
+    ],
+    "extra": [
+      { "name": "Dónal Brady", "url": "/mentors/experts/donal-brady", "kind": "mentor", "role": "CO-FOUNDER, WORK FROM ANYWHERE", "why": "Remote-work compliance and international team scaling for Dublin↔Sydney." },
+      { "name": "Ian Corbally", "url": "/mentors/experts/ian-corbally", "kind": "mentor", "role": "CEO, MORFLESS (MELBOURNE)", "why": "Irish founder; refining technical infrastructure costs in AU." }
+    ]
+  },
+  "investors": {
+    "intro": "The research suggests one possible order — sector specialists, growth partners, broad tech VCs in parallel — but which doors first is the strategy-session conversation.",
+    "approachOrder": [
+      { "label": "Sector specialists first", "text": "[EVP](/investors/evp) (B2B SaaS + AI-first; AU$500k–5M) and angel [Sam Cust](/investors/sam-cust) (hospitality/food-services) — domain expertise to validate local P&L and pricing." },
+      { "label": "Growth partners", "text": "[Potentia Capital](/investors/potentia-capital) and [Grok Ventures](/investors/grok-ventures) for larger tranches behind hiring and national distribution." },
+      { "label": "Broad tech VCs in parallel", "text": "[Aura Ventures](/investors/aura-ventures) (AU$500k–2M — key-question highlight), [Shearwater Capital](/investors/shearwater-capital), [Investible](/investors/investible) for competitive tension and ANZ backing." }
+    ],
+    "all": [
+      { "name": "EVP", "url": "/investors/evp", "kind": "investor", "tag": "", "stageTag": "VC · SEED–B", "description": "Sydney; B2B SaaS and AI-first software — highest-conviction thesis match.", "checkSize": "AU$500k–5M" },
+      { "name": "Aura Ventures", "url": "/investors/aura-ventures", "kind": "investor", "tag": "", "stageTag": "VC · PRE-SEED–SEED", "description": "Sydney; thesis-driven AI-enabled B2B software.", "checkSize": "AU$500k–2M" },
+      { "name": "Grok Ventures", "url": "/investors/grok-ventures", "kind": "investor", "tag": "", "stageTag": "PRIVATE · EARLY–LATE", "description": "Fast-growing tech-enabled businesses across stages." },
+      { "name": "Potentia Capital", "url": "/investors/potentia-capital", "kind": "investor", "tag": "", "stageTag": "GROWTH / BUYOUT", "description": "Growth equity and buyouts for tech-enabled services." },
+      { "name": "Shearwater Capital", "url": "/investors/shearwater-capital", "kind": "investor", "tag": "", "stageTag": "VC · SEED–GROWTH", "description": "Capital flexibility for market-entry scale-ups." },
+      { "name": "Investible", "url": "/investors/investible", "kind": "investor", "tag": "", "stageTag": "VC · PRE-SEED–A", "description": "Asia-Pacific reach — a regional bridgehead." },
+      { "name": "Sam Cust", "url": "/investors/sam-cust", "kind": "investor", "tag": "", "stageTag": "ANGEL · HOSPITALITY", "description": "Hospitality & food-services specialist; local industry connections.", "headshotUrl": "platform:sam-cust" },
+      { "name": "Albert Patajo", "url": "/investors/albert-patajo", "kind": "investor", "tag": "", "stageTag": "ANGEL · B2B SAAS", "description": "Sydney operator-investor; B2B SaaS and marketplaces.", "headshotUrl": "platform:albert-patajo" }
+    ]
+  },
+  "events": {
+    "cards": [
+      { "date": "2026-08-11", "venue": "Sydney", "name": "Australasian Gaming Expo", "url": "/events/australasian-gaming-expo", "why": "The gateway to the clubs-and-pubs sector — high-volume multi-location operations, prime candidates for automated staffing and inventory." },
+      { "date": "2026-09-01", "venue": "Jones Bay Wharf, Sydney", "name": "Big Data & AI Summit Australia", "url": "/events/big-data-ai-summit-australia", "why": "Tech investors and enterprise partners — position agentic AI against legacy POS with Fair Work compliance as the lead message." },
+      { "date": "2027-05-16", "venue": "Sydney", "name": "Australian Tourism Exchange", "url": "/events/australian-tourism-exchange", "why": "Australia's largest B2B tourism event — plus the Irish-Australian expat network for warm distribution leads." }
+    ],
+    "alsoFlagged": "Also flagged: Fine Food Australia (Sydney, September) and ADAPT CIO Edge events."
+  },
+  "actionPlan": {
+    "intro": "Three phases over six months. The default map — pace and emphasis set together in the strategy session.",
+    "phases": [
+      { "period": "MONTHS 1–2 · FOUNDATION", "title": "Legal, compliance & entity setup", "body": "Incorporate Pty Ltd via [MinterEllison](/service-providers/minterellison) · resident director; 482/408 via [TechVisa](/service-providers/techvisa) · ABN, GST, TFN · Privacy Act: data flows, DPA, NDB · IP Australia trademarks · register R&DTI immediately · contact [Investment NSW](/government-support/investment-nsw) · setup outlay AUD $10–20k ex-rent." },
+      { "period": "MONTHS 2–4 · ESTABLISH", "title": "Team, space & network", "body": "Base at [Stone & Chalk](/service-providers/stone-and-chalk) or [Haymarket HQ](/innovation-ecosystem/haymarket-hq) · hire Sydney Head of Sales (AUD $120–160k + super) · [Fullstack Advisory](/service-providers/fullstack-advisory) for CFO/R&DTI · [Irish Australian Chamber](/government-support/irish-australian-chamber-of-commerce) + Enterprise Ireland · [Export Connect](/government-support/export-connect) pricing benchmark · join [ADAPT](/service-providers/adapt); explore [UNSW Founders 10x](/innovation-ecosystem/unsw-founders-10x), [H2 Ventures](/innovation-ecosystem/h2-ventures)." },
+      { "period": "MONTHS 4–6 · LAUNCH", "title": "Go-to-market & sales", "body": "Priority: [Merivale](/accounts/merivale) and [AVC](/accounts/australian-venue-co) · integrate Xero, MYOB, Lightspeed before outbound · SOC 2 / ISO 27001 · [NEXTGEN Group](/service-providers/nextgen-group) distribution · [Accenture](/service-providers/accenture-australia) / [EverestEngineering](/service-providers/everestengineering) SI support · [SproutX](/innovation-ecosystem/sproutx) + [Granton](/service-providers/granton) grants · pipeline at Fine Food Australia · lead with labour-savings and waste ROI." }
+    ]
+  },
+  "compliance": {
+    "intro": "The Australia–Ireland double tax treaty streamlines the path, but early planning avoids the slow steps.",
+    "table": [
+      { "requirement": "Resident director", "severity": "red", "tag": "ASIC · BLOCKING", "finding": "At least one director ordinarily resident in Australia; short-term visa holders don't qualify", "note": "Local hire or nominee director; Director ID from Ireland takes 4–6 weeks — start first" },
+      { "requirement": "Tax & GST", "severity": "amber", "tag": "ATO · ●", "finding": "GST over A$75k turnover; corporate 30%/25% vs Ireland 15%", "note": "Treaty prevents double taxation; dividends capped ~15%; R&DTI 43.5% on AU R&D" },
+      { "requirement": "Privacy & data", "severity": "amber", "tag": "PRIVACY ACT 1988 · ●", "finding": "NDB scheme over A$3M turnover; payroll data high-sensitivity", "note": "Data flows, DPA, OAIC breach procedures before the first enterprise deal" },
+      { "requirement": "People & banking", "severity": "grey", "tag": "FAIR WORK · ●", "finding": "NES + awards set minimum pay; 482 TSS primary relocation visa", "note": "EOR (e.g. Deel) validates market pre-incorporation; digital-first banking opens faster" }
+    ],
+    "stats": [
+      { "value": "A$10–20k", "chip": "sourced", "caption": "Total setup outlay — legal, registration, compliance (ex-rent)" },
+      { "value": "A$120–160k", "chip": "sourced", "caption": "Sydney Head of Sales + 11.5–12% super" },
+      { "value": "A$130–180k+", "chip": "sourced", "caption": "Sydney AI/ML engineer salaries" }
+    ],
+    "checklist": [
+      { "lead": "SOC 2 or ISO 27001", "text": "Baseline for enterprise RFP security review" },
+      { "lead": "Xero + MYOB connectors", "text": "The accounting-stack filter; Lightspeed on POS" },
+      { "lead": "AU data handling", "text": "Localised protocols; NDB readiness" },
+      { "lead": "Award-wage logic", "text": "Payroll must handle Fair Work awards natively" },
+      { "lead": "Trademark filing", "text": "IP Australia early, before brand spend" },
+      { "lead": "Procurement platforms", "text": "Register on Ordermentum and FutureLog" }
+    ]
+  },
+  "guides": {
+    "intro": "Each answers a question this report raises — cultural fit, partner-led distribution, enterprise AI positioning.",
+    "cards": [
+      { "title": "How Starbucks struggled in the Australian market", "url": "/content/starbucks-australia-struggle", "summary": "Misjudging the independent café culture — the cost of imported operating assumptions.", "relevantBecause": "Your buyers ARE that culture — localisation isn't optional." },
+      { "title": "How Shopify won Australian merchants with partner-led growth", "url": "/content/shopify-partner-led-growth-australia", "summary": "Penetration through a local partner ecosystem.", "relevantBecause": "The report's distribution read follows this model." },
+      { "title": "How Anthropic entered the Australian market", "url": "/content/anthropic-australian-market-entry", "summary": "Relationship-first enterprise wins.", "relevantBecause": "Maps to the Merivale / AVC tier of your account list." },
+      { "title": "How UiPath entered the Australian market", "url": "/content/uipath-australian-market-entry", "summary": "Deep technical partnerships; agentic AI in the AU landscape.", "relevantBecause": "The closest precedent — agentic automation sold into AU enterprise." }
+    ]
+  },
+  "leads": {
+    "dataset": { "name": "Hospitality & Tourism Operators — Australia", "url": "/leads/hospitality-tourism-operators", "records": 360, "description": "GMs and technology decision-makers across Australian hotel groups, with technology-readiness scores to identify Sydney early adopters." },
+    "customBuildCopy": "Need more granular focus — high-volume QSR groups, Irish-owned businesses in Australia, or NSW multi-venue operators by tech stack, turnover or headcount? Our research team curates bespoke lists."
+  },
+  "close": {
+    "headline": "This report is the map. The route gets chosen together.",
+    "body": "What it deliberately doesn't do is lock in strategy: sequencing incorporation against first sales, choosing the anchor account, and which investors and mentors to engage first are worked through in your included 60-minute strategy session.",
+    "arriveWith": [ "EOR-first market validation vs immediate Pty Ltd incorporation", "Merivale or AVC as the anchor pursuit — depth vs scale", "POS partnership (OrderMate-class) vs pure direct enterprise sales", "Which two investors and which two mentors to approach first" ]
+  },
+  "sources": {
+    "regulator": ["ASIC incorporation + resident-director requirements", "ATO R&DTI + GST provisions", "Privacy Act 1988 + NDB scheme", "Fair Work NES/awards", "Australia–Ireland double tax treaty", "EU–Australia FTA (concluded Mar 2026)"],
+    "analyst": ["AU hospitality LMS + tour-operator software sizing", "Global AI-in-restaurants market", "AU hospitality projections", "Sydney CBD rent and salary benchmarks", "AI-adoption survey data (65% / 42%)", "NSW/Sydney share estimates ◐"],
+    "vendor": ["Ordermentum, OrderMate, SevenRooms, Netstock, Prediko materials", "Merivale + AVC public signals", "Investor/accelerator public profiles", "Nory client references"]
+  }
+}

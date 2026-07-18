@@ -569,4 +569,44 @@
   .fixed {
     display: none !important;
   }
+
+  /* ── report_v2 renderer print path (ticket 16, MOBILE_AND_PDF.md) ────────
+     Same component tree; @media print only. Scoped to [data-report-v2] so it
+     never touches the legacy [data-report-section] renderer above. */
+  [data-report-v2],
+  [data-report-v2] * {
+    /* Brand moments (dark cover + sources band) and chip/severity colours
+       print as-is rather than being flattened. */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Each numbered section starts a new page; the cover leads page 1. */
+  [data-report-v2] [data-report-v2-section] {
+    break-before: page;
+    page-break-before: always;
+  }
+  /* Cards, table rows, SWOT quadrants and ranked rows are atomic. */
+  [data-report-v2] .rounded-xl,
+  [data-report-v2] .rounded-\[10px\],
+  [data-report-v2] .border-l-\[3px\],
+  [data-report-v2] [class*="border-t-report"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* Interactive affordances have no place in a static PDF. */
+  [data-report-v2] textarea,
+  [data-report-v2] button {
+    display: none !important;
+  }
+  /* Running footer (customer · date · URL) repeats on every printed page. */
+  .report-v2-print-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 8pt;
+    color: #67707e;
+    text-align: center;
+    padding-top: 4pt;
+  }
 }

@@ -309,7 +309,9 @@ Owned by skill `mes-ticket-workflow`; the invariants:
    default-allow incl. AI crawlers (`public/robots.txt`, `public/llms.txt`); private routes
    noindexed — skill `seo-rendering-indexing-and-programmatic-pages`.
 5. Styling: HSL semantic tokens only (shadcn + `--mes-*` brand tokens); no hardcoded palette
-   colors (one documented exception: `reportSectionConfig.ts` section accents).
+   colors (documented exceptions: `reportSectionConfig.ts` section accents; the fixed
+   print-faithful `report.*` palette in `tailwind.config.ts` for the report_v2 renderer, per
+   `design_handoff_mes_report_redesign/tokens.md` — the report surface never theme-inverts).
 6. **Australian English** in all UI copy ("personalised", "organisation").
 7. Never hand-edit `src/integrations/supabase/client.ts` or `types.ts` (generated).
 8. Toasts: `useToast` (shadcn) or `sonner` — either is fine.
