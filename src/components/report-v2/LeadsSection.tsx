@@ -37,6 +37,9 @@ const LeadRequestBox = ({ onRequest }: { onRequest?: (icp: string) => void }) =>
           rows={2}
           className="w-full resize-y rounded-lg border border-report-border bg-report-bg px-4 py-3 text-[12.5px] leading-[1.6] text-report-ink outline-none placeholder:text-report-caption focus:border-report-sky"
         />
+        <p className="hidden text-[12px] italic text-report-muted print:block">
+          Reply to this report with your ideal customer profile and we'll build the list.
+        </p>
       </div>
       <button
         type="button"

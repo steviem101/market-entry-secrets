@@ -19,6 +19,7 @@ interface SectionCardProps {
 const SectionCard = ({ label, id, className, labelClassName, children }: SectionCardProps) => (
   <section
     id={id}
+    data-report-v2-section
     className={cn(
       "rounded-[14px] border-t-[3px] border-t-report-sky bg-white px-5 py-8 text-report-ink lg:px-20 lg:py-16",
       className

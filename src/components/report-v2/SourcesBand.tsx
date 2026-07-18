@@ -15,7 +15,10 @@ const TIERS = [
 const SourcesBand = ({ report }: { report: Report }) => {
   const { sources, meta } = report;
   return (
-    <section className="rounded-[14px] bg-report-surface px-5 pb-10 pt-10 text-report-caption lg:px-20 lg:pb-14 lg:pt-12">
+    <section
+      data-report-v2-section
+      className="rounded-[14px] bg-report-surface px-5 pb-10 pt-10 text-report-caption lg:px-20 lg:pb-14 lg:pt-12"
+    >
       <div className="mb-[18px] flex items-baseline justify-between">
         <span className="text-[10px] font-bold tracking-[0.12em] text-report-border">
           EVIDENCE — {meta.sourceCount} SOURCES, WEIGHTED

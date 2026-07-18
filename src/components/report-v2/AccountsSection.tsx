@@ -85,10 +85,15 @@ const GapCard = ({ name, reason, onRequest }: { name: string; reason: string; on
             setRequested(true);
             onRequest?.();
           }}
-          className="whitespace-nowrap rounded-lg border border-report-sky bg-white px-[18px] py-2.5 text-[12px] font-bold text-report-action transition-colors hover:bg-report-tint"
+          className="whitespace-nowrap rounded-lg border border-report-sky bg-white px-[18px] py-2.5 text-[12px] font-bold text-report-action transition-colors hover:bg-report-tint print:hidden"
         >
           Request the brief
         </button>
+      )}
+      {!requested && (
+        <span className="hidden whitespace-nowrap text-[10px] font-bold italic text-report-muted print:inline">
+          Contact us to request
+        </span>
       )}
     </div>
   );

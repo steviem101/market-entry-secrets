@@ -7,6 +7,7 @@ import SectionCard from "@/components/report-v2/SectionCard";
 import EvidenceChip from "@/components/report-v2/EvidenceChip";
 import Rich from "@/components/report-v2/Rich";
 import { ReportInteractionsProvider } from "@/components/report-v2/ReportInteractionsProvider";
+import { formatReportDate } from "@/lib/report-v2/format";
 import floatsJson from "@/fixtures/floats.json";
 import noryJson from "@/fixtures/nory.json";
 import lemlistJson from "@/fixtures/lemlist.json";
@@ -169,7 +170,9 @@ const ReportPreview = () => {
           that would otherwise stick to tree position. The harness has no report
           row, so the shortlist persists to localStorage keyed by the fixture. */}
       <ReportInteractionsProvider key={fixtureKey} storageKey={fixtureKey}>
-        <ReportShell>
+        <ReportShell
+          printFooter={`${report.meta.customer} · ${formatReportDate(report.meta.date, "short")} · marketentrysecrets.com`}
+        >
           {REPORT_V2_SECTIONS.map(({ id, label, Component }) =>
             Component ? (
               <Component key={id} report={report} />

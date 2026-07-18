@@ -15,19 +15,28 @@ interface RequestHookProps {
  * (README interactions). State is per-mount for now; Supabase persistence +
  * ops notification arrive in ticket 14.
  */
+/** Static one-liner shown in the PDF where an interactive hook sits on screen. */
+const PrintStatic = ({ className }: { className?: string }) => (
+  <p className={`hidden text-[12px] italic text-report-muted print:block ${className ?? ""}`}>
+    To request this, contact us or visit your online report.
+  </p>
+);
+
 const RequestHook = ({ copy, buttonLabel, confirmation, onRequest, className }: RequestHookProps) => {
   const [requested, setRequested] = useState(false);
   if (requested) {
     return (
-      <div className="mt-3 rounded-[10px] border border-report-confirm-border bg-report-confirm-bg px-[22px] py-3 text-[12.5px] font-medium leading-[1.6] text-report-confirm-text">
+      <div className="mt-3 rounded-[10px] border border-report-confirm-border bg-report-confirm-bg px-[22px] py-3 text-[12.5px] font-medium leading-[1.6] text-report-confirm-text print:hidden">
         {confirmation}
       </div>
     );
   }
   return (
-    <div
-      className={`flex items-center justify-between gap-6 rounded-xl border border-dashed border-report-dash bg-report-hook-bg px-7 py-5 ${className ?? ""}`}
-    >
+    <>
+      <PrintStatic className={`mt-3 ${className ?? ""}`} />
+      <div
+        className={`flex items-center justify-between gap-6 rounded-xl border border-dashed border-report-dash bg-report-hook-bg px-7 py-5 print:hidden ${className ?? ""}`}
+      >
       <span className="text-[12.5px] leading-[1.65] text-report-ink-soft">{copy}</span>
       <button
         type="button"
@@ -39,7 +48,8 @@ const RequestHook = ({ copy, buttonLabel, confirmation, onRequest, className }: 
       >
         {buttonLabel}
       </button>
-    </div>
+      </div>
+    </>
   );
 };
 
