@@ -1,7 +1,16 @@
 import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Search, RefreshCw, EyeOff, AlertTriangle, Sparkles } from "lucide-react";
+import {
+  Search,
+  RefreshCw,
+  EyeOff,
+  AlertTriangle,
+  Sparkles,
+  Wand2,
+  PenLine,
+  ListChecks,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +68,39 @@ interface OverrideDraft {
   anonymous_bio: string;
 }
 
+// AI-generated copy awaiting review (mentor_anon_copy_drafts, MES-208).
+// Table is admin-only via RLS; it is not in the generated types yet.
+interface AnonCopyDraft {
+  id: string;
+  mentor_id: string;
+  alias: string | null;
+  headline: string | null;
+  company_label: string | null;
+  bio: string | null;
+  best_for: string | null;
+  claims: { claim: string; source: string }[];
+  leak_flags: { field: string; term: string }[];
+  status: "draft" | "flagged" | "approved" | "rejected";
+  generated_at: string;
+}
+
+// Pending AI drafts (draft/flagged) for the review chips + dialog pre-fill.
+const useAnonCopyDrafts = () =>
+  useQuery({
+    queryKey: ["admin-anon-copy-drafts"],
+    queryFn: async (): Promise<AnonCopyDraft[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mentor_anon_copy_drafts not in generated types yet
+      const { data, error } = await (supabase as any)
+        .from("mentor_anon_copy_drafts")
+        .select(
+          "id, mentor_id, alias, headline, company_label, bio, best_for, claims, leak_flags, status, generated_at",
+        )
+        .in("status", ["draft", "flagged"]);
+      if (error) throw error;
+      return (data || []) as AnonCopyDraft[];
+    },
+  });
+
 // Admins read the base table directly — the admin-only RLS SELECT policy
 // grants it — so this page (and only this page) sees real identity alongside
 // the anonymity state. Writes go through the admin-mentor-anonymity edge
@@ -88,11 +130,14 @@ const LeakWarning = ({ term }: { term: string | null }) =>
 
 const AdminMentors = () => {
   const { data: mentors = [], isLoading, refetch } = useAdminMentors();
+  const { data: aiDrafts = [] } = useAnonCopyDrafts();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [batchGenerating, setBatchGenerating] = useState(false);
   const [editing, setEditing] = useState<AdminMentorRow | null>(null);
   const [draft, setDraft] = useState<OverrideDraft>({
     anonymous_alias: "",
@@ -100,6 +145,15 @@ const AdminMentors = () => {
     anonymous_company_label: "",
     anonymous_bio: "",
   });
+
+  const draftByMentor = useMemo(() => {
+    const map = new Map<string, AnonCopyDraft>();
+    for (const d of aiDrafts) map.set(d.mentor_id, d);
+    return map;
+  }, [aiDrafts]);
+
+  // The pending AI draft for the mentor currently being edited (if any).
+  const activeAiDraft = editing ? draftByMentor.get(editing.id) ?? null : null;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -118,7 +172,7 @@ const AdminMentors = () => {
     mentor: AdminMentorRow,
     isAnonymous: boolean,
     overrides?: Partial<OverrideDraft>,
-  ) => {
+  ): Promise<boolean> => {
     setSaving(true);
     try {
       const { data, error } = await supabase.functions.invoke(
@@ -149,25 +203,130 @@ const AdminMentors = () => {
           ? `Public listing shows "${data?.public_view?.name ?? "masked identity"}". The sitemap serves the masked slug automatically; search engines pick it up on their next crawl.`
           : undefined,
       });
+      return true;
     } catch (err) {
       toast({
         title: "Failed to update anonymity",
         description: err instanceof Error ? err.message : "Unknown error",
         variant: "destructive",
       });
+      return false;
     } finally {
       setSaving(false);
     }
   };
 
+  // Pre-fill priority: pending AI draft (the thing awaiting review) → previously
+  // saved override → taxonomy-derived suggestion.
   const openAnonymizeDialog = (mentor: AdminMentorRow) => {
+    const ai = draftByMentor.get(mentor.id);
     setEditing(mentor);
     setDraft({
-      anonymous_alias: mentor.anonymous_alias || suggestAnonymousAlias(mentor),
-      anonymous_headline: mentor.anonymous_headline || mentor.archetype || "",
-      anonymous_company_label: mentor.anonymous_company_label || "",
-      anonymous_bio: mentor.anonymous_bio || "",
+      anonymous_alias:
+        ai?.alias || mentor.anonymous_alias || suggestAnonymousAlias(mentor),
+      anonymous_headline:
+        ai?.headline || mentor.anonymous_headline || mentor.archetype || "",
+      anonymous_company_label:
+        ai?.company_label || mentor.anonymous_company_label || "",
+      anonymous_bio: ai?.bio || mentor.anonymous_bio || "",
     });
+  };
+
+  const refreshDrafts = () =>
+    queryClient.invalidateQueries({ queryKey: ["admin-anon-copy-drafts"] });
+
+  // Mark the pending draft reviewed after the copy has been published (or the
+  // admin has discarded it). Failure here is non-fatal: the columns are already
+  // saved; the draft simply stays pending.
+  const markDraftReviewed = async (draftId: string, status: "approved" | "rejected") => {
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-mentor-anon-copy", {
+        body: { action: "review", draft_id: draftId, status },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      await refreshDrafts();
+    } catch {
+      toast({
+        title: "Draft status not updated",
+        description: "The copy was saved, but the AI draft could not be marked reviewed.",
+      });
+    }
+  };
+
+  // Generate (or regenerate) the AI draft for the mentor open in the dialog,
+  // then pre-fill the fields from the fresh draft.
+  const generateAiDraft = async () => {
+    if (!editing) return;
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-mentor-anon-copy", {
+        body: { mentor_id: editing.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const result = data?.generated?.[0];
+      if (result?.error) throw new Error(`Generation failed (${result.error})`);
+      await refreshDrafts();
+      const fresh = result?.draft as AnonCopyDraft | undefined;
+      if (fresh) {
+        setDraft({
+          anonymous_alias: fresh.alias || "",
+          anonymous_headline: fresh.headline || "",
+          anonymous_company_label: fresh.company_label || "",
+          anonymous_bio: fresh.bio || "",
+        });
+      }
+      toast({
+        title:
+          result?.status === "flagged"
+            ? "Draft generated with leak warnings"
+            : "AI draft generated",
+        description:
+          result?.status === "flagged"
+            ? "Review the flagged terms before saving."
+            : "Review and edit before publishing — nothing is public until you save.",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to generate AI copy",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Batch: queue drafts for every active anonymous mentor without a pending one.
+  const generateAllDrafts = async () => {
+    setBatchGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-mentor-anon-copy", {
+        body: { batch: true },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const results: { status?: string; error?: string }[] = data?.generated || [];
+      const ok = results.filter((r) => r.status).length;
+      const failed = results.filter((r) => r.error).length;
+      await refreshDrafts();
+      toast({
+        title: "Batch generation finished",
+        description:
+          results.length === 0
+            ? "All anonymous mentors already have a pending draft."
+            : `${ok} draft${ok === 1 ? "" : "s"} queued for review${failed ? `, ${failed} failed` : ""}.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Batch generation failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setBatchGenerating(false);
+    }
   };
 
   // Live preview of exactly what the public will see. Mirrors the
@@ -192,8 +351,25 @@ const AdminMentors = () => {
 
   const saveAnonymize = async () => {
     if (!editing || hasLeak) return;
-    await callToggle(editing, true, draft);
-    setEditing(null);
+    const pendingDraft = activeAiDraft;
+    const ok = await callToggle(editing, true, draft);
+    if (ok && pendingDraft) {
+      // Publishing the (possibly edited) copy counts as reviewing the draft.
+      await markDraftReviewed(pendingDraft.id, "approved");
+    }
+    if (ok) setEditing(null);
+  };
+
+  const discardAiDraft = async () => {
+    if (!editing || !activeAiDraft) return;
+    await markDraftReviewed(activeAiDraft.id, "rejected");
+    // Fall back to saved overrides / suggestion in the fields.
+    setDraft({
+      anonymous_alias: editing.anonymous_alias || suggestAnonymousAlias(editing),
+      anonymous_headline: editing.anonymous_headline || editing.archetype || "",
+      anonymous_company_label: editing.anonymous_company_label || "",
+      anonymous_bio: editing.anonymous_bio || "",
+    });
   };
 
   return (
@@ -209,10 +385,20 @@ const AdminMentors = () => {
               {mentors.length} mentors · {anonymousCount} anonymous
             </p>
           </div>
-          <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={generateAllDrafts}
+              disabled={batchGenerating || anonymousCount === 0}
+            >
+              <Wand2 className={`w-4 h-4 mr-2 ${batchGenerating ? "animate-pulse" : ""}`} />
+              {batchGenerating ? "Generating..." : "Generate AI drafts"}
+            </Button>
+            <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         <div className="relative mb-6 max-w-md">
@@ -245,9 +431,35 @@ const AdminMentors = () => {
                       {[m.title, m.company].filter(Boolean).join(" · ")}
                     </div>
                     {m.is_anonymous && (
-                      <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                        <EyeOff className="w-3 h-3" />
-                        Public alias: {m.anonymous_alias || m.archetype || "Verified Expert"}
+                      <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <EyeOff className="w-3 h-3" />
+                          Public alias: {m.anonymous_alias || m.archetype || "Verified Expert"}
+                        </span>
+                        {draftByMentor.has(m.id) && (
+                          <Badge
+                            variant={
+                              draftByMentor.get(m.id)!.status === "flagged"
+                                ? "destructive"
+                                : "secondary"
+                            }
+                            className="text-[10px] px-1.5 py-0"
+                          >
+                            {draftByMentor.get(m.id)!.status === "flagged"
+                              ? "AI draft flagged"
+                              : "AI draft ready"}
+                          </Badge>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 px-1.5 text-xs"
+                          onClick={() => openAnonymizeDialog(m)}
+                        >
+                          <PenLine className="w-3 h-3 mr-1" />
+                          Edit copy
+                        </Button>
                       </div>
                     )}
                   </TableCell>
@@ -282,7 +494,7 @@ const AdminMentors = () => {
         </div>
 
         <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Anonymize {editing?.name}</DialogTitle>
               <DialogDescription>
@@ -335,31 +547,96 @@ const AdminMentors = () => {
                 <LeakWarning term={leaks.anonymous_company_label} />
               </div>
               <div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-1">
                   <Label htmlFor="anon-bio">Anonymous bio</Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 text-xs"
-                    onClick={() =>
-                      editing &&
-                      setDraft((d) => ({ ...d, anonymous_bio: suggestAnonymousBio(editing) }))
-                    }
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Use suggested
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={generateAiDraft}
+                      disabled={generating}
+                    >
+                      <Wand2 className={`w-3 h-3 mr-1 ${generating ? "animate-pulse" : ""}`} />
+                      {generating
+                        ? "Generating..."
+                        : activeAiDraft
+                        ? "Regenerate AI copy"
+                        : "Generate AI copy"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={() =>
+                        editing &&
+                        setDraft((d) => ({ ...d, anonymous_bio: suggestAnonymousBio(editing) }))
+                      }
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Use template
+                    </Button>
+                  </div>
                 </div>
                 <Textarea
                   id="anon-bio"
                   value={draft.anonymous_bio}
                   onChange={(e) => setDraft((d) => ({ ...d, anonymous_bio: e.target.value }))}
-                  placeholder="Blank = auto-composed from seniority, sectors and specialties. Edit for a richer, identity-free profile."
-                  rows={4}
+                  placeholder="Blank = auto-composed from seniority, sectors and specialties. Generate AI copy for a richer, identity-free profile."
+                  rows={6}
                 />
                 <LeakWarning term={leaks.anonymous_bio} />
               </div>
+
+              {/* AI draft review context: server-side leak flags + claims trace */}
+              {activeAiDraft && (
+                <div className="rounded-lg border p-3 space-y-2">
+                  <div className="text-xs font-medium text-muted-foreground flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <ListChecks className="w-3 h-3" />
+                      AI draft under review — saving publishes it
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 px-1.5 text-xs text-destructive"
+                      onClick={discardAiDraft}
+                      disabled={saving || generating}
+                    >
+                      Discard draft
+                    </Button>
+                  </div>
+                  {activeAiDraft.leak_flags.length > 0 && (
+                    <div className="text-xs text-destructive flex items-start gap-1">
+                      <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                      <span>
+                        Automated check flagged:{" "}
+                        {activeAiDraft.leak_flags
+                          .map((f) => `"${f.term}" in ${f.field.replace(/_/g, " ")}`)
+                          .join("; ")}
+                        . Rewrite or remove these before saving.
+                      </span>
+                    </div>
+                  )}
+                  {activeAiDraft.claims.length > 0 && (
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground mb-1">
+                        Claims trace — every claim must come from the record:
+                      </div>
+                      <ul className="text-xs text-muted-foreground space-y-0.5 max-h-28 overflow-y-auto">
+                        {activeAiDraft.claims.map((c, i) => (
+                          <li key={i}>
+                            "{c.claim}" — <span className="font-mono">{c.source}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
@@ -367,7 +644,13 @@ const AdminMentors = () => {
               </Button>
               <Button onClick={saveAnonymize} disabled={saving || hasLeak}>
                 <EyeOff className="w-4 h-4 mr-2" />
-                {saving ? "Saving..." : hasLeak ? "Resolve warnings to save" : "Anonymize"}
+                {saving
+                  ? "Saving..."
+                  : hasLeak
+                  ? "Resolve warnings to save"
+                  : editing?.is_anonymous
+                  ? "Save copy"
+                  : "Anonymize"}
               </Button>
             </DialogFooter>
           </DialogContent>

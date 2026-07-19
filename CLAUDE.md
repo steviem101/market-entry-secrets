@@ -1,7 +1,7 @@
 # CLAUDE.md — Market Entry Secrets
 
 > Root context file for Claude Code — auto-loaded every session.
-> **Last reviewed: 2026-07-13 (MES-148 Phase 5 data-stewardship flags + rollout runbook** — prior review 2026-07-12 MES-148 Phase 2 rollout flags; full review 2026-07-07 MES-115, gap report: [`docs/audits/mes-115-claude-md-gap-report.md`](docs/audits/mes-115-claude-md-gap-report.md)**).**
+> **Last reviewed: 2026-07-19 (MES-208 anonymous-mentor copy drafts; edge-function count corrected to 37** — prior review 2026-07-13 MES-148 Phase 5 data-stewardship flags; full review 2026-07-07 MES-115, gap report: [`docs/audits/mes-115-claude-md-gap-report.md`](docs/audits/mes-115-claude-md-gap-report.md)**).**
 > Maintenance: this file owns **orientation, invariants, and pointers** only. Deep procedures live
 > in [`.claude/skills/`](.claude/skills/README.md); evidence and audit artefacts live in [`docs/`](docs/).
 > Keep it ≤400 lines, verify every claim against the repo before editing, and update the date above.
@@ -54,7 +54,8 @@ market-intelligence platform helping companies enter the Australian/ANZ market.
 - **Merging to main auto-applies migrations** to prod (Supabase GitHub integration). See §10.
 - **Edge functions are NOT auto-deployed by the Supabase integration.** A GitHub Action
   (`.github/workflows/deploy-edge-functions.yml`) deploys `generate-report`, `scrape-company`,
-  `sitemap`, `generate-plan`, `admin-mentor-anonymity` (+ on `_shared/` changes) on push to main;
+  `sitemap`, `generate-plan`, `admin-mentor-anonymity`, `admin-mentor-anon-copy`
+  (+ on `_shared/` changes) on push to main;
   all other functions are deployed manually via `supabase functions deploy <name>`.
 - `supabase/config.toml` is the version-controlled source of truth for auth config (site_url,
   redirect allowlist, OTP expiry — MES-33) and per-function `verify_jwt`. The hosted dashboard is
@@ -69,7 +70,7 @@ market-intelligence platform helping companies enter the Australian/ANZ market.
 | `src/hooks/`, `src/contexts/` | Domain hooks (`useEvents`, `useSubscription`…), Auth/Persona contexts |
 | `src/lib/` | Pure logic modules with colocated `*.test.ts` (filters, featureFlags, logoUtils); `src/lib/api/reportApi.ts`; `src/lib/mcp/` (MCP tool sources) |
 | `src/integrations/supabase/` | Generated client + types — do not edit |
-| `supabase/functions/` | 30 edge functions + `_shared/` (§6) |
+| `supabase/functions/` | 37 edge functions + `_shared/` (§6) |
 | `supabase/migrations/` | Active ledger, re-baselined 2026-07-04; `migrations_archive/` + `rollback/` are reference only |
 | `docs/` | Audits (`docs/audits/`), runbooks, `migrations.md`, `mes-knowledge-base-rag.md`, `prelaunch-audit.md`, redesign handoffs |
 | `.claude/skills/` | The skills library (§0) |
@@ -129,7 +130,7 @@ market-intelligence platform helping companies enter the Australian/ANZ market.
   `linkedin_industries`/`legacy_industry_mapping`, `ii_*` (Irish Insights pipeline — separate
   workstream), `activity_event_routing` (Slack routing/self-gating for loops).
 
-## 6. Edge functions (`supabase/functions/`, 30 total)
+## 6. Edge functions (`supabase/functions/`, 37 total)
 
 Shared modules: `_shared/http.ts` (`buildCorsHeaders` — allowlist is hardcoded + `FRONTEND_URL`;
 there is **no** `ALLOWED_ORIGINS` secret), `_shared/log.ts`, `_shared/auth.ts` (`requireAdmin`),
@@ -161,6 +162,7 @@ from the repo**): `embed-knowledge` (~2 min per its header), `kb-sync` (incremen
 | `generate-plan` | AI market-entry plan (Anthropic only) |
 | `enrich-content` / `enrich-innovation-ecosystem` / `enrich-investors` / `firecrawl-map` / `firecrawl-scrape` / `firecrawl-search` | Admin enrichment + Firecrawl wrappers |
 | `classify-personas` / `sync-lemlist` / `admin-mentor-anonymity` | Admin: persona classification, Lemlist CRM sync, mentor anonymity toggle |
+| `admin-mentor-anon-copy` | Admin: AI anonymous-mentor copy drafts (Anthropic; single + batch; leak-linted; review via `mentor_anon_copy_drafts` — MES-208) |
 | `ai-chat` | **Placeholder** — returns a stub (`is_placeholder: true`) |
 
 ## 7. AI report pipeline
@@ -279,7 +281,7 @@ Owned by skill `mes-ticket-workflow`; the invariants:
 | `FIRECRAWL_API_KEY` (+ tuning: `FIRECRAWL_CACHE_ENABLED`, `FIRECRAWL_COMPETITOR_DEPTH`) | Scraping/search |
 | `PERPLEXITY_API_KEY` | Market research |
 | `LOVABLE_API_KEY` | Lovable AI Gateway (report sections) |
-| `ANTHROPIC_API_KEY` (+ `RQ_LOOP_MODEL` override; `VERIFIER_ADJUDICATION_MODEL` override in generate-report) | generate-plan, classify-personas, normalize-events, report-quality-loop, generate-report (claims-verifier adjudication — MES-148 1a; **and section writing when a section resolves to a `claude-*` model — Phase 2b — those go direct to Anthropic, not the Lovable gateway**) |
+| `ANTHROPIC_API_KEY` (+ `RQ_LOOP_MODEL` override; `VERIFIER_ADJUDICATION_MODEL` override in generate-report; `ANON_COPY_MODEL` override in admin-mentor-anon-copy) | generate-plan, classify-personas, normalize-events, report-quality-loop, admin-mentor-anon-copy (MES-208 anonymous-mentor copy drafts), generate-report (claims-verifier adjudication — MES-148 1a; **and section writing when a section resolves to a `claude-*` model — Phase 2b — those go direct to Anthropic, not the Lovable gateway**) |
 | `OPENAI_API_KEY` (Vault fallback `openai_api_key`) | KB embeddings (embed-knowledge, knowledge-search) |
 | `MATCH_RERANK_ENABLED` | generate-report matching toggle |
 | `EVAL_BYPASS_USER_ID` | generate-report: exempts one user id (the golden-eval user) from the 5/60min report rate limit; unset in normal operation (MES-148 Phase 1c) |

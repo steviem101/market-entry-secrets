@@ -1,6 +1,7 @@
 # MES-208 — Anonymous Mentor Copy: Audit + Recommended Plan (Phase 1)
 
-**Date:** 2026-07-19 · **Status:** awaiting approval before implementation
+**Date:** 2026-07-19 · **Status:** plan approved 2026-07-19 (drafts table + RLS: approved;
+provider: Anthropic direct; best-for: embedded in bio) — implemented per Part C below
 **Branch:** `claude/anonymous-mentor-profiles-6zsg88` (harness-assigned; maps to the ticket's
 `mes-208-mentor-anon-copy`)
 
@@ -217,3 +218,30 @@ the admin page.
 2. **Provider** — recommendation: Anthropic direct (B3); Lovable gateway/Gemini is the alternative.
 3. **Structured `best_for` column now vs. bio-embedded only** — recommendation: bio-embedded now,
    structured later if a dedicated render block is wanted.
+
+---
+
+## Part C — Implementation notes (Phase 2, as shipped)
+
+- **Migration** `20260719010000_mes208_mentor_anon_copy_drafts.sql`: `mentor_anon_copy_drafts`
+  (drafts + claims + leak_flags + status), RLS on, default grants stripped, admin-only SELECT,
+  service-role-only writes; one pending row per mentor via a partial unique index. Additive and
+  reversible (drop the table).
+- **Edge function** `supabase/functions/admin-mentor-anon-copy/` — `verify_jwt = true` +
+  `requireAdmin()` + service role. Actions: generate (`{mentor_id}` | `{batch: true[, force]}`,
+  batch capped at 20) and review (`{draft_id, status: approved|rejected}`). Anthropic direct
+  (`claude-sonnet-4-6`, overridable via **`ANON_COPY_MODEL`** — the only new env name, optional),
+  60s timeout, 1200 max_tokens, at most 2 calls per mentor (one leak-lint retry). Pure modules
+  `prompt.ts` (system prompt, exemplars, never-echo list, JSON parsing) and `leakCheck.ts`
+  (leak terms from real name + company + experience-tile companies) are unit-tested via `npm test`.
+- **Publishing path unchanged:** approval still writes `community_members.anonymous_*` via
+  `admin-mentor-anonymity`; the public view/grants are untouched (no MES-106 surface change).
+- **Admin UI** (`/admin/mentors`): "Generate AI drafts" batch button; per-row "AI draft ready /
+  flagged" chips and an "Edit copy" action for already-anonymous mentors; the dialog pre-fills
+  from the pending draft, offers Generate/Regenerate AI copy (template composer retained as
+  "Use template"), shows the claims trace + server leak flags, and Discard draft (reject).
+  Saving publishes and marks the draft approved.
+- **Deploy:** function added to `supabase/config.toml` and the deploy-edge-functions workflow.
+- **Follow-ups:** regenerate Supabase types to drop the `(supabase as any)` cast for the drafts
+  table; MES-170 archetype vocabulary can later enrich the prompt; optional structured
+  `best_for` render block if wanted.
