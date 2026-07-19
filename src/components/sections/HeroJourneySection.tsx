@@ -7,6 +7,8 @@ import {
   FileText,
   Globe,
   Handshake,
+  ListChecks,
+  Sparkles,
   Users,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -16,9 +18,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEcosystemStats } from "@/hooks/useEcosystemStats";
 import { useFeaturedLogos } from "@/hooks/useFeaturedLogos";
 import { useLeadDatabaseStats } from "@/hooks/useLeadDatabases";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import { displayCount } from "@/lib/heroStatsDisplay";
-import { topLeadCategories, type JourneyStepKey } from "@/lib/heroJourney";
+import { topLeadCategories, JOURNEY_STEP_ORDER, type JourneyStepKey } from "@/lib/heroJourney";
 import { mentorDisplayName, mentorInitials } from "@/lib/mentorDisplay";
 import { trackFunnelEvent } from "@/lib/analytics/intakeFunnel";
 import {
@@ -84,19 +85,35 @@ const useJourneyMentors = () =>
     staleTime: 30 * 60 * 1000,
   });
 
+// A shared min-height keeps all three panels the same size, so auto-advancing
+// between them (or clicking a shorter tab) never makes the section jump — sized
+// to the tallest panel (step 1, the richest).
 const PanelShell = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-border bg-card/80 p-5 shadow-sm min-h-[320px]">
+  <div className="rounded-2xl border border-border bg-card/80 p-5 shadow-sm min-h-[420px]">
     {children}
   </div>
 );
 
+// Worked example (Canva) of the two most compelling report sections — an
+// executive-summary verdict and a phased action plan. Qualitative only: no
+// invented figures (grounding invariant), clearly labelled "Example". Chosen
+// over a lone SWOT because the verdict conveys insight and the timeline
+// conveys "a plan, not a PDF" — the report's actual payoff.
+const EXAMPLE_ACTION_PLAN: { phase: string; window: string; detail: string }[] = [
+  { phase: "Establish", window: "Weeks 1–3", detail: "Register the entity, GST and a local billing presence" },
+  { phase: "Land", window: "Weeks 4–8", detail: "Warm-intro to vetted providers; first design-partner conversations" },
+  { phase: "Expand", window: "Weeks 9–16", detail: "Enter education & government procurement panels via matched agencies" },
+];
+
 /**
  * Step 1 — the generated report as prose-quality proof. The full section
  * checklist lives in the hero graphic directly above, so this panel doesn't
- * repeat it (MES homepage de-dup, 18 Jul): it leads with the worked SWOT
- * example and a one-line summary instead.
+ * repeat it (MES homepage de-dup, 18 Jul): it shows worked examples of the
+ * report's most compelling sections (exec-summary verdict + action plan) and
+ * grounds them in live directory counts.
  */
 const ReportPanel = () => {
+  const { stats, isReady } = useEcosystemStats();
   const gatedSections = SECTION_ORDER.filter((s) => TIER_REQUIREMENTS[s]);
   const freeCount = SECTION_ORDER.length - gatedSections.length;
 
@@ -106,44 +123,58 @@ const ReportPanel = () => {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
           <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
         </div>
-        <div>
+        <div className="flex-1">
           <div className="text-sm font-semibold text-foreground">Your report is generated</div>
           <div className="text-xs text-muted-foreground">
             {SECTION_ORDER.length} sections &middot; {freeCount} free &middot; written for your company, not a template
           </div>
         </div>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          Example: Canva
+        </span>
       </div>
 
-      {/* SWOT — real quadrants from the swot_analysis section, with a worked
-          example (Canva) so the block reads as real report prose. Qualitative
-          only: no invented figures, clearly labelled Example. */}
+      {/* Executive-summary verdict — the insight that leads the report. */}
       <div className="rounded-lg border border-border bg-muted/30 p-4">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-foreground">
-            {SECTION_LABELS.swot_analysis}
-          </span>
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Example: Canva
-          </span>
+        <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-foreground">
+          <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+          {SECTION_LABELS.executive_summary}
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {[
-            { q: "Strengths", text: "Globally recognised brand with a proven self-serve freemium motion" },
-            { q: "Weaknesses", text: "Enterprise sales coverage still maturing against incumbent suites" },
-            { q: "Opportunities", text: "Government and education procurement partnerships across ANZ" },
-            { q: "Threats", text: "Entrenched incumbent vendors with deep channel lock-in" },
-          ].map(({ q, text }) => (
-            <div key={q} className="rounded-md bg-background border border-border px-3 py-2">
-              <div className="text-xs font-medium text-muted-foreground">{q}</div>
-              <p className="mt-1 text-xs leading-snug text-foreground/80">{text}</p>
-            </div>
+        <p className="text-sm leading-relaxed text-foreground/85">
+          Australia is a strong beachhead for a self-serve product like Canva — high card
+          penetration and English-language fit let a freemium motion land fast — but enterprise
+          and government deals favour incumbents with local procurement panels.
+        </p>
+      </div>
+
+      {/* Action plan — the tangible "plan, not a PDF" payoff. */}
+      <div className="mt-3 rounded-lg border border-border bg-muted/30 p-4">
+        <div className="mb-3 flex items-center gap-1.5 text-xs font-medium text-foreground">
+          <ListChecks className="h-3.5 w-3.5 text-emerald-500" />
+          {SECTION_LABELS.action_plan}
+        </div>
+        <ol className="space-y-2.5">
+          {EXAMPLE_ACTION_PLAN.map((step, i) => (
+            <li key={step.phase} className="flex gap-3">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                {i + 1}
+              </span>
+              <div className="min-w-0">
+                <div className="text-xs font-medium text-foreground">
+                  {step.phase} <span className="font-normal text-muted-foreground">&middot; {step.window}</span>
+                </div>
+                <p className="text-xs leading-snug text-foreground/75">{step.detail}</p>
+              </div>
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
 
       <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-        Every section is grounded in live market data and real directory records.
+        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+        {isReady && stats
+          ? `Grounded in ${displayCount(stats.serviceProviders)}+ providers, ${displayCount(stats.mentors)}+ mentors and ${displayCount(stats.investors)}+ investors from our live directories.`
+          : "Every section is grounded in live market data and real directory records."}
       </p>
     </PanelShell>
   );
@@ -383,18 +414,56 @@ const STEPS: { key: JourneyStepKey; label: string; number: string }[] = [
   { key: "introductions", label: "Introductions", number: "3" },
 ];
 
+const AUTO_ADVANCE_MS = 5000;
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
 /**
  * Three-step value-journey proof section (MES-162, flag `hero_journey`,
  * placement Option B): the report output, the matched provider/lead list it
  * produces, and the mentor introductions that follow — every panel fed by the
  * real config and live records the product itself renders from. Keyboard and
- * screen-reader accessible via Radix tabs; no auto-advance (deliberate — a
- * static stepper needs no reduced-motion handling).
+ * screen-reader accessible via Radix tabs.
+ *
+ * Auto-advances through the three steps (5s each) so the section feels alive on
+ * landing, then STOPS permanently on the first manual interaction so a reader is
+ * never yanked. Disabled entirely under prefers-reduced-motion, and paused while
+ * the pointer is over the section. A thin progress bar signals the auto-advance.
  */
 export const HeroJourneySection = () => {
   const firedSteps = useRef(new Set<JourneyStepKey>());
-  const activeStepRef = useRef<JourneyStepKey>("report");
-  const { elementRef, isVisible } = useIntersectionObserver({ threshold: 0.25 });
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const [activeStep, setActiveStep] = useState<JourneyStepKey>("report");
+  // Auto-advance runs until the first manual interaction, then stops for good.
+  const [autoAdvance, setAutoAdvance] = useState(() => !prefersReducedMotion());
+  const [paused, setPaused] = useState(false);
+  // Live, TWO-WAY viewport tracking (unlike the one-shot useIntersectionObserver
+  // latch): the timer must actually stop when the section scrolls off-screen or
+  // the browser tab is hidden, not run forever after the first reveal.
+  const [inView, setInView] = useState(false);
+  const [tabVisible, setTabVisible] = useState(true);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    // threshold 0: in-view = any part visible, so it pauses only once the
+    // section is fully off-screen (robust for a section taller than the
+    // viewport, where a 0.25 ratio may never be reached).
+    const io = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    io.observe(el);
+    const onVisibility = () => setTabVisible(!document.hidden);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   const fireStepViewed = (step: JourneyStepKey) => {
     if (firedSteps.current.has(step)) return;
@@ -405,12 +474,41 @@ export const HeroJourneySection = () => {
     });
   };
 
+  // Emit the step-viewed event whenever the in-view step changes (covers both
+  // auto-advance and manual clicks; fireStepViewed dedupes per step).
   useEffect(() => {
-    if (isVisible) fireStepViewed(activeStepRef.current);
-  }, [isVisible]);
+    if (inView) fireStepViewed(activeStep);
+  }, [inView, activeStep]);
+
+  // The auto-advance timer: only runs while enabled, on-screen, tab-visible and
+  // not paused — so it genuinely idles when the section isn't being looked at.
+  useEffect(() => {
+    if (!autoAdvance || paused || !inView || !tabVisible) return;
+    const id = setInterval(() => {
+      setActiveStep((prev) => {
+        const idx = JOURNEY_STEP_ORDER.indexOf(prev);
+        return JOURNEY_STEP_ORDER[(idx + 1) % JOURNEY_STEP_ORDER.length];
+      });
+    }, AUTO_ADVANCE_MS);
+    return () => clearInterval(id);
+  }, [autoAdvance, paused, inView, tabVisible]);
+
+  // Any manual tab selection stops the auto-advance permanently.
+  const handleValueChange = (value: string) => {
+    setAutoAdvance(false);
+    setActiveStep(value as JourneyStepKey);
+  };
+
+  const showProgress = autoAdvance && !paused && inView && tabVisible;
 
   return (
-    <section ref={elementRef} aria-labelledby="hero-journey-heading" className="bg-muted/20">
+    <section
+      ref={sectionRef}
+      aria-labelledby="hero-journey-heading"
+      className="bg-muted/20"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <div className="mx-auto mb-8 max-w-2xl text-center">
           <h2 id="hero-journey-heading" className="text-2xl font-bold text-foreground lg:text-3xl">
@@ -423,15 +521,11 @@ export const HeroJourneySection = () => {
         </div>
 
         <Tabs
-          defaultValue="report"
-          onValueChange={(value) => {
-            const step = value as JourneyStepKey;
-            activeStepRef.current = step;
-            fireStepViewed(step);
-          }}
+          value={activeStep}
+          onValueChange={handleValueChange}
           className="mx-auto max-w-3xl"
         >
-          <TabsList className="mb-6 grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1">
+          <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1">
             {STEPS.map((step) => (
               <TabsTrigger
                 key={step.key}
@@ -448,6 +542,19 @@ export const HeroJourneySection = () => {
               </TabsTrigger>
             ))}
           </TabsList>
+
+          {/* Auto-advance progress bar — a keyed remount restarts the CSS
+              animation each time the step changes; hidden once auto-advance
+              stops (manual interaction / reduced-motion / paused). */}
+          <div className="mb-6 mt-1.5 h-0.5 w-full overflow-hidden rounded bg-muted/60" aria-hidden="true">
+            {showProgress && (
+              <div
+                key={activeStep}
+                className="animate-journey-progress h-full bg-primary/50"
+                style={{ animationDuration: `${AUTO_ADVANCE_MS}ms` }}
+              />
+            )}
+          </div>
 
           <TabsContent value="report">
             <ReportPanel />
