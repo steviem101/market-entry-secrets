@@ -104,3 +104,26 @@ test("buildCompetitorCards: empty or all-blank strengths array omits the field",
   assert.equal("strengths" in cards[1], false);
   assert.equal("strengths" in cards[2], false);
 });
+
+test("buildCompetitorCards: carries a grounded differentiation contrast as `differs` (Phase 3c)", () => {
+  const cards = buildCompetitorCards([
+    { name: "Salesforce", url: "https://salesforce.com", differentiation: "  Enterprise-first — we serve SMB self-serve  " },
+  ]);
+  assert.equal(cards[0].differs, "Enterprise-first — we serve SMB self-serve");
+});
+
+test("buildCompetitorCards: empty/missing differentiation omits the differs field", () => {
+  const cards = buildCompetitorCards([
+    { name: "A", url: "https://a.co" },
+    { name: "B", url: "https://b.co", differentiation: "" },
+    { name: "C", url: "https://c.co", differentiation: "   " },
+    { name: "D", url: "https://d.co", differentiation: 42 },
+  ]);
+  for (const card of cards) assert.equal("differs" in card, false);
+});
+
+test("buildCompetitorCards: differs is clipped to 120 chars", () => {
+  const long = "x".repeat(200);
+  const cards = buildCompetitorCards([{ name: "A", url: "https://a.co", differentiation: long }]);
+  assert.equal(cards[0].differs!.length, 120);
+});

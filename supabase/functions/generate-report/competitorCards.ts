@@ -15,6 +15,7 @@ export interface CompetitorLike {
   url?: unknown;
   description?: unknown;
   strengths?: unknown;
+  differentiation?: unknown;
   au_presence?: unknown;
 }
 
@@ -28,6 +29,8 @@ export interface CompetitorCard {
   tags: string[];
   /** Grounded, site-derived strengths — the report_v2 table's Strengths column. */
   strengths?: string[];
+  /** Grounded comparative contrast — the report_v2 table's "Where <you> differ" column. */
+  differs?: string;
 }
 
 const clip = (s: unknown, n: number): string => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
@@ -81,6 +84,9 @@ export function buildCompetitorCards(competitors: CompetitorLike[] | null | unde
     const strengths = Array.isArray(c?.strengths)
       ? (c.strengths as unknown[]).map((s) => clip(s, 80)).filter(Boolean).slice(0, 3)
       : [];
+    // Grounded comparative contrast (clipped); omitted when the extractor found
+    // none. String-only — a non-string must not be coerced into a bogus verdict.
+    const differs = typeof c?.differentiation === "string" ? clip(c.differentiation, 120) : "";
     out.push({
       name,
       subtitle: desc && !FAILURE_DESCRIPTION_RE.test(desc) ? desc : undefined,
@@ -90,6 +96,7 @@ export function buildCompetitorCards(competitors: CompetitorLike[] | null | unde
       source: "web",
       tags: hasAu ? ["AU presence"] : [],
       ...(strengths.length ? { strengths } : {}),
+      ...(differs ? { differs } : {}),
     });
     if (out.length >= cap) break;
   }

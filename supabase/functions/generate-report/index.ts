@@ -267,6 +267,9 @@ interface EnrichedCompanyProfile {
   key_clients: string[];
   team_size_indicators: string;
   unique_selling_points: string[];
+  // One-line positioning statement in the site's own words — powers the
+  // report_v2 §03 "you" row "where you differ" line. "" when not clearly stated.
+  positioning: string;
 }
 
 // Plumbing visibility for the deep company scrape. The metadata flag was
@@ -303,6 +306,7 @@ async function enrichCompanyDeep(
     key_clients: [],
     team_size_indicators: "",
     unique_selling_points: [],
+    positioning: "",
   };
   const diagnostics: CompanyScrapeDiagnostics = {
     attempted: true,
@@ -378,7 +382,8 @@ async function enrichCompanyDeep(
   "products": ["list of main products or services offered as advertised on the site"],
   "key_clients": ["EXPLICITLY confirmed customers ONLY"],
   "team_size_indicators": "any indicators of team size, leadership, or organizational scale that the site states directly",
-  "unique_selling_points": ["2-4 key differentiators or competitive advantages CLAIMED ON THE SITE"]
+  "unique_selling_points": ["2-4 key differentiators or competitive advantages CLAIMED ON THE SITE"],
+  "positioning": "ONE short line (a few words) — how the company frames what makes it different from alternatives, in the site's OWN words. Empty string if the site states no clear positioning."
 }
 
 STRICT RULES for key_clients (most important):
@@ -467,10 +472,27 @@ interface CompetitorData {
   // report_v2 competitor table's "Strengths" column. Grounded (site-derived),
   // never guessed; empty when nothing is evident.
   strengths?: string[];
+  // One short factual contrast — how the CUSTOMER's offering differs from this
+  // competitor, grounded in both sides' stated facts. The report_v2 §03 "Where
+  // <customer> differs" column. "" when no clear contrast is evident (never guessed).
+  differentiation?: string;
   // Populated only under FIRECRAWL_COMPETITOR_DEPTH: the competitor's Australian
   // footprint (local office / AU case studies / .com.au / "no AU presence found"),
   // the single most decision-useful fact for a market-entry competitive read.
   au_presence?: string;
+}
+
+// Customer's intake-stated focus (industry + who they sell to) — grounding
+// context for the report_v2 §03 "where the customer differs" verdict, passed to
+// the competitor-extraction prompts. "" when the intake gives nothing, which
+// makes the verdict degrade to "" (the Where-differs column doesn't render).
+function buildCompanyFocus(intake: any): string {
+  const industrySectorText = (intake?.industry_sector || []).join(", ");
+  const targetCustomerDesc = (intake?.raw_input as any)?.target_customer_description || "";
+  return [
+    industrySectorText ? `industry: ${industrySectorText}` : "",
+    targetCustomerDesc ? `sells to: ${targetCustomerDesc}` : "",
+  ].filter(Boolean).join("; ");
 }
 
 async function scrapeKnownCompetitors(
@@ -478,6 +500,7 @@ async function scrapeKnownCompetitors(
   lovableKey: string,
   knownCompetitors: Array<{ name: string; website: string }>,
   companyName: string,
+  companyFocus: string,
   stats?: FirecrawlStats,
   cache?: ScrapeCache,
   deep = false,
@@ -514,8 +537,8 @@ async function scrapeKnownCompetitors(
           { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
           {
             role: "user",
-            content: `Analyze this website content for "${comp.name}" (${website}), a competitor of "${companyName}".
-Return a JSON object: {"name": "<the company's OFFICIAL name as written on their site, correctly capitalised — e.g. 'SourceWhale' not 'source whale'; fall back to '${comp.name}' only if the site doesn't state it>", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts", "strengths": ["2-3 short competitive strengths EVIDENT ON THEIR SITE (each a few words) — do NOT guess; [] if none evident"]${deep ? `, "au_presence": "their Australian footprint from the site ONLY — local office/address, AU case studies or customers, .com.au domain, AU pricing. If none is evident, say 'No Australian presence evident on their site'. Do NOT guess."` : ""}}
+            content: `Analyze this website content for "${comp.name}" (${website}), a competitor of "${companyName}".${companyFocus ? `\n${companyName}'s own stated focus: ${companyFocus}` : ""}
+Return a JSON object: {"name": "<the company's OFFICIAL name as written on their site, correctly capitalised — e.g. 'SourceWhale' not 'source whale'; fall back to '${comp.name}' only if the site doesn't state it>", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts", "strengths": ["2-3 short competitive strengths EVIDENT ON THEIR SITE (each a few words) — do NOT guess; [] if none evident"], "differentiation": "ONE short factual contrast (a few words) — how ${companyName}'s offering differs from THIS competitor, based ONLY on ${companyName}'s stated focus above and this competitor's own site facts. Empty string if no clear factual contrast is evident — do NOT guess."${deep ? `, "au_presence": "their Australian footprint from the site ONLY — local office/address, AU case studies or customers, .com.au domain, AU pricing. If none is evident, say 'No Australian presence evident on their site'. Do NOT guess."` : ""}}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -560,6 +583,11 @@ async function searchCompetitors(
     const targetRegions = (intake.target_regions || []).join(", ") || "Australia";
     const industrySectorText = (intake.industry_sector || []).join(", ");
 
+    // Grounding context for the "where the customer differs" verdict (see
+    // buildCompanyFocus): the customer's own intake-stated focus, passed to both
+    // extraction prompts so the contrast traces to declared facts, not priors.
+    const companyFocus = buildCompanyFocus(intake);
+
     const queries = deep
       ? buildCompetitorQueries(intake)
       : [`${industrySectorText} companies in Australia ${targetRegions} competitors`];
@@ -569,7 +597,7 @@ async function searchCompetitors(
 
     // Known-competitor scrape + all discovery searches, in parallel.
     const [knownResults, ...searchSets] = await Promise.all([
-      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name, stats, cache, deep),
+      scrapeKnownCompetitors(firecrawlKey, lovableKey, knownCompetitors, intake.company_name, companyFocus, stats, cache, deep),
       ...queries.map((q) => firecrawlSearch(firecrawlKey, q, 5, 15000, stats)),
     ]);
 
@@ -602,9 +630,9 @@ async function searchCompetitors(
         { role: "system", content: "You are a competitive intelligence analyst. Return only valid JSON, no markdown fences." },
         {
           role: "user",
-          content: `Analyze these search results to find DIRECT competitors of ${intake.company_name} — ${nicheAnchor} in Australia. A direct competitor offers a comparable product or service that a buyer would weigh as an alternative to ${intake.company_name} — NOT merely another company in the same broad sector.
+          content: `Analyze these search results to find DIRECT competitors of ${intake.company_name} — ${nicheAnchor} in Australia. A direct competitor offers a comparable product or service that a buyer would weigh as an alternative to ${intake.company_name} — NOT merely another company in the same broad sector.${companyFocus ? `\n${intake.company_name}'s own stated focus: ${companyFocus}` : ""}
 
-Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts", "strengths": ["2-3 short competitive strengths EVIDENT IN THE RESULT (each a few words) — do NOT guess; [] if none evident"]${deep ? `, "au_presence": "their Australian footprint if evident in the result (local office, AU customers/case studies, .com.au). If not evident, 'No Australian presence evident'. Do NOT guess."` : ""}}]${deep ? `\nStrict inclusion: ONLY direct product/service competitors. EXCLUDE service agencies, software-development shops, recruiters, employer-branding/talent platforms, ecosystem/community organisations, regulators, directories, news sites, and ${intake.company_name} itself. If a result is not a direct competitor, omit it — do not include it and then note that it is not a competitor.` : ""}
+Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts", "strengths": ["2-3 short competitive strengths EVIDENT IN THE RESULT (each a few words) — do NOT guess; [] if none evident"], "differentiation": "ONE short factual contrast (a few words) — how ${intake.company_name}'s offering differs from THIS competitor, based ONLY on ${intake.company_name}'s stated focus above and this competitor's facts in the result. Empty string if no clear factual contrast is evident — do NOT guess."${deep ? `, "au_presence": "their Australian footprint if evident in the result (local office, AU customers/case studies, .com.au). If not evident, 'No Australian presence evident'. Do NOT guess."` : ""}}]${deep ? `\nStrict inclusion: ONLY direct product/service competitors. EXCLUDE service agencies, software-development shops, recruiters, employer-branding/talent platforms, ecosystem/community organisations, regulators, directories, news sites, and ${intake.company_name} itself. If a result is not a direct competitor, omit it — do not include it and then note that it is not a competitor.` : ""}
 
 Search results:
 ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.title}\nContent: ${r.markdown}`).join("\n\n")}`,
@@ -2700,7 +2728,7 @@ async function generateReportInBackground(
             const scraped = await scrapeKnownCompetitors(
               firecrawlKey, lovableKey,
               names.map((n) => ({ name: n, website: "" })),
-              intake.company_name, firecrawlStats, firecrawlCache, !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH"),
+              intake.company_name, buildCompanyFocus(intake), firecrawlStats, firecrawlCache, !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH"),
             );
             const existingDomains = new Set(
               competitorResult.competitors.map((c: any) => domainOf(c?.url || "")).filter(Boolean),
@@ -3663,6 +3691,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         company_strengths: Array.isArray(companyProfile?.unique_selling_points)
           ? companyProfile.unique_selling_points.filter((s: unknown) => typeof s === "string" && s.trim()).slice(0, 4)
           : [],
+        // Customer's own site-stated positioning line (grounded) — the report_v2
+        // §03 "you" row "where you differ" cell. "" when the scrape found none.
+        company_positioning: typeof companyProfile?.positioning === "string"
+          ? companyProfile.positioning.trim()
+          : "",
         // Whether the FIRECRAWL_COMPETITOR_DEPTH flag was ON for this report
         // (multi-angle discovery + au_presence signal). Persisted so the flag
         // state is verifiable from telemetry — the count above alone can't

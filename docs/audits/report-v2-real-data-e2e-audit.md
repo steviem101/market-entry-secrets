@@ -144,11 +144,25 @@ runtime-interpolated `grid-cols-[…]`). Verified: 873 tests (+5 competitorCards
 tsc/build/lint clean; §03 rendered on a strengths-injected scale fixture — desktop 3-col + mobile
 stacked cards, 0 overflow. **"Where you differ" (comparative) + per-account §04 briefs stay Phase-B.**
 
+### Phase 3c — pipeline competitor "Where you differ" column — ✅ DONE (2026-07-19)
+Completes the §03 competitor table to its full four-column design on real data. `generate-report`
+now emits a grounded comparative `differentiation` per competitor (both extraction prompts) —
+*"how {customer}'s offering differs from THIS competitor, based ONLY on {customer}'s stated focus
+and this competitor's own site facts … empty if no clear contrast — do NOT guess"* — with the
+customer's focus supplied from intake (`buildCompanyFocus`: industry + who they sell to). The
+you-row cell comes from a new grounded `positioning` field on the company scrape →
+`metadata.company_positioning`. `buildCompetitorCards` carries `differentiation` → card `differs`
+(string-only, clipped 120); the adapter maps competitor `differs` and the you-row positioning, and
+logs "Where-differs column omitted" when a run has no contrast. Renderer already supported it (the
+3b per-column `hasDiffers` scaffold). Verified: 878 tests (+6), tsc/build/lint clean; §03 rendered
+on a differs-injected scale fixture — full 4-col desktop + mobile stacked, 0 overflow, you-row
+positioning in caps. No new LLM calls (rides existing extraction); no migration/RLS.
+
 ### Phase 3 — pipeline & data quality (Phase B proper, per-ticket)
 - `report_templates`/generate-report: emit contract-structured JSON for SWOT, compliance,
-  action plan, competitor verdict columns (you-row ✅/strengths ✅ shipped in 3b; differs, gaps,
-  positioning remain), first-customer briefs, key-question answer, clean metric captions. This
-  removes the prose parsers over time.
+  action plan, competitor verdict columns (you-row ✅/strengths ✅/differs ✅/positioning ✅ shipped
+  in 3b–3c; gaps + positioning-read boxes remain), first-customer briefs, key-question answer,
+  clean metric captions. This removes the prose parsers over time.
 - ~~Tier-RPC over-stripping of `first_customers`~~ — **CORRECTED (Phase-3 investigation):
   not a bug.** `get_tier_gated_report` gates `first_customers`/`lead_list` at `scale` and
   `mentor_recommendations` at `growth`; for a scale owner the strip condition

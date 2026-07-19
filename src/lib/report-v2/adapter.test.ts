@@ -201,6 +201,43 @@ test("Phase 3b: no strengths anywhere → empty strengths + logged column-omitte
   assert.ok(mismatches.some((m) => m.path === "competitors.rows" && /Strengths column omitted/.test(m.issue)));
 });
 
+test("Phase 3c: competitor `differs` maps through; company_positioning fills the you-row", () => {
+  const { report } = adaptPipelineReport(
+    {
+      company_name: "Floats",
+      sections: {
+        competitor_landscape: {
+          content: "x",
+          matches: [
+            { name: "Attio", link: "https://attio.com", subtitle: "CRM.", differs: "  Horizontal CRM — Floats is recruitment-specific  " },
+          ],
+        },
+      },
+      metadata: { company_positioning: "  Built for reverse marketing  " },
+    },
+    {}
+  );
+  assert.equal(report.competitors.rows[0].differs, "Horizontal CRM — Floats is recruitment-specific");
+  assert.equal(report.competitors.you.differs, "Built for reverse marketing");
+});
+
+test("Phase 3c: no contrast anywhere → empty differs + logged Where-differs-omitted signal", () => {
+  const { report, mismatches } = adaptPipelineReport(
+    {
+      sections: {
+        competitor_landscape: {
+          content: "x",
+          matches: [{ name: "Apollo.io", link: "https://apollo.io", subtitle: "Sales platform." }],
+        },
+      },
+    },
+    {}
+  );
+  assert.equal(report.competitors.rows[0].differs, "");
+  assert.equal(report.competitors.you.differs, "");
+  assert.ok(mismatches.some((m) => m.path === "competitors.rows" && /Where-differs column omitted/.test(m.issue)));
+});
+
 test("account status chips are mapped from pipeline tags; hero stat is not duplicated", () => {
   const { report } = adaptPipelineReport(
     {
