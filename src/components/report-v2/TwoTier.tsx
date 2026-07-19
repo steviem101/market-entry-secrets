@@ -89,8 +89,8 @@ export const MatchGrid = ({
     >
       {cards.map((card, i) => (
         <div key={i} className="rounded-xl border border-report-border px-[22px] py-[18px]">
-          <div className="flex justify-between gap-2">
-            <span className="min-w-0 break-words text-[13px] font-bold">
+          <div className="flex items-start justify-between gap-2">
+            <span className="min-w-0 grow break-words text-[13px] font-bold">
               {card.url ? (
                 <a href={card.url} target="_blank" rel="noopener" className="text-inherit">
                   {card.name} ↗
@@ -101,7 +101,9 @@ export const MatchGrid = ({
               <StarToggle name={card.name} url={card.url} section={section} />
             </span>
             {card.tag && (
-              <span className="shrink-0 whitespace-nowrap text-[8.5px] font-bold uppercase text-report-muted">{card.tag}</span>
+              // Long service tags wrap within a capped column instead of forcing
+              // the name to collapse to one-letter-per-line (real-data audit).
+              <span className="max-w-[42%] shrink-0 break-words text-right text-[8.5px] font-bold uppercase leading-[1.35] text-report-muted">{card.tag}</span>
             )}
           </div>
           <div className="mt-1.5 break-words text-[11.5px] leading-[1.6] text-report-muted">{card.description}</div>

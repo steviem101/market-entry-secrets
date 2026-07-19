@@ -153,6 +153,8 @@ export function toParagraphs(
   }
   let hadHeadings = false;
   let hadLists = false;
+  let hadRules = false;
+  let hadQuotes = false;
   let droppedCitations = false;
   // Isolate heading lines into their own block so a heading followed by a
   // single newline does not fuse into the next sentence's paragraph.
@@ -164,6 +166,21 @@ export function toParagraphs(
         .split("\n")
         .map((line) => {
           let text = line.trim();
+          // Drop horizontal rules and unwrap external markdown links to their
+          // label (the contract link grammar is platform-relative only, so a
+          // [label](https://…) can't be a chip-link — render the label).
+          if (/^-{3,}$/.test(text)) {
+            hadRules = true;
+            return "";
+          }
+          text = text
+            .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+            .replace(/\[([^\]]+)\]\((?:https?:|mailto:)[^)]*\)/gi, "$1");
+          // A blockquote line (`> "quote"`) becomes plain text.
+          if (/^>\s?/.test(text)) {
+            hadQuotes = true;
+            text = text.replace(/^>\s?/, "");
+          }
           const heading = text.match(HEADING_RE);
           if (heading) {
             hadHeadings = true;
@@ -196,6 +213,8 @@ export function toParagraphs(
     .filter(Boolean);
   if (hadHeadings) log(path, "markdown headings flattened to bold leads");
   if (hadLists) log(path, "list markers stripped (grammar has no lists)");
+  if (hadRules) log(path, "horizontal rules removed");
+  if (hadQuotes) log(path, "blockquote markers stripped to plain text");
   if (droppedCitations) log(path, "citation markers with no matching source dropped (no chip minted)");
   return paragraphs;
 }
@@ -249,20 +268,67 @@ const kindForPath = (path: string, fallback: EntityKind): EntityKind =>
   KIND_BY_PREFIX.find(([prefix]) => path.startsWith(prefix))?.[1] ?? fallback;
 
 const matchName = (m: PipelineMatch): string => m.name || m.title || "";
-const matchDescription = (m: PipelineMatch): string =>
-  (m.enriched_description || m.description || m.subtitle || "").trim();
 
-const trimWhy = (text: string): string => {
-  if (text.length <= 180) return text;
-  const cut = text.slice(0, 180);
-  // Prefer a sentence end when it lands reasonably far in; otherwise the last
-  // word boundary; otherwise the hard 180-char cut (never slice(0,-1), which
-  // would silently drop a character mid-word when no boundary exists).
+/**
+ * Strip the markdown/HTML artifacts a scraped or LLM string can carry down to
+ * plain prose suitable for a card/caption. Images dropped, links unwrapped to
+ * their label, headings/blockquote/list markers and `---` rules removed, bold
+ * unwrapped, whitespace collapsed. (Paragraph fields that keep the {bold|link|
+ * chip} grammar go through toParagraphs instead — this is for plain text.)
+ */
+const stripInlineMarkdown = (s: string): string =>
+  s
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/^\s*#{1,6}\s+/gm, "")
+    .replace(/^\s*>\s?/gm, "")
+    .replace(/^\s*[-*•]\s+/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/(^|\n)\s*-{3,}\s*(?=\n|$)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+
+// A scrape that returned an error/interstitial page instead of real copy.
+const ERROR_PAGE_RE =
+  /\b40[34]\b|forbidden|page not found|access to this resource|access denied|is not available|enable javascript|are you a robot/i;
+
+// Curation notation that must never reach customer copy (directory-internal).
+const stripInternalNotes = (s: string): string =>
+  s
+    .replace(/\s*\(ID \d+\)\.?/g, "")
+    .replace(/\bThis entry represents an? [^.]*\.\s*/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+/** Sentence/word-boundary cap that never slices mid-word or mid-character. */
+const capText = (text: string, cap = 180): string => {
+  if (text.length <= cap) return text;
+  const cut = text.slice(0, cap);
   const sentenceEnd = cut.lastIndexOf(". ");
   const lastSpace = cut.lastIndexOf(" ");
-  const boundary = sentenceEnd > 40 ? sentenceEnd + 1 : lastSpace;
+  const boundary = sentenceEnd > cap * 0.4 ? sentenceEnd + 1 : lastSpace;
   return `${(boundary > 0 ? cut.slice(0, boundary) : cut).trimEnd()}…`;
 };
+const trimWhy = (text: string): string => capText(text, 180);
+
+/**
+ * Customer-facing card copy. NEVER uses `enriched_description` — that field is
+ * the raw website scrape (nav menus, `## headings`, image markdown, and even
+ * "403 Forbidden" pages) and was the source of the bulk of the real-data
+ * defects. Uses the curated `description`/`subtitle`, strips markdown + curation
+ * notes, drops obvious error-page scrapes, and caps to a card-sized blurb.
+ */
+const matchDescription = (m: PipelineMatch, cap = 260): string => {
+  const raw = (m.description || m.subtitle || "").trim();
+  if (!raw) return "";
+  const plain = stripInternalNotes(stripInlineMarkdown(raw));
+  if (!plain || (ERROR_PAGE_RE.test(plain) && plain.length < 160)) return "";
+  return capText(plain, cap);
+};
+
+// A directory tag that is a placeholder, not a real label — never render it.
+const cleanTag = (tag: string | undefined): string =>
+  tag && !/^n\/?a\b/i.test(tag.trim()) ? tag : "";
 
 function toMatchCard(m: PipelineMatch, kind: EntityKind, path: string, log: Log): MatchCard {
   const url = sanitizeContractPath(m.link, `${path}.link`, log);
@@ -270,7 +336,7 @@ function toMatchCard(m: PipelineMatch, kind: EntityKind, path: string, log: Log)
     name: matchName(m),
     url,
     kind: url ? kindForPath(url, kind) : kind,
-    tag: m.tags?.[0] ?? "",
+    tag: cleanTag(m.tags?.[0]),
     description: matchDescription(m),
     logoUrl: typeof m.logo_url === "string" && m.logo_url ? m.logo_url : undefined,
   };
@@ -313,11 +379,74 @@ export function passesRelevanceGate(m: PipelineMatch, path: string, log: Log): b
   return true;
 }
 
-const metricToTile = (m: KeyMetric): StatTile => ({
-  value: m.value ?? "",
-  chip: (m.estimated ? "est" : "sourced") as Chip,
-  caption: [m.label, m.context].filter(Boolean).join(" — "),
-});
+// Turn a slug-style token run ("Australia-CRM-software") back into words.
+const deSlug = (s: string): string => s.replace(/([A-Za-z0-9])-([A-Za-z])/g, "$1 $2");
+
+const metricToTile = (m: KeyMetric): StatTile => {
+  const clean = (s: string | undefined) =>
+    stripInlineMarkdown((s ?? "").replace(CITATION_MARKER_RE, "")).trim();
+  const context = clean(m.context);
+  const label = deSlug(clean(m.label));
+  // The `context` reads as a natural caption ("2024 estimate for national CRM
+  // software market"); the `label` is an internal slug, used only as fallback.
+  return {
+    value: m.value ?? "",
+    chip: (m.estimated ? "est" : "sourced") as Chip,
+    caption: context || label,
+  };
+};
+
+type SwotQuad = Report["swot"];
+
+/**
+ * Parse the pipeline's heading+bullet SWOT prose into the four quadrants.
+ * Shape: `### **Strengths**` (or `## Strengths`) headings, each followed by
+ * `*   **Lead:** body [n]` bullets → SwotItem{ lead, text(Paragraph, chips kept) }.
+ * Returns empty quadrants when the prose isn't in parseable form (renderer then
+ * shows nothing — never an empty quad).
+ */
+export function parseSwot(content: unknown, citationCount: number, log: Log): SwotQuad {
+  const empty: SwotQuad = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+  if (typeof content !== "string" || !content.trim()) {
+    log("swot", "swot_analysis section missing/empty — quadrants empty");
+    return empty;
+  }
+  const keyOf = (word: string): keyof SwotQuad | null => {
+    const w = word.toLowerCase();
+    if (w.startsWith("strength")) return "strengths";
+    if (w.startsWith("weakness")) return "weaknesses";
+    if (w.startsWith("opportunit")) return "opportunities";
+    if (w.startsWith("threat")) return "threats";
+    return null;
+  };
+  const out: SwotQuad = { strengths: [], weaknesses: [], opportunities: [], threats: [] };
+  let current: keyof SwotQuad | null = null;
+  for (const raw of content.split("\n")) {
+    const line = raw.trim();
+    if (!line) continue;
+    const heading = line.match(/^#{1,6}\s+\**\s*([A-Za-z]+)/);
+    if (heading) {
+      current = keyOf(heading[1]);
+      continue;
+    }
+    const bullet = line.match(/^[-*•]\s+(.*)$/);
+    if (bullet && current) {
+      const body = bullet[1];
+      const leadMatch = body.match(/^\*\*([^*]+?):?\*\*\s*:?\s*(.*)$/);
+      const lead = leadMatch ? leadMatch[1].trim() : "";
+      const rest = (leadMatch ? leadMatch[2] : body).trim();
+      const text = toParagraphs(rest, `swot.${current}`, () => {}, citationCount)[0] ?? stripInlineMarkdown(rest);
+      if (text) out[current].push({ lead, text });
+    }
+  }
+  const total = out.strengths.length + out.weaknesses.length + out.opportunities.length + out.threats.length;
+  if (total === 0) {
+    log("swot", "SWOT prose not in parseable heading+bullet form — quadrants empty");
+    return empty;
+  }
+  log("swot", `parsed ${total} SWOT items from prose (S${out.strengths.length}/W${out.weaknesses.length}/O${out.opportunities.length}/T${out.threats.length})`);
+  return out;
+}
 
 export function adaptPipelineReport(
   json: PipelineReportJson,
@@ -342,22 +471,39 @@ export function adaptPipelineReport(
   if (execRaw !== (sections.executive_summary?.content ?? "")) {
     log("exec.narrative", "stripped pipeline lead-in trailer for key-question picks");
   }
-  const narrative = toParagraphs(execRaw, "exec.narrative", log, citations.length);
-  // Cover headline/scope come from the first SUBSTANTIVE paragraph — skipping
-  // heading-only leads ("**Executive Summary**") and stripping chips/bold.
-  let headline = "";
-  let firstPara = "";
-  for (const para of narrative) {
-    if (/^\*\*[^*]+\*\*$/.test(para.trim())) continue; // heading-only lead
-    const plain = para.replace(/\s*\{chip:[a-z]+\}/g, "").replace(/\*\*/g, "").trim();
-    if (plain) {
-      headline = firstSentence(plain);
-      firstPara = para;
-      break;
-    }
+  // Split the "Your Key Question — Answered" subsection into its own box so it
+  // renders once (styled) instead of leaking a heading + blockquote into the
+  // narrative prose.
+  const kqParts = execRaw.split(/\n#{2,6}\s+Your Key Question[^\n]*\n/i);
+  const execBody = kqParts[0];
+  let keyQuestionAnswer = "";
+  if (kqParts.length > 1) {
+    // The block leads with the verbatim question as a blockquote — drop it (the
+    // box shows the question already) and keep the answer prose.
+    const answerRaw = kqParts.slice(1).join("\n").replace(/^\s*(?:>[^\n]*\n?)+/, "");
+    keyQuestionAnswer = toParagraphs(answerRaw, "exec.keyQuestionAnswer", log, citations.length).join(" ");
+    if (keyQuestionAnswer) log("exec.keyQuestionAnswer", "extracted from executive_summary key-question subsection");
   }
+
+  const narrative = toParagraphs(execBody, "exec.narrative", log, citations.length);
+  // Drop heading-only leads ("**Executive Summary**") — the §01 card is already
+  // labelled, and the cover carries the thesis.
+  const bodyParas = narrative.filter((p) => !/^\*\*[^*]+\*\*$/.test(p.trim()));
+  // Cover = paragraph 1 (headline = its first sentence, plain; scope = the rest
+  // of that paragraph). §01 narrative then starts at paragraph 2, so the opening
+  // thesis is never repeated verbatim between the cover and the section.
+  const firstPara = bodyParas[0] ?? "";
+  const firstPlain = firstPara.replace(/\s*\{chip:[a-z]+\}/g, "").replace(/\*\*/g, "").trim();
+  const headline = firstSentence(firstPlain);
+  const execNarrative = bodyParas.slice(1);
+  let scope = firstPara
+    .split(/(?<=[.!?])\s+/)
+    .slice(1)
+    .join(" ")
+    .trim();
+  if (!scope) scope = execNarrative.shift() ?? ""; // single-sentence ¶1 → borrow ¶2
   if (!headline) log("cover.headline", "no executive summary to derive a headline from");
-  log("cover", "cover derived from executive summary (pipeline has no cover fields until Phase B)");
+  log("cover", "cover derived from executive summary ¶1 (pipeline has no cover fields until Phase B)");
 
   const highlights: EntityRef[] = (sections.executive_summary?.matches ?? []).slice(0, 3).map((m, i) => {
     const url = sanitizeContractPath(m.link, `exec.highlights[${i}].link`, log);
@@ -398,7 +544,7 @@ export function adaptPipelineReport(
     name: matchName(m),
     url: sanitizeContractPath(m.link, `competitors.rows[${i}].link`, log),
     kind: "competitor" as const,
-    positionTag: m.tags?.[0] ?? "",
+    positionTag: cleanTag(m.tags?.[0]),
     position: matchDescription(m),
     strengths: "",
     differs: "",
@@ -406,6 +552,11 @@ export function adaptPipelineReport(
   if (competitorRows.length > 0) {
     log("competitors.rows", "strengths/differs verdict columns unavailable until Phase B");
   }
+
+  // §04 intro: the first-customers strategy prose. Named target briefs
+  // (briefed/icpGuidance) still await Phase B, but rendering this prose keeps
+  // the section from showing an empty card.
+  const accountsIntro = toParagraphs(sections.first_customers?.content, "accounts.intro", log, citations.length).join(" ");
 
   const briefed: AccountBrief[] = (sections.first_customers?.matches ?? [])
     .filter((m, i) => passesRelevanceGate(m, `first_customers.matches[${i}]`, log))
@@ -445,19 +596,12 @@ export function adaptPipelineReport(
   }
 
   // ---- prose-only sections ------------------------------------------------
-  const swotParas = toParagraphs(sections.swot_analysis?.content, "swot", log, citations.length);
-  log(
-    "swot",
-    swotParas.length > 0
-      ? "pipeline SWOT is prose — quadrant items unavailable until Phase B; quadrants render empty"
-      : "swot_analysis section missing — quadrants render empty"
-  );
+  const swot = parseSwot(sections.swot_analysis?.content, citations.length, log);
   const actionParas = toParagraphs(sections.action_plan?.content, "actionPlan", log, citations.length);
-  const phases = actionParas.length
-    ? [{ period: "", title: "", body: actionParas.join(" ") }]
-    : [];
-  log("actionPlan.phases", `derived ${phases.length}/3 phases from prose (structured phases land in Phase B)`);
-  while (phases.length < 3) phases.push({ period: "", title: "", body: "" });
+  // A single flat phase carrying the plan prose (structured 3-phase split is
+  // Phase B). Only pad to the 3-column layout when there is real content.
+  const phases = actionParas.length ? [{ period: "", title: "", body: actionParas.join(" ") }] : [];
+  log("actionPlan.phases", `derived ${phases.length ? 1 : 0} flat phase from prose (structured phases land in Phase B)`);
 
   const complianceParas = toParagraphs(sections.setup_compliance?.content, "compliance", log, citations.length);
   log("compliance", "exposure table / stats / checklist unavailable until Phase B — prose intro only");
@@ -490,10 +634,10 @@ export function adaptPipelineReport(
       keyQuestion: context.keyQuestion ?? "",
       sourceCount: citations.length,
     },
-    cover: { kicker: "MARKET ENTRY REPORT", headline, scope: firstPara },
+    cover: { kicker: "MARKET ENTRY REPORT", headline, scope },
     exec: {
-      narrative,
-      keyQuestionAnswer: "",
+      narrative: execNarrative,
+      keyQuestionAnswer,
       highlights,
       // The pipeline has no distinct "most material number" source separate
       // from the metric tiles; reusing key_metrics[0] here duplicated tile 1,
@@ -502,7 +646,7 @@ export function adaptPipelineReport(
       sequence: { label: "", rows: [], caveat: "" },
     },
     metrics: { tiles: keyMetrics.slice(0, 6).map(metricToTile) },
-    swot: { strengths: [], weaknesses: [], opportunities: [], threats: [] },
+    swot,
     competitors: {
       intro: "",
       you: { name: customer, url: "", kind: "competitor", positionTag: "", position: "", strengths: "", differs: "" },
@@ -511,7 +655,7 @@ export function adaptPipelineReport(
       positioningRead: "",
       scanHookCopy: "Want this table deeper? Request a competitor scan.",
     },
-    accounts: { intro: "", briefed, worthKnowing: "" },
+    accounts: { intro: accountsIntro, briefed, worthKnowing: "" },
     providers: {
       intro: "",
       ourRead: toRanked(providerCards, (i) => (matches.service_providers ?? [])[i]?.subtitle ?? "", "providers.ourRead", log),
@@ -529,7 +673,7 @@ export function adaptPipelineReport(
     investors: {
       intro: "",
       approachOrder: [],
-      all: investorCards.map((card) => ({ ...card, stageTag: card.tag })),
+      all: investorCards.map((card) => ({ ...card, stageTag: cleanTag(card.tag) })),
     },
     events: {
       cards: (matches.events ?? []).map((m, i) => ({
@@ -541,7 +685,9 @@ export function adaptPipelineReport(
       })),
     },
     actionPlan: { intro: "", phases },
-    compliance: { intro: complianceParas[0] ?? "", table: [], stats: [], checklist: [] },
+    // Full prose in the intro (structured table/stats/checklist parsing is
+    // Phase B); the renderer suppresses the empty structured blocks.
+    compliance: { intro: complianceParas.join(" "), table: [], stats: [], checklist: [] },
     guides: { intro: "", cards: guides },
     leads: leadDb
       ? {
