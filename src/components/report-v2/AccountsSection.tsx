@@ -34,9 +34,15 @@ const AccountCard = ({ account }: { account: AccountBrief }) => (
         </span>
       )}
     </div>
-    <div className="mb-3 mt-1 text-[11px] font-medium uppercase text-report-caption">{account.meta}</div>
-    <div className="text-[13.5px] leading-[1.7] text-report-ink-soft">
-      <b>Signals:</b> <Rich as="span" text={account.signals} />{" "}
+    {account.meta && (
+      <div className="mb-3 mt-1 text-[11px] font-medium uppercase text-report-caption">{account.meta}</div>
+    )}
+    <div className="mt-2 text-[13.5px] leading-[1.7] text-report-ink-soft">
+      {account.signals && (
+        <>
+          <b>Signals:</b> <Rich as="span" text={account.signals} />{" "}
+        </>
+      )}
       {account.stack && (
         <>
           <b>Stack:</b> <Rich as="span" text={account.stack} />{" "}

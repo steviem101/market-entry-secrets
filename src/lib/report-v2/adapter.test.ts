@@ -5,6 +5,8 @@ import {
   domainTier,
   mapPlan,
   matchHasSectorRelevance,
+  parseAccountBriefs,
+  accountNamesMatch,
   parseCompetitorProse,
   parseIcpGuidance,
   sanitizeContractPath,
@@ -611,4 +613,104 @@ test("parseIcpGuidance: wired into §04 accounts.icpGuidance", () => {
   );
   assert.deepEqual(report.accounts.icpGuidance?.targetRoles, ["Head of Ops", "COO"]);
   assert.equal(report.accounts.icpGuidance?.angle, "Lead with labour-cost savings.");
+});
+
+test("D1 parseAccountBriefs: parses the real CreditLogic-shaped block (pre-tightening label variants)", () => {
+  const content = [
+    "This section identifies entry points within target accounts.",
+    "",
+    "### [Commonwealth Bank (Commbank)](https://www.commbank.com.au)",
+    "",
+    "**Who they are:** Australia's largest retail bank and a leader in digital transformation.",
+    "",
+    "**Signals:** Record cash profit of **A$10.25 billion**; 70% of home loan applications automated.",
+    "",
+    "**Why they fit CreditLogic:** Their high application volume aligns with your automated processing.",
+    "",
+    "**Who to approach:** Head of Lending, Chief Digital Officer, Head of Mortgage Innovation.",
+    "",
+    "### [Westpac](https://www.westpac.com.au)",
+    "",
+    "**Who they are:** A Big Four bank serving 13 million customers.",
+    "",
+    "**Signals:** Pledged nearly $60 million in refunds.",
+    "",
+    "**Who to approach:** Head of Remediation, Chief Risk Officer.",
+    "",
+    "Securing these customers requires local investor backing.",
+  ].join("\n");
+  const briefs = parseAccountBriefs(content, 0, () => {});
+  assert.equal(briefs.length, 2);
+  assert.equal(briefs[0].name, "Commonwealth Bank (Commbank)");
+  assert.equal(briefs[0].url, "https://www.commbank.com.au");
+  assert.match(briefs[0].signals, /A\$10\.25 billion/);
+  assert.match(briefs[0].fit, /automated processing/); // "Why they fit CreditLogic:" variant
+  assert.deepEqual(briefs[0].approach, ["Head of Lending", "Chief Digital Officer", "Head of Mortgage Innovation"]);
+  // the trailing paragraph after Westpac's last label is NOT swallowed into a field
+  assert.doesNotMatch(briefs[1].approach.join(" "), /Securing these customers/);
+  assert.equal(briefs[1].approach.length, 2);
+});
+
+test("D1 accountNamesMatch: card short-name matches prose long-name; unrelated names don't", () => {
+  assert.equal(accountNamesMatch("Commbank", "Commonwealth Bank (Commbank)"), true);
+  assert.equal(accountNamesMatch("Macquarie Group", "Macquarie Group"), true);
+  assert.equal(accountNamesMatch("Westpac", "Macquarie Group"), false);
+});
+
+test("D1 briefed merge: prose brief fills signals/fit/approach/angle, meta=who, url adopted; no duplication", () => {
+  const { report } = adaptPipelineReport(
+    {
+      company_name: "CreditLogic",
+      sections: {
+        first_customers: {
+          content: [
+            "Intro paragraph.",
+            "",
+            "### [Commonwealth Bank (Commbank)](https://www.commbank.com.au)",
+            "**Who they are:** Australia's largest retail bank.",
+            "**Signals:** Record profit; hiring AI and data roles.",
+            "**Stack:** OpenAI partnership evident.",
+            "**Why they fit:** High application volume.",
+            "**Who to approach:** Head of Lending, Chief Digital Officer.",
+            "**Opening angle:** Lead with automated hardship processing.",
+          ].join("\n"),
+          matches: [
+            { name: "Commbank", tags: ["Tech identified"], subtitle: "Commonwealth Bank (CommBank) is Australia's leading provider of integrated financial services" },
+          ],
+        },
+      },
+    },
+    {}
+  );
+  const a = report.accounts.briefed[0];
+  assert.equal(a.signals, "Record profit; hiring AI and data roles.");
+  assert.equal(a.stack, "OpenAI partnership evident.");
+  assert.equal(a.fit, "High application volume.");
+  assert.deepEqual(a.approach, ["Head of Lending", "Chief Digital Officer"]);
+  assert.equal(a.angle, "Lead with automated hardship processing.");
+  assert.equal(a.url, "https://www.commbank.com.au");
+  assert.equal(a.meta, "AUSTRALIA'S LARGEST RETAIL BANK.");
+  assert.deepEqual(a.statusChips, ["tech"]);
+});
+
+test("D1 degrade: no prose briefs → signals=description once, duplicated meta suppressed", () => {
+  const { report, mismatches } = adaptPipelineReport(
+    {
+      sections: {
+        first_customers: {
+          content: "Just a strategy paragraph, no per-account blocks.",
+          matches: [
+            { name: "Westpac", subtitle: "One of Australia's Big Four banks, providing a comprehensive range of consumer services" },
+          ],
+        },
+      },
+    },
+    {}
+  );
+  const a = report.accounts.briefed[0];
+  // signals carries the description; the meta line (same text) is suppressed, not printed twice
+  assert.match(a.signals, /Big Four/);
+  assert.equal(a.meta, "");
+  assert.equal(a.stack, "");
+  assert.ok(mismatches.some((m) => m.issue.includes("no structured briefs in prose")));
 });

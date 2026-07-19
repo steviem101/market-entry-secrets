@@ -167,7 +167,12 @@ positioning in caps. No new LLM calls (rides existing extraction); no migration/
   (`buildIcpGuidanceNote`: Target Roles / Sector Focus / Opening Angle) when no accounts
   are named — 24/25 live reports free-formed inconsistent prose the renderer couldn't use —
   and the adapter (`parseIcpGuidance`) surfaces the ready-but-dark §04 ICP card from it.
-  Per-account structured briefs (named-target case) remain. This removes the prose parsers over time.
+  **Per-account structured briefs (named-target case) ✅ (D1, CreditLogic audit)**: the section's
+  per-account prose (### heading + bold labels) is now a parse contract — `buildBuyerBriefsNote`
+  mandates exact labels (Who they are / Signals / Stack / Why they fit / Who to approach /
+  Opening angle) and `parseAccountBriefs` merges them onto the buyer cards by loose name match
+  (pre-tightening label variants also parse), fixing the hollow twice-duplicated §04 cards and
+  adopting the heading's site link. This removes the prose parsers over time.
 - ~~Tier-RPC over-stripping of `first_customers`~~ — **CORRECTED (Phase-3 investigation):
   not a bug.** `get_tier_gated_report` gates `first_customers`/`lead_list` at `scale` and
   `mentor_recommendations` at `growth`; for a scale owner the strip condition
