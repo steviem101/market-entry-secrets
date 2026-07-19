@@ -192,3 +192,44 @@ existing prose. Phase 3 fixes generation so the adapter's derivations become pas
 **Regression harness:** `dev-fixtures/real-report.json` + `dev-fixtures/audit.ts` — the
 defect scan must report 0 for every Phase-1 class before that phase ships. The three
 hand-authored fixtures remain the layout/degradation baseline.
+
+---
+
+## Backlog — post-CreditLogic smoke test (2026-07-19)
+
+Shipped this session: renderer+migration activation, Phase 1 (48→0), Phase 2, Phase 3a,
+3b/3c competitor strengths+differs, t20 honest coverage captions, §03 gaps/positioning,
+§04 ICP card (#529), design rebalance (#530), §04 structured account briefs / D1 (#531).
+`dev-fixtures/creditlogic-scale.json` is the current real-data regression fixture (scale view,
+named accounts CBA/Westpac/Macquarie).
+
+**Blocked on owner (not code):** Anthropic API monthly cap hit (resets 2026-08-01) — CI
+golden-eval judge + prod claims-verifier (blocking mode) degraded until the limit is raised in
+the Anthropic console / a fresh key rotated into the GH Actions + Supabase edge secret. A
+separate smaller-capped CI key would stop eval churn starving prod.
+
+**Code backlog (adapter/renderer unless noted):**
+- **Logos + headshots** (IN PROGRESS): (1) company logos — derive logo.dev URLs from each
+  company card's `website` in the adapter (`getLogoUrl`), render `IdentitySlot` on
+  MatchGrid/ranked/account/competitor cards (today only §07 mentors + gov/hubs slot). Works
+  retroactively, no pipeline change. (2) mentor headshots — 124/132 active mentors have
+  `avatar_url` in own Supabase storage; add `avatar_url` to the community_members select in
+  generate-report, **guarded by `is_anonymous`** (5 anon mentors — MES-208, real photos must
+  never ship). New reports only.
+- **D3** mentor why-lines: cards show generic directory bios; tailored per-mentor rationales
+  sit in the §07 prose — reuse the D1 parse-block pattern.
+- **D4 cosmetics:** terse you-row strengths (prompt: phrases not sentences), sentence-boundary
+  clip for competitor `position` mid-word truncation, archetype from `country_of_origin` (Irish
+  entrant currently defaults to `domestic_scaleup`), metric-label de-slug
+  ("Australia‑Fintech‑B2B" → "Australia B2B Fintech"). Plus a 1-char pre-existing print-CSS fix:
+  `src/index.css:513` `.border-t-\\[3px\\]` is double-escaped → never matches (build warns).
+- **D2 competitor discovery (diagnose first):** CreditLogic got n=1 competitor in deep mode in
+  a market with obvious rivals (Rich Data Co, Provenir, Experian AU). Read run telemetry
+  (`firecrawl_competitors_found`, discovery queries, strict-inclusion rejects) across recent
+  runs before any code.
+- **Phase-B structural (per-ticket):** pipeline sources for exec heroStat/sequence + close
+  body; structured compliance table/stats; cover fields; multiple lead datasets.
+
+**Strategic (owner calls, mostly not code):** directory coverage in target sectors (0 ecommerce
+mentors — the real quality ceiling), real non-fintech users, matcher precision on
+broad-umbrella over-matching (heavily-tuned core — needs a measurement harness first).

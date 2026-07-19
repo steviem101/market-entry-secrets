@@ -1,6 +1,7 @@
 import type { MatchCard, Paragraph, RankedItem } from "@/types/report";
 import Rich from "./Rich";
 import StarToggle from "./StarToggle";
+import IdentitySlot from "./IdentitySlot";
 
 /** Ranked "our read" ruled rows: 2px ink top rule, sky 01, muted 02+. */
 export const RankedRows = ({ items, section }: { items: RankedItem[]; section: string }) => (
@@ -16,6 +17,7 @@ export const RankedRows = ({ items, section }: { items: RankedItem[]; section: s
           {String(item.rank).padStart(2, "0")}
         </span>
         <span className="min-w-0 break-words">
+          <IdentitySlot name={item.name} kind="company" src={item.logoUrl} />
           {item.url ? (
             <a href={item.url} target="_blank" rel="noopener" className="text-inherit">
               <b className="text-[14px] font-bold">{item.name} ↗</b>
@@ -91,6 +93,7 @@ export const MatchGrid = ({
         <div key={i} className="rounded-xl border border-report-border px-[22px] py-[18px]">
           <div className="flex items-start justify-between gap-2">
             <span className="min-w-0 grow break-words text-[14px] font-bold">
+              <IdentitySlot name={card.name} kind="company" src={card.logoUrl} />
               {card.url ? (
                 <a href={card.url} target="_blank" rel="noopener" className="text-inherit">
                   {card.name} ↗

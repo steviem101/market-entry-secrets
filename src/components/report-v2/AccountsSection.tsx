@@ -4,6 +4,7 @@ import SectionCard from "./SectionCard";
 import RequestHook from "./RequestHook";
 import StarToggle from "./StarToggle";
 import Rich from "./Rich";
+import IdentitySlot from "./IdentitySlot";
 import { useReportInteractions } from "./ReportInteractionsProvider";
 
 const CHIP_LABELS: Record<AccountBrief["statusChips"][number], string> = {
@@ -15,6 +16,7 @@ const AccountCard = ({ account }: { account: AccountBrief }) => (
   <div className="rounded-xl border border-report-border px-[30px] py-7">
     <div className="flex items-baseline justify-between gap-2.5">
       <span className="text-[15.5px] font-bold">
+        <IdentitySlot name={account.name} kind="company" src={account.logoUrl} />
         {account.url ? (
           <a href={account.url} target="_blank" rel="noopener" className="text-inherit">
             <b>{account.name} ↗</b>
