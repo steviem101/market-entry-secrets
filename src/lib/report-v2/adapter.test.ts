@@ -265,6 +265,58 @@ test("exec key-question subsection is split into its own box", () => {
   assert.ok(!report.exec.narrative.some((p) => /Your Key Question|find grants and funding|^-{3,}$/.test(p)));
 });
 
+test("action plan prose is parsed into structured phases with grouped sub-blocks", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        action_plan: {
+          content:
+            "## Phased Action Plan\n\n### Phase 1 — Foundation (Months 1–2): Legal & Funding\n\n**Legal Entity**\n- Choose a Pty Ltd [1]\n- Appoint a resident director\n\n**Tax & GST**\n- Register for GST at $75,000\n\n### Phase 2 — Establish (Months 2–4): Team\n\n**Hiring**\n- Benchmark salaries",
+        },
+      },
+      metadata: { perplexity_citations: ["https://ato.gov.au/x"] },
+    },
+    {}
+  );
+  assert.equal(report.actionPlan.phases.length, 2);
+  assert.equal(report.actionPlan.phases[0].period, "Months 1–2");
+  assert.equal(report.actionPlan.phases[0].title, "Foundation");
+  assert.equal(report.actionPlan.phases[0].groups?.length, 2);
+  assert.equal(report.actionPlan.phases[0].groups?.[0].title, "Legal Entity");
+  assert.match(report.actionPlan.phases[0].groups?.[0].body ?? "", /Choose a Pty Ltd \{chip:sourced\} · Appoint a resident director/);
+  // §14 arriveWith derives from the action-plan group titles.
+  assert.deepEqual(report.close.arriveWith, ["Legal Entity", "Tax & GST", "Hiring"]);
+});
+
+test("action plan with no phase headings falls back to one flat phase", () => {
+  const { report } = adaptPipelineReport(
+    { sections: { action_plan: { content: "Do the first thing.\n\nThen the second thing." } } },
+    {}
+  );
+  assert.equal(report.actionPlan.phases.length, 1);
+  assert.equal(report.actionPlan.phases[0].groups?.length ?? 0, 0);
+  assert.match(report.actionPlan.phases[0].body ?? "", /Do the first thing/);
+});
+
+test("compliance prose is parsed into a lead intro + checklist", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        setup_compliance: {
+          content:
+            "This guide outlines the requirements.\n\n### Company Structure\n\n- **Resident Director:** Appoint one Australian resident.\n- **ABN:** Register with **ASIC** first.\n\n### Tax\n\n- **GST:** Mandatory at **A$75,000**.",
+        },
+      },
+    },
+    {}
+  );
+  assert.match(report.compliance.intro, /This guide outlines the requirements/);
+  assert.equal(report.compliance.checklist.length, 3);
+  assert.equal(report.compliance.checklist[0].lead, "Resident Director");
+  assert.match(report.compliance.checklist[1].text, /\*\*ASIC\*\*/); // grammar preserved for Rich
+  assert.equal(report.compliance.table.length, 0); // exposure table stays Phase-B
+});
+
 test("adaptPipelineReport survives an empty report_json", () => {
   const { report, mismatches } = adaptPipelineReport({}, {});
   assert.equal(report.meta.customer, "");

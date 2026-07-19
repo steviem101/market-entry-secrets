@@ -448,6 +448,95 @@ export function parseSwot(content: unknown, citationCount: number, log: Log): Sw
   return out;
 }
 
+type Phase = Report["actionPlan"]["phases"][number];
+
+/**
+ * Parse the pipeline's phased action-plan prose into structured phases with
+ * grouped sub-blocks. Shape: `### Phase N — Title (Months X–Y): subtitle`
+ * headings, each with `**Sub-block Title**` groups of `- bullet` lines.
+ * Falls back to a single flat phase carrying the whole prose when the
+ * heading/group structure isn't present.
+ */
+export function parseActionPlan(content: unknown, citationCount: number, log: Log): Phase[] {
+  if (typeof content !== "string" || !content.trim()) return [];
+  const blocks = content.split(/\n(?=#{1,6}\s+Phase\b)/i);
+  const phases: Phase[] = [];
+  for (const block of blocks) {
+    const head = block.match(/^#{1,6}\s+(Phase\b[^\n]*)/i)?.[1];
+    if (!head) continue;
+    const period = (head.match(/\(([^)]*?months?[^)]*?)\)/i)?.[1] ?? "").trim();
+    const title = (head.match(/Phase\s+\S+\s*[—–-]\s*([^(:]+)/i)?.[1] ?? head.replace(/\s*\(.*$/, "")).trim();
+    const groups: { title: string; body: string }[] = [];
+    let cur: { title: string; bullets: string[] } | null = null;
+    for (const raw of block.split("\n")) {
+      const line = raw.trim();
+      if (!line || /^#{1,6}\s+/.test(line)) continue;
+      const boldOnly = line.match(/^\*\*([^*]+?):?\*\*:?\s*$/);
+      if (boldOnly) {
+        cur = { title: boldOnly[1].trim(), bullets: [] };
+        continue;
+      }
+      const bullet = line.match(/^[-*•]\s+(.*)$/);
+      if (bullet) {
+        if (!cur) cur = { title: "", bullets: [] };
+        cur.bullets.push(bullet[1]);
+        // Commit the group when its first bullet arrives so a title with no
+        // bullets is dropped rather than rendered empty.
+        if (cur.bullets.length === 1) groups.push({ title: cur.title, body: "" });
+      }
+      if (cur && groups.length && groups[groups.length - 1].title === cur.title) {
+        groups[groups.length - 1].body = cur.bullets
+          .map((b) => toParagraphs(b, "actionPlan.group", () => {}, citationCount)[0] ?? "")
+          .filter(Boolean)
+          .join(" · ");
+      }
+    }
+    const cleaned = groups.filter((g) => g.body || g.title);
+    if (period || title || cleaned.length) phases.push({ period, title, groups: cleaned });
+  }
+  if (phases.length) {
+    log("actionPlan.phases", `parsed ${phases.length} structured phases (${phases.reduce((n, p) => n + (p.groups?.length ?? 0), 0)} groups)`);
+    return phases;
+  }
+  // No phase headings — one flat phase carrying the plan prose.
+  const flat = toParagraphs(content, "actionPlan", log, citationCount);
+  return flat.length ? [{ period: "", title: "", body: flat.join(" ") }] : [];
+}
+
+/**
+ * Parse the pipeline's setup/compliance prose into a lead intro + a checklist
+ * of `**Lead:** text` bullets. The structured exposure table/stats stay a
+ * Phase-B pipeline output (renderer suppresses the empty blocks).
+ */
+export function parseComplianceChecklist(
+  content: unknown,
+  citationCount: number,
+  log: Log
+): { intro: string; checklist: { lead: string; text: string }[] } {
+  const empty = { intro: "", checklist: [] as { lead: string; text: string }[] };
+  if (typeof content !== "string" || !content.trim()) return empty;
+  const checklist: { lead: string; text: string }[] = [];
+  let intro = "";
+  for (const raw of content.split("\n")) {
+    const line = raw.trim();
+    if (!line || /^#{1,6}\s+/.test(line)) continue; // drop section headings
+    const bullet = line.match(/^[-*•]\s+(.*)$/);
+    if (bullet) {
+      const body = bullet[1];
+      const leadMatch = body.match(/^\*\*([^*]+?):?\*\*\s*:?\s*(.*)$/);
+      const lead = leadMatch ? leadMatch[1].trim() : "";
+      const rest = (leadMatch ? leadMatch[2] : body).trim();
+      const text = toParagraphs(rest, "compliance.checklist", () => {}, citationCount)[0] ?? "";
+      if (lead || text) checklist.push({ lead, text });
+    } else if (!intro) {
+      const p = toParagraphs(line, "compliance.intro", () => {}, citationCount)[0];
+      if (p && !/^\*\*/.test(p)) intro = p;
+    }
+  }
+  if (checklist.length) log("compliance", `parsed ${checklist.length} checklist items from prose`);
+  return { intro, checklist };
+}
+
 export function adaptPipelineReport(
   json: PipelineReportJson,
   context: AdaptContext = {}
@@ -595,16 +684,17 @@ export function adaptPipelineReport(
     log("leads", "additional datasets/contacts beyond the first dataset dropped until Phase B");
   }
 
-  // ---- prose-only sections ------------------------------------------------
+  // ---- prose-only sections (Phase-B structured parses) --------------------
   const swot = parseSwot(sections.swot_analysis?.content, citations.length, log);
-  const actionParas = toParagraphs(sections.action_plan?.content, "actionPlan", log, citations.length);
-  // A single flat phase carrying the plan prose (structured 3-phase split is
-  // Phase B). Only pad to the 3-column layout when there is real content.
-  const phases = actionParas.length ? [{ period: "", title: "", body: actionParas.join(" ") }] : [];
-  log("actionPlan.phases", `derived ${phases.length ? 1 : 0} flat phase from prose (structured phases land in Phase B)`);
-
-  const complianceParas = toParagraphs(sections.setup_compliance?.content, "compliance", log, citations.length);
-  log("compliance", "exposure table / stats / checklist unavailable until Phase B — prose intro only");
+  const phases = parseActionPlan(sections.action_plan?.content, citations.length, log);
+  const compliance = parseComplianceChecklist(sections.setup_compliance?.content, citations.length, log);
+  // §14 "worth arriving with a view on" — the action plan's decision areas
+  // (distinct group titles) are the grounded source until Phase B supplies a
+  // dedicated close block.
+  const arriveWith = [
+    ...new Set(phases.flatMap((p) => (p.groups ?? []).map((g) => g.title)).filter(Boolean)),
+  ].slice(0, 6);
+  if (arriveWith.length) log("close.arriveWith", `derived ${arriveWith.length} decision areas from the action plan`);
 
   // ---- sources -----------------------------------------------------------
   const tiers: Record<"regulator" | "analyst" | "vendor", string[]> = {
@@ -618,7 +708,7 @@ export function adaptPipelineReport(
     if (!tiers[tier].includes(domain)) tiers[tier].push(domain);
   }
 
-  for (const missing of ["exec.keyQuestionAnswer", "exec.sequence", "exec.heroStat", "close.body", "close.arriveWith"]) {
+  for (const missing of ["exec.sequence", "exec.heroStat", "close.body"]) {
     log(missing, "no pipeline source until Phase B — rendered empty");
   }
 
@@ -685,9 +775,9 @@ export function adaptPipelineReport(
       })),
     },
     actionPlan: { intro: "", phases },
-    // Full prose in the intro (structured table/stats/checklist parsing is
-    // Phase B); the renderer suppresses the empty structured blocks.
-    compliance: { intro: complianceParas.join(" "), table: [], stats: [], checklist: [] },
+    // Lead intro + parsed checklist; the exposure table/stats stay a Phase-B
+    // pipeline output (renderer suppresses the empty blocks).
+    compliance: { intro: compliance.intro, table: [], stats: [], checklist: compliance.checklist },
     guides: { intro: "", cards: guides },
     leads: leadDb
       ? {
@@ -701,7 +791,7 @@ export function adaptPipelineReport(
     close: {
       headline: "This report is the map. The route gets chosen together.",
       body: "",
-      arriveWith: [],
+      arriveWith,
     },
     sources: tiers,
   };
