@@ -335,6 +335,38 @@ test("compliance prose is parsed into a lead intro + checklist", () => {
   assert.equal(report.compliance.table.length, 0); // exposure table stays Phase-B
 });
 
+test("scale-view section prose maps to §04/§07/§13 intros, skipping R5 intake guidance", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        first_customers: {
+          content:
+            "To unlock per-account briefs, please provide a list of specific target company names in your intake.\n\n### Strategic Targeting\n\nYour focus should shift to the **Enterprise SaaS** sector [1].",
+          matches: [],
+        },
+        mentor_recommendations: {
+          content:
+            "Deepening your presence requires enterprise engagement.\n\n### Strategic Mentors\n\n* **Jane** — advisor.",
+        },
+        lead_list: {
+          content:
+            "### Datasets\n\nWe did not find a matching pre-built dataset for your industry.\n\n* **Request:** custom list.",
+        },
+      },
+      matches: { community_members: [{ name: "Jane", link: "/mentors/experts/jane" }] },
+      metadata: { perplexity_citations: ["https://ato.gov.au/x"] },
+    },
+    {}
+  );
+  // §04 skips the intake-guidance opener (R5) and uses the strategic paragraph.
+  assert.ok(!/provide a list|in your intake/i.test(report.accounts.intro));
+  assert.match(report.accounts.intro, /Enterprise SaaS/);
+  // §07 uses the strategic lead paragraph, not the card-duplicating list.
+  assert.match(report.mentors.intro, /Deepening your presence/);
+  // §13 uses the grounded gap explanation, not the generic fallback.
+  assert.match(report.leads.gapCopy ?? "", /did not find a matching pre-built dataset/);
+});
+
 test("adaptPipelineReport survives an empty report_json", () => {
   const { report, mismatches } = adaptPipelineReport({}, {});
   assert.equal(report.meta.customer, "");

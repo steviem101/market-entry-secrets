@@ -118,20 +118,31 @@ Visual before/after confirmed for providers (clean curated copy, no "403 Forbidd
 - **Deferred to Phase 3:** surfacing adapter mismatch telemetry to `report_quality` needs a
   client→DB write path (RLS/grants) — belongs with the pipeline work, not a renderer PR.
 
+### Phase 3a — scale-view section prose (adapter, no pipeline) — ✅ DONE (2026-07-19)
+Phase 1/2 were tested against a **free-tier share fixture** (`get_shared_report`), so the
+sections a *scale owner* actually sees — §04 `first_customers`, §07 `mentor_recommendations`,
+§13 `lead_list` prose — were never rendered. The adapter was dropping the mentor (4065 chars)
+and lead-list (1275 chars) prose entirely and blobbing §04. Fixed with a `leadParagraph`
+helper (first strategic paragraph; skips heading-only leads and R5 intake-guidance prose):
+§07 gets a strategic intro above the cards (no card duplication), §13 gets the grounded
+"no matching dataset" explanation, §04 gets a clean strategic paragraph (skipping the
+"provide a list of target companies" intake opener). Fixture rebuilt to a true scale view
+(`dev-fixtures/build-scale.mjs`). Verified: 832 tests, all fixtures 0 overflow/0 errors, §04
+restored. *Remaining Phase-B (pipeline): render the full multi-heading first-customers /
+mentor / lead prose as structured sub-blocks rather than a single lead paragraph.*
+
 ### Phase 3 — pipeline & data quality (Phase B proper, per-ticket)
 - `report_templates`/generate-report: emit contract-structured JSON for SWOT, compliance,
   action plan, competitor verdict columns (you-row, strengths, differs, gaps, positioning),
   first-customer briefs, key-question answer, clean metric captions. This removes the prose
   parsers over time.
-- **Tier-RPC over-stripping (found during Phase 1):** `first_customers` in the raw
-  `user_reports` row is `visible:true, required_tier:null, 2788 chars`, yet both
-  `get_shared_report` and (per the owner's blank §04) `get_tier_gated_report` return it
-  stripped/empty for the report's own scale owner. A no-tier-requirement, visible section
-  is being removed from an entitled viewer — investigate the RPCs' `v_tier_requirements`
-  hardcode for the accounts/first_customers key. This is why §04 was empty; the renderer
-  now suppresses it, but the content should reach the viewer.
-- Fix the silent `visible:false` section failure for `first_customers` (why it failed on a
-  clean scale run) and surface per-section failures in the report UI.
+- ~~Tier-RPC over-stripping of `first_customers`~~ — **CORRECTED (Phase-3 investigation):
+  not a bug.** `get_tier_gated_report` gates `first_customers`/`lead_list` at `scale` and
+  `mentor_recommendations` at `growth`; for a scale owner the strip condition
+  (`user_index < required_index`, i.e. `3 < 3`) is false, so nothing is stripped. The blank
+  §04 came from the dev fixture, which was fetched via `get_shared_report` — a deliberate
+  **free-tier public-share view** that strips every gated section by design. The gating is
+  correct; the earlier note mis-attributed the fixture artefact to an RPC bug.
 - Enrichment: detect and refuse error-page scrapes (403/404/robots interstitials);
   re-enrich affected providers. Directory steward: replace "N/A (…)" investor stage tags
   with proper values; move curation notes out of customer-facing description fields.
