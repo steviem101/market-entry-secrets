@@ -43,10 +43,10 @@ const Cover = ({ report }: { report: Report }) => {
           <CoverMark customer={meta.customer} domain={meta.domain} />
           <div>
             <div className="text-[16px] font-extrabold text-white">{meta.customer}</div>
-            <div className="text-[10px] font-medium uppercase text-report-caption">{meta.descriptor}</div>
+            <div className="text-[11px] font-medium uppercase text-report-caption">{meta.descriptor}</div>
           </div>
         </div>
-        <div className="text-right text-[10px] font-medium uppercase leading-[1.7] text-report-caption">
+        <div className="text-right text-[11px] font-medium uppercase leading-[1.7] text-report-caption">
           MARKET ENTRY SECRETS
           <br />
           {formatReportDate(meta.date, "long")} · {meta.plan.toUpperCase()} PLAN
@@ -66,7 +66,7 @@ const Cover = ({ report }: { report: Report }) => {
         />
       </div>
 
-      <div className="mt-[52px] flex flex-wrap items-baseline gap-7 border-t border-report-surface-rule pt-[22px] text-[10px] font-medium text-report-caption">
+      <div className="mt-[52px] flex flex-wrap items-baseline gap-7 border-t border-report-surface-rule pt-[22px] text-[11px] font-medium text-report-caption">
         <span>
           <b className="text-white">{meta.sourceCount}</b> SOURCES
         </span>

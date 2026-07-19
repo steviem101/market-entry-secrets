@@ -28,18 +28,18 @@ const MentorsSection = ({ report }: { report: Report }) => {
   const { mentors } = report;
   const extras = mentors.extra ?? [];
   return (
-    <SectionCard label="07 · MENTOR RECOMMENDATIONS" className="pb-[60px]">
+    <SectionCard label="07 · MENTOR RECOMMENDATIONS" className="pb-10">
       <Rich
         text={mentors.intro}
-        className="mb-7 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
+        className="mb-7 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"
       />
       <CoverageNote text={mentors.coverageNote} />
       <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
         {mentors.primary.map((person, i) => (
           <div key={i} className="rounded-xl border border-report-border px-[30px] py-7">
             <PersonName person={person} />
-            <div className="mb-3 mt-1 text-[10px] font-medium uppercase text-report-caption">{person.role}</div>
-            <Rich text={person.why} className="text-[12.5px] leading-[1.7] text-report-ink-soft" />
+            <div className="mb-3 mt-1 text-[11px] font-medium uppercase text-report-caption">{person.role}</div>
+            <Rich text={person.why} className="text-[13.5px] leading-[1.7] text-report-ink-soft" />
           </div>
         ))}
       </div>
@@ -48,7 +48,7 @@ const MentorsSection = ({ report }: { report: Report }) => {
           {extras.map((person, i) => (
             <div
               key={i}
-              className="rounded-xl border border-report-border px-7 py-5 text-[12.5px] leading-[1.7] text-report-ink-soft"
+              className="rounded-xl border border-report-border px-7 py-5 text-[13.5px] leading-[1.7] text-report-ink-soft"
             >
               <IdentitySlot name={person.name} kind="person" src={person.headshotUrl} />
               {person.url ? (
@@ -64,7 +64,7 @@ const MentorsSection = ({ report }: { report: Report }) => {
         </div>
       )}
       {mentors.advice && (
-        <div className="mt-[22px] rounded-xl border border-report-tint-border bg-report-tint px-7 py-5 text-[12.5px] leading-[1.7] text-report-ink-soft">
+        <div className="mt-[22px] rounded-xl border border-report-tint-border bg-report-tint px-7 py-5 text-[13.5px] leading-[1.7] text-report-ink-soft">
           <b>From the research — making mentor conversations count:</b>{" "}
           <Rich as="span" text={mentors.advice} />
         </div>

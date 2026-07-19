@@ -11,10 +11,10 @@ import Rich from "./Rich";
 const GuidesSection = ({ report }: { report: Report }) => {
   const { guides } = report;
   return (
-    <SectionCard label="12 · CASE STUDIES & RESOURCES" className="pb-[60px]">
+    <SectionCard label="12 · CASE STUDIES & RESOURCES" className="pb-10">
       <Rich
         text={guides.intro}
-        className="mb-7 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
+        className="mb-7 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"
       />
       <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
         {guides.cards.map((guide, i) => (
@@ -32,9 +32,9 @@ const GuidesSection = ({ report }: { report: Report }) => {
               )}
               <StarToggle name={guide.title} url={guide.url} section="Guide" />
             </div>
-            <div className="text-[12.5px] leading-[1.7] text-report-ink-soft">{guide.summary}</div>
+            <div className="text-[13.5px] leading-[1.7] text-report-ink-soft">{guide.summary}</div>
             {guide.relevantBecause && (
-              <div className="border-t border-report-rule pt-3 text-[11.5px] leading-[1.65] text-report-action">
+              <div className="border-t border-report-rule pt-3 text-[12px] leading-[1.65] text-report-action">
                 <b>Relevant because:</b> {guide.relevantBecause}
               </div>
             )}

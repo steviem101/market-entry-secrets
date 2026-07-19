@@ -12,10 +12,10 @@ import CoverageNote from "./CoverageNote";
 const InvestorsSection = ({ report }: { report: Report }) => {
   const { investors } = report;
   return (
-    <SectionCard label="08 · INVESTOR RECOMMENDATIONS" className="pb-[60px]">
+    <SectionCard label="08 · INVESTOR RECOMMENDATIONS" className="pb-10">
       <Rich
         text={investors.intro}
-        className="mb-6 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
+        className="mb-6 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"
       />
       <CoverageNote text={investors.coverageNote} />
       <NumberedProse items={investors.approachOrder} />
@@ -30,7 +30,7 @@ const InvestorsSection = ({ report }: { report: Report }) => {
         }))}
       />
       {investors.alsoNamed && (
-        <Rich text={investors.alsoNamed} className="mt-4 text-[11.5px] leading-[1.6] text-report-caption" />
+        <Rich text={investors.alsoNamed} className="mt-4 text-[12px] leading-[1.6] text-report-caption" />
       )}
     </SectionCard>
   );

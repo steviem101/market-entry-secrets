@@ -8,7 +8,7 @@
  */
 const CoverageNote = ({ text }: { text?: string }) =>
   text ? (
-    <p className="mb-6 flex max-w-[920px] items-start gap-1.5 text-[11.5px] italic leading-[1.6] text-report-caption">
+    <p className="mb-6 flex max-w-[920px] items-start gap-1.5 text-[12px] italic leading-[1.6] text-report-caption">
       <span aria-hidden className="not-italic">ⓘ</span>
       <span>{text}</span>
     </p>

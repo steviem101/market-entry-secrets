@@ -21,7 +21,7 @@ const SectionCard = ({ label, id, className, labelClassName, children }: Section
     id={id}
     data-report-v2-section
     className={cn(
-      "rounded-[14px] border-t-[3px] border-t-report-sky bg-white px-5 py-8 text-report-ink lg:px-20 lg:py-16",
+      "rounded-[14px] border-t-[3px] border-t-report-sky bg-white px-5 py-8 text-report-ink lg:px-12 lg:py-10",
       className
     )}
   >

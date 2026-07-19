@@ -20,17 +20,17 @@ const SourcesBand = ({ report }: { report: Report }) => {
       className="rounded-[14px] bg-report-surface px-5 pb-10 pt-10 text-report-caption lg:px-20 lg:pb-14 lg:pt-12"
     >
       <div className="mb-[18px] flex items-baseline justify-between">
-        <span className="text-[10px] font-bold tracking-[0.12em] text-report-border">
+        <span className="text-[11px] font-bold tracking-[0.12em] text-report-border">
           EVIDENCE — {meta.sourceCount} SOURCES, WEIGHTED
         </span>
-        <span className="text-[9.5px] font-medium uppercase">
+        <span className="text-[10.5px] font-medium uppercase">
           {meta.customer} · {formatReportDate(meta.date, "short")} · MARKET ENTRY SECRETS
         </span>
       </div>
       <div className="grid grid-cols-1 gap-7 text-[11px] leading-[1.8] md:grid-cols-3">
         {TIERS.map(({ key, heading, headingClass }) => (
           <div key={key}>
-            <b className={`text-[9px] font-bold ${headingClass}`}>{heading}</b>
+            <b className={`text-[10px] font-bold ${headingClass}`}>{heading}</b>
             <br />
             {sources[key].join(" · ")}
           </div>

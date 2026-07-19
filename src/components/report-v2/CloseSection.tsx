@@ -34,10 +34,10 @@ const CloseSection = ({ report }: { report: Report }) => {
         </div>
         {close.arriveWith.length > 0 && (
           <div className="rounded-xl border border-report-border px-[30px] py-[26px]">
-            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.12em] text-report-action">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-report-action">
               WORTH ARRIVING WITH A VIEW ON
             </p>
-            <div className="text-[12.5px] leading-[1.75] text-report-ink-soft">
+            <div className="text-[13.5px] leading-[1.75] text-report-ink-soft">
               {close.arriveWith.map((item, i) => (
                 <div key={i} className="border-t border-report-border py-2 last:border-b">
                   {item}
@@ -49,7 +49,7 @@ const CloseSection = ({ report }: { report: Report }) => {
       </div>
 
       <div className="mt-10 border-t border-report-border pt-[26px]">
-        <p className="mb-3.5 text-[10px] font-bold uppercase tracking-[0.12em] text-report-action">
+        <p className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.12em] text-report-action">
           YOUR SHORTLIST — STARRED FROM THIS REPORT
         </p>
         {starred.length > 0 ? (
@@ -63,7 +63,7 @@ const CloseSection = ({ report }: { report: Report }) => {
                   </>
                 );
                 const cls =
-                  "inline-flex items-center gap-1.5 rounded-full border border-report-tint-border bg-report-tint px-4 py-2 text-[12px] font-semibold text-report-action";
+                  "inline-flex items-center gap-1.5 rounded-full border border-report-tint-border bg-report-tint px-4 py-2 text-[12.5px] font-semibold text-report-action";
                 // Key by entity identity (url, else name) — the shortlist is a
                 // mutable add/remove list, so index keys would misreconcile.
                 const key = item.url || item.name;
@@ -78,18 +78,18 @@ const CloseSection = ({ report }: { report: Report }) => {
                 );
               })}
             </div>
-            <p className="mt-3 text-[11.5px] leading-[1.6] text-report-caption">
+            <p className="mt-3 text-[12px] leading-[1.6] text-report-caption">
               This set pre-frames your advisory session — we'll arrive prepared on exactly these.
             </p>
           </>
         ) : (
           <>
-            <p className="text-[12.5px] leading-[1.65] text-report-caption print:hidden">
+            <p className="text-[13.5px] leading-[1.65] text-report-caption print:hidden">
               Tap the ♥ next to any provider, hub, mentor, investor or event above to build your own
               shortlist — it collects here and sets the agenda for the advisory session.
             </p>
             {/* Print has no interactive hearts — state the mechanic without "tap". */}
-            <p className="hidden text-[12.5px] leading-[1.65] text-report-caption print:block">
+            <p className="hidden text-[13.5px] leading-[1.65] text-report-caption print:block">
               Saved providers, hubs, mentors, investors and events collect here in your online report
               and set the agenda for the advisory session.
             </p>

@@ -26,7 +26,7 @@ const AccountCard = ({ account }: { account: AccountBrief }) => (
       </span>
       {account.statusChips.length > 0 && (
         <span
-          className={`text-[8.5px] font-bold ${
+          className={`text-[9.5px] font-bold ${
             account.statusChips.includes("hiring") ? "text-report-good" : "text-report-muted"
           }`}
         >
@@ -34,8 +34,8 @@ const AccountCard = ({ account }: { account: AccountBrief }) => (
         </span>
       )}
     </div>
-    <div className="mb-3 mt-1 text-[10px] font-medium uppercase text-report-caption">{account.meta}</div>
-    <div className="text-[12.5px] leading-[1.7] text-report-ink-soft">
+    <div className="mb-3 mt-1 text-[11px] font-medium uppercase text-report-caption">{account.meta}</div>
+    <div className="text-[13.5px] leading-[1.7] text-report-ink-soft">
       <b>Signals:</b> <Rich as="span" text={account.signals} />{" "}
       {account.stack && (
         <>
@@ -49,7 +49,7 @@ const AccountCard = ({ account }: { account: AccountBrief }) => (
       )}
     </div>
     {(account.approach.length > 0 || account.angle) && (
-      <div className="mt-3.5 border-t border-report-rule pt-3 text-[10.5px] font-medium leading-[1.8] text-report-ink-soft">
+      <div className="mt-3.5 border-t border-report-rule pt-3 text-[11px] font-medium leading-[1.8] text-report-ink-soft">
         {account.approach.length > 0 && (
           <>
             APPROACH&nbsp;&nbsp;{account.approach.join(" / ")}
@@ -73,11 +73,11 @@ const GapCard = ({ name, reason, onRequest }: { name: string; reason: string; on
   return (
     <div className="flex items-center gap-4 rounded-xl border border-dashed border-report-dash bg-report-hook-bg px-7 py-[22px]">
       <span className="text-[18px] font-bold text-report-warn">+1</span>
-      <span className="flex-1 text-[12.5px] leading-[1.65] text-report-ink-soft">
+      <span className="flex-1 text-[13.5px] leading-[1.65] text-report-ink-soft">
         <b>{name} isn't fully covered.</b> {reason}
       </span>
       {requested ? (
-        <span className="whitespace-nowrap text-[10px] font-bold text-report-confirm-text print:hidden">REQUEST SENT ✓</span>
+        <span className="whitespace-nowrap text-[11px] font-bold text-report-confirm-text print:hidden">REQUEST SENT ✓</span>
       ) : (
         <button
           type="button"
@@ -85,14 +85,14 @@ const GapCard = ({ name, reason, onRequest }: { name: string; reason: string; on
             setRequested(true);
             onRequest?.();
           }}
-          className="whitespace-nowrap rounded-lg border border-report-sky bg-white px-[18px] py-2.5 text-[12px] font-bold text-report-action transition-colors hover:bg-report-tint print:hidden"
+          className="whitespace-nowrap rounded-lg border border-report-sky bg-white px-[18px] py-2.5 text-[12.5px] font-bold text-report-action transition-colors hover:bg-report-tint print:hidden"
         >
           Request the brief
         </button>
       )}
       {/* Static print line renders regardless of session click state so the PDF
           always shows a contact instruction, never a live button or "SENT". */}
-      <span className="hidden whitespace-nowrap text-[10px] font-bold italic text-report-muted print:inline">
+      <span className="hidden whitespace-nowrap text-[11px] font-bold italic text-report-muted print:inline">
         Contact us to request
       </span>
     </div>
@@ -123,14 +123,14 @@ const AccountsSection = ({ report }: { report: Report }) => {
     return null;
   }
   return (
-    <SectionCard label="04 · YOUR FIRST CUSTOMERS" className="pb-[60px]">
+    <SectionCard label="04 · YOUR FIRST CUSTOMERS" className="pb-10">
       <Rich
         text={accounts.intro}
-        className="mb-7 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
+        className="mb-7 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"
       />
 
       {accounts.briefed.length > 0 && (
-        <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2">
           {accounts.briefed.map((account, i) => (
             <AccountCard key={account.url || account.name || i} account={account} />
           ))}
@@ -140,14 +140,14 @@ const AccountsSection = ({ report }: { report: Report }) => {
       {zeroBriefed && accounts.icpGuidance && (
         <>
           <div className="rounded-xl border border-report-border px-[30px] py-7">
-            <p className="mb-3 text-[10px] font-bold tracking-[0.12em] text-report-action">
+            <p className="mb-3 text-[11px] font-bold tracking-[0.12em] text-report-action">
               YOUR ICP — WHO TO TARGET FIRST
             </p>
             <div className="mb-3 flex flex-wrap gap-2">
               {accounts.icpGuidance.targetRoles.map((role) => (
                 <span
                   key={role}
-                  className="rounded-full border border-report-tint-border bg-report-tint px-3 py-1 text-[10.5px] font-bold text-report-action"
+                  className="rounded-full border border-report-tint-border bg-report-tint px-3 py-1 text-[11px] font-bold text-report-action"
                 >
                   {role}
                 </span>
@@ -155,9 +155,9 @@ const AccountsSection = ({ report }: { report: Report }) => {
             </div>
             <Rich
               text={accounts.icpGuidance.sectorFocus}
-              className="text-[12.5px] leading-[1.7] text-report-ink-soft"
+              className="text-[13.5px] leading-[1.7] text-report-ink-soft"
             />
-            <div className="mt-3.5 border-t border-report-rule pt-3 text-[10.5px] font-medium leading-[1.8] text-report-ink-soft">
+            <div className="mt-3.5 border-t border-report-rule pt-3 text-[11px] font-medium leading-[1.8] text-report-ink-soft">
               ANGLE&nbsp;&nbsp;<Rich as="span" text={accounts.icpGuidance.angle} />
             </div>
           </div>
@@ -186,7 +186,7 @@ const AccountsSection = ({ report }: { report: Report }) => {
           />
         ))}
         {accounts.worthKnowing && (
-          <div className="rounded-xl border border-report-tint-border bg-report-tint px-7 py-[22px] text-[12.5px] leading-[1.65] text-report-ink-soft">
+          <div className="rounded-xl border border-report-tint-border bg-report-tint px-7 py-[22px] text-[13.5px] leading-[1.65] text-report-ink-soft">
             <b>Worth knowing:</b> <Rich as="span" text={accounts.worthKnowing} />
           </div>
         )}
