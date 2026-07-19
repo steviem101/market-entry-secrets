@@ -510,7 +510,7 @@
   }
 
   /* Remove accent top borders in print */
-  [data-report-section] .border-t-\\[3px\\] {
+  [data-report-section] .border-t-\[3px\] {
     border-top-width: 0 !important;
   }
 

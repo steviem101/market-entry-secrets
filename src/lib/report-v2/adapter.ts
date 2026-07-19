@@ -318,6 +318,18 @@ const capText = (text: string, cap = 180): string => {
 };
 const trimWhy = (text: string): string => capText(text, 180);
 
+// Pipeline subtitles often arrive hard-clipped mid-word ("…through a simple,
+// streamlin"). When a snippet ends without terminal punctuation it was almost
+// certainly cut, so drop the trailing partial word + dangling punctuation and
+// add an ellipsis; leave already-complete or single-token strings untouched.
+const tidyClip = (s: string): string => {
+  const t = s.trim();
+  if (!t || /[.!?…]$/.test(t) || t.length < 40) return t;
+  const lastSpace = t.lastIndexOf(" ");
+  if (lastSpace < t.length * 0.5) return t;
+  return t.slice(0, lastSpace).replace(/[\s,;:—-]+$/, "") + "…";
+};
+
 /**
  * Customer-facing card copy. NEVER uses `enriched_description` — that field is
  * the raw website scrape (nav menus, `## headings`, image markdown, and even
@@ -457,7 +469,9 @@ function sectorCoverageNote(rawMatches: PipelineMatch[], basis: string): string 
 }
 
 // Turn a slug-style token run ("Australia-CRM-software") back into words.
-const deSlug = (s: string): string => s.replace(/([A-Za-z0-9])-([A-Za-z])/g, "$1 $2");
+// Un-joins slug hyphens INCLUDING the non-breaking hyphen (U+2011) the pipeline
+// emits in metric labels ("Australia‑Fintech‑B2B" → "Australia Fintech B2B").
+const deSlug = (s: string): string => s.replace(/([A-Za-z0-9])[-‑]([A-Za-z])/g, "$1 $2");
 
 const metricToTile = (m: KeyMetric): StatTile => {
   const clean = (s: string | undefined) =>
@@ -772,6 +786,25 @@ export function parseAccountBriefs(content: unknown, citationCount: number, log:
   return out;
 }
 
+/**
+ * §07 writes a tailored, customer-specific rationale per mentor as
+ * `* **[Name](url)**: why this mentor fits <customer>` bullets — richer than the
+ * generic directory bio the cards fall back to (audit D3). Returns name-key →
+ * rationale; empty map when the prose isn't in that shape (cards keep the bio).
+ */
+export function parseMentorWhys(content: unknown): Map<string, string> {
+  const map = new Map<string, string>();
+  if (typeof content !== "string") return map;
+  for (const line of content.split("\n")) {
+    const m = line.match(/^\s*[-*]\s+\*\*\[?([^\]*]+?)\]?(?:\([^)]*\))?\*\*:\s*(.+)$/);
+    if (!m) continue;
+    const name = m[1].trim();
+    const why = m[2].replace(/\[\d+\]/g, "").replace(/\s+/g, " ").trim();
+    if (name && why) map.set(briefNameKey(name), why);
+  }
+  return map;
+}
+
 export function adaptPipelineReport(
   json: PipelineReportJson,
   context: AdaptContext = {}
@@ -844,14 +877,21 @@ export function adaptPipelineReport(
   const hubCards = (matches.innovation_ecosystem ?? []).map((m, i) =>
     toMatchCard(m, "hub", `govAndHubs.hubs[${i}]`, log)
   );
-  const mentorCards: PersonCard[] = (matches.community_members ?? []).map((m, i) => ({
-    name: matchName(m),
-    url: sanitizeContractPath(m.link, `mentors[${i}].link`, log),
-    kind: "mentor" as const,
-    role: m.subtitle ?? "",
-    why: trimWhy(matchDescription(m)),
-    headshotUrl: typeof m.avatar_url === "string" && m.avatar_url ? m.avatar_url : undefined,
-  }));
+  const mentorWhys = parseMentorWhys(sections.mentor_recommendations?.content);
+  let mentorWhyHits = 0;
+  const mentorCards: PersonCard[] = (matches.community_members ?? []).map((m, i) => {
+    const tailored = mentorWhys.get(briefNameKey(matchName(m)));
+    if (tailored) mentorWhyHits++;
+    return {
+      name: matchName(m),
+      url: sanitizeContractPath(m.link, `mentors[${i}].link`, log),
+      kind: "mentor" as const,
+      role: m.subtitle ?? "",
+      why: tailored ? capText(tailored, 260) : trimWhy(matchDescription(m)),
+      headshotUrl: typeof m.avatar_url === "string" && m.avatar_url ? m.avatar_url : undefined,
+    };
+  });
+  if (mentorWhyHits > 0) log("mentors[].why", `used tailored per-mentor rationale from §07 prose for ${mentorWhyHits}/${mentorCards.length}`);
   if (mentorCards.length > 0 && mentorCards.every((m) => !m.headshotUrl)) {
     log("mentors[].headshotUrl", "pipeline omits avatar_url — headshots render monogram (Phase B: add avatar_url to community_members select)");
   }
@@ -884,13 +924,16 @@ export function adaptPipelineReport(
     url: sanitizeContractPath(m.link, `competitors.rows[${i}].link`, log),
     kind: "competitor" as const,
     positionTag: cleanTag(m.tags?.[0]),
-    position: matchDescription(m),
+    position: tidyClip(matchDescription(m)),
     // Grounded, site-derived strengths (Phase 3b) and comparative contrast (3c).
     // Both are per-column and degrade to "" independently.
     strengths: Array.isArray(m.strengths)
       ? m.strengths.map((s) => String(s).trim()).filter(Boolean).join(" · ")
       : "",
     differs: typeof m.differs === "string" ? m.differs.trim() : "",
+    // Competitor links are off-platform (rejected from `url`); derive the logo
+    // from the raw site instead so the player row carries its brand mark.
+    logoUrl: companyLogoUrl(m.website, m.url, m.link),
   }));
   const anyCompetitorStrengths = competitorRows.some((r) => r.strengths);
   if (competitorRows.length > 0 && !anyCompetitorStrengths) {
