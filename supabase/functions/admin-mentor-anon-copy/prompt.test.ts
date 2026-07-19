@@ -14,6 +14,7 @@ import {
 const record: MentorSourceRecord = {
   archetype: "International Founder",
   origin_country: "uk",
+  location: "Melbourne, Victoria, Australia",
   description: "Founded Acme Robotics and scaled it to Australia.",
   experience: "15+ years",
   specialties: ["Sales / GTM"],
@@ -25,31 +26,35 @@ const record: MentorSourceRecord = {
   real_company: "Acme Robotics",
 };
 
-test("system prompt carries the non-negotiables", () => {
+test("system prompt carries the value-first + resolvability non-negotiables", () => {
   for (const marker of [
-    "Never include the mentor's name",
-    "company TYPE",
-    "ONLY the record supplied",
+    "why would I want this intro",
+    "ATTRIBUTES",
+    "IDENTIFIERS",
+    "two web searches",
+    "international_entrant",
+    "local_startup",
     "Australian English",
-    "Best for",
     "claims",
   ]) {
     assert.ok(SYSTEM_PROMPT.includes(marker), `system prompt must mention: ${marker}`);
   }
 });
 
-test("user prompt includes record, exemplars, and the never-echo list", () => {
+test("user prompt includes record, location, exemplars, and the never-echo list", () => {
   const p = buildUserPrompt(record);
-  assert.ok(p.includes("UK Govtech Founder"), "few-shot exemplars present");
+  assert.ok(p.includes("UK → ANZ Govtech Founder"), "value-first exemplars present");
   assert.ok(p.includes("Founded Acme Robotics and scaled it to Australia."), "record description present");
+  assert.ok(p.includes("Melbourne, Victoria, Australia"), "location present");
   assert.ok(p.includes("NEVER-ECHO LIST"), "never-echo list present");
   assert.ok(p.includes("Jane Smithfield"));
   assert.ok(p.includes("Globex"));
+  assert.ok(/[Ll]ocation and corridor ARE allowed/.test(p), "location/corridor explicitly allowed");
 });
 
-test("retry prompt names the offending terms", () => {
-  const p = buildRetryPrompt(["acme", "smithfield"]);
-  assert.ok(p.includes('"acme"'));
+test("retry prompt names the offending terms/phrases", () => {
+  const p = buildRetryPrompt(["the largest US–Australia body", "smithfield"]);
+  assert.ok(p.includes('"the largest US–Australia body"'));
   assert.ok(p.includes('"smithfield"'));
 });
 

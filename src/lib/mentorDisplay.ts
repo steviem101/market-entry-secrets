@@ -98,14 +98,18 @@ export const corridorLabel = (corridor: string): string | null => {
 export const sectorTagLabel = (tag: string): string => sectorLabel(tag);
 
 /**
- * Anonymous mentors' masked location is the raw origin-country slug straight
- * from the view (e.g. "uk"); named mentors keep their human-written location.
+ * Location label for a mentor card/profile. Since MES-208 the public view serves
+ * anonymous mentors their real city/region base ("Melbourne, Victoria, Australia",
+ * "Greater Sydney Area") — metro-level and identity-safe — rather than the coarse
+ * origin-country slug. `countryLabel` prettifies bare country slugs/values (e.g.
+ * "uk" → "🇬🇧 UK", "Australia" → "🇦🇺 Australia") and passes richer location text
+ * through untouched, so the same call is correct for anonymous and named mentors.
  */
 export const mentorLocationLabel = (m: {
   location: string | null;
   is_anonymous: boolean;
 }): string | null =>
-  m.is_anonymous ? countryLabel(m.location) : m.location;
+  countryLabel(m.location);
 
 /**
  * Suggested anonymous alias for the admin marking UI, built only from

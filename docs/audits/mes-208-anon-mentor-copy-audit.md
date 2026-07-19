@@ -245,3 +245,40 @@ the admin page.
 - **Follow-ups:** regenerate Supabase types to drop the `(supabase as any)` cast for the drafts
   table; MES-170 archetype vocabulary can later enrich the prompt; optional structured
   `best_for` render block if wanted.
+
+---
+
+## Part D — Copy-quality + anonymity follow-up (post-merge iteration)
+
+Reviewing the first generated drafts (April Palmerlee, Alan Tsen) surfaced two things the
+initial version got wrong, fixed here:
+
+1. **Semantic identity leak the token lint can't see.** "CEO of Australia's largest US–Australia
+   business organisation" names no one but resolves to exactly one org (→ one person). The token
+   lint only catches literal name/company echoes, so it passed. **Root reframe:** anonymity and
+   specificity are separate axes. *Attributes* (sector, corridor, seniority, company TYPE, kind of
+   achievement, services, stage, location) never identify anyone and should be rich — generic copy
+   is the real failure. *Identifiers* (name, exact employer, a one-of-a-kind role/org, named
+   clients/deals, org-fingerprint figures) resolve to one person and are the only things abstracted.
+   The line is **resolvability, not vocabulary** — superlatives are fine when many orgs fit
+   ("a national trade agency"), a leak only when one fits ("the peak body for X").
+
+2. **Copy read as an anonymised résumé, not a value case.** Rewritten **value-first**: every draft
+   answers "why would *I* want this intro?" for the mentor's `persona_fit` audience (international
+   entrant landing in ANZ vs scaling ANZ startup), leads with a generalised achievement, and ends
+   with an explicit "If you're a … expect …" value beat naming services + stage.
+
+Changes shipped:
+- **`prompt.ts`** rewritten to the value-first / attributes-vs-identifiers / resolvability model,
+  with persona definitions inline and value-first exemplars; `location` added to the record.
+- **`reviewer.ts`** — a new semantic *resolvability reviewer*: a second AI pass that judges whether
+  a draft (plus the visible sector/corridor/location) resolves to one real person/org, returning
+  the exact giveaway phrases. Runs after a clean token lint; a hit feeds one retry, else the draft
+  ships `flagged`. Fails safe (unparseable ⇒ treat as needs-review). Admin review stays mandatory.
+- **Location mask** (`20260719140000`): `community_members_public` now shows anonymous mentors'
+  real city/region base (metro-level, identity-safe — verified against live rows) instead of the
+  coarse origin country, so profiles carry the "based in Sydney, came from Singapore" corridor
+  signal that drives pickability. Every other mask preserved byte-for-byte + regression guards;
+  `mentorLocationLabel` simplified accordingly.
+- Cost: ≤4 Anthropic calls per mentor worst case (2 generation + up to 2 reviewer); batch cap 10,
+  resumable. Negligible on the ~5-mentor corpus.
