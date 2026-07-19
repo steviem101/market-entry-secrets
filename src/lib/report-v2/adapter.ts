@@ -361,6 +361,27 @@ const firstSentence = (text: string): string => {
   return (m ? m[0] : text).trim();
 };
 
+// Intake-request prose (R5: never render "provide a list of target companies"
+// apology/guidance as section copy).
+const INTAKE_GUIDANCE_RE =
+  /\b(provide a list|in your intake|please provide|specify your (?:target|criteria)|prevents the generation)\b/i;
+
+/**
+ * The lead strategic paragraph of a prose section: the first paragraph that is
+ * neither a heading-only lead nor R5 intake-guidance. Used to give §04/§07/§13
+ * a grounded intro line without dumping the whole multi-heading blob (or
+ * duplicating the section's own cards).
+ */
+const leadParagraph = (content: unknown, citationCount: number): string => {
+  for (const p of toParagraphs(content, "lead", () => {}, citationCount)) {
+    const t = p.trim();
+    if (/^\*\*[^*]+\*\*$/.test(t)) continue; // heading-only lead
+    if (INTAKE_GUIDANCE_RE.test(p.replace(/\*\*/g, ""))) continue; // R5
+    return p;
+  }
+  return "";
+};
+
 /**
  * R11 relevance gate (contracts.md), conservative Phase-A form: drop matches
  * whose description marks them as plainly non-commercial (the documented real
@@ -650,7 +671,17 @@ export function adaptPipelineReport(
   // §04 intro: the first-customers strategy prose. Named target briefs
   // (briefed/icpGuidance) still await Phase B, but rendering this prose keeps
   // the section from showing an empty card.
-  const accountsIntro = toParagraphs(sections.first_customers?.content, "accounts.intro", log, citations.length).join(" ");
+  // §04 intro: the lead strategic paragraph (skips the intake-guidance opener
+  // per R5 and the multi-heading blob). Named briefs are Phase-B.
+  const accountsIntro = leadParagraph(sections.first_customers?.content, citations.length);
+  if (accountsIntro) log("accounts.intro", "derived §04 lead paragraph from first_customers prose");
+  // §07 intro: strategic lead paragraph (the card list in the prose duplicates
+  // the mentor cards, so only the lead paragraph is used).
+  const mentorsIntro = leadParagraph(sections.mentor_recommendations?.content, citations.length);
+  if (mentorsIntro) log("mentors.intro", "derived §07 lead paragraph from mentor_recommendations prose");
+  // §13 gap copy: the grounded "why no dataset" explanation from the pipeline
+  // instead of the generic fallback.
+  const leadGapCopy = leadParagraph(sections.lead_list?.content, citations.length);
 
   const briefed: AccountBrief[] = (sections.first_customers?.matches ?? [])
     .filter((m, i) => passesRelevanceGate(m, `first_customers.matches[${i}]`, log))
@@ -764,7 +795,7 @@ export function adaptPipelineReport(
       })),
       hubs: hubCards.map((card) => ({ ...card, focusTag: card.tag })),
     },
-    mentors: { intro: "", primary: mentorCards.slice(0, 3), extra: mentorCards.slice(3) },
+    mentors: { intro: mentorsIntro, primary: mentorCards.slice(0, 3), extra: mentorCards.slice(3) },
     investors: {
       intro: "",
       approachOrder: [],
@@ -790,7 +821,7 @@ export function adaptPipelineReport(
           customBuildCopy: "Need a different list? Describe your ICP and we'll build it.",
         }
       : {
-          gapCopy: "No matching lead dataset yet — request a custom build below.",
+          gapCopy: leadGapCopy || "No matching lead dataset yet — request a custom build below.",
           customBuildCopy: "Need a different list? Describe your ICP and we'll build it.",
         },
     close: {
