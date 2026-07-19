@@ -4,6 +4,7 @@ import {
   adaptPipelineReport,
   domainTier,
   mapPlan,
+  matchHasSectorRelevance,
   sanitizeContractPath,
   toParagraphs,
 } from "./adapter.ts";
@@ -452,4 +453,70 @@ test("adaptPipelineReport survives an empty report_json", () => {
   // No content → no phases (empty section is suppressed, not padded).
   assert.equal(report.actionPlan.phases.length, 0);
   assert.ok(mismatches.length > 0);
+});
+
+test("t20 matchHasSectorRelevance: true only for genuine industry / sells-to sector reasons", () => {
+  assert.equal(matchHasSectorRelevance({ match_reasons: ["industry match ×1 (+3)", "location (+1)"] }), true);
+  assert.equal(matchHasSectorRelevance({ match_reasons: ["sells-to sector (+2)"] }), true);
+  // agnostic / goal / region fallbacks are NOT sector relevance ("all sectors" ≠ sector hit)
+  assert.equal(matchHasSectorRelevance({ match_reasons: ["eligible for all sectors (+0.25)", "target region (+2)"] }), false);
+  assert.equal(matchHasSectorRelevance({ match_reasons: ["service/skill fit ×2 (+4)"] }), false);
+  assert.equal(matchHasSectorRelevance({}), false);
+});
+
+test("t20 coverage note: all-fallback mentor set gets an honest caption; a sector hit suppresses it", () => {
+  const fallback = adaptPipelineReport(
+    {
+      company_name: "Sortd",
+      matches: {
+        community_members: [
+          { name: "Colm Dolan", link: "/mentors/experts/colm-dolan", subtitle: "CEO",
+            match_reasons: ["service/skill fit ×2 (+4)", "eligible for all sectors (+0.25)"] },
+        ],
+      },
+    },
+    {}
+  );
+  assert.equal(fallback.report.mentors.coverageNote, "Matched on your goals and stage rather than your specific industry.");
+  assert.ok(fallback.mismatches.some((m) => m.path === "mentors.coverageNote"));
+
+  const tailored = adaptPipelineReport(
+    {
+      matches: {
+        community_members: [
+          { name: "Sector Specialist", link: "/mentors/experts/x", match_reasons: ["industry match ×1 (+3)"] },
+          { name: "Generalist", link: "/mentors/experts/y", match_reasons: ["eligible for all sectors (+0.25)"] },
+        ],
+      },
+    },
+    {}
+  );
+  assert.equal(tailored.report.mentors.coverageNote, undefined);
+});
+
+test("t20 coverage note: absent when the section has no matches at all (nothing to caption)", () => {
+  const { report } = adaptPipelineReport({ matches: {} }, {});
+  assert.equal(report.mentors.coverageNote, undefined);
+  assert.equal(report.providers.coverageNote, undefined);
+  assert.equal(report.investors.coverageNote, undefined);
+});
+
+test("t20 coverage note: providers with an industry match are NOT captioned (Sortd/NEXTGEN case)", () => {
+  const { report } = adaptPipelineReport(
+    {
+      matches: {
+        service_providers: [
+          { name: "NEXTGEN", link: "/service-providers/nextgen", subtitle: "Sydney",
+            match_reasons: ["industry match ×1 (+3)", "industry specialist (+2)"] },
+        ],
+        investors: [
+          { name: "Some Fund", link: "/investors/some-fund", match_reasons: ["target region (+2)"] },
+        ],
+      },
+    },
+    {}
+  );
+  assert.equal(report.providers.coverageNote, undefined);
+  // investors here are pure fallback → captioned on stage/funding basis
+  assert.equal(report.investors.coverageNote, "Matched on your stage and funding need rather than your specific industry.");
 });

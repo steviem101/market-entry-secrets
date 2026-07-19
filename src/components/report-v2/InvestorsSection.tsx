@@ -2,6 +2,7 @@ import type { Report } from "@/types/report";
 import SectionCard from "./SectionCard";
 import { MatchGrid, NumberedProse } from "./TwoTier";
 import Rich from "./Rich";
+import CoverageNote from "./CoverageNote";
 
 /**
  * §08 investors: numbered approach order (framed as ONE possible order —
@@ -16,6 +17,7 @@ const InvestorsSection = ({ report }: { report: Report }) => {
         text={investors.intro}
         className="mb-6 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
       />
+      <CoverageNote text={investors.coverageNote} />
       <NumberedProse items={investors.approachOrder} />
       <MatchGrid
         header="ALL MATCHED INVESTORS, GRANTS & AWARDS"

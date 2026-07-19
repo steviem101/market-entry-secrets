@@ -3,6 +3,7 @@ import SectionCard from "./SectionCard";
 import IdentitySlot from "./IdentitySlot";
 import StarToggle from "./StarToggle";
 import Rich from "./Rich";
+import CoverageNote from "./CoverageNote";
 
 const PersonName = ({ person }: { person: PersonCard }) => (
   <span>
@@ -32,6 +33,7 @@ const MentorsSection = ({ report }: { report: Report }) => {
         text={mentors.intro}
         className="mb-7 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
       />
+      <CoverageNote text={mentors.coverageNote} />
       <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
         {mentors.primary.map((person, i) => (
           <div key={i} className="rounded-xl border border-report-border px-[30px] py-7">
