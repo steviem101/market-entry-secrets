@@ -5,6 +5,7 @@ import {
   domainTier,
   mapPlan,
   matchHasSectorRelevance,
+  parseCompetitorProse,
   sanitizeContractPath,
   toParagraphs,
 } from "./adapter.ts";
@@ -519,4 +520,56 @@ test("t20 coverage note: providers with an industry match are NOT captioned (Sor
   assert.equal(report.providers.coverageNote, undefined);
   // investors here are pure fallback → captioned on stage/funding basis
   assert.equal(report.investors.coverageNote, "Matched on your stage and funding need rather than your specific industry.");
+});
+
+test("parseCompetitorProse: pulls lead-in + gaps + positioning; ignores the competitor table blocks", () => {
+  const content = [
+    "The Australian CRM landscape is mature [1].",
+    "",
+    "### Top Competitors in the Australian Market",
+    "* **Salesforce** — the leader.",
+    "",
+    "### HubSpot's Strategic Advantages",
+    "* Unified data vs fragmented ecosystems.",
+    "",
+    "### Market Gaps and Opportunities",
+    "* **Managed Services Surge:** projected 15.8% CAGR [1].",
+    "* **SME-to-Enterprise:** a gap for a platform that scales.",
+    "",
+    "### Strategic Positioning Recommendation",
+    "HubSpot should position as the \"Frictionless Enterprise Alternative\" [1].",
+  ].join("\n");
+  const out = parseCompetitorProse(content, 1, () => {});
+  assert.equal(out.intro, "The Australian CRM landscape is mature {chip:sourced}.");
+  // gaps drawn from the Market Gaps block, not the Strategic Advantages block
+  assert.match(out.gaps, /Managed Services Surge/);
+  assert.match(out.gaps, /SME-to-Enterprise/);
+  assert.doesNotMatch(out.gaps, /Unified data/);
+  // positioning anchored on "positioning" — never grabs "Strategic Advantages"
+  assert.match(out.positioningRead, /Frictionless Enterprise Alternative/);
+  assert.doesNotMatch(out.positioningRead, /Unified data/);
+});
+
+test("parseCompetitorProse: empty/headingless prose degrades to empty gaps/positioning", () => {
+  assert.deepEqual(parseCompetitorProse("", 0, () => {}), { intro: "", gaps: "", positioningRead: "" });
+  const noHeadings = parseCompetitorProse("Just a flat paragraph about rivals.", 0, () => {});
+  assert.equal(noHeadings.intro, "Just a flat paragraph about rivals.");
+  assert.equal(noHeadings.gaps, "");
+  assert.equal(noHeadings.positioningRead, "");
+});
+
+test("parseCompetitorProse: wired through adaptPipelineReport into §03 boxes", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        competitor_landscape: {
+          content: "Lead line.\n\n### Market Gaps\n* A real gap.\n\n### Positioning\nGo premium.",
+        },
+      },
+    },
+    {}
+  );
+  assert.equal(report.competitors.intro, "Lead line.");
+  assert.match(report.competitors.gaps, /A real gap/);
+  assert.equal(report.competitors.positioningRead, "Go premium.");
 });

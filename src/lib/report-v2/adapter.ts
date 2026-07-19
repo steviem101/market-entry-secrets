@@ -594,6 +594,54 @@ export function parseComplianceChecklist(
   return { intro, checklist };
 }
 
+/**
+ * §03's competitor TABLE comes from the matches; its lead-in and the two
+ * synthesis boxes come from the `competitor_landscape` prose, which the pipeline
+ * writes with a lead paragraph plus `### Market Gaps and Opportunities` and
+ * `### Strategic Positioning …` headings. Pull those three so the boxes the
+ * renderer already has stop rendering empty (they were dropped — generated then
+ * discarded). Each degrades to "" when its heading is absent. The per-competitor
+ * `### Top Competitors` blocks are deliberately ignored — that IS the structured
+ * table, not prose to repeat.
+ */
+export function parseCompetitorProse(
+  content: unknown,
+  citationCount: number,
+  log: Log
+): { intro: string; gaps: string; positioningRead: string } {
+  const empty = { intro: "", gaps: "", positioningRead: "" };
+  if (typeof content !== "string" || !content.trim()) return empty;
+  // Lead = text before the first heading; then each heading opens a section.
+  const lead: string[] = [];
+  const secs: { heading: string; body: string[] }[] = [];
+  let cur: { heading: string; body: string[] } | null = null;
+  for (const line of content.split("\n")) {
+    const h = line.match(/^#{1,6}\s+(.*\S)\s*$/);
+    if (h) {
+      cur = { heading: h[1].trim(), body: [] };
+      secs.push(cur);
+    } else if (cur) {
+      cur.body.push(line);
+    } else {
+      lead.push(line);
+    }
+  }
+  const bodyOf = (re: RegExp): string => {
+    const s = secs.find((x) => re.test(x.heading));
+    return s ? toParagraphs(s.body.join("\n"), "competitors", () => {}, citationCount).join(" ") : "";
+  };
+  // Intro = the first lead paragraph only (never the whole pre-heading blob).
+  const intro = toParagraphs(lead.join("\n"), "competitors.intro", () => {}, citationCount)[0] ?? "";
+  // "Strategic Advantages" also contains "Strategic" — anchor positioning on the
+  // word "positioning" (or GTM) so it can't grab the advantages block.
+  const gaps = bodyOf(/\bgaps?\b|opportunit/i);
+  const positioningRead = bodyOf(/positioning|go[-\s]?to[-\s]?market/i);
+  if (intro) log("competitors.intro", "derived lead-in from competitor_landscape prose");
+  if (gaps) log("competitors.gaps", "parsed market-gaps subsection from competitor prose");
+  if (positioningRead) log("competitors.positioningRead", "parsed positioning recommendation from competitor prose");
+  return { intro, gaps, positioningRead };
+}
+
 export function adaptPipelineReport(
   json: PipelineReportJson,
   context: AdaptContext = {}
@@ -729,6 +777,8 @@ export function adaptPipelineReport(
   const youDiffers = typeof json.metadata?.company_positioning === "string"
     ? json.metadata.company_positioning.trim()
     : "";
+  // §03 lead-in + the two synthesis boxes, parsed from the competitor prose.
+  const competitorProse = parseCompetitorProse(sections.competitor_landscape?.content, citations.length, log);
 
   // §04 intro: the first-customers strategy prose. Named target briefs
   // (briefed/icpGuidance) still await Phase B, but rendering this prose keeps
@@ -836,11 +886,11 @@ export function adaptPipelineReport(
     metrics: { tiles: keyMetrics.slice(0, 6).map(metricToTile) },
     swot,
     competitors: {
-      intro: "",
+      intro: competitorProse.intro,
       you: { name: customer, url: "", kind: "competitor", positionTag: "", position: "", strengths: youStrengths, differs: youDiffers },
       rows: competitorRows,
-      gaps: "",
-      positioningRead: "",
+      gaps: competitorProse.gaps,
+      positioningRead: competitorProse.positioningRead,
       scanHookCopy: "Want this table deeper? Request a competitor scan.",
     },
     accounts: { intro: accountsIntro, briefed, worthKnowing: "" },

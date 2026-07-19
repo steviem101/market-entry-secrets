@@ -161,7 +161,8 @@ positioning in caps. No new LLM calls (rides existing extraction); no migration/
 ### Phase 3 — pipeline & data quality (Phase B proper, per-ticket)
 - `report_templates`/generate-report: emit contract-structured JSON for SWOT, compliance,
   action plan, competitor verdict columns (you-row ✅/strengths ✅/differs ✅/positioning ✅ shipped
-  in 3b–3c; gaps + positioning-read boxes remain), first-customer briefs, key-question answer,
+  in 3b–3c; §03 intro + gaps + positioning-read ✅ now parsed from the competitor prose —
+  `parseCompetitorProse`, adapter-only), first-customer briefs, key-question answer,
   clean metric captions. This removes the prose parsers over time.
 - ~~Tier-RPC over-stripping of `first_customers`~~ — **CORRECTED (Phase-3 investigation):
   not a bug.** `get_tier_gated_report` gates `first_customers`/`lead_list` at `scale` and
