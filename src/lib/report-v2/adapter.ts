@@ -11,7 +11,7 @@ import type {
   Report,
   StatTile,
 } from "@/types/report";
-import { extractDomain } from "../logoUtils.ts";
+import { extractDomain, getLogoUrl } from "../logoUtils.ts";
 import { isPlatformPath } from "./format.ts";
 
 /**
@@ -49,6 +49,8 @@ interface PipelineMatch {
   tags?: string[];
   logo_url?: string;
   avatar_url?: string;
+  website?: string;
+  url?: string;
   date?: string;
   location?: string;
   record_count?: number;
@@ -335,6 +337,28 @@ const matchDescription = (m: PipelineMatch, cap = 260): string => {
 const cleanTag = (tag: string | undefined): string =>
   tag && !/^n\/?a\b/i.test(tag.trim()) ? tag : "";
 
+// A company logo is only meaningful for a real company domain. Personal/social
+// hosts (mentors' + many angels' `website` is a LinkedIn URL) would resolve to
+// the PLATFORM's logo, not the entity's — worse than the monogram — so skip them.
+const SOCIAL_DOMAIN_RE = /(?:^|\.)(?:linkedin|twitter|x|facebook|instagram|medium|substack|github|youtube|crunchbase|angel|gmail)\.[a-z.]+$/i;
+
+/**
+ * Best-effort company logo (logo.dev, DPR-2 for the 28px company slot) derived
+ * from a card's own site — no pipeline field needed, so it lights up existing
+ * reports. Returns undefined for social/personal domains and unparseable input;
+ * `IdentitySlot` already falls back to a monogram on absent or failed loads.
+ */
+function companyLogoUrl(...sites: unknown[]): string | undefined {
+  for (const site of sites) {
+    if (typeof site !== "string" || !site.trim()) continue;
+    const domain = extractDomain(site);
+    if (!domain || SOCIAL_DOMAIN_RE.test(domain)) continue;
+    const url = getLogoUrl(site, 56);
+    if (url) return url;
+  }
+  return undefined;
+}
+
 function toMatchCard(m: PipelineMatch, kind: EntityKind, path: string, log: Log): MatchCard {
   const url = sanitizeContractPath(m.link, `${path}.link`, log);
   return {
@@ -343,7 +367,8 @@ function toMatchCard(m: PipelineMatch, kind: EntityKind, path: string, log: Log)
     kind: url ? kindForPath(url, kind) : kind,
     tag: cleanTag(m.tags?.[0]),
     description: matchDescription(m),
-    logoUrl: typeof m.logo_url === "string" && m.logo_url ? m.logo_url : undefined,
+    logoUrl: (typeof m.logo_url === "string" && m.logo_url ? m.logo_url : undefined)
+      ?? companyLogoUrl(m.website, m.url),
   };
 }
 
@@ -935,6 +960,7 @@ export function adaptPipelineReport(
         fit: brief?.fit ?? "",
         approach: brief?.approach ?? [],
         angle: brief?.angle ?? "",
+        logoUrl: companyLogoUrl(brief?.url, m.website, url),
       };
     });
   if (briefed.length > 0 && proseBriefs.length === 0) {

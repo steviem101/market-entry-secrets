@@ -714,3 +714,53 @@ test("D1 degrade: no prose briefs → signals=description once, duplicated meta 
   assert.equal(a.stack, "");
   assert.ok(mismatches.some((m) => m.issue.includes("no structured briefs in prose")));
 });
+
+test("company logos: derived from a real company site; social/personal + relative skipped", () => {
+  const { report } = adaptPipelineReport(
+    {
+      matches: {
+        service_providers: [
+          { name: "NEXTGEN", link: "/service-providers/nextgen", website: "https://nextgen.group", description: "d" },
+          { name: "Angel Advisor", link: "/investors/x", website: "https://linkedin.com/in/someangel", description: "d" },
+          { name: "No Site Co", link: "/service-providers/nosite", description: "d" },
+        ],
+      },
+    },
+    {}
+  );
+  const [nextgen, angel, nosite] = report.providers.all;
+  assert.match(nextgen.logoUrl ?? "", /^https:\/\/img\.logo\.dev\/nextgen\.group\?/);
+  assert.equal(angel.logoUrl, undefined);   // linkedin.com would resolve to LinkedIn's logo — skipped
+  assert.equal(nosite.logoUrl, undefined);  // no website → monogram
+});
+
+test("company logos: pipeline logo_url (if ever present) wins over the derived one", () => {
+  const { report } = adaptPipelineReport(
+    { matches: { service_providers: [{ name: "X", link: "/x", logo_url: "https://cdn.example.com/x.png", website: "https://x.com" }] } },
+    {}
+  );
+  assert.equal(report.providers.all[0].logoUrl, "https://cdn.example.com/x.png");
+});
+
+test("company logos: §04 account card adopts a real account-site logo (D1 heading link)", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        first_customers: {
+          content: [
+            "Intro.",
+            "### [Commonwealth Bank (Commbank)](https://www.commbank.com.au)",
+            "**Who they are:** Australia's largest retail bank.",
+            "**Signals:** Record profit.",
+            "**Why they fit:** High volume.",
+            "**Who to approach:** Head of Lending.",
+            "**Opening angle:** Lead with automation.",
+          ].join("\n"),
+          matches: [{ name: "Commbank", subtitle: "Commonwealth Bank" }],
+        },
+      },
+    },
+    {}
+  );
+  assert.match(report.accounts.briefed[0].logoUrl ?? "", /^https:\/\/img\.logo\.dev\/commbank\.com\.au\?/);
+});

@@ -27,6 +27,7 @@ const IdentitySlot = ({ name, kind, src }: IdentitySlotProps) => {
         <img
           src={src}
           alt=""
+          loading="lazy"
           width={isPerson ? 34 : 28}
           height={isPerson ? 34 : 28}
           className="h-full w-full object-cover"
