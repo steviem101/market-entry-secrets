@@ -48,7 +48,7 @@ async function callHaiku(system: string, user: string): Promise<HaikuResult> {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: HAIKU_MODEL, max_tokens: MAX_TOKENS, system,
+        model: HAIKU_MODEL, max_tokens: MAX_TOKENS, temperature: 0, system,
         messages: [{ role: "user", content: user }],
       }),
       signal: controller.signal,
