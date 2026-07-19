@@ -73,7 +73,7 @@ test("adaptPipelineReport maps a realistic pipeline JSON without throwing and lo
       company_name: "Floats",
       sections: {
         executive_summary: {
-          content: "Floats is scaling into a ready market [1]. Timing favours you.\n\nSecond paragraph.",
+          content: "Floats is scaling into a ready market. Timing favours you [1].\n\nSecond paragraph.\n\nThird paragraph.",
           visible: true,
           matches: [{ name: "Aura Ventures", link: "/investors/aura-ventures" }],
         },
@@ -109,8 +109,11 @@ test("adaptPipelineReport maps a realistic pipeline JSON without throwing and lo
   assert.equal(report.meta.plan, "scale");
   assert.equal(report.meta.sourceCount, 3);
   assert.equal(report.cover.headline, "Floats is scaling into a ready market.");
+  // Cover owns paragraph 1 (headline = sentence 1, scope = the rest); §01
+  // narrative starts at paragraph 2, so the opening thesis is never repeated.
   assert.equal(report.exec.narrative.length, 2);
-  assert.match(report.exec.narrative[0], /\{chip:sourced\}/);
+  assert.deepEqual(report.exec.narrative, ["Second paragraph.", "Third paragraph."]);
+  assert.match(report.cover.scope, /\{chip:sourced\}/);
   assert.equal(report.exec.highlights[0].url, "/investors/aura-ventures");
   assert.equal(report.metrics.tiles[0].chip, "est");
   // Off-platform competitor link rejected, not rendered raw.
@@ -119,7 +122,8 @@ test("adaptPipelineReport maps a realistic pipeline JSON without throwing and lo
   assert.equal(report.providers.ourRead[0].rank, 1);
   assert.equal(report.mentors.primary[0].url, "/mentors/experts/jane-citizen");
   assert.equal(report.leads.dataset?.records, 360);
-  assert.equal(report.actionPlan.phases.length, 3);
+  // A single flat phase from prose (no longer padded to 3 empty columns).
+  assert.equal(report.actionPlan.phases.length, 1);
   assert.deepEqual(report.sources.regulator, ["ato.gov.au"]);
   assert.deepEqual(report.sources.analyst, ["ibisworld.com"]);
   assert.deepEqual(report.sources.vendor, ["blog.example.com"]);
@@ -175,10 +179,97 @@ test("account status chips are mapped from pipeline tags; hero stat is not dupli
   assert.equal(report.metrics.tiles[0].value, "$3B");
 });
 
+test("SWOT prose is parsed into quadrant items with leads + chips", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        swot_analysis: {
+          content:
+            "### **Strengths**\n\n*   **Trade Advantage:** Duty-free access under AUSFTA [1].\n*   **Local Presence:** Sydney office since 2014.\n\n### Weaknesses\n\n*   **Payroll Overheads:** High mandatory super contributions.\n\n## Opportunities\n\n*   **AI Demand:** Personalisation is growing fast.\n\n### Threats\n\n*   **Vertical Rivals:** Local players own niches.",
+        },
+      },
+      metadata: { perplexity_citations: ["https://ato.gov.au/x"] },
+    },
+    {}
+  );
+  assert.equal(report.swot.strengths.length, 2);
+  assert.equal(report.swot.strengths[0].lead, "Trade Advantage");
+  assert.match(report.swot.strengths[0].text, /\{chip:sourced\}/);
+  assert.equal(report.swot.weaknesses.length, 1);
+  assert.equal(report.swot.opportunities.length, 1);
+  assert.equal(report.swot.threats.length, 1);
+});
+
+test("match descriptions ignore raw enriched_description scrape and error pages", () => {
+  const { report } = adaptPipelineReport(
+    {
+      matches: {
+        service_providers: [
+          {
+            name: "Junk Co",
+            link: "/service-providers/junk",
+            description: "A tidy commercial firm helping tech companies enter Australia.",
+            enriched_description:
+              "[Skip to content](https://junk.co/#content)\n\n## HOW WE HELP\n\n![logo](https://junk.co/logo.png)",
+          },
+          {
+            name: "Error Co",
+            link: "/service-providers/error",
+            description: "# 403\n\n## Forbidden\n\nAccess to this resource on the server is denied!",
+          },
+        ],
+        investors: [
+          { name: "Solo Angel", link: "/investors/solo", tags: ["N/A (individual entry)"], description: "Angel investor (ID 22). This entry represents an individual, not a fund." },
+        ],
+      },
+    },
+    {}
+  );
+  // Curated description used; no markdown/scrape artifacts.
+  assert.equal(report.providers.all[0].description, "A tidy commercial firm helping tech companies enter Australia.");
+  // Error-page description dropped to empty.
+  assert.equal(report.providers.all[1].description, "");
+  // Placeholder "N/A (…)" tag suppressed; curation notes stripped.
+  assert.equal(report.investors.all[0].stageTag, "");
+  assert.ok(!/\(ID 22\)|This entry represents/.test(report.investors.all[0].description));
+});
+
+test("metric captions drop [n] markers and slug labels", () => {
+  const { report } = adaptPipelineReport(
+    {
+      metadata: {
+        key_metrics: [{ label: "Australia-CRM-software market size", value: "AUD 2.60B", context: "2024 estimate for national CRM software market[1]", estimated: true }],
+        perplexity_citations: ["https://ibisworld.com/x"],
+      },
+    },
+    {}
+  );
+  assert.equal(report.metrics.tiles[0].caption, "2024 estimate for national CRM software market");
+  assert.ok(!/\[\d+\]/.test(report.metrics.tiles[0].caption));
+});
+
+test("exec key-question subsection is split into its own box", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        executive_summary: {
+          content:
+            "## Executive Summary\n\nThesis sentence one. Continuation two.\n\nMore body prose.\n\n---\n\n### Your Key Question — Answered\n\n> \"find grants and funding\"\n\nThe direct answer: grants are limited but tax incentives help.",
+        },
+      },
+    },
+    {}
+  );
+  assert.match(report.exec.keyQuestionAnswer, /The direct answer: grants are limited/);
+  // The question blockquote and heading do not leak into the narrative.
+  assert.ok(!report.exec.narrative.some((p) => /Your Key Question|find grants and funding|^-{3,}$/.test(p)));
+});
+
 test("adaptPipelineReport survives an empty report_json", () => {
   const { report, mismatches } = adaptPipelineReport({}, {});
   assert.equal(report.meta.customer, "");
   assert.equal(report.meta.plan, "free");
-  assert.equal(report.actionPlan.phases.length, 3);
+  // No content → no phases (empty section is suppressed, not padded).
+  assert.equal(report.actionPlan.phases.length, 0);
   assert.ok(mismatches.length > 0);
 });

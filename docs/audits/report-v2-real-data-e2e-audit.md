@@ -68,7 +68,16 @@ telemetry worked; nothing acted on it.
 
 ## Improvement plan
 
-### Phase 1 — adapter + renderer hardening (no pipeline changes; ships from this branch)
+### Phase 1 — adapter + renderer hardening — ✅ DONE (2026-07-19)
+
+Shipped from this branch. **48 content defects → 0** (`dev-fixtures/audit.ts` regression
+scanner; the 7 residual entries are reclassified as Phase-B structural gaps the renderer
+degrades gracefully, not defects). Verified: `tsc`, 827 tests (incl. new SWOT/junk/metric/
+exec adapter cases), build, lint clean; all three fixtures + the real HubSpot report render
+0 mobile overflow / 0 console errors; §04 suppresses to 14 sections on the real report.
+Visual before/after confirmed for providers (clean curated copy, no "403 Forbidden"), exec
+(no repeated thesis / `---` / raw links), metrics (no `[n]`/slug captions), competitor
+(2-col degrade), and **SWOT (blank → fully populated 4-quadrant)**. Implemented items:
 1. **Never use `enriched_description`.** Card copy = curated `description`, markdown-stripped,
    ~260-char cap on sentence boundary; drop obvious error-page text (403/404/"Page not found").
    Same source for `ourRead[].why` (falls back to match_reasons phrasing). Fixes #28–46.
@@ -106,6 +115,13 @@ telemetry worked; nothing acted on it.
   action plan, competitor verdict columns (you-row, strengths, differs, gaps, positioning),
   first-customer briefs, key-question answer, clean metric captions. This removes the prose
   parsers over time.
+- **Tier-RPC over-stripping (found during Phase 1):** `first_customers` in the raw
+  `user_reports` row is `visible:true, required_tier:null, 2788 chars`, yet both
+  `get_shared_report` and (per the owner's blank §04) `get_tier_gated_report` return it
+  stripped/empty for the report's own scale owner. A no-tier-requirement, visible section
+  is being removed from an entitled viewer — investigate the RPCs' `v_tier_requirements`
+  hardcode for the accounts/first_customers key. This is why §04 was empty; the renderer
+  now suppresses it, but the content should reach the viewer.
 - Fix the silent `visible:false` section failure for `first_customers` (why it failed on a
   clean scale run) and surface per-section failures in the report UI.
 - Enrichment: detect and refuse error-page scrapes (403/404/robots interstitials);

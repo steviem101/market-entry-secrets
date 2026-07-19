@@ -110,6 +110,18 @@ const AccountsSection = ({ report }: { report: Report }) => {
   const { recordRequest } = useReportInteractions();
   const unbriefed = accounts.unbriefed ?? [];
   const zeroBriefed = accounts.briefed.length === 0;
+  // Suppress the whole section rather than render an empty card when the
+  // pipeline supplied no first-customer content at all (real-data audit: the
+  // first_customers section can arrive stripped/empty).
+  if (
+    !accounts.intro &&
+    accounts.briefed.length === 0 &&
+    unbriefed.length === 0 &&
+    !accounts.icpGuidance &&
+    !accounts.worthKnowing
+  ) {
+    return null;
+  }
   return (
     <SectionCard label="04 · YOUR FIRST CUSTOMERS" className="pb-[60px]">
       <Rich
