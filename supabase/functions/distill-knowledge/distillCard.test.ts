@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildDistillPrompt, parseDistillResponse, isTooThin, MIN_CHUNK_CHARS, DISTILLER_VERSION, type ChunkInput } from "./distillCard.ts";
+import { buildDistillPrompt, parseDistillResponse, coerceSectors, GENERAL_SECTOR, isTooThin, MIN_CHUNK_CHARS, DISTILLER_VERSION, type ChunkInput } from "./distillCard.ts";
 
 const LONG = "Setting up a company in Australia involves registering for a business number and, depending on turnover, for the goods and services tax. Employers must also meet state-based payroll obligations.";
 
@@ -17,10 +17,14 @@ function chunk(over: Partial<ChunkInput> = {}): ChunkInput {
   };
 }
 
-test("prompt carries lanes, intents menu, corridor, and delimits the source", () => {
+test("prompt carries lanes, intents menu, sectors, corridor, guards, and delimits the source", () => {
   const { system, user } = buildDistillPrompt(chunk());
   assert.match(system, /regulatory, market, playbook, cost, funding/);
+  assert.match(system, /AUDIENCE: only extract insights useful to a company ENTERING/); // inbound-relevance guard
+  assert.match(system, /NON-OBVIOUS/);            // non-obviousness rule
   assert.match(user, /entity_setup:/);            // intent menu present
+  assert.match(user, /technology, financial-services/); // sector menu present
+  assert.match(user, new RegExp(`"${GENERAL_SECTOR}"`)); // general sentinel offered
   assert.match(user, /United Kingdom -> Australia/); // corridor hint
   assert.match(user, /<<</); assert.match(user, />>>/); // source delimiters
 });
@@ -67,6 +71,33 @@ test("too-thin chunk skips before calling the model logic", () => {
   const { cards, skip } = parseDistillResponse("{}", chunk({ content: "short" }));
   assert.equal(cards.length, 0);
   assert.equal(skip, "too_thin");
+});
+
+test("distiller-assigned sectors are validated; junk dropped, general kept, capped at 2", () => {
+  const resp = JSON.stringify({ cards: [
+    { claim: "Foreign entrants to Australia must appoint a locally resident director for a proprietary company.",
+      topic_lane: "regulatory", sectors: ["financial-services", "teleportation", "healthcare"], answers_intents: [] },
+  ]});
+  const { cards } = parseDistillResponse(resp, chunk());
+  assert.equal(cards.length, 1);
+  assert.deepEqual(cards[0].metadata.sectors, ["financial-services", "healthcare"]); // teleportation dropped, capped at 2
+});
+
+test("no distiller sectors -> falls back to the chunk's own sector tags", () => {
+  const resp = JSON.stringify({ cards: [
+    { claim: "New entrants to Australia should plan for a self-assessment tax system with lodgement obligations.",
+      topic_lane: "regulatory", answers_intents: [] },
+  ]});
+  const { cards } = parseDistillResponse(resp, chunk()); // chunk metadata sectors = ["technology"]
+  assert.deepEqual(cards[0].metadata.sectors, ["technology"]);
+});
+
+test("coerceSectors: canonical + general kept, junk + non-canonical fallback dropped", () => {
+  assert.deepEqual(coerceSectors(["technology", "bogus"], []), ["technology"]);
+  assert.deepEqual(coerceSectors([GENERAL_SECTOR], []), [GENERAL_SECTOR]);
+  assert.deepEqual(coerceSectors(["a", "b", "c"], []), []);              // none canonical
+  assert.deepEqual(coerceSectors(undefined, ["retail", "legacy-tag"]), ["retail"]); // fallback filtered too
+  assert.deepEqual(coerceSectors(null, null), []);
 });
 
 test("isTooThin pre-filter mirrors the parse-time backstop", () => {
