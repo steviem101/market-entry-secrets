@@ -30,7 +30,11 @@ const PREFIX = "admin-mentor-anon-copy";
 
 // Model override mirrors the RQ_LOOP_MODEL convention; default matches generate-plan.
 const MODEL = Deno.env.get("ANON_COPY_MODEL") || "claude-sonnet-4-6";
-const MAX_BATCH = 20;            // per invocation — corpus is ~5 today, 134 lifetime
+// Per invocation. Worst case is 2 Anthropic calls × MAX_BATCH mentors run
+// sequentially, so this stays small to keep the function well inside its
+// wall-clock limit; batch skips mentors with a pending draft, so re-invoking
+// simply continues where the last run stopped. Corpus is ~5 today.
+const MAX_BATCH = 10;
 const MAX_TOKENS = 1200;
 const ANTHROPIC_TIMEOUT_MS = 60_000;
 

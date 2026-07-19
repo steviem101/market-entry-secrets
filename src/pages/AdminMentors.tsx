@@ -53,6 +53,7 @@ interface AdminMentorRow {
   sector_tags: string[] | null;
   specialties: string[] | null;
   experience: string | null;
+  experience_tiles: { name?: string }[] | null;
   is_active: boolean;
   is_anonymous: boolean;
   anonymous_alias: string | null;
@@ -112,7 +113,7 @@ const useAdminMentors = () =>
       const { data, error } = await supabase
         .from("community_members")
         .select(
-          "id, name, title, company, archetype, origin_country, sector_tags, specialties, experience, is_active, is_anonymous, anonymous_alias, anonymous_headline, anonymous_company_label, anonymous_bio",
+          "id, name, title, company, archetype, origin_country, sector_tags, specialties, experience, experience_tiles, is_active, is_anonymous, anonymous_alias, anonymous_headline, anonymous_company_label, anonymous_bio",
         )
         .order("name", { ascending: true });
       if (error) throw error;
@@ -339,8 +340,20 @@ const AdminMentors = () => {
       : draft.anonymous_bio.trim();
 
   // Advisory guard: flag admin-authored copy that would re-expose identity.
-  const fieldLeak = (value: string): string | null =>
-    editing ? identityLeak(value, editing.name, editing.company) : null;
+  // Checks the mentor's real name, company, AND experience-tile company names
+  // (the tiles are hidden publicly for anonymous mentors — naming one in the
+  // copy would defeat the mask just as surely as naming the employer).
+  const fieldLeak = (value: string): string | null => {
+    if (!editing) return null;
+    const direct = identityLeak(value, editing.name, editing.company);
+    if (direct) return direct;
+    for (const tile of editing.experience_tiles || []) {
+      if (!tile?.name) continue;
+      const hit = identityLeak(value, tile.name, null);
+      if (hit) return hit;
+    }
+    return null;
+  };
   const leaks = {
     anonymous_alias: fieldLeak(draft.anonymous_alias),
     anonymous_headline: fieldLeak(draft.anonymous_headline),
