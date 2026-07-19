@@ -682,6 +682,71 @@ export function parseIcpGuidance(
   return { targetRoles, sectorFocus, angle };
 }
 
+export interface ParsedAccountBrief {
+  name: string;
+  /** Validated http(s) url from the "### [Name](url)" heading link; "" otherwise. */
+  url: string;
+  who: string;
+  signals: string;
+  stack: string;
+  fit: string;
+  approach: string[];
+  angle: string;
+}
+
+// Loose company-name equivalence for merging prose briefs onto buyer cards: the
+// card says "Commbank" while the prose heading says "Commonwealth Bank
+// (Commbank)" — normalise to alphanumerics and accept containment either way.
+const briefNameKey = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+export function accountNamesMatch(a: string, b: string): boolean {
+  const ka = briefNameKey(a);
+  const kb = briefNameKey(b);
+  return ka.length >= 4 && kb.length >= 4 && (ka.includes(kb) || kb.includes(ka));
+}
+
+/**
+ * §04 named-accounts case: the pipeline writes one "### [Account](url)" block
+ * per verified target with bold-label lines that map 1:1 onto the account-card
+ * contract (the labels are a parse contract with buildBuyerBriefsNote — change
+ * together). Historically ALL of that was dropped and the cards rendered the
+ * directory description twice (CreditLogic audit D1). Label variants from
+ * before the contract tightening ("Why they fit CreditLogic:") still parse.
+ * Blocks with a heading but no recognised labels are skipped, not guessed at.
+ */
+export function parseAccountBriefs(content: unknown, citationCount: number, log: Log): ParsedAccountBrief[] {
+  if (typeof content !== "string" || !content.trim()) return [];
+  const out: ParsedAccountBrief[] = [];
+  // A field runs from its label to the next blank line, label line, or heading.
+  const UPTO = String.raw`([\s\S]*?)(?=\n\s*\n|\n\*\*|\n#{1,6}\s|$)`;
+  for (const block of content.split(/\n(?=#{2,4}\s+)/)) {
+    const head = block.match(/^#{2,4}\s+(.+)$/m)?.[1]?.trim();
+    if (!head) continue;
+    const link = head.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+    const name = (link ? link[1] : head).replace(/[*_]/g, "").trim();
+    const url = link ? link[2] : "";
+    const field = (labelRe: string): string => {
+      const m = block.match(new RegExp(String.raw`\*\*\s*` + labelRe + String.raw`:?\s*\*\*:?\s*` + UPTO, "i"));
+      return m ? toParagraphs(m[1], "accounts.brief", () => {}, citationCount).join(" ") : "";
+    };
+    const who = field("Who they are");
+    const signals = field("Signals");
+    const stack = field(String.raw`(?:Stack|Tech(?:nology)?[^:*]*)`);
+    const fit = field(String.raw`Why they fit[^:*]*`);
+    const approachRaw = field("Who to approach");
+    const angle = field(String.raw`(?:The\s+)?Opening angle`);
+    const approach = approachRaw
+      .replace(/\.\s*$/, "")
+      .split(/,|;|\bor\b|\band\b|\//i)
+      .map((t) => t.replace(/\[\d+\]/g, "").replace(/[*_]/g, "").replace(/\s+/g, " ").trim())
+      .filter((t) => t.length >= 3 && t.length <= 60)
+      .slice(0, 4);
+    if (!signals && !fit && approach.length === 0 && !angle) continue;
+    out.push({ name, url, who, signals, stack, fit, approach, angle });
+  }
+  if (out.length) log("accounts.briefed", `parsed ${out.length} structured account brief(s) from first_customers prose`);
+  return out;
+}
+
 export function adaptPipelineReport(
   json: PipelineReportJson,
   context: AdaptContext = {}
@@ -837,23 +902,44 @@ export function adaptPipelineReport(
   // instead of the generic fallback.
   const leadGapCopy = leadParagraph(sections.lead_list?.content, citations.length);
 
+  // Structured per-account briefs parsed from the section prose (D1) — merged
+  // onto the buyer cards by loose name equivalence.
+  const proseBriefs = parseAccountBriefs(sections.first_customers?.content, citations.length, log);
   const briefed: AccountBrief[] = (sections.first_customers?.matches ?? [])
     .filter((m, i) => passesRelevanceGate(m, `first_customers.matches[${i}]`, log))
-    .map((m, i) => ({
-    name: matchName(m),
-    url: sanitizeContractPath(m.link, `accounts.briefed[${i}].link`, log),
-    kind: "account" as const,
-    meta: (m.subtitle ?? "").toUpperCase(),
-    statusChips: statusChipsFrom(m.tags),
-    signals: matchDescription(m),
-    stack: "",
-    fit: "",
-    approach: [],
-    angle: "",
-  }));
-  if (briefed.length > 0) {
-    log("accounts.briefed", "stack / fit / approach / angle unavailable until Phase B (status chips mapped from tags)");
-  } else {
+    .map((m, i) => {
+      const cardName = matchName(m);
+      const brief = proseBriefs.find((b) => accountNamesMatch(b.name, cardName));
+      const desc = matchDescription(m);
+      const signals = brief?.signals || desc;
+      // Meta line: the brief's one-line "who they are" (short + grounded), else
+      // the subtitle — boundary-capped, and NEVER a duplicate of the signals
+      // text (the pre-D1 cards printed the same description twice).
+      let meta = capText(stripInlineMarkdown(brief?.who || m.subtitle || ""), 90);
+      if (meta && briefNameKey(signals).startsWith(briefNameKey(meta.replace(/…$/, "")))) meta = "";
+      // Buyer cards carry no platform link; adopt the brief heading's validated
+      // external site link so the account name is clickable (audit D4).
+      let url = sanitizeContractPath(m.link, `accounts.briefed[${i}].link`, () => {});
+      if (!url && brief?.url && /^https?:\/\/\S+$/i.test(brief.url)) {
+        url = brief.url;
+        log(`accounts.briefed[${i}].link`, "adopted account site link from the prose brief heading");
+      }
+      return {
+        name: cardName,
+        url,
+        kind: "account" as const,
+        meta: meta.toUpperCase(),
+        statusChips: statusChipsFrom(m.tags),
+        signals,
+        stack: brief?.stack ?? "",
+        fit: brief?.fit ?? "",
+        approach: brief?.approach ?? [],
+        angle: brief?.angle ?? "",
+      };
+    });
+  if (briefed.length > 0 && proseBriefs.length === 0) {
+    log("accounts.briefed", "no structured briefs in prose — cards carry description-only signals (pre-D1 pipeline output)");
+  } else if (briefed.length === 0) {
     log("accounts", "no briefed targets and no icpGuidance source — §04 renders empty until Phase B");
   }
 
