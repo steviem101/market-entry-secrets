@@ -109,6 +109,7 @@ async function callAnthropic(
  */
 // deno-lint-ignore no-explicit-any -- untyped client, house pattern for function helpers
 async function generateForMentor(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped client, house pattern for function helpers
   supabase: any,
   mentor: MentorRow,
 ): Promise<
