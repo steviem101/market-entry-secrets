@@ -44,6 +44,7 @@ interface PipelineMatch {
   description?: string;
   enriched_description?: string;
   strengths?: string[];
+  differs?: string;
   tags?: string[];
   logo_url?: string;
   avatar_url?: string;
@@ -68,6 +69,7 @@ export interface PipelineReportJson {
     perplexity_citations?: string[];
     key_metrics?: KeyMetric[];
     company_strengths?: string[];
+    company_positioning?: string;
     [key: string]: unknown;
   };
   [key: string]: unknown;
@@ -663,20 +665,27 @@ export function adaptPipelineReport(
     kind: "competitor" as const,
     positionTag: cleanTag(m.tags?.[0]),
     position: matchDescription(m),
-    // Grounded, site-derived strengths (Phase 3b). "Where you differ" stays a
-    // Phase-B comparative output.
+    // Grounded, site-derived strengths (Phase 3b) and comparative contrast (3c).
+    // Both are per-column and degrade to "" independently.
     strengths: Array.isArray(m.strengths)
       ? m.strengths.map((s) => String(s).trim()).filter(Boolean).join(" · ")
       : "",
-    differs: "",
+    differs: typeof m.differs === "string" ? m.differs.trim() : "",
   }));
   const anyCompetitorStrengths = competitorRows.some((r) => r.strengths);
   if (competitorRows.length > 0 && !anyCompetitorStrengths) {
     log("competitors.rows", "no site-derived strengths in this run — Strengths column omitted");
   }
-  // §03 "you" row strengths: the customer's own grounded USPs (metadata).
+  const anyCompetitorDiffers = competitorRows.some((r) => r.differs);
+  if (competitorRows.length > 0 && !anyCompetitorDiffers) {
+    log("competitors.rows", "no grounded contrast in this run — Where-differs column omitted");
+  }
+  // §03 "you" row (Phase 3b/3c): the customer's own grounded USPs + positioning.
   const youStrengths = Array.isArray(json.metadata?.company_strengths)
     ? json.metadata!.company_strengths!.map((s) => String(s).trim()).filter(Boolean).join(" · ")
+    : "";
+  const youDiffers = typeof json.metadata?.company_positioning === "string"
+    ? json.metadata.company_positioning.trim()
     : "";
 
   // §04 intro: the first-customers strategy prose. Named target briefs
@@ -786,7 +795,7 @@ export function adaptPipelineReport(
     swot,
     competitors: {
       intro: "",
-      you: { name: customer, url: "", kind: "competitor", positionTag: "", position: "", strengths: youStrengths, differs: "" },
+      you: { name: customer, url: "", kind: "competitor", positionTag: "", position: "", strengths: youStrengths, differs: youDiffers },
       rows: competitorRows,
       gaps: "",
       positioningRead: "",
