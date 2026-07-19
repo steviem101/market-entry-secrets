@@ -6,6 +6,7 @@ import {
   mapPlan,
   matchHasSectorRelevance,
   parseCompetitorProse,
+  parseIcpGuidance,
   sanitizeContractPath,
   toParagraphs,
 } from "./adapter.ts";
@@ -572,4 +573,42 @@ test("parseCompetitorProse: wired through adaptPipelineReport into §03 boxes", 
   assert.equal(report.competitors.intro, "Lead line.");
   assert.match(report.competitors.gaps, /A real gap/);
   assert.equal(report.competitors.positioningRead, "Go premium.");
+});
+
+test("parseIcpGuidance: parses the three labels; roles split + de-qualified", () => {
+  const content = [
+    "Strategic guidance about targeting.",
+    "",
+    "**Target Roles:** Head of Sales, Sales Operations Manager, or Growth Lead at Australian SaaS organisations.",
+    "**Sector Focus:** The Marketing Automation segment, growing 14.8% [1].",
+    "**Opening Angle:** Position lemlist as a way to increase CRM efficiency [1].",
+  ].join("\n");
+  const icp = parseIcpGuidance(content, 1, () => {});
+  assert.ok(icp);
+  assert.deepEqual(icp.targetRoles, ["Head of Sales", "Sales Operations Manager", "Growth Lead"]);
+  assert.match(icp.sectorFocus, /Marketing Automation/);
+  assert.match(icp.sectorFocus, /\{chip:sourced\}/);
+  assert.match(icp.angle, /Position lemlist/);
+});
+
+test("parseIcpGuidance: incomplete block (missing angle) → undefined, never a lopsided card", () => {
+  const content = "**Target Roles:** CMO, CRO\n**Sector Focus:** Enterprise SaaS.";
+  assert.equal(parseIcpGuidance(content, 0, () => {}), undefined);
+  assert.equal(parseIcpGuidance("no labels here", 0, () => {}), undefined);
+  assert.equal(parseIcpGuidance("", 0, () => {}), undefined);
+});
+
+test("parseIcpGuidance: wired into §04 accounts.icpGuidance", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        first_customers: {
+          content: "Lead paragraph.\n\n**Target Roles:** Head of Ops, COO\n**Sector Focus:** Hospitality groups.\n**Opening Angle:** Lead with labour-cost savings.",
+        },
+      },
+    },
+    {}
+  );
+  assert.deepEqual(report.accounts.icpGuidance?.targetRoles, ["Head of Ops", "COO"]);
+  assert.equal(report.accounts.icpGuidance?.angle, "Lead with labour-cost savings.");
 });

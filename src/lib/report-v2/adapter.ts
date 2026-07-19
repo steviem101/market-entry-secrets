@@ -642,6 +642,46 @@ export function parseCompetitorProse(
   return { intro, gaps, positioningRead };
 }
 
+/**
+ * §04's ICP card (the common "no named accounts" case, which is EVERY live
+ * report) is populated from the stable labeled block the pipeline now appends to
+ * the first_customers section (buildIcpGuidanceNote): `**Target Roles:** … /
+ * **Sector Focus:** … / **Opening Angle:** …`. Roles are split and de-qualified
+ * ("Growth Lead at SaaS orgs" → "Growth Lead"). Returns undefined when the block
+ * is absent or incomplete (older/variable reports) so §04 falls back to its lead
+ * paragraph — never a half-empty card.
+ */
+export function parseIcpGuidance(
+  content: unknown,
+  citationCount: number,
+  log: Log
+): { targetRoles: string[]; sectorFocus: string; angle: string } | undefined {
+  if (typeof content !== "string" || !content.trim()) return undefined;
+  const grab = (re: RegExp): string => (content.match(re)?.[1] ?? "").trim();
+  const rolesRaw = grab(/\*\*\s*Target Roles:?\s*\*\*\s*(.+)/i);
+  const sectorRaw = grab(/\*\*\s*Sector Focus:?\s*\*\*\s*(.+)/i);
+  const angleRaw = grab(/\*\*\s*(?:The\s+)?(?:Opening\s+)?Angle:?\s*\*\*\s*(.+)/i);
+  const targetRoles = rolesRaw
+    .split(/,|\bor\b|\band\b|;|\//i)
+    .map((r) =>
+      r
+        .replace(/\s+(?:at|in|within)\s+.*$/i, "") // drop the shared "at <org>" qualifier
+        .replace(/\[\d+\]/g, "")
+        .replace(/[*_.]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    )
+    .filter((r) => r.length >= 2 && r.length <= 48)
+    .slice(0, 5);
+  const sectorFocus = toParagraphs(sectorRaw, "accounts.icpGuidance.sectorFocus", () => {}, citationCount).join(" ");
+  const angle = toParagraphs(angleRaw, "accounts.icpGuidance.angle", () => {}, citationCount).join(" ");
+  // Complete-or-nothing: only surface the card when all three parts parsed, so a
+  // malformed block never renders a lopsided ICP card.
+  if (targetRoles.length === 0 || !sectorFocus || !angle) return undefined;
+  log("accounts.icpGuidance", `parsed ICP card from first_customers block (${targetRoles.length} roles)`);
+  return { targetRoles, sectorFocus, angle };
+}
+
 export function adaptPipelineReport(
   json: PipelineReportJson,
   context: AdaptContext = {}
@@ -787,6 +827,8 @@ export function adaptPipelineReport(
   // per R5 and the multi-heading blob). Named briefs are Phase-B.
   const accountsIntro = leadParagraph(sections.first_customers?.content, citations.length);
   if (accountsIntro) log("accounts.intro", "derived §04 lead paragraph from first_customers prose");
+  // §04 ICP card (no-named-accounts case) — parsed from the stable labeled block.
+  const icpGuidance = parseIcpGuidance(sections.first_customers?.content, citations.length, log);
   // §07 intro: strategic lead paragraph (the card list in the prose duplicates
   // the mentor cards, so only the lead paragraph is used).
   const mentorsIntro = leadParagraph(sections.mentor_recommendations?.content, citations.length);
@@ -893,7 +935,7 @@ export function adaptPipelineReport(
       positioningRead: competitorProse.positioningRead,
       scanHookCopy: "Want this table deeper? Request a competitor scan.",
     },
-    accounts: { intro: accountsIntro, briefed, worthKnowing: "" },
+    accounts: { intro: accountsIntro, briefed, worthKnowing: "", ...(icpGuidance ? { icpGuidance } : {}) },
     providers: {
       intro: "",
       ourRead: toRanked(providerCards, (i) => (matches.service_providers ?? [])[i]?.subtitle ?? "", "providers.ourRead", log),

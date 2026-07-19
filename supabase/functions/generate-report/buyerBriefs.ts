@@ -50,6 +50,26 @@ export function parseIcpDescription(desc: string | null | undefined): ParsedIcp 
   return { titles, org_type: m[2].trim() };
 }
 
+/**
+ * When the user named NO specific target accounts (the common case), the
+ * first_customers section has no per-account briefs to write, so historically it
+ * free-formed ICP prose in an inconsistent shape the renderer could not use
+ * (25 live reports: only 1 emitted a machine-readable structure). This note makes
+ * the section END with a STABLE, parseable ICP block — three fixed bold labels —
+ * so the adapter can populate the report_v2 §04 ICP card reliably. Grounded:
+ * roles anchored on the user's own ICP one-liner when they gave one; titles only,
+ * never invents individuals. Returns "" so the caller can `buyerBriefsNote || icpGuidanceNote`
+ * — an empty string here means "accounts WERE named, briefs take over".
+ */
+export function buildIcpGuidanceNote(icp: ParsedIcp, companyName: string, sectorText: string): string {
+  const anchor = icp.titles.length
+    ? ` Anchor the roles on the user's stated target (${icp.titles.join(", ")}${icp.org_type ? ` at ${icp.org_type}` : ""}) and refine from there.`
+    : "";
+  const sectorClipped = String(sectorText ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
+  const sector = sectorClipped ? ` grounded in ${companyName}'s space (${sectorClipped})` : "";
+  return `\n\nNO NAMED TARGET ACCOUNTS (this section): the user did not name specific companies, so DO NOT invent named accounts or write "### <Company>" briefs. Give concise strategic ICP guidance, then END the section with EXACTLY this block — three lines, each beginning with the bold label shown, and nothing after the third line:\n\n**Target Roles:** 3–5 specific job titles ${companyName} should approach first (titles ONLY — never name or invent individuals).${anchor}\n**Sector Focus:** the single most promising customer segment to prioritise${sector}.\n**Opening Angle:** one concrete, grounded opening angle for the first conversation.\n\nUse ONLY grounded facts — never invent figures, roles, or companies.`;
+}
+
 // Generic tokens that can't distinguish one company from another in a domain.
 const GENERIC_NAME_TOKENS = new Set([
   "recruitment", "recruiting", "group", "australia", "australian", "services",
