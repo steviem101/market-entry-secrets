@@ -131,11 +131,24 @@ helper (first strategic paragraph; skips heading-only leads and R5 intake-guidan
 restored. *Remaining Phase-B (pipeline): render the full multi-heading first-customers /
 mentor / lead prose as structured sub-blocks rather than a single lead paragraph.*
 
+### Phase 3b — pipeline competitor Strengths column — ✅ DONE (2026-07-19)
+First genuinely renderer-unfixable gap closed at the pipeline. `generate-report` now emits
+grounded, site-derived `strengths[]` per competitor (both the known-competitor scrape and the
+discovery-search prompt — "EVIDENT ON THEIR SITE / IN THE RESULT … do NOT guess; [] if none
+evident") and `metadata.company_strengths` (the customer's own `unique_selling_points`) for the
+you-row. `buildCompetitorCards` carries strengths onto each card; the adapter joins them with
+" · " and drives a **per-column** §03 table — Strengths and Where-differs render independently
+(`hasStrengths`/`hasDiffers`), so the table shows exactly the columns with data (2/3/4 cols) and
+never an empty column. Renderer uses statically-enumerated Tailwind grid templates (JIT can't see
+runtime-interpolated `grid-cols-[…]`). Verified: 873 tests (+5 competitorCards/adapter cases),
+tsc/build/lint clean; §03 rendered on a strengths-injected scale fixture — desktop 3-col + mobile
+stacked cards, 0 overflow. **"Where you differ" (comparative) + per-account §04 briefs stay Phase-B.**
+
 ### Phase 3 — pipeline & data quality (Phase B proper, per-ticket)
 - `report_templates`/generate-report: emit contract-structured JSON for SWOT, compliance,
-  action plan, competitor verdict columns (you-row, strengths, differs, gaps, positioning),
-  first-customer briefs, key-question answer, clean metric captions. This removes the prose
-  parsers over time.
+  action plan, competitor verdict columns (you-row ✅/strengths ✅ shipped in 3b; differs, gaps,
+  positioning remain), first-customer briefs, key-question answer, clean metric captions. This
+  removes the prose parsers over time.
 - ~~Tier-RPC over-stripping of `first_customers`~~ — **CORRECTED (Phase-3 investigation):
   not a bug.** `get_tier_gated_report` gates `first_customers`/`lead_list` at `scale` and
   `mentor_recommendations` at `growth`; for a scale owner the strip condition

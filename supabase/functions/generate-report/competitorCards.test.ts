@@ -76,3 +76,31 @@ test("buildCompetitorCards: scrape-failure fallback text never renders as a subt
   assert.equal(cards[1].subtitle, undefined);
   assert.equal(cards[2].subtitle, "A genuine construction platform");
 });
+
+test("buildCompetitorCards: carries up to 3 grounded strengths, clipped and de-emptied (Phase 3b)", () => {
+  const cards = buildCompetitorCards([
+    {
+      name: "Attio",
+      url: "https://attio.com",
+      strengths: ["  Modern UI  ", "", "Powerful automations", "Strong API", "Native integrations"],
+    },
+  ]);
+  // clipped/trimmed, empties dropped, capped at 3
+  assert.deepEqual(cards[0].strengths, ["Modern UI", "Powerful automations", "Strong API"]);
+});
+
+test("buildCompetitorCards: no strengths key omits the field entirely (column-suppress signal)", () => {
+  const cards = buildCompetitorCards([{ name: "Plain Co", url: "https://plain.co" }]);
+  assert.equal("strengths" in cards[0], false);
+});
+
+test("buildCompetitorCards: empty or all-blank strengths array omits the field", () => {
+  const cards = buildCompetitorCards([
+    { name: "A", url: "https://a.co", strengths: [] },
+    { name: "B", url: "https://b.co", strengths: ["", "   "] },
+    { name: "C", url: "https://c.co", strengths: "not-an-array" },
+  ]);
+  assert.equal("strengths" in cards[0], false);
+  assert.equal("strengths" in cards[1], false);
+  assert.equal("strengths" in cards[2], false);
+});

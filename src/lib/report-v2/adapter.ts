@@ -43,6 +43,7 @@ interface PipelineMatch {
   subtitle?: string;
   description?: string;
   enriched_description?: string;
+  strengths?: string[];
   tags?: string[];
   logo_url?: string;
   avatar_url?: string;
@@ -66,6 +67,7 @@ export interface PipelineReportJson {
   metadata?: {
     perplexity_citations?: string[];
     key_metrics?: KeyMetric[];
+    company_strengths?: string[];
     [key: string]: unknown;
   };
   [key: string]: unknown;
@@ -661,12 +663,21 @@ export function adaptPipelineReport(
     kind: "competitor" as const,
     positionTag: cleanTag(m.tags?.[0]),
     position: matchDescription(m),
-    strengths: "",
+    // Grounded, site-derived strengths (Phase 3b). "Where you differ" stays a
+    // Phase-B comparative output.
+    strengths: Array.isArray(m.strengths)
+      ? m.strengths.map((s) => String(s).trim()).filter(Boolean).join(" · ")
+      : "",
     differs: "",
   }));
-  if (competitorRows.length > 0) {
-    log("competitors.rows", "strengths/differs verdict columns unavailable until Phase B");
+  const anyCompetitorStrengths = competitorRows.some((r) => r.strengths);
+  if (competitorRows.length > 0 && !anyCompetitorStrengths) {
+    log("competitors.rows", "no site-derived strengths in this run — Strengths column omitted");
   }
+  // §03 "you" row strengths: the customer's own grounded USPs (metadata).
+  const youStrengths = Array.isArray(json.metadata?.company_strengths)
+    ? json.metadata!.company_strengths!.map((s) => String(s).trim()).filter(Boolean).join(" · ")
+    : "";
 
   // §04 intro: the first-customers strategy prose. Named target briefs
   // (briefed/icpGuidance) still await Phase B, but rendering this prose keeps
@@ -775,7 +786,7 @@ export function adaptPipelineReport(
     swot,
     competitors: {
       intro: "",
-      you: { name: customer, url: "", kind: "competitor", positionTag: "", position: "", strengths: "", differs: "" },
+      you: { name: customer, url: "", kind: "competitor", positionTag: "", position: "", strengths: youStrengths, differs: "" },
       rows: competitorRows,
       gaps: "",
       positioningRead: "",

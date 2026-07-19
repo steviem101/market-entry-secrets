@@ -160,6 +160,47 @@ test("R11 relevance gate drops non-commercial competitor matches and logs", () =
   assert.ok(mismatches.some((m) => m.issue.includes('R11 relevance gate dropped "Clay Aiken"')));
 });
 
+test("Phase 3b: competitor strengths join with '·'; company_strengths populate the you-row", () => {
+  const { report } = adaptPipelineReport(
+    {
+      company_name: "Floats",
+      sections: {
+        competitor_landscape: {
+          content: "x",
+          matches: [
+            { name: "Attio", link: "https://attio.com", subtitle: "CRM.", strengths: ["Modern UI", "Automations"] },
+          ],
+        },
+      },
+      metadata: { company_strengths: ["  AU-native ", "", "Vertical focus"] },
+    },
+    {}
+  );
+  assert.equal(report.competitors.rows[0].strengths, "Modern UI · Automations");
+  // you-row strengths derived from metadata.company_strengths (trimmed, empties dropped)
+  assert.equal(report.competitors.you.strengths, "AU-native · Vertical focus");
+  // "where you differ" stays a Phase-B comparative output — empty for now
+  assert.equal(report.competitors.rows[0].differs, "");
+  assert.equal(report.competitors.you.differs, "");
+});
+
+test("Phase 3b: no strengths anywhere → empty strengths + logged column-omitted signal", () => {
+  const { report, mismatches } = adaptPipelineReport(
+    {
+      sections: {
+        competitor_landscape: {
+          content: "x",
+          matches: [{ name: "Apollo.io", link: "https://apollo.io", subtitle: "Sales platform." }],
+        },
+      },
+    },
+    {}
+  );
+  assert.equal(report.competitors.rows[0].strengths, "");
+  assert.equal(report.competitors.you.strengths, "");
+  assert.ok(mismatches.some((m) => m.path === "competitors.rows" && /Strengths column omitted/.test(m.issue)));
+});
+
 test("account status chips are mapped from pipeline tags; hero stat is not duplicated", () => {
   const { report } = adaptPipelineReport(
     {

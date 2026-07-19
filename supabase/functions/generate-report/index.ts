@@ -463,6 +463,10 @@ interface CompetitorData {
   url: string;
   description: string;
   key_info: string;
+  // 2-3 concise strengths EVIDENT ON THEIR SITE / in the search result — the
+  // report_v2 competitor table's "Strengths" column. Grounded (site-derived),
+  // never guessed; empty when nothing is evident.
+  strengths?: string[];
   // Populated only under FIRECRAWL_COMPETITOR_DEPTH: the competitor's Australian
   // footprint (local office / AU case studies / .com.au / "no AU presence found"),
   // the single most decision-useful fact for a market-entry competitive read.
@@ -511,7 +515,7 @@ async function scrapeKnownCompetitors(
           {
             role: "user",
             content: `Analyze this website content for "${comp.name}" (${website}), a competitor of "${companyName}".
-Return a JSON object: {"name": "<the company's OFFICIAL name as written on their site, correctly capitalised — e.g. 'SourceWhale' not 'source whale'; fall back to '${comp.name}' only if the site doesn't state it>", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts"${deep ? `, "au_presence": "their Australian footprint from the site ONLY — local office/address, AU case studies or customers, .com.au domain, AU pricing. If none is evident, say 'No Australian presence evident on their site'. Do NOT guess."` : ""}}
+Return a JSON object: {"name": "<the company's OFFICIAL name as written on their site, correctly capitalised — e.g. 'SourceWhale' not 'source whale'; fall back to '${comp.name}' only if the site doesn't state it>", "url": "${website}", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, pricing model, market position, target audience, and notable facts", "strengths": ["2-3 short competitive strengths EVIDENT ON THEIR SITE (each a few words) — do NOT guess; [] if none evident"]${deep ? `, "au_presence": "their Australian footprint from the site ONLY — local office/address, AU case studies or customers, .com.au domain, AU pricing. If none is evident, say 'No Australian presence evident on their site'. Do NOT guess."` : ""}}
 
 Website content:
 ${markdown.slice(0, 2000)}`,
@@ -600,7 +604,7 @@ async function searchCompetitors(
           role: "user",
           content: `Analyze these search results to find DIRECT competitors of ${intake.company_name} — ${nicheAnchor} in Australia. A direct competitor offers a comparable product or service that a buyer would weigh as an alternative to ${intake.company_name} — NOT merely another company in the same broad sector.
 
-Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts"${deep ? `, "au_presence": "their Australian footprint if evident in the result (local office, AU customers/case studies, .com.au). If not evident, 'No Australian presence evident'. Do NOT guess."` : ""}}]${deep ? `\nStrict inclusion: ONLY direct product/service competitors. EXCLUDE service agencies, software-development shops, recruiters, employer-branding/talent platforms, ecosystem/community organisations, regulators, directories, news sites, and ${intake.company_name} itself. If a result is not a direct competitor, omit it — do not include it and then note that it is not a competitor.` : ""}
+Return a JSON array of objects: [{"name": "Company Name", "url": "website url", "description": "what they do in 1-2 sentences", "key_info": "key differentiators, market position, or notable facts", "strengths": ["2-3 short competitive strengths EVIDENT IN THE RESULT (each a few words) — do NOT guess; [] if none evident"]${deep ? `, "au_presence": "their Australian footprint if evident in the result (local office, AU customers/case studies, .com.au). If not evident, 'No Australian presence evident'. Do NOT guess."` : ""}}]${deep ? `\nStrict inclusion: ONLY direct product/service competitors. EXCLUDE service agencies, software-development shops, recruiters, employer-branding/talent platforms, ecosystem/community organisations, regulators, directories, news sites, and ${intake.company_name} itself. If a result is not a direct competitor, omit it — do not include it and then note that it is not a competitor.` : ""}
 
 Search results:
 ${filtered.map((r, i) => `--- Result ${i + 1} ---\nURL: ${r.url}\nTitle: ${r.title}\nContent: ${r.markdown}`).join("\n\n")}`,
@@ -3654,6 +3658,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         firecrawl_health: firecrawlStats,
         firecrawl_providers_enriched: (matches.service_providers || []).filter((p: any) => p.enriched_description).length,
         firecrawl_competitors_found: competitorResult.competitors.length,
+        // Customer's own site-derived USPs (grounded) — powers the report_v2
+        // competitor table's "you" row strengths. [] when the scrape found none.
+        company_strengths: Array.isArray(companyProfile?.unique_selling_points)
+          ? companyProfile.unique_selling_points.filter((s: unknown) => typeof s === "string" && s.trim()).slice(0, 4)
+          : [],
         // Whether the FIRECRAWL_COMPETITOR_DEPTH flag was ON for this report
         // (multi-angle discovery + au_presence signal). Persisted so the flag
         // state is verifiable from telemetry — the count above alone can't

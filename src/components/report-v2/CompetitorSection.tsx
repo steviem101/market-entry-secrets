@@ -6,7 +6,16 @@ import Rich from "./Rich";
 import { useReportInteractions } from "./ReportInteractionsProvider";
 
 // Below md the table stacks (README: tables → cards, never horizontal scroll).
-const GRID = "grid grid-cols-1 gap-2 px-[22px] md:grid-cols-[180px_1fr_1fr_1fr] md:gap-[18px]";
+// The verdict columns (Strengths, Where-differs) render independently, so the
+// grid has 0, 1, or 2 verdict columns on top of player+position. Tailwind's JIT
+// only compiles class strings it can see literally, so the three md templates are
+// enumerated statically here — a runtime-interpolated `md:grid-cols-[…]` would
+// silently never be generated.
+const MD_TEMPLATE = [
+  "md:grid-cols-[180px_1fr]",
+  "md:grid-cols-[180px_1fr_1fr]",
+  "md:grid-cols-[180px_1fr_1fr_1fr]",
+] as const;
 const MLABEL = "mb-0.5 block text-[8px] font-bold uppercase tracking-[0.08em] text-report-muted md:hidden";
 
 const PlayerCell = ({ row, tagClass }: { row: CompetitorRow; tagClass: string }) => {
@@ -36,16 +45,18 @@ const PlayerCell = ({ row, tagClass }: { row: CompetitorRow; tagClass: string })
 const CompetitorSection = ({ report }: { report: Report }) => {
   const { competitors, meta } = report;
   const { recordRequest } = useReportInteractions();
-  // Verdict columns (strengths / where-differs) are a Phase-B pipeline output.
-  // Until then, degrade to a 2-column table (player + market position) rather
-  // than render three empty cells per row (real-data audit).
-  const hasVerdicts = Boolean(
-    competitors.you.strengths ||
-      competitors.you.differs ||
-      competitors.rows.some((r) => r.strengths || r.differs)
+  // Verdict columns are populated per-column: Strengths (site-derived, Phase 3b)
+  // and Where-differs (comparative, Phase B) render independently, so the table
+  // shows exactly the columns that have data — never an empty cell per row.
+  const hasStrengths = Boolean(
+    competitors.you.strengths || competitors.rows.some((r) => r.strengths)
   );
-  const grid = hasVerdicts ? GRID : "grid grid-cols-1 gap-2 px-[22px] md:grid-cols-[180px_1fr] md:gap-[18px]";
-  const headerCols = hasVerdicts ? "md:grid-cols-[180px_1fr_1fr_1fr]" : "md:grid-cols-[180px_1fr]";
+  const hasDiffers = Boolean(
+    competitors.you.differs || competitors.rows.some((r) => r.differs)
+  );
+  const verdictCols = (hasStrengths ? 1 : 0) + (hasDiffers ? 1 : 0);
+  const mdTemplate = MD_TEMPLATE[verdictCols];
+  const grid = `grid grid-cols-1 gap-2 px-[22px] ${mdTemplate} md:gap-[18px]`;
   return (
     <SectionCard label="03 · COMPETITOR LANDSCAPE" className="pb-[60px]">
       <Rich
@@ -54,18 +65,18 @@ const CompetitorSection = ({ report }: { report: Report }) => {
       />
 
       <div className="overflow-hidden rounded-xl border border-report-border">
-        <div className={`hidden bg-report-bg py-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-report-muted md:grid ${headerCols} md:gap-[18px] md:px-[22px]`}>
+        <div className={`hidden bg-report-bg py-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-report-muted md:grid ${mdTemplate} md:gap-[18px] md:px-[22px]`}>
           <span>PLAYER</span>
           <span>MARKET POSITION</span>
-          {hasVerdicts && <span>STRENGTHS</span>}
-          {hasVerdicts && <span>WHERE {meta.customer.toUpperCase()} DIFFERS</span>}
+          {hasStrengths && <span>STRENGTHS</span>}
+          {hasDiffers && <span>WHERE {meta.customer.toUpperCase()} DIFFERS</span>}
         </div>
 
         <div className={`${grid} border-t-2 border-t-report-sky bg-report-tint py-[18px] text-[12.5px] leading-[1.6]`}>
           <PlayerCell row={competitors.you} tagClass="text-report-action" />
           <span><span className={MLABEL}>Market position</span>{competitors.you.position}</span>
-          {hasVerdicts && <span><span className={MLABEL}>Strengths</span>{competitors.you.strengths}</span>}
-          {hasVerdicts && (
+          {hasStrengths && <span><span className={MLABEL}>Strengths</span>{competitors.you.strengths}</span>}
+          {hasDiffers && (
             <span className="text-[10px] font-bold uppercase text-report-action">
               <span className={MLABEL}>Where {meta.customer} differs</span>
               {competitors.you.differs}
@@ -77,8 +88,8 @@ const CompetitorSection = ({ report }: { report: Report }) => {
           <div key={i} className={`${grid} border-t border-report-rule py-[18px] text-[12.5px] leading-[1.6]`}>
             <PlayerCell row={row} tagClass="text-report-caption" />
             <span><span className={MLABEL}>Market position</span>{row.position}</span>
-            {hasVerdicts && <span><span className={MLABEL}>Strengths</span>{row.strengths}</span>}
-            {hasVerdicts && <span><span className={MLABEL}>Where {meta.customer} differs</span>{row.differs}</span>}
+            {hasStrengths && <span><span className={MLABEL}>Strengths</span>{row.strengths}</span>}
+            {hasDiffers && <span><span className={MLABEL}>Where {meta.customer} differs</span>{row.differs}</span>}
           </div>
         ))}
       </div>

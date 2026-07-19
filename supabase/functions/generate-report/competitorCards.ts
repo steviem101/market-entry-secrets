@@ -14,6 +14,7 @@ export interface CompetitorLike {
   name?: unknown;
   url?: unknown;
   description?: unknown;
+  strengths?: unknown;
   au_presence?: unknown;
 }
 
@@ -25,6 +26,8 @@ export interface CompetitorCard {
   linkLabel: string;
   source: "web";
   tags: string[];
+  /** Grounded, site-derived strengths — the report_v2 table's Strengths column. */
+  strengths?: string[];
 }
 
 const clip = (s: unknown, n: number): string => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
@@ -74,6 +77,10 @@ export function buildCompetitorCards(competitors: CompetitorLike[] | null | unde
     const hasAu = au && !/no australian presence/i.test(au);
 
     const desc = clip(c?.description, 140);
+    // Carry up to 3 grounded strengths (each clipped), dropping empties.
+    const strengths = Array.isArray(c?.strengths)
+      ? (c.strengths as unknown[]).map((s) => clip(s, 80)).filter(Boolean).slice(0, 3)
+      : [];
     out.push({
       name,
       subtitle: desc && !FAILURE_DESCRIPTION_RE.test(desc) ? desc : undefined,
@@ -82,6 +89,7 @@ export function buildCompetitorCards(competitors: CompetitorLike[] | null | unde
       linkLabel: url ? "Visit site" : "",
       source: "web",
       tags: hasAu ? ["AU presence"] : [],
+      ...(strengths.length ? { strengths } : {}),
     });
     if (out.length >= cap) break;
   }
