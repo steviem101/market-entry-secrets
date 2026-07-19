@@ -31,7 +31,7 @@ const PlayerCell = ({ row, tagClass }: { row: CompetitorRow; tagClass: string })
       )}
       {!isCustomer && <StarToggle name={row.name} url={row.url} section="Competitor" />}
       <br />
-      <span className={`text-[9.5px] font-medium ${tagClass}`}>{row.positionTag}</span>
+      <span className={`text-[10.5px] font-medium ${tagClass}`}>{row.positionTag}</span>
     </span>
   );
 };
@@ -58,26 +58,26 @@ const CompetitorSection = ({ report }: { report: Report }) => {
   const mdTemplate = MD_TEMPLATE[verdictCols];
   const grid = `grid grid-cols-1 gap-2 px-[22px] ${mdTemplate} md:gap-[18px]`;
   return (
-    <SectionCard label="03 · COMPETITOR LANDSCAPE" className="pb-[60px]">
+    <SectionCard label="03 · COMPETITOR LANDSCAPE" className="pb-10">
       <Rich
         text={competitors.intro}
-        className="mb-6 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
+        className="mb-6 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"
       />
 
       <div className="overflow-hidden rounded-xl border border-report-border">
-        <div className={`hidden bg-report-bg py-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-report-muted md:grid ${mdTemplate} md:gap-[18px] md:px-[22px]`}>
+        <div className={`hidden bg-report-bg py-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-report-muted md:grid ${mdTemplate} md:gap-[18px] md:px-[22px]`}>
           <span>PLAYER</span>
           <span>MARKET POSITION</span>
           {hasStrengths && <span>STRENGTHS</span>}
           {hasDiffers && <span>WHERE {meta.customer.toUpperCase()} DIFFERS</span>}
         </div>
 
-        <div className={`${grid} border-t-2 border-t-report-sky bg-report-tint py-[18px] text-[12.5px] leading-[1.6]`}>
+        <div className={`${grid} border-t-2 border-t-report-sky bg-report-tint py-[18px] text-[13.5px] leading-[1.6]`}>
           <PlayerCell row={competitors.you} tagClass="text-report-action" />
           <span><span className={MLABEL}>Market position</span>{competitors.you.position}</span>
           {hasStrengths && <span><span className={MLABEL}>Strengths</span>{competitors.you.strengths}</span>}
           {hasDiffers && (
-            <span className="text-[10px] font-bold uppercase text-report-action">
+            <span className="text-[11px] font-bold uppercase text-report-action">
               <span className={MLABEL}>Where {meta.customer} differs</span>
               {competitors.you.differs}
             </span>
@@ -85,7 +85,7 @@ const CompetitorSection = ({ report }: { report: Report }) => {
         </div>
 
         {competitors.rows.map((row, i) => (
-          <div key={i} className={`${grid} border-t border-report-rule py-[18px] text-[12.5px] leading-[1.6]`}>
+          <div key={i} className={`${grid} border-t border-report-rule py-[18px] text-[13.5px] leading-[1.6]`}>
             <PlayerCell row={row} tagClass="text-report-caption" />
             <span><span className={MLABEL}>Market position</span>{row.position}</span>
             {hasStrengths && <span><span className={MLABEL}>Strengths</span>{row.strengths}</span>}
@@ -98,16 +98,16 @@ const CompetitorSection = ({ report }: { report: Report }) => {
         <div className="mt-7 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-11">
           {competitors.gaps && (
             <div>
-              <h3 className="mb-2.5 text-[13px] font-bold">Market gaps the research identifies</h3>
-              <Rich text={competitors.gaps} className="text-[12.5px] leading-[1.75] text-report-ink-soft" />
+              <h3 className="mb-2.5 text-[14px] font-bold">Market gaps the research identifies</h3>
+              <Rich text={competitors.gaps} className="text-[13.5px] leading-[1.75] text-report-ink-soft" />
             </div>
           )}
           {competitors.positioningRead && (
             <div className="rounded-xl border border-report-tint-border bg-report-tint px-7 py-[22px]">
-              <p className="mb-2.5 text-[10px] font-bold tracking-[0.12em] text-report-action">
+              <p className="mb-2.5 text-[11px] font-bold tracking-[0.12em] text-report-action">
                 THE REPORT'S POSITIONING READ
               </p>
-              <Rich text={competitors.positioningRead} className="text-[12.5px] leading-[1.75] text-report-ink-soft" />
+              <Rich text={competitors.positioningRead} className="text-[13.5px] leading-[1.75] text-report-ink-soft" />
             </div>
           )}
         </div>

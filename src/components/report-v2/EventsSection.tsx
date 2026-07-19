@@ -12,11 +12,11 @@ import Rich from "./Rich";
 const EventsSection = ({ report }: { report: Report }) => {
   const { events } = report;
   return (
-    <SectionCard label="09 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER" className="pb-[60px]">
+    <SectionCard label="09 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER" className="pb-10">
       <div className="mt-2 grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
         {events.cards.map((event, i) => (
           <div key={event.url || event.name || i} className="rounded-xl border border-report-border px-[30px] py-7">
-            <div className="text-[10px] font-bold uppercase text-report-warn">
+            <div className="text-[11px] font-bold uppercase text-report-warn">
               {[formatReportDate(event.date, "short"), event.venue].filter(Boolean).join(" · ")}
             </div>
             <div className="my-2.5 text-[15px] font-bold leading-[1.4]">
@@ -29,7 +29,7 @@ const EventsSection = ({ report }: { report: Report }) => {
               )}
               <StarToggle name={event.name} url={event.url} section="Event" />
             </div>
-            <Rich text={event.why} className="text-[12.5px] leading-[1.7] text-report-ink-soft" />
+            <Rich text={event.why} className="text-[13.5px] leading-[1.7] text-report-ink-soft" />
           </div>
         ))}
       </div>
@@ -37,16 +37,16 @@ const EventsSection = ({ report }: { report: Report }) => {
       {events.alsoFlagged && (
         <Rich
           text={events.alsoFlagged}
-          className="mt-[18px] text-[12px] leading-[1.7] text-report-muted"
+          className="mt-[18px] text-[12.5px] leading-[1.7] text-report-muted"
         />
       )}
 
       {events.maximise && events.maximise.length > 0 && (
         <div className="mt-[22px] rounded-xl border border-report-tint-border bg-report-tint px-7 py-6">
-          <p className="mb-3 text-[10px] font-bold tracking-[0.12em] text-report-action">
+          <p className="mb-3 text-[11px] font-bold tracking-[0.12em] text-report-action">
             MAXIMISE THESE ROOMS
           </p>
-          <div className="flex flex-col gap-2.5 text-[12.5px] leading-[1.7] text-report-ink-soft">
+          <div className="flex flex-col gap-2.5 text-[13.5px] leading-[1.7] text-report-ink-soft">
             {events.maximise.map((tip, i) => (
               <div key={i}>
                 <b>{tip.lead}</b> — <Rich as="span" text={tip.text} />

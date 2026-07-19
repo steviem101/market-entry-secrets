@@ -31,7 +31,7 @@ const ExecSummarySection = ({ report }: { report: Report }) => {
   const showHero = exec.heroStat.value.trim() !== "";
   const showSequence = exec.sequence.rows.length > 0;
   return (
-    <SectionCard label="01 · EXECUTIVE SUMMARY" className="pb-[60px]">
+    <SectionCard label="01 · EXECUTIVE SUMMARY" className="pb-10">
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px] lg:gap-16">
         <div>
           {exec.narrative.map((para, i) => (
@@ -48,14 +48,14 @@ const ExecSummarySection = ({ report }: { report: Report }) => {
 
           {showCallout && (
             <div className="mt-7 rounded-xl border border-report-tint-border bg-report-tint px-[30px] py-6">
-              <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.12em] text-report-action">
+              <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-report-action">
                 YOUR KEY QUESTION — ANSWERED{meta.keyQuestion ? ` · “${meta.keyQuestion}”` : ""}
               </p>
               {exec.keyQuestionAnswer.trim() !== "" && (
-                <Rich text={exec.keyQuestionAnswer} className="text-[13.5px] leading-[1.75] text-report-ink-soft" />
+                <Rich text={exec.keyQuestionAnswer} className="text-[14.5px] leading-[1.75] text-report-ink-soft" />
               )}
               {exec.highlights.length > 0 && (
-                <p className="mt-2 text-[13.5px] leading-[1.75] text-report-ink-soft">
+                <p className="mt-2 text-[14.5px] leading-[1.75] text-report-ink-soft">
                   Key highlights from your matches:{" "}
                   {exec.highlights.map((h, i) => (
                     <span key={i}>
@@ -84,22 +84,22 @@ const ExecSummarySection = ({ report }: { report: Report }) => {
         <div className="flex flex-col gap-[22px]">
           {showHero && (
             <div className="rounded-xl bg-report-surface px-8 py-[30px] text-white">
-              <p className="text-[9.5px] font-bold tracking-[0.12em] text-report-sky-soft">
+              <p className="text-[10.5px] font-bold tracking-[0.12em] text-report-sky-soft">
                 {exec.heroStat.label}
               </p>
               <div className="mb-2 mt-3 text-[56px] font-extrabold leading-none tracking-[-0.02em]">
                 <HeroValue value={exec.heroStat.value} />{" "}
                 <EvidenceChip chip={exec.heroStat.chip} className="align-[24px]" />
               </div>
-              <Rich text={exec.heroStat.caption} className="text-[12.5px] leading-[1.6] text-report-grey-soft" />
+              <Rich text={exec.heroStat.caption} className="text-[13.5px] leading-[1.6] text-report-grey-soft" />
             </div>
           )}
           {showSequence && (
             <div className="rounded-xl border border-report-border px-[30px] py-[26px]">
-              <p className="mb-3.5 text-[9.5px] font-bold tracking-[0.12em] text-report-action">
+              <p className="mb-3.5 text-[10.5px] font-bold tracking-[0.12em] text-report-action">
                 {exec.sequence.label}
               </p>
-              <div className="text-[12.5px] leading-[1.7] text-report-ink-soft">
+              <div className="text-[13.5px] leading-[1.7] text-report-ink-soft">
                 {exec.sequence.rows.map((row, i) => (
                   <div key={i} className="border-t border-report-border py-2 last:border-b">
                     <b>{row.period}</b> · <Rich as="span" text={row.text} />
@@ -107,7 +107,7 @@ const ExecSummarySection = ({ report }: { report: Report }) => {
                 ))}
               </div>
               {exec.sequence.caveat && (
-                <p className="mt-3 text-[10.5px] leading-[1.6] text-report-caption">{exec.sequence.caveat}</p>
+                <p className="mt-3 text-[11px] leading-[1.6] text-report-caption">{exec.sequence.caveat}</p>
               )}
             </div>
           )}

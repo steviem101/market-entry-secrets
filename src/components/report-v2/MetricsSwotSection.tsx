@@ -22,8 +22,8 @@ const SwotQuadrant = ({ heading, border, headingColor, items }: {
   items: SwotItem[];
 }) => (
   <div className={`rounded-xl border border-report-border border-l-[3px] ${border} px-7 py-6`}>
-    <p className={`mb-3 text-[10px] font-bold tracking-[0.12em] ${headingColor}`}>{heading}</p>
-    <div className="text-[12.5px] leading-[1.7] text-report-ink-soft">
+    <p className={`mb-3 text-[11px] font-bold tracking-[0.12em] ${headingColor}`}>{heading}</p>
+    <div className="text-[13.5px] leading-[1.7] text-report-ink-soft">
       {items.map((item, i) => (
         <span key={i}>
           {i > 0 && " · "}
@@ -44,16 +44,16 @@ const MetricsSwotSection = ({ report }: { report: Report }) => {
   const { metrics, swot, meta } = report;
   const quads = QUADRANTS.filter(({ key }) => swot[key].length > 0);
   return (
-    <SectionCard label="02 · KEY MARKET METRICS & STRATEGIC POSITION" className="pb-[60px]">
+    <SectionCard label="02 · KEY MARKET METRICS & STRATEGIC POSITION" className="pb-10">
       {metrics.tiles.length > 0 && (
         <div className="mb-5 mt-6 grid grid-cols-1 gap-[22px] sm:grid-cols-2 md:grid-cols-3">
           {metrics.tiles.map((tile, i) => (
             <div key={i} className="rounded-xl border border-report-border px-7 py-6 text-center">
               <div className="text-[32px] font-extrabold leading-tight text-report-action">
                 {tile.value}{" "}
-                <EvidenceChip chip={tile.chip} className="align-[10px] text-[9px]" />
+                <EvidenceChip chip={tile.chip} className="align-[10px] text-[10px]" />
               </div>
-              <div className="mt-1.5 text-[12px] leading-[1.6] text-report-muted">{tile.caption}</div>
+              <div className="mt-1.5 text-[12.5px] leading-[1.6] text-report-muted">{tile.caption}</div>
             </div>
           ))}
         </div>

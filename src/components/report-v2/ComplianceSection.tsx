@@ -21,15 +21,15 @@ const MLABEL = "mb-0.5 block text-[8px] font-bold uppercase tracking-[0.08em] te
 const ComplianceSection = ({ report }: { report: Report }) => {
   const { compliance } = report;
   return (
-    <SectionCard label="11 · SETUP & COMPLIANCE" className="pb-[60px]">
+    <SectionCard label="11 · SETUP & COMPLIANCE" className="pb-10">
       <Rich
         text={compliance.intro}
-        className="mb-7 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
+        className="mb-7 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"
       />
 
       {compliance.table.length > 0 && (
         <div className="mb-11 overflow-hidden rounded-xl border border-report-border">
-          <div className={`hidden bg-report-bg py-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-report-muted md:grid md:grid-cols-[230px_1fr_1fr] md:gap-[18px] md:px-[22px]`}>
+          <div className={`hidden bg-report-bg py-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-report-muted md:grid md:grid-cols-[230px_1fr_1fr] md:gap-[18px] md:px-[22px]`}>
             <span>REQUIREMENT</span>
             <span>WHAT THE RESEARCH SAYS</span>
             <span>PRACTICAL NOTE</span>
@@ -39,11 +39,11 @@ const ComplianceSection = ({ report }: { report: Report }) => {
             // not throw and take the whole report down — default to grey.
             const sev = SEVERITY[row.severity] ?? SEVERITY.grey;
             return (
-              <div key={i} className={`${GRID} ${sev.width} ${sev.border} py-[18px] text-[12.5px] leading-[1.65]`}>
+              <div key={i} className={`${GRID} ${sev.width} ${sev.border} py-[18px] text-[13.5px] leading-[1.65]`}>
                 <span>
                   <b>{row.requirement}</b>
                   <br />
-                  <span className={`text-[9px] font-medium uppercase ${sev.tag}`}>{row.tag}</span>
+                  <span className={`text-[10px] font-medium uppercase ${sev.tag}`}>{row.tag}</span>
                 </span>
                 <span><span className={MLABEL}>What the research says</span>{row.finding}</span>
                 <span><span className={MLABEL}>Practical note</span>{row.note}</span>
@@ -59,9 +59,9 @@ const ComplianceSection = ({ report }: { report: Report }) => {
             {compliance.stats.map((stat, i) => (
               <div key={i}>
                 <div className="text-[26px] font-extrabold">
-                  {stat.value} <EvidenceChip chip={stat.chip} className="align-[6px] text-[9px]" />
+                  {stat.value} <EvidenceChip chip={stat.chip} className="align-[6px] text-[10px]" />
                 </div>
-                <div className="text-[11.5px] leading-[1.6] text-report-muted">{stat.caption}</div>
+                <div className="text-[12px] leading-[1.6] text-report-muted">{stat.caption}</div>
               </div>
             ))}
           </div>
@@ -69,7 +69,7 @@ const ComplianceSection = ({ report }: { report: Report }) => {
         {compliance.checklist.length > 0 && (
           <div>
             <h3 className="mb-3.5 text-[17px] font-bold">Readiness checklist</h3>
-            <div className="grid grid-cols-1 gap-x-10 md:grid-cols-2 text-[12.5px] leading-[1.65] text-report-ink-soft">
+            <div className="grid grid-cols-1 gap-x-10 md:grid-cols-2 text-[13.5px] leading-[1.65] text-report-ink-soft">
               {compliance.checklist.map((item, i) => (
                 <div key={i} className="border-t border-report-border py-3">
                   <b>{item.lead}</b> — <Rich as="span" text={item.text} />

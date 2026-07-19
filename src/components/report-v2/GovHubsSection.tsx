@@ -28,13 +28,13 @@ const EntityName = ({ name, url, section }: { name: string; url: string; section
 const GovHubsSection = ({ report }: { report: Report }) => {
   const { govAndHubs } = report;
   return (
-    <SectionCard label="06 · GOVERNMENT, TRADE SUPPORT & ACCELERATORS" className="pb-[60px]">
+    <SectionCard label="06 · GOVERNMENT, TRADE SUPPORT & ACCELERATORS" className="pb-10">
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
         <div>
           <h3 className="mb-3.5 text-[16px] font-bold text-report-good">
             Government &amp; trade bodies — free to engage
           </h3>
-          <div className="text-[12.5px] leading-[1.65] text-report-ink-soft">
+          <div className="text-[13.5px] leading-[1.65] text-report-ink-soft">
             {govAndHubs.gov.map((g, i) => (
               <div
                 key={i}
@@ -58,11 +58,11 @@ const GovHubsSection = ({ report }: { report: Report }) => {
                   i === 0 ? "border-report-tint-border" : "border-report-border"
                 }`}
               >
-                <span className="text-[12.5px] leading-[1.6]">
+                <span className="text-[13.5px] leading-[1.6]">
                   <EntityName name={hub.name} url={hub.url} section="Accelerator" /> — {hub.description}
                 </span>
                 {hub.focusTag && (
-                  <span className="text-right text-[9px] font-bold uppercase text-report-action">
+                  <span className="text-right text-[10px] font-bold uppercase text-report-action">
                     {hub.focusTag}
                   </span>
                 )}
@@ -72,7 +72,7 @@ const GovHubsSection = ({ report }: { report: Report }) => {
         </div>
       </div>
       {govAndHubs.alsoNamed && (
-        <Rich text={govAndHubs.alsoNamed} className="mt-4 text-[11.5px] leading-[1.6] text-report-caption" />
+        <Rich text={govAndHubs.alsoNamed} className="mt-4 text-[12px] leading-[1.6] text-report-caption" />
       )}
     </SectionCard>
   );

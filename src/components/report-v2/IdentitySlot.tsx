@@ -40,8 +40,8 @@ const IdentitySlot = ({ name, kind, src }: IdentitySlotProps) => {
       aria-hidden
       className={`${frame} ${
         isPerson
-          ? "bg-report-person-bg text-[12px] font-bold text-report-action"
-          : "bg-report-company-bg text-[10px] font-bold text-report-muted"
+          ? "bg-report-person-bg text-[12.5px] font-bold text-report-action"
+          : "bg-report-company-bg text-[11px] font-bold text-report-muted"
       }`}
     >
       {entityInitials(name)}

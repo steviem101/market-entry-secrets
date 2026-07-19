@@ -11,10 +11,10 @@ import Rich from "./Rich";
 const ActionPlanSection = ({ report }: { report: Report }) => {
   const { actionPlan } = report;
   return (
-    <SectionCard label="10 · PHASED ACTION PLAN" className="pb-[60px]">
+    <SectionCard label="10 · PHASED ACTION PLAN" className="pb-10">
       <Rich
         text={actionPlan.intro}
-        className="mb-7 mt-4 max-w-[920px] text-[13.5px] leading-[1.7] text-report-ink-soft"
+        className="mb-7 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"
       />
       <div className="grid grid-cols-1 gap-[22px] md:grid-cols-3">
         {actionPlan.phases.map((phase, i) => (
@@ -24,7 +24,7 @@ const ActionPlanSection = ({ report }: { report: Report }) => {
           >
             {phase.period && (
               <div
-                className={`text-[10px] font-bold uppercase tracking-[0.1em] ${
+                className={`text-[11px] font-bold uppercase tracking-[0.1em] ${
                   i === 0 ? "text-report-action" : "text-report-muted"
                 }`}
               >
@@ -37,13 +37,13 @@ const ActionPlanSection = ({ report }: { report: Report }) => {
                 {phase.groups.map((group, g) => (
                   <div key={g}>
                     <div className="mb-1 text-[11px] font-bold text-report-ink">{group.title}</div>
-                    <Rich text={group.body} className="text-[12.5px] leading-[1.75] text-report-ink-soft" />
+                    <Rich text={group.body} className="text-[13.5px] leading-[1.75] text-report-ink-soft" />
                   </div>
                 ))}
               </div>
             ) : (
               phase.body && (
-                <Rich text={phase.body} className="text-[12.5px] leading-[1.75] text-report-ink-soft" />
+                <Rich text={phase.body} className="text-[13.5px] leading-[1.75] text-report-ink-soft" />
               )
             )}
           </div>
