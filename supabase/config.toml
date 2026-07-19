@@ -210,6 +210,13 @@ verify_jwt = false
 # stay false or the gateway rejects the cron POST (no JWT) before the function runs.
 verify_jwt = false
 
+[functions.distill-knowledge]
+# Distillation loop (Sub-ticket 2): knowledge_chunk -> knowledge_insight via Haiku.
+# Cron/manual, authenticated in-code by x-internal-secret (Vault-backed, same as
+# embed-knowledge). Gated OFF by default (DISTILL_KNOWLEDGE_ENABLED). Must stay false or
+# the gateway rejects the cron/backfill POST (no JWT) before the function runs.
+verify_jwt = false
+
 [functions.sitemap]
 # Public DB-driven sitemap (MES-79 / SEO-03). Must be fetchable by search-engine
 # crawlers (Googlebot, Bingbot) with no auth header at all, so verify_jwt = false —
