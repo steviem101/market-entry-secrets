@@ -141,7 +141,7 @@ export interface Report {
     intro: Paragraph;
     table: { requirement: string; severity: "red" | "amber" | "grey"; tag: string; finding: string; note: string }[];
     stats: StatTile[];
-    checklist: { lead: string; text: string }[];
+    checklist: { lead: string; text: Paragraph }[];
   };
   guides: {
     intro: Paragraph;

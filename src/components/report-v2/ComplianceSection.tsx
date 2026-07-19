@@ -72,7 +72,7 @@ const ComplianceSection = ({ report }: { report: Report }) => {
             <div className="grid grid-cols-1 gap-x-10 md:grid-cols-2 text-[12.5px] leading-[1.65] text-report-ink-soft">
               {compliance.checklist.map((item, i) => (
                 <div key={i} className="border-t border-report-border py-3">
-                  <b>{item.lead}</b> — {item.text}
+                  <b>{item.lead}</b> — <Rich as="span" text={item.text} />
                 </div>
               ))}
             </div>

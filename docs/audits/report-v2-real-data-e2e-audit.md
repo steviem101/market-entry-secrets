@@ -102,13 +102,21 @@ Visual before/after confirmed for providers (clean curated copy, no "403 Forbidd
    "(ID nn)" and "This entry represents…" sentences from descriptions. Fixes #47 at the
    render boundary (root fix is Phase 3).
 
-### Phase 2 — adapter extraction upgrades
-- Parse `setup_compliance` and `action_plan` prose into their structured shapes where the
-  generated markdown carries headings/lists (compliance rows, 3 phases with periods).
-- Derive `close.arriveWith` from action-plan/exec content; populate heroStat from the
-  strongest sourced metric.
-- Surface adapter mismatch telemetry to `report_quality` so degradation is visible in ops,
-  not just console.debug.
+### Phase 2 — adapter extraction upgrades — ✅ DONE (2026-07-19)
+- **`parseActionPlan`**: `action_plan` prose → structured phases with grouped sub-blocks
+  (`### Phase N — Title (Months X–Y)` + `**Sub-block**` + bullets). The HubSpot report now
+  renders 3 phase columns (Foundation / Establish / Launch) with 4/4/3 groups, chips, and
+  case-study links — was a single flat blob. Falls back to one flat phase when no headings.
+- **`parseComplianceChecklist`**: `setup_compliance` prose → lead intro + an 11-item
+  Readiness checklist (`**Lead:** text`, grammar preserved). Contract `checklist.text`
+  tightened `string`→`Paragraph`; `ComplianceSection` renders it via `Rich` so bold figures
+  ($75,000, 11.5%) show. Exposure table/stats stay Phase-B (renderer suppresses).
+- **`close.arriveWith`** derived from the action-plan group titles (grounded decision
+  areas); `CloseSection` suppresses the rail/body when absent.
+- heroStat: left omitted — `ExecSummarySection` already suppresses it; a non-duplicating
+  source is a Phase-B pipeline field (not worth a fragile derivation).
+- **Deferred to Phase 3:** surfacing adapter mismatch telemetry to `report_quality` needs a
+  client→DB write path (RLS/grants) — belongs with the pipeline work, not a renderer PR.
 
 ### Phase 3 — pipeline & data quality (Phase B proper, per-ticket)
 - `report_templates`/generate-report: emit contract-structured JSON for SWOT, compliance,
