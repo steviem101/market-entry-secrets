@@ -893,7 +893,7 @@ export function adaptPipelineReport(
   });
   if (mentorWhyHits > 0) log("mentors[].why", `used tailored per-mentor rationale from §07 prose for ${mentorWhyHits}/${mentorCards.length}`);
   if (mentorCards.length > 0 && mentorCards.every((m) => !m.headshotUrl)) {
-    log("mentors[].headshotUrl", "pipeline omits avatar_url — headshots render monogram (Phase B: add avatar_url to community_members select)");
+    log("mentors[].headshotUrl", "no matched mentor carries an avatar_url/image — all headshots render monogram (data gap, not a pipeline gap)");
   }
   if (
     [...providerCards, ...investorCards, ...hubCards].length > 0 &&

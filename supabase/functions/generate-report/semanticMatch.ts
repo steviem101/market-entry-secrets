@@ -55,7 +55,7 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
     // slug + is_anonymous + is_active are selected so index.ts's semanticMatches()
     // can build a real profile link and drop inactive/anonymous/seed mentors,
     // mirroring the overlap path.
-    select: "id, name, title, slug, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic, is_anonymous, is_active",
+    select: "id, name, title, slug, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic, is_anonymous, is_active, avatar_url, image",
     cap: 5,
     decorate: (m: any) => ({
       ...m,
@@ -64,6 +64,10 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
       linkLabel: "View Profile",
       subtitle: [m.title, m.company].filter(Boolean).join(", "),
       tags: (m.specialties || []).slice(0, 3),
+      // Grounded headshot (report_v2), same `avatar_url || image` resolution as the
+      // overlap path. decorate() runs AFTER index.ts drops is_anonymous mentors, so
+      // this only ever carries a non-anonymised mentor's photo (MES-208).
+      avatar_url: m.avatar_url || m.image || undefined,
     }),
   },
   events: {
