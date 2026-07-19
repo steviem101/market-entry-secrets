@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildDistillPrompt, parseDistillResponse, DISTILLER_VERSION, type ChunkInput } from "./distillCard.ts";
+import { buildDistillPrompt, parseDistillResponse, isTooThin, MIN_CHUNK_CHARS, DISTILLER_VERSION, type ChunkInput } from "./distillCard.ts";
 
 const LONG = "Setting up a company in Australia involves registering for a business number and, depending on turnover, for the goods and services tax. Employers must also meet state-based payroll obligations.";
 
@@ -67,6 +67,15 @@ test("too-thin chunk skips before calling the model logic", () => {
   const { cards, skip } = parseDistillResponse("{}", chunk({ content: "short" }));
   assert.equal(cards.length, 0);
   assert.equal(skip, "too_thin");
+});
+
+test("isTooThin pre-filter mirrors the parse-time backstop", () => {
+  assert.ok(isTooThin("short"));
+  assert.ok(isTooThin(null));
+  assert.ok(isTooThin(undefined));
+  assert.ok(isTooThin("x".repeat(MIN_CHUNK_CHARS - 1)));
+  assert.ok(!isTooThin("x".repeat(MIN_CHUNK_CHARS)));
+  assert.ok(!isTooThin(LONG));
 });
 
 test("empty cards array -> off_topic; malformed json -> error", () => {

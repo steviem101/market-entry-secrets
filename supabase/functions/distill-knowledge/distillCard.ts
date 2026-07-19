@@ -25,7 +25,13 @@ export interface ChunkInput {
 }
 
 const MAX_CARDS_PER_CHUNK = 3;
-const MIN_CHUNK_CHARS = 120; // below this a chunk is too thin to distil
+export const MIN_CHUNK_CHARS = 120; // below this a chunk is too thin to distil
+
+/** Cheap pre-filter so the orchestrator can skip too-thin chunks BEFORE paying for a
+ *  Haiku call (parseDistillResponse also enforces this as a backstop). */
+export function isTooThin(content: string | null | undefined): boolean {
+  return (content ?? "").trim().length < MIN_CHUNK_CHARS;
+}
 
 /** Build the Haiku system+user prompt for one chunk. Delimited source text is DATA. */
 export function buildDistillPrompt(chunk: ChunkInput): { system: string; user: string } {

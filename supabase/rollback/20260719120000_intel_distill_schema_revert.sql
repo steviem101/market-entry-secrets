@@ -4,6 +4,7 @@
 -- data). To also purge distilled insights:
 --   delete from public.mes_knowledge_base where entity_type = 'knowledge_insight';
 
+drop function if exists public.prune_chunk_insights(jsonb);
 drop function if exists public.log_knowledge_distill(jsonb);
 drop function if exists public.kb_undistilled_chunks(text, integer);
 drop function if exists public.upsert_kb_knowledge_insights(jsonb);

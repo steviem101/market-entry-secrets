@@ -16,8 +16,8 @@ export function hasDatedFigure(text: string): boolean {
   if (/\b\d{1,3}(?:\.\d+)?\s?(?:%|per\s?cent|percent)/i.test(text)) return true;
   // "threshold/fee/levy/rate/deposit/minimum of 25,000".
   if (/\b(threshold|fee|levy|rate|charge|deposit|minimum|cap|limit)\s+of\s+\d[\d,]*/i.test(text)) return true;
-  // Bare large money-like number with a currency word nearby ("25,000 dollars").
-  if (/\b\d{1,3}(?:,\d{3})+\b\s*(?:dollars?|aud|usd)?/i.test(text) && /\b(dollar|aud|usd|tax|fee|cost|price|salary|wage)\b/i.test(text)) return true;
+  // Explicit money amount written out: "25,000 dollars" / "1,000 AUD".
+  if (/\b\d{1,3}(?:,\d{3})+\s?(?:dollars?|aud|usd)\b/i.test(text)) return true;
   return false;
 }
 

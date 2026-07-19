@@ -19,10 +19,17 @@ test("catches 'threshold/fee of N'", () => {
   assert.ok(hasDatedFigure("minimum of 100 employees"));
 });
 
+test("catches money amounts written out with a currency word", () => {
+  assert.ok(hasDatedFigure("the deposit is 25,000 dollars"));
+  assert.ok(hasDatedFigure("a bond of 1,000 AUD is required"));
+});
+
 test("passes durable, generalised statements", () => {
   assert.ok(!hasDatedFigure("Australia applies payroll tax with state-level thresholds"));
   assert.ok(!hasDatedFigure("GST registration is required once turnover exceeds a set threshold"));
   assert.ok(!hasDatedFigure("companies must register for a business number before trading"));
+  // A bare grouped number with no currency word must NOT trip the written-out-money rule.
+  assert.ok(!hasDatedFigure("the market spans more than 25,000 businesses across the region"));
   assert.ok(!hasDatedFigure(""));
 });
 

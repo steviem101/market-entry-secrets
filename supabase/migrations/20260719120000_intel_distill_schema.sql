@@ -112,8 +112,11 @@ as $function$
     and k.embedding is not null
     and coalesce((k.metadata->>'is_active')::boolean, true) is not false
     and not exists (
+      -- A prior SUCCESS/skip excludes the chunk; a transient 'error' row does NOT, so
+      -- rate-limited / timed-out chunks are retried on the next run (the log upserts).
       select 1 from public.knowledge_distill_log d
       where d.chunk_kb_id = k.id and d.distiller_version = p_distiller_version
+        and d.skip_reason is distinct from 'error'
     )
   order by k.updated_at asc
   limit greatest(p_limit, 1);
@@ -159,3 +162,38 @@ $function$;
 
 revoke all on function public.log_knowledge_distill(jsonb) from public, anon, authenticated;
 grant execute on function public.log_knowledge_distill(jsonb) to service_role;
+
+-- 5. Prune stale insight cards for re-distilled chunks. insight_ref is '<chunk_kb_id>:<n>';
+--    when a re-distill (version bump / force run) yields fewer or reordered cards for a
+--    chunk, delete that chunk's knowledge_insight rows whose source_ref is no longer in the
+--    produced keep_refs — preventing orphaned/duplicate "canonical" insights. Called by the
+--    distiller after upsert, once per processed chunk (keep_refs=[] when it produced none).
+create or replace function public.prune_chunk_insights(p_rows jsonb)
+returns integer
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  v_total integer := 0;
+  v_del   integer;
+  r       record;
+begin
+  for r in
+    select x.chunk_kb_id as chunk_kb_id, coalesce(x.keep_refs, '{}'::text[]) as keep_refs
+    from jsonb_to_recordset(p_rows) as x(chunk_kb_id text, keep_refs text[])
+    where x.chunk_kb_id is not null
+  loop
+    delete from public.mes_knowledge_base kb
+    where kb.entity_type = 'knowledge_insight'
+      and kb.metadata->>'source_ref' like (r.chunk_kb_id || ':%')
+      and not ((kb.metadata->>'source_ref') = any(r.keep_refs));
+    get diagnostics v_del = row_count;
+    v_total := v_total + v_del;
+  end loop;
+  return v_total;
+end;
+$function$;
+
+revoke all on function public.prune_chunk_insights(jsonb) from public, anon, authenticated;
+grant execute on function public.prune_chunk_insights(jsonb) to service_role;
