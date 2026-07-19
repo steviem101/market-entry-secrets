@@ -73,8 +73,15 @@ test("sector tags are humanised", () => {
   assert.equal(sectorTagLabel("financial-services"), "Financial Services");
 });
 
-test("anonymous location is prettified, named location untouched", () => {
-  assert.equal(mentorLocationLabel({ location: "uk", is_anonymous: true }), "🇬🇧 UK");
+test("anonymous mentor shows real metro location; bare country values prettified", () => {
+  // MES-208: the view now serves anonymous mentors their real city/region base.
+  assert.equal(
+    mentorLocationLabel({ location: "Melbourne, Victoria, Australia", is_anonymous: true }),
+    "Melbourne, Victoria, Australia",
+  );
+  // A location that is just a country still gets a flag.
+  assert.equal(mentorLocationLabel({ location: "Australia", is_anonymous: true }), "🇦🇺 Australia");
+  // Named mentor location passes through untouched.
   assert.equal(
     mentorLocationLabel({ location: "Sydney, NSW, Australia", is_anonymous: false }),
     "Sydney, NSW, Australia",

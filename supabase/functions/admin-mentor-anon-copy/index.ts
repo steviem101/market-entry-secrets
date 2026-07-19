@@ -8,10 +8,16 @@
 // MES-106 masking chain (view + grants) is untouched.
 //
 // Auth: verify_jwt (config.toml) + requireAdmin() + service role — the
-// classify-personas pattern. Cost caps: MAX_BATCH mentors per invocation,
-// MAX_GENERATIONS_PER_MENTOR Anthropic calls (1 + 1 leak-retry), 60s timeout,
-// bounded max_tokens. Safe to invoke twice: regeneration updates the single
-// pending draft row in place (unique partial index).
+// classify-personas pattern. Cost caps: MAX_BATCH mentors per invocation; per
+// mentor at most 2 generation calls (1 + 1 anonymity-retry) plus 1 reviewer
+// call per clean attempt (≤4 Anthropic calls total), 60s timeout, bounded
+// max_tokens. Safe to invoke twice: regeneration updates the single pending
+// draft row in place (unique partial index).
+//
+// Two-layer anonymity guard: a token lint (real name/company/past-employer
+// names) AND a semantic resolvability reviewer (does the copy paraphrase into a
+// one-of-a-kind, findable description?). Either hit triggers one retry; an
+// unresolved hit ships the draft as `flagged`. Admin review is still mandatory.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/http.ts";
 import { log, logError } from "../_shared/log.ts";
@@ -25,6 +31,11 @@ import {
   type GeneratedDraft,
   type MentorSourceRecord,
 } from "./prompt.ts";
+import {
+  REVIEWER_SYSTEM_PROMPT,
+  buildReviewPrompt,
+  parseReview,
+} from "./reviewer.ts";
 
 const PREFIX = "admin-mentor-anon-copy";
 
@@ -42,7 +53,7 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const MENTOR_COLUMNS =
-  "id, name, company, description, experience, specialties, sector_tags, archetype, persona_fit, market_corridors, origin_country, experience_tiles, is_anonymous, is_active";
+  "id, name, company, description, experience, specialties, sector_tags, archetype, persona_fit, market_corridors, origin_country, location, experience_tiles, is_anonymous, is_active";
 
 interface MentorRow {
   id: string;
@@ -56,6 +67,7 @@ interface MentorRow {
   persona_fit: string[] | null;
   market_corridors: string[] | null;
   origin_country: string | null;
+  location: string | null;
   experience_tiles: unknown;
   is_anonymous: boolean;
   is_active: boolean;
@@ -68,6 +80,7 @@ const json = (cors: Record<string, string>, status: number, body: unknown) =>
   });
 
 async function callAnthropic(
+  system: string,
   messages: { role: "user" | "assistant"; content: string }[],
 ): Promise<string | null> {
   const controller = new AbortController();
@@ -83,7 +96,7 @@ async function callAnthropic(
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: SYSTEM_PROMPT,
+        system,
         messages,
       }),
       signal: controller.signal,
@@ -120,6 +133,7 @@ async function generateForMentor(
   const record: MentorSourceRecord = {
     archetype: mentor.archetype,
     origin_country: mentor.origin_country,
+    location: mentor.location,
     description: mentor.description,
     experience: mentor.experience,
     specialties: mentor.specialties,
@@ -140,13 +154,14 @@ async function generateForMentor(
   ];
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const text = await callAnthropic(messages);
+    const text = await callAnthropic(SYSTEM_PROMPT, messages);
     if (!text) return { mentor_id: mentor.id, error: "generation_failed" };
     const parsed = parseDraft(text);
     if (!parsed) return { mentor_id: mentor.id, error: "unparseable_output" };
 
     draft = parsed;
-    flags = lintDraft(
+    // 1) Token lint — draft echoes the real name / company / past-employer names.
+    const tokenFlags = lintDraft(
       {
         alias: parsed.alias,
         headline: parsed.headline,
@@ -156,8 +171,47 @@ async function generateForMentor(
       },
       terms,
     );
+    // 2) Semantic reviewer — draft paraphrases into a one-of-a-kind, resolvable
+    //    description. Skipped when the token lint already failed (we retry anyway),
+    //    so at most one reviewer call per attempt.
+    const semanticFlags: LeakFlag[] = [];
+    if (tokenFlags.length === 0) {
+      const reviewText = await callAnthropic(REVIEWER_SYSTEM_PROMPT, [
+        {
+          role: "user",
+          content: buildReviewPrompt(
+            {
+              alias: parsed.alias,
+              headline: parsed.headline,
+              company_label: parsed.company_label,
+              bio: parsed.bio,
+            },
+            {
+              real_name: mentor.name,
+              real_company: mentor.company,
+              tile_companies: tiles,
+              sector_tags: mentor.sector_tags,
+              market_corridors: mentor.market_corridors,
+              location: mentor.location,
+            },
+          ),
+        },
+      ]);
+      // No reviewer response → don't hard-fail the draft; leave it clean and let
+      // mandatory admin review be the backstop (the whole flow is approve-gated).
+      if (reviewText) {
+        const verdict = parseReview(reviewText);
+        if (verdict.identifies) {
+          for (const phrase of verdict.phrases.length ? verdict.phrases : [verdict.reason || "resolvable description"]) {
+            semanticFlags.push({ field: "identity", term: phrase });
+          }
+        }
+      }
+    }
+
+    flags = [...tokenFlags, ...semanticFlags];
     if (flags.length === 0) break;
-    // One retry with the offending terms named; a second failure ships as `flagged`.
+    // One retry with the offending terms/phrases named; a second failure ships as `flagged`.
     messages.push({ role: "assistant", content: text });
     messages.push({ role: "user", content: buildRetryPrompt(flags.map((f) => f.term)) });
   }
