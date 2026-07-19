@@ -9,6 +9,7 @@ import {
   accountNamesMatch,
   parseCompetitorProse,
   parseIcpGuidance,
+  parseMentorWhys,
   sanitizeContractPath,
   toParagraphs,
 } from "./adapter.ts";
@@ -763,4 +764,69 @@ test("company logos: §04 account card adopts a real account-site logo (D1 headi
     {}
   );
   assert.match(report.accounts.briefed[0].logoUrl ?? "", /^https:\/\/img\.logo\.dev\/commbank\.com\.au\?/);
+});
+
+test("D3 parseMentorWhys: parses linked + plain bullets into name-keyed tailored rationale", () => {
+  const content = [
+    "Intro line.",
+    "### Strategic Mentors",
+    "*   **[Ronan Lehane](https://linkedin.com/in/ronanlehane)**: As an Irish founder at Carrara Capital, uniquely positioned to help with fundraising [1].",
+    "*   **Mark Lynch**: An Irish entrepreneur based in Sydney with scaling experience.",
+    "Not a bullet, ignored.",
+  ].join("\n");
+  const m = parseMentorWhys(content);
+  assert.match(m.get("ronanlehane") ?? "", /^As an Irish founder at Carrara Capital/);
+  assert.doesNotMatch(m.get("ronanlehane") ?? "", /\[1\]/); // citation stripped
+  assert.match(m.get("marklynch") ?? "", /Irish entrepreneur based in Sydney/);
+  assert.equal(m.get("nobody"), undefined);
+});
+
+test("D3 mentor card uses the tailored §07 why over the generic bio when the name matches", () => {
+  const { report, mismatches } = adaptPipelineReport(
+    {
+      sections: {
+        mentor_recommendations: {
+          content: "### Mentors\n*   **[Ronan Lehane](https://x)**: Uniquely positioned to open Australian capital doors for you.",
+        },
+      },
+      matches: {
+        community_members: [
+          { name: "Ronan Lehane", link: "/mentors/experts/ronan-lehane", subtitle: "Director", description: "Generic directory bio about investment management." },
+        ],
+      },
+    },
+    {}
+  );
+  assert.match(report.mentors.primary[0].why, /Uniquely positioned to open Australian capital doors/);
+  assert.doesNotMatch(report.mentors.primary[0].why, /Generic directory bio/);
+  assert.ok(mismatches.some((m) => m.path === "mentors[].why"));
+});
+
+test("D4 competitor position: mid-word-clipped source gets a clean ellipsis; §03 logo derived", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        competitor_landscape: {
+          content: "x",
+          matches: [
+            { name: "Simpology", link: "https://simpology.com.au", tags: ["ATS"],
+              subtitle: "Simpology is an end-to-end loan origination platform designed to provide efficiency and productivity for lenders through a simple, streamlin" },
+          ],
+        },
+      },
+    },
+    {}
+  );
+  const row = report.competitors.rows[0];
+  assert.doesNotMatch(row.position, /streamlin$/);  // partial word dropped
+  assert.match(row.position, /through a simple…$/);   // clean ellipsis, dangling comma removed
+  assert.match(row.logoUrl ?? "", /^https:\/\/img\.logo\.dev\/simpology\.com\.au\?/);
+});
+
+test("D4 metric de-slug handles the non-breaking hyphen (U+2011) in fallback labels", () => {
+  const { report } = adaptPipelineReport(
+    { metadata: { key_metrics: [{ label: "Australia\u2011Fintech\u2011B2B market size", value: "USD 2.5B" }] } },
+    {}
+  );
+  assert.equal(report.metrics.tiles[0].caption, "Australia Fintech B2B market size");
 });

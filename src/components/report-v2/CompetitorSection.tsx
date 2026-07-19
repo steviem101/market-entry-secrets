@@ -3,6 +3,7 @@ import SectionCard from "./SectionCard";
 import RequestHook from "./RequestHook";
 import StarToggle from "./StarToggle";
 import Rich from "./Rich";
+import IdentitySlot from "./IdentitySlot";
 import { useReportInteractions } from "./ReportInteractionsProvider";
 
 // Below md the table stacks (README: tables → cards, never horizontal scroll).
@@ -18,10 +19,13 @@ const MD_TEMPLATE = [
 ] as const;
 const MLABEL = "mb-0.5 block text-[8px] font-bold uppercase tracking-[0.08em] text-report-muted md:hidden";
 
-const PlayerCell = ({ row, tagClass }: { row: CompetitorRow; tagClass: string }) => {
+const PlayerCell = ({ row, tagClass, isYou }: { row: CompetitorRow; tagClass: string; isYou?: boolean }) => {
   const isCustomer = row.positionTag.startsWith("YOU");
   return (
     <span>
+      {/* Only competitors carry a logo mark; the customer row is set apart by the
+          sky tint + bold, not a competitor-style square. */}
+      {!isYou && <IdentitySlot name={row.name} kind="company" src={row.logoUrl} />}
       {row.url ? (
         <a href={row.url} target="_blank" rel="noopener" className="text-inherit">
           <b>{row.name} ↗</b>
@@ -73,7 +77,7 @@ const CompetitorSection = ({ report }: { report: Report }) => {
         </div>
 
         <div className={`${grid} border-t-2 border-t-report-sky bg-report-tint py-[18px] text-[13.5px] leading-[1.6]`}>
-          <PlayerCell row={competitors.you} tagClass="text-report-action" />
+          <PlayerCell row={competitors.you} tagClass="text-report-action" isYou />
           <span><span className={MLABEL}>Market position</span>{competitors.you.position}</span>
           {hasStrengths && <span><span className={MLABEL}>Strengths</span>{competitors.you.strengths}</span>}
           {hasDiffers && (
