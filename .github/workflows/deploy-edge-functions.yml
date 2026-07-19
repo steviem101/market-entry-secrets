@@ -32,6 +32,7 @@ on:
       - "supabase/functions/sitemap/**"
       - "supabase/functions/generate-plan/**"
       - "supabase/functions/admin-mentor-anonymity/**"
+      - "supabase/functions/admin-mentor-anon-copy/**"
       - "supabase/functions/create-checkout/**"
       - "supabase/functions/stripe-webhook/**"
       - "supabase/functions/stripe-webhook-reconcile/**"
@@ -73,6 +74,9 @@ jobs:
 
       - name: Deploy admin-mentor-anonymity
         run: supabase functions deploy admin-mentor-anonymity --project-ref "$PROJECT_REF"
+
+      - name: Deploy admin-mentor-anon-copy
+        run: supabase functions deploy admin-mentor-anon-copy --project-ref "$PROJECT_REF"
 
       # Payment path (MES-140): these were previously deployed by hand, which
       # left PR #370 merged-but-not-live. Secrets (sandbox vs live Stripe keys)

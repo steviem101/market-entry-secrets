@@ -228,6 +228,11 @@ verify_jwt = false
 # Admin-only mentor anonymity toggle; requireAdmin() re-checks the role in-code.
 verify_jwt = true
 
+[functions.admin-mentor-anon-copy]
+# Admin-only AI anonymous-copy draft generation/review (MES-208);
+# requireAdmin() re-checks the role in-code.
+verify_jwt = true
+
 [functions.import-contact-images]
 # MES-123 admin-only contact-image import pipeline; requireAdmin() re-checks the role in-code.
 # Deployed manually (supabase functions deploy import-contact-images) — not in the
