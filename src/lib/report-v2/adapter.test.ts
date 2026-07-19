@@ -288,6 +288,24 @@ test("action plan prose is parsed into structured phases with grouped sub-blocks
   assert.deepEqual(report.close.arriveWith, ["Legal Entity", "Tax & GST", "Hiring"]);
 });
 
+test("action plan keeps distinct groups when a phase repeats a sub-block title", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        action_plan: {
+          content:
+            "### Phase 1 — Foundation (Months 1–2): x\n\n**Notes**\n- First note\n\n**Notes**\n- Second note",
+        },
+      },
+    },
+    {}
+  );
+  const groups = report.actionPlan.phases[0].groups ?? [];
+  assert.equal(groups.length, 2);
+  assert.match(groups[0].body, /First note/); // not wiped by the second same-titled block
+  assert.match(groups[1].body, /Second note/);
+});
+
 test("action plan with no phase headings falls back to one flat phase", () => {
   const { report } = adaptPipelineReport(
     { sections: { action_plan: { content: "Do the first thing.\n\nThen the second thing." } } },

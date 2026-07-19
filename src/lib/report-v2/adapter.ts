@@ -466,32 +466,37 @@ export function parseActionPlan(content: unknown, citationCount: number, log: Lo
     if (!head) continue;
     const period = (head.match(/\(([^)]*?months?[^)]*?)\)/i)?.[1] ?? "").trim();
     const title = (head.match(/Phase\s+\S+\s*[—–-]\s*([^(:]+)/i)?.[1] ?? head.replace(/\s*\(.*$/, "")).trim();
-    const groups: { title: string; body: string }[] = [];
+    // Reference-based grouping: each **Sub-block** heading opens a new group
+    // object that bullets append to. (Title-matching the last group would wipe
+    // an earlier same-titled group when a phase repeats a sub-block heading.)
+    const raw: { title: string; bullets: string[] }[] = [];
     let cur: { title: string; bullets: string[] } | null = null;
-    for (const raw of block.split("\n")) {
-      const line = raw.trim();
+    for (const line of block.split("\n").map((l) => l.trim())) {
       if (!line || /^#{1,6}\s+/.test(line)) continue;
       const boldOnly = line.match(/^\*\*([^*]+?):?\*\*:?\s*$/);
       if (boldOnly) {
         cur = { title: boldOnly[1].trim(), bullets: [] };
+        raw.push(cur);
         continue;
       }
       const bullet = line.match(/^[-*•]\s+(.*)$/);
       if (bullet) {
-        if (!cur) cur = { title: "", bullets: [] };
+        if (!cur) {
+          cur = { title: "", bullets: [] };
+          raw.push(cur);
+        }
         cur.bullets.push(bullet[1]);
-        // Commit the group when its first bullet arrives so a title with no
-        // bullets is dropped rather than rendered empty.
-        if (cur.bullets.length === 1) groups.push({ title: cur.title, body: "" });
-      }
-      if (cur && groups.length && groups[groups.length - 1].title === cur.title) {
-        groups[groups.length - 1].body = cur.bullets
-          .map((b) => toParagraphs(b, "actionPlan.group", () => {}, citationCount)[0] ?? "")
-          .filter(Boolean)
-          .join(" · ");
       }
     }
-    const cleaned = groups.filter((g) => g.body || g.title);
+    const cleaned = raw
+      .filter((g) => g.bullets.length > 0) // drop sub-block titles that had no bullets
+      .map((g) => ({
+        title: g.title,
+        body: g.bullets
+          .map((b) => toParagraphs(b, "actionPlan.group", () => {}, citationCount)[0] ?? "")
+          .filter(Boolean)
+          .join(" · "),
+      }));
     if (period || title || cleaned.length) phases.push({ period, title, groups: cleaned });
   }
   if (phases.length) {
