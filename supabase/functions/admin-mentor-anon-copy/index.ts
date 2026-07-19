@@ -107,8 +107,9 @@ async function callAnthropic(
  * automatic retry with the offending terms fed back, then upsert the mentor's
  * single pending draft row.
  */
+// deno-lint-ignore no-explicit-any -- untyped client, house pattern for function helpers
 async function generateForMentor(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   mentor: MentorRow,
 ): Promise<
   | { mentor_id: string; status: string; draft: Record<string, unknown> }
