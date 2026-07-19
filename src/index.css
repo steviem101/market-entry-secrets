@@ -276,6 +276,17 @@
     animation: shimmer 2s infinite;
   }
 
+  /* Journey auto-advance progress bar (MES-162): fills over one interval, then
+     the tab advances and the keyed element remounts to restart it. */
+  @keyframes journey-progress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  .animate-journey-progress {
+    transform-origin: left;
+    animation: journey-progress linear forwards;
+  }
+
   /* Hero gradient background shift */
   @keyframes gradient-shift {
     0%, 100% {
@@ -329,7 +340,8 @@
     .animate-glow,
     .animate-shimmer,
     .animate-gradient-shift,
-    .animate-hero-stat-breathe {
+    .animate-hero-stat-breathe,
+    .animate-journey-progress {
       animation: none;
       opacity: 1;
     }
