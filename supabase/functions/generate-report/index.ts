@@ -21,7 +21,7 @@ import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVe
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
 import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
-import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
+import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote, buildIcpGuidanceNote } from "./buyerBriefs.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
 import { applyRelevanceSelection, SURFACE_SELECT_IMMIGRATION } from "./selectRelevant.ts";
@@ -3206,6 +3206,12 @@ async function generateReportInBackground(
       (intake.end_buyers || []).length,
     );
     const buyerCards = buildBuyerCards(endBuyerScrapeResult || []);
+    // No named accounts → instruct the section to close with a stable, parseable
+    // ICP block so the report_v2 §04 ICP card populates (adapter reads it). When
+    // accounts WERE named, buyerBriefsNote drives the section instead.
+    const icpGuidanceNote = buyerBriefsNote
+      ? ""
+      : buildIcpGuidanceNote(parsedIcp, intake.company_name, (intake.industry_sector || []).join(", "));
 
     const leadEmptyNote = (matches.leads || []).length === 0
       ? `\n\nNO MATCHED LEAD DATASETS (this section): The directory returned NO lead datasets matching this company's buyer profile. Keep this section SHORT and honest (2–4 sentences): state that no pre-built list matched their specific buyer profile and that they can request a custom list built for them (a request form appears directly below this section). Do NOT name or recommend specific investors, VCs, angel groups, accelerators, funds, or companies here — those are covered in other sections and naming un-provided ones is not grounded. Do NOT cite market-size, ecosystem-value, or funding figures that are not in the canonical figures list.`
@@ -3361,7 +3367,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~120 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? buyerBriefsNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 

@@ -162,8 +162,12 @@ positioning in caps. No new LLM calls (rides existing extraction); no migration/
 - `report_templates`/generate-report: emit contract-structured JSON for SWOT, compliance,
   action plan, competitor verdict columns (you-row ✅/strengths ✅/differs ✅/positioning ✅ shipped
   in 3b–3c; §03 intro + gaps + positioning-read ✅ now parsed from the competitor prose —
-  `parseCompetitorProse`, adapter-only), first-customer briefs, key-question answer,
-  clean metric captions. This removes the prose parsers over time.
+  `parseCompetitorProse`, adapter-only), key-question answer, clean metric captions.
+  **§04 ICP guidance ✅**: the pipeline now appends a stable labeled block
+  (`buildIcpGuidanceNote`: Target Roles / Sector Focus / Opening Angle) when no accounts
+  are named — 24/25 live reports free-formed inconsistent prose the renderer couldn't use —
+  and the adapter (`parseIcpGuidance`) surfaces the ready-but-dark §04 ICP card from it.
+  Per-account structured briefs (named-target case) remain. This removes the prose parsers over time.
 - ~~Tier-RPC over-stripping of `first_customers`~~ — **CORRECTED (Phase-3 investigation):
   not a bug.** `get_tier_gated_report` gates `first_customers`/`lead_list` at `scale` and
   `mentor_recommendations` at `growth`; for a scale owner the strip condition

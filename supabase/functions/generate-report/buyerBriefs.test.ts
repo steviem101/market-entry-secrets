@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote } from "./buyerBriefs.ts";
+import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote, buildIcpGuidanceNote } from "./buyerBriefs.ts";
 
 test("parseIcpDescription: title + org from the one-liner; lists; no-connector fallback", () => {
   assert.deepEqual(parseIcpDescription("head of marketing at recruitment agency"),
@@ -72,4 +72,21 @@ test("buildBuyerBriefsNote: 5-chip intake with 3 briefed surfaces the cap honest
   // equal counts → no cap sentence
   const noCap = buildBuyerBriefsNote(buyers, { titles: [], org_type: "" }, "Floats", undefined, 3);
   assert.ok(!noCap.includes("are briefed here"));
+});
+
+test("buildIcpGuidanceNote: emits the three stable labels, anchors on ICP titles, grounds sector", () => {
+  const note = buildIcpGuidanceNote({ titles: ["Head of Marketing"], org_type: "recruitment agencies" }, "Floats", "Recruitment Technology");
+  assert.match(note, /\*\*Target Roles:\*\*/);
+  assert.match(note, /\*\*Sector Focus:\*\*/);
+  assert.match(note, /\*\*Opening Angle:\*\*/);
+  assert.match(note, /Head of Marketing/);
+  assert.match(note, /recruitment agencies/);
+  assert.match(note, /Recruitment Technology/);
+  assert.match(note, /never (invent|name)/i);
+});
+
+test("buildIcpGuidanceNote: no ICP titles → no anchor clause, still emits the block", () => {
+  const note = buildIcpGuidanceNote({ titles: [], org_type: "" }, "Acme", "");
+  assert.doesNotMatch(note, /Anchor the roles/);
+  assert.match(note, /\*\*Target Roles:\*\*/);
 });
