@@ -45,6 +45,7 @@ interface PipelineMatch {
   enriched_description?: string;
   strengths?: string[];
   differs?: string;
+  match_reasons?: string[];
   tags?: string[];
   logo_url?: string;
   avatar_url?: string;
@@ -404,6 +405,32 @@ export function passesRelevanceGate(m: PipelineMatch, path: string, log: Log): b
   return true;
 }
 
+/**
+ * Honest-degradation signal (t20). The matcher records WHY each row surfaced in
+ * `match_reasons`; a genuine sector hit reads "industry match …" / "sells-to
+ * sector …", whereas a goal/skill/region/agnostic fallback never does (mirrors
+ * the pipeline's `hasSectorRelevance` in matchScoring.ts — kept in sync here
+ * because the adapter can't import Deno modules). Used to caption a section
+ * whose matches are ALL fallbacks, so a generic set never reads as sector-tailored.
+ */
+export function matchHasSectorRelevance(m: PipelineMatch): boolean {
+  return (m.match_reasons ?? []).some(
+    (r) => typeof r === "string" && (r.startsWith("industry match") || r.startsWith("sells-to sector")),
+  );
+}
+
+/**
+ * Returns an honest caption when a match set exists but NOTHING in it earned a
+ * sector hit — stating the basis the matcher actually used. "" when the set is
+ * empty (nothing to caption) or at least one match is sector-relevant (the
+ * section is genuinely tailored). `basis` is the non-industry axis these matched on.
+ */
+function sectorCoverageNote(rawMatches: PipelineMatch[], basis: string): string {
+  if (rawMatches.length === 0) return "";
+  if (rawMatches.some(matchHasSectorRelevance)) return "";
+  return `Matched on ${basis} rather than your specific industry.`;
+}
+
 // Turn a slug-style token run ("Australia-CRM-software") back into words.
 const deSlug = (s: string): string => s.replace(/([A-Za-z0-9])-([A-Za-z])/g, "$1 $2");
 
@@ -657,6 +684,21 @@ export function adaptPipelineReport(
     log("cards[].logoUrl", "pipeline omits logo_url — provider/investor/hub cards render monogram (Phase B)");
   }
 
+  // Honest-degradation captions (t20): for a company outside the directory's
+  // sector coverage, these sections surface real-but-generic matches (goal/
+  // service/stage fallbacks, no industry hit). Caption them so a fallback set
+  // never reads as sector-tailored. Empty for any company the directory covers.
+  const mentorCoverageNote = sectorCoverageNote(matches.community_members ?? [], "your goals and stage");
+  const providerCoverageNote = sectorCoverageNote(matches.service_providers ?? [], "the services you need");
+  const investorCoverageNote = sectorCoverageNote(matches.investors ?? [], "your stage and funding need");
+  for (const [note, path] of [
+    [mentorCoverageNote, "mentors.coverageNote"],
+    [providerCoverageNote, "providers.coverageNote"],
+    [investorCoverageNote, "investors.coverageNote"],
+  ] as const) {
+    if (note) log(path, "no sector-relevant matches — honest coverage caption emitted");
+  }
+
   const competitorRows: CompetitorRow[] = (sections.competitor_landscape?.matches ?? [])
     .filter((m, i) => passesRelevanceGate(m, `competitor_landscape.matches[${i}]`, log))
     .map((m, i) => ({
@@ -806,6 +848,7 @@ export function adaptPipelineReport(
       intro: "",
       ourRead: toRanked(providerCards, (i) => (matches.service_providers ?? [])[i]?.subtitle ?? "", "providers.ourRead", log),
       all: providerCards,
+      ...(providerCoverageNote ? { coverageNote: providerCoverageNote } : {}),
     },
     govAndHubs: {
       gov: (matches.trade_investment_agencies ?? []).map((m, i) => ({
@@ -815,11 +858,17 @@ export function adaptPipelineReport(
       })),
       hubs: hubCards.map((card) => ({ ...card, focusTag: card.tag })),
     },
-    mentors: { intro: mentorsIntro, primary: mentorCards.slice(0, 3), extra: mentorCards.slice(3) },
+    mentors: {
+      intro: mentorsIntro,
+      primary: mentorCards.slice(0, 3),
+      extra: mentorCards.slice(3),
+      ...(mentorCoverageNote ? { coverageNote: mentorCoverageNote } : {}),
+    },
     investors: {
       intro: "",
       approachOrder: [],
       all: investorCards.map((card) => ({ ...card, stageTag: cleanTag(card.tag) })),
+      ...(investorCoverageNote ? { coverageNote: investorCoverageNote } : {}),
     },
     events: {
       cards: (matches.events ?? []).map((m, i) => ({

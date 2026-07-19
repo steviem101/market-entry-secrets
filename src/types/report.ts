@@ -72,6 +72,10 @@ export interface TwoTierSection {
   intro: Paragraph;
   ourRead: RankedItem[];   // exactly the ranked read; length 1–3
   all: MatchCard[];        // the FULL match set — nothing the matcher surfaced is dropped
+  // Honest-degradation caption (adapter): present ONLY when no match in this
+  // section earned a sector/industry relevance score — states the basis the
+  // matcher actually used, so a goal/service fallback never reads as sector-tailored.
+  coverageNote?: string;
 }
 
 export interface Report {
@@ -120,12 +124,13 @@ export interface Report {
     hubs: (MatchCard & { focusTag: string })[];
     alsoNamed?: Paragraph;
   };
-  mentors: { intro: Paragraph; primary: PersonCard[]; extra?: PersonCard[]; advice?: Paragraph; };
+  mentors: { intro: Paragraph; primary: PersonCard[]; extra?: PersonCard[]; advice?: Paragraph; coverageNote?: string; };
   investors: {
     intro: Paragraph;
     approachOrder: { label: string; text: Paragraph }[];   // framed as ONE POSSIBLE order (tone rule)
     all: (MatchCard & { stageTag: string; checkSize?: string; headshotUrl?: string })[];
     alsoNamed?: Paragraph;
+    coverageNote?: string;   // see TwoTierSection.coverageNote
   };
   events: {
     cards: { date: string; venue: string; name: string; url: string; why: string }[];
