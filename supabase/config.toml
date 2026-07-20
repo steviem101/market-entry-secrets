@@ -217,6 +217,14 @@ verify_jwt = false
 # the gateway rejects the cron/backfill POST (no JWT) before the function runs.
 verify_jwt = false
 
+[functions.apply-proposal]
+# MES agent loops (Workstream A): the SINGLE production writer for agent proposals.
+# Applies agent_content_proposals rows (whitelisted, COALESCE-protected) with the service
+# role. Auth in-code: admin JWT (requireAdmin) OR x-internal-secret == APPLY_PROPOSAL_SECRET
+# (the server-to-server path agent-actions/Slack use). Must stay false or the gateway rejects
+# the internal-secret POST (no JWT) before the function runs.
+verify_jwt = false
+
 [functions.sitemap]
 # Public DB-driven sitemap (MES-79 / SEO-03). Must be fetchable by search-engine
 # crawlers (Googlebot, Bingbot) with no auth header at all, so verify_jwt = false —
