@@ -427,6 +427,22 @@
   }
 }
 
+/* report_v2 section numbering — driven by a CSS counter rather than a
+   hardcoded "NN · " in each section's label. The counter increments only for
+   sections actually in the DOM, so a suppressed section (e.g. §07 innovation
+   hubs when none matched, §04 accounts when empty) never leaves a gap in the
+   sequence. Applies on screen AND in print (counters render in PDFs). Cover
+   and the Sources band aren't [data-numbered], so they don't advance it. */
+[data-report-v2] {
+  counter-reset: report-section;
+}
+[data-report-v2-section][data-numbered] {
+  counter-increment: report-section;
+}
+[data-report-v2-section][data-numbered] .report-section-label::before {
+  content: counter(report-section, decimal-leading-zero) " · ";
+}
+
 /* Print styles for PDF export */
 @media print {
   /* Hide non-content elements */

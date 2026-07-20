@@ -28,7 +28,7 @@ const MentorsSection = ({ report }: { report: Report }) => {
   const { mentors } = report;
   const extras = mentors.extra ?? [];
   return (
-    <SectionCard label="08 · MENTOR RECOMMENDATIONS" className="pb-10">
+    <SectionCard label="MENTOR RECOMMENDATIONS" className="pb-10">
       <Rich
         text={mentors.intro}
         className="mb-7 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"

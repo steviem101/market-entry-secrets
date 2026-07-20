@@ -62,7 +62,7 @@ const CompetitorSection = ({ report }: { report: Report }) => {
   const mdTemplate = MD_TEMPLATE[verdictCols];
   const grid = `grid grid-cols-1 gap-2 px-[22px] ${mdTemplate} md:gap-[18px]`;
   return (
-    <SectionCard label="03 · COMPETITOR LANDSCAPE" className="pb-10">
+    <SectionCard label="COMPETITOR LANDSCAPE" className="pb-10">
       <Rich
         text={competitors.intro}
         className="mb-6 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"

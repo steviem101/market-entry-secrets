@@ -16,7 +16,7 @@ const CloseSection = ({ report }: { report: Report }) => {
   const { starred } = useReportInteractions();
   return (
     <SectionCard
-      label="15 · NEXT: YOUR ADVISORY SESSION"
+      label="NEXT: YOUR ADVISORY SESSION"
       className="border-t-report-warn-accent"
       labelClassName="text-report-muted"
     >
