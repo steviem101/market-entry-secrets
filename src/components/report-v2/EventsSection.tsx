@@ -13,9 +13,12 @@ const EventsSection = ({ report }: { report: Report }) => {
   const { events } = report;
   return (
     <SectionCard label="09 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER" className="pb-10">
-      <div className="mt-2 grid grid-cols-1 gap-[22px] md:grid-cols-2 lg:grid-cols-3">
+      {/* flex-wrap (not a fixed 3-col grid): with a single matched event the
+          grid left two empty columns; here the card grows to fill the row, and
+          2–3 events still lay out as halves/thirds (basis-[300px]). */}
+      <div className="mt-2 flex flex-col gap-[22px] md:flex-row md:flex-wrap">
         {events.cards.map((event, i) => (
-          <div key={event.url || event.name || i} className="rounded-xl border border-report-border px-[30px] py-7">
+          <div key={event.url || event.name || i} className="rounded-xl border border-report-border px-[30px] py-7 md:grow md:basis-[300px]">
             <div className="text-[11px] font-bold uppercase text-report-warn">
               {[formatReportDate(event.date, "short"), event.venue].filter(Boolean).join(" · ")}
             </div>
