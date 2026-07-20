@@ -13,7 +13,7 @@ const CHIP_LABELS: Record<AccountBrief["statusChips"][number], string> = {
 };
 
 const AccountCard = ({ account }: { account: AccountBrief }) => (
-  <div className="rounded-xl border border-report-border px-[30px] py-7">
+  <div className="h-full rounded-xl border border-report-border px-[30px] py-7">
     <div className="flex items-baseline justify-between gap-2.5">
       <span className="text-[15.5px] font-bold">
         <IdentitySlot name={account.name} kind="company" src={account.logoUrl} />
@@ -138,9 +138,14 @@ const AccountsSection = ({ report }: { report: Report }) => {
       />
 
       {accounts.briefed.length > 0 && (
-        <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2">
+        // flex-wrap (not a fixed 2-col grid): cards on the last row grow to fill
+        // the width, so an odd count (e.g. 3 accounts) never orphans a blank
+        // half-cell. basis-[340px] keeps 2–3 per row at report width.
+        <div className="flex flex-col gap-[22px] md:flex-row md:flex-wrap">
           {accounts.briefed.map((account, i) => (
-            <AccountCard key={account.url || account.name || i} account={account} />
+            <div key={account.url || account.name || i} className="md:grow md:basis-[340px]">
+              <AccountCard account={account} />
+            </div>
           ))}
         </div>
       )}
