@@ -131,7 +131,7 @@ const AccountsSection = ({ report }: { report: Report }) => {
     return null;
   }
   return (
-    <SectionCard label="04 · YOUR FIRST CUSTOMERS" className="pb-10">
+    <SectionCard label="YOUR FIRST CUSTOMERS" className="pb-10">
       <Rich
         text={accounts.intro}
         className="mb-7 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"

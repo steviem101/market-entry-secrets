@@ -27,7 +27,7 @@ const ProvidersSection = ({ report }: { report: Report }) => {
     ? "MORE MATCHED PROVIDERS — EXPLORE FREELY"
     : "ALL MATCHED PROVIDERS — EXPLORE FREELY";
   return (
-    <SectionCard label="05 · SERVICE PROVIDERS" className="pb-10">
+    <SectionCard label="SERVICE PROVIDERS" className="pb-10">
       <Rich
         text={providers.intro}
         className="mb-6 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"

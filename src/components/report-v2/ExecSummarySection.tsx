@@ -31,7 +31,7 @@ const ExecSummarySection = ({ report }: { report: Report }) => {
   const showHero = exec.heroStat.value.trim() !== "";
   const showSequence = exec.sequence.rows.length > 0;
   return (
-    <SectionCard label="01 · EXECUTIVE SUMMARY" className="pb-10">
+    <SectionCard label="EXECUTIVE SUMMARY" className="pb-10">
       <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px] lg:gap-16">
         <div>
           {exec.narrative.map((para, i) => (

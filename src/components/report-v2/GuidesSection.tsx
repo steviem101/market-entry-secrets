@@ -11,7 +11,7 @@ import Rich from "./Rich";
 const GuidesSection = ({ report }: { report: Report }) => {
   const { guides } = report;
   return (
-    <SectionCard label="13 · CASE STUDIES & RESOURCES" className="pb-10">
+    <SectionCard label="CASE STUDIES & RESOURCES" className="pb-10">
       <Rich
         text={guides.intro}
         className="mb-7 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"

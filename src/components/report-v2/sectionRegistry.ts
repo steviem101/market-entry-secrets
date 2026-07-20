@@ -26,27 +26,29 @@ import SourcesBand from "./SourcesBand";
  */
 export interface ReportSectionDef {
   id: string;
-  /** Caps section label, e.g. "05 · SERVICE PROVIDERS" (DECISIONS #9). */
+  /** Caps section TITLE, e.g. "SERVICE PROVIDERS". The ordinal ("05 · ") is
+   *  prepended by a CSS counter at render (see index.css), so a suppressed
+   *  section never leaves a gap in the sequence (DECISIONS #9). */
   label: string;
   Component?: React.ComponentType<{ report: Report }>;
 }
 
 export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "cover", label: "COVER", Component: Cover },
-  { id: "exec", label: "01 · EXECUTIVE SUMMARY", Component: ExecSummarySection },
-  { id: "metricsSwot", label: "02 · KEY MARKET METRICS & STRATEGIC POSITION", Component: MetricsSwotSection },
-  { id: "competitors", label: "03 · COMPETITOR LANDSCAPE", Component: CompetitorSection },
-  { id: "accounts", label: "04 · YOUR FIRST CUSTOMERS", Component: AccountsSection },
-  { id: "providers", label: "05 · SERVICE PROVIDERS", Component: ProvidersSection },
-  { id: "govAndHubs", label: "06 · GOVERNMENT & TRADE SUPPORT", Component: GovHubsSection },
-  { id: "hubs", label: "07 · INNOVATION HUBS & ACCELERATORS", Component: HubsSection },
-  { id: "mentors", label: "08 · MENTOR RECOMMENDATIONS", Component: MentorsSection },
-  { id: "investors", label: "09 · INVESTOR RECOMMENDATIONS", Component: InvestorsSection },
-  { id: "events", label: "10 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER", Component: EventsSection },
-  { id: "actionPlan", label: "11 · PHASED ACTION PLAN", Component: ActionPlanSection },
-  { id: "compliance", label: "12 · SETUP & COMPLIANCE", Component: ComplianceSection },
-  { id: "guides", label: "13 · CASE STUDIES & RESOURCES", Component: GuidesSection },
-  { id: "leads", label: "14 · LEAD LIST & MARKET DATA", Component: LeadsSection },
-  { id: "close", label: "15 · NEXT: YOUR ADVISORY SESSION", Component: CloseSection },
+  { id: "exec", label: "EXECUTIVE SUMMARY", Component: ExecSummarySection },
+  { id: "metricsSwot", label: "KEY MARKET METRICS & STRATEGIC POSITION", Component: MetricsSwotSection },
+  { id: "competitors", label: "COMPETITOR LANDSCAPE", Component: CompetitorSection },
+  { id: "accounts", label: "YOUR FIRST CUSTOMERS", Component: AccountsSection },
+  { id: "providers", label: "SERVICE PROVIDERS", Component: ProvidersSection },
+  { id: "govAndHubs", label: "GOVERNMENT & TRADE SUPPORT", Component: GovHubsSection },
+  { id: "hubs", label: "INNOVATION HUBS & ACCELERATORS", Component: HubsSection },
+  { id: "mentors", label: "MENTOR RECOMMENDATIONS", Component: MentorsSection },
+  { id: "investors", label: "INVESTOR RECOMMENDATIONS", Component: InvestorsSection },
+  { id: "events", label: "EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER", Component: EventsSection },
+  { id: "actionPlan", label: "PHASED ACTION PLAN", Component: ActionPlanSection },
+  { id: "compliance", label: "SETUP & COMPLIANCE", Component: ComplianceSection },
+  { id: "guides", label: "CASE STUDIES & RESOURCES", Component: GuidesSection },
+  { id: "leads", label: "LEAD LIST & MARKET DATA", Component: LeadsSection },
+  { id: "close", label: "NEXT: YOUR ADVISORY SESSION", Component: CloseSection },
   { id: "sources", label: "SOURCES", Component: SourcesBand },
 ];

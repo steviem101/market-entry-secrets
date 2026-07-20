@@ -27,7 +27,7 @@ const EntityName = ({ name, url, section }: { name: string; url: string; section
 const GovHubsSection = ({ report }: { report: Report }) => {
   const { govAndHubs } = report;
   return (
-    <SectionCard label="06 · GOVERNMENT & TRADE SUPPORT" className="pb-10">
+    <SectionCard label="GOVERNMENT & TRADE SUPPORT" className="pb-10">
       <h3 className="mb-3.5 mt-6 text-[16px] font-bold text-report-good">
         Government &amp; trade bodies — free to engage
       </h3>

@@ -16,7 +16,7 @@ const HubsSection = ({ report }: { report: Report }) => {
   const { govAndHubs } = report;
   if (govAndHubs.hubs.length === 0) return null;
   return (
-    <SectionCard label="07 · INNOVATION HUBS & ACCELERATORS" className="pb-10">
+    <SectionCard label="INNOVATION HUBS & ACCELERATORS" className="pb-10">
       <p className="mb-6 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft">
         Competitive to join, but a fast route into local networks, credibility and early customers.
       </p>

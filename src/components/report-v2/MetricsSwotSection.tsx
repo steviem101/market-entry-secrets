@@ -44,7 +44,7 @@ const MetricsSwotSection = ({ report }: { report: Report }) => {
   const { metrics, swot, meta } = report;
   const quads = QUADRANTS.filter(({ key }) => swot[key].length > 0);
   return (
-    <SectionCard label="02 · KEY MARKET METRICS & STRATEGIC POSITION" className="pb-10">
+    <SectionCard label="KEY MARKET METRICS & STRATEGIC POSITION" className="pb-10">
       {metrics.tiles.length > 0 && (
         <div className="mb-5 mt-6 grid grid-cols-1 gap-[22px] sm:grid-cols-2 md:grid-cols-3">
           {metrics.tiles.map((tile, i) => (
