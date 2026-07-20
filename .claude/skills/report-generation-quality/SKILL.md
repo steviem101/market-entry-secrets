@@ -59,9 +59,28 @@ provider, mentor, event, and figure is *real* — traceable to a directory row o
 ## Section rubric (self-review before shipping report output)
 Per section: (a) answers its template's question for *this* company/corridor, not generic advice;
 (b) every named entity resolves to a directory row; (c) every number has a source; (d) tier
-visibility matches `TIER_REQUIREMENTS`; (e) 250–550 words; (f) Australian English; (g) actionable
-next step present (esp. `action_plan`). Cross-report: no section contradicts another
+visibility matches `TIER_REQUIREMENTS`; (e) 200–450 words (hard cap ~550); (f) Australian English;
+(g) actionable next step present (esp. `action_plan`). Cross-report: no section contradicts another
 (polish pass exists for this; don't rely on it — it's best-effort with a timeout).
+
+## Prose style — the writing system (report output)
+Reports must read as consultant-grade prose, not AI boilerplate. Enforced in the section-writer
+system prompt (`generate-report/index.ts`, the PRESENTATION & FORMATTING block, ~L3369-3374); apply
+the same rules when hand-writing or reviewing report content.
+- **Plain English (Orwell, 1946):** short word over the long one; cut any word that can go; active
+  voice ("Austrade runs the program", not "the program is run by Austrade"); no stale metaphors or
+  business clichés. Keep regulatory/technical terms (ASIC, AFSL, ABN, GST, R&D) where an everyday
+  word loses precision. Break a rule sooner than write an awkward sentence.
+- **Signal density:** open each subsection with its most decision-relevant fact — a figure, a named
+  entity, a date, a dollar amount — not a framing sentence. Cut hedging ("it is important to note",
+  "in today's competitive landscape") and puffery adjectives ("comprehensive", "robust", "seamless",
+  "world-class", "cutting-edge").
+- **Swap test:** rewrite or delete any sentence a *different company* could paste unchanged into
+  their own report. Every sentence must carry a concrete fact, figure, or specific action for THIS
+  company.
+- **Grounding always wins:** "prefer numbers over adjectives" means *sourced* numbers — a figure
+  without a source does not appear (Playbook rule 2), and brevity cuts filler, never citations or
+  entity links.
 
 ## Red flags / approval gates
 - New/renamed section → update **four** places together: frontend `SECTION_ORDER`+`TIER_REQUIREMENTS`,
