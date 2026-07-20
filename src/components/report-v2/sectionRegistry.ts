@@ -45,9 +45,13 @@ export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "mentors", label: "MENTOR RECOMMENDATIONS", Component: MentorsSection },
   { id: "investors", label: "INVESTOR RECOMMENDATIONS", Component: InvestorsSection },
   { id: "events", label: "EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER", Component: EventsSection },
+  // Case studies sit between the two heaviest prose sections (Action Plan +
+  // Setup & Compliance) so they don't stack back-to-back, and so the tail
+  // alternates heavy/light instead of fizzling into three thin sections in a
+  // row (numbers follow the order automatically via the CSS counter).
   { id: "actionPlan", label: "PHASED ACTION PLAN", Component: ActionPlanSection },
-  { id: "compliance", label: "SETUP & COMPLIANCE", Component: ComplianceSection },
   { id: "guides", label: "CASE STUDIES & RESOURCES", Component: GuidesSection },
+  { id: "compliance", label: "SETUP & COMPLIANCE", Component: ComplianceSection },
   { id: "leads", label: "LEAD LIST & MARKET DATA", Component: LeadsSection },
   { id: "close", label: "NEXT: YOUR ADVISORY SESSION", Component: CloseSection },
   { id: "sources", label: "SOURCES", Component: SourcesBand },
