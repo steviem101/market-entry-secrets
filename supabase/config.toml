@@ -225,6 +225,13 @@ verify_jwt = false
 # the internal-secret POST (no JWT) before the function runs.
 verify_jwt = false
 
+[functions.agent-actions]
+# MES agent loops (Workstream C): admin/Slack endpoint to approve/reject/retry proposals across
+# every loop's source table, invoking apply-proposal for applyable ones. Auth in-code: admin JWT
+# (requireAdmin) OR x-internal-secret == AGENT_ACTIONS_SECRET (Slack server-to-server path). Must
+# stay false or the gateway rejects the internal-secret / Slack POST (no JWT) before it runs.
+verify_jwt = false
+
 [functions.loop-content-refresh]
 # MES agent loops (Workstream B): weekly content-freshness loop (propose-only). Writes
 # automation_runs + agent_content_proposals; never mutates production (apply-proposal does).
