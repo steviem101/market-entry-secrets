@@ -9,6 +9,7 @@ import CompetitorSection from "./CompetitorSection";
 import EventsSection from "./EventsSection";
 import ExecSummarySection from "./ExecSummarySection";
 import GovHubsSection from "./GovHubsSection";
+import HubsSection from "./HubsSection";
 import GuidesSection from "./GuidesSection";
 import MentorsSection from "./MentorsSection";
 import InvestorsSection from "./InvestorsSection";
@@ -37,14 +38,15 @@ export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "competitors", label: "03 · COMPETITOR LANDSCAPE", Component: CompetitorSection },
   { id: "accounts", label: "04 · YOUR FIRST CUSTOMERS", Component: AccountsSection },
   { id: "providers", label: "05 · SERVICE PROVIDERS", Component: ProvidersSection },
-  { id: "govAndHubs", label: "06 · GOVERNMENT, TRADE SUPPORT & ACCELERATORS", Component: GovHubsSection },
-  { id: "mentors", label: "07 · MENTOR RECOMMENDATIONS", Component: MentorsSection },
-  { id: "investors", label: "08 · INVESTOR RECOMMENDATIONS", Component: InvestorsSection },
-  { id: "events", label: "09 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER", Component: EventsSection },
-  { id: "actionPlan", label: "10 · PHASED ACTION PLAN", Component: ActionPlanSection },
-  { id: "compliance", label: "11 · SETUP & COMPLIANCE", Component: ComplianceSection },
-  { id: "guides", label: "12 · CASE STUDIES & RESOURCES", Component: GuidesSection },
-  { id: "leads", label: "13 · LEAD LIST & MARKET DATA", Component: LeadsSection },
-  { id: "close", label: "14 · NEXT: YOUR ADVISORY SESSION", Component: CloseSection },
+  { id: "govAndHubs", label: "06 · GOVERNMENT & TRADE SUPPORT", Component: GovHubsSection },
+  { id: "hubs", label: "07 · INNOVATION HUBS & ACCELERATORS", Component: HubsSection },
+  { id: "mentors", label: "08 · MENTOR RECOMMENDATIONS", Component: MentorsSection },
+  { id: "investors", label: "09 · INVESTOR RECOMMENDATIONS", Component: InvestorsSection },
+  { id: "events", label: "10 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER", Component: EventsSection },
+  { id: "actionPlan", label: "11 · PHASED ACTION PLAN", Component: ActionPlanSection },
+  { id: "compliance", label: "12 · SETUP & COMPLIANCE", Component: ComplianceSection },
+  { id: "guides", label: "13 · CASE STUDIES & RESOURCES", Component: GuidesSection },
+  { id: "leads", label: "14 · LEAD LIST & MARKET DATA", Component: LeadsSection },
+  { id: "close", label: "15 · NEXT: YOUR ADVISORY SESSION", Component: CloseSection },
   { id: "sources", label: "SOURCES", Component: SourcesBand },
 ];
