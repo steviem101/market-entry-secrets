@@ -21,7 +21,7 @@ const MLABEL = "mb-0.5 block text-[8px] font-bold uppercase tracking-[0.08em] te
 const ComplianceSection = ({ report }: { report: Report }) => {
   const { compliance } = report;
   return (
-    <SectionCard label="11 · SETUP & COMPLIANCE" className="pb-10">
+    <SectionCard label="12 · SETUP & COMPLIANCE" className="pb-10">
       <Rich
         text={compliance.intro}
         className="mb-7 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"

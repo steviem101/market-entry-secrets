@@ -12,7 +12,7 @@ import Rich from "./Rich";
 const EventsSection = ({ report }: { report: Report }) => {
   const { events } = report;
   return (
-    <SectionCard label="09 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER" className="pb-10">
+    <SectionCard label="10 · EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER" className="pb-10">
       {/* flex-wrap (not a fixed 3-col grid): with a single matched event the
           grid left two empty columns; here the card grows to fill the row, and
           2–3 events still lay out as halves/thirds (basis-[300px]). */}

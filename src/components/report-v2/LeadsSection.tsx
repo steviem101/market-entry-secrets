@@ -73,7 +73,7 @@ const LeadsSection = ({ report }: { report: Report }) => {
   const { leads } = report;
   const { recordRequest } = useReportInteractions();
   return (
-    <SectionCard label="13 · LEAD LIST & MARKET DATA" className="pb-14">
+    <SectionCard label="14 · LEAD LIST & MARKET DATA" className="pb-14">
       <div className="mt-6 grid grid-cols-1 items-stretch gap-[22px] md:grid-cols-2">
         {leads.dataset ? (
           <div className="rounded-xl border border-report-tint-border bg-report-tint px-[30px] py-[26px]">
