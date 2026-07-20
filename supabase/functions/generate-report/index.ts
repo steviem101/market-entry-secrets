@@ -1543,7 +1543,7 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
   // Community members (mentors) — sector + skill + country corridor + location
   try {
     let cmQuery = supabase.from("community_members")
-      .select("id, name, title, slug, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic, is_anonymous, is_active, data_health")
+      .select("id, name, title, slug, location, specialties, company, website, description, origin_country, sector_tags, sector_agnostic, is_anonymous, is_active, data_health, avatar_url, image")
       .eq("is_active", true)
       .eq("is_anonymous", false)
       .limit(CAND);
@@ -1583,6 +1583,11 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
       linkLabel: "View Profile",
       subtitle: [m.title, m.company].filter(Boolean).join(", "),
       tags: (m.specialties || []).slice(0, 3),
+      // Grounded headshot — mirrors the mentor profile page's `avatar_url || image`
+      // resolution (report_v2 IdentitySlot; monogram fallback when absent). Safe to
+      // surface: this pool is already `.eq("is_anonymous", false)` filtered + seed-
+      // stripped, so no anonymised mentor's real photo can reach it (MES-208).
+      avatar_url: m.avatar_url || m.image || undefined,
     }));
   } catch (e) { console.error("CM search error:", e); }
 

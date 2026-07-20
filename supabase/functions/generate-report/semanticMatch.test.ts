@@ -27,6 +27,28 @@ test("SEMANTIC_CFG: community_members links to a real profile route, not /commun
   assert.equal(noSlug.link, "/mentors");
 });
 
+test("SEMANTIC_CFG: community_members decorate resolves the headshot as avatar_url || image", () => {
+  const cfg = SEMANTIC_CFG.community_members;
+  for (const col of ["avatar_url", "image"]) {
+    assert.ok(cfg.select.includes(col), `community_members select should include ${col} for the headshot`);
+  }
+  assert.equal(
+    cfg.decorate({ name: "X", specialties: [], avatar_url: "https://cdn/a.jpg", image: "https://cdn/i.jpg" }).avatar_url,
+    "https://cdn/a.jpg",
+    "avatar_url wins when present",
+  );
+  assert.equal(
+    cfg.decorate({ name: "X", specialties: [], avatar_url: null, image: "https://cdn/i.jpg" }).avatar_url,
+    "https://cdn/i.jpg",
+    "falls back to image when avatar_url is null",
+  );
+  assert.equal(
+    cfg.decorate({ name: "X", specialties: [] }).avatar_url,
+    undefined,
+    "neither present → undefined (adapter renders monogram)",
+  );
+});
+
 test("buildMatchQueryText composes a compact query from intake fields", () => {
   const q = buildMatchQueryText({
     industry_sector: ["Cybersecurity", "FinTech"],
