@@ -64,7 +64,10 @@ const MetricsSwotSection = ({ report }: { report: Report }) => {
       {quads.length > 0 && (
         <>
           <h2 className="mb-5 text-[18px] font-bold">SWOT — where {meta.customer} stands</h2>
-          <div className="grid grid-cols-1 gap-[22px] md:grid-cols-2">
+          {/* items-start: a short quadrant sizes to its own content instead of
+              stretching to a taller neighbour and leaving an empty bordered
+              bottom (the row still aligns the next pair at its natural top). */}
+          <div className="grid grid-cols-1 items-start gap-[22px] md:grid-cols-2">
             {quads.map(({ key, ...rest }) => (
               <SwotQuadrant key={key} items={swot[key]} {...rest} />
             ))}

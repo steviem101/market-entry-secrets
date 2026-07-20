@@ -53,32 +53,50 @@ const ComplianceSection = ({ report }: { report: Report }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[360px_1fr] lg:gap-16">
-        {compliance.stats.length > 0 && (
-          <div className="flex flex-col gap-5 border-l-2 border-l-report-ink pl-[26px]">
-            {compliance.stats.map((stat, i) => (
-              <div key={i}>
-                <div className="text-[26px] font-extrabold">
-                  {stat.value} <EvidenceChip chip={stat.chip} className="align-[6px] text-[10px]" />
-                </div>
-                <div className="text-[12px] leading-[1.6] text-report-muted">{stat.caption}</div>
-              </div>
-            ))}
-          </div>
-        )}
-        {compliance.checklist.length > 0 && (
-          <div>
-            <h3 className="mb-3.5 text-[17px] font-bold">Readiness checklist</h3>
-            <div className="grid grid-cols-1 gap-x-10 md:grid-cols-2 text-[13.5px] leading-[1.65] text-report-ink-soft">
-              {compliance.checklist.map((item, i) => (
-                <div key={i} className="border-t border-report-border py-3">
-                  <b>{item.lead}</b> — <Rich as="span" text={item.text} />
+      {(compliance.stats.length > 0 || compliance.checklist.length > 0) && (
+        // With a stats rail present the block is a [360px | content] split; with
+        // no stats it MUST collapse to a single full-width column — otherwise the
+        // checklist auto-places into the 360px track and the right ~870px is dead
+        // white space (real-data audit: the stats rail is frequently empty).
+        <div
+          className={
+            compliance.stats.length > 0
+              ? "grid grid-cols-1 items-start gap-10 lg:grid-cols-[360px_1fr] lg:gap-16"
+              : ""
+          }
+        >
+          {compliance.stats.length > 0 && (
+            <div className="flex flex-col gap-5 border-l-2 border-l-report-ink pl-[26px]">
+              {compliance.stats.map((stat, i) => (
+                <div key={i}>
+                  <div className="text-[26px] font-extrabold">
+                    {stat.value} <EvidenceChip chip={stat.chip} className="align-[6px] text-[10px]" />
+                  </div>
+                  <div className="text-[12px] leading-[1.6] text-report-muted">{stat.caption}</div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
-      </div>
+          )}
+          {compliance.checklist.length > 0 && (
+            <div>
+              <h3 className="mb-3.5 text-[17px] font-bold">Readiness checklist</h3>
+              {/* Full-width → 3 columns to fill the row; beside the stats rail the
+                  1fr track is narrower, so 2 columns there. */}
+              <div
+                className={`grid grid-cols-1 gap-x-10 text-[13.5px] leading-[1.65] text-report-ink-soft ${
+                  compliance.stats.length > 0 ? "md:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"
+                }`}
+              >
+                {compliance.checklist.map((item, i) => (
+                  <div key={i} className="border-t border-report-border py-3">
+                    <b>{item.lead}</b> — <Rich as="span" text={item.text} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </SectionCard>
   );
 };
