@@ -225,6 +225,14 @@ verify_jwt = false
 # the internal-secret POST (no JWT) before the function runs.
 verify_jwt = false
 
+[functions.loop-content-refresh]
+# MES agent loops (Workstream B): weekly content-freshness loop (propose-only). Writes
+# automation_runs + agent_content_proposals; never mutates production (apply-proposal does).
+# Authenticated in-code by x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET (same cron pattern
+# as directory-steward). Must stay false or the gateway rejects the cron POST (no JWT).
+# Gated OFF by default (CONTENT_REFRESH_ENABLED); {"dry_run":true}/{"force":true} bypass.
+verify_jwt = false
+
 [functions.sitemap]
 # Public DB-driven sitemap (MES-79 / SEO-03). Must be fetchable by search-engine
 # crawlers (Googlebot, Bingbot) with no auth header at all, so verify_jwt = false —
