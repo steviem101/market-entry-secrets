@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   TOPIC_LANES, contentTypesToLanes, isTopicLane, CANONICAL_SECTORS, isCanonicalSector,
+  coerceSectors, GENERAL_SECTOR,
 } from "./kbTaxonomy.ts";
 
 test("content_types map to distinct lanes in canonical order", () => {
@@ -47,4 +48,36 @@ test("canonical sectors: 20-sector taxonomy, validated", () => {
   assert.equal(new Set(CANONICAL_SECTORS).size, 20, "no duplicate sector slugs");
   assert.ok(isCanonicalSector("technology"));
   assert.ok(!isCanonicalSector("made-up-sector"));
+});
+
+test("coerceSectors: canonical kept, junk dropped, general sentinel kept alone", () => {
+  assert.deepEqual(coerceSectors(["technology", "bogus"], []), ["technology"]);
+  assert.deepEqual(coerceSectors([GENERAL_SECTOR], []), [GENERAL_SECTOR]);
+  assert.deepEqual(coerceSectors(["a", "b", "c"], []), []);              // none canonical, no fallback
+  assert.deepEqual(coerceSectors(null, null), []);
+});
+
+test("coerceSectors: >2 canonical capped at 2 and duplicates removed — on BOTH the raw and fallback paths", () => {
+  // raw path
+  assert.deepEqual(coerceSectors(["technology", "healthcare", "retail"], []), ["technology", "healthcare"]);
+  assert.deepEqual(coerceSectors(["technology", "technology"], []), ["technology"]);
+  // fallback path must enforce the same cap/dedupe (the pre-fix bug: fallback was uncapped + un-deduped)
+  assert.deepEqual(coerceSectors([], ["technology", "healthcare", "retail", "technology"]), ["technology", "healthcare"]);
+  assert.deepEqual(coerceSectors(undefined, ["retail", "retail"]), ["retail"]);
+});
+
+test("coerceSectors: 'general' never mixes with a specific sector (specifics win)", () => {
+  assert.deepEqual(coerceSectors([GENERAL_SECTOR, "technology"], []), ["technology"]);
+  assert.deepEqual(coerceSectors(["technology", GENERAL_SECTOR, "healthcare"], []), ["technology", "healthcare"]);
+});
+
+test("coerceSectors: values are trimmed and lower-cased before validation", () => {
+  assert.deepEqual(coerceSectors(["Healthcare", " Financial-Services "], []), ["healthcare", "financial-services"]);
+  assert.deepEqual(coerceSectors(["GENERAL"], []), [GENERAL_SECTOR]);
+});
+
+test("coerceSectors: falls back to chunk tags only when raw yields nothing", () => {
+  assert.deepEqual(coerceSectors(undefined, ["retail", "legacy-tag"]), ["retail"]); // fallback filtered too
+  assert.deepEqual(coerceSectors(["technology"], ["retail"]), ["technology"]);       // raw wins over fallback
+  assert.deepEqual(coerceSectors(["bogus"], ["retail"]), ["retail"]);                // raw all-junk -> fallback
 });

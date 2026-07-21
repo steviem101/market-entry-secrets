@@ -1,7 +1,7 @@
 // distillCard.ts — prompt construction + response coercion for the distiller (2B).
 // Pure/deterministic (no I/O) so it is unit-testable; the edge function does the Haiku call.
 
-import { TOPIC_LANES, isTopicLane, contentTypesToLanes, CANONICAL_SECTORS, isCanonicalSector, TAXONOMY_BRIDGE_VERSION, type TopicLane } from "../_shared/kbTaxonomy.ts";
+import { TOPIC_LANES, isTopicLane, contentTypesToLanes, CANONICAL_SECTORS, GENERAL_SECTOR, coerceSectors, TAXONOMY_BRIDGE_VERSION, type TopicLane } from "../_shared/kbTaxonomy.ts";
 import { CANONICAL_INTENTS, coerceIntents, CANONICAL_INTENTS_VERSION } from "../_shared/kbIntents.ts";
 import { hasDatedFigure } from "./numericHygiene.ts";
 
@@ -9,9 +9,6 @@ import { hasDatedFigure } from "./numericHygiene.ts";
  *  v2 adds: sector inference, an inbound-only relevance guard, and a non-obviousness
  *  rule (drops generic advice that applies to any market). */
 export const DISTILLER_VERSION = "distill-v2";
-
-/** Sentinel sector for insights that apply across sectors (not a canonical slug). */
-export const GENERAL_SECTOR = "general";
 
 export type SkipReason = "too_thin" | "duplicate" | "off_topic" | "no_durable_claim" | "error";
 
@@ -144,18 +141,6 @@ export function parseDistillResponse(
 
   if (cards.length === 0) return { cards: [], skip: "no_durable_claim" };
   return { cards, skip: null };
-}
-
-/** Keep only valid canonical sectors (or the "general" sentinel) from the distiller's
- *  sectors[], capped at 2. Falls back to the chunk's own sector tags when the distiller
- *  returned nothing usable, so a sector-tagged source chunk never loses its tags. */
-export function coerceSectors(raw: unknown, fallback: unknown): string[] {
-  const ok = (v: unknown): v is string => isCanonicalSector(v) || v === GENERAL_SECTOR;
-  if (Array.isArray(raw)) {
-    const kept = [...new Set(raw.filter(ok))].slice(0, 2);
-    if (kept.length) return kept;
-  }
-  return Array.isArray(fallback) ? (fallback as unknown[]).filter(ok) : [];
 }
 
 /** Pull the first {...} JSON object out of a model response (handles ```json fences / prose). */

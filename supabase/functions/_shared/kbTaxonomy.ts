@@ -64,3 +64,43 @@ export type CanonicalSector = typeof CANONICAL_SECTORS[number];
 export function isCanonicalSector(value: unknown): value is CanonicalSector {
   return typeof value === "string" && (CANONICAL_SECTORS as readonly string[]).includes(value);
 }
+
+/** Sentinel meaning "applies across all sectors" — NOT a canonical slug, so it lives
+ *  here (beside the taxonomy that owns sectors) rather than in the distiller.
+ *
+ *  RETRIEVAL CONTRACT (read before building sector-scoped retrieval — Sub-ticket 3):
+ *  a cross-sector insight card carries metadata.sectors = ["general"]. A naive
+ *  containment filter `metadata->'sectors' @> to_jsonb(<user_sector>)` will match NONE
+ *  of them — currently the majority of the insight corpus — which is the OPPOSITE of
+ *  "applies across sectors". Any sector-scoped retrieval MUST treat "general" as
+ *  match-all, e.g.
+ *      metadata->'sectors' @> to_jsonb(<user_sector>::text)
+ *      OR metadata->'sectors' @> '["general"]'::jsonb
+ *  A sector-specific card carries 1-2 canonical slugs and never mixes in "general". */
+export const GENERAL_SECTOR = "general";
+
+/** Normalise a raw sectors[] (from the distiller, or a chunk's own metadata tags) to the
+ *  card invariant: EITHER 0-2 DISTINCT canonical slugs, OR exactly ["general"] for a
+ *  cross-sector insight — never a mix, never >2, never a duplicate. Values are
+ *  case/space-insensitive (mirrors contentTypesToLanes), and "general" is dropped whenever
+ *  a specific canonical slug is present (specifics are the more precise signal, so they win).
+ *  `fallback` (the chunk's own tags) is used only when `raw` yields nothing usable. */
+export function coerceSectors(raw: unknown, fallback: unknown): string[] {
+  // → { specifics: ≤2 distinct canonical slugs, general: was the sentinel present? }
+  const norm = (arr: unknown): { specifics: string[]; general: boolean } => {
+    if (!Array.isArray(arr)) return { specifics: [], general: false };
+    let general = false;
+    const specifics: string[] = [];
+    for (const v of arr) {
+      if (typeof v !== "string") continue;
+      const s = v.trim().toLowerCase();
+      if (s === GENERAL_SECTOR) { general = true; continue; }
+      if (isCanonicalSector(s)) specifics.push(s);
+    }
+    return { specifics: [...new Set(specifics)].slice(0, 2), general };
+  };
+  const pick = (n: { specifics: string[]; general: boolean }): string[] | null =>
+    n.specifics.length ? n.specifics : n.general ? [GENERAL_SECTOR] : null;
+
+  return pick(norm(raw)) ?? pick(norm(fallback)) ?? [];
+}
