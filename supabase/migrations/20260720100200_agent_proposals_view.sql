@@ -167,5 +167,12 @@ comment on view public.agent_proposals is
   'security_invoker so each source table admin-read RLS is enforced. proposal_key resolves back to '
   'the physical row for apply-proposal / agent-actions. Read-only; never mutate through the view.';
 
+-- security_invoker means the querying admin must hold SELECT on EVERY base table, or the whole
+-- UNION errors. Two staging tables had authenticated SELECT fully revoked (service-role-read only);
+-- grant it so they match the other 6. RLS admin-read policies still restrict rows to admins, so
+-- this exposes nothing to non-admin authenticated users (identical posture to the other 6 tables).
+grant select on public.report_quality_proposals to authenticated;
+grant select on public.ecosystem_import_candidates to authenticated;
+
 revoke all on public.agent_proposals from anon;
 grant select on public.agent_proposals to authenticated;
