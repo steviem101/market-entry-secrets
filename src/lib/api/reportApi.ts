@@ -3,6 +3,17 @@ import type { IntakeFormData } from '@/components/report-creator/intakeSchema';
 import { mapV2ToLegacyIntake, type IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 
+/** Report-quality telemetry surfaced in the admin console (subset of report_quality). */
+export interface ReportQualityRow {
+  report_id: string;
+  report_score: number | null;
+  build_health: number | null;
+  score_substance: number | null;
+  score_presentation: number | null;
+  degraded: boolean | null;
+  created_at: string;
+}
+
 export const reportApi = {
   /**
    * v2 intake submit. Projects the redesigned schema into the flat
@@ -277,6 +288,110 @@ export const reportApi = {
       seen.add(mentor.name);
       return true;
     }) as Array<Record<string, unknown> & { name: string; reportId: string; reportName: string }>;
+  },
+
+  /**
+   * ADMIN: list every report across all users for the quality-review console.
+   * No user_id filter — the RLS SELECT policy on user_reports already grants
+   * admins row access ("Users can view own reports" branches on has_role admin),
+   * and this whole surface is behind ProtectedRoute requireAdmin. List columns
+   * only (report_json is column-revoked and not needed here). Quality scores are
+   * fetched separately (report_quality has no FK to user_reports, so it can't be
+   * PostgREST-embedded) and merged by report_id — latest row per report wins.
+   *
+   * Capped at 500 rows (newest first) to stay under Supabase's 1000-row default
+   * and keep the list responsive; a paged/filtered fetch can replace this later.
+   */
+  async fetchAllReportsAdmin() {
+    const { data: rows, error } = await (supabase as any)
+      .from('user_reports')
+      .select(
+        'id, user_id, status, tier_at_generation, created_at, intake_form_id, user_intake_forms(company_name, country_of_origin, industry_sector)'
+      )
+      .order('created_at', { ascending: false })
+      .limit(500);
+
+    if (error) throw error;
+
+    type ReportRow = {
+      id: string;
+      user_id: string;
+      status: string;
+      tier_at_generation: string;
+      created_at: string;
+      intake_form_id: string | null;
+      user_intake_forms: {
+        company_name: string | null;
+        country_of_origin: string | null;
+        industry_sector: string | null;
+      } | null;
+    };
+    const reportRows = (rows || []) as ReportRow[];
+
+    // Merge in report-quality telemetry (the Slack-card scores). Admin-only
+    // SELECT on report_quality; ordered newest-first so the first row we see per
+    // report_id is the latest quality run.
+    const ids = reportRows.map((r) => r.id);
+    const qualityByReport: Record<string, ReportQualityRow> = {};
+    if (ids.length > 0) {
+      const { data: quality, error: qErr } = await (supabase as any)
+        .from('report_quality')
+        .select(
+          'report_id, report_score, build_health, score_substance, score_presentation, degraded, created_at'
+        )
+        .in('report_id', ids)
+        .order('created_at', { ascending: false });
+      if (qErr) throw qErr;
+      for (const q of (quality || []) as ReportQualityRow[]) {
+        if (!qualityByReport[q.report_id]) qualityByReport[q.report_id] = q;
+      }
+    }
+
+    return reportRows.map((r) => ({
+      ...r,
+      quality: qualityByReport[r.id] ?? null,
+    })) as Array<ReportRow & { quality: ReportQualityRow | null }>;
+  },
+
+  /**
+   * ADMIN: fetch a single report with FULL, ungated content for quality review.
+   * Content comes from the admin-only get_report_admin RPC (SECURITY DEFINER,
+   * self-guards on has_role admin) — NOT get_tier_gated_report, so no section is
+   * tier-stripped and the reviewer sees exactly what was generated.
+   */
+  async fetchAdminReport(reportId: string) {
+    const { data: meta, error: metaError } = await (supabase as any)
+      .from('user_reports')
+      .select(
+        'id, user_id, intake_form_id, tier_at_generation, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at, user_intake_forms(company_name)'
+      )
+      .eq('id', reportId)
+      .single();
+
+    if (metaError) throw metaError;
+
+    const { data: fullJson, error: rpcError } = await (supabase as any)
+      .rpc('get_report_admin', { p_report_id: reportId });
+
+    if (rpcError) throw rpcError;
+
+    return {
+      ...meta,
+      report_json: (fullJson ?? {}) as Record<string, unknown>,
+    } as {
+      id: string;
+      user_id: string;
+      intake_form_id: string;
+      tier_at_generation: string;
+      report_json: Record<string, unknown>;
+      sections_generated: string[];
+      status: string;
+      feedback_score: number | null;
+      feedback_notes: string | null;
+      created_at: string;
+      updated_at: string;
+      user_intake_forms: { company_name: string | null } | null;
+    };
   },
 
   async submitFeedback(reportId: string, score: number, notes?: string) {

@@ -63,6 +63,8 @@ const MyReports = React.lazy(() => import("./pages/MyReports"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const AdminSubmissions = React.lazy(() => import("./pages/AdminSubmissions"));
 const AdminMentors = React.lazy(() => import("./pages/AdminMentors"));
+const AdminReports = React.lazy(() => import("./pages/AdminReports"));
+const AdminReportView = React.lazy(() => import("./pages/AdminReportView"));
 
 // Dev-only report_v2 acceptance harness (DECISIONS #13). The DEV guard is
 // statically replaced at build time, so neither the route nor its chunk
@@ -152,6 +154,9 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/admin/submissions" element={<AdminSubmissions />} />
                   <Route path="/admin/mentors" element={<AdminMentors />} />
+                  <Route path="/admin/reports" element={<AdminReports />} />
+                  <Route path="/admin/reports/:reportId" element={<AdminReportView />} />
+
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   {DevReportPreview && (
                     <Route path="/dev/report-preview" element={<DevReportPreview />} />
