@@ -3244,6 +3244,13 @@ async function generateReportInBackground(
     // Applied on EVERY lead_list run (not just the empty case) to hold the line.
     const leadScopeNote = `\n\nSTRICT SCOPE (this section only): Write ONLY about the pre-built lead datasets provided in the matched leads data above, and the option to request a custom-built list (a request form renders directly below this section). Do NOT discuss, list, or recommend industry communities, associations, networks, events, conferences, accelerators, incubators, co-working spaces, service providers, government/trade agencies, mentors, or investors — every one of those has its OWN dedicated section elsewhere in this report, and repeating them here duplicates the report. If the user's stated priority points toward communities or networking, do NOT satisfy it here — the relevant sections already do. If no dataset matches a given need, say so briefly and point to the custom-list request rather than substituting other entity types.`;
 
+    // Suggested bespoke list (Solidroad review): §14 surfaces a best-guess
+    // description of the lead list this company most likely wants, for them to
+    // approve or refine — MES then builds it manually. The customer-facing hero
+    // card and the parser key off this exact opening line, so keep the label and
+    // shape stable.
+    const leadRecommendationNote = `\n\nSUGGESTED LIST — LEAD WITH THIS: Begin the section with ONE line in EXACTLY this format, then a newline: "**The list we'd build for you:** <specific decision-maker role(s)> at <specific company type> in <region>, ~<round number> contacts." Base the role(s), company type and region ONLY on THIS company's stated ICP, offering, and the buyer research above — never invent a market you have no basis for. The count is a rough suggestion (a round number such as 100 / 250 / 500), never a precise figure. Immediately follow that line with ONE sentence saying why this list fits their stated goal. This is a suggestion for the customer to confirm or refine (they can approve or edit it below) — do not present it as a list that already exists.`;
+
     // D2: emphasise (never hide) the sections the user's selected goals map to.
     const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
 
@@ -3385,7 +3392,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~110 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote + leadRecommendationNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 

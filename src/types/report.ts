@@ -154,6 +154,9 @@ export interface Report {
     cards: { title: string; url: string; summary: string; relevantBecause: string }[];
   };
   leads: {
+    // A best-guess bespoke list spec for the customer to approve/refine (not a
+    // list that exists yet — MES builds it manually after they confirm).
+    recommended?: { spec: string; why: string };
     dataset?: { name: string; url: string; records: number; description: string };  // present → dataset card
     gapCopy?: string;                                                               // present → honest-gap card
     customBuildCopy: string;                                                        // always → request box
