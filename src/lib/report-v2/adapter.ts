@@ -815,6 +815,45 @@ export function parseMentorWhys(content: unknown): Map<string, string> {
   return map;
 }
 
+/**
+ * §10 events prose lists each event as `* **[Name](/link)**` followed by a
+ * tailored "why attend" rationale on the same or following (indented) lines,
+ * under a `### High-Priority Events` heading. Returns name-key → rationale so
+ * the event cards can show a grounded reason to attend instead of the bare
+ * directory blurb. Empty map when the prose isn't in that shape.
+ */
+export function parseEventWhys(content: unknown): Map<string, string> {
+  const map = new Map<string, string>();
+  if (typeof content !== "string") return map;
+  let name: string | null = null;
+  let why: string[] = [];
+  const flush = () => {
+    if (name) {
+      const text = why.join(" ").replace(/\[\d+\]/g, "").replace(/\s+/g, " ").trim();
+      if (text) map.set(briefNameKey(name), text);
+    }
+    name = null;
+    why = [];
+  };
+  for (const raw of content.split("\n")) {
+    const line = raw.trim();
+    const bullet = line.match(/^[-*]\s+\*\*\[?([^\]*]+?)\]?(?:\([^)]*\))?\*\*:?\s*(.*)$/);
+    if (bullet) {
+      flush();
+      name = bullet[1].trim();
+      if (bullet[2]) why.push(bullet[2].trim());
+      continue;
+    }
+    if (/^#{1,6}\s+/.test(line)) {
+      flush();
+      continue;
+    }
+    if (name && line) why.push(line); // continuation of the current event's rationale
+  }
+  flush();
+  return map;
+}
+
 export function adaptPipelineReport(
   json: PipelineReportJson,
   context: AdaptContext = {}
@@ -970,6 +1009,9 @@ export function adaptPipelineReport(
     : "";
   // §03 lead-in + the two synthesis boxes, parsed from the competitor prose.
   const competitorProse = parseCompetitorProse(sections.competitor_landscape?.content, citations.length, log);
+  // §10 per-event "why attend" rationales, parsed from the events prose bullets.
+  const eventWhys = parseEventWhys(sections.events_resources?.content);
+  if (eventWhys.size) log("events.cards[].why", `used tailored per-event rationale from §10 prose for ${eventWhys.size} event(s)`);
 
   // §04 intro: the first-customers strategy prose. Named target briefs
   // (briefed/icpGuidance) still await Phase B, but rendering this prose keeps
@@ -1136,6 +1178,9 @@ export function adaptPipelineReport(
       ...(investorCoverageNote ? { coverageNote: investorCoverageNote } : {}),
     },
     events: {
+      // §10 lead-in — the strategic "why these rooms" paragraph from the events
+      // prose (skips the heading-only / intake-guidance openers).
+      intro: leadParagraph(sections.events_resources?.content, citations.length),
       // Chronological order — the pipeline returns events unsorted, so a
       // Jun-2027 event could lead a section headed "this quarter" (Solidroad
       // smoke test). ISO dates sort lexicographically; undated events sort last.
@@ -1148,18 +1193,22 @@ export function adaptPipelineReport(
           return da < db ? -1 : da > db ? 1 : 0;
         })
         .map((m, i) => {
-          // Events carry an empty `description` and a `subtitle` that is just
-          // "date · location", so matchDescription's subtitle fallback printed
-          // the date a second time under the card (Solidroad smoke test). Use the
-          // real description ONLY — no why-attend body until the pipeline supplies
-          // a grounded one (Wave 4b).
+          // Prefer the tailored per-event "why attend" parsed from the events
+          // prose; fall back to the real `description`. NEVER the "date · location"
+          // subtitle, which echoed the date under the card (Solidroad smoke test).
+          const tailored = eventWhys.get(briefNameKey(matchName(m)));
           const desc = typeof m.description === "string" ? m.description.trim() : "";
+          const why = tailored
+            ? trimWhy(stripInlineMarkdown(tailored))
+            : desc
+              ? trimWhy(stripInternalNotes(stripInlineMarkdown(desc)))
+              : "";
           return {
             date: m.date ?? "",
             venue: m.location ?? "",
             name: matchName(m),
             url: sanitizeContractPath(m.link, `events.cards[${i}].link`, log),
-            why: desc ? trimWhy(stripInternalNotes(stripInlineMarkdown(desc))) : "",
+            why,
           };
         }),
     },

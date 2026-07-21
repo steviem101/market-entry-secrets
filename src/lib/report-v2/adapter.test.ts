@@ -188,6 +188,32 @@ test("events: sorted chronologically; the date/venue subtitle never leaks into t
   assert.equal(report.events.cards[1].why, "Where CX leaders gather.");
 });
 
+test("events: prose lead paragraph → intro; per-event rationale → tailored why by name", () => {
+  const { report } = adaptPipelineReport(
+    {
+      matches: {
+        events: [
+          { name: "Intersekt", link: "/events/intersekt", date: "2026-09-03", location: "Melbourne", subtitle: "2026-09-03 · Melbourne" },
+          { name: "CyberCon", link: "/events/cybercon", date: "2026-10-14", location: "Melbourne", subtitle: "2026-10-14 · Melbourne" },
+        ],
+      },
+      sections: {
+        events_resources: {
+          content:
+            "Strategic event attendance is the lever for local investor interest.\n\n### High-Priority Events\n\n*   **[Intersekt](/events/intersekt)**\n    Australia's flagship fintech event — the primary venue for meeting fintech VCs.\n*   **[CyberCon](/events/cybercon)**\n    Where the security buyers gather.",
+        },
+      },
+    },
+    {}
+  );
+  assert.match(report.events.intro, /Strategic event attendance is the lever/);
+  assert.equal(report.events.cards[0].name, "Intersekt");
+  assert.match(report.events.cards[0].why, /flagship fintech event — the primary venue/);
+  assert.equal(report.events.cards[1].why, "Where the security buyers gather.");
+  // the raw "date · location" subtitle never leaks into a why
+  assert.doesNotMatch(report.events.cards[0].why, /2026-09-03/);
+});
+
 test("Phase 3b: competitor strengths join with '·'; company_strengths populate the you-row", () => {
   const { report } = adaptPipelineReport(
     {
