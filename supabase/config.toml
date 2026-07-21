@@ -232,6 +232,13 @@ verify_jwt = false
 # stay false or the gateway rejects the internal-secret / Slack POST (no JWT) before it runs.
 verify_jwt = false
 
+[functions.agent-notifier]
+# MES agent loops (Workstream D): daily Slack digest for the agent loops (rollup + Approve/Reject
+# cards to #mes-agents-digest, alerts to #mes-agents-alerts). Cron-invoked, authenticated in-code
+# by x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET. Must stay false or the gateway rejects the
+# cron POST (no JWT). Self-skips until SLACK_AGENTS_DIGEST_CHANNEL is set.
+verify_jwt = false
+
 [functions.loop-content-refresh]
 # MES agent loops (Workstream B): weekly content-freshness loop (propose-only). Writes
 # automation_runs + agent_content_proposals; never mutates production (apply-proposal does).

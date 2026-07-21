@@ -25,6 +25,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SIGNING_SECRET = Deno.env.get("SLACK_SIGNING_SECRET") ?? "";
 const ALLOWED_REVIEWERS = (Deno.env.get("RQ_SLACK_REVIEWERS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const AGENT_ACTIONS_SECRET = Deno.env.get("AGENT_ACTIONS_SECRET") ?? Deno.env.get("EMAIL_INTERNAL_SECRET") ?? "";
 const RESPOND_TIMEOUT_MS = 5000;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -81,6 +82,44 @@ async function respond(responseUrl: string | undefined, text: string, visibility
     clearTimeout(to);
   } catch (e) {
     log("response_url post failed", String(e));
+  }
+}
+
+// MES agent loops (Workstream D): Approve/Reject buttons on the agent-notifier digest cards.
+// The button value is "agent:<approve|reject>:<proposal_key>" (proposal_key is "source:uuid", so
+// it carries colons — split on the first two only). This receiver just verifies Slack signing +
+// the reviewer allowlist, then delegates to agent-actions (x-internal-secret), which flips the
+// proposal's status and, for applyable ones, invokes apply-proposal. So the Slack button and the
+// dashboard share the exact same apply path.
+async function processAgentDecision(agentAction: "approve" | "reject", buttonValue: string, slackUser: string, slackUserId: string, responseUrl: string | undefined): Promise<void> {
+  const parts = buttonValue.split(":");
+  if (parts[0] !== "agent" || parts.length < 3) {
+    log("malformed agent button value", { buttonValue });
+    return await respond(responseUrl, "⚠️ That button carried a malformed proposal reference — see function logs.", "ephemeral");
+  }
+  const proposalKey = parts.slice(2).join(":");
+  if (!AGENT_ACTIONS_SECRET) {
+    log("AGENT_ACTIONS_SECRET not configured");
+    return await respond(responseUrl, "⚠️ Agent actions are not configured yet — see function logs.", "ephemeral");
+  }
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/agent-actions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-internal-secret": AGENT_ACTIONS_SECRET },
+      body: JSON.stringify({ action: agentAction, proposal_keys: [proposalKey] }),
+    });
+    const j = await res.json().catch(() => ({}));
+    const row = (j.results ?? [])[0];
+    if (row?.ok) {
+      log("agent proposal actioned", { proposalKey, agentAction, by: slackUserId });
+      const verb = agentAction === "approve" ? "✅ Approved" : "❌ Rejected";
+      const applied = row.applied ? " and applied" : "";
+      return await respond(responseUrl, `${verb}${applied} \`${escapeSlack(proposalKey)}\` (by ${escapeSlack(slackUser)}).`, "in_channel");
+    }
+    return await respond(responseUrl, `⚠️ Could not ${agentAction} \`${escapeSlack(proposalKey)}\`: ${escapeSlack(String(row?.error ?? "unknown error"))}.`, "ephemeral");
+  } catch (e) {
+    log("agent-actions call failed", String(e));
+    return await respond(responseUrl, "⚠️ Failed to reach agent-actions — see function logs.", "ephemeral");
   }
 }
 
@@ -191,7 +230,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const abDecision = actionId.startsWith("ab_accept_") ? "accepted" as const : actionId.startsWith("ab_dismiss_") ? "dismissed" as const : null;
   // Phase 5 (P5-3a): directory steward class-B Approve/Dismiss buttons share it too.
   const dsDecision = actionId.startsWith("ds_approve_") ? "approved" as const : actionId.startsWith("ds_dismiss_") ? "dismissed" as const : null;
-  if (!decision && !abDecision && !dsDecision) return new Response("ok", { status: 200 }); // not one of our buttons
+  // MES agent loops (Workstream D): digest-card Approve/Reject buttons.
+  const agentAction = actionId === "agent_approve" ? "approve" as const : actionId === "agent_reject" ? "reject" as const : null;
+  if (!decision && !abDecision && !dsDecision && !agentAction) return new Response("ok", { status: 200 }); // not one of our buttons
   const responseUrl: string | undefined = payload.response_url;
   const slackUserId: string = payload.user?.id ?? "";
   const slackUser: string = payload.user?.username ?? payload.user?.name ?? (slackUserId || "unknown");
@@ -200,13 +241,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // which is fatal to the Deno isolate.
   const work = (async () => {
     try {
+      // Reviewer allowlist applies to every button type.
+      if (ALLOWED_REVIEWERS.length && !ALLOWED_REVIEWERS.includes(slackUserId)) {
+        log("reviewer not in RQ_SLACK_REVIEWERS");
+        return await respond(responseUrl, "⛔ You're not in the reviewer allowlist.", "ephemeral");
+      }
+      // Agent-loop buttons carry a proposal_key ("source:uuid"), not a bare UUID, so handle them
+      // before the UUID guard and delegate to agent-actions.
+      if (agentAction) return await processAgentDecision(agentAction, proposalId, slackUser, slackUserId, responseUrl);
+
       if (!UUID_RE.test(proposalId)) {
         log("malformed proposal id on rq button", { actionId });
         return await respond(responseUrl, "⚠️ That button carried a malformed proposal id — see function logs.", "ephemeral");
-      }
-      if (ALLOWED_REVIEWERS.length && !ALLOWED_REVIEWERS.includes(slackUserId)) {
-        log("reviewer not in RQ_SLACK_REVIEWERS");
-        return await respond(responseUrl, "⛔ You're not in the reviewer allowlist for report-quality proposals.", "ephemeral");
       }
       if (dsDecision) await processStewardDecision(dsDecision, proposalId, slackUser, slackUserId, responseUrl);
       else if (abDecision) await processAbDecision(abDecision, proposalId, slackUser, slackUserId, responseUrl);
