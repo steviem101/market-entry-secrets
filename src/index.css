@@ -443,6 +443,14 @@
   content: counter(report-section, decimal-leading-zero) " · ";
 }
 
+/* Clear any sticky app chrome when the in-report nav jumps to a section
+   (ReportNav scrollIntoView block:start). Screen only — print has no nav. */
+@media screen {
+  [data-report-v2] [data-report-v2-section] {
+    scroll-margin-top: 84px;
+  }
+}
+
 /* Print styles for PDF export */
 @media print {
   /* Hide non-content elements */

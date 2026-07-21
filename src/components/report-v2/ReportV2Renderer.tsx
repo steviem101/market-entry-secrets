@@ -1,6 +1,7 @@
 import type { Report } from "@/types/report";
 import { REPORT_V2_SECTIONS } from "./sectionRegistry";
 import ReportShell from "./ReportShell";
+import ReportNav from "./ReportNav";
 import { ReportInteractionsProvider } from "./ReportInteractionsProvider";
 import { formatReportDate } from "@/lib/report-v2/format";
 
@@ -20,6 +21,7 @@ interface ReportV2RendererProps {
  */
 const ReportV2Renderer = ({ report, reportId, storageKey }: ReportV2RendererProps) => (
   <ReportInteractionsProvider reportId={reportId} storageKey={storageKey}>
+    <ReportNav />
     <ReportShell
       printFooter={`${report.meta.customer} · ${formatReportDate(report.meta.date, "short")} · marketentrysecrets.com`}
     >
