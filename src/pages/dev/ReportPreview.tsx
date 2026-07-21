@@ -3,6 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import type { Report } from "@/types/report";
 import { REPORT_V2_SECTIONS } from "@/components/report-v2/sectionRegistry";
 import ReportShell from "@/components/report-v2/ReportShell";
+import ReportNav from "@/components/report-v2/ReportNav";
 import SectionCard from "@/components/report-v2/SectionCard";
 import EvidenceChip from "@/components/report-v2/EvidenceChip";
 import Rich from "@/components/report-v2/Rich";
@@ -170,6 +171,7 @@ const ReportPreview = () => {
           that would otherwise stick to tree position. The harness has no report
           row, so the shortlist persists to localStorage keyed by the fixture. */}
       <ReportInteractionsProvider key={fixtureKey} storageKey={fixtureKey}>
+        <ReportNav />
         <ReportShell
           printFooter={`${report.meta.customer} · ${formatReportDate(report.meta.date, "short")} · marketentrysecrets.com`}
         >
