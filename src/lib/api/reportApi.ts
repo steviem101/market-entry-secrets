@@ -14,6 +14,60 @@ export interface ReportQualityRow {
   degraded: boolean | null;
 }
 
+/** The intake fields an admin needs to judge whether a report answered the
+ * customer's actual question — shown beside the report in the review view. */
+export interface AdminReportIntake {
+  company_name: string | null;
+  website_url: string | null;
+  country_of_origin: string | null;
+  industry_sector: string[] | null;
+  company_stage: string | null;
+  employee_count: string | null;
+  target_regions: string[] | null;
+  services_needed: string[] | null;
+  goal_ids: string[] | null;
+  timeline: string | null;
+  budget_level: string | null;
+  revenue_stage: string | null;
+  customer_type: string | null;
+  customer_size: string | null;
+  buying_motion: string | null;
+  key_challenges: string | null;
+  challenge_tags: string[] | null;
+  challenge_other: string | null;
+  report_focus: string | null;
+  known_competitors: Array<{ name?: string; website?: string }> | null;
+  end_buyer_industries: string[] | null;
+}
+
+/** Full report-quality row for one report (get_admin_report_quality_detail RPC)
+ * — the same content the #report-quality Slack card shows. jsonb blobs are typed
+ * loosely on purpose; the review panel reads them defensively. */
+export interface AdminReportQualityDetail {
+  report_status: string | null;
+  report_score: number | null;
+  build_health: number | null;
+  score_plumbing: number | null;
+  score_coverage: number | null;
+  score_completeness: number | null;
+  score_presentation: number | null;
+  score_substance: number | null;
+  degraded: boolean | null;
+  rag_hit_rate: number | null;
+  tables_hit: number | null;
+  total_matches: number | null;
+  utilization_rate: number | null;
+  groundedness: number | null;
+  generation_time_ms: number | null;
+  match_counts: Record<string, number> | null;
+  substance: Record<string, unknown> | null;
+  insights: string[] | null;
+  presentation: Record<string, unknown> | null;
+  utilization: Record<string, unknown> | null;
+  sources: Record<string, unknown> | null;
+  created_at: string | null;
+}
+
 export const reportApi = {
   /**
    * v2 intake submit. Projects the redesigned schema into the flat
@@ -365,16 +419,21 @@ export const reportApi = {
   },
 
   /**
-   * ADMIN: fetch a single report with FULL, ungated content for quality review.
-   * Content comes from the admin-only get_report_admin RPC (SECURITY DEFINER,
-   * self-guards on has_role admin) — NOT get_tier_gated_report, so no section is
-   * tier-stripped and the reviewer sees exactly what was generated.
+   * ADMIN: fetch a single report with FULL, ungated content for quality review,
+   * plus the customer's intake (what they asked for) and the full report-quality
+   * breakdown. Report content comes from get_report_admin (SECURITY DEFINER,
+   * self-guards on admin) — NOT get_tier_gated_report, so nothing is tier-stripped.
+   * Quality is best-effort: it's supplementary, so a failure there must not block
+   * the report view (identical rationale to the list's score merge).
    */
   async fetchAdminReport(reportId: string) {
     const { data: meta, error: metaError } = await (supabase as any)
       .from('user_reports')
       .select(
-        'id, user_id, intake_form_id, tier_at_generation, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at, user_intake_forms(company_name)'
+        'id, user_id, intake_form_id, tier_at_generation, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at, ' +
+          'user_intake_forms(company_name, website_url, country_of_origin, industry_sector, company_stage, employee_count, ' +
+          'target_regions, services_needed, goal_ids, timeline, budget_level, revenue_stage, customer_type, customer_size, ' +
+          'buying_motion, key_challenges, challenge_tags, challenge_other, report_focus, known_competitors, end_buyer_industries)'
       )
       .eq('id', reportId)
       .single();
@@ -386,9 +445,20 @@ export const reportApi = {
 
     if (rpcError) throw rpcError;
 
+    // Best-effort quality breakdown (single latest row via the admin detail RPC).
+    let quality: AdminReportQualityDetail | null = null;
+    const { data: qRows, error: qErr } = await (supabase as any)
+      .rpc('get_admin_report_quality_detail', { p_report_id: reportId });
+    if (qErr) {
+      console.warn('[admin-report] quality breakdown unavailable', qErr.message ?? qErr);
+    } else if (Array.isArray(qRows) && qRows.length > 0) {
+      quality = qRows[0] as AdminReportQualityDetail;
+    }
+
     return {
       ...meta,
       report_json: (fullJson ?? {}) as Record<string, unknown>,
+      quality,
     } as {
       id: string;
       user_id: string;
@@ -401,7 +471,8 @@ export const reportApi = {
       feedback_notes: string | null;
       created_at: string;
       updated_at: string;
-      user_intake_forms: { company_name: string | null } | null;
+      user_intake_forms: AdminReportIntake | null;
+      quality: AdminReportQualityDetail | null;
     };
   },
 
