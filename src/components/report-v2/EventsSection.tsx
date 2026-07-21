@@ -1,5 +1,5 @@
 import type { Report } from "@/types/report";
-import { formatReportDate } from "@/lib/report-v2/format";
+import { formatReportDate, formatEventWindow } from "@/lib/report-v2/format";
 import SectionCard from "./SectionCard";
 import StarToggle from "./StarToggle";
 import Rich from "./Rich";
@@ -7,12 +7,23 @@ import Rich from "./Rich";
 /**
  * §09 events: date-led cards (amber mono date + venue, why-this-room body),
  * an optional "also flagged" line, and an optional "maximise these rooms"
- * tips block (lemlist fixture) rendered as a tinted callout.
+ * tips block (lemlist fixture) rendered as a tinted callout. Cards arrive
+ * date-sorted from the adapter; the header shows the real month window instead
+ * of a hardcoded (and routinely false) "this quarter".
  */
 const EventsSection = ({ report }: { report: Report }) => {
   const { events } = report;
+  const dated = events.cards.filter((e) => e.date);
+  const dateWindow = dated.length
+    ? formatEventWindow(dated[0].date, dated[dated.length - 1].date)
+    : "";
   return (
-    <SectionCard label="EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER" className="pb-10">
+    <SectionCard label="EVENTS — HIGH-SIGNAL ROOMS" className="pb-10">
+      {dateWindow && (
+        <p className="mb-1 mt-4 text-[12.5px] font-bold uppercase tracking-[0.1em] text-report-caption">
+          {dateWindow}
+        </p>
+      )}
       {/* flex-wrap (not a fixed 3-col grid): with a single matched event the
           grid left two empty columns; here the card grows to fill the row, and
           2–3 events still lay out as halves/thirds (basis-[300px]). */}
@@ -32,7 +43,9 @@ const EventsSection = ({ report }: { report: Report }) => {
               )}
               <StarToggle name={event.name} url={event.url} section="Event" />
             </div>
-            <Rich text={event.why} className="text-[13.5px] leading-[1.7] text-report-ink-soft" />
+            {event.why && (
+              <Rich text={event.why} className="text-[13.5px] leading-[1.7] text-report-ink-soft" />
+            )}
           </div>
         ))}
       </div>
