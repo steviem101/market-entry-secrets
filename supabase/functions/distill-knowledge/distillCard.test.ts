@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildDistillPrompt, parseDistillResponse, coerceSectors, GENERAL_SECTOR, isTooThin, MIN_CHUNK_CHARS, DISTILLER_VERSION, type ChunkInput } from "./distillCard.ts";
+import { buildDistillPrompt, parseDistillResponse, isTooThin, MIN_CHUNK_CHARS, DISTILLER_VERSION, type ChunkInput } from "./distillCard.ts";
+import { GENERAL_SECTOR } from "../_shared/kbTaxonomy.ts";
 
 const LONG = "Setting up a company in Australia involves registering for a business number and, depending on turnover, for the goods and services tax. Employers must also meet state-based payroll obligations.";
 
@@ -73,14 +74,32 @@ test("too-thin chunk skips before calling the model logic", () => {
   assert.equal(skip, "too_thin");
 });
 
-test("distiller-assigned sectors are validated; junk dropped, general kept, capped at 2", () => {
+test("distiller-assigned sectors are validated: junk dropped and >2 canonical capped at 2", () => {
   const resp = JSON.stringify({ cards: [
     { claim: "Foreign entrants to Australia must appoint a locally resident director for a proprietary company.",
-      topic_lane: "regulatory", sectors: ["financial-services", "teleportation", "healthcare"], answers_intents: [] },
+      topic_lane: "regulatory", sectors: ["financial-services", "teleportation", "healthcare", "retail"], answers_intents: [] },
   ]});
   const { cards } = parseDistillResponse(resp, chunk());
   assert.equal(cards.length, 1);
-  assert.deepEqual(cards[0].metadata.sectors, ["financial-services", "healthcare"]); // teleportation dropped, capped at 2
+  assert.deepEqual(cards[0].metadata.sectors, ["financial-services", "healthcare"]); // teleportation dropped; 3 canonical capped to 2
+});
+
+test("distiller mixing 'general' with a specific sector keeps only the specific (specifics win)", () => {
+  const resp = JSON.stringify({ cards: [
+    { claim: "Fintech entrants to Australia face licensing obligations administered by the financial regulator.",
+      topic_lane: "regulatory", sectors: [GENERAL_SECTOR, "financial-services"], answers_intents: [] },
+  ]});
+  const { cards } = parseDistillResponse(resp, chunk());
+  assert.deepEqual(cards[0].metadata.sectors, ["financial-services"]); // never the contradictory ["general","financial-services"]
+});
+
+test("title-cased distiller sector is normalised, not dropped-then-mislabelled", () => {
+  const resp = JSON.stringify({ cards: [
+    { claim: "Healthcare entrants to Australia must navigate a national therapeutic-goods approval regime.",
+      topic_lane: "regulatory", sectors: ["Healthcare"], answers_intents: [] },
+  ]});
+  const { cards } = parseDistillResponse(resp, chunk()); // chunk metadata sectors = ["technology"]
+  assert.deepEqual(cards[0].metadata.sectors, ["healthcare"]); // NOT the fallback ["technology"]
 });
 
 test("no distiller sectors -> falls back to the chunk's own sector tags", () => {
@@ -90,14 +109,6 @@ test("no distiller sectors -> falls back to the chunk's own sector tags", () => 
   ]});
   const { cards } = parseDistillResponse(resp, chunk()); // chunk metadata sectors = ["technology"]
   assert.deepEqual(cards[0].metadata.sectors, ["technology"]);
-});
-
-test("coerceSectors: canonical + general kept, junk + non-canonical fallback dropped", () => {
-  assert.deepEqual(coerceSectors(["technology", "bogus"], []), ["technology"]);
-  assert.deepEqual(coerceSectors([GENERAL_SECTOR], []), [GENERAL_SECTOR]);
-  assert.deepEqual(coerceSectors(["a", "b", "c"], []), []);              // none canonical
-  assert.deepEqual(coerceSectors(undefined, ["retail", "legacy-tag"]), ["retail"]); // fallback filtered too
-  assert.deepEqual(coerceSectors(null, null), []);
 });
 
 test("isTooThin pre-filter mirrors the parse-time backstop", () => {
