@@ -19,9 +19,11 @@ const MD_TEMPLATE = [
 ] as const;
 const MLABEL = "mb-0.5 block text-[8px] font-bold uppercase tracking-[0.08em] text-report-muted md:hidden";
 
-const PlayerCell = ({ row, tagClass, isYou }: { row: CompetitorRow; tagClass: string; isYou?: boolean }) => {
-  const isCustomer = row.positionTag.startsWith("YOU");
-  return (
+const PlayerCell = ({ row, tagClass, isYou }: { row: CompetitorRow; tagClass: string; isYou?: boolean }) => (
+  // `isYou` (passed by the you-row caller) is the reliable customer-row signal —
+  // the you-row's positionTag is "", so the old `positionTag.startsWith("YOU")`
+  // check was always false, wrongly giving the you-row a competitor StarToggle
+  // and font-bold instead of font-extrabold (review finding).
     <span>
       {/* Only competitors carry a logo mark; the customer row is set apart by the
           sky tint + bold, not a competitor-style square. */}
@@ -31,14 +33,13 @@ const PlayerCell = ({ row, tagClass, isYou }: { row: CompetitorRow; tagClass: st
           <b>{row.name} ↗</b>
         </a>
       ) : (
-        <b className={isCustomer ? "font-extrabold" : "font-bold"}>{row.name}</b>
+        <b className={isYou ? "font-extrabold" : "font-bold"}>{row.name}</b>
       )}
-      {!isCustomer && <StarToggle name={row.name} url={row.url} section="Competitor" />}
+      {!isYou && <StarToggle name={row.name} url={row.url} section="Competitor" />}
       <br />
       <span className={`text-[10.5px] font-medium ${tagClass}`}>{row.positionTag}</span>
     </span>
   );
-};
 
 /**
  * §03 competitor landscape: ruled table with the customer row first (sky

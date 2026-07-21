@@ -802,15 +802,38 @@ test("D3 mentor card uses the tailored §07 why over the generic bio when the na
   assert.ok(mismatches.some((m) => m.path === "mentors[].why"));
 });
 
-test("D4 competitor position: mid-word-clipped source gets a clean ellipsis; §03 logo derived", () => {
+test("D3 mentor card strips markdown from the tailored §07 why (no stray ** or link syntax)", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        mentor_recommendations: {
+          content: "### Mentors\n*   **[Jane Doe](https://x)**: **She is uniquely placed** to open [enterprise doors](https://y) for your team.",
+        },
+      },
+      matches: {
+        community_members: [
+          { name: "Jane Doe", link: "/mentors/experts/jane-doe", subtitle: "Advisor", description: "bio." },
+        ],
+      },
+    },
+    {}
+  );
+  const why = report.mentors.primary[0].why;
+  assert.match(why, /She is uniquely placed to open enterprise doors for your team/);
+  assert.doesNotMatch(why, /\*\*/);      // bold markers stripped
+  assert.doesNotMatch(why, /\]\(http/);  // markdown link syntax stripped
+});
+
+test("D4 competitor position: complete unpunctuated text is NOT amputated; trailing connector trimmed; §03 logo derived", () => {
   const { report } = adaptPipelineReport(
     {
       sections: {
         competitor_landscape: {
           content: "x",
           matches: [
+            // A complete tagline with no full stop + a dangling trailing comma.
             { name: "Simpology", link: "https://simpology.com.au", tags: ["ATS"],
-              subtitle: "Simpology is an end-to-end loan origination platform designed to provide efficiency and productivity for lenders through a simple, streamlin" },
+              subtitle: "End-to-end loan origination platform for Australian lenders," },
           ],
         },
       },
@@ -818,8 +841,11 @@ test("D4 competitor position: mid-word-clipped source gets a clean ellipsis; §0
     {}
   );
   const row = report.competitors.rows[0];
-  assert.doesNotMatch(row.position, /streamlin$/);  // partial word dropped
-  assert.match(row.position, /through a simple…$/);   // clean ellipsis, dangling comma removed
+  // A period-less phrase is complete, not a mid-word clip — the final word must
+  // survive (the old tidyClip amputated it and faked a truncation ellipsis).
+  assert.match(row.position, /Australian lenders$/);
+  assert.doesNotMatch(row.position, /…$/);   // no fabricated truncation
+  assert.doesNotMatch(row.position, /,$/);   // dangling connector still trimmed
   assert.match(row.logoUrl ?? "", /^https:\/\/img\.logo\.dev\/simpology\.com\.au\?/);
 });
 
@@ -829,4 +855,13 @@ test("D4 metric de-slug handles the non-breaking hyphen (U+2011) in fallback lab
     {}
   );
   assert.equal(report.metrics.tiles[0].caption, "Australia Fintech B2B market size");
+});
+
+test("D4 metric de-slug preserves real hyphens in prose labels (does not over-split)", () => {
+  const { report } = adaptPipelineReport(
+    { metadata: { key_metrics: [{ label: "AI-driven e-commerce market size", value: "USD 5B" }] } },
+    {}
+  );
+  // A spaced label reads as prose; "AI-driven"/"e-commerce" keep their hyphens.
+  assert.equal(report.metrics.tiles[0].caption, "AI-driven e-commerce market size");
 });

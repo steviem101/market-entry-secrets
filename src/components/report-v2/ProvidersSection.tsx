@@ -10,20 +10,15 @@ import CoverageNote from "./CoverageNote";
  * below (the ranked set is filtered out of the grid so it isn't repeated;
  * `providers.all` itself stays the full set).
  */
-const entityKey = (x: { url?: string; name?: string }) => (x.url || x.name || "").trim().toLowerCase();
-
 const ProvidersSection = ({ report }: { report: Report }) => {
   const { providers } = report;
-  // The ranked "our read" top-N is a subset of `providers.all` (adapter builds
-  // both from the same provider cards). Rendering `all` verbatim below repeats
-  // those same rows as the first grid cards — redundant content that pads the
-  // section. Show only the providers NOT already ranked above; the data
-  // contract (`all` = full set) stays intact, this is a presentation choice.
-  const rankedKeys = new Set(providers.ourRead.map(entityKey).filter(Boolean));
-  const gridCards = rankedKeys.size
-    ? providers.all.filter((c) => !rankedKeys.has(entityKey(c)))
-    : providers.all;
-  const gridHeader = rankedKeys.size
+  // The ranked "our read" IS the first `ourRead.length` of `providers.all` (the
+  // adapter builds ourRead as all.slice(0,3)). Show the remainder below so the
+  // grid never repeats the ranked rows — done positionally, not by a name/url
+  // key, because two distinct providers can share a key (same name, both
+  // link-less) and a key filter would then drop a real match (review finding).
+  const gridCards = providers.all.slice(providers.ourRead.length);
+  const gridHeader = providers.ourRead.length
     ? "MORE MATCHED PROVIDERS — EXPLORE FREELY"
     : "ALL MATCHED PROVIDERS — EXPLORE FREELY";
   return (

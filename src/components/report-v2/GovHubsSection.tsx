@@ -26,6 +26,11 @@ const EntityName = ({ name, url, section }: { name: string; url: string; section
  */
 const GovHubsSection = ({ report }: { report: Report }) => {
   const { govAndHubs } = report;
+  // Gov/trade bodies are an independent match set from innovation hubs (which
+  // moved to their own §07). When none matched, render nothing rather than an
+  // empty numbered section — which would consume a section number and print as
+  // a near-blank PDF page (review finding).
+  if (govAndHubs.gov.length === 0 && !govAndHubs.alsoNamed) return null;
   return (
     <SectionCard label="GOVERNMENT & TRADE SUPPORT" className="pb-10">
       <h3 className="mb-3.5 mt-6 text-[16px] font-bold text-report-good">
