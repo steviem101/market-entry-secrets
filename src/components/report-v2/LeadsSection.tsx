@@ -128,7 +128,9 @@ const LeadsSection = ({ report }: { report: Report }) => {
           <p className="mt-[22px] hidden text-[12.5px] italic text-report-muted print:block">
             Reply to this report with your ideal customer profile and we'll build the list.
           </p>
-          {!leads.recommended && confirmation}
+          {/* Always confirm in place: the hero card's confirmation can be scrolled
+              out of view when the request was sent from this bottom box. */}
+          {confirmation}
         </>
       ) : (
         <div className="mt-[22px] grid grid-cols-1 items-stretch gap-5 md:grid-cols-[1fr_auto] md:items-end md:gap-7 rounded-xl border border-report-border px-[30px] py-[26px]">

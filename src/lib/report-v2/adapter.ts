@@ -345,6 +345,19 @@ const matchDescription = (m: PipelineMatch, cap = 260): string => {
   return capText(plain, cap);
 };
 
+// Event why-fallback: the curated `description` ONLY (never the subtitle, which
+// is the "date · location" line Wave 4 deliberately dropped), but with the same
+// markdown-strip + error-page guard as matchDescription — otherwise a scraped
+// "403 Forbidden" / "Page not found" description renders as event copy
+// (code-review finding: the events rewrite bypassed the ERROR_PAGE_RE guard).
+const eventDescription = (m: PipelineMatch): string => {
+  const raw = typeof m.description === "string" ? m.description.trim() : "";
+  if (!raw) return "";
+  const plain = stripInternalNotes(stripInlineMarkdown(raw));
+  if (!plain || (ERROR_PAGE_RE.test(plain) && plain.length < 160)) return "";
+  return plain;
+};
+
 // A directory tag that is a placeholder, not a real label — never render it.
 const cleanTag = (tag: string | undefined): string =>
   tag && !/^n\/?a\b/i.test(tag.trim()) ? tag : "";
@@ -863,26 +876,34 @@ export function parseEventWhys(content: unknown): Map<string, string> {
 export function parseRecommendedList(content: unknown): { spec: string; why: string } | undefined {
   if (typeof content !== "string") return undefined;
   const lines = content.split("\n");
-  const idx = lines.findIndex((l) => /\*\*The list we'?d build for you:\*\*/i.test(l));
+  // Apostrophe class matches both a straight (U+0027) and a curly (U+2019)
+  // apostrophe — the section-writer LLM routinely normalises "we'd" to a curly
+  // quote, which a straight-only regex misses, silently dropping the whole
+  // suggested-list card (code-review finding).
+  const idx = lines.findIndex((l) => /\*\*The list we['’]?d build for you:\*\*/i.test(l));
   if (idx === -1) return undefined;
-  const after = lines[idx].replace(/^.*?\*\*The list we'?d build for you:\*\*/i, "").trim();
+  const after = lines[idx].replace(/^.*?\*\*The list we['’]?d build for you:\*\*/i, "").trim();
   const clean = (s: string) => stripInlineMarkdown(s).replace(/\[\d+\]/g, "").replace(/\s+/g, " ").trim();
-  // The label line may carry the spec sentence plus the why; split on the first
-  // sentence so the spec is just the list description.
-  const spec = clean(firstSentence(after));
-  if (!spec) return undefined;
-  let why = clean(after.slice(firstSentence(after).length));
-  if (!why) {
-    // Why on the following non-empty, non-heading, non-bullet line.
-    for (let i = idx + 1; i < lines.length; i++) {
-      const t = lines[i].trim();
-      if (!t) continue;
-      if (/^#{1,6}\s/.test(t) || /^[-*]\s/.test(t)) break;
-      why = clean(t);
-      break;
-    }
+  // Prompt format: the spec is the whole label line, the why is the sentence on
+  // the FOLLOWING line. Prefer that split so an abbreviation inside the spec
+  // ("…fintech cos.", "Pty.", "Inc.") isn't truncated by firstSentence
+  // (code-review finding). Only when there is no separate why line do we fall
+  // back to splitting the first sentence off the label line itself.
+  let why = "";
+  for (let i = idx + 1; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (!t) continue;
+    if (/^#{1,6}\s/.test(t) || /^[-*]\s/.test(t)) break;
+    why = clean(t);
+    break;
   }
-  return { spec, why };
+  if (why) {
+    const spec = clean(after);
+    return spec ? { spec, why } : undefined;
+  }
+  const specFromLine = clean(firstSentence(after));
+  if (!specFromLine) return undefined;
+  return { spec: specFromLine, why: clean(after.slice(firstSentence(after).length)) };
 }
 
 export function adaptPipelineReport(
@@ -1231,11 +1252,11 @@ export function adaptPipelineReport(
           // prose; fall back to the real `description`. NEVER the "date · location"
           // subtitle, which echoed the date under the card (Solidroad smoke test).
           const tailored = eventWhys.get(briefNameKey(matchName(m)));
-          const desc = typeof m.description === "string" ? m.description.trim() : "";
+          const desc = eventDescription(m);
           const why = tailored
             ? trimWhy(stripInlineMarkdown(tailored))
             : desc
-              ? trimWhy(stripInternalNotes(stripInlineMarkdown(desc)))
+              ? trimWhy(desc)
               : "";
           return {
             date: m.date ?? "",
