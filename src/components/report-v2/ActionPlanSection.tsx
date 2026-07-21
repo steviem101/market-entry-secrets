@@ -36,8 +36,15 @@ const ActionPlanSection = ({ report }: { report: Report }) => {
               <div className="flex flex-col gap-3.5">
                 {phase.groups.map((group, g) => (
                   <div key={g}>
-                    <div className="mb-1 text-[11px] font-bold text-report-ink">{group.title}</div>
-                    <Rich text={group.body} className="text-[13.5px] leading-[1.75] text-report-ink-soft" />
+                    <div className="mb-1.5 text-[11px] font-bold text-report-ink">{group.title}</div>
+                    <ul className="flex flex-col gap-1.5">
+                      {(group.bullets ?? []).map((bullet, b) => (
+                        <li key={b} className="flex gap-2 text-[13.5px] leading-[1.6] text-report-ink-soft">
+                          <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-report-muted" aria-hidden />
+                          <Rich as="span" text={bullet} />
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ))}
               </div>
