@@ -66,28 +66,42 @@ Deno.serve(async (req) => {
   const since7d = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   try {
-    const [runsR, propsR, pendingR, weekR] = await Promise.all([
-      supabase.from("automation_runs").select("loop,status,proposed").gte("started_at", since24).limit(1000),
+    const [runsR, propsR, pendingR, weekR, todayR] = await Promise.all([
+      supabase.from("automation_runs").select("loop,status,proposed").gte("started_at", since24).order("started_at", { ascending: false }).limit(1000),
       supabase.from("agent_proposals").select("proposal_key,loop_name,action_type,status,reason,created_at").gte("created_at", since24).order("created_at", { ascending: false }).limit(1000),
       supabase.from("agent_proposals").select("*", { count: "exact", head: true }).eq("status", "pending"),
       supabase.from("agent_proposals").select("*", { count: "exact", head: true }).gte("created_at", since7d),
+      supabase.from("agent_proposals").select("*", { count: "exact", head: true }).gte("created_at", since24),
     ]);
+
+    // supabase-js RESOLVES (does not throw) on a query error, so the surrounding try/catch would miss
+    // it and we'd post a misleading all-clear "0 proposals" digest. Fail loudly instead.
+    const qErr = runsR.error || propsR.error || pendingR.error || weekR.error || todayR.error;
+    if (qErr) {
+      logError(LOOP_NAME, "digest query failed", qErr);
+      if (!dryRun && ALERTS_CHANNEL) {
+        await slackPost(ALERTS_CHANNEL, [{ type: "section", text: { type: "mrkdwn", text: `:warning: agent-notifier could not build the digest: ${qErr.message}. Check /admin/agents.` } }], "agent-notifier query failed");
+      }
+      return new Response(JSON.stringify({ error: `digest query failed: ${qErr.message}` }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
+    }
 
     const runs24h = (runsR.data ?? []) as RunLite[];
     const proposals24h = (propsR.data ?? []) as (ProposalLite & { created_at: string })[];
     const pendingTotal = pendingR.count ?? 0;
     const weekCount = weekR.count ?? 0;
+    const today24hCount = todayR.count ?? 0; // exact, not capped by the 1000-row array
 
     const summary = buildDigestSummary(runs24h, proposals24h, pendingTotal);
+    summary.totalProposed = today24hCount; // the array is capped at 1000; the count is exact
     const dashboardUrl = `${FRONTEND_URL.replace(/\/$/, "")}/admin/agents`;
     const digestBlocks = buildDigestBlocks(summary, dashboardUrl);
 
     // Cards for the proposals that still need a human: pending (auto_approved is already approved).
     const cardable = proposals24h.filter((p) => p.status === "pending").slice(0, MAX_CARDS);
 
-    // Anomaly: today vs the trailing 7-day daily average (exclude today's slice from the average).
-    const trailingAvg = Math.max(0, (weekCount - proposals24h.length)) / 6;
-    const anomaly = detectAnomaly(proposals24h.length, trailingAvg);
+    // Anomaly: today (exact count) vs the trailing 7-day daily average (excluding today's slice).
+    const trailingAvg = Math.max(0, (weekCount - today24hCount)) / 6;
+    const anomaly = detectAnomaly(today24hCount, trailingAvg);
     const alerts: string[] = [];
     if (summary.failedRuns > 0) alerts.push(`${summary.failedRuns} loop run(s) failed in the last 24 hours. See /admin/agents.`);
     if (anomaly) alerts.push(anomaly);

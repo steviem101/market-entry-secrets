@@ -3,7 +3,7 @@
 // agent-actions. The view/tables are absent from the generated types, so the (supabase as any)
 // cast is used deliberately (same pattern as reportApi.ts).
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { approveProposals, rejectProposals, retryProposals } from "@/lib/api/agentApi";
 
@@ -40,6 +40,9 @@ export function useAgentProposals(opts: UseAgentProposalsOptions = {}) {
 
   return useQuery({
     queryKey: ["agent-proposals", status, loop, source, page, pageSize],
+    // Keep the previous page's rows while the next page/filter loads, so the pager + count don't
+    // flash to zero on every change.
+    placeholderData: keepPreviousData,
     queryFn: async (): Promise<{ rows: AgentProposal[]; count: number }> => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- agent_proposals view is absent from generated types (documented cast pattern)
       let query = (supabase as any)

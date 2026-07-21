@@ -108,7 +108,8 @@ Deno.serve(async (req) => {
 
       const plan = planApply(proposal, currentRow);
       if (isRefusal(plan)) {
-        await markFailed(supabase, parsed.id, plan.reason);
+        // A refusal is a validation/precondition issue (e.g. not-yet-approved, bad payload), not an
+        // apply-time failure — report it but never corrupt the row's status to apply_failed.
         results.push({ proposal_key: key, ok: false, error: plan.reason });
         continue;
       }

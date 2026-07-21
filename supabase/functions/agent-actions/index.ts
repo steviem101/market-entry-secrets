@@ -63,8 +63,15 @@ Deno.serve(async (req) => {
     const plan = resolveAction(parsed.source, action, parsed.id, nowISO, reviewerId);
     if (isActionRefusal(plan)) { results.set(key, { proposal_key: key, ok: false, error: plan.reason }); continue; }
     try {
-      const { error } = await supabase.from(plan.table).update(plan.set).eq("id", parsed.id);
+      // Compare-and-swap: never overwrite a row that is already applied (production already
+      // mutated), so a stray reject/approve/retry can't corrupt terminal state or force a re-apply.
+      const { data: upd, error } = await supabase.from(plan.table)
+        .update(plan.set).eq("id", parsed.id).neq("status", plan.guardStatus).select("id");
       if (error) throw new Error(error.message);
+      if (!upd || upd.length === 0) {
+        results.set(key, { proposal_key: key, ok: false, error: "already applied or not found; no change made" });
+        continue;
+      }
       results.set(key, { proposal_key: key, ok: true });
       if (plan.applyAfter) applyKeys.push(key);
     } catch (err) {

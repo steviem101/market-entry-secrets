@@ -36,7 +36,7 @@ import { useAgentRuns } from "@/hooks/useAgentRuns";
 import { useAgentProposals } from "@/hooks/useAgentProposals";
 //   useAgentProposals({ status?, loop?, source?, page?, pageSize? })
 //     -> { data: { rows: AgentProposal[], count: number }, isLoading, error }
-//   AgentProposal = { proposal_key, source_table, loop_name, action_type, target_table,
+//   AgentProposal = { proposal_key, source_table, id, run_id, loop_name, action_type, target_table,
 //                     target_id, payload, reason, confidence, status, reviewed_at, applied_at, created_at }
 //   status is canonical: pending | approved | rejected | auto_approved | applied | apply_failed
 

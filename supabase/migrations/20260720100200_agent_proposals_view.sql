@@ -84,7 +84,7 @@ union all
 select
   'report_quality_proposals:' || r.id::text,
   'report_quality_proposals',
-  r.id, r.run_id, 'report-quality', 'rq_' || coalesce(r.category, 'proposal'),
+  r.id, r.run_id, 'report-quality-loop', 'rq_' || coalesce(r.category, 'proposal'),
   'user_reports', r.report_id,
   jsonb_build_object('title', r.title, 'impact_estimate', r.impact_estimate, 'risk', r.risk,
                      'axis_scores', r.axis_scores, 'rank_score', r.rank_score,
@@ -101,7 +101,7 @@ union all
 select
   'prompt_ab_proposals:' || a.id::text,
   'prompt_ab_proposals',
-  a.id, a.run_id, 'prompt-ab', 'prompt_ab_' || coalesce(a.verdict, 'proposal'),
+  a.id, a.run_id, 'prompt-ab-rollup', 'prompt_ab_' || coalesce(a.verdict, 'proposal'),
   'report_templates', null::uuid,
   jsonb_build_object('section_name', a.section_name, 'candidate_version', a.candidate_version,
                      'verdict', a.verdict, 'lift', a.lift, 'grounding_lift', a.grounding_lift,
@@ -173,6 +173,20 @@ comment on view public.agent_proposals is
 -- this exposes nothing to non-admin authenticated users (identical posture to the other 6 tables).
 grant select on public.report_quality_proposals to authenticated;
 grant select on public.ecosystem_import_candidates to authenticated;
+
+-- trade_agencies_enrichment_staging has RLS ENABLED but no policy at all (verified live), so a
+-- security_invoker read denies every row to non-service-role callers — the view's branch 9 would
+-- be silently empty for admins. Add the admin-read policy the other 7 staging tables already have.
+do $$ begin
+  if not exists (
+    select 1 from pg_policy p join pg_class c on c.oid = p.polrelid
+    where c.relname = 'trade_agencies_enrichment_staging' and p.polname = 'Admins read trade_agencies_enrichment_staging'
+  ) then
+    create policy "Admins read trade_agencies_enrichment_staging"
+      on public.trade_agencies_enrichment_staging for select
+      using (public.has_role((select auth.uid()), 'admin'::public.app_role));
+  end if;
+end $$;
 
 revoke all on public.agent_proposals from anon;
 grant select on public.agent_proposals to authenticated;

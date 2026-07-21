@@ -16,21 +16,22 @@ export interface SourceConfig {
   table: string;
   approvedValue: string;   // native value written on approve
   rejectedValue: string;   // native value written on reject
+  appliedValue: string;    // native terminal value (production already mutated) — never re-flip it
   hasReviewedBy: boolean;  // some source tables carry a reviewed_by column, some don't
   applyable: boolean;      // true => approve also invokes apply-proposal
 }
 
 // Keyed by the proposal_key source prefix (see the agent_proposals view).
 export const SOURCE_CONFIG: Record<string, SourceConfig> = {
-  agent_content_proposals: { table: "agent_content_proposals", approvedValue: "approved", rejectedValue: "rejected", hasReviewedBy: true, applyable: true },
-  directory_steward_staging: { table: "directory_steward_staging", approvedValue: "approved", rejectedValue: "dismissed", hasReviewedBy: false, applyable: false },
-  directory_discovery_staging: { table: "directory_discovery_staging", approvedValue: "approved", rejectedValue: "dismissed", hasReviewedBy: false, applyable: false },
-  directory_demand_signals: { table: "directory_demand_signals", approvedValue: "ack", rejectedValue: "dismissed", hasReviewedBy: false, applyable: false },
-  report_quality_proposals: { table: "report_quality_proposals", approvedValue: "accepted", rejectedValue: "rejected", hasReviewedBy: true, applyable: false },
-  prompt_ab_proposals: { table: "prompt_ab_proposals", approvedValue: "accepted", rejectedValue: "dismissed", hasReviewedBy: false, applyable: false },
-  ecosystem_import_candidates: { table: "ecosystem_import_candidates", approvedValue: "approved", rejectedValue: "rejected", hasReviewedBy: true, applyable: false },
-  innovation_ecosystem_enrichment_staging: { table: "innovation_ecosystem_enrichment_staging", approvedValue: "approved", rejectedValue: "rejected", hasReviewedBy: false, applyable: false },
-  trade_agencies_enrichment_staging: { table: "trade_agencies_enrichment_staging", approvedValue: "approved", rejectedValue: "rejected", hasReviewedBy: false, applyable: false },
+  agent_content_proposals: { table: "agent_content_proposals", approvedValue: "approved", rejectedValue: "rejected", appliedValue: "applied", hasReviewedBy: true, applyable: true },
+  directory_steward_staging: { table: "directory_steward_staging", approvedValue: "approved", rejectedValue: "dismissed", appliedValue: "applied", hasReviewedBy: false, applyable: false },
+  directory_discovery_staging: { table: "directory_discovery_staging", approvedValue: "approved", rejectedValue: "dismissed", appliedValue: "imported", hasReviewedBy: false, applyable: false },
+  directory_demand_signals: { table: "directory_demand_signals", approvedValue: "ack", rejectedValue: "dismissed", appliedValue: "actioned", hasReviewedBy: false, applyable: false },
+  report_quality_proposals: { table: "report_quality_proposals", approvedValue: "accepted", rejectedValue: "rejected", appliedValue: "shipped", hasReviewedBy: true, applyable: false },
+  prompt_ab_proposals: { table: "prompt_ab_proposals", approvedValue: "accepted", rejectedValue: "dismissed", appliedValue: "shipped", hasReviewedBy: false, applyable: false },
+  ecosystem_import_candidates: { table: "ecosystem_import_candidates", approvedValue: "approved", rejectedValue: "rejected", appliedValue: "applied", hasReviewedBy: true, applyable: false },
+  innovation_ecosystem_enrichment_staging: { table: "innovation_ecosystem_enrichment_staging", approvedValue: "approved", rejectedValue: "rejected", appliedValue: "applied", hasReviewedBy: false, applyable: false },
+  trade_agencies_enrichment_staging: { table: "trade_agencies_enrichment_staging", approvedValue: "approved", rejectedValue: "rejected", appliedValue: "applied", hasReviewedBy: false, applyable: false },
 };
 
 export const MAX_KEYS = 100; // bulk cap per action
@@ -46,6 +47,7 @@ export interface StatusUpdate {
   id: string;
   set: Record<string, unknown>;
   applyAfter: boolean;  // invoke apply-proposal after the status write
+  guardStatus: string;  // never overwrite a row already in this (applied) status
 }
 
 export interface ActionRefusal { refused: true; reason: string }
@@ -66,10 +68,11 @@ export function resolveAction(
 
   if (action === "retry") {
     if (!cfg.applyable) return { refused: true, reason: `retry not supported for '${source}'` };
-    // Reset to approved so apply-proposal (which only acts on approved/auto_approved) will re-run.
-    const retrySet: Record<string, unknown> = { status: cfg.approvedValue, reviewed_at: nowISO };
+    // No status flip: apply-proposal accepts apply_failed directly, so retry just re-runs apply
+    // (flipping back to an "open" status would risk colliding with the open-per-dedup unique index).
+    const retrySet: Record<string, unknown> = { reviewed_at: nowISO };
     if (cfg.hasReviewedBy && reviewerId) retrySet.reviewed_by = reviewerId;
-    return { table: cfg.table, id, set: retrySet, applyAfter: true };
+    return { table: cfg.table, id, set: retrySet, applyAfter: true, guardStatus: cfg.appliedValue };
   }
 
   const set: Record<string, unknown> = {
@@ -78,5 +81,5 @@ export function resolveAction(
   };
   if (cfg.hasReviewedBy && reviewerId) set.reviewed_by = reviewerId;
 
-  return { table: cfg.table, id, set, applyAfter: action === "approve" && cfg.applyable };
+  return { table: cfg.table, id, set, applyAfter: action === "approve" && cfg.applyable, guardStatus: cfg.appliedValue };
 }

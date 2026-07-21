@@ -58,6 +58,7 @@ export function useAgentLoopHealth() {
         .from("agent_proposals")
         .select("loop_name,status,created_at")
         .gte("created_at", sinceISO)
+        .order("created_at", { ascending: false }) // deterministic slice if the window exceeds the cap
         .limit(1000);
 
       const [{ data: runs, error: rErr }, { data: props, error: pErr }] = await Promise.all([runsQ, propsQ]);

@@ -27,7 +27,7 @@ test("approve on a content proposal writes approved + reviewer and flags applyAf
   const r = resolveAction("agent_content_proposals", "approve", "p1", NOW, "admin1");
   assert.deepEqual(r, {
     table: "agent_content_proposals", id: "p1",
-    set: { status: "approved", reviewed_at: NOW, reviewed_by: "admin1" }, applyAfter: true,
+    set: { status: "approved", reviewed_at: NOW, reviewed_by: "admin1" }, applyAfter: true, guardStatus: "applied",
   });
 });
 
@@ -52,9 +52,16 @@ test("internal actor (null reviewer) omits reviewed_by even where the column exi
   assert.ok(!isActionRefusal(r) && !("reviewed_by" in r.set));
 });
 
-test("retry resets applyable rows to approved and re-applies; refused for legacy sources", () => {
+test("retry re-applies without flipping status (avoids the open-per-dedup index); refused for legacy sources", () => {
   const r = resolveAction("agent_content_proposals", "retry", "p1", NOW, "admin1");
-  assert.ok(!isActionRefusal(r) && r.set.status === "approved" && r.applyAfter === true);
+  // No status change on retry: apply-proposal accepts apply_failed directly.
+  assert.ok(!isActionRefusal(r) && !("status" in r.set) && r.set.reviewed_at === NOW && r.applyAfter === true && r.guardStatus === "applied");
   const bad = resolveAction("report_quality_proposals", "retry", "r1", NOW, "admin1");
   assert.ok(isActionRefusal(bad) && /retry not supported/.test(bad.reason));
+});
+
+test("every action carries the source's applied value as the CAS guard", () => {
+  assert.equal((resolveAction("report_quality_proposals", "approve", "r1", NOW, null) as { guardStatus: string }).guardStatus, "shipped");
+  assert.equal((resolveAction("directory_discovery_staging", "reject", "d1", NOW, null) as { guardStatus: string }).guardStatus, "imported");
+  assert.equal((resolveAction("directory_demand_signals", "approve", "g1", NOW, null) as { guardStatus: string }).guardStatus, "actioned");
 });

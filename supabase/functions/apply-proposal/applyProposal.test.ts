@@ -71,6 +71,31 @@ test("set_logo_url rejects a non-whitelisted logo field", () => {
   assert.ok(isRefusal(planApply(p, { password: null })));
 });
 
+test("set_logo_url refuses a non-curated target_table and non-https urls", () => {
+  const offTable = proposal({
+    action_type: "set_logo_url", target_table: "user_subscriptions", target_id: "u1",
+    payload: { logo_field: "logo", logo_url: "https://logo.dev/x.png" },
+  });
+  assert.ok(isRefusal(planApply(offTable, { logo: null })));
+  const notHttps = proposal({
+    action_type: "set_logo_url", target_table: "service_providers", target_id: "s1",
+    payload: { logo_field: "logo", logo_url: "http://insecure/x.png" },
+  });
+  assert.ok(isRefusal(planApply(notHttps, { logo: null })));
+});
+
+test("flag_dead_link and queue_enrichment refuse a non-curated target_table", () => {
+  const dead = proposal({ action_type: "flag_dead_link", target_table: "profiles", target_id: "x", status: "approved" });
+  assert.ok(isRefusal(planApply(dead, {})));
+  const enr = proposal({ action_type: "queue_enrichment", target_table: "profiles", target_id: "x", status: "approved", payload: { fields: { description: "y" } } });
+  assert.ok(isRefusal(planApply(enr, {})));
+});
+
+test("apply_failed is applyable (retry re-runs the same apply)", () => {
+  const r = planApply(proposal({ status: "apply_failed" }), { status: "approved" });
+  assert.deepEqual(r, { op: "update", table: "events", id: "e1", set: { status: "archived" } });
+});
+
 test("queue_enrichment fills only empty curated fields", () => {
   const p = proposal({
     action_type: "queue_enrichment", target_table: "investors", target_id: "i1",

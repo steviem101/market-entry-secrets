@@ -57,13 +57,26 @@ export const ACTION_WHITELIST: Record<string, { autoApprove: boolean }> = {
   flag_stale_content: { autoApprove: false },
 };
 
-// Statuses from which apply-proposal will act. Approving is agent-actions' job; apply only
-// consumes already-approved / auto-approved rows.
-const APPLYABLE_STATUSES = new Set<ProposalStatus>(["approved", "auto_approved"]);
+// Statuses from which apply-proposal will act. Approving is agent-actions' job; apply consumes
+// already-approved / auto-approved rows, plus apply_failed (a retry re-runs the same apply).
+const APPLYABLE_STATUSES = new Set<ProposalStatus>(["approved", "auto_approved", "apply_failed"]);
 
 const DIRECTORY_LOGO_FIELDS = new Set([
   "logo", "image", "avatar_url", "event_logo_url", "logo_url", "image_url",
 ]);
+
+// target_table allowlist: even though only service-role loops write proposals, the choke point
+// must never become a general-purpose table writer. Every table-targeting action is confined to
+// the curated directory/content tables.
+const CURATED_TABLES = new Set([
+  "service_providers", "community_members", "investors",
+  "trade_investment_agencies", "innovation_ecosystem", "events", "content_items",
+]);
+
+function isHttpsUrl(v: unknown): boolean {
+  if (typeof v !== "string") return false;
+  try { return new URL(v).protocol === "https:"; } catch { return false; }
+}
 
 function isEmpty(v: unknown): boolean {
   return v === null || v === undefined || (typeof v === "string" && v.trim() === "");
@@ -113,10 +126,13 @@ export function planApply(p: Proposal, currentRow: Record<string, unknown> | nul
       if (!p.target_table || !p.target_id) {
         return { refused: true, reason: "set_logo_url requires target_table + target_id" };
       }
+      if (!CURATED_TABLES.has(p.target_table)) {
+        return { refused: true, reason: `set_logo_url target_table '${p.target_table}' not allowed` };
+      }
       if (!DIRECTORY_LOGO_FIELDS.has(field)) {
         return { refused: true, reason: `set_logo_url logo_field '${field}' not allowed` };
       }
-      if (isEmpty(url)) return { refused: true, reason: "set_logo_url missing logo_url" };
+      if (!isHttpsUrl(url)) return { refused: true, reason: "set_logo_url requires an https logo_url" };
       // COALESCE-protect: never overwrite an existing logo.
       if (currentRow && !isEmpty(currentRow[field])) {
         return { op: "noop", note: `${field} already set` };
@@ -128,6 +144,9 @@ export function planApply(p: Proposal, currentRow: Record<string, unknown> | nul
       if (!p.target_table || !p.target_id) {
         return { refused: true, reason: "flag_dead_link requires target_table + target_id" };
       }
+      if (!CURATED_TABLES.has(p.target_table)) {
+        return { refused: true, reason: `flag_dead_link target_table '${p.target_table}' not allowed` };
+      }
       const health = typeof p.payload.health === "number" ? p.payload.health : 0;
       return { op: "update", table: p.target_table, id: p.target_id, set: { data_health: health } };
     }
@@ -135,6 +154,9 @@ export function planApply(p: Proposal, currentRow: Record<string, unknown> | nul
     case "queue_enrichment": {
       if (!p.target_table || !p.target_id) {
         return { refused: true, reason: "queue_enrichment requires target_table + target_id" };
+      }
+      if (!CURATED_TABLES.has(p.target_table)) {
+        return { refused: true, reason: `queue_enrichment target_table '${p.target_table}' not allowed` };
       }
       const fields = (p.payload.fields ?? {}) as Record<string, unknown>;
       // COALESCE-protect every curated field: only fill blanks, never overwrite.
