@@ -329,21 +329,32 @@ export const reportApi = {
     const reportRows = (rows || []) as ReportRow[];
 
     // Merge in report-quality telemetry (the Slack-card scores). Admin-only
-    // SELECT on report_quality; ordered newest-first so the first row we see per
-    // report_id is the latest quality run.
+    // SELECT on report_quality. Page through the rows so no listed report
+    // silently loses its latest score past Supabase's 1000-row default (a report
+    // accrues a fresh row per generation/re-run, so 500 reports can exceed 1000
+    // rows). Ordered newest-first with the PK as a stable-pagination tiebreaker;
+    // first row seen per report_id wins (i.e. the latest run).
     const ids = reportRows.map((r) => r.id);
     const qualityByReport: Record<string, ReportQualityRow> = {};
     if (ids.length > 0) {
-      const { data: quality, error: qErr } = await (supabase as any)
-        .from('report_quality')
-        .select(
-          'report_id, report_score, build_health, score_substance, score_presentation, degraded, created_at'
-        )
-        .in('report_id', ids)
-        .order('created_at', { ascending: false });
-      if (qErr) throw qErr;
-      for (const q of (quality || []) as ReportQualityRow[]) {
-        if (!qualityByReport[q.report_id]) qualityByReport[q.report_id] = q;
+      const PAGE = 1000;
+      for (let from = 0; ; from += PAGE) {
+        const { data: quality, error: qErr } = await (supabase as any)
+          .from('report_quality')
+          .select(
+            'report_id, report_score, build_health, score_substance, score_presentation, degraded, created_at'
+          )
+          .in('report_id', ids)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (qErr) throw qErr;
+        const page = (quality || []) as ReportQualityRow[];
+        for (const q of page) {
+          if (!qualityByReport[q.report_id]) qualityByReport[q.report_id] = q;
+        }
+        // Stop on a short (final) page, or once every listed report has a score.
+        if (page.length < PAGE || Object.keys(qualityByReport).length >= ids.length) break;
       }
     }
 

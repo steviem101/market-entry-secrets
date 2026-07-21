@@ -60,7 +60,7 @@ const ScoreCell = ({ value }: { value: number | null | undefined }) => {
 };
 
 const AdminReports = () => {
-  const { data: reports, isLoading, isFetching, refetch } = useAllReportsAdmin();
+  const { data: reports, isLoading, isFetching, isError, error, refetch } = useAllReportsAdmin();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -94,10 +94,11 @@ const AdminReports = () => {
             <p className="text-muted-foreground mt-1">
               {isLoading
                 ? "Loading…"
+                : isError
+                ? "Couldn't load reports"
                 : `${filtered.length} of ${reports?.length ?? 0} report${
                     (reports?.length ?? 0) !== 1 ? "s" : ""
-                  }`}
-              {" — review any customer's report and its quality scores"}
+                  } — review any customer's report and its quality scores`}
             </p>
           </div>
           <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
@@ -161,6 +162,19 @@ const AdminReports = () => {
                 <TableRow>
                   <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                     Loading reports…
+                  </TableCell>
+                </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center py-12">
+                    <p className="text-destructive font-medium">Couldn't load reports.</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {error instanceof Error ? error.message : "Please try again."}
+                    </p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Retry
+                    </Button>
                   </TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
