@@ -207,7 +207,7 @@ test("Phase 3b: no strengths anywhere → empty strengths + logged column-omitte
   assert.ok(mismatches.some((m) => m.path === "competitors.rows" && /Strengths column omitted/.test(m.issue)));
 });
 
-test("Phase 3c: competitor `differs` maps through; company_positioning fills the you-row", () => {
+test("Phase 3c: competitor `differs` maps through; company_positioning fills the you-row MARKET POSITION (not the differs cell)", () => {
   const { report } = adaptPipelineReport(
     {
       company_name: "Floats",
@@ -224,7 +224,11 @@ test("Phase 3c: competitor `differs` maps through; company_positioning fills the
     {}
   );
   assert.equal(report.competitors.rows[0].differs, "Horizontal CRM — Floats is recruitment-specific");
-  assert.equal(report.competitors.you.differs, "Built for reverse marketing");
+  // company_positioning now fills the you-row's Market Position cell (was blank);
+  // the baseline you-row's "where you differ" cell stays empty (per-competitor
+  // contrast column).
+  assert.equal(report.competitors.you.position, "Built for reverse marketing");
+  assert.equal(report.competitors.you.differs, "");
 });
 
 test("Phase 3c: no contrast anywhere → empty differs + logged Where-differs-omitted signal", () => {

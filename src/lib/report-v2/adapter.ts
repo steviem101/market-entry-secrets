@@ -960,7 +960,12 @@ export function adaptPipelineReport(
   const youStrengths = Array.isArray(json.metadata?.company_strengths)
     ? json.metadata!.company_strengths!.map((s) => String(s).trim()).filter(Boolean).join(" · ")
     : "";
-  const youDiffers = typeof json.metadata?.company_positioning === "string"
+  // The customer's own site-stated positioning line fills the you-row's MARKET
+  // POSITION cell (it was hardcoded blank — Solidroad smoke test: "doesn't have
+  // a market position"). "Where <you> differ" is a per-competitor contrast, so
+  // the baseline you-row leaves it empty rather than showing a shouty
+  // positioning badge in that column.
+  const youPosition = typeof json.metadata?.company_positioning === "string"
     ? json.metadata.company_positioning.trim()
     : "";
   // §03 lead-in + the two synthesis boxes, parsed from the competitor prose.
@@ -1097,7 +1102,7 @@ export function adaptPipelineReport(
     swot,
     competitors: {
       intro: competitorProse.intro,
-      you: { name: customer, url: "", kind: "competitor", positionTag: "", position: "", strengths: youStrengths, differs: youDiffers },
+      you: { name: customer, url: "", kind: "competitor", positionTag: "", position: youPosition, strengths: youStrengths, differs: "" },
       rows: competitorRows,
       gaps: competitorProse.gaps,
       positioningRead: competitorProse.positioningRead,

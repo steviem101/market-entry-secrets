@@ -82,8 +82,12 @@ const CompetitorSection = ({ report }: { report: Report }) => {
           <span><span className={MLABEL}>Market position</span>{competitors.you.position}</span>
           {hasStrengths && <span><span className={MLABEL}>Strengths</span>{competitors.you.strengths}</span>}
           {hasDiffers && (
-            <span className="text-[11px] font-bold uppercase text-report-action">
-              <span className={MLABEL}>Where {meta.customer} differs</span>
+            // The span stays present so the desktop grid columns line up, but the
+            // mobile-stack label is gated on content — the baseline you-row has no
+            // differs value, so it must not print a dangling "Where X differs"
+            // label on mobile.
+            <span>
+              {competitors.you.differs && <span className={MLABEL}>Where {meta.customer} differs</span>}
               {competitors.you.differs}
             </span>
           )}
