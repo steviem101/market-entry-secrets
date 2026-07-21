@@ -65,8 +65,9 @@ visibility matches `TIER_REQUIREMENTS`; (e) 200–450 words (hard cap ~550); (f)
 
 ## Prose style — the writing system (report output)
 Reports must read as consultant-grade prose, not AI boilerplate. Enforced in the section-writer
-system prompt (`generate-report/index.ts`, the PRESENTATION & FORMATTING block, ~L3369-3374); apply
-the same rules when hand-writing or reviewing report content.
+system prompt (`generate-report/index.ts`, the PRESENTATION & FORMATTING block, ~L3373-3384, plus the
+`actionPlanFormatNote` applied to the action_plan section); apply the same rules when hand-writing or
+reviewing report content.
 - **Plain English (Orwell, 1946):** short word over the long one; cut any word that can go; active
   voice ("Austrade runs the program", not "the program is run by Austrade"); no stale metaphors or
   business clichés. Keep regulatory/technical terms (ASIC, AFSL, ABN, GST, R&D) where an everyday
@@ -78,6 +79,15 @@ the same rules when hand-writing or reviewing report content.
 - **Swap test:** rewrite or delete any sentence a *different company* could paste unchanged into
   their own report. Every sentence must carry a concrete fact, figure, or specific action for THIS
   company.
+- **Em dashes sparingly:** at most one per paragraph; prefer a colon, a comma, or a new sentence.
+  Reports were leaning on "—" as the default connector everywhere (Solidroad review).
+- **Consistent figures:** a quantity from the provided data is quoted verbatim and identically every
+  time it appears — never rounded or restated as a different number in different places (real
+  defect: "43.65%" vs "43.5%" and "11%" vs "11.5%" for the same rate within one report).
+- **Action plan = bullets, not walls:** phases are a short **bold sub-heading** + 3-6 bullets, each
+  ~120-150 words per phase; every bullet is one concrete action (verb + named entity/agency/amount/
+  deadline, ≤~20 words), never a paragraph — keeps the three phase columns balanced (Solidroad
+  review: one phase spilled two pages while another ended early).
 - **Grounding always wins:** "prefer numbers over adjectives" means *sourced* numbers — a figure
   without a source does not appear (Playbook rule 2), and brevity cuts filler, never citations or
   entity links.
