@@ -30,3 +30,20 @@ export const useMyMentorMatches = () => {
     queryFn: () => reportApi.fetchMyMentorMatches(),
   });
 };
+
+/** ADMIN: every report across all users, with quality scores merged. */
+export const useAllReportsAdmin = () => {
+  return useQuery({
+    queryKey: ['admin-reports'],
+    queryFn: () => reportApi.fetchAllReportsAdmin(),
+  });
+};
+
+/** ADMIN: a single report with full ungated content for quality review. */
+export const useAdminReport = (reportId: string | undefined) => {
+  return useQuery({
+    queryKey: ['admin-report', reportId],
+    queryFn: () => reportApi.fetchAdminReport(reportId!),
+    enabled: !!reportId,
+  });
+};
