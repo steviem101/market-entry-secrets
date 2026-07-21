@@ -131,14 +131,20 @@ Deno.serve(async (req) => {
       for (const t of LOGO_TARGETS) {
         const remaining = batchCap - allProposals.length;
         if (remaining <= 0) break;
-        const { data: rows, error } = await supabase.from(t.table)
+        // Dynamic table + a computed select string defeats supabase-js's type-level select parser,
+        // so query through a loosely-typed client (house pattern) and shape the rows ourselves.
+        // deno-lint-ignore no-explicit-any
+        const { data: rows, error } = await (supabase as any).from(t.table)
           .select(`id,name,${t.websiteCol},${t.logoCol}`)
           .is(t.logoCol, null)                       // NULL logos (the dominant missing case)
           .not(t.websiteCol, "is", null)
           .limit(remaining);
         if (error) throw new Error(`${t.table} read: ${error.message}`);
-        itemsScanned += rows?.length ?? 0;
-        const candidates: LogoCandidate[] = (rows ?? []).map((r) => ({ id: r.id, website: r[t.websiteCol], name: r.name }));
+        const rowList = (rows ?? []) as Array<Record<string, unknown>>;
+        itemsScanned += rowList.length;
+        const candidates: LogoCandidate[] = rowList.map((r) => ({
+          id: String(r.id), website: (r[t.websiteCol] as string | null) ?? null, name: (r.name as string | null) ?? null,
+        }));
         const fresh = await dropAlreadyOpen(supabase, buildSetLogoProposals(candidates, t.table, t.logoCol, runId));
         byCheck["set_logo_url"] = (byCheck["set_logo_url"] ?? 0) + fresh.length;
         allProposals = allProposals.concat(fresh);
