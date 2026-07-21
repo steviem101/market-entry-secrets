@@ -60,7 +60,9 @@ const ScoreCell = ({ value }: { value: number | null | undefined }) => {
 };
 
 const AdminReports = () => {
-  const { data: reports, isLoading, isFetching, isError, error, refetch } = useAllReportsAdmin();
+  const { data, isLoading, isFetching, isError, error, refetch } = useAllReportsAdmin();
+  const reports = data?.rows;
+  const qualityAvailable = data?.qualityAvailable ?? true;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -98,7 +100,9 @@ const AdminReports = () => {
                 ? "Couldn't load reports"
                 : `${filtered.length} of ${reports?.length ?? 0} report${
                     (reports?.length ?? 0) !== 1 ? "s" : ""
-                  } — review any customer's report and its quality scores`}
+                  } — review any customer's report and its quality scores${
+                    isError ? " · last refresh failed, showing earlier data" : ""
+                  }`}
             </p>
           </div>
           <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
@@ -240,9 +244,9 @@ const AdminReports = () => {
           </Table>
         </div>
         <p className="text-xs text-muted-foreground mt-4">
-          Showing up to 500 most recent reports. Scores come from the report-quality
-          telemetry (the same numbers posted to #report-quality in Slack); a dash means no
-          quality run has been recorded for that report yet.
+          {qualityAvailable
+            ? "Showing up to 500 most recent reports. Scores come from the report-quality telemetry (the same numbers posted to #report-quality in Slack); a dash means no quality run has been recorded for that report yet."
+            : "Showing up to 500 most recent reports. Quality scores are temporarily unavailable — the telemetry couldn't be loaded just now, so the dashes below don't mean scores are missing."}
         </p>
       </div>
     </ProtectedRoute>

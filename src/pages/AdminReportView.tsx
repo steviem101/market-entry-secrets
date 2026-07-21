@@ -10,7 +10,26 @@ import ReportV2Renderer from "@/components/report-v2/ReportV2Renderer";
 import { adaptPipelineReport, type PipelineReportJson } from "@/lib/report-v2/adapter";
 import type { Report as ReportV2Contract } from "@/types/report";
 
-type ReportSection = { title?: string; content?: string };
+// title/content are unknown on purpose: legacy report_json shapes carry
+// non-string values here, and rendering those directly crashes React — the
+// dump helpers below narrow/stringify before anything reaches JSX.
+type ReportSection = { title?: unknown; content?: unknown };
+
+const sectionTitle = (key: string, s: ReportSection) =>
+  typeof s?.title === "string" && s.title ? s.title : key;
+
+const sectionText = (s: ReportSection) => {
+  const c = s?.content;
+  if (typeof c === "string" && c.trim()) return c;
+  if (c != null && typeof c !== "string") {
+    try {
+      return JSON.stringify(c, null, 2);
+    } catch {
+      return String(c);
+    }
+  }
+  return "(no content)";
+};
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleString("en-AU", {
@@ -69,31 +88,49 @@ const AdminReportViewInner = () => {
     "Market Entry Report";
 
   // Sections are usually nested (report_json.sections.{key}), but older/flat
-  // reports store them at the root. Support both, and detect the empty/failed
+  // reports store them at the root, and some legacy shapes use an array. Build
+  // a raw-dump map from whichever shape exists, and detect the empty/failed
   // case (a `failed` report, or one where get_report_admin returned null → {})
   // so the viewer surfaces the reason instead of a blank shell.
   const nestedRaw = rawJson.sections;
   const nested =
-    nestedRaw && typeof nestedRaw === "object"
+    nestedRaw && typeof nestedRaw === "object" && !Array.isArray(nestedRaw)
       ? (nestedRaw as Record<string, ReportSection>)
       : null;
-  const flat: Record<string, ReportSection> = {};
-  if (!nested) {
+  const META_KEYS = new Set(["company_name", "error", "reaped_at"]);
+  const rawSections: Record<string, ReportSection> = {};
+  if (nested) {
+    Object.assign(rawSections, nested);
+  } else if (Array.isArray(nestedRaw)) {
+    nestedRaw.forEach((value, i) => {
+      if (value && typeof value === "object") rawSections[`section_${i + 1}`] = value as ReportSection;
+    });
+  } else {
     for (const [key, value] of Object.entries(rawJson)) {
+      if (META_KEYS.has(key)) continue;
       if (value && typeof value === "object" && ("content" in value || "title" in value)) {
-        flat[key] = value as ReportSection;
+        rawSections[key] = value as ReportSection;
+      } else if (typeof value === "string" && value.trim()) {
+        // Oldest flat shape: root key → prose string.
+        rawSections[key] = { content: value };
       }
     }
   }
-  const rawSections = nested ?? flat;
   const hasContent = Object.keys(rawSections).length > 0;
   const reportError = typeof rawJson.error === "string" ? rawJson.error : null;
 
-  // The v2 renderer expects the nested pipeline shape; only use it when nested
-  // sections exist (adaptPipelineReport tolerates missing data by emptying it,
-  // so a flat/empty report would otherwise render a blank shell).
+  // The v2 renderer only for nested reports with at least one real piece of
+  // prose. adaptPipelineReport never throws — it empties whatever is missing —
+  // so this gate (not the try/catch) is what keeps hollow reports (every
+  // section failed → content:"") on the raw dump, where "(no content)" per
+  // section is visible, instead of a polished-looking blank v2 shell.
+  const nestedHasProse =
+    !!nested &&
+    Object.values(nested).some(
+      (s) => typeof s?.content === "string" && s.content.trim().length > 0
+    );
   let reportV2: ReportV2Contract | null = null;
-  if (nested && Object.keys(nested).length > 0) {
+  if (nestedHasProse) {
     try {
       const { report: adapted } = adaptPipelineReport(
         report.report_json as PipelineReportJson,
@@ -136,9 +173,21 @@ const AdminReportViewInner = () => {
             {report.feedback_score != null && (
               <> · customer rating {report.feedback_score}/5</>
             )}
+            {" · read-only preview — stars and request buttons don't act on the customer's report"}
           </div>
         </div>
       </div>
+
+      {/* Generation error, shown in EVERY branch — a report can carry both an
+          error and (partial) content, and hiding the error behind the empty
+          state would mislead exactly the failed-report reviews this page is for. */}
+      {reportError && (
+        <div className="border-b bg-destructive/10">
+          <div className="container mx-auto px-4 py-2 text-sm text-destructive whitespace-pre-wrap">
+            Generation error: {reportError}
+          </div>
+        </div>
+      )}
 
       {reportV2 ? (
         // storageKey (not reportId) → star/request interactions are local scratch
@@ -155,9 +204,9 @@ const AdminReportViewInner = () => {
             </p>
             {Object.entries(rawSections).map(([key, section]) => (
               <section key={key} className="space-y-2">
-                <h2 className="text-xl font-bold text-foreground">{section?.title || key}</h2>
+                <h2 className="text-xl font-bold text-foreground">{sectionTitle(key, section)}</h2>
                 <p className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed">
-                  {section?.content || "(no content)"}
+                  {sectionText(section)}
                 </p>
               </section>
             ))}
@@ -173,9 +222,6 @@ const AdminReportViewInner = () => {
               This {report.status} report has no generated sections
               {report.status === "processing" ? " yet" : ""}.
             </p>
-            {reportError && (
-              <p className="text-sm text-destructive whitespace-pre-wrap">{reportError}</p>
-            )}
           </div>
         </main>
       )}

@@ -336,13 +336,17 @@ export const reportApi = {
     // Merge in report-quality telemetry (the Slack-card scores) via the
     // admin-only RPC, which returns exactly the latest row per report id. This
     // is best-effort: scores are supplementary (the UI shows '—' when absent),
-    // so a failure here must NOT blank the whole console — log and continue.
+    // so a failure here must NOT blank the whole console — log, flag it via
+    // qualityAvailable so the UI can say "scores unavailable" rather than
+    // implying no quality run ever happened, and continue.
     const ids = reportRows.map((r) => r.id);
     const qualityByReport: Record<string, ReportQualityRow> = {};
+    let qualityAvailable = true;
     if (ids.length > 0) {
       const { data: quality, error: qErr } = await (supabase as any)
         .rpc('get_admin_report_quality', { p_report_ids: ids });
       if (qErr) {
+        qualityAvailable = false;
         console.warn('[admin-reports] quality scores unavailable', qErr.message ?? qErr);
       } else {
         for (const q of (quality || []) as ReportQualityRow[]) {
@@ -351,10 +355,13 @@ export const reportApi = {
       }
     }
 
-    return reportRows.map((r) => ({
-      ...r,
-      quality: qualityByReport[r.id] ?? null,
-    })) as Array<ReportRow & { quality: ReportQualityRow | null }>;
+    return {
+      qualityAvailable,
+      rows: reportRows.map((r) => ({
+        ...r,
+        quality: qualityByReport[r.id] ?? null,
+      })) as Array<ReportRow & { quality: ReportQualityRow | null }>,
+    };
   },
 
   /**

@@ -1,3 +1,7 @@
+-- APPROVAL-GATED (SECURITY DEFINER + grants over a service-role-only table):
+-- prepared on the admin-reports branch; ships only via the reviewed PR flow
+-- (docs/migrations.md) with explicit human sign-off in the PR.
+--
 -- Admin-only "latest quality row per report" read for the Admin Reports console.
 --
 -- Bug fixed: the console listed report_quality scores by SELECTing report_quality
@@ -43,5 +47,13 @@ END;
 $function$;
 
 -- Never anon/PUBLIC; authenticated is fine because the body self-guards on admin.
-REVOKE EXECUTE ON FUNCTION public.get_admin_report_quality(uuid[]) FROM public;
+-- The explicit `FROM anon` matters: Supabase's default privileges grant anon a
+-- DIRECT EXECUTE on every new public function at CREATE time, and a revoke from
+-- PUBLIC does not remove a direct role grant.
+REVOKE EXECUTE ON FUNCTION public.get_admin_report_quality(uuid[]) FROM public, anon;
 GRANT EXECUTE ON FUNCTION public.get_admin_report_quality(uuid[]) TO authenticated, service_role;
+
+-- Same hardening for the sibling admin RPC shipped in 20260721120000, which
+-- carried the identical gap (self-guard holds — anon gets NULL — but the
+-- function should not be anon-reachable attack surface at all).
+REVOKE EXECUTE ON FUNCTION public.get_report_admin(uuid) FROM anon;
