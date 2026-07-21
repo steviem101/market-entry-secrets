@@ -10,11 +10,16 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { handleReportQuality } from "./reportQuality.ts";
+import { buildSubmissionEditorUrl, curateSubmissionFields, projectRefFromUrl } from "./submissionCard.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SLACK_BOT_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("SLACK_NOTIFY_WEBHOOK_SECRET") ?? "";
+// Numeric table id for public.directory_submissions in the Supabase table editor
+// (env-overridable in case the id ever changes).
+const SUBMISSIONS_TABLE_ID = Deno.env.get("SUBMISSIONS_TABLE_EDITOR_ID") ?? "20063";
+const PROJECT_REF = projectRefFromUrl(SUPABASE_URL);
 
 const DIGEST_LIMIT = 200;
 const ID_CHUNK = 100;
@@ -95,6 +100,34 @@ function buildEventBlocks(ev: ActivityEvent, routing: Routing): unknown[] {
   return blocks;
 }
 
+// Richer card for directory_submissions events (submission.received /
+// intro.requested): curated form_data fields + a deep link to the row in the
+// Supabase table editor. Falls back to buildEventBlocks-style rendering when
+// form_data is empty.
+function buildSubmissionBlocks(
+  ev: ActivityEvent, routing: Routing, formData: Record<string, unknown>,
+): unknown[] {
+  const submissionType = (ev.metadata?.submission_type as string) ?? (formData.content_type as string) ?? "";
+  const blocks: unknown[] = [
+    { type: "header", text: { type: "plain_text", text: `${routing.emoji} ${titleFor(ev.event_type)}`.slice(0, 150) } },
+  ];
+  const lines: string[] = [];
+  const who = actorLine(ev);
+  if (who) lines.push(who);
+  if (submissionType) lines.push(`*Type:* ${titleFor(submissionType)}`);
+  for (const f of curateSubmissionFields(formData)) lines.push(`*${f.label}:* ${f.value}`);
+  if (lines.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: lines.join("\n").slice(0, 2900) } });
+
+  const editorUrl = buildSubmissionEditorUrl(PROJECT_REF, SUBMISSIONS_TABLE_ID, ev.object_id);
+  if (editorUrl) blocks.push({ type: "section", text: { type: "mrkdwn", text: `<${editorUrl}|🔗 View submission in Supabase>` } });
+
+  blocks.push({
+    type: "context",
+    elements: [{ type: "mrkdwn", text: `severity: ${ev.severity} · ${new Date(ev.created_at).toUTCString()} · id: ${ev.object_id ?? "—"}` }],
+  });
+  return blocks;
+}
+
 // deno-lint-ignore no-explicit-any
 async function claimIds(supabase: any, ids: string[]): Promise<string[]> {
   const claimed: string[] = [];
@@ -156,7 +189,19 @@ async function dispatchOne(supabase: any, eventId: string): Promise<Response> {
   if (claimErr) { logErr("claim", claimErr.message); return json({ ok: false, error: claimErr.message }, 500); }
   if (!claimed || claimed.length === 0) return json({ ok: true, skipped: "already_claimed" });
 
-  const built = prebuilt ?? {
+  let built = prebuilt;
+  if (!built && ev.object_type === "directory_submissions" && ev.object_id) {
+    const { data: sub, error: subErr } = await supabase
+      .from("directory_submissions").select("form_data").eq("id", ev.object_id).maybeSingle();
+    if (subErr) logErr("load submission", subErr.message);
+    const formData = (sub?.form_data ?? {}) as Record<string, unknown>;
+    built = {
+      text: `${titleFor(ev.event_type)}${ev.metadata?.submission_type ? ` — ${ev.metadata.submission_type}` : ""}`,
+      blocks: buildSubmissionBlocks(ev, routing, formData),
+      color: SEVERITY_COLOR[ev.severity] ?? SEVERITY_COLOR.info,
+    };
+  }
+  built ??= {
     text: titleFor(ev.event_type), blocks: buildEventBlocks(ev, routing),
     color: SEVERITY_COLOR[ev.severity] ?? SEVERITY_COLOR.info,
   };
