@@ -33,7 +33,18 @@ export interface CompetitorCard {
   differs?: string;
 }
 
-const clip = (s: unknown, n: number): string => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
+// Word-safe cap: collapse whitespace, and when the text exceeds `n` cut back to
+// the last word boundary and append an ellipsis — never slice mid-word. A raw
+// `.slice(0, n)` previously cut competitor table cells mid-word ("customer
+// experience t", "enablemen") — Solidroad smoke test.
+const clip = (s: unknown, n: number): string => {
+  const t = String(s ?? "").replace(/\s+/g, " ").trim();
+  if (t.length <= n) return t;
+  const cut = t.slice(0, n);
+  const lastSpace = cut.lastIndexOf(" ");
+  const body = lastSpace > n * 0.5 ? cut.slice(0, lastSpace) : cut;
+  return `${body.replace(/[\s,;:.—-]+$/, "")}…`;
+};
 
 // De-dupe key: strip a trailing parenthetical ("Juicebox (formerly PeopleGPT)" →
 // "juicebox") so the extraction LLM emitting BOTH the bare and the parenthetical
@@ -79,14 +90,14 @@ export function buildCompetitorCards(competitors: CompetitorLike[] | null | unde
     const au = clip(c?.au_presence, 60);
     const hasAu = au && !/no australian presence/i.test(au);
 
-    const desc = clip(c?.description, 140);
+    const desc = clip(c?.description, 240);
     // Carry up to 3 grounded strengths (each clipped), dropping empties.
     const strengths = Array.isArray(c?.strengths)
       ? (c.strengths as unknown[]).map((s) => clip(s, 80)).filter(Boolean).slice(0, 3)
       : [];
     // Grounded comparative contrast (clipped); omitted when the extractor found
     // none. String-only — a non-string must not be coerced into a bogus verdict.
-    const differs = typeof c?.differentiation === "string" ? clip(c.differentiation, 120) : "";
+    const differs = typeof c?.differentiation === "string" ? clip(c.differentiation, 200) : "";
     out.push({
       name,
       subtitle: desc && !FAILURE_DESCRIPTION_RE.test(desc) ? desc : undefined,
