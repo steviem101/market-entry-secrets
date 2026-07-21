@@ -24,6 +24,9 @@
 name: Deploy Edge Functions
 
 on:
+  # Manual trigger so the agent-loops functions (and any others below) can be deployed on demand
+  # without a code push — e.g. after this list changes but the function code did not.
+  workflow_dispatch: {}
   push:
     branches: [main]
     paths:
@@ -39,6 +42,12 @@ on:
       - "supabase/functions/process-email-queue/**"
       - "supabase/functions/email-assets/**"
       - "supabase/functions/import-contact-images/**"
+      # MES-206 agent loops (control plane + content-refresh loop + dashboard + Slack)
+      - "supabase/functions/apply-proposal/**"
+      - "supabase/functions/loop-content-refresh/**"
+      - "supabase/functions/agent-actions/**"
+      - "supabase/functions/agent-notifier/**"
+      - "supabase/functions/rq-slack-actions/**"
       - "supabase/functions/_shared/**"
       - ".github/workflows/deploy-edge-functions.yml"
 
@@ -103,3 +112,24 @@ jobs:
 
       - name: Deploy import-contact-images
         run: supabase functions deploy import-contact-images --project-ref "$PROJECT_REF"
+
+      # MES-206 agent loops. These are all gated OFF by env flags (CONTENT_REFRESH_ENABLED,
+      # CONTENT_REFRESH_CHECKS, CONTENT_REFRESH_AUTOAPPLY) or self-skip until their Slack channel
+      # secrets are set (agent-notifier), so deploying the code does NOT start any loop — behaviour
+      # only changes when a maintainer flips the flags. verify_jwt=false for these comes from
+      # supabase/config.toml. rq-slack-actions is re-deployed here because MES-206 added the
+      # agent-loop Approve/Reject button handler to it.
+      - name: Deploy apply-proposal
+        run: supabase functions deploy apply-proposal --project-ref "$PROJECT_REF"
+
+      - name: Deploy loop-content-refresh
+        run: supabase functions deploy loop-content-refresh --project-ref "$PROJECT_REF"
+
+      - name: Deploy agent-actions
+        run: supabase functions deploy agent-actions --project-ref "$PROJECT_REF"
+
+      - name: Deploy agent-notifier
+        run: supabase functions deploy agent-notifier --project-ref "$PROJECT_REF"
+
+      - name: Deploy rq-slack-actions
+        run: supabase functions deploy rq-slack-actions --project-ref "$PROJECT_REF"
