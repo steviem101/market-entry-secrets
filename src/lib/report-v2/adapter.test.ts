@@ -188,6 +188,36 @@ test("events: sorted chronologically; the date/venue subtitle never leaks into t
   assert.equal(report.events.cards[1].why, "Where CX leaders gather.");
 });
 
+test("leads: suggested-list spec + why parsed from §14 prose into leads.recommended", () => {
+  const { report } = adaptPipelineReport(
+    {
+      matches: { leads: [{ name: "ANZ CFOs", link: "/leads/anz-cfos", record_count: 340, description: "Finance leaders." }] },
+      sections: {
+        lead_list: {
+          content:
+            "**The list we'd build for you:** Heads of Lending at banks and non-bank lenders in ANZ, ~250 contacts.\nThis targets the exact buyers of a lending-decisioning platform [1].\n\n### Targeted Lead Datasets\n\n*   [**ANZ CFOs**](/leads/anz-cfos): 340 finance leaders.",
+        },
+      },
+      metadata: { perplexity_citations: ["https://x.example/1"] },
+    },
+    {}
+  );
+  assert.equal(report.leads.recommended?.spec, "Heads of Lending at banks and non-bank lenders in ANZ, ~250 contacts.");
+  assert.match(report.leads.recommended?.why ?? "", /exact buyers of a lending-decisioning platform/);
+  // citation marker stripped from the why
+  assert.doesNotMatch(report.leads.recommended?.why ?? "", /\[1\]/);
+  // existing matched dataset still surfaces alongside the suggestion
+  assert.equal(report.leads.dataset?.records, 340);
+});
+
+test("leads: no suggested-list line → leads.recommended is undefined (datasets/box still render)", () => {
+  const { report } = adaptPipelineReport(
+    { sections: { lead_list: { content: "No pre-built dataset matched your buyer profile." } } },
+    {}
+  );
+  assert.equal(report.leads.recommended, undefined);
+});
+
 test("events: prose lead paragraph → intro; per-event rationale → tailored why by name", () => {
   const { report } = adaptPipelineReport(
     {

@@ -854,6 +854,37 @@ export function parseEventWhys(content: unknown): Map<string, string> {
   return map;
 }
 
+/**
+ * §14 leads the section with a best-guess suggested list the customer can
+ * approve or refine: `**The list we'd build for you:** <spec>.` followed by a
+ * one-sentence why. Parses that into { spec, why }; undefined when the prose
+ * isn't in that shape (renderer then shows only the datasets + request box).
+ */
+export function parseRecommendedList(content: unknown): { spec: string; why: string } | undefined {
+  if (typeof content !== "string") return undefined;
+  const lines = content.split("\n");
+  const idx = lines.findIndex((l) => /\*\*The list we'?d build for you:\*\*/i.test(l));
+  if (idx === -1) return undefined;
+  const after = lines[idx].replace(/^.*?\*\*The list we'?d build for you:\*\*/i, "").trim();
+  const clean = (s: string) => stripInlineMarkdown(s).replace(/\[\d+\]/g, "").replace(/\s+/g, " ").trim();
+  // The label line may carry the spec sentence plus the why; split on the first
+  // sentence so the spec is just the list description.
+  const spec = clean(firstSentence(after));
+  if (!spec) return undefined;
+  let why = clean(after.slice(firstSentence(after).length));
+  if (!why) {
+    // Why on the following non-empty, non-heading, non-bullet line.
+    for (let i = idx + 1; i < lines.length; i++) {
+      const t = lines[i].trim();
+      if (!t) continue;
+      if (/^#{1,6}\s/.test(t) || /^[-*]\s/.test(t)) break;
+      why = clean(t);
+      break;
+    }
+  }
+  return { spec, why };
+}
+
 export function adaptPipelineReport(
   json: PipelineReportJson,
   context: AdaptContext = {}
@@ -1029,6 +1060,9 @@ export function adaptPipelineReport(
   // §13 gap copy: the grounded "why no dataset" explanation from the pipeline
   // instead of the generic fallback.
   const leadGapCopy = leadParagraph(sections.lead_list?.content, citations.length);
+  // §14 suggested bespoke list — a best-guess spec the customer approves/refines.
+  const recommendedList = parseRecommendedList(sections.lead_list?.content);
+  if (recommendedList) log("leads.recommended", "parsed suggested bespoke lead-list spec from §14 prose");
 
   // Structured per-account briefs parsed from the section prose (D1) — merged
   // onto the buyer cards by loose name equivalence.
@@ -1219,10 +1253,12 @@ export function adaptPipelineReport(
     guides: { intro: "", cards: guides },
     leads: leadDb
       ? {
+          ...(recommendedList ? { recommended: recommendedList } : {}),
           dataset: { name: matchName(leadDb), url: leadUrl, records: leadDb.record_count ?? 0, description: matchDescription(leadDb) },
           customBuildCopy: "Need a different list? Describe your ICP and we'll build it.",
         }
       : {
+          ...(recommendedList ? { recommended: recommendedList } : {}),
           gapCopy: leadGapCopy || "No matching lead dataset yet — request a custom build below.",
           customBuildCopy: "Need a different list? Describe your ICP and we'll build it.",
         },
