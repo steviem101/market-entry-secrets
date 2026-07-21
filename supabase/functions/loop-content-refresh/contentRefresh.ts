@@ -151,3 +151,49 @@ export function buildArchiveEventProposals(pastEvents: EventRow[], runId: string
 export function filterNewProposals(candidates: ProposalInsert[], existingOpenKeys: Set<string>): ProposalInsert[] {
   return candidates.filter((c) => !existingOpenKeys.has(c.dedup_key));
 }
+
+// ── flag_dead_link ────────────────────────────────────────────────────────────────────────────
+// Directory tables whose website links the loop GET-checks. Mentors/events excluded.
+export const LINK_CHECK_TARGETS: Array<{ table: string; urlCol: string }> = [
+  { table: "service_providers", urlCol: "website" },
+  { table: "investors", urlCol: "website" },
+  { table: "innovation_ecosystem", urlCol: "website" },
+  { table: "trade_investment_agencies", urlCol: "website_url" },
+];
+
+export const LINK_CHECK_BATCH = 15;        // URLs GET-checked per run (bounds runtime under the cron timeout)
+export const LINK_CHECK_TIMEOUT_MS = 6000;
+export const LINK_RECHECK_AFTER_DAYS = 6;  // re-check weekly-ish; skip URLs checked more recently
+export const DEAD_LINK_THRESHOLD = 2;      // consecutive failed checks before proposing (audit: HEAD gives false positives, so this is a GET + a 2-strike rule)
+
+export interface LinkCheckState { consecutive_failures: number | null; last_checked_at?: string | null; }
+export interface LinkCheckResult { ok: boolean; status: number | null; }
+
+/** New counters from the prior state + this check's result. A success resets the streak to 0. */
+export function nextLinkCheckCounters(prev: LinkCheckState | null, result: LinkCheckResult): { consecutive_failures: number; last_status: number | null; last_ok: boolean } {
+  const prevFail = prev?.consecutive_failures ?? 0;
+  return { consecutive_failures: result.ok ? 0 : prevFail + 1, last_status: result.status, last_ok: result.ok };
+}
+
+export function shouldProposeDeadLink(consecutiveFailures: number): boolean {
+  return consecutiveFailures >= DEAD_LINK_THRESHOLD;
+}
+
+/** True when the URL was checked within the recheck window (so this run should skip it). */
+export function checkedRecently(lastCheckedAt: string | null | undefined, nowMs: number): boolean {
+  if (!lastCheckedAt) return false;
+  const t = Date.parse(lastCheckedAt);
+  if (Number.isNaN(t)) return false;
+  return nowMs - t < LINK_RECHECK_AFTER_DAYS * 24 * 60 * 60 * 1000;
+}
+
+export function buildDeadLinkProposal(table: string, recordId: string, url: string, consecutiveFailures: number, lastStatus: number | null, runId: string | null): ProposalInsert {
+  return {
+    run_id: runId, loop_name: "content-refresh", action_type: "flag_dead_link",
+    target_table: table, target_id: recordId,
+    payload: { url, consecutive_failures: consecutiveFailures, last_status: lastStatus, health: 0 },
+    reason: `${table} link ${url} failed ${consecutiveFailures} consecutive checks (last status ${lastStatus ?? "no response"}); flag for review.`,
+    confidence: null, status: "pending",
+    dedup_key: dedupKey("flag_dead_link", table, recordId),
+  };
+}

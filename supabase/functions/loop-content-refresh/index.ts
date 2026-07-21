@@ -15,8 +15,11 @@ import { log, logError } from "../_shared/log.ts";
 import {
   getEnabledChecks, DEFAULT_BATCH_CAP, buildArchiveEventProposals, filterNewProposals,
   isPastEvent, LOGO_TARGETS, buildSetLogoProposals,
-  type ProposalInsert, type EventRow, type LogoCandidate, type CheckName,
+  LINK_CHECK_TARGETS, LINK_CHECK_BATCH, LINK_CHECK_TIMEOUT_MS, nextLinkCheckCounters,
+  shouldProposeDeadLink, checkedRecently, buildDeadLinkProposal,
+  type ProposalInsert, type EventRow, type LogoCandidate, type CheckName, type LinkCheckResult,
 } from "./contentRefresh.ts";
+import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -61,6 +64,21 @@ async function dropAlreadyOpen(
     .select("dedup_key").in("dedup_key", keys).in("status", ["pending", "approved", "auto_approved"]);
   for (const r of open ?? []) existingOpen.add(r.dedup_key as string);
   return filterNewProposals(candidates, existingOpen);
+}
+
+// GET-check a URL (not HEAD — the audit found HEAD yields 4xx/415 false positives). 2xx/3xx = ok.
+// Bounded by an AbortController timeout; any throw (DNS, TLS, timeout) counts as a failure.
+async function checkUrl(url: string): Promise<LinkCheckResult> {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), LINK_CHECK_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { method: "GET", redirect: "follow", signal: ctrl.signal, headers: { "User-Agent": "MES-linkcheck/1.0" } });
+    return { ok: res.status >= 200 && res.status < 400, status: res.status };
+  } catch {
+    return { ok: false, status: null };
+  } finally {
+    clearTimeout(to);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -149,6 +167,50 @@ Deno.serve(async (req) => {
         byCheck["set_logo_url"] = (byCheck["set_logo_url"] ?? 0) + fresh.length;
         allProposals = allProposals.concat(fresh);
       }
+    }
+
+    // --- flag_dead_link: GET-check directory links; propose after 2 consecutive failures ---
+    if (enabledChecks.includes("flag_dead_link")) {
+      const nowMs = Date.parse(startedAt);
+      let checked = 0;
+      const deadCandidates: ProposalInsert[] = [];
+      for (const t of LINK_CHECK_TARGETS) {
+        if (checked >= LINK_CHECK_BATCH) break;
+        // deno-lint-ignore no-explicit-any
+        const { data: rows } = await (supabase as any).from(t.table)
+          .select(`id,${t.urlCol}`).not(t.urlCol, "is", null).limit(300);
+        for (const r of (rows ?? []) as Array<Record<string, unknown>>) {
+          if (checked >= LINK_CHECK_BATCH) break;
+          const url = (r[t.urlCol] as string | null) ?? null;
+          if (!url || isPrivateOrReservedUrl(url)) continue; // SSRF guard: never fetch internal/reserved hosts
+          const recordId = String(r.id);
+
+          const { data: prev } = await supabase.from("content_link_checks")
+            .select("consecutive_failures,last_checked_at")
+            .eq("directory_table", t.table).eq("record_id", recordId).eq("url", url).maybeSingle();
+          if (checkedRecently(prev?.last_checked_at as string | null | undefined, nowMs)) continue; // weekly cadence
+
+          const result = await checkUrl(url);
+          checked++;
+          const counters = nextLinkCheckCounters(prev ?? null, result);
+          if (!dryRun) {
+            await supabase.from("content_link_checks").upsert({
+              directory_table: t.table, record_id: recordId, url,
+              last_status: counters.last_status, last_ok: counters.last_ok,
+              consecutive_failures: counters.consecutive_failures,
+              last_checked_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+            }, { onConflict: "directory_table,record_id,url" });
+          }
+
+          if (shouldProposeDeadLink(counters.consecutive_failures)) {
+            deadCandidates.push(buildDeadLinkProposal(t.table, recordId, url, counters.consecutive_failures, counters.last_status, runId));
+          }
+        }
+      }
+      itemsScanned += checked;
+      const fresh = await dropAlreadyOpen(supabase, deadCandidates);
+      byCheck["flag_dead_link"] = fresh.length;
+      allProposals = allProposals.concat(fresh);
     }
 
     if (dryRun) {

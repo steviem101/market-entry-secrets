@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   dedupKey, isPastEvent, buildArchiveEventProposals, filterNewProposals,
   getEnabledChecks, DEFAULT_BATCH_CAP, extractDomain, buildLogoDevUrl, buildSetLogoProposals,
+  nextLinkCheckCounters, shouldProposeDeadLink, checkedRecently, buildDeadLinkProposal,
+  DEAD_LINK_THRESHOLD, LINK_RECHECK_AFTER_DAYS,
   type EventRow, type ProposalInsert, type LogoCandidate,
 } from "./contentRefresh.ts";
 
@@ -79,6 +81,41 @@ test("buildArchiveEventProposals emits auto_approved event proposals with dedup 
   assert.equal(props[0].dedup_key, "archive_event:events:e1");
   assert.match(props[0].reason, /2026-06-01/);
   assert.match(props[1].reason, /2026-05-01/); // event_date sliced to date
+});
+
+test("nextLinkCheckCounters increments on failure, resets to 0 on success", () => {
+  assert.deepEqual(nextLinkCheckCounters({ consecutive_failures: 1 }, { ok: false, status: 500 }),
+    { consecutive_failures: 2, last_status: 500, last_ok: false });
+  assert.deepEqual(nextLinkCheckCounters({ consecutive_failures: 3 }, { ok: true, status: 200 }),
+    { consecutive_failures: 0, last_status: 200, last_ok: true });
+  assert.deepEqual(nextLinkCheckCounters(null, { ok: false, status: null }),
+    { consecutive_failures: 1, last_status: null, last_ok: false }); // first-ever check, no response
+});
+
+test("shouldProposeDeadLink only at the 2-consecutive-failure threshold", () => {
+  assert.equal(DEAD_LINK_THRESHOLD, 2);
+  assert.equal(shouldProposeDeadLink(1), false); // a single (transient) failure never proposes
+  assert.equal(shouldProposeDeadLink(2), true);
+  assert.equal(shouldProposeDeadLink(3), true);
+});
+
+test("checkedRecently skips URLs inside the recheck window, rechecks older/never", () => {
+  const now = Date.parse("2026-07-20T00:00:00Z");
+  const dayMs = 24 * 60 * 60 * 1000;
+  assert.equal(checkedRecently(new Date(now - 1 * dayMs).toISOString(), now), true);  // 1 day ago -> skip
+  assert.equal(checkedRecently(new Date(now - (LINK_RECHECK_AFTER_DAYS + 1) * dayMs).toISOString(), now), false); // stale -> recheck
+  assert.equal(checkedRecently(null, now), false);        // never checked -> check
+  assert.equal(checkedRecently("garbage", now), false);   // unparseable -> check
+});
+
+test("buildDeadLinkProposal is a pending (non-auto) flag with url + failure evidence", () => {
+  const p = buildDeadLinkProposal("service_providers", "sp1", "https://dead.example", 2, 503, "run-9");
+  assert.equal(p.action_type, "flag_dead_link");
+  assert.equal(p.status, "pending"); // never auto-approved
+  assert.equal(p.target_table, "service_providers");
+  assert.equal(p.target_id, "sp1");
+  assert.equal(p.dedup_key, "flag_dead_link:service_providers:sp1");
+  assert.deepEqual(p.payload, { url: "https://dead.example", consecutive_failures: 2, last_status: 503, health: 0 });
 });
 
 test("filterNewProposals drops candidates that already have an open proposal", () => {
