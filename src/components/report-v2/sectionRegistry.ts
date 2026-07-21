@@ -44,7 +44,7 @@ export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "hubs", label: "INNOVATION HUBS & ACCELERATORS", Component: HubsSection },
   { id: "mentors", label: "MENTOR RECOMMENDATIONS", Component: MentorsSection },
   { id: "investors", label: "INVESTOR RECOMMENDATIONS", Component: InvestorsSection },
-  { id: "events", label: "EVENTS — HIGH-SIGNAL ROOMS THIS QUARTER", Component: EventsSection },
+  { id: "events", label: "EVENTS — HIGH-SIGNAL ROOMS", Component: EventsSection },
   // Case studies sit between the two heaviest prose sections (Action Plan +
   // Setup & Compliance) so they don't stack back-to-back, and so the tail
   // alternates heavy/light instead of fizzling into three thin sections in a

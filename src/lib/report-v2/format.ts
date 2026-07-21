@@ -31,6 +31,27 @@ export function formatReportDate(iso: string, style: "long" | "short" = "long"):
   return (style === "long" ? LONG_DATE : SHORT_DATE).format(parsed).toUpperCase();
 }
 
+const MONTH_YEAR = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Australia/Sydney",
+  month: "short",
+  year: "numeric",
+});
+
+/**
+ * A month-range caption for the events section, e.g. "SEP 2026 – JUN 2027" (or
+ * "SEP 2026" when the earliest and latest event fall in the same month). Used
+ * instead of a hardcoded "this quarter" that was routinely false. Returns "" if
+ * either bound is unparseable.
+ */
+export function formatEventWindow(startIso: string, endIso: string): string {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "";
+  const s = MONTH_YEAR.format(start).toUpperCase();
+  const e = MONTH_YEAR.format(end).toUpperCase();
+  return s === e ? s : `${s} – ${e}`;
+}
+
 /**
  * Platform-relative path guard. Contract URLs are ALWAYS site-relative paths
  * ("/investors/aura-ventures"); anything else — absolute URLs, protocol-

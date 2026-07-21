@@ -1136,13 +1136,32 @@ export function adaptPipelineReport(
       ...(investorCoverageNote ? { coverageNote: investorCoverageNote } : {}),
     },
     events: {
-      cards: (matches.events ?? []).map((m, i) => ({
-        date: m.date ?? "",
-        venue: m.location ?? "",
-        name: matchName(m),
-        url: sanitizeContractPath(m.link, `events.cards[${i}].link`, log),
-        why: trimWhy(matchDescription(m)),
-      })),
+      // Chronological order — the pipeline returns events unsorted, so a
+      // Jun-2027 event could lead a section headed "this quarter" (Solidroad
+      // smoke test). ISO dates sort lexicographically; undated events sort last.
+      cards: [...(matches.events ?? [])]
+        .sort((a, b) => {
+          const da = typeof a.date === "string" ? a.date : "";
+          const db = typeof b.date === "string" ? b.date : "";
+          if (!da) return db ? 1 : 0;
+          if (!db) return -1;
+          return da < db ? -1 : da > db ? 1 : 0;
+        })
+        .map((m, i) => {
+          // Events carry an empty `description` and a `subtitle` that is just
+          // "date · location", so matchDescription's subtitle fallback printed
+          // the date a second time under the card (Solidroad smoke test). Use the
+          // real description ONLY — no why-attend body until the pipeline supplies
+          // a grounded one (Wave 4b).
+          const desc = typeof m.description === "string" ? m.description.trim() : "";
+          return {
+            date: m.date ?? "",
+            venue: m.location ?? "",
+            name: matchName(m),
+            url: sanitizeContractPath(m.link, `events.cards[${i}].link`, log),
+            why: desc ? trimWhy(stripInternalNotes(stripInlineMarkdown(desc))) : "",
+          };
+        }),
     },
     actionPlan: { intro: "", phases },
     // Lead intro + parsed checklist; the exposure table/stats stay a Phase-B

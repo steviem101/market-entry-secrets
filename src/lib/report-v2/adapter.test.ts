@@ -166,6 +166,28 @@ test("R11 relevance gate drops non-commercial competitor matches and logs", () =
   assert.ok(mismatches.some((m) => m.issue.includes('R11 relevance gate dropped "Clay Aiken"')));
 });
 
+test("events: sorted chronologically; the date/venue subtitle never leaks into the why body", () => {
+  const { report } = adaptPipelineReport(
+    {
+      matches: {
+        events: [
+          { name: "Late", link: "/events/late", date: "2027-06-01", location: "Sydney", subtitle: "2027-06-01 · Sydney" },
+          { name: "Early", link: "/events/early", date: "2026-09-01", location: "Sydney", subtitle: "2026-09-01 · Sydney" },
+          { name: "Mid", link: "/events/mid", date: "2026-11-15", location: "Sydney", subtitle: "2026-11-15 · Sydney", description: "Where CX leaders gather." },
+        ],
+      },
+    },
+    {}
+  );
+  // Chronological order, not pipeline order.
+  assert.deepEqual(report.events.cards.map((e) => e.name), ["Early", "Mid", "Late"]);
+  // Events with only a "date · location" subtitle get NO why body (no date echo).
+  assert.equal(report.events.cards[0].why, "");
+  assert.equal(report.events.cards[2].why, ""); // "Late" — subtitle-only
+  // A real description still becomes the why body.
+  assert.equal(report.events.cards[1].why, "Where CX leaders gather.");
+});
+
 test("Phase 3b: competitor strengths join with '·'; company_strengths populate the you-row", () => {
   const { report } = adaptPipelineReport(
     {
