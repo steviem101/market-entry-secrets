@@ -1,6 +1,8 @@
 // Report-quality telemetry + scoring. Imported by slack-notify/index.ts.
-// Deterministic layers (utilization, presentation) + an LLM "substance" judge via the Lovable
-// AI Gateway (Gemini). Substance is computed once per report and cached on the report_quality row.
+// Deterministic layers (utilization, presentation, lint) + an LLM "substance" judge via the
+// Lovable AI Gateway (Gemini). Substance is computed once per report and cached on the row.
+
+import { lintReport, lintSummary } from "./reportLint.ts";
 
 const REPORT_BASE_URL = "https://marketentrysecrets.com/report";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
@@ -240,6 +242,10 @@ export function computeReportTelemetry(report: any, intake: any) {
 
   const util = computeUtilization(rj);
   const pres = computePresentation(rj);
+  // Wave 8 report-lint: deterministic defect detection (truncation / missing
+  // intro / inconsistent figures) that presentation + failed_sections don't
+  // cover. Advisory telemetry only — never affects the scores below.
+  const lint = status === "failed" ? { findings: [], counts: { truncation: 0, missing_intro: 0, inconsistent_figures: 0 } } : lintReport(rj);
 
   let plumbing = 0, coverage = 0, completeness = 0;
   if (status !== "failed") {
@@ -265,7 +271,7 @@ export function computeReportTelemetry(report: any, intake: any) {
     groundedness: Number(clamp(citations / Math.max(visibleWithContent, 1), 0, 1).toFixed(2)),
     utilization_rate: util.rate != null ? Number(util.rate.toFixed(2)) : null, utilization: util,
     presentation: pres, words: pres.totalWords, sections_visible: sectionsVisible, visible_with_content: visibleWithContent,
-    failed_sections: failedSections, user_feedback: report.feedback_score ?? null,
+    failed_sections: failedSections, user_feedback: report.feedback_score ?? null, lint,
   };
 }
 
@@ -333,6 +339,12 @@ function buildReportQualityCard(t: any, intake: any, sub: { score: number; rubri
   blocks.push({ type: "section", text: { type: "mrkdwn", text: `*RAG coverage (surfaced)*\n${covGrid}\n→ *${t.tables_hit}/${RAG_SOURCES.length}* data types · ${t.total_matches} matches${researchWarn}` } });
   blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Used in report* — ${u.usedTotal}/${u.surfacedTotal} surfaced items included (*${utilPct}%*)${droppedTxt}${gatedTxt}` } });
   blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Presentation ${p.score}/100* — ${t.visible_with_content} sections · ~${p.totalWords.toLocaleString()} words · ${p.linkCount} links · ${p.citationMarkers} citations${presFlags}` } });
+  // Wave 8 report-lint — deterministic defects presentation doesn't cover.
+  const lintLine = lintSummary(t.lint);
+  if (lintLine) {
+    const detail = t.lint.findings.slice(0, 4).map((f: { code: string; where: string }) => `${f.code}@${f.where}`).join(" · ");
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*🔎 Report lint* — ${lintLine}\n${detail}` } });
+  }
   if (sub && sub.insights.length) {
     blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Suggested fixes (plumbing/prompts/taxonomy)*\n${sub.insights.map((i) => `• ${i}`).join("\n")}` } });
   }
@@ -396,7 +408,7 @@ export async function handleReportQuality(supabase: any, ev: any): Promise<{ tex
     degraded: t.degraded, rag_hit_rate: t.rag_hit_rate, tables_hit: t.tables_hit, total_matches: t.total_matches,
     match_counts: t.match_counts, sources: t.sources, generation_time_ms: t.generation_time_ms, groundedness: t.groundedness,
     utilization_rate: t.utilization_rate, utilization: t.utilization, presentation: t.presentation, user_feedback: t.user_feedback,
-    metadata: { company: t.company, words: t.words, sections_visible: t.sections_visible, visible_with_content: t.visible_with_content, failed_sections: t.failed_sections, phase_timings: t.phase_timings },
+    metadata: { company: t.company, words: t.words, sections_visible: t.sections_visible, visible_with_content: t.visible_with_content, failed_sections: t.failed_sections, phase_timings: t.phase_timings, lint: { counts: t.lint.counts, findings: t.lint.findings.slice(0, 12) } },
   }, { onConflict: "report_id" });
   if (upErr) logErr("upsert", upErr.message);
 
