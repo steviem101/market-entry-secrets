@@ -122,8 +122,21 @@ test("buildCompetitorCards: empty/missing differentiation omits the differs fiel
   for (const card of cards) assert.equal("differs" in card, false);
 });
 
-test("buildCompetitorCards: differs is clipped to 120 chars", () => {
-  const long = "x".repeat(200);
+test("buildCompetitorCards: differs is word-safe capped (never cut mid-word)", () => {
+  const long = "Alpha ".repeat(60); // 360 chars of whole words
   const cards = buildCompetitorCards([{ name: "A", url: "https://a.co", differentiation: long }]);
-  assert.equal(cards[0].differs!.length, 120);
+  const d = cards[0].differs!;
+  assert.ok(d.length <= 201, `expected ≤201 (200 + ellipsis), got ${d.length}`);
+  assert.match(d, /…$/);
+  assert.doesNotMatch(d, /Alph…$/); // the cut lands on a space, never inside "Alpha"
+  assert.match(d, /Alpha…$/);
+});
+
+test("buildCompetitorCards: description is word-safe capped (never cut mid-word)", () => {
+  const long = `The platform ${"automates ".repeat(40)}workflows`; // > 240 chars
+  const cards = buildCompetitorCards([{ name: "A", url: "https://a.co", description: long }]);
+  const s = cards[0].subtitle!;
+  assert.ok(s.length <= 241, `expected ≤241, got ${s.length}`);
+  assert.match(s, /…$/);
+  assert.doesNotMatch(s, /automat…$/); // no mid-word cut
 });
