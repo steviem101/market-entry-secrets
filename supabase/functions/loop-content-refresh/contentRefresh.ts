@@ -197,3 +197,80 @@ export function buildDeadLinkProposal(table: string, recordId: string, url: stri
     dedup_key: dedupKey("flag_dead_link", table, recordId),
   };
 }
+
+// ── trigger_reembed ─────────────────────────────────────────────────────────────────────────────
+export const REEMBED_CAP = 200; // ids per proposal
+
+/**
+ * One trigger_reembed proposal for KB rows whose embedding is STUCK (content changed but the
+ * 2-minute embed-knowledge cron has not caught up after an hour) — a genuinely stuck pipeline, not
+ * the normal small backlog. Auto-approved: apply nulls the hashes so the cron re-embeds. Null when
+ * nothing is stuck. Single stable dedup_key so only one is open at a time.
+ */
+export function buildReembedProposal(stuckKbIds: string[], runId: string | null): ProposalInsert | null {
+  if (stuckKbIds.length === 0) return null;
+  const ids = stuckKbIds.slice(0, REEMBED_CAP);
+  return {
+    run_id: runId, loop_name: "content-refresh", action_type: "trigger_reembed",
+    target_table: "mes_knowledge_base", target_id: null,
+    payload: { kb_ids: ids },
+    reason: `${ids.length} knowledge-base row(s) have a stale embedding older than 1h (embed cron may be stuck); re-embed them.`,
+    confidence: null, status: "auto_approved",
+    dedup_key: "trigger_reembed:mes_knowledge_base:stuck",
+  };
+}
+
+// ── remove_kb_row ───────────────────────────────────────────────────────────────────────────────
+// Directory entity tables whose deleted rows should not linger in the KB / RAG surface.
+export const KB_ORPHAN_TABLES = [
+  "service_providers", "community_members", "events", "investors",
+  "innovation_ecosystem", "trade_investment_agencies",
+];
+
+/** remove_kb_row proposals for KB rows whose source entity no longer exists. Pending (not auto). */
+export function buildRemoveKbProposals(
+  orphans: Array<{ id: string; source_table: string; source_id: string }>, runId: string | null,
+): ProposalInsert[] {
+  return orphans.map((o) => ({
+    run_id: runId, loop_name: "content-refresh", action_type: "remove_kb_row",
+    target_table: "mes_knowledge_base", target_id: o.id,
+    payload: { source_table: o.source_table, source_id: o.source_id },
+    reason: `KB row ${o.id} points at a deleted ${o.source_table} (${o.source_id}); remove the orphan.`,
+    confidence: null, status: "pending",
+    dedup_key: dedupKey("remove_kb_row", "mes_knowledge_base", o.id),
+  }));
+}
+
+/** KB rows whose source_id is absent from the set of live ids for that source_table. Pure. */
+export function findKbOrphans(
+  kbRows: Array<{ id: string; source_id: string }>, liveIds: Set<string>, sourceTable: string,
+): Array<{ id: string; source_table: string; source_id: string }> {
+  return kbRows
+    .filter((k) => k.source_id && !liveIds.has(k.source_id))
+    .map((k) => ({ id: k.id, source_table: sourceTable, source_id: k.source_id }));
+}
+
+// ── flag_stale_content ──────────────────────────────────────────────────────────────────────────
+export const STALE_CONTENT_DAYS = 180;
+
+/** True when a title/subtitle references a year strictly before 2025 (a staleness signal). */
+export function hasOldYearRef(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const years = text.match(/\b(19|20)\d{2}\b/g);
+  if (!years) return false;
+  return years.some((y) => Number(y) < 2025);
+}
+
+export interface StaleContentRow { id: string; title?: string | null; reason_detail: string; }
+
+/** flag_stale_content proposals (pending, review-only) for content_items flagged stale. */
+export function buildStaleContentProposals(rows: StaleContentRow[], runId: string | null): ProposalInsert[] {
+  return rows.map((r) => ({
+    run_id: runId, loop_name: "content-refresh", action_type: "flag_stale_content",
+    target_table: "content_items", target_id: r.id,
+    payload: { detail: r.reason_detail },
+    reason: `content_item "${r.title ?? r.id}" looks stale: ${r.reason_detail}. Flag for a refresh.`,
+    confidence: null, status: "pending",
+    dedup_key: dedupKey("flag_stale_content", "content_items", r.id),
+  }));
+}

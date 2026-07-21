@@ -5,7 +5,9 @@ import {
   getEnabledChecks, DEFAULT_BATCH_CAP, extractDomain, buildLogoDevUrl, buildSetLogoProposals,
   nextLinkCheckCounters, shouldProposeDeadLink, checkedRecently, buildDeadLinkProposal,
   DEAD_LINK_THRESHOLD, LINK_RECHECK_AFTER_DAYS,
-  type EventRow, type ProposalInsert, type LogoCandidate,
+  buildReembedProposal, REEMBED_CAP, findKbOrphans, buildRemoveKbProposals,
+  hasOldYearRef, buildStaleContentProposals,
+  type EventRow, type ProposalInsert, type LogoCandidate, type StaleContentRow,
 } from "./contentRefresh.ts";
 
 const TODAY = "2026-07-20";
@@ -116,6 +118,52 @@ test("buildDeadLinkProposal is a pending (non-auto) flag with url + failure evid
   assert.equal(p.target_id, "sp1");
   assert.equal(p.dedup_key, "flag_dead_link:service_providers:sp1");
   assert.deepEqual(p.payload, { url: "https://dead.example", consecutive_failures: 2, last_status: 503, health: 0 });
+});
+
+test("buildReembedProposal: null when nothing stuck, auto_approved + capped when stuck", () => {
+  assert.equal(buildReembedProposal([], "run-1"), null);
+  const many = Array.from({ length: REEMBED_CAP + 50 }, (_, i) => `kb${i}`);
+  const p = buildReembedProposal(many, "run-1")!;
+  assert.equal(p.action_type, "trigger_reembed");
+  assert.equal(p.status, "auto_approved");
+  assert.equal(p.target_table, "mes_knowledge_base");
+  assert.equal(p.target_id, null);
+  assert.equal((p.payload as { kb_ids: string[] }).kb_ids.length, REEMBED_CAP); // capped
+  assert.equal(p.dedup_key, "trigger_reembed:mes_knowledge_base:stuck");        // single open at a time
+});
+
+test("findKbOrphans returns KB rows whose source_id is not among live ids", () => {
+  const kb = [{ id: "k1", source_id: "s1" }, { id: "k2", source_id: "gone" }, { id: "k3", source_id: "" }];
+  const orphans = findKbOrphans(kb, new Set(["s1", "s2"]), "investors");
+  assert.equal(orphans.length, 1);
+  assert.deepEqual(orphans[0], { id: "k2", source_table: "investors", source_id: "gone" });
+});
+
+test("buildRemoveKbProposals: pending proposals targeting the KB row", () => {
+  const props = buildRemoveKbProposals([{ id: "k2", source_table: "investors", source_id: "gone" }], "run-1");
+  assert.equal(props.length, 1);
+  assert.equal(props[0].action_type, "remove_kb_row");
+  assert.equal(props[0].status, "pending");
+  assert.equal(props[0].target_table, "mes_knowledge_base");
+  assert.equal(props[0].target_id, "k2");
+  assert.equal(props[0].dedup_key, "remove_kb_row:mes_knowledge_base:k2");
+});
+
+test("hasOldYearRef flags pre-2025 years only", () => {
+  assert.equal(hasOldYearRef("2021 Market Guide"), true);
+  assert.equal(hasOldYearRef("Guide updated 2026"), false);
+  assert.equal(hasOldYearRef("2019 and 2027 both"), true); // any pre-2025 year
+  assert.equal(hasOldYearRef("No year here"), false);
+  assert.equal(hasOldYearRef(null), false);
+});
+
+test("buildStaleContentProposals: pending review-only flags", () => {
+  const rows: StaleContentRow[] = [{ id: "c1", title: "Old Guide", reason_detail: "not updated in 180+ days" }];
+  const props = buildStaleContentProposals(rows, "run-1");
+  assert.equal(props[0].action_type, "flag_stale_content");
+  assert.equal(props[0].status, "pending");
+  assert.equal(props[0].target_table, "content_items");
+  assert.equal(props[0].dedup_key, "flag_stale_content:content_items:c1");
 });
 
 test("filterNewProposals drops candidates that already have an open proposal", () => {

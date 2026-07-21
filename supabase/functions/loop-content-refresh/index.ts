@@ -17,7 +17,10 @@ import {
   isPastEvent, LOGO_TARGETS, buildSetLogoProposals,
   LINK_CHECK_TARGETS, LINK_CHECK_BATCH, LINK_CHECK_TIMEOUT_MS, nextLinkCheckCounters,
   shouldProposeDeadLink, checkedRecently, buildDeadLinkProposal,
+  buildReembedProposal, KB_ORPHAN_TABLES, buildRemoveKbProposals, findKbOrphans,
+  buildStaleContentProposals, STALE_CONTENT_DAYS, hasOldYearRef,
   type ProposalInsert, type EventRow, type LogoCandidate, type CheckName, type LinkCheckResult,
+  type StaleContentRow,
 } from "./contentRefresh.ts";
 import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 
@@ -215,6 +218,67 @@ Deno.serve(async (req) => {
       itemsScanned += checked;
       const fresh = await dropAlreadyOpen(supabase, deadCandidates);
       byCheck["flag_dead_link"] = fresh.length;
+      allProposals = allProposals.concat(fresh);
+    }
+
+    // --- trigger_reembed: KB rows stuck unembedded (embedding null) for over an hour ---
+    // The embed-knowledge cron embeds null-embedding rows every ~2 min, so a null embedding older
+    // than an hour means the pipeline is stuck. (PostgREST can't compare embedded_hash to
+    // content_hash directly; embedding-is-null is the single-column proxy for the backlog.)
+    if (enabledChecks.includes("trigger_reembed")) {
+      const stuckSince = new Date(Date.parse(startedAt) - 60 * 60 * 1000).toISOString();
+      const { data: stuck, error } = await supabase.from("mes_knowledge_base")
+        .select("id").is("embedding", null).lt("updated_at", stuckSince).limit(500);
+      if (error) throw new Error(`kb stuck read: ${error.message}`);
+      const ids = (stuck ?? []).map((r) => String(r.id));
+      const proposal = buildReembedProposal(ids, runId);
+      const fresh = proposal ? await dropAlreadyOpen(supabase, [proposal]) : [];
+      byCheck["trigger_reembed"] = fresh.length;
+      itemsScanned += ids.length;
+      allProposals = allProposals.concat(fresh);
+    }
+
+    // --- remove_kb_row: KB rows whose source entity was deleted ---
+    if (enabledChecks.includes("remove_kb_row")) {
+      const orphans: Array<{ id: string; source_table: string; source_id: string }> = [];
+      for (const table of KB_ORPHAN_TABLES) {
+        // deno-lint-ignore no-explicit-any
+        const { data: kbRows } = await (supabase as any).from("mes_knowledge_base")
+          .select("id,source_id").eq("source_table", table).limit(1000);
+        if (!kbRows || kbRows.length === 0) continue;
+        // deno-lint-ignore no-explicit-any
+        const { data: liveRows } = await (supabase as any).from(table).select("id").limit(2000);
+        const liveIds = new Set<string>((liveRows ?? []).map((r: { id: string }) => String(r.id)));
+        orphans.push(...findKbOrphans(
+          (kbRows as Array<{ id: string; source_id: string }>).map((k) => ({ id: String(k.id), source_id: String(k.source_id ?? "") })),
+          liveIds, table,
+        ));
+        if (orphans.length >= batchCap) break;
+      }
+      const fresh = await dropAlreadyOpen(supabase, buildRemoveKbProposals(orphans.slice(0, batchCap), runId));
+      byCheck["remove_kb_row"] = fresh.length;
+      allProposals = allProposals.concat(fresh);
+    }
+
+    // --- flag_stale_content: content_items not updated in 180d, or with a pre-2025 year in the title ---
+    if (enabledChecks.includes("flag_stale_content")) {
+      const staleBefore = new Date(Date.parse(startedAt) - STALE_CONTENT_DAYS * 24 * 60 * 60 * 1000).toISOString();
+      const { data: items, error } = await supabase.from("content_items")
+        .select("id,title,subtitle,updated_at,created_at").limit(1000);
+      if (error) throw new Error(`content_items read: ${error.message}`);
+      const staleRows: StaleContentRow[] = [];
+      for (const it of (items ?? [])) {
+        const updated = (it.updated_at as string | null) ?? (it.created_at as string | null);
+        const isOld = !!updated && updated < staleBefore;
+        const oldYear = hasOldYearRef(it.title as string | null) || hasOldYearRef(it.subtitle as string | null);
+        if (isOld || oldYear) {
+          staleRows.push({ id: String(it.id), title: it.title as string | null, reason_detail: isOld ? `not updated in ${STALE_CONTENT_DAYS}+ days` : "title references a pre-2025 year" });
+        }
+        if (staleRows.length >= batchCap) break;
+      }
+      itemsScanned += items?.length ?? 0;
+      const fresh = await dropAlreadyOpen(supabase, buildStaleContentProposals(staleRows, runId));
+      byCheck["flag_stale_content"] = fresh.length;
       allProposals = allProposals.concat(fresh);
     }
 
