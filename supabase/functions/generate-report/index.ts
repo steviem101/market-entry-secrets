@@ -3033,7 +3033,11 @@ async function generateReportInBackground(
       enriched_summary: enrichedSummary,
       enriched_company_profile: companyProfile ? JSON.stringify(companyProfile) : "No enriched data available.",
       matched_providers_json: JSON.stringify(providerUnion),
-      matched_mentors_json: JSON.stringify(matches.community_members || []),
+      // Headshot URLs are display-only (read by the report_v2 adapter off the
+      // STORED match, not here) — strip them from the prompt copy so the
+      // section writer can't Markdown-link a mentor's name to their avatar image
+      // under the HYPERLINKS rule, and to keep the prompt lean (review finding).
+      matched_mentors_json: JSON.stringify((matches.community_members || []).map(({ avatar_url, image, ...m }: any) => m)),
       matched_events_json: JSON.stringify(matches.events || []),
       matched_content_json: JSON.stringify(matches.content_items || []),
       matched_case_studies_json: JSON.stringify(matches.case_studies || []),
