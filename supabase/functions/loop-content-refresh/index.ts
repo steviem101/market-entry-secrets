@@ -20,7 +20,30 @@ import {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const WEBHOOK_SECRET = Deno.env.get("SLACK_NOTIFY_WEBHOOK_SECRET") ?? "";
+const APPLY_SECRET = Deno.env.get("APPLY_PROPOSAL_SECRET") ?? Deno.env.get("EMAIL_INTERNAL_SECRET") ?? "";
+const APPLY_CHUNK = 100; // apply-proposal's bulk cap
 const LOOP_NAME = "content-refresh";
+
+// Apply the run's auto_approved proposals through the single choke point, chunked to its bulk cap.
+// Best-effort: a failed apply leaves the proposal apply_failed (visible in the dashboard/digest);
+// it never throws the run.
+async function applyAutoApproved(keys: string[]): Promise<number> {
+  if (!APPLY_SECRET) { logError(LOOP_NAME, "auto-apply skipped: no APPLY_PROPOSAL_SECRET", null); return 0; }
+  let applied = 0;
+  for (let i = 0; i < keys.length; i += APPLY_CHUNK) {
+    const chunk = keys.slice(i, i + APPLY_CHUNK);
+    try {
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/apply-proposal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-internal-secret": APPLY_SECRET },
+        body: JSON.stringify({ proposal_keys: chunk }),
+      });
+      const j = await resp.json().catch(() => ({ results: [] }));
+      applied += (j.results ?? []).filter((r: { ok: boolean }) => r.ok).length;
+    } catch (e) { logError(LOOP_NAME, "auto-apply chunk failed", e); }
+  }
+  return applied;
+}
 
 Deno.serve(async (req) => {
   const cors = buildCorsHeaders(req);
@@ -100,17 +123,28 @@ Deno.serve(async (req) => {
 
     let proposed = 0;
     let accepted = 0;
+    let applied = 0;
+    let autoApprovedKeys: string[] = [];
     if (allProposals.length > 0) {
       const { data: inserted, error: insErr } = await supabase.from("agent_content_proposals")
         .insert(allProposals).select("id,status");
       if (insErr) throw new Error(`proposal insert: ${insErr.message}`);
       proposed = inserted?.length ?? 0;
       accepted = (inserted ?? []).filter((r) => r.status === "auto_approved").length;
+      autoApprovedKeys = (inserted ?? []).filter((r) => r.status === "auto_approved").map((r) => `agent_content_proposals:${r.id}`);
+    }
+
+    // Gated end-of-run auto-apply: when CONTENT_REFRESH_AUTOAPPLY is on, the whitelisted
+    // auto_approved proposals apply themselves through the choke point (apply-proposal). Default
+    // OFF, so the pilot's first runs stay propose-only until you flip it on.
+    const autoApply = ["on", "1", "true"].includes((Deno.env.get("CONTENT_REFRESH_AUTOAPPLY") || "").trim().toLowerCase());
+    if (autoApply && autoApprovedKeys.length > 0) {
+      applied = await applyAutoApproved(autoApprovedKeys);
     }
 
     await supabase.from("automation_runs").update({
       finished_at: new Date().toISOString(), status: "success",
-      proposed, accepted, metadata: { checks: ENABLED_CHECKS, by_check: byCheck, items_scanned: itemsScanned, batch_cap: batchCap },
+      proposed, accepted, metadata: { checks: ENABLED_CHECKS, by_check: byCheck, items_scanned: itemsScanned, batch_cap: batchCap, auto_apply: autoApply, applied },
     }).eq("id", runId);
 
     // Best-effort digest signal (Slack routing for 'content.refresh' is wired in Workstream D).
@@ -121,8 +155,8 @@ Deno.serve(async (req) => {
       });
     } catch (e) { logError(LOOP_NAME, "activity_event insert failed (non-fatal)", e); }
 
-    log(LOOP_NAME, `run ${runId}: proposed ${proposed}, accepted ${accepted}`, byCheck);
-    return new Response(JSON.stringify({ run_id: runId, proposed, accepted, by_check: byCheck, items_scanned: itemsScanned }), {
+    log(LOOP_NAME, `run ${runId}: proposed ${proposed}, accepted ${accepted}, applied ${applied}`, byCheck);
+    return new Response(JSON.stringify({ run_id: runId, proposed, accepted, applied, by_check: byCheck, items_scanned: itemsScanned }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (err) {

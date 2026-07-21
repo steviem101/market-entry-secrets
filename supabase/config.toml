@@ -245,6 +245,8 @@ verify_jwt = false
 # Authenticated in-code by x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET (same cron pattern
 # as directory-steward). Must stay false or the gateway rejects the cron POST (no JWT).
 # Gated OFF by default (CONTENT_REFRESH_ENABLED); {"dry_run":true}/{"force":true} bypass.
+# CONTENT_REFRESH_AUTOAPPLY (default off) makes auto_approved proposals apply themselves at
+# end of run via apply-proposal, so the pilot's first runs stay propose-only until flipped on.
 verify_jwt = false
 
 [functions.sitemap]
