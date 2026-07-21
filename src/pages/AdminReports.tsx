@@ -94,7 +94,7 @@ const AdminReports = () => {
             <p className="text-muted-foreground mt-1">
               {isLoading
                 ? "Loading…"
-                : isError
+                : isError && !reports?.length
                 ? "Couldn't load reports"
                 : `${filtered.length} of ${reports?.length ?? 0} report${
                     (reports?.length ?? 0) !== 1 ? "s" : ""
@@ -164,7 +164,7 @@ const AdminReports = () => {
                     Loading reports…
                   </TableCell>
                 </TableRow>
-              ) : isError ? (
+              ) : isError && !reports?.length ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center py-12">
                     <p className="text-destructive font-medium">Couldn't load reports.</p>
