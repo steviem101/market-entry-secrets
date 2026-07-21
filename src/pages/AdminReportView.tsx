@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ReportV2Renderer from "@/components/report-v2/ReportV2Renderer";
 import { adaptPipelineReport, type PipelineReportJson } from "@/lib/report-v2/adapter";
 import type { Report as ReportV2Contract } from "@/types/report";
+import { IntakePanel, QualityPanel } from "@/components/admin/ReportReviewPanels";
 
 // title/content are unknown on purpose: legacy report_json shapes carry
 // non-string values here, and rendering those directly crashes React — the
@@ -188,6 +189,13 @@ const AdminReportViewInner = () => {
           </div>
         </div>
       )}
+
+      {/* Review context — what the customer asked for + the quality breakdown,
+          so the report can be judged against its inputs and telemetry in one place. */}
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        <IntakePanel intake={report.user_intake_forms} />
+        <QualityPanel quality={report.quality} />
+      </div>
 
       {reportV2 ? (
         // storageKey (not reportId) → star/request interactions are local scratch
