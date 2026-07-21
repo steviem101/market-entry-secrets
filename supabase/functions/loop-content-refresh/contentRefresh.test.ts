@@ -2,14 +2,51 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   dedupKey, isPastEvent, buildArchiveEventProposals, filterNewProposals,
-  ENABLED_CHECKS, DEFAULT_BATCH_CAP, type EventRow, type ProposalInsert,
+  getEnabledChecks, DEFAULT_BATCH_CAP, extractDomain, buildLogoDevUrl, buildSetLogoProposals,
+  type EventRow, type ProposalInsert, type LogoCandidate,
 } from "./contentRefresh.ts";
 
 const TODAY = "2026-07-20";
 
-test("pilot enables only archive_event", () => {
-  assert.deepEqual([...ENABLED_CHECKS], ["archive_event"]);
+test("getEnabledChecks defaults to archive_event, parses env, drops unknowns", () => {
+  assert.deepEqual(getEnabledChecks(undefined), ["archive_event"]);
+  assert.deepEqual(getEnabledChecks("archive_event, set_logo_url"), ["archive_event", "set_logo_url"]);
+  assert.deepEqual(getEnabledChecks("set_logo_url,bogus_check"), ["set_logo_url"]); // unknown dropped
+  assert.deepEqual(getEnabledChecks(""), ["archive_event"]);       // empty falls back
+  assert.deepEqual(getEnabledChecks("nonsense"), ["archive_event"]); // all-unknown falls back
   assert.equal(DEFAULT_BATCH_CAP, 50);
+});
+
+test("extractDomain strips scheme + www, tolerates bare hosts, rejects junk", () => {
+  assert.equal(extractDomain("https://www.Example.com/path"), "example.com");
+  assert.equal(extractDomain("example.com"), "example.com");
+  assert.equal(extractDomain("http://sub.foo.com.au"), "sub.foo.com.au");
+  assert.equal(extractDomain(""), null);
+  assert.equal(extractDomain(null), null);
+  assert.equal(extractDomain("not a url"), null);
+});
+
+test("buildLogoDevUrl is an https logo.dev url for the domain", () => {
+  const u = buildLogoDevUrl("example.com");
+  assert.ok(u.startsWith("https://img.logo.dev/example.com?"));
+  assert.match(u, /token=pk_/);
+});
+
+test("buildSetLogoProposals emits auto_approved logo proposals, skips rows with no derivable domain", () => {
+  const rows: LogoCandidate[] = [
+    { id: "s1", website: "https://acme.com", name: "Acme" },
+    { id: "s2", website: "not a url", name: "Bad" },   // no domain -> skipped
+    { id: "s3", website: null, name: "None" },          // null -> skipped
+  ];
+  const props = buildSetLogoProposals(rows, "investors", "logo", "run-1");
+  assert.equal(props.length, 1);
+  assert.equal(props[0].target_id, "s1");
+  assert.equal(props[0].action_type, "set_logo_url");
+  assert.equal(props[0].status, "auto_approved");
+  assert.equal(props[0].target_table, "investors");
+  assert.equal(props[0].dedup_key, "set_logo_url:investors:s1");
+  assert.equal((props[0].payload as { logo_field: string }).logo_field, "logo");
+  assert.match(String((props[0].payload as { logo_url: string }).logo_url), /^https:\/\/img\.logo\.dev\/acme\.com/);
 });
 
 test("isPastEvent prefers event_date, falls back to date, ignores null", () => {

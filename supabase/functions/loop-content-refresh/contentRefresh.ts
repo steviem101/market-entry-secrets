@@ -22,13 +22,89 @@ export interface ProposalInsert {
   dedup_key: string;
 }
 
-// Checks enabled in the current rollout. Fan-out flips these on one at a time (Workstream B).
-export const ENABLED_CHECKS = ["archive_event"] as const;
 export type CheckName =
   | "archive_event" | "flag_dead_link" | "set_logo_url"
   | "queue_enrichment" | "trigger_reembed" | "remove_kb_row" | "flag_stale_content";
 
+// Every check the loop knows how to run. Which ones actually run is env-driven (see
+// getEnabledChecks) so the maintainer can enable them ONE AT A TIME with a manual run each,
+// per the staged-rollout plan, without a code change.
+export const KNOWN_CHECKS: CheckName[] = [
+  "archive_event", "set_logo_url", "flag_dead_link",
+  "queue_enrichment", "trigger_reembed", "remove_kb_row", "flag_stale_content",
+];
+
+/**
+ * Enabled checks come from CONTENT_REFRESH_CHECKS (comma-separated), defaulting to archive_event
+ * only (the pilot). Unknown names are dropped. The maintainer widens this env value one check at a
+ * time. Kept pure (env passed in) so it is testable.
+ */
+export function getEnabledChecks(rawEnv: string | undefined): CheckName[] {
+  const raw = (rawEnv ?? "archive_event").split(",").map((s) => s.trim()).filter(Boolean);
+  const known = new Set<string>(KNOWN_CHECKS);
+  const enabled = raw.filter((c) => known.has(c)) as CheckName[];
+  return enabled.length > 0 ? enabled : ["archive_event"];
+}
+
 export const DEFAULT_BATCH_CAP = 50;
+
+// Publishable Logo.dev key (pk_) — documented safe to ship client-side (src/lib/logoUtils.ts),
+// so it is fine in the edge runtime too. set_logo_url only ever writes an https logo.dev URL.
+const LOGO_DEV_TOKEN = "pk_L3JbJjCeT0-mUdhpPlS6SA";
+
+/** Bare registrable domain from a URL/host string (mirrors src/lib/logoUtils.extractDomain). */
+export function extractDomain(url: string | null | undefined): string | null {
+  if (!url || !url.trim()) return null;
+  let hostname = url.trim();
+  if (!/^https?:\/\//i.test(hostname)) hostname = `https://${hostname}`;
+  try {
+    let domain = new URL(hostname).hostname.toLowerCase();
+    if (domain.startsWith("www.")) domain = domain.slice(4);
+    return domain || null;
+  } catch { return null; }
+}
+
+export function buildLogoDevUrl(domain: string): string {
+  return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}&size=128&format=png`;
+}
+
+// Directory tables whose missing logos set_logo_url can fill, with the website column to derive the
+// domain from. Mentors (people) are deliberately excluded — logo.dev is for company domains.
+export const LOGO_TARGETS: Array<{ table: string; websiteCol: string; logoCol: string }> = [
+  { table: "service_providers", websiteCol: "website", logoCol: "logo" },
+  { table: "investors", websiteCol: "website", logoCol: "logo" },
+  { table: "trade_investment_agencies", websiteCol: "website_url", logoCol: "logo" }, // agencies populate website_url, not website
+  { table: "innovation_ecosystem", websiteCol: "website", logoCol: "logo" },
+];
+
+export interface LogoCandidate { id: string; website: string | null; name?: string | null; }
+
+/**
+ * set_logo_url proposals for directory rows with a resolvable domain but no logo. Auto-approved
+ * (low-risk) and COALESCE-protected at apply, so an existing logo is never overwritten.
+ */
+export function buildSetLogoProposals(
+  rows: LogoCandidate[], table: string, logoCol: string, runId: string | null,
+): ProposalInsert[] {
+  const out: ProposalInsert[] = [];
+  for (const r of rows) {
+    const domain = extractDomain(r.website);
+    if (!domain) continue;
+    out.push({
+      run_id: runId,
+      loop_name: "content-refresh",
+      action_type: "set_logo_url",
+      target_table: table,
+      target_id: r.id,
+      payload: { logo_field: logoCol, logo_url: buildLogoDevUrl(domain) },
+      reason: `${table} "${r.name ?? r.id}" has no logo; deriving one from ${domain} via logo.dev.`,
+      confidence: null,
+      status: "auto_approved",
+      dedup_key: dedupKey("set_logo_url", table, r.id),
+    });
+  }
+  return out;
+}
 
 export function dedupKey(action: string, table: string, id: string): string {
   return `${action}:${table}:${id}`;

@@ -13,8 +13,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/http.ts";
 import { log, logError } from "../_shared/log.ts";
 import {
-  ENABLED_CHECKS, DEFAULT_BATCH_CAP, buildArchiveEventProposals, filterNewProposals,
-  isPastEvent, type ProposalInsert, type EventRow,
+  getEnabledChecks, DEFAULT_BATCH_CAP, buildArchiveEventProposals, filterNewProposals,
+  isPastEvent, LOGO_TARGETS, buildSetLogoProposals,
+  type ProposalInsert, type EventRow, type LogoCandidate, type CheckName,
 } from "./contentRefresh.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -43,6 +44,23 @@ async function applyAutoApproved(keys: string[]): Promise<number> {
     } catch (e) { logError(LOOP_NAME, "auto-apply chunk failed", e); }
   }
   return applied;
+}
+
+// Drop candidates whose dedup_key already has an OPEN proposal (pending/approved/auto_approved),
+// so a re-scan never floods. Shared by every check.
+// Bare `ReturnType<typeof createClient>` resolves the schema generics to `never` under strict Deno
+// type-checking (supabase-js v2 defaults), so type the client loosely like the other functions.
+async function dropAlreadyOpen(
+  // deno-lint-ignore no-explicit-any
+  supabase: any, candidates: ProposalInsert[],
+): Promise<ProposalInsert[]> {
+  if (candidates.length === 0) return [];
+  const keys = candidates.map((c) => c.dedup_key);
+  const existingOpen = new Set<string>();
+  const { data: open } = await supabase.from("agent_content_proposals")
+    .select("dedup_key").in("dedup_key", keys).in("status", ["pending", "approved", "auto_approved"]);
+  for (const r of open ?? []) existingOpen.add(r.dedup_key as string);
+  return filterNewProposals(candidates, existingOpen);
 }
 
 Deno.serve(async (req) => {
@@ -79,10 +97,12 @@ Deno.serve(async (req) => {
   const todayISO = startedAt.slice(0, 10);
 
   // Open one run row (skipped on dry_run — nothing to join to).
+  const enabledChecks: CheckName[] = getEnabledChecks(Deno.env.get("CONTENT_REFRESH_CHECKS"));
+
   let runId: string | null = null;
   if (!dryRun) {
     const { data: run } = await supabase.from("automation_runs")
-      .insert({ loop: LOOP_NAME, started_at: startedAt, status: "running", metadata: { checks: ENABLED_CHECKS, dry_run: false } })
+      .insert({ loop: LOOP_NAME, started_at: startedAt, status: "running", metadata: { checks: enabledChecks, dry_run: false } })
       .select("id").maybeSingle();
     runId = run?.id ?? null;
   }
@@ -92,8 +112,8 @@ Deno.serve(async (req) => {
   let allProposals: ProposalInsert[] = [];
 
   try {
-    // --- archive_event (the only enabled pilot check) ---
-    if (ENABLED_CHECKS.includes("archive_event")) {
+    // --- archive_event: past-dated events still on a live status ---
+    if (enabledChecks.includes("archive_event")) {
       const { data: events, error } = await supabase.from("events")
         .select("id,title,status,date,event_date")
         .in("status", ["approved", "needs_review"])
@@ -101,18 +121,28 @@ Deno.serve(async (req) => {
       if (error) throw new Error(`events read: ${error.message}`);
       const past = (events ?? []).filter((e) => isPastEvent(e as EventRow, todayISO)).slice(0, batchCap);
       itemsScanned += events?.length ?? 0;
-      const candidates = buildArchiveEventProposals(past as EventRow[], runId);
-
-      const keys = candidates.map((c) => c.dedup_key);
-      const existingOpen = new Set<string>();
-      if (keys.length > 0) {
-        const { data: open } = await supabase.from("agent_content_proposals")
-          .select("dedup_key").in("dedup_key", keys).in("status", ["pending", "approved", "auto_approved"]);
-        for (const r of open ?? []) existingOpen.add(r.dedup_key as string);
-      }
-      const fresh = filterNewProposals(candidates, existingOpen);
+      const fresh = await dropAlreadyOpen(supabase, buildArchiveEventProposals(past as EventRow[], runId));
       byCheck["archive_event"] = fresh.length;
       allProposals = allProposals.concat(fresh);
+    }
+
+    // --- set_logo_url: directory rows with a domain but no logo (fill via logo.dev) ---
+    if (enabledChecks.includes("set_logo_url")) {
+      for (const t of LOGO_TARGETS) {
+        const remaining = batchCap - allProposals.length;
+        if (remaining <= 0) break;
+        const { data: rows, error } = await supabase.from(t.table)
+          .select(`id,name,${t.websiteCol},${t.logoCol}`)
+          .is(t.logoCol, null)                       // NULL logos (the dominant missing case)
+          .not(t.websiteCol, "is", null)
+          .limit(remaining);
+        if (error) throw new Error(`${t.table} read: ${error.message}`);
+        itemsScanned += rows?.length ?? 0;
+        const candidates: LogoCandidate[] = (rows ?? []).map((r) => ({ id: r.id, website: r[t.websiteCol], name: r.name }));
+        const fresh = await dropAlreadyOpen(supabase, buildSetLogoProposals(candidates, t.table, t.logoCol, runId));
+        byCheck["set_logo_url"] = (byCheck["set_logo_url"] ?? 0) + fresh.length;
+        allProposals = allProposals.concat(fresh);
+      }
     }
 
     if (dryRun) {
@@ -144,7 +174,7 @@ Deno.serve(async (req) => {
 
     await supabase.from("automation_runs").update({
       finished_at: new Date().toISOString(), status: "success",
-      proposed, accepted, metadata: { checks: ENABLED_CHECKS, by_check: byCheck, items_scanned: itemsScanned, batch_cap: batchCap, auto_apply: autoApply, applied },
+      proposed, accepted, metadata: { checks: enabledChecks, by_check: byCheck, items_scanned: itemsScanned, batch_cap: batchCap, auto_apply: autoApply, applied },
     }).eq("id", runId);
 
     // Best-effort digest signal (Slack routing for 'content.refresh' is wired in Workstream D).
