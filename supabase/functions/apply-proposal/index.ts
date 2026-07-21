@@ -133,7 +133,8 @@ Deno.serve(async (req) => {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       logError("apply-proposal", `apply failed for ${key}`, err);
-      await markFailed(supabase, parsed.id, msg);
+      await supabase.from("agent_content_proposals")
+        .update({ status: "apply_failed", apply_error: msg.slice(0, 500) }).eq("id", parsed.id);
       results.push({ proposal_key: key, ok: false, error: msg });
     }
   }
@@ -144,8 +145,3 @@ Deno.serve(async (req) => {
     headers: { ...cors, "Content-Type": "application/json" },
   });
 });
-
-async function markFailed(supabase: ReturnType<typeof createClient>, id: string, reason: string) {
-  await supabase.from("agent_content_proposals")
-    .update({ status: "apply_failed", apply_error: reason.slice(0, 500) }).eq("id", id);
-}
