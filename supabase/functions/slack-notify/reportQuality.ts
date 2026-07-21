@@ -261,6 +261,7 @@ export function computeReportTelemetry(report: any, intake: any) {
     score_presentation: status === "failed" ? 0 : pres.score,
     degraded, rag_hit_rate: Number(ragHitRate.toFixed(2)), tables_hit: tablesHit, total_matches: totalMatches,
     match_counts: matchCounts, sources, generation_time_ms: meta.generation_time_ms ?? null,
+    phase_timings: meta.phase_timings ?? null,
     groundedness: Number(clamp(citations / Math.max(visibleWithContent, 1), 0, 1).toFixed(2)),
     utilization_rate: util.rate != null ? Number(util.rate.toFixed(2)) : null, utilization: util,
     presentation: pres, words: pres.totalWords, sections_visible: sectionsVisible, visible_with_content: visibleWithContent,
@@ -395,7 +396,7 @@ export async function handleReportQuality(supabase: any, ev: any): Promise<{ tex
     degraded: t.degraded, rag_hit_rate: t.rag_hit_rate, tables_hit: t.tables_hit, total_matches: t.total_matches,
     match_counts: t.match_counts, sources: t.sources, generation_time_ms: t.generation_time_ms, groundedness: t.groundedness,
     utilization_rate: t.utilization_rate, utilization: t.utilization, presentation: t.presentation, user_feedback: t.user_feedback,
-    metadata: { company: t.company, words: t.words, sections_visible: t.sections_visible, visible_with_content: t.visible_with_content, failed_sections: t.failed_sections },
+    metadata: { company: t.company, words: t.words, sections_visible: t.sections_visible, visible_with_content: t.visible_with_content, failed_sections: t.failed_sections, phase_timings: t.phase_timings },
   }, { onConflict: "report_id" });
   if (upErr) logErr("upsert", upErr.message);
 
