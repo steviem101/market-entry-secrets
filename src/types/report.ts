@@ -140,7 +140,7 @@ export interface Report {
   actionPlan: {
     intro: Paragraph;
     // exactly 3 phases; a phase is EITHER flat body OR grouped sub-blocks (never both)
-    phases: { period: string; title: string; body?: Paragraph; groups?: { title: string; body: Paragraph }[] }[];
+    phases: { period: string; title: string; body?: Paragraph; groups?: { title: string; bullets: Paragraph[] }[] }[];
   };
   compliance: {
     intro: Paragraph;

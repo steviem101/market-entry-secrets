@@ -367,7 +367,12 @@ test("action plan prose is parsed into structured phases with grouped sub-blocks
   assert.equal(report.actionPlan.phases[0].title, "Foundation");
   assert.equal(report.actionPlan.phases[0].groups?.length, 2);
   assert.equal(report.actionPlan.phases[0].groups?.[0].title, "Legal Entity");
-  assert.match(report.actionPlan.phases[0].groups?.[0].body ?? "", /Choose a Pty Ltd \{chip:sourced\} · Appoint a resident director/);
+  // Each bullet is now a discrete Paragraph (rendered as a list item), not a
+  // ` · `-joined wall.
+  assert.deepEqual(report.actionPlan.phases[0].groups?.[0].bullets, [
+    "Choose a Pty Ltd {chip:sourced}",
+    "Appoint a resident director",
+  ]);
   // §14 arriveWith derives from the action-plan group titles.
   assert.deepEqual(report.close.arriveWith, ["Legal Entity", "Tax & GST", "Hiring"]);
 });
@@ -386,8 +391,27 @@ test("action plan keeps distinct groups when a phase repeats a sub-block title",
   );
   const groups = report.actionPlan.phases[0].groups ?? [];
   assert.equal(groups.length, 2);
-  assert.match(groups[0].body, /First note/); // not wiped by the second same-titled block
-  assert.match(groups[1].body, /Second note/);
+  assert.deepEqual(groups[0].bullets, ["First note"]); // not wiped by the second same-titled block
+  assert.deepEqual(groups[1].bullets, ["Second note"]);
+});
+
+test("action plan group bullets stay discrete — never re-flattened into one string", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        action_plan: {
+          content:
+            "### Phase 1 — Foundation (Months 1–2): x\n\n**Steps**\n- Alpha\n- Beta\n- Gamma",
+        },
+      },
+    },
+    {}
+  );
+  const bullets = report.actionPlan.phases[0].groups?.[0].bullets ?? [];
+  assert.equal(bullets.length, 3);
+  assert.deepEqual(bullets, ["Alpha", "Beta", "Gamma"]);
+  // Guard the regression: no bullet is a ` · `-joined concatenation of siblings.
+  for (const b of bullets) assert.doesNotMatch(b, / · /);
 });
 
 test("action plan with no phase headings falls back to one flat phase", () => {

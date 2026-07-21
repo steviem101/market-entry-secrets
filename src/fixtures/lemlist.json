@@ -120,19 +120,19 @@
     "intro": "Three phases over six months — the default map; pace set together in the strategy session.",
     "phases": [
       { "period": "MONTHS 1–2 · FOUNDATION", "title": "Legal, compliance & investor signals", "groups": [
-        { "title": "Legal & structural", "body": "Pty Ltd via ASIC (~$310/yr) · ABN + GST over $75k · [Fullstack Advisory](/service-providers/fullstack-advisory) registers AI/ML under R&DTI — 43.5% refundable, up to $4M/yr cash." },
-        { "title": "Compliance", "body": "Audit AI features against the Privacy Act; ADM disclosures before Dec 2026 · Spam Act: inferred consent, 5-day unsubscribes, sender ID · DNCR checks for voice." },
-        { "title": "Investor groundwork", "body": "Map Series A/B profile against Blackbird, AirTree, Tidal, Antler · [Business France](/government-support/business-france) warm introductions · apply to [H2 Ventures](/innovation-ecosystem/h2-ventures) + [SproutX](/innovation-ecosystem/sproutx)." }
+        { "title": "Legal & structural", "bullets": ["Pty Ltd via ASIC (~$310/yr)", "ABN + GST over $75k", "[Fullstack Advisory](/service-providers/fullstack-advisory) registers AI/ML under R&DTI — 43.5% refundable, up to $4M/yr cash."] },
+        { "title": "Compliance", "bullets": ["Audit AI features against the Privacy Act; ADM disclosures before Dec 2026", "Spam Act: inferred consent, 5-day unsubscribes, sender ID", "DNCR checks for voice."] },
+        { "title": "Investor groundwork", "bullets": ["Map Series A/B profile against Blackbird, AirTree, Tidal, Antler", "[Business France](/government-support/business-france) warm introductions", "apply to [H2 Ventures](/innovation-ecosystem/h2-ventures) + [SproutX](/innovation-ecosystem/sproutx)."] }
       ] },
       { "period": "MONTHS 2–4 · ESTABLISH", "title": "Office, team & network", "groups": [
-        { "title": "Presence", "body": "Base at [Stone & Chalk](/service-providers/stone-and-chalk) ($3–6k/mo suites; Westpac + CBA CVC in residence) · budget $80–150k/mo burn for a 3–5 person team ($100–180k salaries + 12% super)." },
-        { "title": "Team & partners", "body": "Hire an AI-fluent Sydney Head of Sales (national quota attainment: 46% — favour RevOps/GTM-engineer backgrounds) · [ADAPT](/service-providers/adapt) CIO/CMO community · [AiGroup](/government-support/aigroup) employer compliance." },
-        { "title": "Investor momentum", "body": "[UNSW Founders 10x](/innovation-ecosystem/unsw-founders-10x) events for founder-to-founder VC credibility · pursue CVC pilots via Stone & Chalk's bank partners." }
+        { "title": "Presence", "bullets": ["Base at [Stone & Chalk](/service-providers/stone-and-chalk) ($3–6k/mo suites; Westpac + CBA CVC in residence)", "budget $80–150k/mo burn for a 3–5 person team ($100–180k salaries + 12% super)."] },
+        { "title": "Team & partners", "bullets": ["Hire an AI-fluent Sydney Head of Sales (national quota attainment: 46% — favour RevOps/GTM-engineer backgrounds)", "[ADAPT](/service-providers/adapt) CIO/CMO community", "[AiGroup](/government-support/aigroup) employer compliance."] },
+        { "title": "Investor momentum", "bullets": ["[UNSW Founders 10x](/innovation-ecosystem/unsw-founders-10x) events for founder-to-founder VC credibility", "pursue CVC pilots via Stone & Chalk's bank partners."] }
       ] },
       { "period": "MONTHS 4–6 · LAUNCH", "title": "Go-to-market & revenue", "groups": [
-        { "title": "Sales motion", "body": "B2B SaaS heads of sales first (1–3 month cycles) · fixed-price milestone pilots · human-approval loops in all AI outreach." },
-        { "title": "Channels", "body": "[NEXTGEN Group](/service-providers/nextgen-group) reseller network · [Export Connect](/government-support/export-connect) lead qualification · [Accenture Australia](/service-providers/accenture-australia) as SI partner." },
-        { "title": "Pricing & EMDG", "body": "Pilot usage/outcome pricing alongside seats (75% of vendors are shifting) · localise case studies before enterprise procurement · submit EMDG for up to 50% of eligible launch marketing spend." }
+        { "title": "Sales motion", "bullets": ["B2B SaaS heads of sales first (1–3 month cycles)", "fixed-price milestone pilots", "human-approval loops in all AI outreach."] },
+        { "title": "Channels", "bullets": ["[NEXTGEN Group](/service-providers/nextgen-group) reseller network", "[Export Connect](/government-support/export-connect) lead qualification", "[Accenture Australia](/service-providers/accenture-australia) as SI partner."] },
+        { "title": "Pricing & EMDG", "bullets": ["Pilot usage/outcome pricing alongside seats (75% of vendors are shifting)", "localise case studies before enterprise procurement", "submit EMDG for up to 50% of eligible launch marketing spend."] }
       ] }
     ]
   },

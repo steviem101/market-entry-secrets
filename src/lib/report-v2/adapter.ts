@@ -316,7 +316,11 @@ const capText = (text: string, cap = 180): string => {
   const boundary = sentenceEnd > cap * 0.4 ? sentenceEnd + 1 : lastSpace;
   return `${(boundary > 0 ? cut.slice(0, boundary) : cut).trimEnd()}…`;
 };
-const trimWhy = (text: string): string => capText(text, 180);
+// 260 matches matchDescription's own cap, so a card blurb is capped ONCE at the
+// source rather than re-truncated to 180 here — the latter clipped complete
+// provider copy for no layout reason (Solidroad smoke test: §05 "shortening
+// service providers text for no reason").
+const trimWhy = (text: string): string => capText(text, 260);
 
 // Tidy only a trailing dangling connector/comma. We deliberately do NOT drop a
 // final word: a period-less phrase is almost always a complete tagline, not a
@@ -587,10 +591,12 @@ export function parseActionPlan(content: unknown, citationCount: number, log: Lo
       .filter((g) => g.bullets.length > 0) // drop sub-block titles that had no bullets
       .map((g) => ({
         title: g.title,
-        body: g.bullets
+        // Keep each bullet a discrete Paragraph so the renderer can lay them out
+        // as a real list. The old ` · `-joined single string read as a text wall
+        // (Solidroad smoke test: action plan "ridiculous amount of text").
+        bullets: g.bullets
           .map((b) => toParagraphs(b, "actionPlan.group", () => {}, citationCount)[0] ?? "")
-          .filter(Boolean)
-          .join(" · "),
+          .filter(Boolean),
       }));
     if (period || title || cleaned.length) phases.push({ period, title, groups: cleaned });
   }

@@ -23,14 +23,17 @@ const SwotQuadrant = ({ heading, border, headingColor, items }: {
 }) => (
   <div className={`rounded-xl border border-report-border border-l-[3px] ${border} px-7 py-6`}>
     <p className={`mb-3 text-[11px] font-bold tracking-[0.12em] ${headingColor}`}>{heading}</p>
-    <div className="text-[13.5px] leading-[1.7] text-report-ink-soft">
+    <ul className="flex flex-col gap-2 text-[13.5px] leading-[1.6] text-report-ink-soft">
       {items.map((item, i) => (
-        <span key={i}>
-          {i > 0 && " · "}
-          <b>{item.lead}</b> — <Rich as="span" text={item.text} />
-        </span>
+        <li key={i} className="flex gap-2">
+          <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-report-muted" aria-hidden />
+          <span>
+            {item.lead && <b>{item.lead} — </b>}
+            <Rich as="span" text={item.text} />
+          </span>
+        </li>
       ))}
-    </div>
+    </ul>
   </div>
 );
 
