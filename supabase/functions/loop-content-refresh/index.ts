@@ -66,13 +66,18 @@ async function dropAlreadyOpen(
   return filterNewProposals(candidates, existingOpen);
 }
 
-// GET-check a URL (not HEAD — the audit found HEAD yields 4xx/415 false positives). 2xx/3xx = ok.
-// Bounded by an AbortController timeout; any throw (DNS, TLS, timeout) counts as a failure.
+// GET-check a URL (not HEAD — the audit found HEAD yields 4xx/415 false positives).
+// SSRF-safe by construction: redirect:"manual" means we NEVER follow a redirect, so the caller's
+// pre-fetch isPrivateOrReservedUrl(url) check can't be bypassed by a 30x to an internal address
+// (the redirect target is never requested). A redirect (opaqueredirect, status 0) means the origin
+// responded and the link is alive, so it counts as ok. Bounded by an AbortController timeout;
+// any throw (DNS, TLS, timeout) counts as a failure.
 async function checkUrl(url: string): Promise<LinkCheckResult> {
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), LINK_CHECK_TIMEOUT_MS);
   try {
-    const res = await fetch(url, { method: "GET", redirect: "follow", signal: ctrl.signal, headers: { "User-Agent": "MES-linkcheck/1.0" } });
+    const res = await fetch(url, { method: "GET", redirect: "manual", signal: ctrl.signal, headers: { "User-Agent": "MES-linkcheck/1.0" } });
+    if (res.type === "opaqueredirect") return { ok: true, status: 301 }; // alive, redirects (not followed)
     return { ok: res.status >= 200 && res.status < 400, status: res.status };
   } catch {
     return { ok: false, status: null };
