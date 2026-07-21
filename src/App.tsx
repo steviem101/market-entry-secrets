@@ -63,6 +63,7 @@ const MyReports = React.lazy(() => import("./pages/MyReports"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const AdminSubmissions = React.lazy(() => import("./pages/AdminSubmissions"));
 const AdminMentors = React.lazy(() => import("./pages/AdminMentors"));
+const AdminAgents = React.lazy(() => import("./pages/AdminAgents"));
 const AdminReports = React.lazy(() => import("./pages/AdminReports"));
 const AdminReportView = React.lazy(() => import("./pages/AdminReportView"));
 
@@ -154,6 +155,7 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/admin/submissions" element={<AdminSubmissions />} />
                   <Route path="/admin/mentors" element={<AdminMentors />} />
+                  <Route path="/admin/agents" element={<AdminAgents />} />
                   <Route path="/admin/reports" element={<AdminReports />} />
                   <Route path="/admin/reports/:reportId" element={<AdminReportView />} />
 
