@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, UserCircle, Shield, LayoutDashboard, FileText, Heart, Handshake, BarChart3, TrendingUp } from 'lucide-react';
+import { LogOut, UserCircle, Shield, LayoutDashboard, FileText, Heart, Handshake, BarChart3, TrendingUp, FileSearch, ClipboardList, Users } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -135,6 +135,32 @@ export const UserDropdown = () => {
             <UserCircle className="mr-2 h-4 w-4" />
             <span>Edit Profile</span>
           </DropdownMenuItem>
+          {isAdmin() && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                Admin
+              </DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link to="/admin/reports">
+                  <FileSearch className="mr-2 h-4 w-4" />
+                  <span>Reports</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/admin/submissions">
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  <span>Submissions</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/admin/mentors">
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Mentors</span>
+                </Link>
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />

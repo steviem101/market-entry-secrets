@@ -3,7 +3,8 @@ import type { IntakeFormData } from '@/components/report-creator/intakeSchema';
 import { mapV2ToLegacyIntake, type IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 
-/** Report-quality telemetry surfaced in the admin console (subset of report_quality). */
+/** Report-quality telemetry surfaced in the admin console (one latest row per
+ * report, as returned by the get_admin_report_quality RPC). */
 export interface ReportQualityRow {
   report_id: string;
   report_score: number | null;
@@ -11,7 +12,6 @@ export interface ReportQualityRow {
   score_substance: number | null;
   score_presentation: number | null;
   degraded: boolean | null;
-  created_at: string;
 }
 
 export const reportApi = {
@@ -301,6 +301,11 @@ export const reportApi = {
    *
    * Capped at 500 rows (newest first) to stay under Supabase's 1000-row default
    * and keep the list responsive; a paged/filtered fetch can replace this later.
+   *
+   * Scores come from the admin-only get_admin_report_quality RPC — NOT a direct
+   * report_quality SELECT, which `authenticated` has no grant for (it would 42501
+   * and, being fatal, blank the whole console). The RPC read is best-effort: on
+   * any failure the list still renders with '—' in the score columns.
    */
   async fetchAllReportsAdmin() {
     const { data: rows, error } = await (supabase as any)
@@ -328,29 +333,35 @@ export const reportApi = {
     };
     const reportRows = (rows || []) as ReportRow[];
 
-    // Merge in report-quality telemetry (the Slack-card scores). Admin-only
-    // SELECT on report_quality; ordered newest-first so the first row we see per
-    // report_id is the latest quality run.
+    // Merge in report-quality telemetry (the Slack-card scores) via the
+    // admin-only RPC, which returns exactly the latest row per report id. This
+    // is best-effort: scores are supplementary (the UI shows '—' when absent),
+    // so a failure here must NOT blank the whole console — log, flag it via
+    // qualityAvailable so the UI can say "scores unavailable" rather than
+    // implying no quality run ever happened, and continue.
     const ids = reportRows.map((r) => r.id);
     const qualityByReport: Record<string, ReportQualityRow> = {};
+    let qualityAvailable = true;
     if (ids.length > 0) {
       const { data: quality, error: qErr } = await (supabase as any)
-        .from('report_quality')
-        .select(
-          'report_id, report_score, build_health, score_substance, score_presentation, degraded, created_at'
-        )
-        .in('report_id', ids)
-        .order('created_at', { ascending: false });
-      if (qErr) throw qErr;
-      for (const q of (quality || []) as ReportQualityRow[]) {
-        if (!qualityByReport[q.report_id]) qualityByReport[q.report_id] = q;
+        .rpc('get_admin_report_quality', { p_report_ids: ids });
+      if (qErr) {
+        qualityAvailable = false;
+        console.warn('[admin-reports] quality scores unavailable', qErr.message ?? qErr);
+      } else {
+        for (const q of (quality || []) as ReportQualityRow[]) {
+          qualityByReport[q.report_id] = q;
+        }
       }
     }
 
-    return reportRows.map((r) => ({
-      ...r,
-      quality: qualityByReport[r.id] ?? null,
-    })) as Array<ReportRow & { quality: ReportQualityRow | null }>;
+    return {
+      qualityAvailable,
+      rows: reportRows.map((r) => ({
+        ...r,
+        quality: qualityByReport[r.id] ?? null,
+      })) as Array<ReportRow & { quality: ReportQualityRow | null }>,
+    };
   },
 
   /**
