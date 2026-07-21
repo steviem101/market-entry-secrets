@@ -20,6 +20,17 @@ const MLABEL = "mb-0.5 block text-[8px] font-bold uppercase tracking-[0.08em] te
  */
 const ComplianceSection = ({ report }: { report: Report }) => {
   const { compliance } = report;
+  // Suppress an all-empty section rather than render a bare numbered header (a
+  // near-blank PDF page) when the pipeline supplied no compliance content at all
+  // (review finding — matches the accounts/hubs null-return pattern).
+  if (
+    !compliance.intro &&
+    compliance.table.length === 0 &&
+    compliance.stats.length === 0 &&
+    compliance.checklist.length === 0
+  ) {
+    return null;
+  }
   return (
     <SectionCard label="SETUP & COMPLIANCE" className="pb-10">
       <Rich

@@ -318,17 +318,13 @@ const capText = (text: string, cap = 180): string => {
 };
 const trimWhy = (text: string): string => capText(text, 180);
 
-// Pipeline subtitles often arrive hard-clipped mid-word ("…through a simple,
-// streamlin"). When a snippet ends without terminal punctuation it was almost
-// certainly cut, so drop the trailing partial word + dangling punctuation and
-// add an ellipsis; leave already-complete or single-token strings untouched.
-const tidyClip = (s: string): string => {
-  const t = s.trim();
-  if (!t || /[.!?…]$/.test(t) || t.length < 40) return t;
-  const lastSpace = t.lastIndexOf(" ");
-  if (lastSpace < t.length * 0.5) return t;
-  return t.slice(0, lastSpace).replace(/[\s,;:—-]+$/, "") + "…";
-};
+// Tidy only a trailing dangling connector/comma. We deliberately do NOT drop a
+// final word: a period-less phrase is almost always a complete tagline, not a
+// mid-word clip, and guessing "clipped" amputated real copy from competitor
+// subtitles (e.g. "…software for Australian lenders" → "…software for Australian…").
+// A genuine pipeline mid-word clip is rare and renders as-is — never corrupt
+// valid text to maybe-clean a rare one (review finding).
+const tidyClip = (s: string): string => s.trim().replace(/[\s,;:—-]+$/, "");
 
 /**
  * Customer-facing card copy. NEVER uses `enriched_description` — that field is
@@ -352,7 +348,7 @@ const cleanTag = (tag: string | undefined): string =>
 // A company logo is only meaningful for a real company domain. Personal/social
 // hosts (mentors' + many angels' `website` is a LinkedIn URL) would resolve to
 // the PLATFORM's logo, not the entity's — worse than the monogram — so skip them.
-const SOCIAL_DOMAIN_RE = /(?:^|\.)(?:linkedin|twitter|x|facebook|instagram|medium|substack|github|youtube|crunchbase|angel|gmail)\.[a-z.]+$/i;
+const SOCIAL_DOMAIN_RE = /(?:^|\.)(?:linkedin|lnkd|twitter|x|t|facebook|fb|instagram|threads|bsky|medium|substack|github|youtube|youtu|crunchbase|angel|wellfound|gmail)\.[a-z.]+$/i;
 
 /**
  * Best-effort company logo (logo.dev, DPR-2 for the 28px company slot) derived
@@ -471,7 +467,15 @@ function sectorCoverageNote(rawMatches: PipelineMatch[], basis: string): string 
 // Turn a slug-style token run ("Australia-CRM-software") back into words.
 // Un-joins slug hyphens INCLUDING the non-breaking hyphen (U+2011) the pipeline
 // emits in metric labels ("Australia‑Fintech‑B2B" → "Australia Fintech B2B").
-const deSlug = (s: string): string => s.replace(/([A-Za-z0-9])[-‑]([A-Za-z])/g, "$1 $2");
+// Un-join a slug-style label ("Australia‑Fintech‑B2B" → "Australia Fintech B2B").
+// The non-breaking hyphen (U+2011) only ever appears as a slug artifact, so
+// always split it. The regular hyphen is ambiguous ("AI-driven", "e-commerce",
+// "go-to-market" are real words), so only split it in a space-less slug label —
+// a label that already reads as prose keeps its real hyphens (review finding).
+const deSlug = (s: string): string => {
+  const unNb = s.replace(/([A-Za-z0-9])‑([A-Za-z])/g, "$1 $2");
+  return unNb.includes(" ") ? unNb : unNb.replace(/([A-Za-z0-9])-([A-Za-z])/g, "$1 $2");
+};
 
 const metricToTile = (m: KeyMetric): StatTile => {
   const clean = (s: string | undefined) =>
@@ -887,7 +891,10 @@ export function adaptPipelineReport(
       url: sanitizeContractPath(m.link, `mentors[${i}].link`, log),
       kind: "mentor" as const,
       role: m.subtitle ?? "",
-      why: tailored ? capText(tailored, 260) : trimWhy(matchDescription(m)),
+      // Strip markdown BEFORE capping (like the bio path) so a cut inside a
+      // `[label](url)` or `**bold**` span can't leave an unbalanced marker on
+      // the card (review finding); the card renders plain text either way.
+      why: tailored ? capText(stripInlineMarkdown(tailored), 260) : trimWhy(matchDescription(m)),
       headshotUrl: typeof m.avatar_url === "string" && m.avatar_url ? m.avatar_url : undefined,
     };
   });
