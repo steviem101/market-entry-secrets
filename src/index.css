@@ -608,18 +608,50 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  /* Each numbered section starts a new page; the cover leads page 1. */
-  [data-report-v2] [data-report-v2-section] {
-    break-before: page;
-    page-break-before: always;
+  /* Sections flow CONTINUOUSLY — the old `break-before: page` on every section
+     forced a fresh page per section and was the dominant cause of 20+ page
+     PDFs with half-empty pages. Only the cover gets its own page; everything
+     else packs down the page and breaks only where a genuine atom (below)
+     would otherwise be split. Tighter padding fits more per page too. */
+  [data-report-v2] .overflow-hidden.rounded-\[14px\] {
+    break-after: page;
+    page-break-after: always;
   }
-  /* Cards, table rows, SWOT quadrants and ranked rows are atomic. */
-  [data-report-v2] .rounded-xl,
+  [data-report-v2] [data-report-v2-section] {
+    break-before: auto;
+    padding: 20pt 24pt !important;
+  }
+  /* Never strand a section label as the last line on a page. */
+  [data-report-v2] .report-section-label {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+  /* Keep true ATOMS off page boundaries: match/metric cards, SWOT quadrants,
+     ranked rows, callouts. Deliberately EXCLUDES the section shell
+     (.rounded-[14px], never selected here) and any `.overflow-hidden.rounded-xl`
+     wrapper — the competitor-table shell must be free to split across pages,
+     with its rows kept atomic individually (next rule). */
+  [data-report-v2] .rounded-xl:not(.overflow-hidden),
   [data-report-v2] .rounded-\[10px\],
-  [data-report-v2] .border-l-\[3px\],
-  [data-report-v2] [class*="border-t-report"] {
+  [data-report-v2] .border-l-\[3px\] {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+  /* The competitor and compliance "tables" are CSS grids of <div> rows inside
+     an .overflow-hidden.rounded-xl shell: let the shell split across pages,
+     keep each row (header + data rows are the shell's direct children) atomic. */
+  [data-report-v2] .overflow-hidden.rounded-xl {
+    break-inside: auto;
+  }
+  [data-report-v2] .overflow-hidden.rounded-xl > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* Orphan/widow control so a paragraph never leaves one line alone. */
+  [data-report-v2] p,
+  [data-report-v2] li {
+    orphans: 2;
+    widows: 2;
   }
   /* Interactive affordances have no place in a static PDF. */
   [data-report-v2] textarea,
