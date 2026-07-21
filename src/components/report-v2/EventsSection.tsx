@@ -19,6 +19,12 @@ const EventsSection = ({ report }: { report: Report }) => {
     : "";
   return (
     <SectionCard label="EVENTS — HIGH-SIGNAL ROOMS" className="pb-10">
+      {events.intro && (
+        <Rich
+          text={events.intro}
+          className="mb-5 mt-4 max-w-[920px] text-[14.5px] leading-[1.7] text-report-ink-soft"
+        />
+      )}
       {dateWindow && (
         <p className="mb-1 mt-4 text-[12.5px] font-bold uppercase tracking-[0.1em] text-report-caption">
           {dateWindow}

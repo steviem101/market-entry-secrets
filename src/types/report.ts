@@ -133,6 +133,7 @@ export interface Report {
     coverageNote?: string;   // see TwoTierSection.coverageNote
   };
   events: {
+    intro: Paragraph;
     cards: { date: string; venue: string; name: string; url: string; why: string }[];
     alsoFlagged?: Paragraph;
     maximise?: { lead: string; text: Paragraph }[];   // customer-specific "get value from these rooms" tips (≤3)
