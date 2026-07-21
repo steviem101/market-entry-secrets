@@ -217,6 +217,14 @@ verify_jwt = false
 # the gateway rejects the cron/backfill POST (no JWT) before the function runs.
 verify_jwt = false
 
+[functions.supersede-insights]
+# Supersede/dedup pass (Sub-ticket 2): clusters near-duplicate knowledge_insight cards by
+# embedding cosine similarity and marks one canonical card per cluster (metadata-only write).
+# Cron/manual, authenticated in-code by x-internal-secret (Vault-backed, same as
+# distill-knowledge). Gated OFF by default (SUPERSEDE_INSIGHTS_ENABLED); {"dry_run":true}
+# previews without writing. Must stay false or the gateway rejects the no-JWT POST.
+verify_jwt = false
+
 [functions.apply-proposal]
 # MES agent loops (Workstream A): the SINGLE production writer for agent proposals.
 # Applies agent_content_proposals rows (whitelisted, COALESCE-protected) with the service
