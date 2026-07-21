@@ -151,3 +151,126 @@ export function buildArchiveEventProposals(pastEvents: EventRow[], runId: string
 export function filterNewProposals(candidates: ProposalInsert[], existingOpenKeys: Set<string>): ProposalInsert[] {
   return candidates.filter((c) => !existingOpenKeys.has(c.dedup_key));
 }
+
+// ── flag_dead_link ────────────────────────────────────────────────────────────────────────────
+// Directory tables whose website links the loop GET-checks. Mentors/events excluded.
+export const LINK_CHECK_TARGETS: Array<{ table: string; urlCol: string }> = [
+  { table: "service_providers", urlCol: "website" },
+  { table: "investors", urlCol: "website" },
+  { table: "innovation_ecosystem", urlCol: "website" },
+  { table: "trade_investment_agencies", urlCol: "website_url" },
+];
+
+export const LINK_CHECK_BATCH = 15;        // URLs GET-checked per run (bounds runtime under the cron timeout)
+export const LINK_CHECK_TIMEOUT_MS = 6000;
+export const LINK_RECHECK_AFTER_DAYS = 6;  // re-check weekly-ish; skip URLs checked more recently
+export const DEAD_LINK_THRESHOLD = 2;      // consecutive failed checks before proposing (audit: HEAD gives false positives, so this is a GET + a 2-strike rule)
+
+export interface LinkCheckState { consecutive_failures: number | null; last_checked_at?: string | null; }
+export interface LinkCheckResult { ok: boolean; status: number | null; }
+
+/** New counters from the prior state + this check's result. A success resets the streak to 0. */
+export function nextLinkCheckCounters(prev: LinkCheckState | null, result: LinkCheckResult): { consecutive_failures: number; last_status: number | null; last_ok: boolean } {
+  const prevFail = prev?.consecutive_failures ?? 0;
+  return { consecutive_failures: result.ok ? 0 : prevFail + 1, last_status: result.status, last_ok: result.ok };
+}
+
+export function shouldProposeDeadLink(consecutiveFailures: number): boolean {
+  return consecutiveFailures >= DEAD_LINK_THRESHOLD;
+}
+
+/** True when the URL was checked within the recheck window (so this run should skip it). */
+export function checkedRecently(lastCheckedAt: string | null | undefined, nowMs: number): boolean {
+  if (!lastCheckedAt) return false;
+  const t = Date.parse(lastCheckedAt);
+  if (Number.isNaN(t)) return false;
+  return nowMs - t < LINK_RECHECK_AFTER_DAYS * 24 * 60 * 60 * 1000;
+}
+
+export function buildDeadLinkProposal(table: string, recordId: string, url: string, consecutiveFailures: number, lastStatus: number | null, runId: string | null): ProposalInsert {
+  return {
+    run_id: runId, loop_name: "content-refresh", action_type: "flag_dead_link",
+    target_table: table, target_id: recordId,
+    payload: { url, consecutive_failures: consecutiveFailures, last_status: lastStatus, health: 0 },
+    reason: `${table} link ${url} failed ${consecutiveFailures} consecutive checks (last status ${lastStatus ?? "no response"}); flag for review.`,
+    confidence: null, status: "pending",
+    dedup_key: dedupKey("flag_dead_link", table, recordId),
+  };
+}
+
+// ── trigger_reembed ─────────────────────────────────────────────────────────────────────────────
+export const REEMBED_CAP = 200; // ids per proposal
+
+/**
+ * One trigger_reembed proposal for KB rows whose embedding is STUCK (content changed but the
+ * 2-minute embed-knowledge cron has not caught up after an hour) — a genuinely stuck pipeline, not
+ * the normal small backlog. Auto-approved: apply nulls the hashes so the cron re-embeds. Null when
+ * nothing is stuck. Single stable dedup_key so only one is open at a time.
+ */
+export function buildReembedProposal(stuckKbIds: string[], runId: string | null): ProposalInsert | null {
+  if (stuckKbIds.length === 0) return null;
+  const ids = stuckKbIds.slice(0, REEMBED_CAP);
+  return {
+    run_id: runId, loop_name: "content-refresh", action_type: "trigger_reembed",
+    target_table: "mes_knowledge_base", target_id: null,
+    payload: { kb_ids: ids },
+    reason: `${ids.length} knowledge-base row(s) have a stale embedding older than 1h (embed cron may be stuck); re-embed them.`,
+    confidence: null, status: "auto_approved",
+    dedup_key: "trigger_reembed:mes_knowledge_base:stuck",
+  };
+}
+
+// ── remove_kb_row ───────────────────────────────────────────────────────────────────────────────
+// Directory entity tables whose deleted rows should not linger in the KB / RAG surface.
+export const KB_ORPHAN_TABLES = [
+  "service_providers", "community_members", "events", "investors",
+  "innovation_ecosystem", "trade_investment_agencies",
+];
+
+/** remove_kb_row proposals for KB rows whose source entity no longer exists. Pending (not auto). */
+export function buildRemoveKbProposals(
+  orphans: Array<{ id: string; source_table: string; source_id: string }>, runId: string | null,
+): ProposalInsert[] {
+  return orphans.map((o) => ({
+    run_id: runId, loop_name: "content-refresh", action_type: "remove_kb_row",
+    target_table: "mes_knowledge_base", target_id: o.id,
+    payload: { source_table: o.source_table, source_id: o.source_id },
+    reason: `KB row ${o.id} points at a deleted ${o.source_table} (${o.source_id}); remove the orphan.`,
+    confidence: null, status: "pending",
+    dedup_key: dedupKey("remove_kb_row", "mes_knowledge_base", o.id),
+  }));
+}
+
+/** KB rows whose source_id is absent from the set of live ids for that source_table. Pure. */
+export function findKbOrphans(
+  kbRows: Array<{ id: string; source_id: string }>, liveIds: Set<string>, sourceTable: string,
+): Array<{ id: string; source_table: string; source_id: string }> {
+  return kbRows
+    .filter((k) => k.source_id && !liveIds.has(k.source_id))
+    .map((k) => ({ id: k.id, source_table: sourceTable, source_id: k.source_id }));
+}
+
+// ── flag_stale_content ──────────────────────────────────────────────────────────────────────────
+export const STALE_CONTENT_DAYS = 180;
+
+/** True when a title/subtitle references a year strictly before 2025 (a staleness signal). */
+export function hasOldYearRef(text: string | null | undefined): boolean {
+  if (!text) return false;
+  const years = text.match(/\b(19|20)\d{2}\b/g);
+  if (!years) return false;
+  return years.some((y) => Number(y) < 2025);
+}
+
+export interface StaleContentRow { id: string; title?: string | null; reason_detail: string; }
+
+/** flag_stale_content proposals (pending, review-only) for content_items flagged stale. */
+export function buildStaleContentProposals(rows: StaleContentRow[], runId: string | null): ProposalInsert[] {
+  return rows.map((r) => ({
+    run_id: runId, loop_name: "content-refresh", action_type: "flag_stale_content",
+    target_table: "content_items", target_id: r.id,
+    payload: { detail: r.reason_detail },
+    reason: `content_item "${r.title ?? r.id}" looks stale: ${r.reason_detail}. Flag for a refresh.`,
+    confidence: null, status: "pending",
+    dedup_key: dedupKey("flag_stale_content", "content_items", r.id),
+  }));
+}

@@ -15,8 +15,14 @@ import { log, logError } from "../_shared/log.ts";
 import {
   getEnabledChecks, DEFAULT_BATCH_CAP, buildArchiveEventProposals, filterNewProposals,
   isPastEvent, LOGO_TARGETS, buildSetLogoProposals,
-  type ProposalInsert, type EventRow, type LogoCandidate, type CheckName,
+  LINK_CHECK_TARGETS, LINK_CHECK_BATCH, LINK_CHECK_TIMEOUT_MS, nextLinkCheckCounters,
+  shouldProposeDeadLink, checkedRecently, buildDeadLinkProposal,
+  buildReembedProposal, KB_ORPHAN_TABLES, buildRemoveKbProposals, findKbOrphans,
+  buildStaleContentProposals, STALE_CONTENT_DAYS, hasOldYearRef,
+  type ProposalInsert, type EventRow, type LogoCandidate, type CheckName, type LinkCheckResult,
+  type StaleContentRow,
 } from "./contentRefresh.ts";
+import { isPrivateOrReservedUrl } from "../_shared/url.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -61,6 +67,26 @@ async function dropAlreadyOpen(
     .select("dedup_key").in("dedup_key", keys).in("status", ["pending", "approved", "auto_approved"]);
   for (const r of open ?? []) existingOpen.add(r.dedup_key as string);
   return filterNewProposals(candidates, existingOpen);
+}
+
+// GET-check a URL (not HEAD — the audit found HEAD yields 4xx/415 false positives).
+// SSRF-safe by construction: redirect:"manual" means we NEVER follow a redirect, so the caller's
+// pre-fetch isPrivateOrReservedUrl(url) check can't be bypassed by a 30x to an internal address
+// (the redirect target is never requested). A redirect (opaqueredirect, status 0) means the origin
+// responded and the link is alive, so it counts as ok. Bounded by an AbortController timeout;
+// any throw (DNS, TLS, timeout) counts as a failure.
+async function checkUrl(url: string): Promise<LinkCheckResult> {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), LINK_CHECK_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { method: "GET", redirect: "manual", signal: ctrl.signal, headers: { "User-Agent": "MES-linkcheck/1.0" } });
+    if (res.type === "opaqueredirect") return { ok: true, status: 301 }; // alive, redirects (not followed)
+    return { ok: res.status >= 200 && res.status < 400, status: res.status };
+  } catch {
+    return { ok: false, status: null };
+  } finally {
+    clearTimeout(to);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -149,6 +175,111 @@ Deno.serve(async (req) => {
         byCheck["set_logo_url"] = (byCheck["set_logo_url"] ?? 0) + fresh.length;
         allProposals = allProposals.concat(fresh);
       }
+    }
+
+    // --- flag_dead_link: GET-check directory links; propose after 2 consecutive failures ---
+    if (enabledChecks.includes("flag_dead_link")) {
+      const nowMs = Date.parse(startedAt);
+      let checked = 0;
+      const deadCandidates: ProposalInsert[] = [];
+      for (const t of LINK_CHECK_TARGETS) {
+        if (checked >= LINK_CHECK_BATCH) break;
+        // deno-lint-ignore no-explicit-any
+        const { data: rows } = await (supabase as any).from(t.table)
+          .select(`id,${t.urlCol}`).not(t.urlCol, "is", null).limit(300);
+        for (const r of (rows ?? []) as Array<Record<string, unknown>>) {
+          if (checked >= LINK_CHECK_BATCH) break;
+          const url = (r[t.urlCol] as string | null) ?? null;
+          if (!url || isPrivateOrReservedUrl(url)) continue; // SSRF guard: never fetch internal/reserved hosts
+          const recordId = String(r.id);
+
+          const { data: prev } = await supabase.from("content_link_checks")
+            .select("consecutive_failures,last_checked_at")
+            .eq("directory_table", t.table).eq("record_id", recordId).eq("url", url).maybeSingle();
+          if (checkedRecently(prev?.last_checked_at as string | null | undefined, nowMs)) continue; // weekly cadence
+
+          const result = await checkUrl(url);
+          checked++;
+          const counters = nextLinkCheckCounters(prev ?? null, result);
+          if (!dryRun) {
+            await supabase.from("content_link_checks").upsert({
+              directory_table: t.table, record_id: recordId, url,
+              last_status: counters.last_status, last_ok: counters.last_ok,
+              consecutive_failures: counters.consecutive_failures,
+              last_checked_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+            }, { onConflict: "directory_table,record_id,url" });
+          }
+
+          if (shouldProposeDeadLink(counters.consecutive_failures)) {
+            deadCandidates.push(buildDeadLinkProposal(t.table, recordId, url, counters.consecutive_failures, counters.last_status, runId));
+          }
+        }
+      }
+      itemsScanned += checked;
+      const fresh = await dropAlreadyOpen(supabase, deadCandidates);
+      byCheck["flag_dead_link"] = fresh.length;
+      allProposals = allProposals.concat(fresh);
+    }
+
+    // --- trigger_reembed: KB rows stuck unembedded (embedding null) for over an hour ---
+    // The embed-knowledge cron embeds null-embedding rows every ~2 min, so a null embedding older
+    // than an hour means the pipeline is stuck. (PostgREST can't compare embedded_hash to
+    // content_hash directly; embedding-is-null is the single-column proxy for the backlog.)
+    if (enabledChecks.includes("trigger_reembed")) {
+      const stuckSince = new Date(Date.parse(startedAt) - 60 * 60 * 1000).toISOString();
+      const { data: stuck, error } = await supabase.from("mes_knowledge_base")
+        .select("id").is("embedding", null).lt("updated_at", stuckSince).limit(500);
+      if (error) throw new Error(`kb stuck read: ${error.message}`);
+      const ids = (stuck ?? []).map((r) => String(r.id));
+      const proposal = buildReembedProposal(ids, runId);
+      const fresh = proposal ? await dropAlreadyOpen(supabase, [proposal]) : [];
+      byCheck["trigger_reembed"] = fresh.length;
+      itemsScanned += ids.length;
+      allProposals = allProposals.concat(fresh);
+    }
+
+    // --- remove_kb_row: KB rows whose source entity was deleted ---
+    if (enabledChecks.includes("remove_kb_row")) {
+      const orphans: Array<{ id: string; source_table: string; source_id: string }> = [];
+      for (const table of KB_ORPHAN_TABLES) {
+        // deno-lint-ignore no-explicit-any
+        const { data: kbRows } = await (supabase as any).from("mes_knowledge_base")
+          .select("id,source_id").eq("source_table", table).limit(1000);
+        if (!kbRows || kbRows.length === 0) continue;
+        // deno-lint-ignore no-explicit-any
+        const { data: liveRows } = await (supabase as any).from(table).select("id").limit(2000);
+        const liveIds = new Set<string>((liveRows ?? []).map((r: { id: string }) => String(r.id)));
+        orphans.push(...findKbOrphans(
+          (kbRows as Array<{ id: string; source_id: string }>).map((k) => ({ id: String(k.id), source_id: String(k.source_id ?? "") })),
+          liveIds, table,
+        ));
+        if (orphans.length >= batchCap) break;
+      }
+      const fresh = await dropAlreadyOpen(supabase, buildRemoveKbProposals(orphans.slice(0, batchCap), runId));
+      byCheck["remove_kb_row"] = fresh.length;
+      allProposals = allProposals.concat(fresh);
+    }
+
+    // --- flag_stale_content: content_items not updated in 180d, or with a pre-2025 year in the title ---
+    if (enabledChecks.includes("flag_stale_content")) {
+      const staleBefore = new Date(Date.parse(startedAt) - STALE_CONTENT_DAYS * 24 * 60 * 60 * 1000).toISOString();
+      const { data: items, error } = await supabase.from("content_items")
+        .select("id,title,subtitle,updated_at,created_at").limit(1000);
+      if (error) throw new Error(`content_items read: ${error.message}`);
+      const staleRows: StaleContentRow[] = [];
+      for (const it of (items ?? [])) {
+        const updated = (it.updated_at as string | null) ?? (it.created_at as string | null);
+        const isOld = !!updated && updated < staleBefore;
+        const oldYear = hasOldYearRef(it.title as string | null) || hasOldYearRef(it.subtitle as string | null);
+        if (isOld || oldYear) {
+          staleRows.push({ id: String(it.id), title: it.title as string | null, reason_detail: isOld ? `not updated in ${STALE_CONTENT_DAYS}+ days` : "title references a pre-2025 year" });
+        }
+        if (staleRows.length >= batchCap) break;
+      }
+      itemsScanned += items?.length ?? 0;
+      const fresh = await dropAlreadyOpen(supabase, buildStaleContentProposals(staleRows, runId));
+      byCheck["flag_stale_content"] = fresh.length;
+      allProposals = allProposals.concat(fresh);
     }
 
     if (dryRun) {
