@@ -34,6 +34,15 @@ const SOURCE_OPTIONS = [
 ];
 const PAGE_SIZES = [25, 50, 100];
 
+// trade_agencies_enrichment_staging.created_at is nullable (verified live), so the view can
+// deliver a null here despite the hook's string type — an unguarded new Date(null) would make
+// formatDistanceToNow throw and crash the queue.
+const relativeTime = (iso: string | null | undefined): string => {
+  if (!iso) return "unknown";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "unknown" : formatDistanceToNow(d, { addSuffix: true });
+};
+
 const statusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case "applied": return "default";
@@ -65,9 +74,12 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
   const [pendingBulk, setPendingBulk] = useState<BulkAction | null>(null);
   const [lastOutcome, setLastOutcome] = useState<LastOutcome | null>(null);
 
-  const { data, isLoading, error } = useAgentProposals({ status, loop, source, page, pageSize });
+  const { data, isLoading, error, isPlaceholderData } = useAgentProposals({ status, loop, source, page, pageSize });
   const { approve, reject, retry } = useAgentProposalActions();
+  // Freeze selection while keepPreviousData is showing the PREVIOUS page's rows: ticking a stale
+  // row would let the confirm modal summarise against rows that are about to be replaced.
   const busy = approve.isPending || reject.isPending || retry.isPending;
+  const selectionFrozen = busy || isPlaceholderData;
 
   const rows = useMemo(() => data?.rows ?? [], [data?.rows]);
   const count = data?.count ?? 0;
@@ -138,10 +150,10 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
         <span className="text-sm text-muted-foreground">
           {selection.length} selected (max {MAX_BULK})
         </span>
-        <Button size="sm" disabled={selection.length === 0 || busy} onClick={() => setPendingBulk("approve")}>
+        <Button size="sm" disabled={selection.length === 0 || selectionFrozen} onClick={() => setPendingBulk("approve")}>
           Approve selected
         </Button>
-        <Button size="sm" variant="destructive" disabled={selection.length === 0 || busy} onClick={() => setPendingBulk("reject")}>
+        <Button size="sm" variant="destructive" disabled={selection.length === 0 || selectionFrozen} onClick={() => setPendingBulk("reject")}>
           Reject selected
         </Button>
         {selection.length > 0 && (
@@ -187,6 +199,7 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
                 <TableHead className="w-10">
                   <Checkbox
                     checked={allSelected(selection, pageKeys)}
+                    disabled={selectionFrozen}
                     onCheckedChange={() => {
                       if (allSelected(selection, pageKeys)) {
                         setSelection(selection.filter((k) => !pageKeys.includes(k)));
@@ -215,6 +228,7 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
                     <TableCell>
                       <Checkbox
                         checked={selection.includes(row.proposal_key)}
+                        disabled={selectionFrozen}
                         onCheckedChange={() => {
                           const r = toggleKey(selection, row.proposal_key, MAX_BULK);
                           setSelection(r.selection);
@@ -237,7 +251,7 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
                     <TableCell className="text-sm max-w-[420px] truncate" title={row.reason}>{row.reason}</TableCell>
                     <TableCell><Badge variant={statusVariant(row.status)}>{row.status.replace("_", " ")}</Badge></TableCell>
                     <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(row.created_at), { addSuffix: true })}
+                      {relativeTime(row.created_at)}
                     </TableCell>
                     <TableCell className="text-right whitespace-nowrap">
                       {row.status === "pending" && (
