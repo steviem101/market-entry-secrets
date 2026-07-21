@@ -218,6 +218,72 @@ test("leads: no suggested-list line → leads.recommended is undefined (datasets
   assert.equal(report.leads.recommended, undefined);
 });
 
+test("leads: curly apostrophe in the label still parses (LLM normalises we'd → we’d)", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        lead_list: {
+          content:
+            "**The list we’d build for you:** Heads of Customer Support at top Aussie tech companies, ~500 contacts.\nThis matches your ICP of scaling support teams.",
+        },
+      },
+    },
+    {}
+  );
+  assert.equal(
+    report.leads.recommended?.spec,
+    "Heads of Customer Support at top Aussie tech companies, ~500 contacts."
+  );
+  assert.match(report.leads.recommended?.why ?? "", /scaling support teams/);
+});
+
+test("leads: abbreviation in the spec is not truncated (why comes from the next line)", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        lead_list: {
+          content:
+            "**The list we'd build for you:** VPs at fintech cos. in ANZ, ~250 contacts.\nThis fits your stated distribution goal.",
+        },
+      },
+    },
+    {}
+  );
+  // "cos." must NOT split the spec — the whole label line is the spec.
+  assert.equal(report.leads.recommended?.spec, "VPs at fintech cos. in ANZ, ~250 contacts.");
+  assert.match(report.leads.recommended?.why ?? "", /distribution goal/);
+});
+
+test("events: an error-page description is suppressed, never rendered as the why body", () => {
+  const { report } = adaptPipelineReport(
+    {
+      matches: {
+        events: [
+          {
+            name: "Ghost Summit",
+            link: "/events/ghost",
+            date: "2026-09-01",
+            location: "Sydney",
+            description: "403 Forbidden — access to this resource on the server is denied.",
+          },
+          {
+            name: "Real Expo",
+            link: "/events/real",
+            date: "2026-10-01",
+            location: "Sydney",
+            description: "Where fintech founders meet lenders.",
+          },
+        ],
+      },
+    },
+    {}
+  );
+  const ghost = report.events.cards.find((e) => e.name === "Ghost Summit");
+  const real = report.events.cards.find((e) => e.name === "Real Expo");
+  assert.equal(ghost?.why, ""); // error-page scrape suppressed, matching every other card type
+  assert.equal(real?.why, "Where fintech founders meet lenders.");
+});
+
 test("events: prose lead paragraph → intro; per-event rationale → tailored why by name", () => {
   const { report } = adaptPipelineReport(
     {
