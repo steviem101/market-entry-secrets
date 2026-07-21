@@ -2515,6 +2515,10 @@ async function generateReportInBackground(
   evalSectionModels: Record<string, string> = {},
 ): Promise<void> {
   const startTime = Date.now();
+  // Per-run phase timings (ms) persisted into report_json.metadata.phase_timings
+  // → report_quality.metadata by slack-notify — so it's observable which phase
+  // dominates a ~3-4 min generation (research vs section writing vs polish).
+  const phaseTimings: { research_ms?: number; sections_ms?: number; polish_ms?: number } = {};
   const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
 
   try {
@@ -2632,6 +2636,7 @@ async function generateReportInBackground(
       return rawMatches;
     };
 
+    const researchStart = Date.now();
     [
       companyEnrichResult,
       marketResearch,
@@ -2665,6 +2670,7 @@ async function generateReportInBackground(
         return r.ok ? r.content : "";
       })(),
     ]);
+    phaseTimings.research_ms = Date.now() - researchStart;
 
     // ── MES-159: existing-Australia-presence signal (behind AU_PRESENCE_SIGNAL) ──
     // Runs after Phase 1 so it can reuse the company scrape output; adds at most one
@@ -3492,6 +3498,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         }
       }
 
+      phaseTimings.sections_ms = Date.now() - sectionStartTime;
       console.log(`Section generation: ${sectionsGenerated.length} sections in ${Date.now() - sectionStartTime}ms (single batch)`);
       if (emptySections.length > 0) {
         console.error(`Section generation: ${emptySections.length}/${templates.length} section(s) EMPTY after retry — report ships without them: ${emptySections.join(", ")}`);
@@ -3699,6 +3706,8 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         tables_searched: Object.keys(matches),
         total_matches: Object.values(matches).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
         generation_time_ms: Date.now() - startTime,
+        // Per-phase breakdown of the generation time (ms) — which phase dominates.
+        phase_timings: { ...phaseTimings, total_ms: Date.now() - startTime },
         perplexity_used: marketResearch.used,
         perplexity_health: marketResearch.health,
         perplexity_citations: cited.citations,
@@ -3885,6 +3894,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       }
     };
 
+    const polishStart = Date.now();
     try {
       let polishedSections: Record<string, any>;
       try {
@@ -3920,6 +3930,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         );
       }
 
+      phaseTimings.polish_ms = Date.now() - polishStart;
       const polishedReportJson = buildReportJson(sections, true);
 
       await supabase
