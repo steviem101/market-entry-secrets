@@ -353,8 +353,9 @@ export const reportApi = {
    * fetched separately (report_quality has no FK to user_reports, so it can't be
    * PostgREST-embedded) and merged by report_id — latest row per report wins.
    *
-   * Capped at 500 rows (newest first) to stay under Supabase's 1000-row default
-   * and keep the list responsive; a paged/filtered fetch can replace this later.
+   * Capped at 1000 rows (newest first) — Supabase's max default page — and
+   * paginated + filtered client-side in AdminReports. Beyond 1000 reports this
+   * needs server-side paging with server-side search (a deliberate follow-up).
    *
    * Scores come from the admin-only get_admin_report_quality RPC — NOT a direct
    * report_quality SELECT, which `authenticated` has no grant for (it would 42501
@@ -368,7 +369,7 @@ export const reportApi = {
         'id, user_id, status, tier_at_generation, created_at, intake_form_id, user_intake_forms(company_name, country_of_origin, industry_sector)'
       )
       .order('created_at', { ascending: false })
-      .limit(500);
+      .limit(1000);
 
     if (error) throw error;
 
