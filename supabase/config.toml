@@ -217,6 +217,38 @@ verify_jwt = false
 # the gateway rejects the cron/backfill POST (no JWT) before the function runs.
 verify_jwt = false
 
+[functions.apply-proposal]
+# MES agent loops (Workstream A): the SINGLE production writer for agent proposals.
+# Applies agent_content_proposals rows (whitelisted, COALESCE-protected) with the service
+# role. Auth in-code: admin JWT (requireAdmin) OR x-internal-secret == APPLY_PROPOSAL_SECRET
+# (the server-to-server path agent-actions/Slack use). Must stay false or the gateway rejects
+# the internal-secret POST (no JWT) before the function runs.
+verify_jwt = false
+
+[functions.agent-actions]
+# MES agent loops (Workstream C): admin/Slack endpoint to approve/reject/retry proposals across
+# every loop's source table, invoking apply-proposal for applyable ones. Auth in-code: admin JWT
+# (requireAdmin) OR x-internal-secret == AGENT_ACTIONS_SECRET (Slack server-to-server path). Must
+# stay false or the gateway rejects the internal-secret / Slack POST (no JWT) before it runs.
+verify_jwt = false
+
+[functions.agent-notifier]
+# MES agent loops (Workstream D): daily Slack digest for the agent loops (rollup + Approve/Reject
+# cards to #mes-agents-digest, alerts to #mes-agents-alerts). Cron-invoked, authenticated in-code
+# by x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET. Must stay false or the gateway rejects the
+# cron POST (no JWT). Self-skips until SLACK_AGENTS_DIGEST_CHANNEL is set.
+verify_jwt = false
+
+[functions.loop-content-refresh]
+# MES agent loops (Workstream B): weekly content-freshness loop (propose-only). Writes
+# automation_runs + agent_content_proposals; never mutates production (apply-proposal does).
+# Authenticated in-code by x-webhook-secret == SLACK_NOTIFY_WEBHOOK_SECRET (same cron pattern
+# as directory-steward). Must stay false or the gateway rejects the cron POST (no JWT).
+# Gated OFF by default (CONTENT_REFRESH_ENABLED); {"dry_run":true}/{"force":true} bypass.
+# CONTENT_REFRESH_AUTOAPPLY (default off) makes auto_approved proposals apply themselves at
+# end of run via apply-proposal, so the pilot's first runs stay propose-only until flipped on.
+verify_jwt = false
+
 [functions.sitemap]
 # Public DB-driven sitemap (MES-79 / SEO-03). Must be fetchable by search-engine
 # crawlers (Googlebot, Bingbot) with no auth header at all, so verify_jwt = false —
