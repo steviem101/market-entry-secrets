@@ -10,13 +10,16 @@
 // Pilot: POST {"dry_run":true} -> returns cluster stats + sample, writes nothing.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { DISTILLER_VERSION } from "../distill-knowledge/distillCard.ts";
 import { computeClusterDiff, summariseClusters, type CardField, type Edge } from "./cluster.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SUPERSEDE_ENABLED = ["on", "1", "true"].includes((Deno.env.get("SUPERSEDE_INSIGHTS_ENABLED") ?? "").toLowerCase());
 
+// Default distiller version this pass clusters over. Kept as a local literal (not imported
+// from the distiller) so the function is self-contained and deploys standalone; callers can
+// override per request via body.distiller_version. Mirrors distill-knowledge's DISTILLER_VERSION.
+const DEFAULT_DISTILLER_VERSION = "distill-v2";
 const DEFAULT_THRESHOLD = 0.92;
 const DEFAULT_K = 8;
 
@@ -42,7 +45,7 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { /* defaults */ }
   const dryRun = body.dry_run === true;
   const force = body.force === true;
-  const version = typeof body.distiller_version === "string" ? body.distiller_version : DISTILLER_VERSION;
+  const version = typeof body.distiller_version === "string" ? body.distiller_version : DEFAULT_DISTILLER_VERSION;
   const threshold = Math.min(Math.max(Number(body.threshold) || DEFAULT_THRESHOLD, 0.5), 1);
   const k = Math.min(Math.max(Math.trunc(Number(body.k) || DEFAULT_K), 1), 50);
 
