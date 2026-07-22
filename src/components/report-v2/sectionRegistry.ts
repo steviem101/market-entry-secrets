@@ -1,6 +1,7 @@
 import type React from "react";
 import type { Report } from "@/types/report";
 import Cover from "./Cover";
+import HowToReadCard from "./HowToReadCard";
 import CloseSection from "./CloseSection";
 import AccountsSection from "./AccountsSection";
 import ActionPlanSection from "./ActionPlanSection";
@@ -35,6 +36,9 @@ export interface ReportSectionDef {
 
 export const REPORT_V2_SECTIONS: ReportSectionDef[] = [
   { id: "cover", label: "COVER", Component: Cover },
+  // Unnumbered orientation card (no SectionCard) — sits between cover and §01 and
+  // does not advance the section counter or appear in the scroll-spy nav.
+  { id: "howToRead", label: "HOW TO READ", Component: HowToReadCard },
   { id: "exec", label: "EXECUTIVE SUMMARY", Component: ExecSummarySection },
   { id: "metricsSwot", label: "KEY MARKET METRICS & STRATEGIC POSITION", Component: MetricsSwotSection },
   { id: "competitors", label: "COMPETITOR LANDSCAPE", Component: CompetitorSection },

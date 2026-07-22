@@ -228,6 +228,7 @@ const ReportViewInner = () => {
       const { report: adapted, mismatches } = adaptPipelineReport(reportJson, {
         date: report.created_at,
         tier: report.tier_at_generation,
+        domain: (report as { company_website?: string | null }).company_website ?? undefined,
       });
       if (import.meta.env.DEV && mismatches.length > 0) {
         console.debug('[report_v2] adapter mismatches', mismatches);

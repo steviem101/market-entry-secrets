@@ -358,6 +358,38 @@ const eventDescription = (m: PipelineMatch): string => {
   return plain;
 };
 
+// Content/guide card summary: the curated `meta_description` FIRST, then the
+// real `description` — NEVER the `subtitle`, which for content_items is the
+// content_type ("guide") and rendered the literal word "guide" as the blurb
+// (Floats smoke test §12). Same markdown-strip + error-page guard as the rest.
+const contentSummary = (m: PipelineMatch): string => {
+  const raw =
+    (typeof m.meta_description === "string" && m.meta_description.trim()) ||
+    (typeof m.description === "string" && m.description.trim()) ||
+    "";
+  if (!raw) return "";
+  const plain = stripInternalNotes(stripInlineMarkdown(raw));
+  if (!plain || (ERROR_PAGE_RE.test(plain) && plain.length < 160)) return "";
+  return plain;
+};
+
+// First-customers brief signals often arrive as one blob that already inlines
+// the "Why they fit / Approach / Opening angle" sub-sections which the card ALSO
+// renders as their own fields — the pre-fix cards printed all of it twice
+// (Floats smoke test §04: Randstad/Robert Walters). Keep only the genuine
+// signals lead: strip a leading "Signals:" label and cut at the first
+// fit/approach/angle label so the structured fields render exactly once.
+// \b before the label group: without it, 'fit:'/'angle:' match INSIDE ordinary
+// words ('profit:', 'benefit:', 'rectangle:') and amputate the text mid-word
+// (review finding: 'record profit: A$2.1B' rendered as 'record pro').
+const BRIEF_LABEL_RE = /(?:\*\*)?\s*\b(?:why they fit|fit|approach|opening angle|angle)\s*(?:\*\*)?\s*:/i;
+const signalsLead = (text: string): string => {
+  let t = (text || "").replace(/^\s*(?:\*\*)?\s*signals\s*(?:\*\*)?\s*:\s*/i, "");
+  const idx = t.search(BRIEF_LABEL_RE);
+  if (idx >= 0) t = t.slice(0, idx);
+  return t.trim();
+};
+
 // A directory tag that is a placeholder, not a real label — never render it.
 const cleanTag = (tag: string | undefined): string =>
   tag && !/^n\/?a\b/i.test(tag.trim()) ? tag : "";
@@ -993,6 +1025,12 @@ export function adaptPipelineReport(
       // the card (review finding); the card renders plain text either way.
       why: tailored ? capText(stripInlineMarkdown(tailored), 260) : trimWhy(matchDescription(m)),
       headshotUrl: typeof m.avatar_url === "string" && m.avatar_url ? m.avatar_url : undefined,
+      // Specialty pills — already in the match payload as `tags` (the pipeline
+      // maps community_members.specialties → tags). Surfacing them tells the
+      // reader why the mentor is relevant (Floats smoke test §08).
+      specialties: Array.isArray(m.tags)
+        ? m.tags.map((t) => cleanTag(String(t))).filter(Boolean).slice(0, 3)
+        : undefined,
     };
   });
   if (mentorWhyHits > 0) log("mentors[].why", `used tailored per-mentor rationale from §07 prose for ${mentorWhyHits}/${mentorCards.length}`);
@@ -1094,7 +1132,12 @@ export function adaptPipelineReport(
       const cardName = matchName(m);
       const brief = proseBriefs.find((b) => accountNamesMatch(b.name, cardName));
       const desc = matchDescription(m);
-      const signals = brief?.signals || desc;
+      // Fall back to the raw description when the lead collapses to "" (a
+      // description that IS a label-prefixed blob, e.g. "Approach: …") and no
+      // structured brief exists to render instead — a blank card body is worse
+      // than label-y prose (review finding: total content loss vs pre-F1).
+      const lead = signalsLead(brief?.signals || desc);
+      const signals = lead || (brief ? "" : (desc || "").trim());
       // Meta line: the brief's one-line "who they are" (short + grounded), else
       // the subtitle — boundary-capped, and NEVER a duplicate of the signals
       // text (the pre-D1 cards printed the same description twice).
@@ -1130,7 +1173,7 @@ export function adaptPipelineReport(
   const guides = (matches.content_items ?? []).map((m, i) => ({
     title: matchName(m),
     url: sanitizeContractPath(m.link, `guides.cards[${i}].link`, log),
-    summary: trimWhy(matchDescription(m)),
+    summary: trimWhy(contentSummary(m)),
     relevantBecause: "",
   }));
   if (guides.length > 0) log("guides.cards", "relevantBecause footers unavailable until Phase B");
@@ -1162,10 +1205,18 @@ export function adaptPipelineReport(
     analyst: [],
     vendor: [],
   };
+  // Keep the FULL citation URL (deduped by domain) so the sources band can
+  // hyperlink each source (Floats smoke test: "no actual links to the sources").
+  // The renderer displays the domain and links to the URL. Bare-domain fixtures
+  // (no scheme) pass through unchanged and render as plain text.
+  const seenSource = new Set<string>();
   for (const url of citations) {
     const domain = extractDomain(url) ?? url;
     const tier = domainTier(url);
-    if (!tiers[tier].includes(domain)) tiers[tier].push(domain);
+    const key = `${tier}|${domain}`;
+    if (seenSource.has(key)) continue;
+    seenSource.add(key);
+    tiers[tier].push(url);
   }
 
   for (const missing of ["exec.sequence", "exec.heroStat", "close.body"]) {
@@ -1175,7 +1226,11 @@ export function adaptPipelineReport(
   const report: Report = {
     meta: {
       customer,
-      domain: context.domain,
+      // The intake URL arrives https://-prefixed (zod transform), but logo.dev
+      // needs the bare host — getLogoDevUrl templates meta.domain verbatim, so
+      // an unextracted URL 404s on every real report (review finding: fixtures
+      // pass bare domains and masked this). Null-safe: unparseable → monogram.
+      domain: context.domain ? extractDomain(context.domain) ?? undefined : undefined,
       location: context.location ?? "",
       descriptor: context.descriptor ?? (context.location ?? "").toUpperCase(),
       date: context.date ?? "",

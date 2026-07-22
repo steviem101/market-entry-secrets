@@ -40,6 +40,18 @@ const MentorsSection = ({ report }: { report: Report }) => {
             <PersonName person={person} />
             <div className="mb-3 mt-1 text-[11px] font-medium uppercase text-report-caption">{person.role}</div>
             <Rich text={person.why} className="text-[13.5px] leading-[1.7] text-report-ink-soft" />
+            {person.specialties && person.specialties.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {person.specialties.map((s, j) => (
+                  <span
+                    key={j}
+                    className="rounded-full border border-report-tint-border bg-report-tint px-2.5 py-1 text-[10.5px] font-semibold text-report-action"
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>

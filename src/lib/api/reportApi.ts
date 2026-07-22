@@ -237,13 +237,18 @@ export const reportApi = {
 
   async fetchReport(reportId: string) {
     // Fetch report metadata (without full report_json content for gated sections)
+    // Embed the intake's website_url (owner-visible via RLS) so report_v2 can
+    // resolve the customer's real logo.dev cover mark instead of a monogram
+    // (Floats smoke test: wrong cover logo). Null-safe — a missing embed just
+    // degrades to the monogram, exactly as before.
     const { data: meta, error: metaError } = await (supabase as any)
       .from('user_reports')
-      .select('id, user_id, intake_form_id, tier_at_generation, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at')
+      .select('id, user_id, intake_form_id, tier_at_generation, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at, user_intake_forms(website_url)')
       .eq('id', reportId)
       .single();
 
     if (metaError) throw metaError;
+    const companyWebsite: string | null = meta?.user_intake_forms?.website_url ?? null;
 
     // Use the server-side tier-gated function to get filtered report_json.
     // T4 (MES-188): request redacted teasers for locked sections when the
@@ -267,6 +272,7 @@ export const reportApi = {
 
     return {
       ...meta,
+      company_website: companyWebsite,
       report_json: gatedJson ?? {},
     } as {
       id: string;
@@ -280,6 +286,7 @@ export const reportApi = {
       feedback_notes: string | null;
       created_at: string;
       updated_at: string;
+      company_website: string | null;
     };
   },
 

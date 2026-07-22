@@ -35,6 +35,7 @@ export interface PersonCard extends EntityRef {
   role: string;           // mono caps line
   why: string;
   headshotUrl?: string;   // same resolution rule as logoUrl
+  specialties?: string[]; // ≤3 relevance pills (mentor domain tags)
 }
 
 export interface RankedItem extends EntityRef {
