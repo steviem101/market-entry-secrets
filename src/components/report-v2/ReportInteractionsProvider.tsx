@@ -9,7 +9,7 @@ export interface ShortlistItem {
   section: string;
 }
 
-export type RequestType = "scan_request" | "brief_request" | "lead_request" | "book_request" | "checkbox";
+export type RequestType = "scan_request" | "brief_request" | "lead_request" | "book_request";
 
 interface ReportInteractionsValue {
   starred: ShortlistItem[];

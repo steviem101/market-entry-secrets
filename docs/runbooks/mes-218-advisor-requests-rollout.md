@@ -14,7 +14,7 @@ checkboxes, which are self-contained. MES Platform project `xhziwveaiuhzdoutpgrh
 - **F3 additions:**
   - Two new interaction types — `checkbox` (action-plan step ticked; **silent**, like `star`) and
     `book_request` (customer clicked *Book your advisory session*; the primary conversion action).
-    Migration `20260722030000_report_interactions_f3.sql` widens the type CHECK, extends
+    Migration `20260722130000_report_interactions_f3.sql` widens the type CHECK, extends
     `emit_report_interaction_activity()` so `book_request → report.session_requested`, and inserts a
     **disabled** routing row for it.
   - Renderer: durable action-plan checkboxes (`ActionPlanSection`), the booking CTA
