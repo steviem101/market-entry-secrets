@@ -3,18 +3,30 @@ import SectionCard from "./SectionCard";
 import Rich from "./Rich";
 import { useReportInteractions } from "./ReportInteractionsProvider";
 
+// Plain-text of a step's prose for the checkbox aria-label — strip evidence-chip
+// tokens + bold markers and cap the length so screen-reader users hear WHICH step
+// each checkbox controls, not an identical "Mark step done" on every row (a11y).
+const stepAriaText = (bullet: string): string =>
+  bullet
+    .replace(/\{chip:[a-z]+\}/g, "")
+    .replace(/\*\*/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+
 /** A tick-off checkbox for one action-plan step (F3). Durable + advisor-visible
  *  via the interactions store. Print renders a clean empty box (non-interactive). */
-const StepCheck = ({ id }: { id: string }) => {
+const StepCheck = ({ id, label }: { id: string; label?: string }) => {
   const { isChecked, toggleCheck } = useReportInteractions();
   const on = isChecked(id);
+  const suffix = label ? `: ${label}` : "";
   return (
     <>
       <button
         type="button"
         role="checkbox"
         aria-checked={on}
-        aria-label={on ? "Mark step not done" : "Mark step done"}
+        aria-label={(on ? "Mark step not done" : "Mark step done") + suffix}
         onClick={() => toggleCheck(id)}
         className={`mt-[2px] flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-[4px] border text-white transition-colors print:hidden ${
           on ? "border-report-action bg-report-action" : "border-report-dash bg-white hover:border-report-action"
@@ -74,7 +86,7 @@ const ActionPlanSection = ({ report }: { report: Report }) => {
                         const id = `ap-${i}-${g}-${b}`;
                         return (
                           <li key={b} className="flex gap-2 text-[13.5px] leading-[1.6] text-report-ink-soft">
-                            <StepCheck id={id} />
+                            <StepCheck id={id} label={stepAriaText(bullet)} />
                             <Rich
                               as="span"
                               text={bullet}

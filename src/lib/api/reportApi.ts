@@ -473,7 +473,12 @@ export const reportApi = {
       .from('report_interactions')
       .select('id, type, payload, created_at')
       .eq('report_id', reportId)
-      .order('created_at', { ascending: false });
+      // Explicit cap (mirrors the report renderer's INTERACTION_READ_CAP): the
+      // event log is unbounded, and riding the implicit 1000-row cap would drop
+      // the OLDEST rows here while the customer view drops the newest — so the two
+      // views could disagree. 2000 is well past any real per-report count.
+      .order('created_at', { ascending: false })
+      .limit(2000);
     if (iErr) {
       console.warn('[admin-report] interactions unavailable', iErr.message ?? iErr);
     } else if (Array.isArray(iRows)) {

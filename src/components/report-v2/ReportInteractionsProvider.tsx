@@ -27,6 +27,11 @@ interface ReportInteractionsValue {
 
 const keyOf = (item: { url: string; name: string }) => item.url || item.name;
 
+// Bound on the interaction-log read. Well above any real per-report event count
+// (a handful of stars/checks + a booking), but explicit so the read never rides
+// the implicit 1000-row cap and silently loses rows. Mirrors the admin read.
+const INTERACTION_READ_CAP = 2000;
+
 const Ctx = createContext<ReportInteractionsValue | null>(null);
 
 export const useReportInteractions = (): ReportInteractionsValue => {
@@ -71,13 +76,19 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
         .select("type,payload,created_at")
         .eq("report_id", reportId)
         .in("type", ["star", "checkbox", "book_request"])
-        .order("created_at", { ascending: true })
+        // Newest-first + an explicit cap: the event log grows unbounded, and the
+        // default 1000-row cap on an ASCENDING read would silently drop the NEWEST
+        // rows — showing stale stars/checks and reading hasBooked=false after a
+        // real booking (CLAUDE.md gotcha #1). Reversed back to ascending below so
+        // the "latest write wins" reducer stays correct.
+        .order("created_at", { ascending: false })
+        .limit(INTERACTION_READ_CAP)
         .then(({ data }: { data: { type: string; payload: { item?: ShortlistItem; on?: boolean; id?: string } }[] | null }) => {
           if (cancelled || !data) return;
           const latestStar = new Map<string, { item: ShortlistItem; on: boolean }>();
           const latestCheck = new Map<string, boolean>();
           let anyBooked = false;
-          for (const row of data) {
+          for (const row of [...data].reverse()) {
             if (row.type === "checkbox") {
               if (row.payload?.id) latestCheck.set(row.payload.id, !!row.payload?.on);
             } else if (row.type === "book_request") {
@@ -92,17 +103,23 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
           setBooked(anyBooked);
         });
     } else {
+      // Two independent try blocks: a corrupt shortlist value must not abort the
+      // checkbox hydration (they are separate keys with separate lifetimes).
       try {
         const raw = localStorage.getItem(lsKey);
         const parsed = raw ? JSON.parse(raw) : null;
         // Validate the shape — valid-but-wrong JSON ("null", an object) would
         // otherwise poison `starred` and crash downstream .map/.some/.length.
         if (Array.isArray(parsed) && !cancelled) setStarred(parsed as ShortlistItem[]);
+      } catch {
+        /* ignore malformed shortlist state */
+      }
+      try {
         const rawC = localStorage.getItem(lsCheckKey);
         const parsedC = rawC ? JSON.parse(rawC) : null;
         if (Array.isArray(parsedC) && !cancelled) setChecked(new Set(parsedC as string[]));
       } catch {
-        /* ignore malformed local state */
+        /* ignore malformed checkbox state */
       }
     }
     return () => {

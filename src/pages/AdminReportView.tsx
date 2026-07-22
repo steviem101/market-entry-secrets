@@ -195,7 +195,17 @@ const AdminReportViewInner = () => {
       <div className="container mx-auto px-4 py-6 space-y-6">
         <IntakePanel intake={report.user_intake_forms} />
         <QualityPanel quality={report.quality} />
-        <AdvisorQueuePanel interactions={report.interactions} />
+        <AdvisorQueuePanel
+          interactions={report.interactions}
+          planStepCount={
+            reportV2
+              ? reportV2.actionPlan.phases.reduce(
+                  (n, p) => n + (p.groups?.reduce((m, g) => m + (g.bullets?.length ?? 0), 0) ?? 0),
+                  0
+                )
+              : undefined
+          }
+        />
       </div>
 
       {reportV2 ? (

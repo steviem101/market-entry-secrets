@@ -44,7 +44,11 @@ begin
     jsonb_build_object(
       'report_id', NEW.report_id,
       'account_name', left(coalesce(NEW.payload->>'accountName', ''), 200),
-      'icp', left(coalesce(NEW.payload->>'icpDescription', ''), 500)
+      'icp', left(coalesce(NEW.payload->>'icpDescription', ''), 500),
+      -- book_request carries how many items the customer shortlisted before
+      -- booking (accountName/icp are empty for bookings). Kept as a jsonb number;
+      -- '->' avoids a text→int cast that would fail the emit on a bad value.
+      'starred_count', coalesce(NEW.payload->'starredCount', '0'::jsonb)
     ),
     'ri:' || NEW.id::text);
   return NEW;

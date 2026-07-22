@@ -268,7 +268,17 @@ const REQUEST_LABEL: Record<string, string> = {
   scan_request: "Competitor scan",
 };
 
-export const AdvisorQueuePanel = ({ interactions }: { interactions: ReportInteractionRow[] }) => {
+export const AdvisorQueuePanel = ({
+  interactions,
+  planStepCount,
+}: {
+  interactions: ReportInteractionRow[];
+  /** Total action-plan steps in this report, so progress reads against the whole
+   *  plan ("3 of 40") rather than only the steps the customer happened to toggle
+   *  ("3 of 3", which read as a finished plan). Undefined when the plan total is
+   *  unknown (raw-dump fallback) — the copy degrades to a plain ticked count. */
+  planStepCount?: number;
+}) => {
   if (!interactions || interactions.length === 0) {
     return (
       <section className="rounded-lg border bg-card p-5">
@@ -362,7 +372,9 @@ export const AdvisorQueuePanel = ({ interactions }: { interactions: ReportIntera
         <div>
           <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Action-plan progress</h3>
           <p className="text-sm text-foreground">
-            {checkedCount} of {checkState.size} step{checkState.size === 1 ? "" : "s"} ticked.
+            {typeof planStepCount === "number" && planStepCount >= checkedCount
+              ? `${checkedCount} of ${planStepCount} step${planStepCount === 1 ? "" : "s"} ticked.`
+              : `${checkedCount} step${checkedCount === 1 ? "" : "s"} ticked.`}
           </p>
         </div>
       )}
