@@ -135,7 +135,11 @@ const AdminReportViewInner = () => {
     try {
       const { report: adapted } = adaptPipelineReport(
         report.report_json as PipelineReportJson,
-        { date: report.created_at, tier: report.tier_at_generation }
+        {
+          date: report.created_at,
+          tier: report.tier_at_generation,
+          domain: report.user_intake_forms?.website_url ?? undefined,
+        }
       );
       reportV2 = adapted;
     } catch {

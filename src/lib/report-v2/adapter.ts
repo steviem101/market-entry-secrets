@@ -379,7 +379,10 @@ const contentSummary = (m: PipelineMatch): string => {
 // (Floats smoke test §04: Randstad/Robert Walters). Keep only the genuine
 // signals lead: strip a leading "Signals:" label and cut at the first
 // fit/approach/angle label so the structured fields render exactly once.
-const BRIEF_LABEL_RE = /(?:\*\*)?\s*(?:why they fit|fit|approach|opening angle|angle)\s*(?:\*\*)?\s*:/i;
+// \b before the label group: without it, 'fit:'/'angle:' match INSIDE ordinary
+// words ('profit:', 'benefit:', 'rectangle:') and amputate the text mid-word
+// (review finding: 'record profit: A$2.1B' rendered as 'record pro').
+const BRIEF_LABEL_RE = /(?:\*\*)?\s*\b(?:why they fit|fit|approach|opening angle|angle)\s*(?:\*\*)?\s*:/i;
 const signalsLead = (text: string): string => {
   let t = (text || "").replace(/^\s*(?:\*\*)?\s*signals\s*(?:\*\*)?\s*:\s*/i, "");
   const idx = t.search(BRIEF_LABEL_RE);
@@ -1026,7 +1029,7 @@ export function adaptPipelineReport(
       // maps community_members.specialties → tags). Surfacing them tells the
       // reader why the mentor is relevant (Floats smoke test §08).
       specialties: Array.isArray(m.tags)
-        ? m.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 3)
+        ? m.tags.map((t) => cleanTag(String(t))).filter(Boolean).slice(0, 3)
         : undefined,
     };
   });
@@ -1129,7 +1132,12 @@ export function adaptPipelineReport(
       const cardName = matchName(m);
       const brief = proseBriefs.find((b) => accountNamesMatch(b.name, cardName));
       const desc = matchDescription(m);
-      const signals = signalsLead(brief?.signals || desc);
+      // Fall back to the raw description when the lead collapses to "" (a
+      // description that IS a label-prefixed blob, e.g. "Approach: …") and no
+      // structured brief exists to render instead — a blank card body is worse
+      // than label-y prose (review finding: total content loss vs pre-F1).
+      const lead = signalsLead(brief?.signals || desc);
+      const signals = lead || (brief ? "" : (desc || "").trim());
       // Meta line: the brief's one-line "who they are" (short + grounded), else
       // the subtitle — boundary-capped, and NEVER a duplicate of the signals
       // text (the pre-D1 cards printed the same description twice).
@@ -1218,7 +1226,11 @@ export function adaptPipelineReport(
   const report: Report = {
     meta: {
       customer,
-      domain: context.domain,
+      // The intake URL arrives https://-prefixed (zod transform), but logo.dev
+      // needs the bare host — getLogoDevUrl templates meta.domain verbatim, so
+      // an unextracted URL 404s on every real report (review finding: fixtures
+      // pass bare domains and masked this). Null-safe: unparseable → monogram.
+      domain: context.domain ? extractDomain(context.domain) ?? undefined : undefined,
       location: context.location ?? "",
       descriptor: context.descriptor ?? (context.location ?? "").toUpperCase(),
       date: context.date ?? "",

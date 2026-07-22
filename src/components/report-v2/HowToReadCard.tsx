@@ -35,7 +35,7 @@ const HowToReadCard = () => (
       </div>
     </div>
     <p className="mt-5 border-t border-report-tint-border pt-4 text-[12.5px] leading-[1.7] text-report-muted">
-      Evidence markers you'll see on figures: <b className="text-report-sky">●</b> sourced ·{" "}
+      Evidence markers you'll see on figures: <b className="text-report-good">●</b> sourced ·{" "}
       <b className="text-report-warn">◐</b> estimated · <b className="text-report-caption">○</b> inferred
       — so you can weigh every number at a glance.
     </p>
