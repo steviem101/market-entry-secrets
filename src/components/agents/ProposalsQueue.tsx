@@ -1,6 +1,4 @@
-import { useMemo, useState } from "react";
-import { Fragment } from "react";
-import { formatDistanceToNow } from "date-fns";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,33 +15,24 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ListPagination } from "@/components/common/ListPagination";
 import { useToast } from "@/hooks/use-toast";
 import { useAgentProposals, useAgentProposalActions, type AgentProposal } from "@/hooks/useAgentProposals";
 import { MAX_BULK, type AgentActionResponse } from "@/lib/api/agentApi";
+import { relativeTime } from "@/lib/relativeTime";
+import {
+  STATUS_OPTIONS, SOURCE_OPTIONS, LOOP_OPTIONS, isSelectable, rowActions, type RowAction,
+} from "@/lib/agentProposalsMeta";
 import {
   toggleKey, selectAll, allSelected, summariseSelection, partitionResults,
+  type SelectionSummary,
 } from "@/lib/agentSelection";
 
-const STATUS_OPTIONS = ["pending", "approved", "auto_approved", "applied", "apply_failed", "rejected"];
-// The agent_proposals view's union sources (stable; new loops extend the view deliberately).
-const SOURCE_OPTIONS = [
-  "agent_content_proposals", "directory_steward_staging", "directory_discovery_staging",
-  "directory_demand_signals", "report_quality_proposals", "prompt_ab_proposals",
-  "ecosystem_import_candidates", "innovation_ecosystem_enrichment_staging",
-  "trade_agencies_enrichment_staging",
-];
 const PAGE_SIZES = [25, 50, 100];
 
-// trade_agencies_enrichment_staging.created_at is nullable (verified live), so the view can
-// deliver a null here despite the hook's string type — an unguarded new Date(null) would make
-// formatDistanceToNow throw and crash the queue.
-const relativeTime = (iso: string | null | undefined): string => {
-  if (!iso) return "unknown";
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "unknown" : formatDistanceToNow(d, { addSuffix: true });
-};
-
-const statusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+// PROPOSAL-status mapping (canonical agent_proposals vocabulary). Deliberately named apart from
+// the grid's runStatusVariant: different vocabularies, do not "deduplicate".
+const proposalStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case "applied": return "default";
     case "apply_failed": return "destructive";
@@ -52,7 +41,18 @@ const statusVariant = (status: string): "default" | "secondary" | "destructive" 
   }
 };
 
-type BulkAction = "approve" | "reject";
+const ACTION_LABELS: Record<RowAction, { label: string; variant: "outline" | "ghost" }> = {
+  approve: { label: "Approve", variant: "outline" },
+  retry: { label: "Retry apply", variant: "outline" },
+  reject: { label: "Reject", variant: "ghost" },
+};
+
+interface BulkSnapshot {
+  action: "approve" | "reject";
+  /** Frozen at modal open: exactly these keys are sent on Confirm, no more, no fewer. */
+  keys: string[];
+  summary: SelectionSummary;
+}
 
 interface LastOutcome {
   action: string;
@@ -60,35 +60,57 @@ interface LastOutcome {
   failed: Array<{ proposal_key: string; error?: string }>;
 }
 
-export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
+export const ProposalsQueue = () => {
   const { toast } = useToast();
   const [status, setStatus] = useState("pending");
   const [loop, setLoop] = useState("all");
   const [source, setSource] = useState("all");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
-  // Selection is cleared on any page/filter change so the confirm modal always summarises
-  // exactly the rows the reviewer can currently see. What you approve is what you saw.
+  // Selection is cleared on any page/filter change, and the confirm modal operates on a frozen
+  // snapshot of selection ∩ visible rows: what you approve is exactly what you saw.
   const [selection, setSelection] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [pendingBulk, setPendingBulk] = useState<BulkAction | null>(null);
+  const [pendingBulk, setPendingBulk] = useState<BulkSnapshot | null>(null);
   const [lastOutcome, setLastOutcome] = useState<LastOutcome | null>(null);
+  // Synchronous double-fire guard: React Query's isPending only disables buttons on the NEXT
+  // render, so a fast double-click would run the action twice without this.
+  const inflight = useRef(false);
 
   const { data, isLoading, error, isPlaceholderData } = useAgentProposals({ status, loop, source, page, pageSize });
   const { approve, reject, retry } = useAgentProposalActions();
-  // Freeze selection while keepPreviousData is showing the PREVIOUS page's rows: ticking a stale
-  // row would let the confirm modal summarise against rows that are about to be replaced.
   const busy = approve.isPending || reject.isPending || retry.isPending;
   const selectionFrozen = busy || isPlaceholderData;
 
   const rows = useMemo(() => data?.rows ?? [], [data?.rows]);
   const count = data?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(count / pageSize));
-  const pageKeys = useMemo(() => rows.map((r) => r.proposal_key), [rows]);
+  const selectedSet = useMemo(() => new Set(selection), [selection]);
+  // Only actionable rows are selectable — the header select-all must never sweep applied or
+  // rejected rows into a bulk approve (the server would re-approve and APPLY a rejected row).
+  const selectableKeys = useMemo(
+    () => rows.filter((r) => isSelectable(r.status)).map((r) => r.proposal_key),
+    [rows],
+  );
 
-  const resetTo = (fn: () => void) => { fn(); setPage(0); setSelection([]); setExpanded(null); };
+  const goToPage = (p: number) => { setPage(p); setSelection([]); setExpanded(null); };
+  const resetTo = (fn: () => void) => { fn(); goToPage(0); };
+
+  // Clamp when a mutation shrinks count below the current page (otherwise the refetch asks
+  // PostgREST for an out-of-range window and the queue shows a misleading error).
+  useEffect(() => {
+    if (!isLoading && page > pageCount - 1) goToPage(pageCount - 1);
+  }, [pageCount, page, isLoading]); // goToPage is render-scoped and stable in effect
+
+  // Backstop for the 416/PGRST103 path (the failed response carries no fresh count to clamp on).
+  useEffect(() => {
+    if (error && page > 0) goToPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
 
   const runAction = async (action: "approve" | "reject" | "retry", keys: string[]) => {
+    if (inflight.current || keys.length === 0) return;
+    inflight.current = true;
     const mutation = action === "approve" ? approve : action === "reject" ? reject : retry;
     try {
       const res = (await mutation.mutateAsync(keys)) as AgentActionResponse;
@@ -105,12 +127,27 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
         });
       }
     } catch (e) {
-      setLastOutcome({ action, ok: 0, failed: keys.map((k) => ({ proposal_key: k, error: e instanceof Error ? e.message : "request failed" })) });
-      toast({ title: "Action failed", description: "Could not reach agent-actions. Try again.", variant: "destructive" });
+      const message = e instanceof Error ? e.message : "The request failed.";
+      setLastOutcome({ action, ok: 0, failed: keys.map((k) => ({ proposal_key: k, error: message })) });
+      toast({ title: "Action failed", description: message, variant: "destructive" });
+    } finally {
+      inflight.current = false;
     }
   };
 
-  const bulkSummary = pendingBulk ? summariseSelection(rows, selection) : null;
+  const openBulk = (action: "approve" | "reject") => {
+    // Snapshot selection ∩ currently visible rows: the modal summarises exactly what Confirm
+    // will send, even if a background refetch replaces rows while the modal is open.
+    const visible = new Set(rows.map((r) => r.proposal_key));
+    const keys = selection.filter((k) => visible.has(k));
+    if (keys.length === 0) {
+      toast({ title: "Nothing to confirm", description: "The selected rows are no longer visible. Reselect and try again." });
+      setSelection([]);
+      return;
+    }
+    if (keys.length < selection.length) setSelection(keys);
+    setPendingBulk({ action, keys, summary: summariseSelection(rows, keys) });
+  };
 
   return (
     <div className="space-y-4">
@@ -127,7 +164,7 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
           <SelectTrigger className="w-[190px]"><SelectValue placeholder="Loop" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All loops</SelectItem>
-            {loopOptions.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+            {LOOP_OPTIONS.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={source} onValueChange={(v) => resetTo(() => setSource(v))}>
@@ -148,12 +185,12 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
       {/* Bulk bar */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-muted-foreground">
-          {selection.length} selected (max {MAX_BULK})
+          {selection.length} selected (max {MAX_BULK}; only pending and auto approved rows are selectable)
         </span>
-        <Button size="sm" disabled={selection.length === 0 || selectionFrozen} onClick={() => setPendingBulk("approve")}>
+        <Button size="sm" disabled={selection.length === 0 || selectionFrozen} onClick={() => openBulk("approve")}>
           Approve selected
         </Button>
-        <Button size="sm" variant="destructive" disabled={selection.length === 0 || selectionFrozen} onClick={() => setPendingBulk("reject")}>
+        <Button size="sm" variant="destructive" disabled={selection.length === 0 || selectionFrozen} onClick={() => openBulk("reject")}>
           Reject selected
         </Button>
         {selection.length > 0 && (
@@ -183,7 +220,7 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
       {error ? (
         <Alert variant="destructive">
           <AlertTitle>Could not load proposals</AlertTitle>
-          <AlertDescription>Check that you are signed in with an admin account, then refresh.</AlertDescription>
+          <AlertDescription>{error instanceof Error ? error.message : "Refresh the page and try again."}</AlertDescription>
         </Alert>
       ) : isLoading && rows.length === 0 ? (
         <div className="space-y-2">
@@ -198,18 +235,18 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
               <TableRow>
                 <TableHead className="w-10">
                   <Checkbox
-                    checked={allSelected(selection, pageKeys)}
-                    disabled={selectionFrozen}
+                    checked={allSelected(selection, selectableKeys)}
+                    disabled={selectionFrozen || selectableKeys.length === 0}
                     onCheckedChange={() => {
-                      if (allSelected(selection, pageKeys)) {
-                        setSelection(selection.filter((k) => !pageKeys.includes(k)));
+                      if (allSelected(selection, selectableKeys)) {
+                        setSelection(selection.filter((k) => !selectableKeys.includes(k)));
                       } else {
-                        const r = selectAll(selection, pageKeys, MAX_BULK);
+                        const r = selectAll(selection, selectableKeys, MAX_BULK);
                         setSelection(r.selection);
                         if (r.capped) toast({ title: `Selection capped at ${MAX_BULK}` });
                       }
                     }}
-                    aria-label="Select all rows on this page"
+                    aria-label="Select all actionable rows on this page"
                   />
                 </TableHead>
                 <TableHead className="w-8" />
@@ -224,11 +261,11 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
             <TableBody>
               {rows.map((row: AgentProposal) => (
                 <Fragment key={row.proposal_key}>
-                  <TableRow data-state={selection.includes(row.proposal_key) ? "selected" : undefined}>
+                  <TableRow data-state={selectedSet.has(row.proposal_key) ? "selected" : undefined}>
                     <TableCell>
                       <Checkbox
-                        checked={selection.includes(row.proposal_key)}
-                        disabled={selectionFrozen}
+                        checked={selectedSet.has(row.proposal_key)}
+                        disabled={selectionFrozen || !isSelectable(row.status)}
                         onCheckedChange={() => {
                           const r = toggleKey(selection, row.proposal_key, MAX_BULK);
                           setSelection(r.selection);
@@ -249,35 +286,23 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
                     <TableCell className="whitespace-nowrap text-sm">{row.loop_name}</TableCell>
                     <TableCell><code className="text-xs">{row.action_type}</code></TableCell>
                     <TableCell className="text-sm max-w-[420px] truncate" title={row.reason}>{row.reason}</TableCell>
-                    <TableCell><Badge variant={statusVariant(row.status)}>{row.status.replace("_", " ")}</Badge></TableCell>
+                    <TableCell><Badge variant={proposalStatusVariant(row.status)}>{row.status.replace("_", " ")}</Badge></TableCell>
                     <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                       {relativeTime(row.created_at)}
                     </TableCell>
                     <TableCell className="text-right whitespace-nowrap">
-                      {row.status === "pending" && (
-                        <>
-                          <Button size="sm" variant="outline" className="mr-1" disabled={busy}
-                            onClick={() => runAction("approve", [row.proposal_key])}>
-                            Approve
-                          </Button>
-                          <Button size="sm" variant="ghost" disabled={busy}
-                            onClick={() => runAction("reject", [row.proposal_key])}>
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                      {row.status === "auto_approved" && (
-                        <Button size="sm" variant="ghost" disabled={busy}
-                          onClick={() => runAction("reject", [row.proposal_key])}>
-                          Reject
+                      {rowActions(row.status, row.source_table).map((action) => (
+                        <Button
+                          key={action}
+                          size="sm"
+                          variant={ACTION_LABELS[action].variant}
+                          className="ml-1"
+                          disabled={busy}
+                          onClick={() => runAction(action, [row.proposal_key])}
+                        >
+                          {action === "approve" && row.status === "auto_approved" ? "Apply now" : ACTION_LABELS[action].label}
                         </Button>
-                      )}
-                      {row.status === "apply_failed" && (
-                        <Button size="sm" variant="outline" disabled={busy}
-                          onClick={() => runAction("retry", [row.proposal_key])}>
-                          Retry apply
-                        </Button>
-                      )}
+                      ))}
                     </TableCell>
                   </TableRow>
                   {expanded === row.proposal_key && (
@@ -303,19 +328,14 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
       )}
 
       {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>{count} proposal{count === 1 ? "" : "s"}</span>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" disabled={page === 0 || isLoading}
-            onClick={() => { setPage(page - 1); setSelection([]); setExpanded(null); }}>
-            Previous
-          </Button>
-          <span>Page {page + 1} of {pageCount}</span>
-          <Button size="sm" variant="outline" disabled={page + 1 >= pageCount || isLoading}
-            onClick={() => { setPage(page + 1); setSelection([]); setExpanded(null); }}>
-            Next
-          </Button>
-        </div>
+      <div className="flex flex-col items-center gap-1">
+        <span className="text-sm text-muted-foreground">{count} proposal{count === 1 ? "" : "s"}</span>
+        <ListPagination
+          currentPage={page + 1}
+          totalPages={pageCount}
+          onPageChange={(p) => goToPage(p - 1)}
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Bulk confirm */}
@@ -323,15 +343,15 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {pendingBulk === "approve" ? "Approve" : "Reject"} {bulkSummary?.total ?? 0} proposal{(bulkSummary?.total ?? 0) === 1 ? "" : "s"}?
+              {pendingBulk?.action === "approve" ? "Approve" : "Reject"} {pendingBulk?.summary.total ?? 0} proposal{(pendingBulk?.summary.total ?? 0) === 1 ? "" : "s"}?
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                {pendingBulk === "approve" && (
+                {pendingBulk?.action === "approve" && (
                   <p>Approving applies whitelisted changes to production through apply-proposal.</p>
                 )}
                 <ul className="text-sm">
-                  {(bulkSummary?.byActionType ?? []).map((t) => (
+                  {(pendingBulk?.summary.byActionType ?? []).map((t) => (
                     <li key={t.actionType}>
                       <code className="text-xs">{t.actionType}</code>: {t.count}
                     </li>
@@ -344,9 +364,9 @@ export const ProposalsQueue = ({ loopOptions }: { loopOptions: string[] }) => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                const action = pendingBulk;
+                const snapshot = pendingBulk;
                 setPendingBulk(null);
-                if (action) runAction(action, selection);
+                if (snapshot) runAction(snapshot.action, snapshot.keys);
               }}
             >
               Confirm

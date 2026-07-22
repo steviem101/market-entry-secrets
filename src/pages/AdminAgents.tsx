@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -15,11 +14,6 @@ import { ProposalsQueue } from "@/components/agents/ProposalsQueue";
  */
 const AdminAgents = () => {
   const { data, isLoading, error } = useAgentLoopHealth();
-
-  const loopOptions = useMemo(
-    () => (data?.health ?? []).map((h) => h.loop_name).sort(),
-    [data?.health],
-  );
 
   return (
     <ProtectedRoute requireAdmin fallbackMessage="Admin access is required to review agent activity.">
@@ -56,7 +50,7 @@ const AdminAgents = () => {
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Proposals</h2>
-          <ProposalsQueue loopOptions={loopOptions} />
+          <ProposalsQueue />
         </section>
       </div>
     </ProtectedRoute>

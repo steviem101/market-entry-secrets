@@ -1,10 +1,12 @@
-import { formatDistanceToNow } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { relativeTime } from "@/lib/relativeTime";
 import type { LoopHealth } from "@/lib/agentLoopHealth";
 
-const statusVariant = (status: string | null): "default" | "secondary" | "destructive" | "outline" => {
+// RUN-status mapping (automation_runs vocabulary). Deliberately named apart from the queue's
+// proposalStatusVariant: the two cover different vocabularies and must not be "deduplicated".
+const runStatusVariant = (status: string | null): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
     case "success": return "default";
     case "failed":
@@ -36,15 +38,12 @@ export const LoopHealthGrid = ({ health, isLoading }: { health: LoopHealth[] | u
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-base truncate">{loop.loop_name}</CardTitle>
-              <Badge variant={statusVariant(loop.last_status)}>{loop.last_status ?? "no runs"}</Badge>
+              <Badge variant={runStatusVariant(loop.last_status)}>{loop.last_status ?? "no runs"}</Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-1 text-sm text-muted-foreground">
             <p>
-              Last run:{" "}
-              {loop.last_run_at
-                ? formatDistanceToNow(new Date(loop.last_run_at), { addSuffix: true })
-                : "never (proposals only)"}
+              Last run: {loop.last_run_at ? relativeTime(loop.last_run_at) : "never (proposals only)"}
             </p>
             <p>Success streak: {loop.success_streak}</p>
             <p className="flex items-center gap-2">

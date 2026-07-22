@@ -25,7 +25,9 @@ export const ActivityChart = ({ activity, isLoading }: { activity: LoopActivityP
           <XAxis type="number" allowDecimals={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
           <YAxis type="category" dataKey="name" width={150} stroke="hsl(var(--muted-foreground))" fontSize={12} />
           <Tooltip
-            formatter={(value: number, key: string) => [value, key === "proposed" ? "Proposed" : "Resolved"]}
+            // No value formatter: recharts already labels each entry with the Bar's `name` prop.
+            // (A formatter comparing against the dataKey received the NAME and mislabelled both
+            // series as "Resolved" — caught in review.)
             labelFormatter={(label: string) => {
               const row = data.find((d) => d.name === label);
               return row ? `${label} (acceptance ${row.acceptance}%)` : label;
