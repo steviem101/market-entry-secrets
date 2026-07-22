@@ -24,6 +24,11 @@ on:
         description: "Phase 2b A/B: route the 3 money sections to this model id (e.g. claude-sonnet-5). Empty = flash baseline."
         required: false
         default: ""
+      update_baseline:
+        description: "Re-stamp eval/baselines.json from THIS run and open a PR with the new baseline (reviewed like code). Use the full set (leave goldens empty)."
+        required: false
+        type: boolean
+        default: false
   # PRs run a cheap 2-golden SMOKE subset (see the run step); the full set runs on
   # manual dispatch and nightly. Keeps report-pipeline PRs from burning the whole
   # set (and brushing the 5-reports/60min limit) on every push.
@@ -51,11 +56,23 @@ concurrency:
 jobs:
   golden-eval:
     runs-on: ubuntu-latest
+    # contents/pull-requests write are used ONLY by the final baseline-refresh
+    # step (open a PR with the new eval/baselines.json). The eval run itself needs
+    # neither; the step that commits never has the EVAL_* prod secrets in scope.
+    permissions:
+      contents: write
+      pull-requests: write
     # Full set runs sequentially at up to ~12 min/golden; 150 holds ~10-12 goldens.
     # Beyond that, shard eval users / parallelise rather than only raising this.
     timeout-minutes: 150
     steps:
+      # persist-credentials:false keeps the write-capable GITHUB_TOKEN OUT of
+      # .git/config during the prod-secret-bearing eval run (which resolves
+      # unpinned esm.sh deps); the baseline-refresh step below re-authenticates
+      # explicitly with the token only for its own push (mes-qa hardening).
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -76,6 +93,9 @@ jobs:
           # Phase 2b money-section A/B model id — read directly by the runner (which
           # charset-guards it), passed via env (never interpolated into the script).
           MONEY_MODEL: ${{ github.event.inputs.money_model }}
+          # Boolean dispatch input, passed via env (never interpolated into the
+          # script — same secret-exfil guard as GOLDENS_INPUT above).
+          UPDATE_BASELINE: ${{ github.event.inputs.update_baseline }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
           ARGS=""
@@ -92,7 +112,37 @@ jobs:
             esac
             ARGS="--goldens=$INPUT"
           fi
+          # Re-stamp the committed baseline from this run when explicitly asked
+          # (manual dispatch only). Only meaningful on the full set — a subset
+          # would re-stamp just those goldens.
+          if [ "$UPDATE_BASELINE" = "true" ]; then
+            ARGS="$ARGS --update-baseline"
+          fi
           # --no-lock: the root deno.lock pins esm.sh hashes for other tooling
           # and drifts as esm.sh re-resolves unpinned deps — the runner is not
           # bound by it.
           deno run --no-lock --allow-net --allow-env --allow-read --allow-write eval/run-goldens.ts $ARGS
+
+      # Open a PR with the refreshed baseline so it is reviewed like code (never
+      # committed straight to main). Runs ONLY on an explicit update_baseline
+      # dispatch, in a separate step that does NOT carry the EVAL_* prod secrets.
+      # github.run_id is a safe numeric — no user input is interpolated here.
+      - name: Open baseline-refresh PR
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.update_baseline == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- eval/baselines.json; then
+            echo "Baseline unchanged — nothing to open a PR for."
+            exit 0
+          fi
+          BRANCH="eval/baseline-refresh-${{ github.run_id }}"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git checkout -b "$BRANCH"
+          git add eval/baselines.json
+          git commit -m "chore(eval): refresh golden baseline (run ${{ github.run_id }})"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$BRANCH"
+          gh pr create --base main --head "$BRANCH" \
+            --title "chore(eval): refresh golden baseline" \
+            --body "Automated golden-baseline refresh from the \`update_baseline\` dispatch (run ${{ github.run_id }}). Review the per-section score deltas in \`eval/baselines.json\` before merging — this re-stamps the regression gate to the current pipeline's scores. See eval/README.md."
