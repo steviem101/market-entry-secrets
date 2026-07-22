@@ -72,7 +72,11 @@ export const SEMANTIC_CFG: Record<string, SemanticTypeConfig> = {
   },
   events: {
     table: "events",
-    select: "id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic",
+    // `description` is the event blurb that renders on the report card. The
+    // overlap path selects it (index.ts) but the semantic path — primary in prod
+    // whenever OPENAI_API_KEY is set — omitted it, so semantically-matched events
+    // shipped blurb-less. The `events` table has this column (see overlap select).
+    select: "id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic, description",
     cap: 5,
     decorate: (e: any) => ({
       ...e,

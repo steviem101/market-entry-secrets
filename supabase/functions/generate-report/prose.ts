@@ -17,12 +17,19 @@
 export function deEmDash(text: string): string {
   if (!text) return text;
   return text
-    .replace(/\s*—\s*/g, ", ") // em-dash (any surrounding whitespace) → comma-space
-    .replace(/,\s*,/g, ",") // collapse a doubled comma
-    .replace(/,\s*([.!?;:)\]])/g, "$1") // drop a comma now sitting before end punctuation / a closer
-    .replace(/([(\[])\s*,\s*/g, "$1") // ...or just after an opener
+    // em-dash → comma-space. Only HORIZONTAL whitespace around it is consumed:
+    // matching \n here would pull a following list item / heading / paragraph
+    // onto the previous line (a "— \n- next" bullet fuses into the prose above).
+    .replace(/[ \t]*—[ \t]*/g, ", ")
+    .replace(/,[ \t]*,/g, ",") // collapse a doubled comma (same line)
+    .replace(/,[ \t]*([.!?;:)\]])/g, "$1") // drop a comma now sitting before end punctuation / a closer
+    .replace(/([(\[])[ \t]*,[ \t]*/g, "$1") // ...or just after an opener
     .replace(/(^|\n)[ \t]*,[ \t]*/g, "$1") // ...or at the very start of the text / a line
-    .replace(/[ \t]{2,}/g, " "); // tidy any double spaces the swap introduced
+    .replace(/,[ \t]+(\n|$)/g, ",$1") // ...or a space the swap left between a comma and a line end (an em-dash that ended a line)
+    // tidy INTERIOR double spaces the swap introduced, but never touch leading
+    // indentation (nested list items) or a trailing "  \n" markdown hard break —
+    // this runs on every section, em-dashes or not, so it must not reflow layout.
+    .replace(/(?<=\S)[ \t]{2,}(?=\S)/g, " ");
 }
 
 /**
@@ -57,10 +64,43 @@ export function deEmDashMatches(matches: Record<string, any>): Record<string, an
     out[cat] = arr.map((m) => {
       if (!m || typeof m !== "object") return m;
       const next = { ...m };
-      if (typeof next.description === "string") next.description = deEmDash(next.description);
-      if (typeof next.subtitle === "string") next.subtitle = deEmDash(next.subtitle);
+      // `meta_description` is the guide/content card blurb (report_v2 promotes it
+      // to the visible card text), so it needs the same strip as description.
+      for (const field of ["description", "subtitle", "meta_description"] as const) {
+        if (typeof next[field] === "string") next[field] = deEmDash(next[field]);
+      }
       return next;
     });
   }
   return out;
+}
+
+/**
+ * Strip em-dashes from a list of prose strings (e.g. the customer's own
+ * site-derived strengths that render in the competitor "you" row). Non-strings
+ * pass through; non-arrays return `[]`.
+ */
+export function deEmDashList(arr: unknown): string[] {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((s) => (typeof s === "string" ? deEmDash(s) : s));
+}
+
+/**
+ * Strip em-dashes from the prose fields of key-metric tiles (`label`, `value`,
+ * `context`). These render as the metric cards ABOVE the sections, so an
+ * em-dash there is just as visible as one in the prose. Value ranges use
+ * EN-dashes ("$2m–$5m"), which deEmDash deliberately leaves untouched. Other
+ * fields (e.g. `estimated`) pass through unchanged.
+ */
+// deno-lint-ignore no-explicit-any
+export function deEmDashKeyMetrics(metrics: unknown): any[] {
+  if (!Array.isArray(metrics)) return [];
+  return metrics.map((m) => {
+    if (!m || typeof m !== "object") return m;
+    const next = { ...m };
+    for (const field of ["label", "value", "context"] as const) {
+      if (typeof next[field] === "string") next[field] = deEmDash(next[field]);
+    }
+    return next;
+  });
 }

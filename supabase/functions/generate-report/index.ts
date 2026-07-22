@@ -31,7 +31,7 @@ import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse,
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { parseAbPercent, inCandidateBucket } from "./promptAb.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
-import { deEmDashSections, deEmDashMatches } from "./prose.ts";
+import { deEmDash, deEmDashSections, deEmDashMatches, deEmDashList, deEmDashKeyMetrics } from "./prose.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry, FLASH_MODEL } from "./sectionModel.ts";
 import { selectCaseStudies, hasCorridorReason, type CaseStudyRow } from "./caseStudyMatch.ts";
 
@@ -3048,7 +3048,17 @@ async function generateReportInBackground(
       // section writer can't Markdown-link a mentor's name to their avatar image
       // under the HYPERLINKS rule, and to keep the prompt lean (review finding).
       matched_mentors_json: JSON.stringify((matches.community_members || []).map(({ avatar_url, image, ...m }: any) => m)),
-      matched_events_json: JSON.stringify(matches.events || []),
+      // Trim the event blurb in the PROMPT copy only (the stored match keeps its
+      // full description for the card) — some event descriptions run to several
+      // paragraphs, and the section writer only needs a gist. Keeps the prompt
+      // lean the way matched_mentors_json strips display-only fields (review finding).
+      matched_events_json: JSON.stringify(
+        (matches.events || []).map((e: any) =>
+          typeof e?.description === "string" && e.description.length > 300
+            ? { ...e, description: `${e.description.slice(0, 300)}…` }
+            : e
+        ),
+      ),
       matched_content_json: JSON.stringify(matches.content_items || []),
       matched_case_studies_json: JSON.stringify(matches.case_studies || []),
       matched_leads_json: JSON.stringify(matches.leads || []),
@@ -3754,12 +3764,14 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // Customer's own site-derived USPs (grounded) — powers the report_v2
         // competitor table's "you" row strengths. [] when the scrape found none.
         company_strengths: Array.isArray(companyProfile?.unique_selling_points)
-          ? companyProfile.unique_selling_points.filter((s: unknown) => typeof s === "string" && s.trim()).slice(0, 4)
+          ? deEmDashList(
+              companyProfile.unique_selling_points.filter((s: unknown) => typeof s === "string" && s.trim()).slice(0, 4),
+            )
           : [],
         // Customer's own site-stated positioning line (grounded) — the report_v2
         // §03 "you" row "where you differ" cell. "" when the scrape found none.
         company_positioning: typeof companyProfile?.positioning === "string"
-          ? companyProfile.positioning.trim()
+          ? deEmDash(companyProfile.positioning.trim())
           : "",
         // Whether the FIRECRAWL_COMPETITOR_DEPTH flag was ON for this report
         // (multi-angle discovery + au_presence signal). Persisted so the flag
@@ -3828,7 +3840,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         resume: { research_bundle: !!resumedResearch },
         // Renumbered alongside the sections so metric-card [N]s and the stored
         // Sources list stay 1:1 (falls back to the originals when no citations).
-        key_metrics: cited.keyMetrics ?? keyMetrics,
+        // De-dashed too: the tiles render above the sections, so an em-dash in a
+        // metric label/context is as visible as one in the prose (F2 review).
+        key_metrics: deEmDashKeyMetrics(cited.keyMetrics ?? keyMetrics),
         discovered_events_count: discoveredEvents.length,
         end_buyer_research_available: !!endBuyerProcurementResearch,
         bilateral_trade_available: !!marketResearch.bilateral_trade,
