@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ReportV2Renderer from "@/components/report-v2/ReportV2Renderer";
 import { adaptPipelineReport, type PipelineReportJson } from "@/lib/report-v2/adapter";
 import type { Report as ReportV2Contract } from "@/types/report";
-import { IntakePanel, QualityPanel } from "@/components/admin/ReportReviewPanels";
+import { IntakePanel, QualityPanel, AdvisorQueuePanel } from "@/components/admin/ReportReviewPanels";
 
 // title/content are unknown on purpose: legacy report_json shapes carry
 // non-string values here, and rendering those directly crashes React — the
@@ -135,7 +135,11 @@ const AdminReportViewInner = () => {
     try {
       const { report: adapted } = adaptPipelineReport(
         report.report_json as PipelineReportJson,
-        { date: report.created_at, tier: report.tier_at_generation }
+        {
+          date: report.created_at,
+          tier: report.tier_at_generation,
+          domain: report.user_intake_forms?.website_url ?? undefined,
+        }
       );
       reportV2 = adapted;
     } catch {
@@ -195,6 +199,17 @@ const AdminReportViewInner = () => {
       <div className="container mx-auto px-4 py-6 space-y-6">
         <IntakePanel intake={report.user_intake_forms} />
         <QualityPanel quality={report.quality} />
+        <AdvisorQueuePanel
+          interactions={report.interactions}
+          planStepCount={
+            reportV2
+              ? reportV2.actionPlan.phases.reduce(
+                  (n, p) => n + (p.groups?.reduce((m, g) => m + (g.bullets?.length ?? 0), 0) ?? 0),
+                  0
+                )
+              : undefined
+          }
+        />
       </div>
 
       {reportV2 ? (

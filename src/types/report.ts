@@ -35,6 +35,7 @@ export interface PersonCard extends EntityRef {
   role: string;           // mono caps line
   why: string;
   headshotUrl?: string;   // same resolution rule as logoUrl
+  specialties?: string[]; // ≤3 relevance pills (mentor domain tags)
 }
 
 export interface RankedItem extends EntityRef {
@@ -157,6 +158,9 @@ export interface Report {
     // A best-guess bespoke list spec for the customer to approve/refine (not a
     // list that exists yet — MES builds it manually after they confirm).
     recommended?: { spec: string; why: string };
+    // An optional SECOND suggested list (a different angle) so the customer can
+    // pick between two. Only present when `recommended` is.
+    recommendedAlt?: { spec: string; why: string };
     dataset?: { name: string; url: string; records: number; description: string };  // present → dataset card
     gapCopy?: string;                                                               // present → honest-gap card
     customBuildCopy: string;                                                        // always → request box

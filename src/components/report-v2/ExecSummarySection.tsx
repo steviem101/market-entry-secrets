@@ -27,7 +27,7 @@ const HeroValue = ({ value }: { value: string }) => {
  */
 const ExecSummarySection = ({ report }: { report: Report }) => {
   const { exec, meta } = report;
-  const showCallout = exec.keyQuestionAnswer.trim() !== "" || exec.highlights.length > 0;
+  const showCallout = exec.keyQuestionAnswer.trim() !== "";
   const showHero = exec.heroStat.value.trim() !== "";
   const showSequence = exec.sequence.rows.length > 0;
   return (
@@ -54,34 +54,35 @@ const ExecSummarySection = ({ report }: { report: Report }) => {
               {exec.keyQuestionAnswer.trim() !== "" && (
                 <Rich text={exec.keyQuestionAnswer} className="text-[14.5px] leading-[1.75] text-report-ink-soft" />
               )}
-              {exec.highlights.length > 0 && (
-                <p className="mt-2 text-[14.5px] leading-[1.75] text-report-ink-soft">
-                  Key highlights from your matches:{" "}
-                  {exec.highlights.map((h, i) => (
-                    <span key={i}>
-                      {i > 0 && " · "}
-                      {h.url ? (
-                        <a
-                          href={h.url}
-                          target="_blank"
-                          rel="noopener"
-                          className="font-bold text-report-action hover:underline"
-                        >
-                          {h.name}
-                        </a>
-                      ) : (
-                        <b className="font-bold">{h.name}</b>
-                      )}
-                      {h.why ? ` (${h.why})` : ""}
-                    </span>
-                  ))}
-                </p>
-              )}
             </div>
           )}
         </div>
 
         <div className="flex flex-col gap-[22px]">
+          {/* Key highlights as tiles in the rail (Floats smoke test: the buried
+              inline links become scannable tiles that also fill the right-column
+              whitespace). */}
+          {exec.highlights.length > 0 && (
+            <div className="rounded-xl border border-report-border px-[26px] py-[22px]">
+              <p className="mb-3 text-[10.5px] font-bold tracking-[0.12em] text-report-action">
+                KEY HIGHLIGHTS FROM YOUR MATCHES
+              </p>
+              <div className="flex flex-col gap-2.5">
+                {exec.highlights.map((h, i) => (
+                  <div key={i} className="rounded-lg border border-report-tint-border bg-report-tint px-3.5 py-2.5">
+                    {h.url ? (
+                      <a href={h.url} target="_blank" rel="noopener" className="text-[13.5px] font-bold text-report-action hover:underline">
+                        {h.name} ↗
+                      </a>
+                    ) : (
+                      <span className="text-[13.5px] font-bold text-report-ink">{h.name}</span>
+                    )}
+                    {h.why && <p className="mt-0.5 text-[12px] leading-[1.55] text-report-ink-soft">{h.why}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {showHero && (
             <div className="rounded-xl bg-report-surface px-8 py-[30px] text-white">
               <p className="text-[10.5px] font-bold tracking-[0.12em] text-report-sky-soft">

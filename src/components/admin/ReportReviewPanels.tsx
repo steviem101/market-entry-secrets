@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { AdminReportIntake, AdminReportQualityDetail } from "@/lib/api/reportApi";
+import type { AdminReportIntake, AdminReportQualityDetail, ReportInteractionRow } from "@/lib/api/reportApi";
 import { Badge } from "@/components/ui/badge";
 
 // ── shared helpers ────────────────────────────────────────────────────────
@@ -252,6 +252,130 @@ export const QualityPanel = ({ quality }: { quality: AdminReportQualityDetail | 
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Presentation flags</p>
           <p className="text-sm text-mes-warning">{presFlags.join(" · ")}</p>
+        </div>
+      )}
+    </section>
+  );
+};
+
+// ── Advisor queue (F3) ──────────────────────────────────────────────────────
+// What the customer flagged on this report — their shortlist (latest star state
+// per entity), scan/brief/lead requests, and action-plan checkbox progress — so
+// the advisor arrives prepared. Interactions arrive newest-first.
+const REQUEST_LABEL: Record<string, string> = {
+  lead_request: "Lead list",
+  brief_request: "Account brief",
+  scan_request: "Competitor scan",
+};
+
+export const AdvisorQueuePanel = ({
+  interactions,
+  planStepCount,
+}: {
+  interactions: ReportInteractionRow[];
+  /** Total action-plan steps in this report, so progress reads against the whole
+   *  plan ("3 of 40") rather than only the steps the customer happened to toggle
+   *  ("3 of 3", which read as a finished plan). Undefined when the plan total is
+   *  unknown (raw-dump fallback) — the copy degrades to a plain ticked count. */
+  planStepCount?: number;
+}) => {
+  if (!interactions || interactions.length === 0) {
+    return (
+      <section className="rounded-lg border bg-card p-5">
+        <h2 className="text-sm font-semibold text-foreground mb-1">Advisor queue</h2>
+        <p className="text-sm text-muted-foreground">
+          The customer hasn't starred anything or sent a request on this report yet.
+        </p>
+      </section>
+    );
+  }
+
+  // Latest state per entity for stars and per id for checkboxes (event-log model:
+  // walk oldest→newest so the last write wins).
+  const shortlist = new Map<string, { name: string; section: string; on: boolean }>();
+  const checkState = new Map<string, boolean>();
+  for (let idx = interactions.length - 1; idx >= 0; idx--) {
+    const i = interactions[idx];
+    if (i.type === "star") {
+      const item = (i.payload?.item ?? {}) as Record<string, unknown>;
+      const name = typeof item.name === "string" ? item.name : "";
+      if (!name) continue;
+      const section = typeof item.section === "string" ? item.section : "";
+      shortlist.set(`${section}|${name}`, { name, section, on: i.payload?.on === true });
+    } else if (i.type === "checkbox") {
+      const id = str(i.payload, "id") ?? str(i.payload, "label");
+      if (id) checkState.set(id, i.payload?.on === true);
+    }
+  }
+  const starred = [...shortlist.values()].filter((s) => s.on);
+  const requests = interactions.filter(
+    (i) => i.type === "scan_request" || i.type === "brief_request" || i.type === "lead_request"
+  );
+  // Booking is the primary conversion action — surface the most recent one
+  // prominently (interactions arrive newest-first, so the first match is latest).
+  const booked = interactions.find((i) => i.type === "book_request");
+  const checkedCount = [...checkState.values()].filter(Boolean).length;
+
+  return (
+    <section className="rounded-lg border bg-card p-5 space-y-4">
+      <h2 className="text-sm font-semibold text-foreground">Advisor queue — what the customer flagged</h2>
+
+      {booked && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-mes-success/40 bg-mes-success/10 px-3 py-2">
+          <Badge className="bg-mes-success text-white hover:bg-mes-success">Session requested</Badge>
+          <span className="text-sm text-foreground">
+            Customer clicked “Book your advisory session”
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {new Date(booked.created_at).toLocaleDateString()}
+          </span>
+        </div>
+      )}
+
+      <div>
+        <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Shortlist ({starred.length})</h3>
+        {starred.length ? (
+          <div className="flex flex-wrap gap-1.5">
+            {starred.map((s, i) => (
+              <Badge key={i} variant="secondary">
+                ♥ {s.name}
+                {s.section ? ` · ${s.section}` : ""}
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Nothing starred.</p>
+        )}
+      </div>
+
+      <div>
+        <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Requests ({requests.length})</h3>
+        {requests.length ? (
+          <ul className="space-y-1.5">
+            {requests.map((r) => {
+              const detail = str(r.payload, "icpDescription") ?? str(r.payload, "accountName");
+              return (
+                <li key={r.id} className="flex flex-wrap items-baseline gap-2 text-sm">
+                  <Badge>{REQUEST_LABEL[r.type] ?? r.type}</Badge>
+                  {detail && <span className="text-foreground">{detail}</span>}
+                  <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">No requests.</p>
+        )}
+      </div>
+
+      {checkState.size > 0 && (
+        <div>
+          <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Action-plan progress</h3>
+          <p className="text-sm text-foreground">
+            {typeof planStepCount === "number" && planStepCount >= checkedCount
+              ? `${checkedCount} of ${planStepCount} step${planStepCount === 1 ? "" : "s"} ticked.`
+              : `${checkedCount} step${checkedCount === 1 ? "" : "s"} ticked.`}
+          </p>
         </div>
       )}
     </section>

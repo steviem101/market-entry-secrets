@@ -68,6 +68,14 @@ export interface AdminReportQualityDetail {
   created_at: string | null;
 }
 
+/** One row of the report_v2 advisor queue (star / request / checkbox). */
+export interface ReportInteractionRow {
+  id: string;
+  type: 'star' | 'scan_request' | 'brief_request' | 'lead_request' | 'checkbox' | 'book_request';
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
 export const reportApi = {
   /**
    * v2 intake submit. Projects the redesigned schema into the flat
@@ -237,13 +245,18 @@ export const reportApi = {
 
   async fetchReport(reportId: string) {
     // Fetch report metadata (without full report_json content for gated sections)
+    // Embed the intake's website_url (owner-visible via RLS) so report_v2 can
+    // resolve the customer's real logo.dev cover mark instead of a monogram
+    // (Floats smoke test: wrong cover logo). Null-safe — a missing embed just
+    // degrades to the monogram, exactly as before.
     const { data: meta, error: metaError } = await (supabase as any)
       .from('user_reports')
-      .select('id, user_id, intake_form_id, tier_at_generation, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at')
+      .select('id, user_id, intake_form_id, tier_at_generation, sections_generated, status, feedback_score, feedback_notes, created_at, updated_at, user_intake_forms(website_url)')
       .eq('id', reportId)
       .single();
 
     if (metaError) throw metaError;
+    const companyWebsite: string | null = meta?.user_intake_forms?.website_url ?? null;
 
     // Use the server-side tier-gated function to get filtered report_json.
     // T4 (MES-188): request redacted teasers for locked sections when the
@@ -267,6 +280,7 @@ export const reportApi = {
 
     return {
       ...meta,
+      company_website: companyWebsite,
       report_json: gatedJson ?? {},
     } as {
       id: string;
@@ -280,6 +294,7 @@ export const reportApi = {
       feedback_notes: string | null;
       created_at: string;
       updated_at: string;
+      company_website: string | null;
     };
   },
 
@@ -456,10 +471,32 @@ export const reportApi = {
       quality = qRows[0] as AdminReportQualityDetail;
     }
 
+    // Advisor queue (F3): what the customer flagged on this report — shortlist
+    // stars, scan/brief/lead requests, action-plan checkbox progress. Admin RLS
+    // on report_interactions permits the full read; best-effort (a missing table
+    // in an old preview just yields []).
+    let interactions: ReportInteractionRow[] = [];
+    const { data: iRows, error: iErr } = await (supabase as any)
+      .from('report_interactions')
+      .select('id, type, payload, created_at')
+      .eq('report_id', reportId)
+      // Explicit cap (mirrors the report renderer's INTERACTION_READ_CAP): the
+      // event log is unbounded, and riding the implicit 1000-row cap would drop
+      // the OLDEST rows here while the customer view drops the newest — so the two
+      // views could disagree. 2000 is well past any real per-report count.
+      .order('created_at', { ascending: false })
+      .limit(2000);
+    if (iErr) {
+      console.warn('[admin-report] interactions unavailable', iErr.message ?? iErr);
+    } else if (Array.isArray(iRows)) {
+      interactions = iRows as ReportInteractionRow[];
+    }
+
     return {
       ...meta,
       report_json: (fullJson ?? {}) as Record<string, unknown>,
       quality,
+      interactions,
     } as {
       id: string;
       user_id: string;
@@ -474,6 +511,7 @@ export const reportApi = {
       updated_at: string;
       user_intake_forms: AdminReportIntake | null;
       quality: AdminReportQualityDetail | null;
+      interactions: ReportInteractionRow[];
     };
   },
 
