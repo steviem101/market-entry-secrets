@@ -3164,6 +3164,20 @@ async function generateReportInBackground(
     // stay balanced and each line is a distinct action, not a paragraph.
     const actionPlanFormatNote = `\n\nACTION PLAN FORMAT: Structure this as phases, each with a short **bold sub-heading** followed by 3-6 bullet points — never long paragraphs. Keep each phase to roughly 120-150 words. Every bullet is ONE concrete action: lead with the verb, name the specific entity / agency / dollar amount / deadline, and keep it under ~20 words. Do not restate context already covered in earlier sections; each bullet stands alone.`;
 
+    // F2 (MES-217) section-quality notes — additive, grounded, per-section.
+    // Exec: the Floats smoke test flagged the summary as a wall of text; force
+    // short paragraphs + a scannable bullet list, plain English (Orwell's rules).
+    const execFormatNote = `\n\nWRITING STYLE (this section): Keep paragraphs SHORT (2-4 sentences). After the opening paragraph, use a scannable **bullet list** for the key takeaways rather than more prose. Apply George Orwell's rules: prefer the short word, cut every word that adds nothing, use the active voice, avoid jargon and cliché. Do NOT repeat points made elsewhere in the report. Aim for signal, not length.`;
+    // Providers: a one-line "why we chose this one" tied to the customer's OWN
+    // stated needs/questions from the intake, for the top matches.
+    const providerRationaleNote = `\n\nWHY THESE PROVIDERS: For the first three providers, add ONE short sentence explaining why THIS provider fits the customer's stated needs/questions from their intake (their goals, challenges, and services_needed above). Tie it back to what they actually asked for — do not give generic praise. Base it only on the provider's real description and the customer's stated context; never invent services a provider does not list.`;
+    // Investors: only recommend stage-appropriate investors, and separate grants/
+    // awards (non-dilutive) from equity investors so the funding mix is clear.
+    const investorStageFitNote = `\n\nSTAGE FIT + FUNDING MIX: Prioritise investors whose stage focus MATCHES this company's stage (a pre-seed/seed company should be pointed at pre-seed/seed funds and angels, not growth/late-stage equity — flag any later-stage name as "for a future round"). Group NON-DILUTIVE options (grants, awards, government programs) SEPARATELY from equity investors so the customer sees the full funding mix, and surface the single most relevant grant they are likely eligible for. Only use investors/grants present in the matched data; never invent a fund, cheque size, or eligibility.`;
+    // Competitors: prioritise + explicitly tag Australian/ANZ competitors first —
+    // the report is ANZ market intelligence, so local rivals matter most.
+    const competitorAuFirstNote = `\n\nAUSTRALIAN COMPETITORS FIRST: This is Australian/ANZ market intelligence, so LEAD with competitors that operate in Australia/New Zealand and explicitly tag them as locally present; treat overseas competitors as secondary context. Where a competitor has a known AU/ANZ presence, say so. Do not fabricate an Australian presence — only state it when the provided data supports it.`;
+
     // Phase C (RQ ref 7a000874): when the user's stated priority is an explicit home-vs-
     // Australia comparison, instruct sections (esp. SWOT + action plan) to contrast the two
     // markets using the provided research rather than describing Australia in isolation.
@@ -3402,7 +3416,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~110 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote + leadRecommendationNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote + providerRationaleNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote + competitorAuFirstNote : ""}${tmpl.section_name === "investor_recommendations" ? investorStageFitNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote + leadRecommendationNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" ? execFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
