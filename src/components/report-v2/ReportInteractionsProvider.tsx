@@ -9,7 +9,7 @@ export interface ShortlistItem {
   section: string;
 }
 
-export type RequestType = "scan_request" | "brief_request" | "lead_request";
+export type RequestType = "scan_request" | "brief_request" | "lead_request" | "book_request";
 
 interface ReportInteractionsValue {
   starred: ShortlistItem[];
@@ -17,9 +17,20 @@ interface ReportInteractionsValue {
   toggleStar: (item: ShortlistItem) => void;
   /** Persist a request-hook event (ticket 14). No-op without a report id. */
   recordRequest: (type: RequestType, payload?: Record<string, unknown>) => void;
+  /** Action-plan checkbox state (F3): durable per report + advisor-visible. */
+  isChecked: (id: string) => boolean;
+  toggleCheck: (id: string) => void;
+  /** True once a book_request exists for this report (F3): lets the booking CTA
+   *  show its confirmation across reloads and guards against a duplicate emit. */
+  hasBooked: boolean;
 }
 
 const keyOf = (item: { url: string; name: string }) => item.url || item.name;
+
+// Bound on the interaction-log read. Well above any real per-report event count
+// (a handful of stars/checks + a booking), but explicit so the read never rides
+// the implicit 1000-row cap and silently loses rows. Mirrors the admin read.
+const INTERACTION_READ_CAP = 2000;
 
 const Ctx = createContext<ReportInteractionsValue | null>(null);
 
@@ -45,7 +56,10 @@ interface ProviderProps {
  */
 export const ReportInteractionsProvider = ({ reportId, storageKey, children }: ProviderProps) => {
   const [starred, setStarred] = useState<ShortlistItem[]>([]);
+  const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [booked, setBooked] = useState(false);
   const lsKey = `mes_report_v2_shortlist_${storageKey ?? reportId ?? "dev"}`;
+  const lsCheckKey = `mes_report_v2_checks_${storageKey ?? reportId ?? "dev"}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -53,24 +67,44 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
     // shows the previous report's shortlist (and never writes a star against
     // the new report from stale state) while the fetch is in flight.
     setStarred([]);
+    setChecked(new Set());
+    setBooked(false);
     if (reportId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any)
         .from("report_interactions")
-        .select("payload,created_at")
+        .select("type,payload,created_at")
         .eq("report_id", reportId)
-        .eq("type", "star")
-        .order("created_at", { ascending: true })
-        .then(({ data }: { data: { payload: { item?: ShortlistItem; on?: boolean } }[] | null }) => {
+        .in("type", ["star", "checkbox", "book_request"])
+        // Newest-first + an explicit cap: the event log grows unbounded, and the
+        // default 1000-row cap on an ASCENDING read would silently drop the NEWEST
+        // rows — showing stale stars/checks and reading hasBooked=false after a
+        // real booking (CLAUDE.md gotcha #1). Reversed back to ascending below so
+        // the "latest write wins" reducer stays correct.
+        .order("created_at", { ascending: false })
+        .limit(INTERACTION_READ_CAP)
+        .then(({ data }: { data: { type: string; payload: { item?: ShortlistItem; on?: boolean; id?: string } }[] | null }) => {
           if (cancelled || !data) return;
-          const latest = new Map<string, { item: ShortlistItem; on: boolean }>();
-          for (const row of data) {
-            const item = row.payload?.item;
-            if (item) latest.set(keyOf(item), { item, on: !!row.payload?.on });
+          const latestStar = new Map<string, { item: ShortlistItem; on: boolean }>();
+          const latestCheck = new Map<string, boolean>();
+          let anyBooked = false;
+          for (const row of [...data].reverse()) {
+            if (row.type === "checkbox") {
+              if (row.payload?.id) latestCheck.set(row.payload.id, !!row.payload?.on);
+            } else if (row.type === "book_request") {
+              anyBooked = true;
+            } else {
+              const item = row.payload?.item;
+              if (item) latestStar.set(keyOf(item), { item, on: !!row.payload?.on });
+            }
           }
-          setStarred([...latest.values()].filter((v) => v.on).map((v) => v.item));
+          setStarred([...latestStar.values()].filter((v) => v.on).map((v) => v.item));
+          setChecked(new Set([...latestCheck.entries()].filter(([, on]) => on).map(([id]) => id)));
+          setBooked(anyBooked);
         });
     } else {
+      // Two independent try blocks: a corrupt shortlist value must not abort the
+      // checkbox hydration (they are separate keys with separate lifetimes).
       try {
         const raw = localStorage.getItem(lsKey);
         const parsed = raw ? JSON.parse(raw) : null;
@@ -78,13 +112,20 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
         // otherwise poison `starred` and crash downstream .map/.some/.length.
         if (Array.isArray(parsed) && !cancelled) setStarred(parsed as ShortlistItem[]);
       } catch {
-        /* ignore malformed local state */
+        /* ignore malformed shortlist state */
+      }
+      try {
+        const rawC = localStorage.getItem(lsCheckKey);
+        const parsedC = rawC ? JSON.parse(rawC) : null;
+        if (Array.isArray(parsedC) && !cancelled) setChecked(new Set(parsedC as string[]));
+      } catch {
+        /* ignore malformed checkbox state */
       }
     }
     return () => {
       cancelled = true;
     };
-  }, [reportId, lsKey]);
+  }, [reportId, lsKey, lsCheckKey]);
 
   const toggleStar = useCallback(
     (item: ShortlistItem) => {
@@ -128,5 +169,38 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
 
   const isStarred = useCallback((key: string) => starred.some((x) => keyOf(x) === key), [starred]);
 
-  return <Ctx.Provider value={{ starred, isStarred, toggleStar, recordRequest }}>{children}</Ctx.Provider>;
+  const isChecked = useCallback((id: string) => checked.has(id), [checked]);
+
+  const toggleCheck = useCallback(
+    (id: string) => {
+      const on = !checked.has(id);
+      const next = new Set(checked);
+      if (on) next.add(id);
+      else next.delete(id);
+      setChecked(next);
+      if (reportId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase as any)
+          .from("report_interactions")
+          .insert({ report_id: reportId, type: "checkbox", payload: { id, on } })
+          .then(
+            () => {},
+            () => {}
+          );
+      } else {
+        try {
+          localStorage.setItem(lsCheckKey, JSON.stringify([...next]));
+        } catch {
+          /* ignore quota errors */
+        }
+      }
+    },
+    [checked, reportId, lsCheckKey]
+  );
+
+  return (
+    <Ctx.Provider value={{ starred, isStarred, toggleStar, recordRequest, isChecked, toggleCheck, hasBooked: booked }}>
+      {children}
+    </Ctx.Provider>
+  );
 };
