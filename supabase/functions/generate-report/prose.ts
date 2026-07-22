@@ -38,3 +38,29 @@ export function deEmDashSections(sections: Record<string, any>): Record<string, 
   }
   return out;
 }
+
+/**
+ * Apply deEmDash to the card-copy fields (`description`, `subtitle`) of every
+ * match. These render directly on the report cards (event blurbs, provider /
+ * mentor / investor descriptions), so em-dashes there must be stripped too —
+ * section prose isn't the only surface (mes-qa follow-up).
+ */
+// deno-lint-ignore no-explicit-any
+export function deEmDashMatches(matches: Record<string, any>): Record<string, any> {
+  // deno-lint-ignore no-explicit-any
+  const out: Record<string, any> = {};
+  for (const [cat, arr] of Object.entries(matches)) {
+    if (!Array.isArray(arr)) {
+      out[cat] = arr;
+      continue;
+    }
+    out[cat] = arr.map((m) => {
+      if (!m || typeof m !== "object") return m;
+      const next = { ...m };
+      if (typeof next.description === "string") next.description = deEmDash(next.description);
+      if (typeof next.subtitle === "string") next.subtitle = deEmDash(next.subtitle);
+      return next;
+    });
+  }
+  return out;
+}

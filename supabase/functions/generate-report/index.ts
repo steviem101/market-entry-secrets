@@ -31,7 +31,7 @@ import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse,
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { parseAbPercent, inCandidateBucket } from "./promptAb.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
-import { deEmDashSections } from "./prose.ts";
+import { deEmDashSections, deEmDashMatches } from "./prose.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry, FLASH_MODEL } from "./sectionModel.ts";
 import { selectCaseStudies, hasCorridorReason, type CaseStudyRow } from "./caseStudyMatch.ts";
 
@@ -3720,10 +3720,13 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       // failed to keep "long dashes" out. Runs on both the unpolished and
       // polished builds so every stored snapshot is clean.
       const deDashed = deEmDashSections(cited.sections);
+      // Also strip em-dashes from card-copy fields on matches (event blurbs,
+      // provider/mentor/investor descriptions) — they render alongside the prose.
+      const deDashedMatches = deEmDashMatches(matches);
       return {
       company_name: intake.company_name,
       sections: deDashed,
-      matches,
+      matches: deDashedMatches,
       metadata: {
         tables_searched: Object.keys(matches),
         total_matches: Object.values(matches).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0),

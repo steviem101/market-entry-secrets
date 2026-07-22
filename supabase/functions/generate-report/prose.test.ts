@@ -3,7 +3,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { deEmDash, deEmDashSections } from "./prose.ts";
+import { deEmDash, deEmDashSections, deEmDashMatches } from "./prose.ts";
 
 test("spaced em-dash → comma", () => {
   assert.equal(
@@ -44,6 +44,19 @@ test("idempotent", () => {
 test("safe on empty / undefined", () => {
   assert.equal(deEmDash(""), "");
   assert.equal(deEmDash(undefined as unknown as string), undefined);
+});
+
+test("deEmDashMatches strips em-dashes from match description/subtitle, preserves the rest", () => {
+  const out = deEmDashMatches({
+    events: [{ name: "Expo", description: "A great room — meet buyers", subtitle: "SEP 2026 – Sydney" }],
+    empty: [],
+    scalar: "x",
+  });
+  assert.equal(out.events[0].description, "A great room, meet buyers");
+  assert.equal(out.events[0].subtitle, "SEP 2026 – Sydney"); // en-dash range untouched
+  assert.equal(out.events[0].name, "Expo");
+  assert.deepEqual(out.empty, []);
+  assert.equal(out.scalar, "x");
 });
 
 test("deEmDashSections only rewrites string content, preserves other fields", () => {
