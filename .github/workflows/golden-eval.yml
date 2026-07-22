@@ -76,7 +76,26 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      # Reject an update_baseline dispatch that would bake a bad baseline, BEFORE
+      # the eval spends money. Runs with NO prod secrets in scope; only compares
+      # the built-in GITHUB_REF and the (non-executed) goldens input. Failing here
+      # skips the eval step, which in turn keeps the refresh step from opening a PR
+      # (it gates on steps.eval.outcome).
+      - name: Validate baseline-refresh request
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.update_baseline == 'true' }}
+        env:
+          GOLDENS_INPUT: ${{ github.event.inputs.goldens }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::update_baseline must be dispatched from main (got $GITHUB_REF). A non-default ref would PR the whole branch as the baseline." >&2
+            exit 1
+          fi
+          if [ -n "$GOLDENS_INPUT" ]; then
+            echo "::error::update_baseline requires the FULL set — leave 'goldens' empty. A subset would re-stamp only those goldens and corrupt the baseline." >&2
+            exit 1
+          fi
       - name: Run golden set
+        id: eval
         env:
           EVAL_SUPABASE_URL: ${{ secrets.EVAL_SUPABASE_URL }}
           EVAL_SUPABASE_ANON_KEY: ${{ secrets.EVAL_SUPABASE_ANON_KEY }}
@@ -126,23 +145,49 @@ jobs:
       # Open a PR with the refreshed baseline so it is reviewed like code (never
       # committed straight to main). Runs ONLY on an explicit update_baseline
       # dispatch, in a separate step that does NOT carry the EVAL_* prod secrets.
-      # github.run_id is a safe numeric — no user input is interpolated here.
+      # github.run_id/run_attempt are safe numerics — no user input is interpolated.
+      #
+      # Gated on steps.eval.outcome, NOT the job's success: the eval step exits 1
+      # when it flags a regression, but a regression is exactly when an operator
+      # wants to RE-STAMP the baseline downward — so we must still open the PR after
+      # a 'failure'. We exclude 'skipped' (the validation step above rejected the
+      # request) so a bad dispatch never opens a PR. `main`-only is re-asserted here
+      # so a non-default-ref dispatch can't reach the PR path.
       - name: Open baseline-refresh PR
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.update_baseline == 'true' }}
+        if: >-
+          ${{ !cancelled()
+              && github.event_name == 'workflow_dispatch'
+              && github.event.inputs.update_baseline == 'true'
+              && github.ref == 'refs/heads/main'
+              && (steps.eval.outcome == 'success' || steps.eval.outcome == 'failure') }}
         env:
           GH_TOKEN: ${{ github.token }}
+          EVAL_OUTCOME: ${{ steps.eval.outcome }}
         run: |
           if git diff --quiet -- eval/baselines.json; then
             echo "Baseline unchanged — nothing to open a PR for."
             exit 0
           fi
-          BRANCH="eval/baseline-refresh-${{ github.run_id }}"
+          # run_attempt distinguishes re-runs of the SAME run_id, whose branch
+          # would otherwise already exist and fail the push.
+          BRANCH="eval/baseline-refresh-${{ github.run_id }}-${{ github.run_attempt }}"
+          GATE_NOTE="the regression gate PASSED on this run"
+          if [ "$EVAL_OUTCOME" = "failure" ]; then
+            GATE_NOTE="**the regression gate FAILED on this run** — this is a DOWNWARD re-stamp; confirm the lower scores are acceptable, not a real quality drop"
+          fi
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git checkout -b "$BRANCH"
           git add eval/baselines.json
-          git commit -m "chore(eval): refresh golden baseline (run ${{ github.run_id }})"
+          git commit -m "chore(eval): refresh golden baseline (run ${{ github.run_id }} attempt ${{ github.run_attempt }})"
           git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$BRANCH"
           gh pr create --base main --head "$BRANCH" \
             --title "chore(eval): refresh golden baseline" \
-            --body "Automated golden-baseline refresh from the \`update_baseline\` dispatch (run ${{ github.run_id }}). Review the per-section score deltas in \`eval/baselines.json\` before merging — this re-stamps the regression gate to the current pipeline's scores. See eval/README.md."
+            --body "Automated golden-baseline refresh from the \`update_baseline\` dispatch (run ${{ github.run_id }}, attempt ${{ github.run_attempt }}).
+
+          Review the per-section score deltas in \`eval/baselines.json\` before merging — this re-stamps the regression gate to the current pipeline's scores.
+
+          - Gate status: ${GATE_NOTE}.
+          - **Confirm this was a FULL-set run with no skipped goldens** before merging: a golden dropped to a 429/rate-limit keeps its OLD baseline score, so a partial run would silently freeze a stale baseline for the skipped goldens. Check the run log for a golden count matching \`eval/goldens\`.
+
+          See eval/README.md."
