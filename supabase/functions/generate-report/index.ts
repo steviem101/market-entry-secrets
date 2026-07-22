@@ -34,6 +34,7 @@ import { auditPolishedSections } from "./polishDiffAudit.ts";
 import { deEmDash, deEmDashSections, deEmDashMatches, deEmDashList, deEmDashKeyMetrics } from "./prose.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry, FLASH_MODEL } from "./sectionModel.ts";
 import { selectCaseStudies, hasCorridorReason, type CaseStudyRow } from "./caseStudyMatch.ts";
+import { computeRunCost, type TokenUsage, type AiUsageEntry } from "./cost.ts";
 
 // ── Firecrawl helpers ──────────────────────────────────────────────────
 
@@ -1040,11 +1041,20 @@ async function researchEndBuyerProcurement(intake: any): Promise<string> {
 // do NOT set a restrictive max_tokens on synthesis/polish — a hard cap would
 // truncate mid-sentence (worse for presentation than an overlong section); section
 // length is controlled via prompt budgets instead.
+// Optional token-usage reporting for cost attribution (MES-219). Callers that
+// don't pass onUsage are unaffected. TokenUsage + the cost aggregation live in
+// the pure, unit-tested ./cost.ts.
+type AICallOpts = {
+  temperature?: number;
+  max_tokens?: number;
+  onUsage?: (u: TokenUsage) => void;
+};
+
 async function callAI(
   apiKey: string,
   messages: Array<{ role: string; content: string }>,
   model = "google/gemini-3-flash-preview",
-  opts: { temperature?: number; max_tokens?: number } = {}
+  opts: AICallOpts = {}
 ): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 90000);
@@ -1072,6 +1082,14 @@ async function callAI(
   }
 
   const data = await resp.json();
+  // Gateway returns OpenAI-shaped usage; report it if the caller opted in.
+  // Fully guarded — a missing usage block simply reports nothing.
+  if (opts.onUsage && data.usage) {
+    opts.onUsage({
+      input: Number(data.usage.prompt_tokens) || 0,
+      output: Number(data.usage.completion_tokens) || 0,
+    });
+  }
   return data.choices?.[0]?.message?.content || "";
 }
 
@@ -1089,7 +1107,7 @@ async function callAnthropicChat(
   model: string,
   systemContent: string,
   userContent: string,
-  opts: { temperature?: number; max_tokens?: number } = {},
+  opts: AICallOpts = {},
 ): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SECTION_ANTHROPIC_TIMEOUT_MS);
@@ -1112,6 +1130,13 @@ async function callAnthropicChat(
       throw new Error(`Anthropic call failed: ${resp.status}`);
     }
     const data = await resp.json();
+    // Anthropic usage is {input_tokens, output_tokens}; report if opted in.
+    if (opts.onUsage && data.usage) {
+      opts.onUsage({
+        input: Number(data.usage.input_tokens) || 0,
+        output: Number(data.usage.output_tokens) || 0,
+      });
+    }
     // Text blocks only (a thinking block would otherwise contribute "").
     return (data.content || [])
       .filter((b: any) => b?.type === "text")
@@ -1128,7 +1153,7 @@ async function callAnthropicChat(
 async function writeSection(
   model: string,
   messages: Array<{ role: string; content: string }>,
-  opts: { temperature?: number; max_tokens?: number },
+  opts: AICallOpts,
   keys: { lovableKey: string; anthropicKey?: string },
 ): Promise<string> {
   if (isAnthropicModel(model)) {
@@ -1271,7 +1296,8 @@ const SECTION_DELIMITER_SUFFIX = "===";
 async function polishReport(
   apiKey: string,
   sections: Record<string, any>,
-  sectionOrder: string[]
+  sectionOrder: string[],
+  onUsage?: (u: TokenUsage) => void,
 ): Promise<Record<string, any>> {
   // Polish every section that has content, even if it's currently gated
   // (visible=false). Gated content is stored hidden under P0-3 so that an
@@ -1319,7 +1345,7 @@ Rules:
       },
     ],
     "google/gemini-3-flash-preview",
-    { temperature: 0.3 }
+    { temperature: 0.3, onUsage }
   );
 
   console.log(`Polish: AI call completed in ${Date.now() - polishStart}ms`);
@@ -2522,7 +2548,42 @@ async function generateReportInBackground(
   // Per-run phase timings (ms) persisted into report_json.metadata.phase_timings
   // → report_quality.metadata by slack-notify — so it's observable which phase
   // dominates a ~3-4 min generation (research vs section writing vs polish).
-  const phaseTimings: { research_ms?: number; sections_ms?: number; polish_ms?: number } = {};
+  const phaseTimings: {
+    research_ms?: number;
+    sections_ms?: number;
+    polish_ms?: number;
+    // MES-219 finer breakdown: the non-research/section/polish time was previously
+    // unaccounted (setup, prompt assembly, saves). research_breakdown attributes
+    // the parallel Phase-1 block per source so the long pole is visible.
+    setup_ms?: number;
+    assembly_ms?: number;
+    research_breakdown?: Record<string, number>;
+  } = {};
+  // MES-219 cost attribution: metered AI token usage per call (pushed by the
+  // optional onUsage hook), aggregated + LOGGED at each buildReportJson pass.
+  // Deliberately NOT persisted into report_json.metadata — the tier-gated and
+  // shared-report RPCs pass metadata through to clients (incl. public share
+  // links), and a per-report USD figure must never reach them.
+  const aiUsage: AiUsageEntry[] = [];
+  const meterUsage = (model: string) => (u: TokenUsage) => {
+    aiUsage.push({ model, input: u.input, output: u.output });
+  };
+  // Per-source timing for the Phase-1 research Promise.all (all run concurrently,
+  // so each key is its own wall-clock, and max(values) ≈ research_ms).
+  const researchBreakdown: Record<string, number> = {};
+  let researchEndAt = 0;
+  // `p: T` + Promise<Awaited<T>> (not `p: Promise<T>`) so a ternary branch whose
+  // two arms resolve to DIFFERENT shapes (e.g. {profile: Profile} vs {profile: null})
+  // stays a union per Promise.all slot instead of collapsing to one T — matches the
+  // original un-wrapped typing exactly.
+  const timeIt = async <T>(key: string, p: T): Promise<Awaited<T>> => {
+    const t = Date.now();
+    try {
+      return await p;
+    } finally {
+      researchBreakdown[key] = Date.now() - t;
+    }
+  };
   const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
 
   try {
@@ -2641,6 +2702,9 @@ async function generateReportInBackground(
     };
 
     const researchStart = Date.now();
+    // Setup (intake fetch, ownership, artifact check, key wiring) is everything
+    // before Phase 1 — previously unaccounted in phase_timings (MES-219).
+    phaseTimings.setup_ms = researchStart - startTime;
     [
       companyEnrichResult,
       marketResearch,
@@ -2650,31 +2714,33 @@ async function generateReportInBackground(
       endBuyerProcurementResearch,
       endBuyerAccountResearch,
     ] = await Promise.all([
-      firecrawlKey && intake.website_url
+      timeIt("company_scrape", firecrawlKey && intake.website_url
         ? enrichCompanyDeep(firecrawlKey, lovableKey, intake.website_url, intake.company_name, fallbackSummary, firecrawlStats, firecrawlCache)
-        : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary, diagnostics: null }),
-      runMarketResearch(intake, persona),
-      matchesAndEnrichTask(),
-      firecrawlKey
+        : Promise.resolve({ profile: null, enrichedSummary: fallbackSummary, diagnostics: null })),
+      timeIt("market_research", runMarketResearch(intake, persona)),
+      timeIt("directory_matching", matchesAndEnrichTask()),
+      timeIt("competitors", firecrawlKey
         ? searchCompetitors(firecrawlKey, lovableKey, intake, firecrawlStats, firecrawlCache)
-        : Promise.resolve({ competitors: [], raw_results: [], competitor_depth: !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH") }),
-      firecrawlKey && (intake.end_buyers || []).length > 0
+        : Promise.resolve({ competitors: [], raw_results: [], competitor_depth: !!Deno.env.get("FIRECRAWL_COMPETITOR_DEPTH") })),
+      timeIt("end_buyer_scrape", firecrawlKey && (intake.end_buyers || []).length > 0
         ? scrapeEndBuyers(firecrawlKey, lovableKey, intake.end_buyers, intake.company_name, firecrawlStats, firecrawlCache)
-        : Promise.resolve([]),
-      researchEndBuyerProcurement(intake),
+        : Promise.resolve([])),
+      timeIt("end_buyer_procurement", researchEndBuyerProcurement(intake)),
       // Buyer-briefs v1: ONE batched Perplexity pass across all named accounts —
       // recent news + live hiring + known tech, cited. Single call regardless of
       // chip count (cost cap); "" on failure/no chips (fail-open).
-      (async () => {
+      timeIt("end_buyer_accounts", (async () => {
         const chips = (intake.end_buyers || []).slice(0, 3);
         const pk = Deno.env.get("PERPLEXITY_API_KEY");
         if (!pk || chips.length === 0) return "";
         const list = chips.map((b: any) => `${b.name}${b.website ? ` (${b.website})` : ""}`).join("; ");
         const r = await callPerplexity(pk, `For EACH of these Australian-market companies: ${list} — give 1) notable news from the last 12 months, 2) whether they appear to be actively hiring and for what roles, 3) any known software/technology they use (ATS, CRM, marketing or delivery stack). Say "unknown" where you cannot find evidence — do not guess.`, { recency: "year" });
         return r.ok ? r.content : "";
-      })(),
+      })()),
     ]);
-    phaseTimings.research_ms = Date.now() - researchStart;
+    researchEndAt = Date.now();
+    phaseTimings.research_ms = researchEndAt - researchStart;
+    phaseTimings.research_breakdown = researchBreakdown;
 
     // ── MES-159: existing-Australia-presence signal (behind AU_PRESENCE_SIGNAL) ──
     // Runs after Phase 1 so it can reuse the company scrape output; adds at most one
@@ -3380,6 +3446,16 @@ async function generateReportInBackground(
       // empty content, which forced a full regeneration after every upgrade.
       console.log(`Generating ${templates.length} sections in single parallel batch (P0-3: gated content stored hidden)...`);
       const sectionStartTime = Date.now();
+      // Everything between research completion and section generation — MES-219.
+      // Mostly prompt assembly (metric extraction, availability lines, template
+      // fetch/render) but ALSO the flag-gated AU-presence pass, the research
+      // artifact save, claims registration, and the key-question-picks AI call —
+      // with AU_PRESENCE_SIGNAL on, network calls can dominate this bucket, so
+      // read a jump here as "pre-section work", not a template-render regression.
+      // Guarded so a resumed report (research loaded from artifact,
+      // researchEndAt=0) doesn't record a bogus interval; resumed runs carry
+      // only sections_ms/polish_ms/total_ms by design.
+      if (researchEndAt) phaseTimings.assembly_ms = sectionStartTime - researchEndAt;
 
       const results = await Promise.allSettled(
         templates.map(async (tmpl: any) => {
@@ -3447,14 +3523,14 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             // metadata.empty_sections (fail-loud), never silently dropped.
             let content = "";
             try {
-              content = await writeSection(sectionModel, sectionMessages, { temperature: 0.4 }, { lovableKey, anthropicKey });
+              content = await writeSection(sectionModel, sectionMessages, { temperature: 0.4, onUsage: meterUsage(sectionModel) }, { lovableKey, anthropicKey });
             } catch (writeErr) {
               console.error(`Section ${tmpl.section_name}: model ${sectionModel} threw:`, writeErr instanceof Error ? writeErr.message : writeErr);
             }
             if (needsFlashRetry(content, isEvalOverride)) {
               console.error(`Section ${tmpl.section_name}: blank from ${sectionModel} — retrying once on flash`);
               try {
-                content = await writeSection(FLASH_MODEL, sectionMessages, { temperature: 0.4 }, { lovableKey, anthropicKey });
+                content = await writeSection(FLASH_MODEL, sectionMessages, { temperature: 0.4, onUsage: meterUsage(FLASH_MODEL) }, { lovableKey, anthropicKey });
               } catch (retryErr) {
                 console.error(`Section ${tmpl.section_name}: flash retry threw:`, retryErr instanceof Error ? retryErr.message : retryErr);
               }
@@ -3624,7 +3700,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             const rewritten = await writeSection(regenModel, [
               { role: "system", content: p.system + buildRegenerationNote(fabricated, name) },
               { role: "user", content: p.user },
-            ], { temperature: 0.2 }, { lovableKey, anthropicKey });
+            ], { temperature: 0.2, onUsage: meterUsage(regenModel) }, { lovableKey, anthropicKey });
             if (rewritten && rewritten.trim().length > 50) {
               sections[name] = { ...sections[name], content: rewritten };
               regenerated.push(name);
@@ -3733,6 +3809,16 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       // Also strip em-dashes from card-copy fields on matches (event blurbs,
       // provider/mentor/investor descriptions) — they render alongside the prose.
       const deDashedMatches = deEmDashMatches(matches);
+      // Estimated per-run cost (MES-219): metered AI tokens + Firecrawl ops. Logged
+      // for ops visibility only — deliberately NOT written into report_json.metadata,
+      // which the tier-gated/shared RPCs pass through to the client (an estimated
+      // per-report USD figure must not leak to public share links). Admin surfacing
+      // is a follow-up that will store it in an admin-only channel. Logs at each
+      // build so the polished snapshot's cost (incl. polish tokens) is visible too.
+      const runCost = computeRunCost(aiUsage, firecrawlStats.ops);
+      console.log(
+        `[cost] report est $${runCost.est_total_usd} — ai $${runCost.ai_usd} (${runCost.ai_input_tokens}+${runCost.ai_output_tokens} tok / ${runCost.ai_calls} calls), firecrawl ${runCost.firecrawl_ops} ops $${runCost.firecrawl_usd}, polished=${polishApplied}`,
+      );
       return {
       company_name: intake.company_name,
       sections: deDashed,
@@ -3917,7 +4003,7 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
       try {
         return await Promise.race([
-          polishReport(lovableKey, sections, sectionOrder),
+          polishReport(lovableKey, sections, sectionOrder, meterUsage("google/gemini-3-flash-preview")),
           new Promise<never>((_, reject) => {
             timeoutHandle = setTimeout(
               () => reject(new Error(`Polish timeout (${POLISH_TIMEOUT_MS / 1000}s)`)),
