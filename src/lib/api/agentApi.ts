@@ -23,6 +23,28 @@ export interface AgentActionResponse {
 // Mirror of the server bulk cap (agent-actions MAX_KEYS). The dashboard also caps selection at 100.
 export const MAX_BULK = 100;
 
+/**
+ * supabase.functions.invoke wraps every non-2xx in a FunctionsHttpError whose .message is the
+ * generic "Edge Function returned a non-2xx status code" — the real reason (401 admin required,
+ * 400 too many keys) lives on error.context (the Response). Surface it, so an expired session
+ * reads as "sign in again", not as a connectivity problem to retry.
+ */
+async function describeInvokeError(error: unknown): Promise<Error> {
+  const ctx = (error as { context?: Response })?.context;
+  if (ctx && typeof ctx.status === "number") {
+    let detail = "";
+    try {
+      const body = await ctx.json();
+      detail = typeof body?.error === "string" ? body.error : "";
+    } catch { /* non-JSON body */ }
+    if (ctx.status === 401 || ctx.status === 403) {
+      return new Error(`Not authorised (${ctx.status})${detail ? `: ${detail}` : ""}. Sign in again with an admin account.`);
+    }
+    return new Error(`agent-actions returned ${ctx.status}${detail ? `: ${detail}` : ""}`);
+  }
+  return error instanceof Error ? error : new Error(String(error));
+}
+
 async function invokeAgentAction(action: AgentAction, proposalKeys: string[]): Promise<AgentActionResponse> {
   if (proposalKeys.length === 0) {
     return { action, ok: 0, total: 0, results: [] };
@@ -33,7 +55,7 @@ async function invokeAgentAction(action: AgentAction, proposalKeys: string[]): P
   const { data, error } = await supabase.functions.invoke("agent-actions", {
     body: { action, proposal_keys: proposalKeys },
   });
-  if (error) throw error;
+  if (error) throw await describeInvokeError(error);
   return data as AgentActionResponse;
 }
 
