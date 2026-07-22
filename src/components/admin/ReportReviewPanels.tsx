@@ -311,8 +311,8 @@ export const AdvisorQueuePanel = ({ interactions }: { interactions: ReportIntera
       <h2 className="text-sm font-semibold text-foreground">Advisor queue — what the customer flagged</h2>
 
       {booked && (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2">
-          <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Session requested</Badge>
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-mes-success/40 bg-mes-success/10 px-3 py-2">
+          <Badge className="bg-mes-success text-white hover:bg-mes-success">Session requested</Badge>
           <span className="text-sm text-foreground">
             Customer clicked “Book your advisory session”
           </span>
