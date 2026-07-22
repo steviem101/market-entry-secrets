@@ -20,6 +20,9 @@ interface ReportInteractionsValue {
   /** Action-plan checkbox state (F3): durable per report + advisor-visible. */
   isChecked: (id: string) => boolean;
   toggleCheck: (id: string) => void;
+  /** True once a book_request exists for this report (F3): lets the booking CTA
+   *  show its confirmation across reloads and guards against a duplicate emit. */
+  hasBooked: boolean;
 }
 
 const keyOf = (item: { url: string; name: string }) => item.url || item.name;
@@ -49,6 +52,7 @@ interface ProviderProps {
 export const ReportInteractionsProvider = ({ reportId, storageKey, children }: ProviderProps) => {
   const [starred, setStarred] = useState<ShortlistItem[]>([]);
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [booked, setBooked] = useState(false);
   const lsKey = `mes_report_v2_shortlist_${storageKey ?? reportId ?? "dev"}`;
   const lsCheckKey = `mes_report_v2_checks_${storageKey ?? reportId ?? "dev"}`;
 
@@ -59,21 +63,25 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
     // the new report from stale state) while the fetch is in flight.
     setStarred([]);
     setChecked(new Set());
+    setBooked(false);
     if (reportId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any)
         .from("report_interactions")
         .select("type,payload,created_at")
         .eq("report_id", reportId)
-        .in("type", ["star", "checkbox"])
+        .in("type", ["star", "checkbox", "book_request"])
         .order("created_at", { ascending: true })
         .then(({ data }: { data: { type: string; payload: { item?: ShortlistItem; on?: boolean; id?: string } }[] | null }) => {
           if (cancelled || !data) return;
           const latestStar = new Map<string, { item: ShortlistItem; on: boolean }>();
           const latestCheck = new Map<string, boolean>();
+          let anyBooked = false;
           for (const row of data) {
             if (row.type === "checkbox") {
               if (row.payload?.id) latestCheck.set(row.payload.id, !!row.payload?.on);
+            } else if (row.type === "book_request") {
+              anyBooked = true;
             } else {
               const item = row.payload?.item;
               if (item) latestStar.set(keyOf(item), { item, on: !!row.payload?.on });
@@ -81,6 +89,7 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
           }
           setStarred([...latestStar.values()].filter((v) => v.on).map((v) => v.item));
           setChecked(new Set([...latestCheck.entries()].filter(([, on]) => on).map(([id]) => id)));
+          setBooked(anyBooked);
         });
     } else {
       try {
@@ -173,7 +182,7 @@ export const ReportInteractionsProvider = ({ reportId, storageKey, children }: P
   );
 
   return (
-    <Ctx.Provider value={{ starred, isStarred, toggleStar, recordRequest, isChecked, toggleCheck }}>
+    <Ctx.Provider value={{ starred, isStarred, toggleStar, recordRequest, isChecked, toggleCheck, hasBooked: booked }}>
       {children}
     </Ctx.Provider>
   );

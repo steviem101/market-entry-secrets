@@ -14,10 +14,16 @@ import { useReportInteractions } from "./ReportInteractionsProvider";
  */
 const CloseSection = ({ report }: { report: Report }) => {
   const { close } = report;
-  const { starred, recordRequest } = useReportInteractions();
-  const [booked, setBooked] = useState(false);
+  const { starred, recordRequest, hasBooked } = useReportInteractions();
+  // Confirmation is durable: hasBooked rehydrates from a persisted book_request,
+  // so a reload keeps the confirmed state and the guard below prevents a second
+  // emit. justBooked is the optimistic flip for the click that has just happened
+  // (and the only signal in the dev harness, which doesn't persist requests).
+  const [justBooked, setJustBooked] = useState(false);
+  const booked = hasBooked || justBooked;
   const bookSession = () => {
-    setBooked(true);
+    if (booked) return;
+    setJustBooked(true);
     recordRequest("book_request", { starredCount: starred.length });
   };
   return (
