@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ReportV2Renderer from "@/components/report-v2/ReportV2Renderer";
 import { adaptPipelineReport, type PipelineReportJson } from "@/lib/report-v2/adapter";
 import type { Report as ReportV2Contract } from "@/types/report";
-import { IntakePanel, QualityPanel } from "@/components/admin/ReportReviewPanels";
+import { IntakePanel, QualityPanel, AdvisorQueuePanel } from "@/components/admin/ReportReviewPanels";
 
 // title/content are unknown on purpose: legacy report_json shapes carry
 // non-string values here, and rendering those directly crashes React — the
@@ -195,6 +195,7 @@ const AdminReportViewInner = () => {
       <div className="container mx-auto px-4 py-6 space-y-6">
         <IntakePanel intake={report.user_intake_forms} />
         <QualityPanel quality={report.quality} />
+        <AdvisorQueuePanel interactions={report.interactions} />
       </div>
 
       {reportV2 ? (

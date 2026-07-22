@@ -68,6 +68,14 @@ export interface AdminReportQualityDetail {
   created_at: string | null;
 }
 
+/** One row of the report_v2 advisor queue (star / request / checkbox). */
+export interface ReportInteractionRow {
+  id: string;
+  type: 'star' | 'scan_request' | 'brief_request' | 'lead_request' | 'checkbox';
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
 export const reportApi = {
   /**
    * v2 intake submit. Projects the redesigned schema into the flat
@@ -456,10 +464,27 @@ export const reportApi = {
       quality = qRows[0] as AdminReportQualityDetail;
     }
 
+    // Advisor queue (F3): what the customer flagged on this report — shortlist
+    // stars, scan/brief/lead requests, action-plan checkbox progress. Admin RLS
+    // on report_interactions permits the full read; best-effort (a missing table
+    // in an old preview just yields []).
+    let interactions: ReportInteractionRow[] = [];
+    const { data: iRows, error: iErr } = await (supabase as any)
+      .from('report_interactions')
+      .select('id, type, payload, created_at')
+      .eq('report_id', reportId)
+      .order('created_at', { ascending: false });
+    if (iErr) {
+      console.warn('[admin-report] interactions unavailable', iErr.message ?? iErr);
+    } else if (Array.isArray(iRows)) {
+      interactions = iRows as ReportInteractionRow[];
+    }
+
     return {
       ...meta,
       report_json: (fullJson ?? {}) as Record<string, unknown>,
       quality,
+      interactions,
     } as {
       id: string;
       user_id: string;
@@ -474,6 +499,7 @@ export const reportApi = {
       updated_at: string;
       user_intake_forms: AdminReportIntake | null;
       quality: AdminReportQualityDetail | null;
+      interactions: ReportInteractionRow[];
     };
   },
 
