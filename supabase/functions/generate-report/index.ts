@@ -31,6 +31,7 @@ import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse,
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { parseAbPercent, inCandidateBucket } from "./promptAb.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
+import { deEmDashSections } from "./prose.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry, FLASH_MODEL } from "./sectionModel.ts";
 import { selectCaseStudies, hasCorridorReason, type CaseStudyRow } from "./caseStudyMatch.ts";
 
@@ -1598,7 +1599,10 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
   try {
     const todayIso = todayIsoForReportTimezone();
     let evQuery = supabase.from("events")
-      .select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic")
+      // `description` surfaces the event blurb on the report card (Floats smoke
+      // test: events showed only a title). The adapter's eventDescription()
+      // error-page-guards it before render.
+      .select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic, description")
       .gte("date", todayIso)
       .limit(CAND);
     evQuery = evQuery.or(buildOr());
@@ -1622,7 +1626,7 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
     // 2024 events appearing in 2026 reports).
     if (eventResults.length === 0) {
       let fbQuery = supabase.from("events")
-        .select("id, title, slug, date, location, category, type, organizer, sector")
+        .select("id, title, slug, date, location, category, type, organizer, sector, description")
         .gte("date", todayIso)
         .order("date", { ascending: true })
         .limit(5);
@@ -3698,9 +3702,13 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         marketResearch.citations,
         keyMetrics,
       );
+      // E1 (F2): deterministic em-dash strip — prompt-only enforcement (Wave 5)
+      // failed to keep "long dashes" out. Runs on both the unpolished and
+      // polished builds so every stored snapshot is clean.
+      const deDashed = deEmDashSections(cited.sections);
       return {
       company_name: intake.company_name,
-      sections: cited.sections,
+      sections: deDashed,
       matches,
       metadata: {
         tables_searched: Object.keys(matches),
