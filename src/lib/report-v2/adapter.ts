@@ -358,6 +358,35 @@ const eventDescription = (m: PipelineMatch): string => {
   return plain;
 };
 
+// Content/guide card summary: the curated `meta_description` FIRST, then the
+// real `description` — NEVER the `subtitle`, which for content_items is the
+// content_type ("guide") and rendered the literal word "guide" as the blurb
+// (Floats smoke test §12). Same markdown-strip + error-page guard as the rest.
+const contentSummary = (m: PipelineMatch): string => {
+  const raw =
+    (typeof m.meta_description === "string" && m.meta_description.trim()) ||
+    (typeof m.description === "string" && m.description.trim()) ||
+    "";
+  if (!raw) return "";
+  const plain = stripInternalNotes(stripInlineMarkdown(raw));
+  if (!plain || (ERROR_PAGE_RE.test(plain) && plain.length < 160)) return "";
+  return plain;
+};
+
+// First-customers brief signals often arrive as one blob that already inlines
+// the "Why they fit / Approach / Opening angle" sub-sections which the card ALSO
+// renders as their own fields — the pre-fix cards printed all of it twice
+// (Floats smoke test §04: Randstad/Robert Walters). Keep only the genuine
+// signals lead: strip a leading "Signals:" label and cut at the first
+// fit/approach/angle label so the structured fields render exactly once.
+const BRIEF_LABEL_RE = /(?:\*\*)?\s*(?:why they fit|fit|approach|opening angle|angle)\s*(?:\*\*)?\s*:/i;
+const signalsLead = (text: string): string => {
+  let t = (text || "").replace(/^\s*(?:\*\*)?\s*signals\s*(?:\*\*)?\s*:\s*/i, "");
+  const idx = t.search(BRIEF_LABEL_RE);
+  if (idx >= 0) t = t.slice(0, idx);
+  return t.trim();
+};
+
 // A directory tag that is a placeholder, not a real label — never render it.
 const cleanTag = (tag: string | undefined): string =>
   tag && !/^n\/?a\b/i.test(tag.trim()) ? tag : "";
@@ -993,6 +1022,12 @@ export function adaptPipelineReport(
       // the card (review finding); the card renders plain text either way.
       why: tailored ? capText(stripInlineMarkdown(tailored), 260) : trimWhy(matchDescription(m)),
       headshotUrl: typeof m.avatar_url === "string" && m.avatar_url ? m.avatar_url : undefined,
+      // Specialty pills — already in the match payload as `tags` (the pipeline
+      // maps community_members.specialties → tags). Surfacing them tells the
+      // reader why the mentor is relevant (Floats smoke test §08).
+      specialties: Array.isArray(m.tags)
+        ? m.tags.map((t) => String(t).trim()).filter(Boolean).slice(0, 3)
+        : undefined,
     };
   });
   if (mentorWhyHits > 0) log("mentors[].why", `used tailored per-mentor rationale from §07 prose for ${mentorWhyHits}/${mentorCards.length}`);
@@ -1094,7 +1129,7 @@ export function adaptPipelineReport(
       const cardName = matchName(m);
       const brief = proseBriefs.find((b) => accountNamesMatch(b.name, cardName));
       const desc = matchDescription(m);
-      const signals = brief?.signals || desc;
+      const signals = signalsLead(brief?.signals || desc);
       // Meta line: the brief's one-line "who they are" (short + grounded), else
       // the subtitle — boundary-capped, and NEVER a duplicate of the signals
       // text (the pre-D1 cards printed the same description twice).
@@ -1130,7 +1165,7 @@ export function adaptPipelineReport(
   const guides = (matches.content_items ?? []).map((m, i) => ({
     title: matchName(m),
     url: sanitizeContractPath(m.link, `guides.cards[${i}].link`, log),
-    summary: trimWhy(matchDescription(m)),
+    summary: trimWhy(contentSummary(m)),
     relevantBecause: "",
   }));
   if (guides.length > 0) log("guides.cards", "relevantBecause footers unavailable until Phase B");

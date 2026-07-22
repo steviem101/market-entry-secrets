@@ -73,6 +73,76 @@ test("mapPlan: paid tiers → scale, unknown/empty fail closed to free", () => {
   assert.equal(mapPlan(undefined, noop), "free");
 });
 
+test("guides: card summary uses meta_description, never the content_type subtitle (\"guide\")", () => {
+  const { report } = adaptPipelineReport(
+    {
+      matches: {
+        content_items: [
+          {
+            name: "Hiring Your First ANZ Team",
+            title: "Hiring Your First ANZ Team",
+            link: "/content/hiring-anz",
+            content_type: "guide",
+            subtitle: "guide",
+            meta_description: "Employment, payroll and superannuation basics for your first Australian hires.",
+          },
+        ],
+      },
+    },
+    {}
+  );
+  assert.equal(report.guides.cards.length, 1);
+  assert.match(report.guides.cards[0].summary, /payroll and superannuation/);
+  assert.doesNotMatch(report.guides.cards[0].summary, /^guide$/i);
+});
+
+test("mentors: specialty pills surfaced from the match tags", () => {
+  const { report } = adaptPipelineReport(
+    {
+      matches: {
+        community_members: [
+          {
+            name: "Jane Citizen",
+            link: "/mentors/experts/jane-citizen",
+            subtitle: "CEO, Example",
+            description: "Recruitment operator.",
+            tags: ["GTM", "Fintech", "Scaling", "Extra"],
+          },
+        ],
+      },
+    },
+    {}
+  );
+  assert.deepEqual(report.mentors.primary[0].specialties, ["GTM", "Fintech", "Scaling"]); // capped at 3
+});
+
+test("first-customers: signals blob is de-duplicated against the structured fields", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        first_customers: {
+          content: "Align with the biggest firms.",
+          visible: true,
+          matches: [
+            {
+              name: "Randstad",
+              link: "https://randstad.com",
+              description:
+                "Signals: Focus on enterprise-grade scalability across 39 markets. Why they fit: needs high-volume analytics. Approach: Head of Marketing. Opening angle: \"We can help.\"",
+            },
+          ],
+        },
+      },
+    },
+    {}
+  );
+  const acct = report.accounts.briefed[0];
+  if (acct) {
+    assert.doesNotMatch(acct.signals, /Why they fit|Opening angle/i);
+    assert.match(acct.signals, /enterprise-grade scalability/);
+  }
+});
+
 test("adaptPipelineReport maps a realistic pipeline JSON without throwing and logs gaps", () => {
   const { report, mismatches } = adaptPipelineReport(
     {
