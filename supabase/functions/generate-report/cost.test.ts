@@ -55,6 +55,19 @@ test("priceForModel: an anthropic/-prefixed section model prices as its bare Cla
   assert.notDeepEqual(priceForModel("anthropic/claude-sonnet-5"), priceForModel("google/gemini-3-flash-preview"));
 });
 
+test("priceForModel: dated snapshot ids and bare aliases price identically (never flash)", () => {
+  // The canonical config alias (claude-haiku-4-5) and the dated full id must
+  // both hit the Haiku row — an alias miss silently under-prices ~13-17x.
+  assert.deepEqual(priceForModel("claude-haiku-4-5"), { in: 1, out: 5 });
+  assert.deepEqual(priceForModel("claude-haiku-4-5-20251001"), priceForModel("claude-haiku-4-5"));
+  assert.deepEqual(priceForModel("anthropic/claude-haiku-4-5-20251001"), priceForModel("claude-haiku-4-5"));
+  assert.notDeepEqual(priceForModel("claude-haiku-4-5"), priceForModel("google/gemini-3-flash-preview"));
+});
+
+test("priceForModel: opus 4-8 carries the verified $5/$25 list price", () => {
+  assert.deepEqual(priceForModel("claude-opus-4-8"), { in: 5, out: 25 });
+});
+
 test("computeRunCost: is defensive against bad telemetry (NaN/negative never poison the total)", () => {
   const c = computeRunCost(
     [

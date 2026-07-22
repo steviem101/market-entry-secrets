@@ -2556,7 +2556,10 @@ async function generateReportInBackground(
     research_breakdown?: Record<string, number>;
   } = {};
   // MES-219 cost attribution: metered AI token usage per call (pushed by the
-  // optional onUsage hook), aggregated into report_json.metadata.cost at save.
+  // optional onUsage hook), aggregated + LOGGED at each buildReportJson pass.
+  // Deliberately NOT persisted into report_json.metadata — the tier-gated and
+  // shared-report RPCs pass metadata through to clients (incl. public share
+  // links), and a per-report USD figure must never reach them.
   const aiUsage: AiUsageEntry[] = [];
   const meterUsage = (model: string) => (u: TokenUsage) => {
     aiUsage.push({ model, input: u.input, output: u.output });
@@ -3415,10 +3418,15 @@ async function generateReportInBackground(
       // empty content, which forced a full regeneration after every upgrade.
       console.log(`Generating ${templates.length} sections in single parallel batch (P0-3: gated content stored hidden)...`);
       const sectionStartTime = Date.now();
-      // Prompt assembly (metric extraction, availability lines, template render)
-      // between research completion and section generation — MES-219. Guarded so
-      // a resumed report (research loaded from artifact, researchEndAt=0) doesn't
-      // record a bogus interval.
+      // Everything between research completion and section generation — MES-219.
+      // Mostly prompt assembly (metric extraction, availability lines, template
+      // fetch/render) but ALSO the flag-gated AU-presence pass, the research
+      // artifact save, claims registration, and the key-question-picks AI call —
+      // with AU_PRESENCE_SIGNAL on, network calls can dominate this bucket, so
+      // read a jump here as "pre-section work", not a template-render regression.
+      // Guarded so a resumed report (research loaded from artifact,
+      // researchEndAt=0) doesn't record a bogus interval; resumed runs carry
+      // only sections_ms/polish_ms/total_ms by design.
       if (researchEndAt) phaseTimings.assembly_ms = sectionStartTime - researchEndAt;
 
       const results = await Promise.allSettled(

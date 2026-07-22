@@ -8,13 +8,16 @@
 export type TokenUsage = { input: number; output: number };
 export type AiUsageEntry = { model: string; input: number; output: number };
 
-// Rough public list prices (USD per 1M tokens). Estimates — update as vendor
-// pricing changes. Unknown models fall back to the flash rate.
+// Public list prices (USD per 1M tokens), verified against the Anthropic model
+// catalog 2026-07-22 (Opus 4.8 $5/$25, Sonnet 5 $3/$15 sticker, Haiku 4.5
+// $1/$5). Estimates — update as vendor pricing changes. Keyed by the BARE
+// canonical alias; priceForModel normalises gateway prefixes and dated
+// snapshot ids before lookup. Unknown models fall back to the flash rate.
 export const MODEL_PRICING_USD_PER_MTOK: Record<string, { in: number; out: number }> = {
   "google/gemini-3-flash-preview": { in: 0.075, out: 0.3 },
-  "claude-haiku-4-5-20251001": { in: 1, out: 5 },
+  "claude-haiku-4-5": { in: 1, out: 5 },
   "claude-sonnet-5": { in: 3, out: 15 },
-  "claude-opus-4-8": { in: 15, out: 75 },
+  "claude-opus-4-8": { in: 5, out: 25 },
 };
 
 export const FIRECRAWL_USD_PER_OP = 0.0015;
@@ -22,11 +25,14 @@ export const FIRECRAWL_USD_PER_OP = 0.0015;
 const FLASH = "google/gemini-3-flash-preview";
 
 export function priceForModel(model: string): { in: number; out: number } {
-  // Try the id as-is, then without an "anthropic/" gateway prefix (section
-  // models can resolve to e.g. "anthropic/claude-sonnet-5"), then flash.
+  // Normalise: strip an "anthropic/" gateway prefix (section models can resolve
+  // to e.g. "anthropic/claude-sonnet-5") and a trailing dated-snapshot suffix
+  // (e.g. "claude-haiku-4-5-20251001" → "claude-haiku-4-5") so both the alias
+  // and dated forms price identically. Unknown models fall back to flash.
+  const bare = model.replace(/^anthropic\//, "").replace(/-\d{8}$/, "");
   return (
     MODEL_PRICING_USD_PER_MTOK[model] ??
-    MODEL_PRICING_USD_PER_MTOK[model.replace(/^anthropic\//, "")] ??
+    MODEL_PRICING_USD_PER_MTOK[bare] ??
     MODEL_PRICING_USD_PER_MTOK[FLASH]
   );
 }
@@ -75,6 +81,6 @@ export function computeRunCost(aiUsage: AiUsageEntry[], firecrawlOps: number): R
     firecrawl_ops: ops,
     firecrawl_usd: round4(firecrawlUsd),
     basis:
-      "estimated list prices (USD); AI tokens metered, Firecrawl by op count; excludes Perplexity research; internal ops visibility only",
+      "estimated list prices (USD); metered AI = section writing, verifier regen, polish only (enrichment/classification/verifier gateway calls and Perplexity research are NOT metered); Firecrawl by op count; internal ops visibility only",
   };
 }
