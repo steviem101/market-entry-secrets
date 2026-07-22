@@ -301,11 +301,26 @@ export const AdvisorQueuePanel = ({ interactions }: { interactions: ReportIntera
   const requests = interactions.filter(
     (i) => i.type === "scan_request" || i.type === "brief_request" || i.type === "lead_request"
   );
+  // Booking is the primary conversion action — surface the most recent one
+  // prominently (interactions arrive newest-first, so the first match is latest).
+  const booked = interactions.find((i) => i.type === "book_request");
   const checkedCount = [...checkState.values()].filter(Boolean).length;
 
   return (
     <section className="rounded-lg border bg-card p-5 space-y-4">
       <h2 className="text-sm font-semibold text-foreground">Advisor queue — what the customer flagged</h2>
+
+      {booked && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2">
+          <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">Session requested</Badge>
+          <span className="text-sm text-foreground">
+            Customer clicked “Book your advisory session”
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {new Date(booked.created_at).toLocaleDateString()}
+          </span>
+        </div>
+      )}
 
       <div>
         <h3 className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Shortlist ({starred.length})</h3>

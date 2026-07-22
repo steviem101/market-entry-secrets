@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Heart } from "lucide-react";
 import type { Report } from "@/types/report";
 import SectionCard from "./SectionCard";
@@ -13,7 +14,12 @@ import { useReportInteractions } from "./ReportInteractionsProvider";
  */
 const CloseSection = ({ report }: { report: Report }) => {
   const { close } = report;
-  const { starred } = useReportInteractions();
+  const { starred, recordRequest } = useReportInteractions();
+  const [booked, setBooked] = useState(false);
+  const bookSession = () => {
+    setBooked(true);
+    recordRequest("book_request", { starredCount: starred.length });
+  };
   return (
     <SectionCard
       label="NEXT: YOUR ADVISORY SESSION"
@@ -31,6 +37,28 @@ const CloseSection = ({ report }: { report: Report }) => {
               className="max-w-[720px] text-[14px] leading-[1.8] text-report-ink-soft"
             />
           )}
+          {/* Primary conversion action — book the advisory session. Records a
+              book_request so the advisor is notified; print shows the prompt
+              without the (non-functional) button. */}
+          {booked ? (
+            <div className="mt-6 max-w-[560px] rounded-xl border border-report-confirm-border bg-report-confirm-bg px-6 py-4 text-[13.5px] font-medium leading-[1.6] text-report-confirm-text print:hidden">
+              Session requested — we'll reach out to find a time and arrive prepared on your shortlist.
+            </div>
+          ) : (
+            <div className="mt-6 flex flex-wrap items-center gap-4 print:hidden">
+              <button
+                type="button"
+                onClick={bookSession}
+                className="whitespace-nowrap rounded-lg bg-report-action px-[26px] py-[13px] text-[14px] font-bold text-white transition-colors hover:bg-report-sky"
+              >
+                Book your advisory session
+              </button>
+              <span className="text-[12.5px] text-report-muted">Free · we'll come prepared on exactly what you've flagged.</span>
+            </div>
+          )}
+          <p className="mt-4 hidden max-w-[560px] text-[13px] italic leading-[1.6] text-report-muted print:block">
+            To book your advisory session, reply to this report or contact your Market Entry Secrets advisor.
+          </p>
         </div>
         {close.arriveWith.length > 0 && (
           <div className="rounded-xl border border-report-border px-[30px] py-[26px]">

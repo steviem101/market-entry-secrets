@@ -71,7 +71,7 @@ export interface AdminReportQualityDetail {
 /** One row of the report_v2 advisor queue (star / request / checkbox). */
 export interface ReportInteractionRow {
   id: string;
-  type: 'star' | 'scan_request' | 'brief_request' | 'lead_request' | 'checkbox';
+  type: 'star' | 'scan_request' | 'brief_request' | 'lead_request' | 'checkbox' | 'book_request';
   payload: Record<string, unknown>;
   created_at: string;
 }
