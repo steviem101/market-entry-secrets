@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { RefreshCw, Search, ExternalLink } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAllReportsAdmin } from "@/hooks/useReport";
+import { ListPagination } from "@/components/common/ListPagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,17 +46,16 @@ const statusBadgeVariant = (status: string) => {
   return "secondary" as const;
 };
 
-/** Colour a 0–100 quality score: green ≥85, amber ≥70, red below. Null → dash. */
+// 25 rows per page keeps the table light without hiding much at a glance.
+const PAGE_SIZE = 25;
+
+/** Colour a 0–100 quality score via semantic tokens (§13.5): success ≥85,
+ * warning ≥70, destructive below. Null → dash. */
 const ScoreCell = ({ value }: { value: number | null | undefined }) => {
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">—</span>;
   }
-  const tone =
-    value >= 85
-      ? "text-emerald-600 dark:text-emerald-400"
-      : value >= 70
-      ? "text-amber-600 dark:text-amber-400"
-      : "text-red-600 dark:text-red-400";
+  const tone = value >= 85 ? "text-mes-success" : value >= 70 ? "text-mes-warning" : "text-destructive";
   return <span className={`font-medium tabular-nums ${tone}`}>{value}</span>;
 };
 
@@ -65,6 +65,8 @@ const AdminReports = () => {
   const qualityAvailable = data?.qualityAvailable ?? true;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -83,6 +85,15 @@ const AdminReports = () => {
       return haystack.includes(q);
     });
   }, [reports, search, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // Snap back to page 1 whenever the filtered set changes (new search/filter, or
+  // a refetch that shrank the list) so the current page can never be out of range.
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter]);
+  const pageSafe = Math.min(page, totalPages);
+  const paged = filtered.slice((pageSafe - 1) * PAGE_SIZE, pageSafe * PAGE_SIZE);
 
   return (
     <ProtectedRoute requireAdmin>
@@ -188,7 +199,7 @@ const AdminReports = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((r) => (
+                paged.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                       {formatDate(r.created_at)}
@@ -212,7 +223,7 @@ const AdminReports = () => {
                           {r.status}
                         </Badge>
                         {r.quality?.degraded && (
-                          <Badge variant="outline" className="text-xs text-amber-600 dark:text-amber-400 border-amber-500/40">
+                          <Badge variant="outline" className="text-xs text-mes-warning border-mes-warning/40">
                             degraded
                           </Badge>
                         )}
@@ -232,7 +243,11 @@ const AdminReports = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button asChild variant="ghost" size="sm">
-                        <Link to={`/admin/reports/${r.id}`} title="Open full report">
+                        <Link
+                          to={`/admin/reports/${r.id}`}
+                          title="Open full report"
+                          aria-label={`Open ${r.user_intake_forms?.company_name || "report"} full report`}
+                        >
                           <ExternalLink className="w-4 h-4" />
                         </Link>
                       </Button>
@@ -243,10 +258,16 @@ const AdminReports = () => {
             </TableBody>
           </Table>
         </div>
-        <p className="text-xs text-muted-foreground mt-4">
+        <ListPagination
+          currentPage={pageSafe}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          className="!py-4"
+        />
+        <p className="text-xs text-muted-foreground mt-2">
           {qualityAvailable
-            ? "Showing up to 500 most recent reports. Scores come from the report-quality telemetry (the same numbers posted to #report-quality in Slack); a dash means no quality run has been recorded for that report yet."
-            : "Showing up to 500 most recent reports. Quality scores are temporarily unavailable — the telemetry couldn't be loaded just now, so the dashes below don't mean scores are missing."}
+            ? "Showing the 1,000 most recent reports, 25 per page. Scores come from the report-quality telemetry (the same numbers posted to #report-quality in Slack); a dash means no quality run has been recorded for that report yet."
+            : "Showing the 1,000 most recent reports, 25 per page. Quality scores are temporarily unavailable — the telemetry couldn't be loaded just now, so the dashes don't mean scores are missing."}
         </p>
       </div>
     </ProtectedRoute>

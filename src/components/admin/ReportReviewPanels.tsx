@@ -15,14 +15,15 @@ const RAG_LABELS: Record<string, string> = {
   investors: "Investors",
 };
 
+// Semantic tokens (§13.5), not raw palette: success ≥80, warning ≥60, else destructive.
 const scoreTone = (v: number | null | undefined) =>
   v == null
     ? "text-muted-foreground"
     : v >= 80
-    ? "text-emerald-600 dark:text-emerald-400"
+    ? "text-mes-success"
     : v >= 60
-    ? "text-amber-600 dark:text-amber-400"
-    : "text-red-600 dark:text-red-400";
+    ? "text-mes-warning"
+    : "text-destructive";
 
 const num = (o: Record<string, unknown> | null | undefined, k: string): number | null => {
   const v = o?.[k];
@@ -150,7 +151,7 @@ export const QualityPanel = ({ quality }: { quality: AdminReportQualityDetail | 
         <h2 className="text-sm font-semibold text-foreground">Quality breakdown</h2>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {quality.degraded && (
-            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/40">
+            <Badge variant="outline" className="text-mes-warning border-mes-warning/40">
               degraded
             </Badge>
           )}
@@ -250,7 +251,7 @@ export const QualityPanel = ({ quality }: { quality: AdminReportQualityDetail | 
       {presFlags.length > 0 && (
         <div>
           <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Presentation flags</p>
-          <p className="text-sm text-amber-600 dark:text-amber-400">{presFlags.join(" · ")}</p>
+          <p className="text-sm text-mes-warning">{presFlags.join(" · ")}</p>
         </div>
       )}
     </section>
