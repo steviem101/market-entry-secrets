@@ -31,6 +31,7 @@ import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse,
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { parseAbPercent, inCandidateBucket } from "./promptAb.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
+import { deEmDash, deEmDashSections, deEmDashMatches, deEmDashList, deEmDashKeyMetrics } from "./prose.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry, FLASH_MODEL } from "./sectionModel.ts";
 import { selectCaseStudies, hasCorridorReason, type CaseStudyRow } from "./caseStudyMatch.ts";
 
@@ -1598,7 +1599,10 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
   try {
     const todayIso = todayIsoForReportTimezone();
     let evQuery = supabase.from("events")
-      .select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic")
+      // `description` surfaces the event blurb on the report card (Floats smoke
+      // test: events showed only a title). The adapter's eventDescription()
+      // error-page-guards it before render.
+      .select("id, title, slug, date, location, category, type, organizer, sector, sector_tags, sector_agnostic, description")
       .gte("date", todayIso)
       .limit(CAND);
     evQuery = evQuery.or(buildOr());
@@ -1622,7 +1626,7 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
     // 2024 events appearing in 2026 reports).
     if (eventResults.length === 0) {
       let fbQuery = supabase.from("events")
-        .select("id, title, slug, date, location, category, type, organizer, sector")
+        .select("id, title, slug, date, location, category, type, organizer, sector, description")
         .gte("date", todayIso)
         .order("date", { ascending: true })
         .limit(5);
@@ -3044,7 +3048,17 @@ async function generateReportInBackground(
       // section writer can't Markdown-link a mentor's name to their avatar image
       // under the HYPERLINKS rule, and to keep the prompt lean (review finding).
       matched_mentors_json: JSON.stringify((matches.community_members || []).map(({ avatar_url, image, ...m }: any) => m)),
-      matched_events_json: JSON.stringify(matches.events || []),
+      // Trim the event blurb in the PROMPT copy only (the stored match keeps its
+      // full description for the card) — some event descriptions run to several
+      // paragraphs, and the section writer only needs a gist. Keeps the prompt
+      // lean the way matched_mentors_json strips display-only fields (review finding).
+      matched_events_json: JSON.stringify(
+        (matches.events || []).map((e: any) =>
+          typeof e?.description === "string" && e.description.length > 300
+            ? { ...e, description: `${e.description.slice(0, 300)}…` }
+            : e
+        ),
+      ),
       matched_content_json: JSON.stringify(matches.content_items || []),
       matched_case_studies_json: JSON.stringify(matches.case_studies || []),
       matched_leads_json: JSON.stringify(matches.leads || []),
@@ -3160,6 +3174,20 @@ async function generateReportInBackground(
     // stay balanced and each line is a distinct action, not a paragraph.
     const actionPlanFormatNote = `\n\nACTION PLAN FORMAT: Structure this as phases, each with a short **bold sub-heading** followed by 3-6 bullet points — never long paragraphs. Keep each phase to roughly 120-150 words. Every bullet is ONE concrete action: lead with the verb, name the specific entity / agency / dollar amount / deadline, and keep it under ~20 words. Do not restate context already covered in earlier sections; each bullet stands alone.`;
 
+    // F2 (MES-217) section-quality notes — additive, grounded, per-section.
+    // Exec: the Floats smoke test flagged the summary as a wall of text; force
+    // short paragraphs + a scannable bullet list, plain English (Orwell's rules).
+    const execFormatNote = `\n\nWRITING STYLE (this section): Keep paragraphs SHORT (2-4 sentences). After the opening paragraph, use a scannable **bullet list** for the key takeaways rather than more prose. Apply George Orwell's rules: prefer the short word, cut every word that adds nothing, use the active voice, avoid jargon and cliché. Do NOT repeat points made elsewhere in the report. Aim for signal, not length.`;
+    // Providers: a one-line "why we chose this one" tied to the customer's OWN
+    // stated needs/questions from the intake, for the top matches.
+    const providerRationaleNote = `\n\nWHY THESE PROVIDERS: For the first three providers, add ONE short sentence explaining why THIS provider fits the customer's stated needs/questions from their intake (their goals, challenges, and services_needed above). Tie it back to what they actually asked for — do not give generic praise. Base it only on the provider's real description and the customer's stated context; never invent services a provider does not list.`;
+    // Investors: only recommend stage-appropriate investors, and separate grants/
+    // awards (non-dilutive) from equity investors so the funding mix is clear.
+    const investorStageFitNote = `\n\nSTAGE FIT + FUNDING MIX: Prioritise investors whose stage focus MATCHES this company's stage (a pre-seed/seed company should be pointed at pre-seed/seed funds and angels, not growth/late-stage equity — flag any later-stage name as "for a future round"). Group NON-DILUTIVE options (grants, awards, government programs) SEPARATELY from equity investors so the customer sees the full funding mix, and surface the single most relevant grant they are likely eligible for. Only use investors/grants present in the matched data; never invent a fund, cheque size, or eligibility.`;
+    // Competitors: prioritise + explicitly tag Australian/ANZ competitors first —
+    // the report is ANZ market intelligence, so local rivals matter most.
+    const competitorAuFirstNote = `\n\nAUSTRALIAN COMPETITORS FIRST: This is Australian/ANZ market intelligence, so LEAD with competitors that operate in Australia/New Zealand and explicitly tag them as locally present; treat overseas competitors as secondary context. Where a competitor has a known AU/ANZ presence, say so. Do not fabricate an Australian presence — only state it when the provided data supports it.`;
+
     // Phase C (RQ ref 7a000874): when the user's stated priority is an explicit home-vs-
     // Australia comparison, instruct sections (esp. SWOT + action plan) to contrast the two
     // markets using the provided research rather than describing Australia in isolation.
@@ -3255,7 +3283,7 @@ async function generateReportInBackground(
     // approve or refine — MES then builds it manually. The customer-facing hero
     // card and the parser key off this exact opening line, so keep the label and
     // shape stable.
-    const leadRecommendationNote = `\n\nSUGGESTED LIST — LEAD WITH THIS: Begin the section with ONE line in EXACTLY this format, then a newline: "**The list we'd build for you:** <specific decision-maker role(s)> at <specific company type> in <region>, ~<round number> contacts." Base the role(s), company type and region ONLY on THIS company's stated ICP, offering, and the buyer research above — never invent a market you have no basis for. The count is a rough suggestion (a round number such as 100 / 250 / 500), never a precise figure. Immediately follow that line with ONE sentence saying why this list fits their stated goal. This is a suggestion for the customer to confirm or refine (they can approve or edit it below) — do not present it as a list that already exists.`;
+    const leadRecommendationNote = `\n\nSUGGESTED LISTS — LEAD WITH THESE: Begin the section with ONE line in EXACTLY this format, then a newline: "**The list we'd build for you:** <specific decision-maker role(s)> at <specific company type> in <region>, ~<round number> contacts." Immediately follow that line with ONE sentence saying why this list fits their stated goal. Then, on a new line, offer ONE alternative angle in the same format: "**An alternative list we'd build:** <different decision-maker role(s) or segment> at <company type> in <region>, ~<round number> contacts." followed by ONE sentence on why this second angle could also work — make it a GENUINELY different cut (a different buyer role, seniority, or segment), so the customer can pick between two. Base every role/company type/region ONLY on THIS company's stated ICP, offering, and the buyer research above — never invent a market you have no basis for. Counts are rough round numbers (100 / 250 / 500), never precise. These are suggestions for the customer to confirm or refine (they can approve or edit below) — do not present either as a list that already exists.`;
 
     // D2: emphasise (never hide) the sections the user's selected goals map to.
     const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
@@ -3398,7 +3426,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~110 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote + leadRecommendationNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote + providerRationaleNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote + competitorAuFirstNote : ""}${tmpl.section_name === "investor_recommendations" ? investorStageFitNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote + leadRecommendationNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" ? execFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
@@ -3698,10 +3726,17 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         marketResearch.citations,
         keyMetrics,
       );
+      // E1 (F2): deterministic em-dash strip — prompt-only enforcement (Wave 5)
+      // failed to keep "long dashes" out. Runs on both the unpolished and
+      // polished builds so every stored snapshot is clean.
+      const deDashed = deEmDashSections(cited.sections);
+      // Also strip em-dashes from card-copy fields on matches (event blurbs,
+      // provider/mentor/investor descriptions) — they render alongside the prose.
+      const deDashedMatches = deEmDashMatches(matches);
       return {
       company_name: intake.company_name,
-      sections: cited.sections,
-      matches,
+      sections: deDashed,
+      matches: deDashedMatches,
       metadata: {
         tables_searched: Object.keys(matches),
         total_matches: Object.values(matches).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
@@ -3729,12 +3764,14 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // Customer's own site-derived USPs (grounded) — powers the report_v2
         // competitor table's "you" row strengths. [] when the scrape found none.
         company_strengths: Array.isArray(companyProfile?.unique_selling_points)
-          ? companyProfile.unique_selling_points.filter((s: unknown) => typeof s === "string" && s.trim()).slice(0, 4)
+          ? deEmDashList(
+              companyProfile.unique_selling_points.filter((s: unknown) => typeof s === "string" && s.trim()).slice(0, 4),
+            )
           : [],
         // Customer's own site-stated positioning line (grounded) — the report_v2
         // §03 "you" row "where you differ" cell. "" when the scrape found none.
         company_positioning: typeof companyProfile?.positioning === "string"
-          ? companyProfile.positioning.trim()
+          ? deEmDash(companyProfile.positioning.trim())
           : "",
         // Whether the FIRECRAWL_COMPETITOR_DEPTH flag was ON for this report
         // (multi-angle discovery + au_presence signal). Persisted so the flag
@@ -3803,7 +3840,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         resume: { research_bundle: !!resumedResearch },
         // Renumbered alongside the sections so metric-card [N]s and the stored
         // Sources list stay 1:1 (falls back to the originals when no citations).
-        key_metrics: cited.keyMetrics ?? keyMetrics,
+        // De-dashed too: the tiles render above the sections, so an em-dash in a
+        // metric label/context is as visible as one in the prose (F2 review).
+        key_metrics: deEmDashKeyMetrics(cited.keyMetrics ?? keyMetrics),
         discovered_events_count: discoveredEvents.length,
         end_buyer_research_available: !!endBuyerProcurementResearch,
         bilateral_trade_available: !!marketResearch.bilateral_trade,

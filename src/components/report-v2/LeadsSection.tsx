@@ -36,46 +36,60 @@ const LeadsSection = ({ report }: { report: Report }) => {
 
   return (
     <SectionCard label="LEAD LIST & MARKET DATA" className="pb-14">
-      {leads.recommended && (
-        <div className="mt-6 rounded-xl border border-report-sky bg-report-tint px-[30px] py-7">
-          <p className="mb-2.5 text-[11px] font-bold tracking-[0.12em] text-report-action">
-            THE LIST WE'D BUILD FOR YOU
-          </p>
-          <p className="text-[17px] font-bold leading-[1.4] text-report-ink">{leads.recommended.spec}</p>
-          {leads.recommended.why && (
-            <Rich
-              text={leads.recommended.why}
-              className="mt-2.5 max-w-[820px] text-[14px] leading-[1.7] text-report-ink-soft"
-            />
-          )}
-          <p className="mt-2.5 text-[12.5px] italic text-report-muted">
-            A best guess from your report — approve it and our advisor builds the list for you, or refine it below.
-          </p>
-          {sent ? (
-            confirmation
-          ) : (
-            <div className="mt-4 flex flex-wrap gap-3 print:hidden">
-              <button
-                type="button"
-                onClick={() => submit(leads.recommended!.spec)}
-                className="whitespace-nowrap rounded-lg bg-report-sky px-[22px] py-[11px] text-[13.5px] font-bold text-white transition-colors hover:bg-report-action"
-              >
-                Approve this list
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  boxRef.current?.focus();
-                  boxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }}
-                className="whitespace-nowrap rounded-lg border border-report-sky px-[22px] py-[11px] text-[13.5px] font-bold text-report-action transition-colors hover:bg-white"
-              >
-                Refine it
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      {leads.recommended && (() => {
+        const options = [leads.recommended, leads.recommendedAlt].filter(Boolean) as { spec: string; why: string }[];
+        const twoUp = options.length > 1;
+        return (
+          <div className="mt-6 rounded-xl border border-report-sky bg-report-tint px-[30px] py-7">
+            <p className="mb-2.5 text-[11px] font-bold tracking-[0.12em] text-report-action">
+              {twoUp ? "TWO LISTS WE'D BUILD FOR YOU — PICK THE CLOSER FIT" : "THE LIST WE'D BUILD FOR YOU"}
+            </p>
+            {sent ? (
+              confirmation
+            ) : (
+              <>
+                <div className={twoUp ? "grid gap-4 md:grid-cols-2" : ""}>
+                  {options.map((opt, i) => (
+                    <div key={i} className={twoUp ? "flex flex-col rounded-xl border border-report-sky bg-report-bg px-5 py-4" : ""}>
+                      {twoUp && (
+                        <p className="mb-1.5 text-[10.5px] font-bold tracking-[0.12em] text-report-muted">
+                          {i === 0 ? "OPTION A" : "OPTION B"}
+                        </p>
+                      )}
+                      <p className="text-[16px] font-bold leading-[1.4] text-report-ink">{opt.spec}</p>
+                      {opt.why && (
+                        <Rich text={opt.why} className="mt-2 max-w-[820px] text-[13.5px] leading-[1.65] text-report-ink-soft" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => submit(opt.spec)}
+                        className="mt-3 self-start whitespace-nowrap rounded-lg bg-report-sky px-[22px] py-[11px] text-[13.5px] font-bold text-white transition-colors hover:bg-report-action print:hidden"
+                      >
+                        {twoUp ? "Approve this one" : "Approve this list"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    boxRef.current?.focus();
+                    boxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }}
+                  className="mt-4 text-[13px] font-semibold text-report-action underline transition hover:no-underline print:hidden"
+                >
+                  …or refine these / describe your own below
+                </button>
+                <p className="mt-3 text-[12.5px] italic text-report-muted">
+                  {twoUp
+                    ? "Two starting points from your report — approve the closer fit and our advisor builds it, or refine below."
+                    : "A best guess from your report — approve it and our advisor builds the list for you, or refine it below."}
+                </p>
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="mt-[22px] grid grid-cols-1 items-stretch gap-[22px] md:grid-cols-2">
         {leads.dataset ? (

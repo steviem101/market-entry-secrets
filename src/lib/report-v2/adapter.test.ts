@@ -282,12 +282,103 @@ test("leads: suggested-list spec + why parsed from §14 prose into leads.recomme
   assert.equal(report.leads.dataset?.records, 340);
 });
 
+test("leads: an alternative suggested list is parsed into recommendedAlt", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        lead_list: {
+          content:
+            "**The list we'd build for you:** Heads of Talent at Sydney tech scaleups, ~250 contacts.\nThis matches your ICP.\n**An alternative list we'd build:** HR Directors at NSW enterprises, ~150 contacts.\nA more senior angle for enterprise deals.",
+        },
+      },
+    },
+    {}
+  );
+  assert.equal(report.leads.recommended?.spec, "Heads of Talent at Sydney tech scaleups, ~250 contacts.");
+  assert.match(report.leads.recommended?.why ?? "", /matches your ICP/);
+  assert.equal(report.leads.recommendedAlt?.spec, "HR Directors at NSW enterprises, ~150 contacts.");
+  assert.match(report.leads.recommendedAlt?.why ?? "", /senior angle/);
+  // the primary's why must NOT swallow the alternative's label line
+  assert.doesNotMatch(report.leads.recommended?.why ?? "", /alternative list/i);
+});
+
+test("leads: no alternative line → recommendedAlt undefined, recommended still present", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        lead_list: {
+          content: "**The list we'd build for you:** Heads of Talent at Sydney tech scaleups, ~250 contacts.\nThis matches your ICP.",
+        },
+      },
+    },
+    {}
+  );
+  assert.ok(report.leads.recommended);
+  assert.equal(report.leads.recommendedAlt, undefined);
+});
+
 test("leads: no suggested-list line → leads.recommended is undefined (datasets/box still render)", () => {
   const { report } = adaptPipelineReport(
     { sections: { lead_list: { content: "No pre-built dataset matched your buyer profile." } } },
     {}
   );
   assert.equal(report.leads.recommended, undefined);
+});
+
+test("leads: both labels on ONE line → alt spec does not leak into the primary's why", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        lead_list: {
+          content:
+            "**The list we'd build for you:** Heads of Lending in ANZ, ~250 contacts. **An alternative list we'd build:** CFOs at NSW enterprises, ~150 contacts.",
+        },
+      },
+    },
+    {}
+  );
+  assert.equal(report.leads.recommended?.spec, "Heads of Lending in ANZ, ~250 contacts.");
+  // the alternative label/spec must NOT become the primary's why
+  assert.doesNotMatch(report.leads.recommended?.why ?? "", /alternative list/i);
+  assert.doesNotMatch(report.leads.recommended?.why ?? "", /CFOs at NSW/i);
+  assert.equal(report.leads.recommendedAlt?.spec, "CFOs at NSW enterprises, ~150 contacts.");
+});
+
+test("leads: a blank-separated closing paragraph is not captured as the alt's why", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        lead_list: {
+          content:
+            "**The list we'd build for you:** Heads of Talent at Sydney scaleups, ~250 contacts.\nMatches your ICP.\n**An alternative list we'd build:** HR Directors at NSW enterprises, ~150 contacts. A more senior angle.\n\nOnce you approve either, we deliver within 48 hours.",
+        },
+      },
+    },
+    {}
+  );
+  assert.equal(report.leads.recommendedAlt?.spec, "HR Directors at NSW enterprises, ~150 contacts.");
+  assert.match(report.leads.recommendedAlt?.why ?? "", /senior angle/);
+  // the closing paragraph after the blank line must NOT be the alt's why
+  assert.doesNotMatch(report.leads.recommendedAlt?.why ?? "", /deliver within 48 hours/i);
+});
+
+test("leads: gap copy does not duplicate the recommended-list spec paragraph", () => {
+  const { report } = adaptPipelineReport(
+    {
+      sections: {
+        lead_list: {
+          content:
+            "**The list we'd build for you:** Heads of Lending in ANZ, ~250 contacts.\nThis matches your ICP.\n\nNo pre-built dataset covers this exact buyer yet, so we build it bespoke.",
+        },
+      },
+    },
+    {}
+  );
+  // recommended card carries the spec…
+  assert.equal(report.leads.recommended?.spec, "Heads of Lending in ANZ, ~250 contacts.");
+  // …and gap copy is the grounded "why no dataset" paragraph, NOT the spec again.
+  assert.match(report.leads.gapCopy ?? "", /build it bespoke/);
+  assert.doesNotMatch(report.leads.gapCopy ?? "", /Heads of Lending/);
 });
 
 test("leads: curly apostrophe in the label still parses (LLM normalises we'd → we’d)", () => {

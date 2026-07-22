@@ -459,11 +459,16 @@ const INTAKE_GUIDANCE_RE =
  * a grounded intro line without dumping the whole multi-heading blob (or
  * duplicating the section's own cards).
  */
-const leadParagraph = (content: unknown, citationCount: number): string => {
+const leadParagraph = (
+  content: unknown,
+  citationCount: number,
+  extraSkip?: (paragraph: string) => boolean,
+): string => {
   for (const p of toParagraphs(content, "lead", () => {}, citationCount)) {
     const t = p.trim();
     if (/^\*\*[^*]+\*\*$/.test(t)) continue; // heading-only lead
     if (INTAKE_GUIDANCE_RE.test(p.replace(/\*\*/g, ""))) continue; // R5
+    if (extraSkip && extraSkip(t)) continue;
     return p;
   }
   return "";
@@ -899,33 +904,39 @@ export function parseEventWhys(content: unknown): Map<string, string> {
   return map;
 }
 
-/**
- * §14 leads the section with a best-guess suggested list the customer can
- * approve or refine: `**The list we'd build for you:** <spec>.` followed by a
- * one-sentence why. Parses that into { spec, why }; undefined when the prose
- * isn't in that shape (renderer then shows only the datasets + request box).
- */
-export function parseRecommendedList(content: unknown): { spec: string; why: string } | undefined {
-  if (typeof content !== "string") return undefined;
-  const lines = content.split("\n");
-  // Apostrophe class matches both a straight (U+0027) and a curly (U+2019)
-  // apostrophe — the section-writer LLM routinely normalises "we'd" to a curly
-  // quote, which a straight-only regex misses, silently dropping the whole
-  // suggested-list card (code-review finding).
-  const idx = lines.findIndex((l) => /\*\*The list we['’]?d build for you:\*\*/i.test(l));
+// Apostrophe class matches both a straight (U+0027) and a curly (U+2019)
+// apostrophe — the section-writer LLM routinely normalises "we'd" to a curly
+// quote, which a straight-only regex misses, silently dropping the card
+// (code-review finding).
+const RECOMMENDED_LABEL = /\*\*The list we['’]?d build for you:\*\*/i;
+const RECOMMENDED_ALT_LABEL = /\*\*An alternative list we['’]?d build:\*\*/i;
+
+/** Parse a `**<label>:** <spec>` line + its following-line why into {spec, why}. */
+function parseLabeledSpec(lines: string[], label: RegExp): { spec: string; why: string } | undefined {
+  const idx = lines.findIndex((l) => label.test(l));
   if (idx === -1) return undefined;
-  const after = lines[idx].replace(/^.*?\*\*The list we['’]?d build for you:\*\*/i, "").trim();
+  const otherLabel = label === RECOMMENDED_LABEL ? RECOMMENDED_ALT_LABEL : RECOMMENDED_LABEL;
+  let after = lines[idx].replace(new RegExp(`^.*?${label.source}`, "i"), "").trim();
+  // The OTHER suggested-list label can share this line ("…SpecA. **An
+  // alternative list we'd build:** SpecB."). Cut it (and its spec) off so it
+  // never bleeds into this label's spec or — via the no-why fallback — its why.
+  const otherOnLine = after.search(otherLabel);
+  if (otherOnLine !== -1) after = after.slice(0, otherOnLine).trim();
   const clean = (s: string) => stripInlineMarkdown(s).replace(/\[\d+\]/g, "").replace(/\s+/g, " ").trim();
   // Prompt format: the spec is the whole label line, the why is the sentence on
   // the FOLLOWING line. Prefer that split so an abbreviation inside the spec
-  // ("…fintech cos.", "Pty.", "Inc.") isn't truncated by firstSentence
-  // (code-review finding). Only when there is no separate why line do we fall
-  // back to splitting the first sentence off the label line itself.
+  // ("…fintech cos.", "Pty.", "Inc.") isn't truncated by firstSentence. Only
+  // when there is no separate why line do we fall back to splitting the first
+  // sentence off the label line itself. Never read the OTHER suggested-list
+  // label line as this one's why.
   let why = "";
   for (let i = idx + 1; i < lines.length; i++) {
     const t = lines[i].trim();
-    if (!t) continue;
+    // Stop at a paragraph break: the why is the CONTIGUOUS next line, not a
+    // later closing paragraph of §14 (which would otherwise be captured).
+    if (!t) break;
     if (/^#{1,6}\s/.test(t) || /^[-*]\s/.test(t)) break;
+    if (otherLabel.test(t)) break;
     why = clean(t);
     break;
   }
@@ -936,6 +947,22 @@ export function parseRecommendedList(content: unknown): { spec: string; why: str
   const specFromLine = clean(firstSentence(after));
   if (!specFromLine) return undefined;
   return { spec: specFromLine, why: clean(after.slice(firstSentence(after).length)) };
+}
+
+/**
+ * §14 leads the section with a best-guess suggested list the customer can
+ * approve or refine: `**The list we'd build for you:** <spec>.` + one-sentence
+ * why. Undefined when the prose isn't in that shape.
+ */
+export function parseRecommendedList(content: unknown): { spec: string; why: string } | undefined {
+  if (typeof content !== "string") return undefined;
+  return parseLabeledSpec(content.split("\n"), RECOMMENDED_LABEL);
+}
+
+/** The optional SECOND suggested list (a different angle) — same shape. */
+export function parseRecommendedAlt(content: unknown): { spec: string; why: string } | undefined {
+  if (typeof content !== "string") return undefined;
+  return parseLabeledSpec(content.split("\n"), RECOMMENDED_ALT_LABEL);
 }
 
 export function adaptPipelineReport(
@@ -1117,11 +1144,20 @@ export function adaptPipelineReport(
   const mentorsIntro = leadParagraph(sections.mentor_recommendations?.content, citations.length);
   if (mentorsIntro) log("mentors.intro", "derived §07 lead paragraph from mentor_recommendations prose");
   // §13 gap copy: the grounded "why no dataset" explanation from the pipeline
-  // instead of the generic fallback.
-  const leadGapCopy = leadParagraph(sections.lead_list?.content, citations.length);
-  // §14 suggested bespoke list — a best-guess spec the customer approves/refines.
+  // instead of the generic fallback. Skip the §14 suggested-list label
+  // paragraphs — those render as the `recommended`/`recommendedAlt` cards, so
+  // surfacing them here too would duplicate the hero card (F2 review).
+  const leadGapCopy = leadParagraph(
+    sections.lead_list?.content,
+    citations.length,
+    (p) => RECOMMENDED_LABEL.test(p) || RECOMMENDED_ALT_LABEL.test(p),
+  );
+  // §14 suggested bespoke list — a best-guess spec the customer approves/refines,
+  // plus an optional alternative angle so they can pick between two (F2/MES-217).
   const recommendedList = parseRecommendedList(sections.lead_list?.content);
   if (recommendedList) log("leads.recommended", "parsed suggested bespoke lead-list spec from §14 prose");
+  const recommendedAlt = recommendedList ? parseRecommendedAlt(sections.lead_list?.content) : undefined;
+  if (recommendedAlt) log("leads.recommendedAlt", "parsed alternative suggested lead-list spec from §14 prose");
 
   // Structured per-account briefs parsed from the section prose (D1) — merged
   // onto the buyer cards by loose name equivalence.
@@ -1330,11 +1366,13 @@ export function adaptPipelineReport(
     leads: leadDb
       ? {
           ...(recommendedList ? { recommended: recommendedList } : {}),
+          ...(recommendedAlt ? { recommendedAlt } : {}),
           dataset: { name: matchName(leadDb), url: leadUrl, records: leadDb.record_count ?? 0, description: matchDescription(leadDb) },
           customBuildCopy: "Need a different list? Describe your ICP and we'll build it.",
         }
       : {
           ...(recommendedList ? { recommended: recommendedList } : {}),
+          ...(recommendedAlt ? { recommendedAlt } : {}),
           gapCopy: leadGapCopy || "No matching lead dataset yet — request a custom build below.",
           customBuildCopy: "Need a different list? Describe your ICP and we'll build it.",
         },
