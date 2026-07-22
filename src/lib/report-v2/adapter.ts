@@ -1197,10 +1197,18 @@ export function adaptPipelineReport(
     analyst: [],
     vendor: [],
   };
+  // Keep the FULL citation URL (deduped by domain) so the sources band can
+  // hyperlink each source (Floats smoke test: "no actual links to the sources").
+  // The renderer displays the domain and links to the URL. Bare-domain fixtures
+  // (no scheme) pass through unchanged and render as plain text.
+  const seenSource = new Set<string>();
   for (const url of citations) {
     const domain = extractDomain(url) ?? url;
     const tier = domainTier(url);
-    if (!tiers[tier].includes(domain)) tiers[tier].push(domain);
+    const key = `${tier}|${domain}`;
+    if (seenSource.has(key)) continue;
+    seenSource.add(key);
+    tiers[tier].push(url);
   }
 
   for (const missing of ["exec.sequence", "exec.heroStat", "close.body"]) {

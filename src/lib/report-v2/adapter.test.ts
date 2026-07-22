@@ -200,9 +200,11 @@ test("adaptPipelineReport maps a realistic pipeline JSON without throwing and lo
   assert.equal(report.leads.dataset?.records, 360);
   // A single flat phase from prose (no longer padded to 3 empty columns).
   assert.equal(report.actionPlan.phases.length, 1);
-  assert.deepEqual(report.sources.regulator, ["ato.gov.au"]);
-  assert.deepEqual(report.sources.analyst, ["ibisworld.com"]);
-  assert.deepEqual(report.sources.vendor, ["blog.example.com"]);
+  // B1: tiers hold the full citation URL (deduped by domain) so the sources band
+  // can hyperlink; the band extracts the domain for display.
+  assert.deepEqual(report.sources.regulator, ["https://www.ato.gov.au/x"]);
+  assert.deepEqual(report.sources.analyst, ["https://www.ibisworld.com/y"]);
+  assert.deepEqual(report.sources.vendor, ["https://blog.example.com/z"]);
   // Gaps are logged, not silent.
   assert.ok(mismatches.some((m) => m.path === "meta.archetype"));
   assert.ok(mismatches.some((m) => m.path.startsWith("competitors.rows[0]")));

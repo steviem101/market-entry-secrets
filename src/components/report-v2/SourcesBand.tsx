@@ -1,16 +1,35 @@
 import type { Report } from "@/types/report";
 import { formatReportDate } from "@/lib/report-v2/format";
+import { extractDomain } from "@/lib/logoUtils";
 
+// B3 (Floats smoke test): the tier headers use a SQUARE marker (▪), NOT the
+// round ●/◐/○ evidence-weight chips from the cover legend — same glyph, two
+// meanings was the source of the "why are there green then blue/orange/grey
+// dots" confusion. One symbol, one meaning.
 const TIERS = [
-  { key: "regulator", heading: "● REGULATOR / STATUTE", headingClass: "text-report-sky-soft" },
-  { key: "analyst", heading: "● ANALYST / INSTITUTIONAL", headingClass: "text-report-warn-accent" },
-  { key: "vendor", heading: "● VENDOR / PRESS / END-BUYER", headingClass: "text-report-grey-soft" },
+  { key: "regulator", heading: "▪ REGULATOR / STATUTE", headingClass: "text-report-sky-soft" },
+  { key: "analyst", heading: "▪ ANALYST / INSTITUTIONAL", headingClass: "text-report-warn-accent" },
+  { key: "vendor", heading: "▪ VENDOR / PRESS / END-BUYER", headingClass: "text-report-grey-soft" },
 ] as const;
+
+/** A single source: hyperlink (new tab) when it is a real URL, plain domain
+ *  text otherwise (bare-domain fixtures). Displays the domain either way. */
+const Source = ({ value }: { value: string }) => {
+  const isUrl = /^https?:\/\//i.test(value);
+  const label = extractDomain(value) ?? value;
+  if (!isUrl) return <span>{label}</span>;
+  return (
+    <a href={value} target="_blank" rel="noopener noreferrer" className="text-report-grey-soft underline decoration-report-surface-rule underline-offset-2 transition-colors hover:text-white">
+      {label}
+    </a>
+  );
+};
 
 /**
  * Dark closing band: sources grouped by tier (DECISIONS #7 — domains never
- * render raw; the adapter maps them into the three tiers). Reference:
- * "Sources" screen in reference/*.dc.html.
+ * render raw; the adapter maps them into the three tiers). Each source links to
+ * its citation URL when available (B1). Reference: "Sources" screen in
+ * reference/*.dc.html.
  */
 const SourcesBand = ({ report }: { report: Report }) => {
   const { sources, meta } = report;
@@ -32,7 +51,12 @@ const SourcesBand = ({ report }: { report: Report }) => {
           <div key={key}>
             <b className={`text-[10px] font-bold ${headingClass}`}>{heading}</b>
             <br />
-            {sources[key].join(" · ")}
+            {sources[key].map((s, i) => (
+              <span key={i}>
+                {i > 0 && " · "}
+                <Source value={s} />
+              </span>
+            ))}
           </div>
         ))}
       </div>
