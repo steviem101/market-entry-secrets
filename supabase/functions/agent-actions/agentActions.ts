@@ -36,6 +36,27 @@ export const SOURCE_CONFIG: Record<string, SourceConfig> = {
 
 export const MAX_KEYS = 100; // bulk cap per action
 
+// Staging sources that apply-proposal CAN apply once enabled (MES-223 E1). SOURCE_CONFIG keeps
+// applyable=false for these — the apply is gated at runtime by AGENT_APPLY_SOURCES, not by the
+// static config — so the default (env unset) behaves exactly as before: approve records status,
+// applies nothing.
+export const STAGING_APPLY_SOURCES: ReadonlySet<string> = new Set([
+  "directory_steward_staging",
+  "innovation_ecosystem_enrichment_staging",
+  "trade_agencies_enrichment_staging",
+]);
+
+/** Parse AGENT_APPLY_SOURCES into the set of staging sources whose approve should also apply.
+ * Unknown names are ignored (a typo can only under-enable). Unset/empty => empty set. */
+export function enabledApplySources(env: string | undefined | null): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const part of (env ?? "").split(",")) {
+    const name = part.trim();
+    if (name && STAGING_APPLY_SOURCES.has(name)) out.add(name);
+  }
+  return out;
+}
+
 export function parseProposalKey(key: string): { source: string; id: string } | null {
   const idx = key.indexOf(":");
   if (idx <= 0 || idx === key.length - 1) return null;

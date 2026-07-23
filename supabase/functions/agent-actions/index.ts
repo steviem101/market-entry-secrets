@@ -12,7 +12,7 @@ import { buildCorsHeaders } from "../_shared/http.ts";
 import { requireAdmin } from "../_shared/auth.ts";
 import { log, logError } from "../_shared/log.ts";
 import {
-  MAX_KEYS, parseProposalKey, resolveAction, isActionRefusal,
+  MAX_KEYS, parseProposalKey, resolveAction, isActionRefusal, enabledApplySources,
   type CanonicalAction,
 } from "./agentActions.ts";
 
@@ -20,6 +20,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const AGENT_SECRET = Deno.env.get("AGENT_ACTIONS_SECRET") ?? Deno.env.get("EMAIL_INTERNAL_SECRET") ?? "";
 const APPLY_SECRET = Deno.env.get("APPLY_PROPOSAL_SECRET") ?? Deno.env.get("EMAIL_INTERNAL_SECRET") ?? "";
+
+// Staging sources whose approve should also apply (MES-223 E1). Env-gated; unset => none, so the
+// default behaviour is unchanged. apply-proposal enforces the same gate independently.
+const ENABLED_APPLY = enabledApplySources(Deno.env.get("AGENT_APPLY_SOURCES"));
 
 interface RowResult { proposal_key: string; ok: boolean; applied?: boolean; error?: string }
 
@@ -73,7 +77,9 @@ Deno.serve(async (req) => {
         continue;
       }
       results.set(key, { proposal_key: key, ok: true });
-      if (plan.applyAfter) applyKeys.push(key);
+      // Content proposals apply via plan.applyAfter. Enabled staging sources apply on approve too,
+      // gated by AGENT_APPLY_SOURCES (SOURCE_CONFIG.applyable stays false for them by design).
+      if (plan.applyAfter || (action === "approve" && ENABLED_APPLY.has(parsed.source))) applyKeys.push(key);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       results.set(key, { proposal_key: key, ok: false, error: msg });

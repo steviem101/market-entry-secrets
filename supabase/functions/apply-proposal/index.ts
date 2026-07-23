@@ -20,13 +20,21 @@ import { log, logError } from "../_shared/log.ts";
 import {
   planApply, parseProposalKey, isApplyableSource, isRefusal, type Proposal, type ProposalStatus,
 } from "./applyProposal.ts";
+import {
+  STAGING_SOURCES, isStagingSource, enabledStagingSources,
+  planStewardApply, planEnrichmentApply, isStagingRefusal, type StagingPlan,
+} from "./stagingApply.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const APPLY_SECRET = Deno.env.get("APPLY_PROPOSAL_SECRET") ?? Deno.env.get("EMAIL_INTERNAL_SECRET") ?? "";
 const MAX_KEYS = 100; // bulk cap (matches the dashboard 100-per-action cap)
 
-interface RowResult { proposal_key: string; ok: boolean; op?: string; error?: string }
+// Per-source rollout switch (MES-223 E1). Unset/empty => no staging source applies, so the
+// dashboard behaves exactly as before this change (approve records status, applies nothing).
+const ENABLED_STAGING = enabledStagingSources(Deno.env.get("AGENT_APPLY_SOURCES"));
+
+interface RowResult { proposal_key: string; ok: boolean; op?: string; error?: string; applied_fields?: string[]; skipped?: string[] }
 
 function authorize(req: Request): Promise<{ actor: string } | { error: { status: number; message: string } }> {
   const secret = req.headers.get("x-internal-secret");
@@ -36,6 +44,70 @@ function authorize(req: Request): Promise<{ actor: string } | { error: { status:
   return requireAdmin(req).then((r) =>
     "error" in r ? { error: r.error } : { actor: r.user.id },
   );
+}
+
+// Staging tables are dynamic + absent from generated types; queries below use the documented
+// (supabase as any) cast pattern. The client itself is strongly typed here.
+type Db = ReturnType<typeof createClient>;
+
+/**
+ * Apply one staging proposal (steward or enrichment) through the same choke point. Loads the
+ * staging row, resolves its target directory row, plans via the pure planners (CAS / fill-empty),
+ * writes the allowed fields, and stamps the staging row applied. A partial apply (some fields
+ * skipped) is still success — the skips are reported per-field, never silently dropped. A hard
+ * failure leaves the staging row in 'approved' (no apply_failed status on these tables), so it
+ * stays visibly retryable rather than silently terminal.
+ */
+async function applyStagingRow(supabase: Db, source: string, id: string, key: string): Promise<RowResult> {
+  const spec = STAGING_SOURCES[source];
+  try {
+    // deno-lint-ignore no-explicit-any
+    const { data: row, error: loadErr } = await (supabase as any).from(source).select("*").eq("id", id).maybeSingle();
+    if (loadErr) throw new Error(loadErr.message);
+    if (!row) return { proposal_key: key, ok: false, error: "staging row not found" };
+    if (row.status === spec.appliedStatus) return { proposal_key: key, ok: true, op: "noop" };
+
+    const targetTable = spec.kind === "steward" ? String(row[spec.targetTableField!] ?? "") : spec.targetTable!;
+    const targetId = row[spec.targetIdField];
+    if (!targetTable || !targetId) return { proposal_key: key, ok: false, error: "staging row missing target table/id" };
+
+    // deno-lint-ignore no-explicit-any
+    const { data: cur } = await (supabase as any).from(targetTable).select("*").eq("id", targetId).maybeSingle();
+    const currentRow = (cur ?? null) as Record<string, unknown> | null;
+
+    const plan = spec.kind === "steward"
+      ? planStewardApply({ status: row.status, field_diffs: row.field_diffs }, targetTable, currentRow)
+      : planEnrichmentApply({ status: row.status, enrichment: row.enrichment }, targetTable, currentRow);
+
+    if (isStagingRefusal(plan)) return { proposal_key: key, ok: false, error: plan.reason };
+
+    const p = plan as StagingPlan;
+    if (p.op === "update") {
+      // deno-lint-ignore no-explicit-any
+      const { error } = await (supabase as any).from(targetTable).update(p.set!).eq("id", targetId);
+      if (error) throw new Error(error.message);
+    }
+    // op 'noop' (all fields skipped or already satisfied) still marks the staging row resolved so
+    // it leaves the review queue — but only when the diff was genuinely satisfied, not when every
+    // field was refused (CAS mismatch / not allowed): those must stay for a human to re-examine.
+    if (p.op === "noop" && !p.allSatisfied) {
+      return { proposal_key: key, ok: false, op: "noop", error: `nothing applied: ${p.skipped.map((s) => `${s.field}(${s.reason})`).join("; ")}` };
+    }
+
+    const stamp: Record<string, unknown> = { status: spec.appliedStatus };
+    if (spec.hasAppliedAt) stamp.applied_at = new Date().toISOString();
+    // deno-lint-ignore no-explicit-any
+    await (supabase as any).from(source).update(stamp).eq("id", id).neq("status", spec.appliedStatus);
+
+    return {
+      proposal_key: key, ok: true, op: p.op,
+      applied_fields: p.appliedFields, skipped: p.skipped.map((s) => `${s.field}(${s.reason})`),
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logError("apply-proposal", `staging apply failed for ${key}`, err);
+    return { proposal_key: key, ok: false, error: msg };
+  }
 }
 
 Deno.serve(async (req) => {
@@ -81,6 +153,17 @@ Deno.serve(async (req) => {
   for (const key of keys) {
     const parsed = parseProposalKey(key);
     if (!parsed) { results.push({ proposal_key: key, ok: false, error: "malformed proposal_key" }); continue; }
+
+    // Staging sources (steward / enrichment) — MES-223 E1, only when enabled by AGENT_APPLY_SOURCES.
+    if (isStagingSource(parsed.source)) {
+      if (!ENABLED_STAGING.has(parsed.source)) {
+        results.push({ proposal_key: key, ok: false, error: `source '${parsed.source}' apply not enabled` });
+        continue;
+      }
+      results.push(await applyStagingRow(supabase, parsed.source, parsed.id, key));
+      continue;
+    }
+
     if (!isApplyableSource(parsed.source)) {
       results.push({ proposal_key: key, ok: false, error: `source '${parsed.source}' is not directly applyable` });
       continue;

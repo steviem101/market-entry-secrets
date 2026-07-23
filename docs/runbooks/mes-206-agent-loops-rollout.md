@@ -114,3 +114,57 @@ select directory_table, count(*) filter (where consecutive_failures >= 2) as fla
   COALESCE-protected). Auto-approve is limited to archive_event / set_logo_url / trigger_reembed.
 - Slack and the dashboard share one apply path (agent-actions), so state stays consistent.
 - Never point any loop at the Content Studio project (`rcgaviwbsudouvfwzydq`).
+
+## Apply-on-approve for staging sources (MES-223 E1)
+
+Approving a `directory-steward` or enrichment proposal can now apply the change to the live
+directory row through `apply-proposal` (the same single writer), instead of only recording the
+decision. This is **off by default** and enabled per source.
+
+### Enable (owner, at rollout)
+
+Set the Supabase edge secret on BOTH `apply-proposal` and `agent-actions`:
+
+```
+AGENT_APPLY_SOURCES=directory_steward_staging
+```
+
+Comma-separate to add more (`...,innovation_ecosystem_enrichment_staging,trade_agencies_enrichment_staging`).
+Unset/empty = today's behaviour (approve records status, applies nothing). Unknown names are
+ignored. No redeploy needed to disable — clear the secret.
+
+### What apply does per source
+
+- **directory-steward** — applies each `field_diffs` field by compare-and-swap: writes `after`
+  only while the live value still equals `before` (null/""/missing treated as equal). A field
+  edited since the proposal is skipped and reported; it never overwrites drifted data.
+- **enrichment (ecosystem / agency)** — fill-empty only: writes a proposed value only into a
+  currently-empty field. Populated fields are never overwritten.
+- Both are constrained to the **organisations-only fact-field allowlist** in `stagingApply.ts`
+  (no people tables; prose/description fields are never machine-written).
+
+A partial apply (some fields skipped) is still success; the skips are returned per field. A hard
+failure leaves the staging row in `approved` (these tables have no `apply_failed` state), so it
+stays visibly retryable.
+
+### Undo an applied steward change
+
+The old value is preserved in the proposal's `field_diffs.<field>.before`:
+
+```sql
+-- inspect what was applied
+select record_id, directory_table, field_diffs, applied_at
+from directory_steward_staging where id = '<staging_id>';
+
+-- restore one field (example: website) to its pre-apply value
+update innovation_ecosystem
+set website = (select field_diffs->'website'->>'before' from directory_steward_staging where id='<staging_id>')
+where id = '<record_id>';
+```
+
+Enrichment undo = set the filled field back to empty (`null`), since apply only ever filled a blank.
+
+### Supervised soak (E2 — do this before bulk-approving)
+
+Apply the first ~20 individually and verify the live row after each. Expect some benign
+`skipped` / no-op results — that is the guard working, not a bug.

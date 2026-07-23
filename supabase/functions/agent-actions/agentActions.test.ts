@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   SOURCE_CONFIG, parseProposalKey, resolveAction, isActionRefusal, MAX_KEYS,
+  enabledApplySources, STAGING_APPLY_SOURCES,
 } from "./agentActions.ts";
 
 const NOW = "2026-07-20T00:00:00.000Z";
@@ -58,6 +59,21 @@ test("retry re-applies without flipping status (avoids the open-per-dedup index)
   assert.ok(!isActionRefusal(r) && !("status" in r.set) && r.set.reviewed_at === NOW && r.applyAfter === true && r.guardStatus === "applied");
   const bad = resolveAction("report_quality_proposals", "retry", "r1", NOW, "admin1");
   assert.ok(isActionRefusal(bad) && /retry not supported/.test(bad.reason));
+});
+
+test("enabledApplySources parses AGENT_APPLY_SOURCES, ignores unknowns + non-staging", () => {
+  assert.equal(enabledApplySources(undefined).size, 0);
+  const s = enabledApplySources("directory_steward_staging, agent_content_proposals, bogus");
+  assert.ok(s.has("directory_steward_staging"));       // staging source enabled
+  assert.equal(s.has("agent_content_proposals"), false); // not a staging source — ignored
+  assert.equal(s.has("bogus"), false);
+  assert.equal(s.size, 1);
+});
+
+test("staging apply sources stay applyable=false in static config (runtime-gated)", () => {
+  for (const src of STAGING_APPLY_SOURCES) {
+    assert.equal(SOURCE_CONFIG[src].applyable, false, `${src} must stay statically non-applyable`);
+  }
 });
 
 test("every action carries the source's applied value as the CAS guard", () => {
