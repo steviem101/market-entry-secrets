@@ -28,6 +28,7 @@ export interface LoopHealth {
   success_streak: number;    // consecutive most-recent successful runs
   pending_count: number;     // proposals awaiting review (pending)
   proposals_total: number;
+  runs_only: boolean;        // ledger-only loop with no proposals branch (e.g. distill-knowledge)
 }
 
 const OPEN_STATUSES = new Set(["pending"]);
@@ -35,8 +36,17 @@ const OPEN_STATUSES = new Set(["pending"]);
 /**
  * One health row per loop that appears in EITHER runs or proposals, so a loop with proposals but
  * no ledger row (e.g. demand-mining today) still shows up rather than silently vanishing.
+ *
+ * `proposalCapableLoops` is the set of loop_names the agent_proposals view can emit (injected
+ * from agentProposalsMeta so this module stays import-free). A ledger loop outside that set has
+ * no review queue AT ALL (its ledger counters are self-applied work, e.g. distill-knowledge KB
+ * cards) — the grid labels it runs-only instead of showing a misleading "Pending review: 0".
  */
-export function buildLoopHealth(runs: AgentRun[], proposals: AgentProposalLite[]): LoopHealth[] {
+export function buildLoopHealth(
+  runs: AgentRun[],
+  proposals: AgentProposalLite[],
+  proposalCapableLoops?: ReadonlySet<string>,
+): LoopHealth[] {
   const loops = new Set<string>();
   for (const r of runs) loops.add(r.loop);
   for (const p of proposals) loops.add(p.loop_name);
@@ -70,6 +80,9 @@ export function buildLoopHealth(runs: AgentRun[], proposals: AgentProposalLite[]
       success_streak: streak,
       pending_count: pending,
       proposals_total: loopProps.length,
+      // Only a KNOWN non-proposal loop is runs-only; without the capability set, or for a loop
+      // the view can emit (even if quiet this window), keep the normal pending-review framing.
+      runs_only: proposalCapableLoops ? !proposalCapableLoops.has(loop) : false,
     });
   }
   // Most-pending first so the grid surfaces what needs review; stable tie-break by name.

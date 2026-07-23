@@ -8,6 +8,11 @@ import {
   buildLoopHealth, buildLoopActivity, type AgentRun, type AgentProposalLite,
   type LoopHealth, type LoopActivityPoint,
 } from "@/lib/agentLoopHealth";
+import { LOOP_OPTIONS } from "@/lib/agentProposalsMeta";
+
+// Loops the agent_proposals view can emit. A ledger loop outside this set is runs-only
+// (no review queue), which the health grid labels honestly instead of "Pending review: 0".
+const PROPOSAL_CAPABLE_LOOPS: ReadonlySet<string> = new Set(LOOP_OPTIONS);
 
 export interface UseAgentRunsOptions {
   loop?: string;      // filter to one loop_name, or "all"
@@ -67,7 +72,7 @@ export function useAgentLoopHealth() {
 
       const runsData = (runs ?? []) as AgentRun[];
       const propsData = (props ?? []) as AgentProposalLite[];
-      return { health: buildLoopHealth(runsData, propsData), activity: buildLoopActivity(propsData) };
+      return { health: buildLoopHealth(runsData, propsData, PROPOSAL_CAPABLE_LOOPS), activity: buildLoopActivity(propsData) };
     },
   });
 }
