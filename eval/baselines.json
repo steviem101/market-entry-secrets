@@ -4,397 +4,432 @@
   "goldens": {
     "creditlogic-ie-fintech": {
       "lead_list": {
-        "notes": "The '340 contacts' dataset and A$25k–A$500k ACV figure are asserted without verifiable source; list is largely a placeholder upsell.",
-        "grounding": 2,
-        "duplication": 3,
-        "specificity": 2,
-        "personalisation": 3
+        "grounding": 3,
+        "specificity": 4,
+        "personalisation": 4,
+        "duplication": 4,
+        "notes": "ANZ dataset link is an internal product page, not a verifiable external source; plausible but unverified record count."
       },
       "action_plan": {
-        "notes": "AUSTRAC 29 July 2026 deadline and $26M Westpac penalty are specific but unverified; R&D rate and super figures repeated from other sections.",
-        "grounding": 3,
-        "duplication": 3,
+        "grounding": 4,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 5,
+        "duplication": 4,
+        "notes": "TechVisa.com.au existence unverified; Westpac hardship-notice angle is strong but Cassini stack detail unconfirmed."
       },
       "swot_analysis": {
-        "notes": "NAB-Banked acquisition link is unverified; '76% of firms testing AI' stat unsourced; ACV range, R&D rate and super figures duplicated across sections.",
         "grounding": 3,
-        "duplication": 2,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 3,
+        "duplication": 3,
+        "notes": "Generic SaaS SWOT points; APRA alignment claim lacks cited standard; opportunities repeat Stone & Chalk from action_plan."
       },
       "first_customers": {
-        "notes": "Westpac $26M penalty and 200-banker hiring signal are plausible but uncited; CommBank tech stack details are vague and hedged weakly.",
         "grounding": 3,
+        "specificity": 5,
+        "personalisation": 5,
         "duplication": 4,
-        "specificity": 4,
-        "personalisation": 4
+        "notes": "Cassini and AEM stack attributions presented as fact without source citations; hardship-notice signal for Westpac is plausible but unhedged."
       },
       "events_resources": {
-        "notes": "Internal '/events/' links are fabricated placeholders; Fenergo/FINEOS case study URLs are invented, undermining grounding despite good Irish-corridor personalisation.",
         "grounding": 2,
+        "specificity": 3,
+        "personalisation": 3,
         "duplication": 3,
-        "specificity": 2,
-        "personalisation": 4
+        "notes": "All event links are internal relative URLs with no dates or confirmed venues; cannot verify these events exist as described."
       },
       "setup_compliance": {
-        "notes": "Director ID 4–6 week timeline and treaty withholding rates are specific and plausible; EMDG A$770k figure and R&D rate repeated from executive summary.",
-        "grounding": 4,
-        "duplication": 3,
+        "grounding": 5,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 4,
+        "notes": "Strongest grounded section; 43.5% R&D credit rate and EMDG cap figures are accurate and well-hedged for this stage."
       },
       "executive_summary": {
-        "notes": "US$11.51B market size and 13.4% CAGR cited as [1] with no traceable source; competitor analysis names Alloy but provides no AU-specific grounding.",
-        "grounding": 2,
-        "duplication": 2,
+        "grounding": 4,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "Honestly flags competitor gap rather than fabricating names; outcome-based pricing point is useful but repeated in competitor_landscape."
       },
       "service_providers": {
-        "notes": "NEXTGEN, Stone & Chalk, Gadens are real and relevant; Hatch Quarter and TechVisa less verifiable; many providers duplicated verbatim from action_plan.",
         "grounding": 3,
-        "duplication": 2,
         "specificity": 3,
-        "personalisation": 3
+        "personalisation": 3,
+        "duplication": 2,
+        "notes": "Heavy repetition of providers already named in action_plan; NEXTGEN/Gadens/Dentons descriptions add little new decision-ready detail."
+      },
+      "case_studies_guides": {
+        "grounding": 3,
+        "specificity": 3,
+        "personalisation": 4,
+        "duplication": 4,
+        "notes": "All case-study links are internal relative URLs; Fenergo ANZ claims are plausible but unverified and presented without hedging."
       },
       "competitor_landscape": {
-        "notes": "Engine (Pakistani apparel brand) included as a competitor with no fintech relevance; only three competitors listed, one entirely irrelevant, severely weakening the section.",
-        "grounding": 1,
-        "duplication": 3,
+        "grounding": 2,
         "specificity": 2,
-        "personalisation": 3
+        "personalisation": 3,
+        "duplication": 3,
+        "notes": "Admits no named competitors found yet fills section with generic positioning; fails the stated report focus of understanding competitors."
       },
       "mentor_recommendations": {
-        "notes": "LinkedIn URLs for Navaid Khatib point to his profile yet describe AusPayNet board role without verification; Brian Cooke identity is ambiguous and unverified.",
-        "grounding": 2,
-        "duplication": 3,
+        "grounding": 3,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "LinkedIn profiles cited but individuals' current roles and fintech relevance unverified; FinTech Australia and Investment NSW repeat prior sections."
       },
       "investor_recommendations": {
-        "notes": "Folklore and Partners for Growth are real and plausible fits; angel check sizes for Muir and Basha are unspecified, reducing decision-readiness.",
         "grounding": 3,
+        "specificity": 4,
+        "personalisation": 4,
         "duplication": 4,
-        "specificity": 3,
-        "personalisation": 3
+        "notes": "Angel check-size figures presented with false precision; Reinventure's Westpac link is historical and no longer active, unhedged."
       }
     },
     "floats-au-startup": {
       "lead_list": {
-        "notes": "Admits no matching data found; '47 firms' statistic uncited and unverified; generic redirect to custom list weakens decision-readiness.",
-        "grounding": 2,
-        "duplication": 3,
+        "grounding": 3,
         "specificity": 2,
-        "personalisation": 3
+        "personalisation": 2,
+        "duplication": 4,
+        "notes": "No actual leads delivered; proposed lists are generic Melbourne HR/founder segments not tailored to boutique staffing agencies Floats actually targets."
       },
       "action_plan": {
-        "notes": "R&D registration incorrectly directed to ARC instead of AusIndustry/business.gov.au; salary and burn figures repeated verbatim from SWOT.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 2,
+        "notes": "Heavy repetition of R&DTI 43.5% offset advice and same providers (Fullstack, Stone & Chalk, H2) already covered in service_providers and setup_compliance sections."
       },
       "swot_analysis": {
-        "notes": "LaunchVic AUD 50,000 dollar-matched claim unverified; salary and burn figures duplicated across multiple sections.",
-        "grounding": 3,
-        "duplication": 3,
+        "grounding": 4,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 4,
+        "notes": "Weaknesses section slightly generic; ATS integration friction point could name specific incumbent ATS vendors relevant to Australian boutique agencies."
       },
       "first_customers": {
-        "notes": "HubSpot and WordPress tech-stack claims presented as fact without sourcing; Walter Page entry is incomplete placeholder reducing utility.",
-        "grounding": 3,
-        "duplication": 3,
-        "specificity": 4,
-        "personalisation": 4
+        "grounding": 2,
+        "specificity": 3,
+        "personalisation": 3,
+        "duplication": 4,
+        "notes": "Gadens is a law firm, not a recruitment buyer; mapping Floats as a resource-allocation tool for a law firm is a weak, implausible fit."
       },
       "events_resources": {
-        "notes": "Internal content links unverifiable; GitHub case study referenced in summary but not listed in section body, creating inconsistency.",
         "grounding": 3,
+        "specificity": 4,
+        "personalisation": 4,
         "duplication": 3,
-        "specificity": 3,
-        "personalisation": 3
+        "notes": "R&D documentation advice repeated from setup_compliance; CDAO Melbourne event URL and attendance figures not independently verifiable."
       },
       "setup_compliance": {
-        "notes": "R&D registration again misattributed to ARC rather than AusIndustry; superannuation rate (11.5%) conflicts with action_plan's stated 12%.",
-        "grounding": 4,
-        "duplication": 3,
+        "grounding": 5,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "Superannuation rate cited as 11.5% but rate is 11.5% for FY2024 and rising; minor. R&DTI detail duplicated heavily across executive_summary and action_plan."
       },
       "executive_summary": {
-        "notes": "R&D registration incorrectly cites ARC; 'Future Fund Victoria' is not a recognised program name; key figures heavily repeated from body sections.",
-        "grounding": 3,
-        "duplication": 2,
+        "grounding": 4,
         "specificity": 4,
-        "personalisation": 5
+        "personalisation": 5,
+        "duplication": 3,
+        "notes": "Named real early clients and product features well; Go1 analogy repeated in action_plan. 'Who from your matches' section appears empty/truncated."
       },
       "service_providers": {
-        "notes": "Treadstone and Granton URLs need verification; Stone & Chalk and Hatch Quarter repeated from action_plan without new decision-ready detail.",
         "grounding": 3,
+        "specificity": 3,
+        "personalisation": 3,
+        "duplication": 2,
+        "notes": "ARAIN and SMEC AI described as 'federal agency' and 'National AI Adopt Centre' interchangeably with unclear distinctions; several providers repeated verbatim from action_plan."
+      },
+      "case_studies_guides": {
+        "grounding": 3,
+        "specificity": 3,
+        "personalisation": 3,
         "duplication": 3,
-        "specificity": 4,
-        "personalisation": 4
+        "notes": "Guide links appear to be internal platform URLs not independently verifiable; superannuation cited as 12% here vs 11.5% in setup_compliance — factual inconsistency."
       },
       "competitor_landscape": {
-        "notes": "Robert Half partnership claim for SourceWhale stated confidently without citation; otherwise well-differentiated and minimally repetitive.",
         "grounding": 4,
-        "duplication": 4,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 4,
+        "notes": "All competitors are sourcing-focused; no local Australian competitors (e.g. Expr3ss, Ascender) assessed, weakening completeness of local market picture."
       },
       "mentor_recommendations": {
-        "notes": "LinkedIn profiles for Sinead Connolly and Madeline Ferguson presented as verified mentors without confirmed advisory relationship to Floats.",
         "grounding": 2,
-        "duplication": 4,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "Claire Marriott's relevance to R&D grant compliance is a stretch; LinkedIn profiles not verified as current roles. Navaid Khatib's fintech background weakly justified for HRTech AI."
       },
       "investor_recommendations": {
-        "notes": "Smart50 Awards framed as grant funding source which is inaccurate; Potentia and SecondQuarter premature for seed stage, reducing relevance.",
-        "grounding": 3,
+        "grounding": 2,
+        "specificity": 2,
+        "personalisation": 3,
         "duplication": 3,
-        "specificity": 3,
-        "personalisation": 3
+        "notes": "Smart50 is an awards program not a grant; Transition Level Investments has minimal verifiable public profile. No HRTech-specific VCs like Airtree or Blackbird mentioned."
       }
     },
     "infact-uk-fintech": {
       "lead_list": {
-        "notes": "Named datasets with URLs appear to be internal product links, not independently verifiable; no evidence these lists exist.",
-        "grounding": 2,
+        "grounding": 4,
+        "specificity": 4,
+        "personalisation": 4,
         "duplication": 4,
-        "specificity": 3,
-        "personalisation": 3
+        "notes": "ACL/AFSL filter for custom lists is a strong touch; dataset counts (260, 340) unverified but plausible and clearly labelled."
       },
       "action_plan": {
-        "notes": "Stone & Chalk, FinTech Australia, NEXTGEN, Intersekt repeated across multiple sections; NEXTGEN as distribution partner is unverified.",
-        "grounding": 3,
-        "duplication": 3,
-        "specificity": 4,
-        "personalisation": 4
+        "grounding": 4,
+        "specificity": 5,
+        "personalisation": 5,
+        "duplication": 4,
+        "notes": "ANZ URL listed as 'anz.com.westpac.com' elsewhere bleeds in; minor but signals copy-paste error undermining grounding."
       },
       "swot_analysis": {
-        "notes": "USD 40M AI market figure and 72% AI adoption stat cited without traceable primary source; repeated across exec summary.",
         "grounding": 3,
+        "specificity": 3,
+        "personalisation": 3,
         "duplication": 3,
-        "specificity": 4,
-        "personalisation": 4
+        "notes": "Real-time vs batch claim is specific but unverified; Stone & Chalk and accelerator opportunities repeat heavily from other sections."
       },
       "first_customers": {
-        "notes": "CBA $90M AI program and ANZ reverse pitch signals plausible but unverified; ANZ section notably thinner with no tech signals.",
-        "grounding": 3,
+        "grounding": 2,
+        "specificity": 3,
+        "personalisation": 3,
         "duplication": 3,
-        "specificity": 4,
-        "personalisation": 4
+        "notes": "ANZ URL is wrong ('anz.com.westpac.com'); 'Money Plan' procurement signal is unverified and presented as confirmed fact."
       },
       "events_resources": {
-        "notes": "Internal relative URLs for events and content are not independently verifiable; Fenergo and Brighte case studies are generic.",
         "grounding": 2,
-        "duplication": 3,
         "specificity": 3,
-        "personalisation": 3
+        "personalisation": 3,
+        "duplication": 3,
+        "notes": "Specific 2026-2027 dates for named events are unverifiable and presented as confirmed; risks being entirely fabricated."
       },
       "setup_compliance": {
-        "notes": "A-UKFTA residency director claim is hedged but slightly overstated; otherwise well-grounded and Infact-corridor specific.",
-        "grounding": 4,
-        "duplication": 4,
+        "grounding": 5,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 4,
+        "notes": "Strong grounding on A-UKFTA date, superannuation rate, R&D threshold; SC400 visa name is non-standard and should be hedged."
       },
       "executive_summary": {
-        "notes": "Heavily recaps figures and recommendations from SWOT, action plan and setup sections; significant repetition across the report.",
-        "grounding": 3,
-        "duplication": 2,
-        "specificity": 3,
-        "personalisation": 4
+        "grounding": 4,
+        "specificity": 4,
+        "personalisation": 5,
+        "duplication": 3,
+        "notes": "Stone & Chalk and FinTech Australia accelerator pitch repeats verbatim from other sections; Contino case study link reused."
       },
       "service_providers": {
-        "notes": "Adrenalin Equity in competitor section and ADAPT here are weakly grounded; Stone & Chalk and FinTech Australia repeated from multiple sections.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 3,
-        "personalisation": 3
+        "personalisation": 3,
+        "duplication": 2,
+        "notes": "Stone & Chalk listed twice under different subheadings; NEXTGEN Group claim of 'Sales as a Service' is unverified."
+      },
+      "case_studies_guides": {
+        "grounding": 2,
+        "specificity": 3,
+        "personalisation": 4,
+        "duplication": 4,
+        "notes": "All case study links are internal slugs with no external verification; fabricated parallels presented as confirmed facts."
       },
       "competitor_landscape": {
-        "notes": "Adrenalin Equity inclusion as a competitor is confusing and poorly grounded; illion URL incorrectly points to Experian domain.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 4,
+        "notes": "Adrenalin Equity inclusion as a 'competitor' is irrelevant and confusing; Experian listed twice as separate entities inconsistently."
       },
       "mentor_recommendations": {
-        "notes": "Named mentors have LinkedIn URLs but roles and relevance are asserted without sourcing; Jason Marsham profile link looks low-confidence.",
         "grounding": 2,
-        "duplication": 3,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 3,
+        "duplication": 3,
+        "notes": "LinkedIn profiles cited for named individuals are unverified; Navaid Khatib's URL points to his own profile not AusPayNet."
       },
       "investor_recommendations": {
-        "notes": "Angel investor check sizes and backgrounds largely unverified; Beachhead VC range and Vincent Turner Frollo link are unsourced.",
         "grounding": 2,
-        "duplication": 4,
         "specificity": 3,
-        "personalisation": 3
+        "personalisation": 3,
+        "duplication": 4,
+        "notes": "Angel investor check sizes and RegTech focus claims (Alistair Muir, Martyn Reeves) are unverified and presented as confirmed facts."
       }
     },
     "synthetic-au-cleantech": {
       "lead_list": {
-        "notes": "ANZ Trade database of '210 contacts' is unverifiable; section is largely a placeholder upsell with no actionable named leads.",
-        "grounding": 2,
+        "grounding": 3,
+        "specificity": 3,
+        "personalisation": 3,
         "duplication": 3,
-        "specificity": 2,
-        "personalisation": 3
+        "notes": "ANZ Trade dataset link feels generic; no named cleantech investors or WA-specific contacts despite that being the core ask."
       },
       "action_plan": {
-        "notes": "Purpose Ventures URL inconsistent across report; 'NETA' and 'CERI' plausibility unverified; R&D figures repeated from other sections.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 2,
+        "notes": "NETA, Granton, Treadstone URLs unverified; R&D Tax Incentive advice repeated verbatim across multiple sections."
       },
       "swot_analysis": {
-        "notes": "A$6.4B pipeline, 43.5% RDTI offset, and 1.9GW CIS figures repeated verbatim across multiple sections without added insight.",
-        "grounding": 3,
-        "duplication": 2,
+        "grounding": 4,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "R&D Tax Incentive benefit duplicated from action_plan and setup_compliance; SWIS reference is strong local touch."
       },
       "first_customers": {
-        "notes": "No named decision-makers provided despite claiming to; VOW Venture Capital CEFC partnership claim is unverified and potentially fabricated.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 3,
+        "duplication": 4,
+        "notes": "No named utility or government targets despite B2G focus; generic DNSP framing not specific to WA network operators."
       },
       "events_resources": {
-        "notes": "West Tech Fest date and 'Black Nova' attendance claim are unverified; internal content links add no grounded value for a real user.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 3,
-        "personalisation": 3
+        "personalisation": 3,
+        "duplication": 3,
+        "notes": "Smart Energy 2027 URL implausible for a current event; pre-meeting investor tactics are generic, no WA-specific events listed."
       },
       "setup_compliance": {
-        "notes": "Solid compliance detail but largely generic Australian startup advice; superannuation rate cited as 11.5% conflicts with 12% stated in events section.",
         "grounding": 4,
-        "duplication": 3,
-        "specificity": 4,
-        "personalisation": 3
+        "specificity": 3,
+        "personalisation": 2,
+        "duplication": 2,
+        "notes": "Workers comp references icare/NSW and WorkSafe/Victoria despite company being Perth/WA-based; should cite WorkCover WA."
       },
       "executive_summary": {
-        "notes": "Burda Principal Investments A$16M claim appears fabricated; most key figures (46.1%, 6.4B, 43.5%) repeated from nearly every other section.",
-        "grounding": 3,
-        "duplication": 2,
+        "grounding": 4,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "Honest caveat on investor data is good, but R&D Tax Incentive and accelerator recommendations repeat content from other sections."
       },
       "service_providers": {
-        "notes": "NETA equity-free grant amount ($10k) and Founders Climate 10x SAFE ($100k) are specific but unverified; some providers repeated from action_plan.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "NEXTGEN Group inclusion feels irrelevant to cleantech seed stage; NETA $10k grant figure unverified and repeated from action_plan."
+      },
+      "case_studies_guides": {
+        "grounding": 2,
+        "specificity": 2,
+        "personalisation": 2,
+        "duplication": 4,
+        "notes": "Buildkite, Go1, Linktree are software companies with no cleantech relevance; case study links are internal placeholders not real sources."
       },
       "competitor_landscape": {
-        "notes": "Horizon Power framed as competitor is creative but stretches credibility; pipeline statistics repeated again without new competitive framing.",
-        "grounding": 4,
+        "grounding": 3,
+        "specificity": 3,
+        "personalisation": 3,
         "duplication": 3,
-        "specificity": 4,
-        "personalisation": 4
+        "notes": "No named competitors despite claiming three tiers exist; SWIS duck curve mention is good but sovereign capability framing is generic."
       },
       "mentor_recommendations": {
-        "notes": "Named individuals (Ferguson, O'Connell, Munoz) lack verifiable energy-sector relevance; LinkedIn URLs not confirmed as correct profiles.",
         "grounding": 2,
-        "duplication": 3,
         "specificity": 3,
-        "personalisation": 3
+        "personalisation": 3,
+        "duplication": 4,
+        "notes": "LinkedIn URLs used as org URLs; Liza Noonan and Sam Cust roles unverifiable; Hyper Startup Studio appears fabricated."
       },
       "investor_recommendations": {
-        "notes": "Electrifi Ventures '450+ members' and prior thermal storage backing are unverified specifics; Blackbird check size range is implausibly wide for seed context.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "Mick Liubinskas check size of $25k stated with false precision; Croc Pitch is Darwin-based and weakly relevant to Perth cleantech."
       }
     },
     "synthetic-sg-medtech": {
       "lead_list": {
-        "notes": "The 380-contact database is an unverified internal product claim; no evidence it exists or is current.",
-        "grounding": 2,
-        "duplication": 3,
-        "specificity": 3,
-        "personalisation": 3
+        "grounding": 4,
+        "specificity": 4,
+        "personalisation": 4,
+        "duplication": 4,
+        "notes": "Royal Brisbane and Women's Hospital reference is plausible but Metro HHS specifics unverified; minor overlap with first_customers section."
       },
       "action_plan": {
-        "notes": "CCIWA (Western Australia body) recommended for Queensland entry without justification; weakens credibility.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "Several named firms (LandedFlow, Treadstone, Stockwells) lack verifiable MedTech credentials; CCIWA is WA-focused, oddly placed. Repeats TGA advice from other sections."
       },
       "swot_analysis": {
-        "notes": "Regulatory timeline details repeated verbatim from first_customers and executive_summary sections.",
         "grounding": 3,
-        "duplication": 2,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "Series A-B equated to '51-200 employees' without basis; SAFTA/RDTI claims are real but generic; threats repeat TGA timeline points stated elsewhere."
       },
       "first_customers": {
-        "notes": "TGA class timelines and HSA reliance pathway repeated across multiple sections without new decision-ready detail.",
-        "grounding": 3,
-        "duplication": 3,
+        "grounding": 4,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 5,
+        "duplication": 3,
+        "notes": "HSA comparable-regulator pathway claim is useful but overstated; QTenders and HHS specifics are accurate. Standing Offer Arrangements advice repeats action_plan."
       },
       "events_resources": {
-        "notes": "Xerocon and AgriFutures are irrelevant to MedTech; no actual MedTech-specific Brisbane events provided.",
         "grounding": 2,
-        "duplication": 3,
         "specificity": 2,
-        "personalisation": 2
+        "personalisation": 3,
+        "duplication": 3,
+        "notes": "ADX Brisbane is a dental event with no relevance to diagnostic MedTech; recommending it to vet medical device distributors is a significant grounding failure."
       },
       "setup_compliance": {
-        "notes": "SC400 visa subclass is not a standard Australian visa category; minor but confident unsourced specificity.",
         "grounding": 4,
-        "duplication": 4,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 3,
+        "duplication": 4,
+        "notes": "Director ID timeline and superannuation rate are accurate; SC400 visa name is incorrect (it is a subclass 400). Content is largely generic incorporation advice."
       },
       "executive_summary": {
-        "notes": "'500 medical device applications fast-tracked' figure is unverified and cited without a credible traceable source.",
-        "grounding": 3,
+        "grounding": 4,
+        "specificity": 4,
+        "personalisation": 5,
         "duplication": 3,
-        "specificity": 3,
-        "personalisation": 4
+        "notes": "12-27 month TGA range is well-framed; 2032 Olympics hook is relevant. Slightly repeats entity-setup and distributor-parallel-pursuit advice found in action_plan."
       },
       "service_providers": {
-        "notes": "Export Connect is agri-food focused; its inclusion for MedTech distribution is weakly justified and slightly misleading.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 4,
-        "personalisation": 4
+        "personalisation": 4,
+        "duplication": 3,
+        "notes": "LandedFlow described as distribution consultant but appears to be a different business; CCIWA is WA-specific and weakly justified. Repeats PharmOut/R2/Adjutor from action_plan."
+      },
+      "case_studies_guides": {
+        "grounding": 2,
+        "specificity": 3,
+        "personalisation": 3,
+        "duplication": 3,
+        "notes": "Secretlab, BYD, Kia, and Singtel are irrelevant sector comparisons for a MedTech regulatory entry; lessons are loosely analogised and undermine credibility."
       },
       "competitor_landscape": {
-        "notes": "QHeart Medical link resolves to a directory page, not the company; entity may not exist as described.",
         "grounding": 3,
-        "duplication": 3,
         "specificity": 3,
-        "personalisation": 3
+        "personalisation": 3,
+        "duplication": 4,
+        "notes": "QHeart Medical link routes to a generic directory, not a verified company page; competitors chosen have minimal overlap with diagnostic imaging/AI diagnostics positioning."
       },
       "mentor_recommendations": {
-        "notes": "Named mentors have no verifiable MedTech or TGA credentials stated; LinkedIn profiles unconfirmed for claimed expertise.",
         "grounding": 2,
-        "duplication": 3,
         "specificity": 3,
-        "personalisation": 4
+        "personalisation": 3,
+        "duplication": 4,
+        "notes": "Nigel Williams described as Clayton Utz advisor and ex-CBA CRO without verifiable connection to MedTech; LinkedIn URLs are generic and profiles unverified."
       },
       "investor_recommendations": {
-        "notes": "Breakthrough Victoria targets Victorian presence, not Queensland; misaligned with stated Brisbane/QLD target region.",
-        "grounding": 3,
-        "duplication": 4,
+        "grounding": 2,
         "specificity": 3,
-        "personalisation": 3
+        "personalisation": 3,
+        "duplication": 4,
+        "notes": "Illumina for Startups grant reframed as Series A-B MedTech funding; it is genomics-specific and US$10k instrument access, not capital. Michal Wallas unverifiable."
       }
     }
   }
