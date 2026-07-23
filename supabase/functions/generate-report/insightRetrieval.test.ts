@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { goalIdsToIntents, toCanonicalSectors, buildInsightNote, SECTION_LANES, MAX_CARDS_PER_SECTION, type InsightCard } from "./insightRetrieval.ts";
+import { goalIdsToIntents, toCanonicalSectors, buildInsightNote, specificityScore, SECTION_LANES, MAX_CARDS_PER_SECTION, type InsightCard } from "./insightRetrieval.ts";
 import { isCanonicalSector } from "../_shared/kbTaxonomy.ts";
 
 function card(over: Partial<InsightCard> = {}): InsightCard {
@@ -57,6 +57,23 @@ test("buildInsightNote: proprietary cards rank first, capped at MAX_CARDS_PER_SE
   const bulletCount = (note.match(/\n- /g) || []).length;
   assert.equal(bulletCount, MAX_CARDS_PER_SECTION);
   assert.match(note, /PROPRIETARY EDGE\./); // proprietary survives the cap because it sorts first
+});
+
+test("specificityScore ranks proprietary > sector-specific > general-only", () => {
+  const proprietary = specificityScore(card({ is_proprietary: true, sectors: ["general"] }));
+  const specific = specificityScore(card({ is_proprietary: false, sectors: ["financial-services"] }));
+  const general = specificityScore(card({ is_proprietary: false, sectors: ["general"] }));
+  assert.ok(proprietary > specific, "proprietary outranks sector-specific");
+  assert.ok(specific > general, "sector-specific outranks general-only");
+});
+
+test("buildInsightNote: sector-specific cards win the 6-cap over generic ones", () => {
+  const cards: InsightCard[] = [];
+  for (let i = 0; i < 6; i++) cards.push(card({ topic_lane: "regulatory", sectors: ["general"], claim: `General ${i}.` }));
+  cards.push(card({ topic_lane: "regulatory", sectors: ["financial-services"], claim: "SECTOR SPECIFIC EDGE." }));
+  const note = buildInsightNote(cards, "setup_compliance"); // regulatory lane
+  assert.match(note, /SECTOR SPECIFIC EDGE\./); // survives the cap because it outranks the 6 generals
+  assert.equal((note.match(/\n- /g) || []).length, MAX_CARDS_PER_SECTION);
 });
 
 test("buildInsightNote returns '' for unknown section, empty cards, or no lane match", () => {
