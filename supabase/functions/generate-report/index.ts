@@ -11,6 +11,7 @@ import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits,
 import { buildServiceTermIndex, expandServiceTags, type ServiceTermRow, type ServiceTermIndex } from "./serviceTerms.ts";
 import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
+import { goalIdsToIntents, toCanonicalSectors, buildInsightNote, type InsightCard } from "./insightRetrieval.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
 import { metaLine, recordCountLabel, resolveWebsite } from "./cardFields.ts";
 import { buildCompetitorCards } from "./competitorCards.ts";
@@ -2642,6 +2643,9 @@ async function generateReportInBackground(
     let auPresence: AuPresenceSignal = { ...NONE_SIGNAL };
     let auPresenceNote = "";
     let auFootprintNote = "";
+    // Sub-ticket 3: distilled insight cards for section grounding — populated after Phase 1 when
+    // REPORT_INSIGHTS_ENABLED, [] otherwise. Resumed/saved like auPresence so retries keep them.
+    let retrievedInsights: InsightCard[] = [];
     let matchRerankInfo: { applied: boolean; dropped: Record<string, number>; dropped_count: number } | null = null;
     // MES-148 Phase 5 (P5-1): load the service_terms synonym index once (flag-gated,
     // null when off). Shared by the fresh-path matcher AND the goal_tag_hits
@@ -2922,6 +2926,19 @@ async function generateReportInBackground(
     // (auPresence is now set in each branch), so a retry reweights identically.
     auPresenceNote = buildPresenceReweightNote(auPresence.status);
     auFootprintNote = buildFootprintNote(auPresence);
+
+    // ── Sub-ticket 3: retrieve distilled insight cards for section grounding ──
+    // Behind REPORT_INSIGHTS_ENABLED (default off). One metadata-only RPC — no external call, no
+    // embedding — so it runs for BOTH fresh and resumed paths here (cheap; no need to snapshot it).
+    // Fail-open: [] on any error, so the intelligence layer can never block a report.
+    if (["on", "1", "true"].includes((Deno.env.get("REPORT_INSIGHTS_ENABLED") || "").trim().toLowerCase())) {
+      try {
+        retrievedInsights = await retrieveReportInsights(supabase, intake);
+        console.log(`report insights: ${retrievedInsights.length} cards retrieved for grounding`);
+      } catch (e) {
+        console.error("report insight retrieval failed (continuing):", e);
+      }
+    }
 
     // ── MES-148 1a: claims registry ─────────────────────────────────────
     // Key metrics become claims deterministically; the free-prose research
@@ -3474,6 +3491,10 @@ async function generateReportInBackground(
             ? `\n\nPRIORITISED SECTION: the user explicitly selected a goal that this section addresses, so it is one of the outcomes they most want. Make it especially specific, concrete and actionable — lead with the highest-value, most directly useful recommendations (stay within the length budget above).`
             : "";
 
+          // Sub-ticket 3: grounded MARKET INTELLIGENCE from distilled insight cards, filtered to
+          // this section's topic-lanes. "" when the flag is off, no cards, or no lane match.
+          const marketIntelNote = buildInsightNote(retrievedInsights, tmpl.section_name);
+
           // Phase 4: if this report is in the A/B bucket and a candidate body
           // exists for the section, write from the candidate instead of the
           // active prompt_body. The variant is recorded only AFTER the section
@@ -3502,7 +3523,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~110 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote + providerRationaleNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote + competitorAuFirstNote : ""}${tmpl.section_name === "investor_recommendations" ? investorStageFitNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote + leadRecommendationNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" ? execFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${marketIntelNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote + providerRationaleNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote + competitorAuFirstNote : ""}${tmpl.section_name === "investor_recommendations" ? investorStageFitNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote + leadRecommendationNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" ? execFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
@@ -4310,6 +4331,26 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       console.error("Failed to update report status:", updateErr);
     }
   }
+}
+
+// ── Sub-ticket 3: report insight retrieval ─────────────────────────────
+// Fetch grounding insight cards for this intake via the metadata-only RPC (no embedding call).
+// Fail-open: any error returns [] so a report is never blocked by the intelligence layer.
+async function retrieveReportInsights(supabase: any, intake: any): Promise<InsightCard[]> {
+  const sectors = toCanonicalSectors(industryGroupsToSectorSlugs(intake.industry_sector));
+  const intents = goalIdsToIntents((intake as any).goal_ids);
+  const origin = normalizeCountry(intake.country_of_origin);
+  const { data, error } = await supabase.rpc("match_report_insights", {
+    p_sectors: sectors, p_intents: intents, p_origin: origin, p_target: "Australia", p_limit: 40,
+  });
+  if (error) { console.error("match_report_insights failed:", error.message); return []; }
+  return (data ?? []).map((r: any) => ({
+    claim: String(r.claim ?? ""),
+    topic_lane: String(r.topic_lane ?? ""),
+    sectors: Array.isArray(r.sectors) ? r.sectors : [],
+    answers_intents: Array.isArray(r.answers_intents) ? r.answers_intents : [],
+    is_proprietary: r.is_proprietary === true,
+  }));
 }
 
 // ── Main handler ───────────────────────────────────────────────────────
