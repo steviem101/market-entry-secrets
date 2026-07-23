@@ -143,9 +143,20 @@ ignored. No redeploy needed to disable — clear the secret.
 - Both are constrained to the **organisations-only fact-field allowlist** in `stagingApply.ts`
   (no people tables; prose/description fields are never machine-written).
 
-A partial apply (some fields skipped) is still success; the skips are returned per field. A hard
-failure leaves the staging row in `approved` (these tables have no `apply_failed` state), so it
-stays visibly retryable.
+A partial apply (some fields skipped) is still success; the skips are returned per field.
+
+### Recovering a hard apply failure
+
+A hard failure (e.g. a DB constraint error) leaves the staging row in `approved` — these tables
+have no `apply_failed` state, and the dashboard does **not** offer a direct re-apply for an
+`approved` staging row. While it stays `approved` it also holds the steward loop's
+open-proposal dedup slot (`uq_directory_steward_open_per_record`, predicate
+`status IN ('new','approved')`), so the loop cannot raise any new proposal for that record.
+
+**Recover by rejecting it:** Reject sets the row `dismissed`, which frees the dedup slot; the
+steward loop then re-proposes the still-stale field on its next scan (6-hourly). A dedicated
+apply_failed/retry surface is deferred to E4. Enrichment rows have no dedup slot, so a rejected
+enrichment row simply waits for the enrichment loop to re-propose.
 
 ### Undo an applied steward change
 

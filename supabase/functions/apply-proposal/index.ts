@@ -54,9 +54,13 @@ type Db = ReturnType<typeof createClient>;
  * Apply one staging proposal (steward or enrichment) through the same choke point. Loads the
  * staging row, resolves its target directory row, plans via the pure planners (CAS / fill-empty),
  * writes the allowed fields, and stamps the staging row applied. A partial apply (some fields
- * skipped) is still success — the skips are reported per-field, never silently dropped. A hard
- * failure leaves the staging row in 'approved' (no apply_failed status on these tables), so it
- * stays visibly retryable rather than silently terminal.
+ * skipped) is still success — the skips are reported per-field, never silently dropped.
+ *
+ * Failure recovery: a hard apply failure leaves the staging row in 'approved' (these tables have
+ * no apply_failed status). The dashboard does not offer a direct re-apply for an approved staging
+ * row, and while it stays 'approved' it holds the loop's open-proposal dedup slot for that record.
+ * The recovery path is therefore to REJECT it: that frees the slot, and the loop re-proposes the
+ * still-stale field on its next scan. (A dedicated apply_failed/retry surface is E4's job.)
  */
 async function applyStagingRow(supabase: Db, source: string, id: string, key: string): Promise<RowResult> {
   const spec = STAGING_SOURCES[source];
@@ -97,7 +101,12 @@ async function applyStagingRow(supabase: Db, source: string, id: string, key: st
     const stamp: Record<string, unknown> = { status: spec.appliedStatus };
     if (spec.hasAppliedAt) stamp.applied_at = new Date().toISOString();
     // deno-lint-ignore no-explicit-any
-    await (supabase as any).from(source).update(stamp).eq("id", id).neq("status", spec.appliedStatus);
+    const { error: stampErr } = await (supabase as any)
+      .from(source).update(stamp).eq("id", id).neq("status", spec.appliedStatus);
+    // The target write already succeeded, so a stamp failure is an inconsistency (row still
+    // 'approved' but production mutated) — surface it rather than reporting a misleading success.
+    // Re-running is safe: the planners are idempotent (live now equals `after` -> satisfied noop).
+    if (stampErr) throw new Error(`applied but failed to stamp staging row: ${stampErr.message}`);
 
     return {
       proposal_key: key, ok: true, op: p.op,
