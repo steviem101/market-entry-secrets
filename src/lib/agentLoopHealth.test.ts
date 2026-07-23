@@ -62,3 +62,19 @@ test("buildLoopActivity acceptance_rate is 0 when nothing resolved", () => {
   const a = buildLoopActivity([prop({ status: "pending" })]);
   assert.equal(a[0].acceptance_rate, 0);
 });
+
+test("a ledger loop outside the proposal-capable set is runs_only", () => {
+  const capable = new Set(["content-refresh"]);
+  const h = buildLoopHealth(
+    [run({ loop: "distill-knowledge" }), run({ loop: "content-refresh", started_at: "2026-07-20T01:00:00Z" })],
+    [], capable,
+  );
+  const byName = Object.fromEntries(h.map((x) => [x.loop_name, x]));
+  assert.equal(byName["distill-knowledge"].runs_only, true);
+  assert.equal(byName["content-refresh"].runs_only, false); // capable but quiet ≠ runs-only
+});
+
+test("runs_only defaults to false when no capability set is provided", () => {
+  const h = buildLoopHealth([run({ loop: "distill-knowledge" })], []);
+  assert.equal(h[0].runs_only, false);
+});

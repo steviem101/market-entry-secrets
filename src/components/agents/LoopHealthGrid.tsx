@@ -46,13 +46,19 @@ export const LoopHealthGrid = ({ health, isLoading }: { health: LoopHealth[] | u
               Last run: {loop.last_run_at ? relativeTime(loop.last_run_at) : "never (proposals only)"}
             </p>
             <p>Success streak: {loop.success_streak}</p>
-            <p className="flex items-center gap-2">
-              Pending review:
-              {loop.pending_count > 0
-                ? <Badge variant="secondary">{loop.pending_count}</Badge>
-                : <span>0</span>}
-              <span className="text-xs">({loop.proposals_total} total in 30 days)</span>
-            </p>
+            {loop.runs_only ? (
+              // Ledger-only loop (e.g. distill-knowledge): its counters are self-applied work,
+              // not proposals — "Pending review: 0" here would wrongly imply an empty queue.
+              <p className="text-xs">Runs-only loop: no review queue, output applies automatically.</p>
+            ) : (
+              <p className="flex items-center gap-2">
+                Pending review:
+                {loop.pending_count > 0
+                  ? <Badge variant="secondary">{loop.pending_count}</Badge>
+                  : <span>0</span>}
+                <span className="text-xs">({loop.proposals_total} total in 30 days)</span>
+              </p>
+            )}
           </CardContent>
         </Card>
       ))}

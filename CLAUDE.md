@@ -1,7 +1,7 @@
 # CLAUDE.md — Market Entry Secrets
 
 > Root context file for Claude Code — auto-loaded every session.
-> **Last reviewed: 2026-07-19 (MES-208 anonymous-mentor copy drafts; edge-function count corrected to 37** — prior review 2026-07-13 MES-148 Phase 5 data-stewardship flags; full review 2026-07-07 MES-115, gap report: [`docs/audits/mes-115-claude-md-gap-report.md`](docs/audits/mes-115-claude-md-gap-report.md)**).**
+> **Last reviewed: 2026-07-23 (MES-206 agent loops shipped: control plane + dashboard + Slack layer; edge-function count corrected to 43** — prior review 2026-07-19 MES-208 anonymous-mentor copy drafts; full review 2026-07-07 MES-115, gap report: [`docs/audits/mes-115-claude-md-gap-report.md`](docs/audits/mes-115-claude-md-gap-report.md)**).**
 > Maintenance: this file owns **orientation, invariants, and pointers** only. Deep procedures live
 > in [`.claude/skills/`](.claude/skills/README.md); evidence and audit artefacts live in [`docs/`](docs/).
 > Keep it ≤400 lines, verify every claim against the repo before editing, and update the date above.
@@ -53,10 +53,14 @@ market-intelligence platform helping companies enter the Australian/ANZ market.
   `*.lovable.app`). `src/integrations/supabase/client.ts` and `types.ts` are generated — never hand-edit.
 - **Merging to main auto-applies migrations** to prod (Supabase GitHub integration). See §10.
 - **Edge functions are NOT auto-deployed by the Supabase integration.** A GitHub Action
-  (`.github/workflows/deploy-edge-functions.yml`) deploys `generate-report`, `scrape-company`,
-  `sitemap`, `generate-plan`, `admin-mentor-anonymity`, `admin-mentor-anon-copy`
-  (+ on `_shared/` changes) on push to main;
-  all other functions are deployed manually via `supabase functions deploy <name>`.
+  (`.github/workflows/deploy-edge-functions.yml`) deploys 17 functions on push to main —
+  the original six (`generate-report`, `scrape-company`, `sitemap`, `generate-plan`,
+  `admin-mentor-anonymity`, `admin-mentor-anon-copy`), payments/email
+  (`create-checkout`, `stripe-webhook`, `stripe-webhook-reconcile`, `process-email-queue`,
+  `email-assets`, `import-contact-images`) and the agent-loop surface (`apply-proposal`,
+  `loop-content-refresh`, `agent-actions`, `agent-notifier`, `rq-slack-actions`), + on
+  `_shared/` changes. The workflow file is the source of truth for the list; all other
+  functions are deployed manually via `supabase functions deploy <name>`.
 - `supabase/config.toml` is the version-controlled source of truth for auth config (site_url,
   redirect allowlist, OTP expiry — MES-33) and per-function `verify_jwt`. The hosted dashboard is
   not auto-synced — keep them in lockstep.
@@ -70,7 +74,7 @@ market-intelligence platform helping companies enter the Australian/ANZ market.
 | `src/hooks/`, `src/contexts/` | Domain hooks (`useEvents`, `useSubscription`…), Auth/Persona contexts |
 | `src/lib/` | Pure logic modules with colocated `*.test.ts` (filters, featureFlags, logoUtils); `src/lib/api/reportApi.ts`; `src/lib/mcp/` (MCP tool sources) |
 | `src/integrations/supabase/` | Generated client + types — do not edit |
-| `supabase/functions/` | 37 edge functions + `_shared/` (§6) |
+| `supabase/functions/` | 43 edge functions + `_shared/` (§6) |
 | `supabase/migrations/` | Active ledger, re-baselined 2026-07-04; `migrations_archive/` + `rollback/` are reference only |
 | `docs/` | Audits (`docs/audits/`), runbooks, `migrations.md`, `mes-knowledge-base-rag.md`, `prelaunch-audit.md`, redesign handoffs |
 | `.claude/skills/` | The skills library (§0) |
@@ -87,7 +91,7 @@ market-intelligence platform helping companies enter the Australian/ANZ market.
 | `/locations[/:slug]`, `/countries[/:slug]`, `/sectors[/:slug]` | Taxonomy landing pages |
 | `/pricing` | Tiers + Stripe checkout |
 | `/dashboard`, `/member-hub`, `/bookmarks`, `/mentor-connections` | Member area (`/dashboard` aliases MemberHub) |
-| `/admin/submissions`, `/admin/mentors` | Admin: submission queues; mentor anonymity management |
+| `/admin/submissions`, `/admin/mentors`, `/admin/agents` | Admin: submission queues; mentor anonymity; agent-loops review dashboard (MES-206) |
 | `/auth/callback`, `/reset-password` | Auth flows |
 | `/about`, `/faq`, `/market-entry-questions`, `/contact`, `/privacy`, `/terms`, `/partner` | Static/info pages |
 | Redirects | `/community`→`/mentors`, `/trade-investment-agencies`→`/government-support`, `/planner`→`/report-creator` |
@@ -126,11 +130,14 @@ market-intelligence platform helping companies enter the Australian/ANZ market.
   a derived, rebuildable index over customer-facing entities, kept fresh by triggers + the
   `embed-knowledge` cron. Read path is the `match_knowledge()` RPC only (no anon grants).
   Deep doc: [`docs/mes-knowledge-base-rag.md`](docs/mes-knowledge-base-rag.md).
+- **Agent loops (MES-206):** `automation_runs` (run ledger, admin-read), `agent_content_proposals`
+  + 8 per-loop staging tables, unified through the `agent_proposals` VIEW (security_invoker,
+  admin-read) — reviewed at `/admin/agents`; ALL production writes go through `apply-proposal`.
 - **Other:** `payment_webhook_logs`, `ai_chat_*` (chat is a placeholder), `testimonials`,
   `linkedin_industries`/`legacy_industry_mapping`, `ii_*` (Irish Insights pipeline — separate
   workstream), `activity_event_routing` (Slack routing/self-gating for loops).
 
-## 6. Edge functions (`supabase/functions/`, 37 total)
+## 6. Edge functions (`supabase/functions/`, 43 total)
 
 Shared modules: `_shared/http.ts` (`buildCorsHeaders` — allowlist is hardcoded + `FRONTEND_URL`;
 there is **no** `ALLOWED_ORIGINS` secret), `_shared/log.ts`, `_shared/auth.ts` (`requireAdmin`),
@@ -142,7 +149,9 @@ cost attribution: skill `observability-logging-and-cost-attribution`.
 **Cron-driven functions** (invoked by pg_cron via pg_net — **schedules live in the DB, unverified
 from the repo**): `embed-knowledge` (~2 min per its header), `kb-sync` (incremental),
 `process-email-queue`, `report-quality-loop`, `report-quality-rollup` (weekly),
-`stripe-webhook-reconcile` (every 15 min — migration `20260710200000`).
+`stripe-webhook-reconcile` (every 15 min — migration `20260710200000`), and the agent loops
+(MES-206): `loop-content-refresh` (weekly), `directory-steward` (6-hourly), `demand-mining` /
+`directory-discovery` (weekly, flag-gated), `agent-notifier` (daily digest).
 
 | Function | Purpose (auth if not JWT) |
 |----------|--------------------------|
@@ -163,6 +172,13 @@ from the repo**): `embed-knowledge` (~2 min per its header), `kb-sync` (incremen
 | `enrich-content` / `enrich-innovation-ecosystem` / `enrich-investors` / `firecrawl-map` / `firecrawl-scrape` / `firecrawl-search` | Admin enrichment + Firecrawl wrappers |
 | `classify-personas` / `sync-lemlist` / `admin-mentor-anonymity` | Admin: persona classification, Lemlist CRM sync, mentor anonymity toggle |
 | `admin-mentor-anon-copy` | Admin: AI anonymous-mentor copy drafts (Anthropic; single + batch; leak-linted; review via `mentor_anon_copy_drafts` — MES-208) |
+| `loop-content-refresh` | Agent loop (MES-206): content-freshness checks -> `agent_content_proposals` (`x-internal-secret`) |
+| `apply-proposal` | **The single production writer** for approved proposals — whitelisted low-risk action types only, COALESCE-protected, bulk cap 100 (`requireAdmin` or internal secret) |
+| `agent-actions` | Shared approve/reject/retry path for the `/admin/agents` dashboard AND Slack buttons — per-source status vocab in `agentActions.ts` (`requireAdmin` or `x-internal-secret`; Slack clicks arrive via the Slack-signed `rq-slack-actions`) |
+| `agent-notifier` | Daily digest + per-proposal cards to the `#mes-agents-*` Slack channels (`x-internal-secret`) |
+| `directory-steward` / `demand-mining` / `directory-discovery` | MES-148 Phase 5 data-stewardship loops — propose into their staging tables, flag-gated (§12) |
+| `prompt-ab-rollup` | Prompt A/B verdicts -> `prompt_ab_proposals` (propose-only) |
+| `distill-knowledge` / `supersede-insights` | KB intelligence layer: distills insight cards / clusters near-duplicates — **runs-only loops** (no review queue; flag-gated, no cron — invoked manually) |
 | `ai-chat` | **Placeholder** — returns a stub (`is_placeholder: true`) |
 
 ## 7. AI report pipeline
