@@ -268,6 +268,16 @@ export function computeReportTelemetry(report: any, intake: any) {
     degraded, rag_hit_rate: Number(ragHitRate.toFixed(2)), tables_hit: tablesHit, total_matches: totalMatches,
     match_counts: matchCounts, sources, generation_time_ms: meta.generation_time_ms ?? null,
     phase_timings: meta.phase_timings ?? null,
+    // MES-221: shadow verifier now runs post-polish and patches this field on
+    // user_reports.report_json AFTER slack-notify's initial pass. Carry it
+    // through the upsert so a late re-read (rare) can't clobber a pre-existing
+    // report_quality.metadata.verification from an even later run.
+    // Object-only guard: verifier writes a {mode, totals, ...} object, so
+    // reject strings/numbers/booleans that could slip through JSONB drift.
+    verification: (() => {
+      const v = (meta as { verification?: unknown }).verification;
+      return v && typeof v === "object" ? v : null;
+    })(),
     groundedness: Number(clamp(citations / Math.max(visibleWithContent, 1), 0, 1).toFixed(2)),
     utilization_rate: util.rate != null ? Number(util.rate.toFixed(2)) : null, utilization: util,
     presentation: pres, words: pres.totalWords, sections_visible: sectionsVisible, visible_with_content: visibleWithContent,
@@ -408,7 +418,7 @@ export async function handleReportQuality(supabase: any, ev: any): Promise<{ tex
     degraded: t.degraded, rag_hit_rate: t.rag_hit_rate, tables_hit: t.tables_hit, total_matches: t.total_matches,
     match_counts: t.match_counts, sources: t.sources, generation_time_ms: t.generation_time_ms, groundedness: t.groundedness,
     utilization_rate: t.utilization_rate, utilization: t.utilization, presentation: t.presentation, user_feedback: t.user_feedback,
-    metadata: { company: t.company, words: t.words, sections_visible: t.sections_visible, visible_with_content: t.visible_with_content, failed_sections: t.failed_sections, phase_timings: t.phase_timings, lint: { counts: t.lint.counts, findings: t.lint.findings.slice(0, 12) } },
+    metadata: { company: t.company, words: t.words, sections_visible: t.sections_visible, visible_with_content: t.visible_with_content, failed_sections: t.failed_sections, phase_timings: t.phase_timings, verification: t.verification, lint: { counts: t.lint.counts, findings: t.lint.findings.slice(0, 12) } },
   }, { onConflict: "report_id" });
   if (upErr) logErr("upsert", upErr.message);
 
