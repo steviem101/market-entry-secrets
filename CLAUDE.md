@@ -174,7 +174,7 @@ from the repo**): `embed-knowledge` (~2 min per its header), `kb-sync` (incremen
 | `admin-mentor-anon-copy` | Admin: AI anonymous-mentor copy drafts (Anthropic; single + batch; leak-linted; review via `mentor_anon_copy_drafts` — MES-208) |
 | `loop-content-refresh` | Agent loop (MES-206): content-freshness checks -> `agent_content_proposals` (`x-internal-secret`) |
 | `apply-proposal` | **The single production writer** for approved proposals — whitelisted low-risk action types only, COALESCE-protected, bulk cap 100 (`requireAdmin` or internal secret) |
-| `agent-actions` | Shared approve/reject/retry path for the `/admin/agents` dashboard AND Slack buttons — per-source status vocab in `agentActions.ts` (`requireAdmin`/Slack signing) |
+| `agent-actions` | Shared approve/reject/retry path for the `/admin/agents` dashboard AND Slack buttons — per-source status vocab in `agentActions.ts` (`requireAdmin` or `x-internal-secret`; Slack clicks arrive via the Slack-signed `rq-slack-actions`) |
 | `agent-notifier` | Daily digest + per-proposal cards to the `#mes-agents-*` Slack channels (`x-internal-secret`) |
 | `directory-steward` / `demand-mining` / `directory-discovery` | MES-148 Phase 5 data-stewardship loops — propose into their staging tables, flag-gated (§12) |
 | `prompt-ab-rollup` | Prompt A/B verdicts -> `prompt_ab_proposals` (propose-only) |
