@@ -32,6 +32,7 @@ import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse,
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { parseAbPercent, inCandidateBucket } from "./promptAb.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
+import { withTimeout } from "./phaseTimeouts.ts";
 import { deEmDash, deEmDashSections, deEmDashMatches, deEmDashList, deEmDashKeyMetrics } from "./prose.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry, FLASH_MODEL } from "./sectionModel.ts";
 import { selectCaseStudies, hasCorridorReason, type CaseStudyRow } from "./caseStudyMatch.ts";
@@ -2559,6 +2560,17 @@ async function generateReportInBackground(
     setup_ms?: number;
     assembly_ms?: number;
     research_breakdown?: Record<string, number>;
+    // MES-221 finer telemetry: attribute the ~28s assembly window and the
+    // per-section batch, and preserve the polished snapshot's total separately
+    // so `total_ms` reflects the user-visible (completed-save) time.
+    assembly_breakdown?: Record<string, number>;
+    section_timings?: Record<string, number>;
+    verifier_ms?: number;
+    // total_ms is captured on the pre-polish buildReportJson call and reused
+    // by the post-polish rebuild, so an operator's p50 `total_ms` reflects
+    // time-to-user-visible-completion, not time-to-polished-save.
+    total_ms?: number;
+    polished_total_ms?: number;
   } = {};
   // MES-219 cost attribution: metered AI token usage per call (pushed by the
   // optional onUsage hook), aggregated + LOGGED at each buildReportJson pass.
@@ -2573,6 +2585,11 @@ async function generateReportInBackground(
   // so each key is its own wall-clock, and max(values) ≈ research_ms).
   const researchBreakdown: Record<string, number> = {};
   let researchEndAt = 0;
+  // MES-221: sub-attribute the ~28s assembly window (research end → sections
+  // start) and per-section wall-clocks. Both are additive telemetry — the pipeline
+  // never reads them; a missing sub-key = "did not run" (some steps are flag-gated).
+  const assemblyBreakdown: Record<string, number> = {};
+  const sectionTimings: Record<string, number> = {};
   // `p: T` + Promise<Awaited<T>> (not `p: Promise<T>`) so a ternary branch whose
   // two arms resolve to DIFFERENT shapes (e.g. {profile: Profile} vs {profile: null})
   // stays a union per Promise.all slot instead of collapsing to one T — matches the
@@ -2751,6 +2768,7 @@ async function generateReportInBackground(
     // Firecrawl search + one classify call. Fail-safe: defaults to `none` (today's
     // entry framing) on any weakness/error. Threaded into section prompts below.
     if (["on", "1", "true"].includes((Deno.env.get("AU_PRESENCE_SIGNAL") || "").trim().toLowerCase())) {
+      const auStart = Date.now();
       auPresence = await deriveAuPresence(
         supabase,
         firecrawlKey,
@@ -2759,6 +2777,7 @@ async function generateReportInBackground(
         (companyEnrichResult as any)?.enrichedSummary || fallbackSummary,
         firecrawlStats,
       );
+      assemblyBreakdown.au_presence_ms = Date.now() - auStart;
     }
 
     // Extract key metrics from the landscape response instead of a separate Perplexity call
@@ -2932,12 +2951,14 @@ async function generateReportInBackground(
     // embedding — so it runs for BOTH fresh and resumed paths here (cheap; no need to snapshot it).
     // Fail-open: [] on any error, so the intelligence layer can never block a report.
     if (["on", "1", "true"].includes((Deno.env.get("REPORT_INSIGHTS_ENABLED") || "").trim().toLowerCase())) {
+      const insightsStart = Date.now();
       try {
         retrievedInsights = await retrieveReportInsights(supabase, intake);
         console.log(`report insights: ${retrievedInsights.length} cards retrieved for grounding`);
       } catch (e) {
         console.error("report insight retrieval failed (continuing):", e);
       }
+      assemblyBreakdown.insights_ms = Date.now() - insightsStart;
     }
 
     // ── MES-148 1a: claims registry ─────────────────────────────────────
@@ -2949,6 +2970,7 @@ async function generateReportInBackground(
     // must never fail the report.
     let reportClaims: ReportClaim[] = [];
     let claimsExtractionOk = false;
+    const claimsStart = Date.now();
     try {
       const metricClaims = claimsFromKeyMetrics(keyMetrics, marketResearch.citations);
       const researchStreams = [
@@ -3010,6 +3032,7 @@ async function generateReportInBackground(
     } catch (e) {
       console.error("Claims registry failed (continuing):", e);
     }
+    assemblyBreakdown.claims_ms = Date.now() - claimsStart;
 
     const enrichedSummary = companyEnrichResult.enrichedSummary;
     const companyProfile = companyEnrichResult.profile;
@@ -3030,11 +3053,13 @@ async function generateReportInBackground(
     userTier = tierMap[userTier] || userTier;
 
     // 4. Fetch report templates
+    const templatesStart = Date.now();
     const { data: templates } = await supabase
       .from("report_templates")
       .select("*")
       .eq("is_active", true)
       .order("section_name");
+    assemblyBreakdown.templates_ms = Date.now() - templatesStart;
 
     // MES-210a deploy-skew guard: if this build is live before the migration that
     // seeds the case_studies_guides template, fall back to the legacy shape —
@@ -3472,7 +3497,15 @@ async function generateReportInBackground(
       // Guarded so a resumed report (research loaded from artifact,
       // researchEndAt=0) doesn't record a bogus interval; resumed runs carry
       // only sections_ms/polish_ms/total_ms by design.
-      if (researchEndAt) phaseTimings.assembly_ms = sectionStartTime - researchEndAt;
+      if (researchEndAt) {
+        phaseTimings.assembly_ms = sectionStartTime - researchEndAt;
+        // MES-221: attributed sub-times for the assembly window. `prep_ms` is
+        // whatever is left after the tracked steps (variable build + prompt-note
+        // assembly + subscription lookup) — the deliberately-unattributed remainder.
+        const tracked = Object.values(assemblyBreakdown).reduce((s, v) => s + v, 0);
+        assemblyBreakdown.prep_ms = Math.max(0, phaseTimings.assembly_ms - tracked);
+        phaseTimings.assembly_breakdown = { ...assemblyBreakdown };
+      }
 
       const results = await Promise.allSettled(
         templates.map(async (tmpl: any) => {
@@ -3542,20 +3575,29 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             // Eval A/B overrides never retry (the money-section guard must observe the
             // true empty). A section still blank after the retry is recorded in
             // metadata.empty_sections (fail-loud), never silently dropped.
+            // MES-221: per-section hard timeout — one stalled section could otherwise
+            // hold the batch until the gateway's own (much larger) timeout fires.
+            // Default 45s; override with SECTION_TIMEOUT_MS. A timeout counts as
+            // "threw" and falls into the empty-section sink like any other failure.
+            const sectionStart = Date.now();
+            const sectionTimeoutMs = Math.max(5000, Number(Deno.env.get("SECTION_TIMEOUT_MS")) || 45000);
             let content = "";
             try {
-              content = await writeSection(sectionModel, sectionMessages, { temperature: 0.4, onUsage: meterUsage(sectionModel) }, { lovableKey, anthropicKey });
+              content = await withTimeout(tmpl.section_name, sectionTimeoutMs,
+                writeSection(sectionModel, sectionMessages, { temperature: 0.4, onUsage: meterUsage(sectionModel) }, { lovableKey, anthropicKey }));
             } catch (writeErr) {
               console.error(`Section ${tmpl.section_name}: model ${sectionModel} threw:`, writeErr instanceof Error ? writeErr.message : writeErr);
             }
             if (needsFlashRetry(content, isEvalOverride)) {
               console.error(`Section ${tmpl.section_name}: blank from ${sectionModel} — retrying once on flash`);
               try {
-                content = await writeSection(FLASH_MODEL, sectionMessages, { temperature: 0.4, onUsage: meterUsage(FLASH_MODEL) }, { lovableKey, anthropicKey });
+                content = await withTimeout(tmpl.section_name, sectionTimeoutMs,
+                  writeSection(FLASH_MODEL, sectionMessages, { temperature: 0.4, onUsage: meterUsage(FLASH_MODEL) }, { lovableKey, anthropicKey }));
               } catch (retryErr) {
                 console.error(`Section ${tmpl.section_name}: flash retry threw:`, retryErr instanceof Error ? retryErr.message : retryErr);
               }
             }
+            sectionTimings[tmpl.section_name] = Date.now() - sectionStart;
             if (isBlankContent(content)) {
               emptySections.push(tmpl.section_name);
               console.error(`Section ${tmpl.section_name}: EMPTY after flash retry — report ships without it`);
@@ -3624,7 +3666,12 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       }
 
       phaseTimings.sections_ms = Date.now() - sectionStartTime;
-      console.log(`Section generation: ${sectionsGenerated.length} sections in ${Date.now() - sectionStartTime}ms (single batch)`);
+      phaseTimings.section_timings = { ...sectionTimings };
+      // MES-221 pole-section visibility: log the slowest section per batch so
+      // an operator can see which section is holding sections_ms up. A section
+      // that hit the SECTION_TIMEOUT_MS cap reads here as ≈ the cap.
+      const pole = Object.entries(sectionTimings).sort(([, a], [, b]) => b - a)[0];
+      console.log(`Section generation: ${sectionsGenerated.length} sections in ${Date.now() - sectionStartTime}ms (single batch); pole=${pole?.[0]}@${pole?.[1]}ms`);
       if (emptySections.length > 0) {
         console.error(`Section generation: ${emptySections.length}/${templates.length} section(s) EMPTY after retry — report ships without them: ${emptySections.join(", ")}`);
       }
@@ -3644,6 +3691,12 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     const verifierMode = (Deno.env.get("CLAIMS_VERIFIER_MODE") || "").trim() === "blocking" ? "blocking" : "shadow";
     const MAX_REGENERATED_SECTIONS = 3;
     let verification: Record<string, unknown> | null = null;
+    // MES-221: extracted into a closure so BLOCKING mode still runs it
+    // synchronously before the completed-save (regenerations must land in the
+    // saved report_json), but SHADOW mode can defer it to AFTER polish — its
+    // work is deterministic telemetry only, and running it in the critical
+    // path was costing ~10–30s of user-visible latency for no user gain.
+    const runGroundingVerifier = async (): Promise<void> => {
     try {
       const knownEntityNames: string[] = [intake.company_name];
       for (const arr of Object.values(matches)) {
@@ -3797,6 +3850,16 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     } catch (e) {
       console.error("Grounding verification failed (continuing):", e);
     }
+    };
+
+    // BLOCKING mode: must run before save so regenerated sections + fabrication
+    // flags land in the initial report_json. This is the strict-verification
+    // path — opt-in via CLAIMS_VERIFIER_MODE=blocking.
+    if (verifierMode === "blocking") {
+      const verifierStart = Date.now();
+      await runGroundingVerifier();
+      phaseTimings.verifier_ms = Date.now() - verifierStart;
+    }
 
     // 7. Assemble and store report BEFORE polish pass (critical: ensures report is saved even if worker dies)
 
@@ -3840,6 +3903,15 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       console.log(
         `[cost] report est $${runCost.est_total_usd} — ai $${runCost.ai_usd} (${runCost.ai_input_tokens}+${runCost.ai_output_tokens} tok / ${runCost.ai_calls} calls), firecrawl ${runCost.firecrawl_ops} ops $${runCost.firecrawl_usd}, polished=${polishApplied}`,
       );
+      // MES-221: preserve the pre-polish total_ms in the polished snapshot.
+      // The pre-polish call captures phaseTimings.total_ms; the post-polish
+      // rebuild reuses it so the reported total reflects the user-visible
+      // completed time (previously polish added ~30–40s to `total_ms` for no
+      // user gain — polish is best-effort and happens after status:completed).
+      // polished_total_ms carries the polished wall-clock for ops visibility.
+      const nowMs = Date.now();
+      if (phaseTimings.total_ms === undefined) phaseTimings.total_ms = nowMs - startTime;
+      const totalMs = phaseTimings.total_ms;
       return {
       company_name: intake.company_name,
       sections: deDashed,
@@ -3847,9 +3919,13 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       metadata: {
         tables_searched: Object.keys(matches),
         total_matches: Object.values(matches).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
-        generation_time_ms: Date.now() - startTime,
+        generation_time_ms: totalMs,
         // Per-phase breakdown of the generation time (ms) — which phase dominates.
-        phase_timings: { ...phaseTimings, total_ms: Date.now() - startTime },
+        phase_timings: {
+          ...phaseTimings,
+          total_ms: totalMs,
+          ...(polishApplied ? { polished_total_ms: nowMs - startTime } : {}),
+        },
         perplexity_used: marketResearch.used,
         perplexity_health: marketResearch.health,
         perplexity_citations: cited.citations,
@@ -3908,6 +3984,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
           icp_titles: parsedIcp.titles,
         },
         polish_applied: polishApplied,
+        // MES-221 telemetry: whether the cross-report scrape cache was ON for
+        // this report. When off, provider enrichment re-scrapes every report
+        // cold, so directory_matching sits at ~11–19s p50. Observable per
+        // report so ops can verify the flag state without a secrets check.
+        firecrawl_cache_enabled: ["on", "1", "true"].includes((Deno.env.get("FIRECRAWL_CACHE_ENABLED") || "").trim().toLowerCase()),
         // MES-148 1a: claims-registry + grounding-verification telemetry.
         // verification reflects the pre-polish drafts (the polish pass is
         // instructed to preserve facts verbatim; a post-polish diff audit is
@@ -4014,10 +4095,12 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
 
     console.log(`Report ${reportId} saved (unpolished) in ${Date.now() - startTime}ms`);
 
-    // 7b. Polish pass — best-effort improvement, given a more generous timeout
-    // (45s, up from 30s) and a single retry. Email is sent AFTER polish so
-    // users don't open the link to an unpolished draft. If polish fails the
-    // unpolished report is still emailed — better than not emailing at all.
+    // 7b. Polish pass — best-effort improvement (45s cap, single attempt).
+    // MES-221: the retry doubled the failure-path cost (up to 90s of tail on a
+    // polish outage) for a rarely-converting second call; dropped so a polish
+    // outage costs at most one 45s attempt. Polish still patches the saved
+    // report_json in place and preserves the pre-polish `total_ms` — see the
+    // buildReportJson closure above.
     let polishApplied = false;
     const POLISH_TIMEOUT_MS = 45000;
     const runPolishOnce = async (): Promise<Record<string, any>> => {
@@ -4042,13 +4125,12 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
 
     const polishStart = Date.now();
     try {
-      let polishedSections: Record<string, any>;
-      try {
-        polishedSections = await runPolishOnce();
-      } catch (firstErr) {
-        console.warn("Polish pass first attempt failed — retrying once:", firstErr instanceof Error ? firstErr.message : firstErr);
-        polishedSections = await runPolishOnce();
-      }
+      // MES-221: single attempt (no retry). Polish is best-effort editorial —
+      // when it fails, we ship the pre-polish report the user is already
+      // reading. Retrying doubled the failure-path tail (up to 90s) for a
+      // second call that rarely converts; the unpolished report is genuinely
+      // usable, so a polish outage should cost at most one 45s timeout.
+      const polishedSections: Record<string, any> = await runPolishOnce();
 
       // MES-148 Phase 2c: diff-audit the polish. The polish is an editorial
       // rewrite that must not introduce a new figure or named entity; where it
@@ -4095,7 +4177,79 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       polishApplied = true;
       console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);
     } catch (e) {
-      console.warn("Polish pass skipped after retry (report stays unpolished):", e instanceof Error ? e.message : e);
+      console.warn("Polish pass skipped (report stays unpolished):", e instanceof Error ? e.message : e);
+    }
+
+    // MES-221 — SHADOW verifier runs AFTER polish, off the pre-polish critical
+    // path (BLOCKING mode already ran it before the completed-save so its
+    // regenerations landed in report_json). Shadow work is deterministic
+    // telemetry only — running it before the save was costing ~10–30s of
+    // user-visible latency for no user gain. After it runs, we patch
+    // verification into BOTH user_reports.report_json.metadata AND
+    // report_quality.metadata via targeted read-modify-write updates — the
+    // status-transition trigger fired once at the pre-polish save with
+    // verification=null, and re-dispatching a fresh report.quality event
+    // would double-post to Slack (routing is enabled). Direct-patching keeps
+    // shadow verifier telemetry propagating without the notification noise.
+    if (verifierMode === "shadow") {
+      const verifierStart = Date.now();
+      try {
+        await runGroundingVerifier();
+        phaseTimings.verifier_ms = Date.now() - verifierStart;
+        if (verification) {
+          // Patch user_reports.report_json (system of record for section
+          // consumers + admin viewer).
+          try {
+            const { data: current } = await supabase
+              .from("user_reports")
+              .select("report_json")
+              .eq("id", reportId)
+              .maybeSingle();
+            const currentJson = current?.report_json as Record<string, unknown> | undefined;
+            if (currentJson && typeof currentJson === "object") {
+              const currentMeta = (currentJson.metadata as Record<string, unknown> | undefined) ?? {};
+              const currentPhaseTimings = (currentMeta.phase_timings as Record<string, unknown> | undefined) ?? {};
+              const patched = {
+                ...currentJson,
+                metadata: {
+                  ...currentMeta,
+                  verification,
+                  phase_timings: { ...currentPhaseTimings, verifier_ms: phaseTimings.verifier_ms },
+                },
+              };
+              await supabase.from("user_reports").update({ report_json: patched }).eq("id", reportId);
+            }
+          } catch (patchErr) {
+            console.warn("Shadow verifier: user_reports patch failed (continuing):", patchErr instanceof Error ? patchErr.message : patchErr);
+          }
+          // Patch report_quality.metadata (the queryable mirror slack-notify
+          // originally populated from the pre-polish read). Idempotent — if
+          // the row doesn't exist yet (slack-notify hasn't run), skip; its
+          // eventual upsert reads the now-patched user_reports.report_json.
+          try {
+            const { data: rq } = await supabase
+              .from("report_quality")
+              .select("metadata")
+              .eq("report_id", reportId)
+              .maybeSingle();
+            if (rq) {
+              const rqMeta = (rq.metadata as Record<string, unknown> | undefined) ?? {};
+              const rqPhaseTimings = (rqMeta.phase_timings as Record<string, unknown> | undefined) ?? {};
+              await supabase.from("report_quality").update({
+                metadata: {
+                  ...rqMeta,
+                  verification,
+                  phase_timings: { ...rqPhaseTimings, verifier_ms: phaseTimings.verifier_ms },
+                },
+              }).eq("report_id", reportId);
+            }
+          } catch (rqErr) {
+            console.warn("Shadow verifier: report_quality patch failed (continuing):", rqErr instanceof Error ? rqErr.message : rqErr);
+          }
+        }
+      } catch (verifyErr) {
+        console.warn("Shadow verifier (post-polish) failed:", verifyErr instanceof Error ? verifyErr.message : verifyErr);
+      }
     }
 
     // 7b-lead. Automatic lead delivery for Scale (MES-198 / T7). On a Scale
