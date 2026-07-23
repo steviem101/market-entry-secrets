@@ -9,7 +9,7 @@
 // and — because the distiller strips dated figures — they carry NO numbers to leak into prose.
 
 import { CANONICAL_INTENTS } from "../_shared/kbIntents.ts";
-import { isCanonicalSector } from "../_shared/kbTaxonomy.ts";
+import { isCanonicalSector, GENERAL_SECTOR } from "../_shared/kbTaxonomy.ts";
 
 /** One distilled insight card as returned by match_report_insights (claim + lane + tags). */
 export interface InsightCard {
@@ -86,8 +86,16 @@ export const SECTION_LANES: Record<string, string[]> = {
   first_customers: ["playbook", "market"],
 };
 
-/** Cards injected per section (proprietary first, then most-recent). Keeps the prompt lean. */
+/** Cards injected per section. Keeps the prompt lean. */
 export const MAX_CARDS_PER_SECTION = 6;
+
+/** Ranking weight so the per-section cap keeps the most DIFFERENTIATED cards rather than generic
+ *  ones: the corpus is ~60% 'general'-only, so without this the cap fills with boilerplate. Order:
+ *  proprietary (future-proof; none in the corpus today) > sector-specific > general-only. */
+export function specificityScore(c: InsightCard): number {
+  const hasSpecificSector = Array.isArray(c.sectors) && c.sectors.some((s) => s !== GENERAL_SECTOR);
+  return (c.is_proprietary ? 4 : 0) + (hasSpecificSector ? 2 : 0);
+}
 
 /** Build the grounded MARKET INTELLIGENCE note for one section from the retrieved cards, filtered to
  *  the section's relevant lanes. Returns "" when the section has no relevant lane or no matching
@@ -98,7 +106,9 @@ export function buildInsightNote(cards: InsightCard[], sectionName: string): str
   const laneSet = new Set(lanes);
   const relevant = cards
     .filter((c) => c && typeof c.claim === "string" && c.claim.trim().length > 0 && laneSet.has(c.topic_lane))
-    .sort((a, b) => Number(!!b.is_proprietary) - Number(!!a.is_proprietary))
+    // Sector-specific cards win the per-section cap over generic 'general' ones (stable sort keeps
+    // the RPC's own specific-first/recency order within a tier).
+    .sort((a, b) => specificityScore(b) - specificityScore(a))
     .slice(0, MAX_CARDS_PER_SECTION);
   if (relevant.length === 0) return "";
   const bullets = relevant.map((c) => `- ${c.claim.trim()}`).join("\n");

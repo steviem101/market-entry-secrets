@@ -4341,7 +4341,7 @@ async function retrieveReportInsights(supabase: any, intake: any): Promise<Insig
   const intents = goalIdsToIntents((intake as any).goal_ids);
   const origin = normalizeCountry(intake.country_of_origin);
   const { data, error } = await supabase.rpc("match_report_insights", {
-    p_sectors: sectors, p_intents: intents, p_origin: origin, p_target: "Australia", p_limit: 40,
+    p_sectors: sectors, p_intents: intents, p_origin: origin, p_target: "Australia", p_limit: 60,
   });
   if (error) { console.error("match_report_insights failed:", error.message); return []; }
   return (data ?? []).map((r: any) => ({
