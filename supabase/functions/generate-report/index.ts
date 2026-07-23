@@ -32,7 +32,7 @@ import { claimsFromKeyMetrics, buildClaimsExtractionPrompt, parseClaimsResponse,
 import { buildEvidenceCorpus, verifySections, flaggedItemsOf, batchFlagged, buildAdjudicationPrompt, parseAdjudication, buildRegenerationNote, type FlaggedItem } from "./verifier.ts";
 import { parseAbPercent, inCandidateBucket } from "./promptAb.ts";
 import { auditPolishedSections } from "./polishDiffAudit.ts";
-import { withTimeout } from "./phaseTimeouts.ts";
+import { withTimeout, SectionTimeoutError } from "./phaseTimeouts.ts";
 import { deEmDash, deEmDashSections, deEmDashMatches, deEmDashList, deEmDashKeyMetrics } from "./prose.ts";
 import { resolveSectionModel, sectionModelMap, isAnthropicModel, anthropicModelId, isBlankContent, needsFlashRetry, FLASH_MODEL } from "./sectionModel.ts";
 import { selectCaseStudies, hasCorridorReason, type CaseStudyRow } from "./caseStudyMatch.ts";
@@ -2590,6 +2590,13 @@ async function generateReportInBackground(
   // never reads them; a missing sub-key = "did not run" (some steps are flag-gated).
   const assemblyBreakdown: Record<string, number> = {};
   const sectionTimings: Record<string, number> = {};
+  // MES-221: per-section failure attribution. Values: "timeout" (hit
+  // SECTION_TIMEOUT_MS cap), "threw" (model/gateway error), "blank" (returned
+  // empty content without throwing). Only populated when a section fails —
+  // absence means the section wrote content successfully. Distinguishes a
+  // section-timeout incident from a gateway incident from a model quality
+  // regression, all of which read as `empty_sections` today.
+  const sectionFailureReasons: Record<string, "timeout" | "threw" | "blank"> = {};
   // `p: T` + Promise<Awaited<T>> (not `p: Promise<T>`) so a ternary branch whose
   // two arms resolve to DIFFERENT shapes (e.g. {profile: Profile} vs {profile: null})
   // stays a union per Promise.all slot instead of collapsing to one T — matches the
@@ -2769,15 +2776,21 @@ async function generateReportInBackground(
     // entry framing) on any weakness/error. Threaded into section prompts below.
     if (["on", "1", "true"].includes((Deno.env.get("AU_PRESENCE_SIGNAL") || "").trim().toLowerCase())) {
       const auStart = Date.now();
-      auPresence = await deriveAuPresence(
-        supabase,
-        firecrawlKey,
-        lovableKey,
-        intake,
-        (companyEnrichResult as any)?.enrichedSummary || fallbackSummary,
-        firecrawlStats,
-      );
-      assemblyBreakdown.au_presence_ms = Date.now() - auStart;
+      try {
+        auPresence = await deriveAuPresence(
+          supabase,
+          firecrawlKey,
+          lovableKey,
+          intake,
+          (companyEnrichResult as any)?.enrichedSummary || fallbackSummary,
+          firecrawlStats,
+        );
+      } finally {
+        // Record the sub-time REGARDLESS of throw so an au-presence outage is
+        // observable in telemetry, not silently absent (would otherwise leave
+        // the outer catch to handle the throw and lose the timing evidence).
+        assemblyBreakdown.au_presence_ms = Date.now() - auStart;
+      }
     }
 
     // Extract key metrics from the landscape response instead of a separate Perplexity call
@@ -3593,25 +3606,36 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             const sectionTimeoutMs = Math.max(5000, Number(Deno.env.get("SECTION_TIMEOUT_MS")) || 45000);
             const remainingBudget = () => Math.max(1000, sectionTimeoutMs - (Date.now() - sectionStart));
             let content = "";
+            // Track the LAST failure reason across primary + retry so the
+            // recorded reason reflects the reason the section shipped empty.
+            let lastFailure: "timeout" | "threw" | null = null;
             try {
               content = await withTimeout(tmpl.section_name, remainingBudget(),
                 writeSection(sectionModel, sectionMessages, { temperature: 0.4, onUsage: meterUsage(sectionModel) }, { lovableKey, anthropicKey }));
             } catch (writeErr) {
-              console.error(`Section ${tmpl.section_name}: model ${sectionModel} threw:`, writeErr instanceof Error ? writeErr.message : writeErr);
+              lastFailure = writeErr instanceof SectionTimeoutError ? "timeout" : "threw";
+              console.error(`Section ${tmpl.section_name}: model ${sectionModel} ${lastFailure === "timeout" ? "timed out" : "threw"}:`, writeErr instanceof Error ? writeErr.message : writeErr);
             }
             if (needsFlashRetry(content, isEvalOverride)) {
               console.error(`Section ${tmpl.section_name}: blank from ${sectionModel} — retrying once on flash (${remainingBudget()}ms budget left)`);
               try {
                 content = await withTimeout(tmpl.section_name, remainingBudget(),
                   writeSection(FLASH_MODEL, sectionMessages, { temperature: 0.4, onUsage: meterUsage(FLASH_MODEL) }, { lovableKey, anthropicKey }));
+                if (!isBlankContent(content)) lastFailure = null; // retry recovered
               } catch (retryErr) {
-                console.error(`Section ${tmpl.section_name}: flash retry threw:`, retryErr instanceof Error ? retryErr.message : retryErr);
+                lastFailure = retryErr instanceof SectionTimeoutError ? "timeout" : "threw";
+                console.error(`Section ${tmpl.section_name}: flash retry ${lastFailure === "timeout" ? "timed out" : "threw"}:`, retryErr instanceof Error ? retryErr.message : retryErr);
               }
             }
             sectionTimings[tmpl.section_name] = Date.now() - sectionStart;
             if (isBlankContent(content)) {
               emptySections.push(tmpl.section_name);
-              console.error(`Section ${tmpl.section_name}: EMPTY after flash retry — report ships without it`);
+              // Distinguish "model returned blank content" from "call timed out"
+              // from "call threw" — an operator seeing "timeout" 3× knows to
+              // raise SECTION_TIMEOUT_MS; "threw" 3× is a gateway incident;
+              // "blank" 3× is a model quality regression.
+              sectionFailureReasons[tmpl.section_name] = lastFailure ?? "blank";
+              console.error(`Section ${tmpl.section_name}: EMPTY (${sectionFailureReasons[tmpl.section_name]}) after flash retry — report ships without it`);
               return { name: tmpl.section_name, data: { content: "", visible: false } };
             }
 
@@ -4020,6 +4044,10 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // Empty array on a healthy report; a non-empty list means a "completed"
         // report is genuinely short those sections (fail-loud, never silent — §14.5).
         empty_sections: emptySections,
+        // MES-221: per-section failure attribution — "timeout" / "threw" / "blank".
+        // Absent keys = section shipped content. Distinguishes SECTION_TIMEOUT_MS
+        // biting from a gateway incident from a model quality regression.
+        empty_section_reasons: sectionFailureReasons,
         // MES-210a: per-table surfacing telemetry. The MES-210 audit had to mine
         // report_json.matches to learn that 39% of reports shipped zero case-study
         // cards — persist the per-pool counts so under-surfacing is a query, not
@@ -4089,17 +4117,21 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
     // 20260628210003). Deliberately a SEPARATE update from the critical save
     // above so a missing column (deploy lag) or write error can never fail report
     // generation — the report is already durably stored at this point.
+    // MES-221: reuse phaseTimings.total_ms (the value inside report_json) so the
+    // queryable column and the JSON always agree — analytics joining the two
+    // now see the same number rather than a ~ms-scale skew.
     try {
-      await supabase.from("user_reports").update({
-        generation_time_ms: Date.now() - startTime,
+      const { error: colErr } = await supabase.from("user_reports").update({
+        generation_time_ms: phaseTimings.total_ms ?? (Date.now() - startTime),
         total_matches: Object.values(matches).reduce((sum: number, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
         firecrawl_ops: firecrawlStats.ops,
         firecrawl_scrape_ok: companyScrapeDiag?.scrape_ok ?? false,
         perplexity_ok: marketResearch.health.succeeded > 0,
         polish_applied: false,
       }).eq("id", reportId);
+      if (colErr) console.warn("user_reports metadata columns update failed:", colErr.message);
     } catch (e) {
-      console.warn("user_reports metadata columns update skipped:", e instanceof Error ? e.message : e);
+      console.warn("user_reports metadata columns update threw:", e instanceof Error ? e.message : e);
     }
 
     await supabase.from("user_intake_forms").update({ status: "completed" }).eq("id", intakeFormId);
@@ -4172,22 +4204,33 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       phaseTimings.polish_ms = Date.now() - polishStart;
       const polishedReportJson = buildReportJson(sections, true);
 
-      await supabase
+      // supabase-js `.update()` returns { error } instead of throwing on a
+      // Postgres error (RLS/schema/constraint). Without checking, a polish
+      // save silently fails yet `polishApplied` flips to true below — the
+      // report is then reported as polished when it isn't. MES-221 review.
+      const { error: polishSaveErr } = await supabase
         .from("user_reports")
         .update({ report_json: polishedReportJson })
         .eq("id", reportId);
-
-      // Best-effort: keep the queryable polish_applied column in sync (separate
-      // from the report_json write above so a missing column never loses polish).
-      try {
-        await supabase.from("user_reports").update({ polish_applied: true }).eq("id", reportId);
-      } catch (e) {
-        console.warn("user_reports polish_applied column update skipped:", e instanceof Error ? e.message : e);
+      if (polishSaveErr) {
+        console.warn("Polish save failed (report stays unpolished):", polishSaveErr.message);
+      } else {
+        polishApplied = true;
+        // Best-effort: keep the queryable polish_applied column in sync
+        // (separate from the report_json write above so a missing column
+        // never loses polish). Same silent-error concern — check .error.
+        try {
+          const { error: polishColErr } = await supabase.from("user_reports").update({ polish_applied: true }).eq("id", reportId);
+          if (polishColErr) console.warn("user_reports polish_applied column update failed:", polishColErr.message);
+        } catch (e) {
+          console.warn("user_reports polish_applied column update threw:", e instanceof Error ? e.message : e);
+        }
+        console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);
       }
-
-      polishApplied = true;
-      console.log(`Report ${reportId} polished and updated in ${Date.now() - startTime}ms`);
     } catch (e) {
+      // Includes `runPolishOnce()` throws AND the diff-audit code above. Record
+      // polish_ms regardless so a polish outage is visible in telemetry.
+      if (phaseTimings.polish_ms === undefined) phaseTimings.polish_ms = Date.now() - polishStart;
       console.warn("Polish pass skipped (report stays unpolished):", e instanceof Error ? e.message : e);
     }
 
@@ -4209,13 +4252,16 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         phaseTimings.verifier_ms = Date.now() - verifierStart;
         if (verification) {
           // Patch user_reports.report_json (system of record for section
-          // consumers + admin viewer).
+          // consumers + admin viewer). `.update()` returns { error } instead
+          // of throwing on Postgres errors — check both the outer throw and
+          // the inline error, otherwise a silent failure diverges the mirror.
           try {
-            const { data: current } = await supabase
+            const { data: current, error: readErr } = await supabase
               .from("user_reports")
               .select("report_json")
               .eq("id", reportId)
               .maybeSingle();
+            if (readErr) throw readErr;
             const currentJson = current?.report_json as Record<string, unknown> | undefined;
             if (currentJson && typeof currentJson === "object") {
               const currentMeta = (currentJson.metadata as Record<string, unknown> | undefined) ?? {};
@@ -4228,31 +4274,41 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
                   phase_timings: { ...currentPhaseTimings, verifier_ms: phaseTimings.verifier_ms },
                 },
               };
-              await supabase.from("user_reports").update({ report_json: patched }).eq("id", reportId);
+              const { error: updateErr } = await supabase.from("user_reports").update({ report_json: patched }).eq("id", reportId);
+              if (updateErr) throw updateErr;
             }
           } catch (patchErr) {
             console.warn("Shadow verifier: user_reports patch failed (continuing):", patchErr instanceof Error ? patchErr.message : patchErr);
           }
           // Patch report_quality.metadata (the queryable mirror slack-notify
-          // originally populated from the pre-polish read). Idempotent — if
-          // the row doesn't exist yet (slack-notify hasn't run), skip; its
-          // eventual upsert reads the now-patched user_reports.report_json.
+          // originally populated from the pre-polish read). If the row exists,
+          // we merge verification into it; if not, slack-notify hasn't run yet
+          // and its upsert will carry verification through via t.verification
+          // (see reportQuality.ts) — as long as slack-notify's read of
+          // user_reports happens AFTER the patch above. Rare interleave: a
+          // slow-LLM slack-notify read happens BEFORE our patch AND its upsert
+          // lands AFTER our `if (rq)` check ⇒ verification never lands in
+          // report_quality (still in user_reports.report_json, the SoR).
           try {
-            const { data: rq } = await supabase
+            const { data: rq, error: rqReadErr } = await supabase
               .from("report_quality")
               .select("metadata")
               .eq("report_id", reportId)
               .maybeSingle();
+            if (rqReadErr) throw rqReadErr;
             if (rq) {
               const rqMeta = (rq.metadata as Record<string, unknown> | undefined) ?? {};
               const rqPhaseTimings = (rqMeta.phase_timings as Record<string, unknown> | undefined) ?? {};
-              await supabase.from("report_quality").update({
+              const { error: rqUpdateErr } = await supabase.from("report_quality").update({
                 metadata: {
                   ...rqMeta,
                   verification,
                   phase_timings: { ...rqPhaseTimings, verifier_ms: phaseTimings.verifier_ms },
                 },
               }).eq("report_id", reportId);
+              if (rqUpdateErr) throw rqUpdateErr;
+            } else {
+              console.log(`Shadow verifier: report_quality row not yet written for ${reportId} — slack-notify will carry verification via its own read.`);
             }
           } catch (rqErr) {
             console.warn("Shadow verifier: report_quality patch failed (continuing):", rqErr instanceof Error ? rqErr.message : rqErr);

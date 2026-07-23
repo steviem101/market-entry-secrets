@@ -272,7 +272,12 @@ export function computeReportTelemetry(report: any, intake: any) {
     // user_reports.report_json AFTER slack-notify's initial pass. Carry it
     // through the upsert so a late re-read (rare) can't clobber a pre-existing
     // report_quality.metadata.verification from an even later run.
-    verification: (meta as { verification?: unknown }).verification ?? null,
+    // Object-only guard: verifier writes a {mode, totals, ...} object, so
+    // reject strings/numbers/booleans that could slip through JSONB drift.
+    verification: (() => {
+      const v = (meta as { verification?: unknown }).verification;
+      return v && typeof v === "object" ? v : null;
+    })(),
     groundedness: Number(clamp(citations / Math.max(visibleWithContent, 1), 0, 1).toFixed(2)),
     utilization_rate: util.rate != null ? Number(util.rate.toFixed(2)) : null, utilization: util,
     presentation: pres, words: pres.totalWords, sections_visible: sectionsVisible, visible_with_content: visibleWithContent,
