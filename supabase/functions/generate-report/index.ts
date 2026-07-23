@@ -3505,6 +3505,12 @@ async function generateReportInBackground(
         const tracked = Object.values(assemblyBreakdown).reduce((s, v) => s + v, 0);
         assemblyBreakdown.prep_ms = Math.max(0, phaseTimings.assembly_ms - tracked);
         phaseTimings.assembly_breakdown = { ...assemblyBreakdown };
+      } else if (Object.keys(assemblyBreakdown).length > 0) {
+        // Resumed runs skip Phase-1 (researchEndAt stays 0, no assembly_ms) but
+        // still run some of the assembly sub-steps (au_presence, insights,
+        // claims, templates). Emit those sub-times so a resumed run isn't
+        // silently missing telemetry for work it actually did.
+        phaseTimings.assembly_breakdown = { ...assemblyBreakdown };
       }
 
       const results = await Promise.allSettled(
@@ -3579,19 +3585,24 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
             // hold the batch until the gateway's own (much larger) timeout fires.
             // Default 45s; override with SECTION_TIMEOUT_MS. A timeout counts as
             // "threw" and falls into the empty-section sink like any other failure.
+            // The primary+retry SHARE the budget — a primary that eats 30s leaves
+            // the flash retry 15s. Without shared-budget, a timed-out primary
+            // (blank content triggers needsFlashRetry) could double the wall-time
+            // to 2×SECTION_TIMEOUT_MS, defeating the cap.
             const sectionStart = Date.now();
             const sectionTimeoutMs = Math.max(5000, Number(Deno.env.get("SECTION_TIMEOUT_MS")) || 45000);
+            const remainingBudget = () => Math.max(1000, sectionTimeoutMs - (Date.now() - sectionStart));
             let content = "";
             try {
-              content = await withTimeout(tmpl.section_name, sectionTimeoutMs,
+              content = await withTimeout(tmpl.section_name, remainingBudget(),
                 writeSection(sectionModel, sectionMessages, { temperature: 0.4, onUsage: meterUsage(sectionModel) }, { lovableKey, anthropicKey }));
             } catch (writeErr) {
               console.error(`Section ${tmpl.section_name}: model ${sectionModel} threw:`, writeErr instanceof Error ? writeErr.message : writeErr);
             }
             if (needsFlashRetry(content, isEvalOverride)) {
-              console.error(`Section ${tmpl.section_name}: blank from ${sectionModel} — retrying once on flash`);
+              console.error(`Section ${tmpl.section_name}: blank from ${sectionModel} — retrying once on flash (${remainingBudget()}ms budget left)`);
               try {
-                content = await withTimeout(tmpl.section_name, sectionTimeoutMs,
+                content = await withTimeout(tmpl.section_name, remainingBudget(),
                   writeSection(FLASH_MODEL, sectionMessages, { temperature: 0.4, onUsage: meterUsage(FLASH_MODEL) }, { lovableKey, anthropicKey }));
               } catch (retryErr) {
                 console.error(`Section ${tmpl.section_name}: flash retry threw:`, retryErr instanceof Error ? retryErr.message : retryErr);
