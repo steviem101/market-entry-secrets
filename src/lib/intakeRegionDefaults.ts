@@ -8,7 +8,12 @@
  * operate") starts empty so founders state where they actually are.
  */
 
-export type IntakePersona = 'international' | 'startup';
+// Reuse the canonical persona union (type-only import — erased at runtime, so the
+// node:test runner never resolves the aliased module graph). A future third
+// persona then fails to type-check here instead of silently taking the else-branch.
+import type { ReportPersona } from '../components/report-creator/intakeSchema.v2';
+
+export type IntakePersona = ReportPersona;
 
 export function defaultTargetRegions(persona: IntakePersona, nationalPrefill: boolean): string[] {
   if (!nationalPrefill) return ['Sydney/NSW'];

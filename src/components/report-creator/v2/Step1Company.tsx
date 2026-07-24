@@ -130,8 +130,16 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
     setIndQuery('');
   }
   function toggleRegion(r: string) {
+    const wasSuggested = regionSuggested;
     if (regionSuggested) setRegionSuggested(false);
-    set({ target_regions: regions.includes(r) ? regions.filter((x) => x !== r) : [...regions, r] });
+    // Tapping a region while the value is still the untouched suggestion REPLACES
+    // it (the hint invites "pick specific states to narrow it" — National + a city
+    // is contradictory). After that first tap it's a normal multi-select (MES-227 R6).
+    set({
+      target_regions: regions.includes(r)
+        ? regions.filter((x) => x !== r)
+        : (wasSuggested ? [r] : [...regions, r]),
+    });
   }
 
   const baseChips = showMoreInd ? [...TOP_INDUSTRIES, ...MORE_INDUSTRIES] : TOP_INDUSTRIES;

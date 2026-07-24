@@ -270,10 +270,15 @@ const ReportCreatorV2 = () => {
     lastAutoGoals.current = DEFAULT_GOALS[p];
     form.setValue('revenue_stage', undefined);
     // Regions the user chose survive the switch ("Your other answers stay"),
-    // but an UNTOUCHED suggestion from the old journey must not masquerade as
-    // a choice in the new one — swap it for the new persona's default (MES-227).
+    // but an UNTOUCHED state from the old journey must not carry over — reseed
+    // the new persona's default. Untouched = the old persona's suggested default
+    // OR empty (the flag-on startup default is [], which isSuggestedRegionDefault
+    // can't flag as a suggestion; empty is also never a deliberate choice since
+    // min-1 gates progress) — so startup→international correctly seeds ['National']
+    // (MES-227 R4). A chosen (non-empty, non-default) selection is always kept.
     const prefillV3 = isFeatureEnabled('intake_prefill_v3');
-    if (isSuggestedRegionDefault(form.getValues('target_regions'), prev, prefillV3)) {
+    const current = form.getValues('target_regions') ?? [];
+    if (current.length === 0 || isSuggestedRegionDefault(current, prev, prefillV3)) {
       form.setValue('target_regions', defaultTargetRegions(p, prefillV3));
     }
   }
