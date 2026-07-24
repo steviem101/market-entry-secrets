@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'report_v2' | 'hero_journey' | 'intake_prefill_v3';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'report_v2' | 'hero_journey' | 'intake_prefill_v3' | 'sells_to_all';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -104,6 +104,18 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   intake_prefill_v3: {
     queryKey: 'prefillv3',
     storageKey: 'mes_flag_intake_prefill_v3',
+    defaultValue: false,
+  },
+  // MES-231 (MES-213 Wave 2) sector-agnostic catch-all: a pinned "All industries
+  // (sector-agnostic)" chip in "Industries you sell into" for horizontal sellers
+  // (e.g. a lender that lends to every business). Selecting it stores
+  // target_customers.all_industries=true + empty industries, and the matcher
+  // (behind SELLS_TO_ALL_ENABLED) then treats the buyer ICP as neutral-wide
+  // instead of gating lead lists to the company's own sector. Ships dark
+  // (default off); ?sellstoall=1 enables the chip, ?sellstoall=0 is the kill switch.
+  sells_to_all: {
+    queryKey: 'sellstoall',
+    storageKey: 'mes_flag_sells_to_all',
     defaultValue: false,
   },
   // MES-162 homepage hero credibility: static real report-output panel in the
