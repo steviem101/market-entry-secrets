@@ -1,0 +1,164 @@
+/**
+ * Pure merge + provenance logic for the Step 1 website-scrape prefill (MES-226).
+ *
+ * The scrape is a SUGGESTION that must never clobber user-typed values — but
+ * values placed by an EARLIER scrape are not user input, so when the user
+ * switches to another company they must not survive either. The component can't
+ * tell the two apart from form state alone, so every merge returns a provenance
+ * map recording exactly which fields the scrape populated (and with what), and
+ * `clearScrapedFields` later resets only fields the user hasn't edited since.
+ */
+
+export interface ScrapePrefill {
+  company_name?: string;
+  industry_sector?: string[];
+  country_of_origin?: string;
+  company_stage?: string;
+  employee_count?: string;
+}
+
+export type ScrapeField = keyof ScrapePrefill;
+
+/** Serialised value each scraped field was set to, keyed by field. */
+export type ScrapeProvenance = Partial<Record<ScrapeField, string>>;
+
+export interface ScrapeFormSlice {
+  company_name?: string;
+  industry_sector?: string[];
+  country_of_origin?: string;
+  company_stage?: string;
+  employee_count?: string;
+}
+
+const serialise = (v: string | string[] | undefined): string =>
+  Array.isArray(v) ? JSON.stringify(v) : (v ?? '');
+
+/**
+ * Hostname-ish domain from a loosely-typed URL field: protocol, userinfo
+ * (`user@`), port (`:8080`), `www.`, and path/query/hash are all stripped and
+ * the result lowercased. Null when nothing domain-like is present.
+ */
+export function extractDomain(raw: string | undefined | null): string | null {
+  const t = (raw ?? '').trim().toLowerCase().replace(/^https?:\/\//, '');
+  let host = t.split(/[/?#]/, 1)[0]; // drop path/query/hash
+  host = host.split('@').pop() ?? host; // drop userinfo (user:pass@)
+  host = host.split(':', 1)[0]; // drop :port
+  host = host.replace(/^www\./, ''); // drop www once userinfo/port are gone
+  if (!host || !host.includes('.') || host.endsWith('.')) return null;
+  return host;
+}
+
+export interface MergeOutcome {
+  patch: ScrapeFormSlice;
+  /** Fields this scrape populated, with the serialised value it set. */
+  provenance: ScrapeProvenance;
+  /** Which fields to badge as AI-detected in the confirm card. */
+  aiFields: Partial<Record<ScrapeField, boolean>>;
+  /** A required field is still empty after the merge (expand the full form). */
+  missingRequired: boolean;
+}
+
+/**
+ * Suggestion-merge semantics (unchanged from the original flow, minus the
+ * premature `website_scrape_accepted`): company_name fills only when currently
+ * empty; the other fields take the scrape's value when present and keep the
+ * existing value otherwise.
+ */
+export function mergeScrapeResult(form: ScrapeFormSlice, result: ScrapePrefill): MergeOutcome {
+  const mergedName = form.company_name || result.company_name || '';
+  const mergedCountry = result.country_of_origin ?? form.country_of_origin;
+  const mergedIndustry = result.industry_sector ?? form.industry_sector;
+  const mergedStage = result.company_stage ?? form.company_stage;
+  const mergedEmployees = result.employee_count ?? form.employee_count;
+
+  const provenance: ScrapeProvenance = {};
+  // Record company_name whenever the resulting name CAME FROM this scrape — i.e.
+  // the form was empty (first scrape) OR already held the scrape's own value (a
+  // re-scrape of the same site). A user-typed *different* name wins and is NOT
+  // claimed. Without this, a second fetch of the same domain dropped company_name
+  // from provenance and a later company switch failed to clear it (MES-226 R2).
+  if (result.company_name && mergedName === result.company_name) provenance.company_name = serialise(mergedName);
+  if (result.country_of_origin) provenance.country_of_origin = serialise(mergedCountry);
+  if (result.industry_sector && result.industry_sector.length > 0) provenance.industry_sector = serialise(mergedIndustry);
+  if (result.company_stage) provenance.company_stage = serialise(mergedStage);
+  if (result.employee_count) provenance.employee_count = serialise(mergedEmployees);
+
+  return {
+    patch: {
+      company_name: mergedName,
+      country_of_origin: mergedCountry,
+      industry_sector: mergedIndustry,
+      company_stage: mergedStage,
+      employee_count: mergedEmployees,
+    },
+    provenance,
+    aiFields: {
+      company_name: 'company_name' in provenance,
+      country_of_origin: 'country_of_origin' in provenance,
+      industry_sector: 'industry_sector' in provenance,
+      company_stage: 'company_stage' in provenance,
+      employee_count: 'employee_count' in provenance,
+    },
+    missingRequired: !mergedName || !mergedCountry || !(mergedIndustry ?? []).length || !mergedStage,
+  };
+}
+
+/**
+ * Reset the fields a previous scrape populated, keeping any the user has since
+ * edited (current value no longer matches what the scrape set).
+ */
+export function clearScrapedFields(form: ScrapeFormSlice, provenance: ScrapeProvenance): ScrapeFormSlice {
+  const patch: ScrapeFormSlice = {};
+  if (provenance.company_name !== undefined && serialise(form.company_name) === provenance.company_name) {
+    patch.company_name = '';
+  }
+  if (provenance.country_of_origin !== undefined && serialise(form.country_of_origin) === provenance.country_of_origin) {
+    patch.country_of_origin = '';
+  }
+  if (provenance.industry_sector !== undefined && serialise(form.industry_sector) === provenance.industry_sector) {
+    patch.industry_sector = [];
+  }
+  if (provenance.company_stage !== undefined && serialise(form.company_stage) === provenance.company_stage) {
+    patch.company_stage = undefined;
+  }
+  if (provenance.employee_count !== undefined && serialise(form.employee_count) === provenance.employee_count) {
+    patch.employee_count = undefined;
+  }
+  return patch;
+}
+
+/** Persisted scrape metadata so the provenance survives leave-and-return. */
+export interface ScrapeMeta {
+  domain: string;
+  provenance: ScrapeProvenance;
+}
+
+export const SCRAPE_META_KEY = 'mes_intake_v2_scrape_meta';
+
+/**
+ * Next scrape-meta after a fetch. A re-scrape of the SAME domain MERGES its
+ * provenance onto the prior one (union, new wins) so a field the earlier scrape
+ * owned but this one didn't re-record (e.g. company_name, already filled) stays
+ * scrape-owned. A different domain (or no prior meta) starts fresh (MES-226 R2/E5).
+ */
+export function mergeProvenanceForDomain(
+  prev: ScrapeMeta | null,
+  domain: string,
+  provenance: ScrapeProvenance,
+): ScrapeMeta {
+  return {
+    domain,
+    provenance: prev && prev.domain === domain ? { ...prev.provenance, ...provenance } : provenance,
+  };
+}
+
+export function parseScrapeMeta(raw: string | null): ScrapeMeta | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as ScrapeMeta;
+    if (typeof parsed?.domain !== 'string' || !parsed.domain) return null;
+    return { domain: parsed.domain, provenance: parsed.provenance ?? {} };
+  } catch {
+    return null;
+  }
+}

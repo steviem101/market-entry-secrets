@@ -34,6 +34,12 @@ export const useReportGenerationV2 = () => {
       return null;
     }
   };
+  // Clears ONLY the form draft. The scrape-provenance key (SCRAPE_META_KEY) is
+  // owned by Step1Company and deliberately NOT cleared here: coupling it to the
+  // draft-clear left a mounted Step 1 with live form values but null provenance
+  // after a failed run, blinding the company-switch clear (MES-226 E2). A stale
+  // provenance only ever clears *matching* values (a no-op on a fresh form) and
+  // self-corrects on the next domain change, so leaving it is safe.
   const clearDraft = () => {
     try { localStorage.removeItem(LOCALSTORAGE_KEY_V2); } catch { /* ignore */ }
   };
@@ -74,13 +80,21 @@ export const useReportGenerationV2 = () => {
       setGenerationStatus('Starting report generation…');
       const result = await reportApi.generateReport(intakeForm.id);
 
+      // Clear the draft only once a report row exists (generateReport returned a
+      // report_id). Earlier failures — a 429 rate-limit or network error, which
+      // reject BEFORE generate-report inserts the row — must keep the draft so
+      // the user can resume; there's no /my-reports row to retry from in that
+      // case (MES-226 R1/B1). A failed/timed-out run AFTER this point still has
+      // its report row, and the draft is already gone so it can't re-seed the
+      // next intake (the original weakness-10 this ticket also fixes).
+      clearDraft();
+
       setGenerationStatus('Researching your market — this takes 2–4 minutes…');
       const pollResult = await reportApi.pollReportStatus(result.report_id, (status) => {
         if (status === 'processing') setGenerationStatus('Generating your report — analysing market data…');
       });
 
       if (pollResult.status === 'completed') {
-        clearDraft();
         trackIntakeEvent('report_completed', {
           persona: data.persona,
           intake_form_id: intakeForm.id,
