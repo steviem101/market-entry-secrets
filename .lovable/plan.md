@@ -1,32 +1,35 @@
-## Update `/content/how-to-choose-market-entry-strategy-australia` with the expanded guide
+## Add sidebar sections to the Market Entry Strategy guide
 
-### Where the content lives
-The article is a single row in `content_items` (slug `how-to-choose-market-entry-strategy-australia`) with one `content_sections` row ("Overview") and one `content_bodies` row containing HTML in `body_text`. The renderer (`ContentBodyRenderer`) sanitises and parses HTML, so the update is a straight `body_text` replacement — no schema or component changes.
+### Problem
+The sidebar on `/content/how-to-choose-market-entry-strategy-australia` shows only a single **Overview** entry. That's because the article is stored as one `content_sections` row ("Overview") with one `content_bodies` row containing the whole HTML — the sidebar renders one link per section. The prose already has H2 headings, but they don't create sidebar entries; only `content_sections` rows do.
 
-### What changes
-1. **New migration** `supabase/migrations/<ts>_update_choose_market_entry_strategy_guide.sql` that:
-   - Updates `content_bodies.body_text` for the existing row (targeted by `section_id` of the article's Overview section, matched via slug — idempotent, no hardcoded UUIDs).
-   - Refreshes `content_items.meta_description` (~155 chars) and bumps `updated_at` / `last_verified_at` to now.
-   - Optionally sets `read_time` to a realistic figure (~12 min) given the new length.
-2. **Body conversion** — convert the user-supplied prose into semantic HTML:
-   - `<h2>` for each numbered section ("Exporting and distribution", "Licensing and franchising", "Remote digital sales", "Local subsidiary (Pty Ltd)", "Joint venture or acquisition", "The cautionary tale…", "The decision framework", "The most common sequence").
-   - `<h3>` for the sub-headings ("The margin reality", "What to negotiate…", "Real example: Wendy's…", "Subsidiary vs branch", etc.).
-   - Real `<table>` markup for the two comparison tables ("The five modes at a glance", "What it actually costs in 2026", the regulated-sector matrix) instead of the raw text grid.
-   - `<ul>` / `<ol>` for the checklists (negotiation points, remote-sales caveats, the two Pty Ltd constraints, the three decision-framework questions, the tiebreakers, the staged sequence).
-   - Closing disclaimer wrapped in `<p><em>…</em></p>`.
-   - Final CTA paragraph links to `/report-creator` ("Generate a tailored market entry report").
-3. **No frontend/component edits.** The existing content detail page already renders HTML tables, headings and lists via `prose` styling. If tables look cramped, we can add a small `.prose table` polish in a follow-up — not in scope here.
+### Change
+Split the existing single-section article into 8 sidebar sections (one per H2), each with its own `content_bodies` row. No component or schema changes — just a data migration.
+
+Sections, in order:
+
+1. `overview` — Overview *(intro + "The five modes at a glance" comparison table)*
+2. `exporting-and-distribution` — Exporting and distribution
+3. `licensing-and-franchising` — Licensing and franchising
+4. `remote-digital-sales` — Remote digital sales
+5. `local-subsidiary` — Local subsidiary (Pty Ltd)
+6. `joint-venture-or-acquisition` — Joint venture or acquisition
+7. `starbucks-cautionary-tale` — The cautionary tale: what Starbucks got wrong
+8. `decision-framework` — The decision framework *(includes "The most common sequence", CTA, and the general-advice disclaimer)*
+
+### Execution (one `supabase--insert` call)
+- Look up the guide's `content_items.id` by slug and its existing Overview `content_sections` row.
+- Update the existing Overview section (keep same `id` so any inbound links survive) to hold section 1's body only; leave its slug as `overview` and set `sort_order = 0`.
+- `INSERT` 7 new `content_sections` rows (sort_order 1..7, slugs above) plus one `content_bodies` row per new section carrying the HTML for that H2 block. Strip the `<h2>` from each body (the section title renders it already) and keep the H3/lists/tables/paragraphs beneath.
+- Bump `content_items.updated_at` and `last_verified_at`.
 
 ### Verification
-- Run `supabase migration up` locally (or rely on the merge-to-main auto-apply per repo rules).
-- Query the row post-migration to confirm `body_text` length ≈ 10–12k chars and starts with the new intro.
-- Load `/content/how-to-choose-market-entry-strategy-australia` in preview: check H2/H3 hierarchy, both tables render, list items render, CTA link works, no console/DOMPurify warnings.
-- `npx tsc -p tsconfig.app.json --noEmit` (no code changed, but sanity check).
+- Query `content_sections` for the guide to confirm 8 rows in the expected order, each with exactly one `content_bodies` row.
+- Reload the page and check the sidebar shows 8 entries, each scrolls to its section, and no content is dropped vs. the current single-page body.
 
 ### Out of scope
-- Editorial rewrites of the other 9 seeded guides.
-- New images/hero art.
-- Table styling tweaks (only if the plain `prose` rendering looks broken after preview).
+- No component, styling, or route changes.
+- No edits to the other 9 seeded guides.
 
 ### Files touched
-- `supabase/migrations/<new-timestamp>_update_choose_market_entry_strategy_guide.sql` (new)
+- Database only (via `supabase--insert`). No source files.
