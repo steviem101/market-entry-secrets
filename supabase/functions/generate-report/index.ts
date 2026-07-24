@@ -16,7 +16,8 @@ import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semant
 import { metaLine, recordCountLabel, resolveWebsite } from "./cardFields.ts";
 import { buildCompetitorCards } from "./competitorCards.ts";
 import { renumberCitations, stripContextLabelCitations } from "./citationRenumber.ts";
-import { expandTargetRegions } from "./targetRegion.ts";
+import { expandTargetRegions, hasNationWideTarget } from "./targetRegion.ts";
+import { regionFilterAndDedupeEvents } from "./eventsRegion.ts";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch, stateAgencyRegionMismatch } from "./geoRelevance.ts";
 import { buildRerankItems, buildRerankPrompt, parseRerankVerdicts, applyRerankVerdicts } from "./matchRerank.ts";
 import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type PickCard } from "./keyQuestionPicks.ts";
@@ -1403,9 +1404,6 @@ const deriveLocationPatterns = (intake: any): string[] =>
     .map((r: string) => sanitizeFilterValue(r))
     .filter(Boolean);
 
-const normalizeEventKeyPart = (s: string): string =>
-  (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(/\s+/).slice(0, 6).join(" ");
-
 /** Today's date as ISO YYYY-MM-DD in the report's target timezone
  *  (Australia/Sydney). Using UTC midnight produced an up-to-14h staleness
  *  window each day where an event whose Sydney-local date had already
@@ -1419,32 +1417,16 @@ const todayIsoForReportTimezone = (): string => {
   }
 };
 
-/** Region hard-filter (when target_regions supplied) + title|date|venue dedupe.
- *  Mirrors the overlap path so the semantic path can't surface wrong-city or
- *  duplicate events. Returns at most `cap` rows. */
-const regionFilterAndDedupeEvents = <T extends { title?: string; date?: string; location?: string }>(
-  events: T[],
-  locationPatterns: string[],
-  cap: number,
-): T[] => {
-  let filtered = events || [];
-  if (locationPatterns.length > 0) {
-    filtered = filtered.filter((row) => {
-      const loc = (row.location || "").toLowerCase();
-      return locationPatterns.some((l) => loc.includes(l.toLowerCase()));
-    });
-  }
-  const seen = new Set<string>();
-  const deduped: T[] = [];
-  for (const e of filtered) {
-    const key = `${normalizeEventKeyPart(e.title || "")}|${e.date || ""}|${normalizeEventKeyPart(e.location || "")}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    deduped.push(e);
-    if (deduped.length >= cap) break;
-  }
-  return deduped;
-};
+// MES-186 / MES-232 events-matcher calibration flag (default off; MES-148 pattern).
+// Gates THREE additive changes together for staged rollout: (A) buyer-industry
+// specialist parity in scoreRow (via ctx.buyerParityEnabled); (B) honouring a
+// nation-wide target by relaxing the events geo HARD-drop; and the register fixes —
+// deriving the overlap path's locationPatterns via expandTargetRegions (so a
+// "National" target no longer yields a bare "national" token that string-matches
+// "International Convention Centre") and preserving the sector signal in the
+// zero-survivor events fallback. Read once per call site.
+const eventsBuyerGeoEnabled = (): boolean =>
+  ["on", "1", "true"].includes((Deno.env.get("EVENTS_BUYER_GEO_ENABLED") || "").trim().toLowerCase());
 
 // ── Goal-to-service-tag mapping ───────────────────────────────────────
 // Keyed by stable goal_id (with a legacy long-label fallback). Lives in a
@@ -1493,7 +1475,16 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
   // no grant tag vocabulary exists in any directory table).
   const wantsGrantsGoal = goalSelectsGrants(intake);
 
-  const locationPatterns = regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
+  // MES-186 / MES-232: when the flag is on, derive location tokens via
+  // expandTargetRegions (state halves preserved, nation-wide words dropped) — the
+  // same derivation the semantic path already uses — so the two paths agree and a
+  // "National" target no longer produces a bare "national" token. Flag off keeps the
+  // legacy naive `split("/")[0]` behaviour byte-for-byte.
+  const eventsBuyerGeo = eventsBuyerGeoEnabled();
+  const nationWideTarget = hasNationWideTarget(regions);
+  const locationPatterns = eventsBuyerGeo
+    ? deriveLocationPatterns(intake)
+    : regions.map((r: string) => sanitizeFilterValue(r.split("/")[0])).filter(Boolean);
 
   // ── Sector-relevance signals (Phase D) ──────────────────────────────────
   // The form collects LinkedIn industry GROUPS; directory rows carry 20-sector
@@ -1534,6 +1525,8 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
     // MES-148 Phase 5 (P5-2): freshness tiebreaker from steward-scored data_health.
     // Off by default; inert until the steward populates data_health (NULL = neutral).
     freshnessEnabled: ["on", "1", "true"].includes((Deno.env.get("FRESHNESS_RANKING_ENABLED") || "").trim().toLowerCase()),
+    // MES-186 / MES-232: buyer-industry specialist parity on applySellsTo surfaces.
+    buyerParityEnabled: eventsBuyerGeo,
   };
 
   // rank(): score -> sort -> optional diversity + specialist guarantee -> attach
@@ -1647,11 +1640,34 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
     // accounting expo surfacing for a cyber company), but never empty the section —
     // keep at least 6 candidates so the region filter + dedupe below still have a pool.
     const gatedEvents = preferRelevant(ranked, hasSectorRelevance, 6);
-    let eventResults = regionFilterAndDedupeEvents(gatedEvents, locationPatterns, 5);
+    // MES-186 B: when a nation-wide scope is targeted (e.g. [Melbourne/VIC, National]),
+    // relax the HARD city drop — a national-tier interstate conference the entrant
+    // explicitly targets stays eligible. Score + the target-city +2 soft bonus still
+    // rank the target city first; date filter + title|date|venue dedupe are unchanged.
+    const relaxRegion = eventsBuyerGeo && nationWideTarget;
+    // Explicit string[] — locationPatterns is inferred `any` (regions comes off the
+    // `any`-typed intake), which would make the `.some((l) => …)` callback below an
+    // implicit-any parameter and fail `deno check` (noImplicitAny).
+    const geoTokens: string[] = relaxRegion ? [] : locationPatterns;
+    // How many gated candidates the city filter would remove — measured before the
+    // cap/dedupe so the telemetry below reflects the geo gate alone, not the +5 cap.
+    const geoPass = geoTokens.length === 0
+      ? gatedEvents.length
+      : gatedEvents.filter((e: { location?: string }) => {
+          const loc = (e.location || "").toLowerCase();
+          return geoTokens.some((l) => loc.includes(l.toLowerCase()));
+        }).length;
+    // For a nation-wide target `geoTokens` is already [] (no city drop), so this
+    // main pass keeps the sector-ranked slate without dropping interstate events —
+    // the sector signal is preserved for National here, in the main path. For a
+    // city-only target the city drop is honoured; if it empties the slate, the
+    // legacy date-bounded fallback below applies, still scoped to the target city.
+    let eventResults = regionFilterAndDedupeEvents(gatedEvents, geoTokens, 5);
 
-    // Fallback when the strict filter returned nothing: take the soonest
-    // future events in the target region (still date-bounded — no more
-    // 2024 events appearing in 2026 reports).
+    // Fallback when the region filter returned nothing: soonest future events,
+    // date-bounded, scoped to the target city when one was supplied (a city-only
+    // target must NOT surface interstate events — the National relax is the only
+    // path that widens beyond the target city).
     if (eventResults.length === 0) {
       let fbQuery = supabase.from("events")
         .select("id, title, slug, date, location, category, type, organizer, sector, description")
@@ -1665,6 +1681,15 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
       const { data: fb } = await fbQuery;
       eventResults = fb || [];
     }
+
+    // Drop-reason telemetry (efficiency rec 12): make the events geo gate observable —
+    // how many ranked/gated candidates survived, whether the National relax fired, and
+    // how many the city filter removed. Counts only (event data is public, no PII).
+    console.log(
+      `[events] ranked=${ranked.length} gated=${gatedEvents.length} ` +
+      `geo=${relaxRegion ? "relaxed(national)" : (geoTokens.length ? geoTokens.join("|") : "none")} ` +
+      `region_dropped=${Math.max(0, gatedEvents.length - geoPass)} final=${eventResults.length}`,
+    );
 
     matches.events = eventResults.map((e: any) => ({
       ...e, name: e.title, link: e.slug ? `/events/${e.slug}` : "/events", linkLabel: "View Event",
@@ -2015,6 +2040,9 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
 
   const todayIso = todayIsoForReportTimezone();
   const locationPatterns = deriveLocationPatterns(intake);
+  // MES-186 B: mirror the overlap path — relax the events city hard-drop when a
+  // nation-wide scope is targeted, so both paths agree on which events survive.
+  const relaxEventRegion = eventsBuyerGeoEnabled() && hasNationWideTarget(intake?.target_regions);
   const ranked = groupRankedBySource(data || []);
   await Promise.all(Object.entries(ranked).map(async ([tbl, items]) => {
     const cfg = SEMANTIC_CFG[tbl];
@@ -2051,9 +2079,10 @@ async function semanticMatches(supabase: any, intake: any): Promise<Record<strin
         // Apply the same date guard + region hard-filter + title|date|venue
         // dedupe as the overlap path. Without this the preferred semantic
         // path could resurface near-duplicate / wrong-city events that the
-        // overlap path now blocks.
+        // overlap path now blocks. When National is targeted (relaxEventRegion),
+        // skip the city drop — keep date filter + dedupe — matching the overlap path.
         const dateFiltered = ordered.filter((e: any) => !e.date || e.date >= todayIso);
-        ordered = regionFilterAndDedupeEvents(dateFiltered, locationPatterns, cfg.cap);
+        ordered = regionFilterAndDedupeEvents(dateFiltered, relaxEventRegion ? [] : locationPatterns, cfg.cap);
       } else if (tbl === "content_items") {
         // MES-210a: case studies surface via the dedicated corridor-matched pool
         // + section; mirror the overlap path's exclusion so the semantic path

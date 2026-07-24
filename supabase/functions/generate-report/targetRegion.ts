@@ -62,3 +62,33 @@ export function expandTargetRegions(regions: string[] | null | undefined): strin
   }
   return [...out];
 }
+
+// Nation-wide / broader-than-a-city geography words. A target that names one of
+// these covers many AU cities at once, so the report shouldn't HARD-drop an event
+// purely because its city isn't in the (city-only) locationPatterns list — an
+// entrant who ticked "National" alongside "Melbourne/VIC" is explicitly saying an
+// interstate national-tier conference is in scope (MES-186 root cause B). This is
+// the subset of GENERIC that denotes a real broad geography, excluding the intake
+// placeholders ("tbd", "not sure", "various", "none", …) and the "remote/online"
+// words, which signal "no venue" rather than "everywhere".
+const NATION_WIDE = new Set<string>([
+  "national", "nationwide", "australia", "australian", "australia wide",
+  "anz", "australia and new zealand", "global", "worldwide", "international",
+  "apac", "asia pacific", "oceania",
+]);
+
+/**
+ * True when the intake's target_regions include a nation-wide (or broader) scope —
+ * used to relax the events geo hard-gate so national-tier interstate events stay
+ * eligible (MES-186 B). Same tokenisation as expandTargetRegions so "Melbourne/VIC"
+ * splits cleanly and only the nation-wide segment triggers.
+ */
+export function hasNationWideTarget(regions: string[] | null | undefined): boolean {
+  for (const raw of regions || []) {
+    for (const part of String(raw ?? "").split(/[/,&]/)) {
+      const t = part.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+      if (NATION_WIDE.has(t)) return true;
+    }
+  }
+  return false;
+}

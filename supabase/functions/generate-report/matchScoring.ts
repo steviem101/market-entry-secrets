@@ -22,7 +22,6 @@
  * guarantee so genuine experts always make the slate when they exist.
  */
 
-import { overlapCount } from "./sectorTaxonomy.ts";
 import { normalizeCountry } from "./countryNormalize.ts";
 import { countServiceMatches } from "./serviceMatch.ts";
 
@@ -41,6 +40,11 @@ export interface MatchContext {
    *  its rank (fresh/complete rows up, stale ones down). Off by default; a NULL
    *  data_health is always neutral, so this is inert until the steward populates it. */
   freshnessEnabled?: boolean;
+  /** MES-186 / MES-232: when true, a focused BUYER-industry row earns a specialist-
+   *  parity bonus on `applySellsTo` surfaces (events/content/leads), so a conference
+   *  where the entrant's CUSTOMERS gather ranks near one for the entrant's OWN
+   *  industry. Off by default; inert on non-applySellsTo surfaces (advisory/supply). */
+  buyerParityEnabled?: boolean;
 }
 
 // Freshness is a TIEBREAKER, not a dominant signal — capped below the target-region
@@ -91,6 +95,18 @@ function diminishing(matches: number, base: number, step: number): number {
 // Tuned 3 -> 2 after the Nory report ranked Insurtech Australia above Enterprise Ireland.
 const SPECIALIST_BONUS = 2;
 const AGNOSTIC_NUDGE = 0.25;  // small — "eligible for everyone" != "relevant"
+
+// MES-186 / MES-232: buyer-side specialist parity. On buyer-facing (`applySellsTo`)
+// surfaces a focused BUYER-industry row earns a bonus equal to the own-industry
+// SPECIALIST_BONUS, so a premium conference for the entrant's CUSTOMERS ranks near
+// one for the entrant's own vertical instead of being outscored by generic
+// same-industry meetups (Floats: Talent X/RCSA + HR & L&D Tech Fest were buried).
+// Equal magnitude is deliberate: the sells-to base unit (+2, diminishing base 2) is
+// already one below the own-industry base (+3), so even with matching bonuses an
+// own-industry specialist (3+2=5) still edges a buyer specialist (2+2=4) — parity
+// makes the buyer event competitive, not dominant. Gated by ctx.buyerParityEnabled
+// (default off) and only applied when opts.applySellsTo.
+const BUYER_SPECIALIST_BONUS = 2;
 
 // A row that claims a large share of the 20-sector taxonomy isn't a genuine
 // specialist in any of them — it's "matches everyone" noise (Stage 7 bug B8: a
@@ -155,6 +171,17 @@ export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
     matchedOwn.every((t) => HORIZONTAL_SECTORS.has(t)) &&
     tags.some((t) => !HORIZONTAL_SECTORS.has(t) && !userSet.has(t));
 
+  // Buyer-side (sells-to) overlap + its own horizontal-only guard, mirroring the
+  // own-industry logic (MES-186 A). A "foreign vertical" here is a non-horizontal
+  // tag matching NEITHER the buyer NOR the user's own sectors — positive evidence
+  // the row's real focus is a different vertical, so it doesn't earn buyer parity.
+  const sellsToSet = new Set(ctx.sellsToSectors);
+  const matchedBuyer = tags.filter((t) => sellsToSet.has(t));
+  const buyerMatches = matchedBuyer.length;
+  const buyerHorizontalOnly = !row.sector_agnostic && buyerMatches > 0 &&
+    matchedBuyer.every((t) => HORIZONTAL_SECTORS.has(t)) &&
+    tags.some((t) => !HORIZONTAL_SECTORS.has(t) && !sellsToSet.has(t) && !userSet.has(t));
+
   if (ownMatches > 0) {
     const broadOnly = overTagged || horizontalOnly;
     const add = broadOnly ? 1 : diminishing(ownMatches, 3, 1);
@@ -167,13 +194,22 @@ export function scoreRow(row: Row, opts: ScoreOpts, ctx: MatchContext): Scored {
   }
 
   if (opts.applySellsTo) {
-    const sellMatches = overlapCount(tags, ctx.sellsToSectors);
-    if (sellMatches > 0) {
-      const add = overTagged ? 1 : diminishing(sellMatches, 2, 1);
+    if (buyerMatches > 0) {
+      const add = overTagged ? 1 : diminishing(buyerMatches, 2, 1);
       s += add;
       reasons.push(overTagged
-        ? `broad sells-to overlap ×${sellMatches} (+${add})`
-        : `sells-to sector ×${sellMatches} (+${add})`);
+        ? `broad sells-to overlap ×${buyerMatches} (+${add})`
+        : `sells-to sector ×${buyerMatches} (+${add})`);
+    }
+    // Buyer specialist parity (MES-186 A): a focused buyer-industry row (sector-
+    // specific, not over-tagged, not horizontal-only) is a genuine "where my buyers
+    // gather" match — award it the parity bonus so it ranks near an own-industry
+    // specialist rather than under generic same-industry meetups. Gated (default off).
+    const buyerSpecialist =
+      !row.sector_agnostic && !overTagged && !buyerHorizontalOnly && buyerMatches > 0;
+    if (ctx.buyerParityEnabled && buyerSpecialist) {
+      s += BUYER_SPECIALIST_BONUS;
+      reasons.push(`buyer-industry specialist (+${BUYER_SPECIALIST_BONUS})`);
     }
   }
 

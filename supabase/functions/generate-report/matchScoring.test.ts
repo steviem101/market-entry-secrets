@@ -455,6 +455,84 @@ test("isImmigrationFocused: flags visa/immigration-dominant mentors via any iden
   assert.equal(isImmigrationFocused({ name: "" } as any), false);
 });
 
+// ── Buyer-industry specialist parity (MES-186 A / MES-232) ───────────────────
+// Floats — AI recruitment SaaS, own industry maps to `technology-…`, sells to
+// Staffing & Recruiting → `administrative-and-support-services`; targets
+// [Melbourne/VIC, National] (locationPatterns = melbourne/victoria/vic).
+const FLOATS_CTX: MatchContext = {
+  userSectors: ["technology-information-and-media"],
+  sellsToSectors: ["administrative-and-support-services"],
+  serviceTags: [],
+  locationPatterns: ["melbourne", "victoria", "vic"],
+  userCountry: "",
+  userIsIntl: false,
+  countryTerm: "",
+};
+const FLOATS_CTX_ON: MatchContext = { ...FLOATS_CTX, buyerParityEnabled: true };
+
+// A generic own-industry tech networking event in the target city (the row that
+// buried the buyer conferences): industry match +3, specialist +2, region +2 = 7.
+const techNetworking = { id: "tech", sector_agnostic: false, location: "Melbourne, VIC",
+  sector_tags: ["technology-information-and-media"] };
+// Talent X / RCSA — a focused buyer-industry conference in the target city.
+const talentX = { id: "talentx", sector_agnostic: false, location: "Melbourne, VIC",
+  sector_tags: ["administrative-and-support-services", "professional-services"] };
+// HR + L&D Innovation & Tech Fest — same buyer sector, but in Sydney (no region bonus).
+const hrTechFest = { id: "hrfest", sector_agnostic: false, location: "Sydney, NSW",
+  sector_tags: ["administrative-and-support-services", "professional-services"] };
+
+test("buyer parity: OFF by default — a focused buyer event scores sells-to + region only", () => {
+  const s = scoreRow(talentX, { applySellsTo: true }, FLOATS_CTX);
+  assert.equal(s.score, 4, "sells-to (+2) + target region (+2), no parity bonus");
+  assert.ok(!s.reasons.some((r) => r.startsWith("buyer-industry specialist")), "no parity reason when flag off");
+});
+
+test("buyer parity: ON — a focused buyer event earns the specialist-parity bonus (applySellsTo only)", () => {
+  const s = scoreRow(talentX, { applySellsTo: true }, FLOATS_CTX_ON);
+  assert.equal(s.score, 6, "sells-to (+2) + buyer specialist (+2) + target region (+2)");
+  assert.ok(s.reasons.some((r) => r.startsWith("buyer-industry specialist")), "parity reason present");
+});
+
+test("buyer parity never fires on a non-buyer-facing surface, even with the flag on", () => {
+  // Same row scored as a PROVIDER/mentor (applySellsTo omitted): buyers' industry is
+  // irrelevant to advisory/supply surfaces — no sells-to points, no parity.
+  const asProvider = scoreRow(talentX, {}, FLOATS_CTX_ON);
+  assert.equal(asProvider.score, 2, "target region only; buyers' sector must not score here");
+  assert.ok(!asProvider.reasons.some((r) => r.startsWith("buyer-industry specialist")));
+});
+
+test("buyer parity is denied to over-tagged and horizontal-only buyer rows (guards reused)", () => {
+  // Over-tagged (≥5 tags) buyer row → broad overlap, no parity.
+  const broad = { id: "broad", sector_agnostic: false, sector_tags: [
+    "administrative-and-support-services", "education", "utilities", "construction", "energy-utilities-and-waste",
+  ] };
+  const b = scoreRow(broad, { applySellsTo: true }, FLOATS_CTX_ON);
+  assert.ok(!b.reasons.some((r) => r.startsWith("buyer-industry specialist")), "over-tagged buyer row gets no parity");
+  // Horizontal-only buyer overlap with a FOREIGN vertical (education) → no parity.
+  const eduBody = { id: "edu", sector_agnostic: false, sector_tags: [
+    "administrative-and-support-services", "education",
+  ] };
+  const e = scoreRow(eduBody, { applySellsTo: true }, FLOATS_CTX_ON);
+  assert.ok(!e.reasons.some((r) => r.startsWith("buyer-industry specialist")),
+    "horizontal-only buyer overlap (real focus = education) gets no parity");
+});
+
+test("Floats regression: with parity ON, the buyer conference ranks competitively and stays sector-relevant", () => {
+  const tech = scoreRow(techNetworking, { applySellsTo: true }, FLOATS_CTX_ON);
+  const tx = scoreRow(talentX, { applySellsTo: true }, FLOATS_CTX_ON);
+  const hr = scoreRow(hrTechFest, { applySellsTo: true }, FLOATS_CTX_ON);
+  // The own-industry event still edges ahead (7 vs 6) — parity makes the buyer event
+  // COMPETITIVE, not dominant — but the gap is now one point, not three (was 7 vs 4).
+  assert.equal(tech.score, 7);
+  assert.equal(tx.score, 6);
+  assert.ok(tech.score - tx.score <= 1, `buyer conference within one point of the tech event (${tech.score} vs ${tx.score})`);
+  // Both buyer conferences carry a genuine sells-to match → hasSectorRelevance keeps
+  // them, so preferRelevant(events, hasSectorRelevance, …) won't shed them as "weak"
+  // (the mechanism that, combined with the hard city drop, hid HR + L&D Tech Fest).
+  assert.ok(hasSectorRelevance(withMatchMeta(tx)), "Talent X is sector-relevant");
+  assert.ok(hasSectorRelevance(withMatchMeta(hr)), "HR + L&D Tech Fest is sector-relevant (survives the relevance gate)");
+});
+
 test("isImmigrationFocused: also flags an immigration service-provider card (name/services/tags)", () => {
   // Provider card shape: TechVisa surfaced for a domestic Floats report.
   assert.equal(isImmigrationFocused({ name: "TechVisa", services: ["Business Immigration", "Employer Sponsorship"], tags: ["Business Immigration"] } as any), true);
