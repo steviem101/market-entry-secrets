@@ -31,10 +31,20 @@ export interface ParsedIcp {
 
 /**
  * Parse the free-text ICP one-liner ("head of marketing at recruitment agency",
- * "CTO or Head of Data in mid-size banks") into titles + org type. Heuristic on
- * purpose: split on the LAST " at " / " in " / " within " connector; the left side
- * is one or more titles (split on ","/" or "/" and "), Title Cased. No connector →
- * the whole line is an org descriptor (no title claim is safer than a wrong one).
+ * "CTO or Head of Data in mid-size banks") into titles + org type.
+ *
+ * MES-235: split on the FIRST " at " / " in " / " within " connector, NOT the last.
+ * The lazy `.*?` already did this, but the old comment claimed "LAST" — the opposite
+ * of the code, inviting a wrong "fix". FIRST is correct because job titles rarely
+ * contain a connector token whereas org descriptors routinely trail with one
+ * ("founders at startups in Sydney" → titles=[Founders], org="startups in Sydney";
+ * splitting on the last " in " would mint the garbage title "Founders At Startups").
+ * The left side is one or more titles (split on ","/" or "/" and "), Title Cased;
+ * ≥3-char tokens only, so short forms that survive as noise are dropped. No connector,
+ * or no usable title on the left → the whole line is an org descriptor (a missing
+ * title claim is safer than a wrong one). MES-235 also stopped feeding this the
+ * SYNTHESISED chip-soup description (the source of the ICP Target-Roles garbage) —
+ * the caller now passes the user's raw one-liner (v2 `target_customers.notes`).
  */
 export function parseIcpDescription(desc: string | null | undefined): ParsedIcp {
   const s = (desc ?? "").replace(/\s+/g, " ").trim();
@@ -47,6 +57,10 @@ export function parseIcpDescription(desc: string | null | undefined): ParsedIcp 
     .split(/,|\bor\b|\band\b|\//i)
     .map((t) => titleCase(t))
     .filter((t) => t.length >= 3);
+  // Connector matched but the left side held no usable title (e.g. "VP at banks" —
+  // "VP" is below the 3-char floor): treat the whole line as an org descriptor
+  // rather than emitting an empty title list against a truncated org ("banks").
+  if (titles.length === 0) return { titles: [], org_type: s };
   return { titles, org_type: m[2].trim() };
 }
 

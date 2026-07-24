@@ -14,6 +14,23 @@ test("parseIcpDescription: title + org from the one-liner; lists; no-connector f
   assert.deepEqual(parseIcpDescription(null), { titles: [], org_type: "" });
 });
 
+test("MES-235: splits on the FIRST connector, not the last (multi-connector one-liner)", () => {
+  // "founders at startups in Sydney": FIRST " at " → title "Founders", org keeps the
+  // trailing " in Sydney". Splitting on the last " in " would mint the garbage title
+  // "Founders At Startups".
+  assert.deepEqual(parseIcpDescription("founders at startups in Sydney"),
+    { titles: ["Founders"], org_type: "startups in Sydney" });
+  assert.deepEqual(parseIcpDescription("ops leaders at mid-size logistics firms tired of manual scheduling"),
+    { titles: ["Ops Leaders"], org_type: "mid-size logistics firms tired of manual scheduling" });
+});
+
+test("MES-235: a connector with no usable title on the left → whole line is the org descriptor", () => {
+  // "VP" is below the 3-char floor; rather than titles:[] against a truncated org
+  // ("banks"), the full line is treated as the org descriptor.
+  assert.deepEqual(parseIcpDescription("VP at banks"),
+    { titles: [], org_type: "VP at banks" });
+});
+
 test("nameMatchesDomain: distinctive token must appear in host (walter page gate)", () => {
   assert.equal(nameMatchesDomain("kelly recruitment", "https://kellyservices.com.au"), true);
   assert.equal(nameMatchesDomain("Gadens", "https://gadens.com"), true);

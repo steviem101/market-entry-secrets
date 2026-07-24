@@ -8,12 +8,13 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   GOALS, COUNTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS, REVENUE_STAGE_OPTIONS,
+  TIMELINE_OPTIONS, BUDGET_OPTIONS,
   type IntakeFormDataV2, type ReportPersona,
 } from '../intakeSchema.v2';
 import { PERSONA_COPY } from './rcData';
 import { RcIcon } from './icons';
 import {
-  RcGhostButton, RcPrimaryButton, RcSavedPill, RcTextInput, RcSelect,
+  RcGhostButton, RcPrimaryButton, RcSavedPill, RcTextInput, RcSelect, RcRadioChipGroup,
 } from './primitives';
 import { ReportPreview } from './ReportPreview';
 import type { SetPatch } from './types';
@@ -116,6 +117,26 @@ function ChipRow({ label, items, onEdit }: { label: string; items: string[]; onE
   );
 }
 
+// ── Single-select chip row (interactive; optional — re-tap the active chip to clear) ──
+// MES-235: timeline & budget were captured by the v2 schema but no screen collected
+// them, so generate-report always saw '' → "Not specified" — yet {{timeline}} feeds 3
+// live templates and {{budget_level}} feeds 4 (incl. both money sections). Restored here
+// as optional chips (v2 parity); they already flow to the columns + template vars.
+function ChipSelectRow({
+  label, options, value, onChange,
+}: {
+  label: string; options: readonly string[]; value?: string; onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-start gap-3 py-2">
+      <span className="w-[92px] shrink-0 pt-1 text-[12px] text-rc-muted">{label}</span>
+      <div className="min-w-0 flex-1">
+        <RcRadioChipGroup label={label} options={options} value={value ?? ''} onChange={onChange} />
+      </div>
+    </div>
+  );
+}
+
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-2xl border border-rc-line bg-white p-4 shadow-rc-card">
@@ -176,6 +197,14 @@ export function ReviewScreen({
               <ChipRow label="Competitors" items={(form.known_competitors ?? []).map((c) => c.name).filter(Boolean)} onEdit={() => goToStep('details')} />
             )}
             <ChipRow label="Challenges" items={form.challenges?.tags ?? []} onEdit={() => goToStep('details')} />
+            <ChipSelectRow
+              label="Timeline" options={TIMELINE_OPTIONS} value={form.timeline}
+              onChange={(v) => set({ timeline: (v || undefined) as IntakeFormDataV2['timeline'] })}
+            />
+            <ChipSelectRow
+              label="Budget" options={BUDGET_OPTIONS} value={form.budget_level}
+              onChange={(v) => set({ budget_level: (v || undefined) as IntakeFormDataV2['budget_level'] })}
+            />
             <InlineScalar label="Focus" value={form.report_focus} onSave={(v) => set({ report_focus: v })} placeholder="What should the report answer?" />
           </Card>
         </div>
