@@ -283,6 +283,18 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
             <RcField label="Country of origin" required error={errors.country_of_origin?.message}>
               <RcSelect placeholder="Select country" options={COUNTRY_OPTIONS} value={form.country_of_origin || ''}
                 onChange={(v) => set({ country_of_origin: v })} ai={aiFields.country_of_origin} ariaLabel="Country of origin" />
+              {/* PD-7: free-text country when "Other" is picked, so uncovered countries
+                  produce a coherent report + corridor lookup instead of the literal "Other". */}
+              {form.country_of_origin === 'Other' && (
+                <div className="mt-2">
+                  <RcTextInput
+                    placeholder="Type your country — e.g. Brazil"
+                    value={form.country_of_origin_other || ''}
+                    onChange={(v) => set({ country_of_origin_other: v })}
+                    ariaLabel="Enter your country of origin"
+                  />
+                </div>
+              )}
             </RcField>
             <RcField label="Company stage" required error={errors.company_stage?.message}>
               <RcSelect placeholder="Select stage" options={STAGE_OPTIONS} value={form.company_stage || ''}
