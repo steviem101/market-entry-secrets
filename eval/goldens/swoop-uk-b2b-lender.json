@@ -1,0 +1,38 @@
+{
+  "golden_id": "swoop-uk-b2b-lender",
+  "description": "MES-213 persona fixture: sector-agnostic B2B funding marketplace (Swoop-style) entering AU — exercises finding 3 (no 'all industries' catch-all: end_buyer_industries left empty, so the lead-ICP gate falls back to the company's own sector) and the token-based sells-into↔leads alignment. Post-fix diff should show lead lists and buyer-facing surfaces widening beyond fintech.",
+  "frozen_at": "2026-07-24",
+  "source_intake_id": null,
+  "intake": {
+    "company_name": "Swoop Funding",
+    "website_url": "swoopfunding.com",
+    "country_of_origin": "United Kingdom",
+    "industry_sector": ["Fintech", "Financial Services", "SaaS"],
+    "company_stage": "Growth/Scale-up",
+    "employee_count": "51-200",
+    "target_regions": ["Sydney/NSW"],
+    "services_needed": ["Access qualified lead lists", "Find vetted service providers", "Connect with trade & investment agencies", "Get market & industry research"],
+    "primary_goals": "Access qualified lead lists; Find vetted service providers; Connect with trade & investment agencies; Get market & industry research",
+    "key_challenges": "Finding distribution partners, Brand awareness, Competing with incumbents",
+    "challenge_tags": ["Finding distribution partners", "Brand awareness", "Competing with incumbents"],
+    "known_competitors": [],
+    "end_buyer_industries": [],
+    "end_buyers": [],
+    "customer_type": "B2B",
+    "customer_size": "Mixed",
+    "buying_motion": "Self-serve / marketplace",
+    "goal_ids": ["lead_lists_intl", "find_providers", "trade_agencies", "market_research", "events"],
+    "report_focus": "How do we reach Australian SMEs across every industry, not just fintech?",
+    "raw_input": {
+      "persona": "international",
+      "target_customers": {
+        "notes": "any Australian SME that needs funding — we are sector agnostic",
+        "industries": [],
+        "customer_type": "B2B",
+        "named_companies": []
+      },
+      "website_scrape_accepted": true,
+      "target_customer_description": "B2B customers — Mixed — via self-serve / marketplace — any Australian SME that needs funding — we are sector agnostic"
+    }
+  }
+}

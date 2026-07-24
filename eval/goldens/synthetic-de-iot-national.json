@@ -1,0 +1,38 @@
+{
+  "golden_id": "synthetic-de-iot-national",
+  "description": "MES-213 persona fixture (synthetic): German industrial-IoT scale-up entering AU with target_regions=['National'] only — exercises finding 5 (international entrant expecting National, not Sydney) and finding 7 (National target should disable the events hard city filter; no existing golden targets National). Synthetic domain makes the Firecrawl scrape fail deliberately, covering the scrape-fallback path.",
+  "frozen_at": "2026-07-24",
+  "source_intake_id": null,
+  "intake": {
+    "company_name": "Sensorik Systems",
+    "website_url": "sensorik-systems.example.com",
+    "country_of_origin": "Germany",
+    "industry_sector": ["Machinery Manufacturing", "Software Development"],
+    "company_stage": "Growth/Scale-up",
+    "employee_count": "201-500",
+    "target_regions": ["National"],
+    "services_needed": ["Find vetted service providers", "Connect with trade & investment agencies", "Discover events & networking", "Get market & industry research", "Access market entry case studies"],
+    "primary_goals": "Find vetted service providers; Connect with trade & investment agencies; Discover events & networking; Get market & industry research; Access market entry case studies",
+    "key_challenges": "Regulatory & licensing, Logistics & supply chain, Hiring local talent",
+    "challenge_tags": ["Regulatory & licensing", "Logistics & supply chain", "Hiring local talent"],
+    "known_competitors": [],
+    "end_buyer_industries": ["Machinery Manufacturing", "Farming"],
+    "end_buyers": [],
+    "customer_type": "B2B",
+    "customer_size": "Enterprise (500+)",
+    "buying_motion": "Channel / partners",
+    "goal_ids": ["find_providers", "trade_agencies", "events", "market_research", "case_studies"],
+    "report_focus": "Help me prioritise where to start",
+    "raw_input": {
+      "persona": "international",
+      "target_customers": {
+        "notes": "operations and plant managers at large manufacturers and agribusinesses",
+        "industries": ["Machinery Manufacturing", "Farming"],
+        "customer_type": "B2B",
+        "named_companies": []
+      },
+      "website_scrape_accepted": false,
+      "target_customer_description": "B2B customers — Enterprise (500+) — via channel / partners — in Machinery Manufacturing, Farming — operations and plant managers at large manufacturers and agribusinesses"
+    }
+  }
+}

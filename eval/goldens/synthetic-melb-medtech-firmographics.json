@@ -1,0 +1,40 @@
+{
+  "golden_id": "synthetic-melb-medtech-firmographics",
+  "description": "MES-213 persona fixture (synthetic): Melbourne-only medtech startup with strong industry focus and full firmographics set (customer_size, buying_motion) — exercises finding 4 (structured firmographic columns are never read by generate-report; only the synthesised target_customer_description reaches prompts) and finding 7 (Melbourne/VIC-only target hard-drops interstate industry conferences). Synthetic domain: deliberate scrape-fallback.",
+  "frozen_at": "2026-07-24",
+  "source_intake_id": null,
+  "intake": {
+    "company_name": "Auscultate Health",
+    "website_url": "auscultate-health.example.com",
+    "country_of_origin": "Australia",
+    "industry_sector": ["Medical Equipment Manufacturing", "Software Development"],
+    "company_stage": "Startup/Seed",
+    "employee_count": "11-50",
+    "target_regions": ["Melbourne/VIC"],
+    "services_needed": ["Find investors & VCs", "Connect with mentors & advisors", "Identify grants & government funding", "Discover events & networking", "Get market & industry research"],
+    "primary_goals": "Find investors & VCs; Connect with mentors & advisors; Identify grants & government funding; Discover events & networking; Get market & industry research",
+    "key_challenges": "Raising the next round, Scaling go-to-market, Building partnerships",
+    "challenge_tags": ["Raising the next round", "Scaling go-to-market", "Building partnerships"],
+    "known_competitors": [],
+    "end_buyer_industries": ["Hospitals and Health Care"],
+    "end_buyers": [],
+    "customer_type": "B2B",
+    "customer_size": "Enterprise (500+)",
+    "buying_motion": "Direct sales",
+    "revenue_stage": "<$500K",
+    "goal_ids": ["investors", "mentors_startup", "grants", "events", "market_research"],
+    "report_focus": "Show me who to pitch first",
+    "raw_input": {
+      "persona": "startup",
+      "revenue_stage": "<$500K",
+      "target_customers": {
+        "notes": "clinical procurement leads at hospital groups and day surgeries",
+        "industries": ["Hospitals and Health Care"],
+        "customer_type": "B2B",
+        "named_companies": []
+      },
+      "website_scrape_accepted": false,
+      "target_customer_description": "B2B customers — Enterprise (500+) — via direct sales — in Hospitals and Health Care — clinical procurement leads at hospital groups and day surgeries"
+    }
+  }
+}
