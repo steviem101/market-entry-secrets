@@ -13,6 +13,8 @@ import {
   SCRAPE_META_KEY, clearScrapedFields, extractDomain, mergeProvenanceForDomain, mergeScrapeResult, parseScrapeMeta,
   type ScrapeFormSlice, type ScrapeMeta,
 } from '@/lib/intakeScrapeMerge';
+import { defaultTargetRegions, isSuggestedRegionDefault } from '@/lib/intakeRegionDefaults';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import type { IntakeValues, StepProps } from './types';
 import { PERSONA_COPY, TOP_INDUSTRIES, MORE_INDUSTRIES } from './rcData';
 import { RcIcon } from './icons';
@@ -44,13 +46,18 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
       else localStorage.removeItem(SCRAPE_META_KEY);
     } catch { /* ignore */ }
   }, [scrapeMeta]);
-  // The default ['Sydney/NSW'] is a suggestion until the user edits regions.
+  // The persona default (Sydney historically; National for international with
+  // the MES-227 flag on) is a suggestion until the user edits regions.
+  const nationalPrefill = isFeatureEnabled('intake_prefill_v3');
   const [regionSuggested, setRegionSuggested] = useState(
-    () => (form.target_regions ?? []).length === 1 && (form.target_regions ?? [])[0] === 'Sydney/NSW',
+    () => isSuggestedRegionDefault(form.target_regions, persona, nationalPrefill),
   );
 
   const selected = form.industry_sector ?? [];
   const regions = form.target_regions ?? [];
+  // Guard the hint against persona switches: only show "suggestion" copy while
+  // the value still IS this persona's untouched default.
+  const showSuggestionHint = regionSuggested && isSuggestedRegionDefault(regions, persona, nationalPrefill);
 
   async function runScrape() {
     const url = (form.website_url || '').trim();
@@ -81,19 +88,20 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
       const result = await prefillFromWebsite(url);
       if (!result) { setScrape('error'); return; }
       const hadRegion = regions.length > 0;
+      const regionFallback = defaultTargetRegions(persona, nationalPrefill);
       const { patch, provenance, aiFields: nextAiFields, missingRequired } = mergeScrapeResult(base, result);
       // The merge is a suggestion only — acceptance is the user's explicit
       // "Looks right" click, not the scrape itself (analytics depend on this).
       set({
         ...patch,
-        target_regions: hadRegion ? regions : ['Sydney/NSW'],
+        target_regions: hadRegion ? regions : regionFallback,
       } as Partial<IntakeValues>);
       setAiFields(nextAiFields);
       // Merge onto any same-domain prior provenance so a re-fetch that no longer
       // re-records a field (e.g. company_name, already filled) keeps it
       // scrape-owned (MES-226 R2). A different domain was reset to null above.
       if (nextDomain) setScrapeMeta((prev) => mergeProvenanceForDomain(prev, nextDomain, provenance));
-      setRegionSuggested(!hadRegion);
+      setRegionSuggested(!hadRegion && regionFallback.length > 0);
       // If a REQUIRED field (especially country — hard to scrape reliably) wasn't
       // captured, expand to the full fields so the user can complete it. Collapsing to
       // the "Here's what we found" card hides the empty required input, so its
@@ -352,7 +360,11 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
       {/* Target regions — promoted above the fold */}
       <RcField
         label={copy.regionLabel} required
-        hint={regionSuggested ? 'Pre-filled to the most common entry point — change if needed.' : copy.regionHint}
+        hint={showSuggestionHint
+          ? (nationalPrefill && persona === 'international'
+            ? 'Pre-filled to National — pick specific states if you want to narrow it.'
+            : 'Pre-filled to the most common entry point — change if needed.')
+          : copy.regionHint}
         error={errors.target_regions?.message}
       >
         <div role="group" aria-label={copy.regionLabel} className="flex flex-wrap gap-2">

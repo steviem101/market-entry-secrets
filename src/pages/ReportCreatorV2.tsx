@@ -25,6 +25,8 @@ import { Step3Details } from '@/components/report-creator/v2/Step3Details';
 import { ReviewScreen } from '@/components/report-creator/v2/ReviewScreen';
 import { trackIntakeEvent, trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 import { corporateWebsiteFromEmail } from '@/lib/corporateDomain';
+import { defaultTargetRegions, isSuggestedRegionDefault } from '@/lib/intakeRegionDefaults';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import { readHeroIntentMarker, clearHeroIntentMarker } from '@/lib/heroIntentPrefill';
 import { X } from 'lucide-react';
 
@@ -50,9 +52,11 @@ function buildDefaults(persona: ReportPersona): IntakeValues {
     company_stage: undefined as unknown as IntakeValues['company_stage'],
     employee_count: undefined,
     revenue_stage: undefined,
-    // Pre-fill the most common AU entry point so the majority confirm rather
-    // than cold-pick (README §Step 1). Cleared on any manual region change.
-    target_regions: ['Sydney/NSW'],
+    // Flag off: the historical Sydney/NSW suggestion (README §Step 1).
+    // Flag on (MES-227): international pre-fills National — the matcher treats
+    // it as no location constraint — and startup starts empty so founders
+    // state where they actually operate. Cleared on any manual region change.
+    target_regions: defaultTargetRegions(persona, isFeatureEnabled('intake_prefill_v3')),
     website_scrape_accepted: false,
     goal_ids: DEFAULT_GOALS[persona],
     timeline: undefined,
@@ -217,6 +221,9 @@ const ReportCreatorV2 = () => {
     form.setValue('persona', p);
     form.setValue('goal_ids', DEFAULT_GOALS[p]);
     lastAutoGoals.current = DEFAULT_GOALS[p];
+    // The user hasn't seen the form yet (this screen is skipped on draft
+    // restore), so re-seed the persona-specific region default (MES-227).
+    form.setValue('target_regions', defaultTargetRegions(p, isFeatureEnabled('intake_prefill_v3')));
     trackIntakeEvent('persona_selected', { persona: p, user_id: user?.id });
     setScreen('company');
   }
@@ -255,12 +262,20 @@ const ReportCreatorV2 = () => {
   }
 
   function applyPersonaSwitch(p: ReportPersona) {
+    const prev = persona;
     setPersona(p);
     form.setValue('persona', p);
     // Goals differ per persona — reset to that persona's defaults.
     form.setValue('goal_ids', DEFAULT_GOALS[p]);
     lastAutoGoals.current = DEFAULT_GOALS[p];
     form.setValue('revenue_stage', undefined);
+    // Regions the user chose survive the switch ("Your other answers stay"),
+    // but an UNTOUCHED suggestion from the old journey must not masquerade as
+    // a choice in the new one — swap it for the new persona's default (MES-227).
+    const prefillV3 = isFeatureEnabled('intake_prefill_v3');
+    if (isSuggestedRegionDefault(form.getValues('target_regions'), prev, prefillV3)) {
+      form.setValue('target_regions', defaultTargetRegions(p, prefillV3));
+    }
   }
 
   function switchPersona(p: ReportPersona) {
