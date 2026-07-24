@@ -33,8 +33,10 @@
 //     index.ts) + the Perplexity grants research every report already runs.
 //   • lead_lists_* — lead_databases matching is semantic + ICP-gated (leadMatchesIcp);
 //     these tags only feed the scorer breadth.
-//   • founders — no peer-founder data source; the goal's real mechanisms are the
-//     mentor/events section emphasis + the "Scaled Founder" specialty term below.
+//   • founders — no separate peer-founder table; the goal's real mechanisms are the
+//     mentor/events section emphasis, the "Scaled Founder" specialty term below, and
+//     (MES-236) a labelled "Founder peers" sub-slate of founder-archetype mentors
+//     surfaced inside mentor_recommendations (see founderPeers.ts).
 export const GOAL_SERVICE_TAGS_BY_ID: Record<string, string[]> = {
   // International
   find_providers: ["Legal", "Tax", "HR", "Accounting", "Finance", "Immigration"],
@@ -78,8 +80,32 @@ export const GOAL_SERVICE_TAGS_BY_LABEL: Record<string, string[]> = {
   "Find co-working spaces and innovation hubs": ["Co-working", "Innovation Hub"],
   "Identify grant and government funding opportunities": ["Grants", "Government", "Funding"],
   "Access lead lists and customer acquisition resources": ["Lead Generation", "Marketing", "Sales"],
+  // MES-236: the legacy label was reworded ("…who've scaled"); keep BOTH keys so
+  // historical rows and freshly-submitted v1 intakes both resolve to the same tags.
   "Connect with other founders and peer networks": ["Networking", "Community", "Founder"],
+  "Connect with founders who've scaled": ["Networking", "Community", "Founder"],
 };
+
+// MES-236: labels the v1 flow may have written for the "founders" goal (original +
+// reworded). Used by goalSelectsFounders so the Founder-peers sub-slate fires for v1
+// intakes too, not just v2 goal_ids.
+export const FOUNDERS_LEGACY_LABELS = [
+  "Connect with other founders and peer networks",
+  "Connect with founders who've scaled",
+];
+
+/**
+ * Did the user select the "connect with founders" goal? True for v2 rows (goal_ids
+ * carries "founders") AND legacy/v1 rows (services_needed carries a founders label,
+ * original or reworded). Pure — shared by the edge function so the Founder-peers
+ * sub-slate (founderPeers.ts) fires consistently across both intake flows.
+ */
+export function goalSelectsFounders(source: { goal_ids?: string[] | null; services_needed?: string[] | null }): boolean {
+  return (
+    (source.goal_ids ?? []).includes("founders") ||
+    (source.services_needed ?? []).some((l) => FOUNDERS_LEGACY_LABELS.includes(l))
+  );
+}
 
 export interface GoalTagSource {
   /** v2 column: stable goal ids. Preferred. */
