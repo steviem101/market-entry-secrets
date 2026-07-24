@@ -1645,7 +1645,10 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
     // explicitly targets stays eligible. Score + the target-city +2 soft bonus still
     // rank the target city first; date filter + title|date|venue dedupe are unchanged.
     const relaxRegion = eventsBuyerGeo && nationWideTarget;
-    const geoTokens = relaxRegion ? [] : locationPatterns;
+    // Explicit string[] — locationPatterns is inferred `any` (regions comes off the
+    // `any`-typed intake), which would make the `.some((l) => …)` callback below an
+    // implicit-any parameter and fail `deno check` (noImplicitAny).
+    const geoTokens: string[] = relaxRegion ? [] : locationPatterns;
     // How many gated candidates the city filter would remove — measured before the
     // cap/dedupe so the telemetry below reflects the geo gate alone, not the +5 cap.
     const geoPass = geoTokens.length === 0
