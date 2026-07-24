@@ -34,22 +34,18 @@ const serialise = (v: string | string[] | undefined): string =>
   Array.isArray(v) ? JSON.stringify(v) : (v ?? '');
 
 /**
- * Hostname-ish domain from a loosely-typed URL field (protocol optional,
- * `www.` stripped, path/query dropped, lowercased). Null when nothing
- * domain-like is present.
+ * Hostname-ish domain from a loosely-typed URL field: protocol, userinfo
+ * (`user@`), port (`:8080`), `www.`, and path/query/hash are all stripped and
+ * the result lowercased. Null when nothing domain-like is present.
  */
 export function extractDomain(raw: string | undefined | null): string | null {
-  const t = (raw ?? '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '');
-  const host = t.split(/[/?#]/, 1)[0];
+  const t = (raw ?? '').trim().toLowerCase().replace(/^https?:\/\//, '');
+  let host = t.split(/[/?#]/, 1)[0]; // drop path/query/hash
+  host = host.split('@').pop() ?? host; // drop userinfo (user:pass@)
+  host = host.split(':', 1)[0]; // drop :port
+  host = host.replace(/^www\./, ''); // drop www once userinfo/port are gone
   if (!host || !host.includes('.') || host.endsWith('.')) return null;
   return host;
-}
-
-/** True when both URLs carry a parseable domain and they differ. */
-export function isMaterialDomainChange(prevUrl: string | null | undefined, nextUrl: string | null | undefined): boolean {
-  const prev = extractDomain(prevUrl);
-  const next = extractDomain(nextUrl);
-  return !!prev && !!next && prev !== next;
 }
 
 export interface MergeOutcome {
@@ -76,7 +72,12 @@ export function mergeScrapeResult(form: ScrapeFormSlice, result: ScrapePrefill):
   const mergedEmployees = result.employee_count ?? form.employee_count;
 
   const provenance: ScrapeProvenance = {};
-  if (!form.company_name && result.company_name) provenance.company_name = serialise(mergedName);
+  // Record company_name whenever the resulting name CAME FROM this scrape — i.e.
+  // the form was empty (first scrape) OR already held the scrape's own value (a
+  // re-scrape of the same site). A user-typed *different* name wins and is NOT
+  // claimed. Without this, a second fetch of the same domain dropped company_name
+  // from provenance and a later company switch failed to clear it (MES-226 R2).
+  if (result.company_name && mergedName === result.company_name) provenance.company_name = serialise(mergedName);
   if (result.country_of_origin) provenance.country_of_origin = serialise(mergedCountry);
   if (result.industry_sector && result.industry_sector.length > 0) provenance.industry_sector = serialise(mergedIndustry);
   if (result.company_stage) provenance.company_stage = serialise(mergedStage);
@@ -133,6 +134,23 @@ export interface ScrapeMeta {
 }
 
 export const SCRAPE_META_KEY = 'mes_intake_v2_scrape_meta';
+
+/**
+ * Next scrape-meta after a fetch. A re-scrape of the SAME domain MERGES its
+ * provenance onto the prior one (union, new wins) so a field the earlier scrape
+ * owned but this one didn't re-record (e.g. company_name, already filled) stays
+ * scrape-owned. A different domain (or no prior meta) starts fresh (MES-226 R2/E5).
+ */
+export function mergeProvenanceForDomain(
+  prev: ScrapeMeta | null,
+  domain: string,
+  provenance: ScrapeProvenance,
+): ScrapeMeta {
+  return {
+    domain,
+    provenance: prev && prev.domain === domain ? { ...prev.provenance, ...provenance } : provenance,
+  };
+}
 
 export function parseScrapeMeta(raw: string | null): ScrapeMeta | null {
   if (!raw) return null;

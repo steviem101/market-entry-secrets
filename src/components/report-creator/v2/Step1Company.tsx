@@ -10,7 +10,7 @@ import {
 } from '../intakeSchema.v2';
 import { INDUSTRY_GROUP_OPTIONS } from '@/constants/linkedinTaxonomy';
 import {
-  SCRAPE_META_KEY, clearScrapedFields, extractDomain, mergeScrapeResult, parseScrapeMeta,
+  SCRAPE_META_KEY, clearScrapedFields, extractDomain, mergeProvenanceForDomain, mergeScrapeResult, parseScrapeMeta,
   type ScrapeFormSlice, type ScrapeMeta,
 } from '@/lib/intakeScrapeMerge';
 import type { IntakeValues, StepProps } from './types';
@@ -89,7 +89,10 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
         target_regions: hadRegion ? regions : ['Sydney/NSW'],
       } as Partial<IntakeValues>);
       setAiFields(nextAiFields);
-      if (nextDomain) setScrapeMeta({ domain: nextDomain, provenance });
+      // Merge onto any same-domain prior provenance so a re-fetch that no longer
+      // re-records a field (e.g. company_name, already filled) keeps it
+      // scrape-owned (MES-226 R2). A different domain was reset to null above.
+      if (nextDomain) setScrapeMeta((prev) => mergeProvenanceForDomain(prev, nextDomain, provenance));
       setRegionSuggested(!hadRegion);
       // If a REQUIRED field (especially country — hard to scrape reliably) wasn't
       // captured, expand to the full fields so the user can complete it. Collapsing to

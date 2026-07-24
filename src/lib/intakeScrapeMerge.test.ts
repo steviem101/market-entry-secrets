@@ -1,11 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  extractDomain, isMaterialDomainChange, mergeScrapeResult, clearScrapedFields, parseScrapeMeta,
-  type ScrapeFormSlice,
+  extractDomain, mergeScrapeResult, clearScrapedFields, parseScrapeMeta, mergeProvenanceForDomain,
+  type ScrapeFormSlice, type ScrapeMeta,
 } from "./intakeScrapeMerge.ts";
 
-// --- extractDomain / isMaterialDomainChange -------------------------------
+// --- extractDomain --------------------------------------------------------
 
 test("extractDomain normalises protocol, www, path and case", () => {
   assert.equal(extractDomain("https://www.Acme.com/about?x=1"), "acme.com");
@@ -13,18 +13,17 @@ test("extractDomain normalises protocol, www, path and case", () => {
   assert.equal(extractDomain("  http://sub.acme.co.uk/ "), "sub.acme.co.uk");
 });
 
+test("extractDomain strips userinfo and port (MES-226 D5)", () => {
+  assert.equal(extractDomain("jane@acme.com"), "acme.com");
+  assert.equal(extractDomain("acme.com:8080"), "acme.com");
+  assert.equal(extractDomain("https://user:pass@www.acme.com:443/x"), "acme.com");
+});
+
 test("extractDomain returns null for non-domains", () => {
   assert.equal(extractDomain(""), null);
   assert.equal(extractDomain(undefined), null);
   assert.equal(extractDomain("acme"), null);
   assert.equal(extractDomain("acme."), null);
-});
-
-test("isMaterialDomainChange only fires when both sides parse and differ", () => {
-  assert.equal(isMaterialDomainChange("acme.com", "https://www.acme.com/team"), false);
-  assert.equal(isMaterialDomainChange("acme.com", "other.io"), true);
-  assert.equal(isMaterialDomainChange("acme.com", "acm"), false);
-  assert.equal(isMaterialDomainChange("", "other.io"), false);
 });
 
 // --- mergeScrapeResult ----------------------------------------------------
@@ -66,6 +65,32 @@ test("merge keeps existing values when the scrape misses a field (no provenance 
 test("merge flags missingRequired when a required field is still empty", () => {
   const out = mergeScrapeResult(emptyForm, { company_name: "Acme", industry_sector: ["Fintech"], company_stage: "Startup/Seed" });
   assert.equal(out.missingRequired, true); // country still empty (the observed nory.ai dead-Next case)
+});
+
+test("re-scrape of the same site RE-claims company_name provenance (MES-226 R2)", () => {
+  // First scrape fills the empty name; a second fetch of the same site sees the
+  // name already there but must still record it as scrape-owned.
+  const first = mergeScrapeResult(emptyForm, { company_name: "Acme" });
+  assert.equal(first.provenance.company_name, "Acme");
+  const second = mergeScrapeResult({ ...emptyForm, company_name: "Acme" }, { company_name: "Acme" });
+  assert.equal(second.provenance.company_name, "Acme"); // NOT dropped
+});
+
+// --- mergeProvenanceForDomain ---------------------------------------------
+
+test("mergeProvenanceForDomain unions provenance on a same-domain re-scrape", () => {
+  const prev: ScrapeMeta = { domain: "acme.com", provenance: { company_name: "Acme", country_of_origin: "Ireland" } };
+  // A re-scrape that only re-records country still keeps the earlier name.
+  const next = mergeProvenanceForDomain(prev, "acme.com", { country_of_origin: "Ireland" });
+  assert.deepEqual(next.provenance, { company_name: "Acme", country_of_origin: "Ireland" });
+});
+
+test("mergeProvenanceForDomain starts fresh on a different domain or no prior meta", () => {
+  const prev: ScrapeMeta = { domain: "acme.com", provenance: { company_name: "Acme" } };
+  assert.deepEqual(mergeProvenanceForDomain(prev, "other.io", { country_of_origin: "Germany" }),
+    { domain: "other.io", provenance: { country_of_origin: "Germany" } });
+  assert.deepEqual(mergeProvenanceForDomain(null, "acme.com", { company_name: "Acme" }),
+    { domain: "acme.com", provenance: { company_name: "Acme" } });
 });
 
 // --- clearScrapedFields ---------------------------------------------------

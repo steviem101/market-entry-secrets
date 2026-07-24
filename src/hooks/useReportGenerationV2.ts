@@ -4,7 +4,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { reportApi } from '@/lib/api/reportApi';
 import type { IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
-import { SCRAPE_META_KEY } from '@/lib/intakeScrapeMerge';
 import { trackIntakeEvent, trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 
 /**
@@ -35,11 +34,14 @@ export const useReportGenerationV2 = () => {
       return null;
     }
   };
+  // Clears ONLY the form draft. The scrape-provenance key (SCRAPE_META_KEY) is
+  // owned by Step1Company and deliberately NOT cleared here: coupling it to the
+  // draft-clear left a mounted Step 1 with live form values but null provenance
+  // after a failed run, blinding the company-switch clear (MES-226 E2). A stale
+  // provenance only ever clears *matching* values (a no-op on a fresh form) and
+  // self-corrects on the next domain change, so leaving it is safe.
   const clearDraft = () => {
-    try {
-      localStorage.removeItem(LOCALSTORAGE_KEY_V2);
-      localStorage.removeItem(SCRAPE_META_KEY);
-    } catch { /* ignore */ }
+    try { localStorage.removeItem(LOCALSTORAGE_KEY_V2); } catch { /* ignore */ }
   };
 
   // `heroOriginated` is passed by the caller from its in-memory hero-intent state
@@ -62,14 +64,6 @@ export const useReportGenerationV2 = () => {
     try {
       const intakeForm = await reportApi.submitIntakeFormV2(data, user.id);
 
-      // MES-226: the draft's job ends the moment the intake row exists — the
-      // submitted data lives server-side and failed runs are retried from
-      // /my-reports (research_bundle resume), so keeping the local draft only
-      // re-seeds the NEXT intake with a stale company. Clearing here (not just
-      // on `completed`) covers failed and timed-out runs too. The open page is
-      // unaffected: form state lives in RHF, and any further edit re-saves.
-      clearDraft();
-
       // MES-187 A1: derive the member profile from the intake we just collected
       // so the onboarding modal never asks again for what we already have.
       // Best-effort + silent — never blocks or fails generation (if it errors,
@@ -85,6 +79,15 @@ export const useReportGenerationV2 = () => {
 
       setGenerationStatus('Starting report generation…');
       const result = await reportApi.generateReport(intakeForm.id);
+
+      // Clear the draft only once a report row exists (generateReport returned a
+      // report_id). Earlier failures — a 429 rate-limit or network error, which
+      // reject BEFORE generate-report inserts the row — must keep the draft so
+      // the user can resume; there's no /my-reports row to retry from in that
+      // case (MES-226 R1/B1). A failed/timed-out run AFTER this point still has
+      // its report row, and the draft is already gone so it can't re-seed the
+      // next intake (the original weakness-10 this ticket also fixes).
+      clearDraft();
 
       setGenerationStatus('Researching your market — this takes 2–4 minutes…');
       const pollResult = await reportApi.pollReportStatus(result.report_id, (status) => {
