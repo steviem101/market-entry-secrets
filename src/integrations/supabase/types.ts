@@ -260,6 +260,63 @@ export type Database = {
           },
         ]
       }
+      agent_content_proposals: {
+        Row: {
+          action_type: string
+          applied_at: string | null
+          apply_error: string | null
+          confidence: number | null
+          created_at: string
+          dedup_key: string | null
+          id: string
+          loop_name: string
+          payload: Json
+          reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          run_id: string | null
+          status: string
+          target_id: string | null
+          target_table: string | null
+        }
+        Insert: {
+          action_type: string
+          applied_at?: string | null
+          apply_error?: string | null
+          confidence?: number | null
+          created_at?: string
+          dedup_key?: string | null
+          id?: string
+          loop_name?: string
+          payload?: Json
+          reason: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          run_id?: string | null
+          status?: string
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Update: {
+          action_type?: string
+          applied_at?: string | null
+          apply_error?: string | null
+          confidence?: number | null
+          created_at?: string
+          dedup_key?: string | null
+          id?: string
+          loop_name?: string
+          payload?: Json
+          reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          run_id?: string | null
+          status?: string
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Relationships: []
+      }
       ai_chat_conversations: {
         Row: {
           created_at: string
@@ -1098,6 +1155,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_link_checks: {
+        Row: {
+          consecutive_failures: number
+          created_at: string
+          directory_table: string
+          id: string
+          last_checked_at: string | null
+          last_ok: boolean | null
+          last_status: number | null
+          record_id: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          consecutive_failures?: number
+          created_at?: string
+          directory_table: string
+          id?: string
+          last_checked_at?: string | null
+          last_ok?: boolean | null
+          last_status?: number | null
+          record_id: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          consecutive_failures?: number
+          created_at?: string
+          directory_table?: string
+          id?: string
+          last_checked_at?: string | null
+          last_ok?: boolean | null
+          last_status?: number | null
+          record_id?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
       }
       content_sections: {
         Row: {
@@ -3214,6 +3310,7 @@ export type Database = {
           experience_tiles: Json | null
           founded: string
           id: string
+          is_featured: boolean
           last_verified: string | null
           location: string
           location_id: string | null
@@ -3241,6 +3338,7 @@ export type Database = {
           experience_tiles?: Json | null
           founded: string
           id?: string
+          is_featured?: boolean
           last_verified?: string | null
           location: string
           location_id?: string | null
@@ -3268,6 +3366,7 @@ export type Database = {
           experience_tiles?: Json | null
           founded?: string
           id?: string
+          is_featured?: boolean
           last_verified?: string | null
           location?: string
           location_id?: string | null
@@ -3520,6 +3619,45 @@ export type Database = {
           last_run_at?: string | null
           last_synced_at?: string
           source?: string
+        }
+        Relationships: []
+      }
+      knowledge_distill_log: {
+        Row: {
+          chunk_kb_id: string
+          created_at: string
+          distilled: boolean
+          distiller_version: string
+          id: string
+          insight_count: number
+          insight_refs: string[]
+          metadata: Json
+          run_id: string | null
+          skip_reason: string | null
+        }
+        Insert: {
+          chunk_kb_id: string
+          created_at?: string
+          distilled?: boolean
+          distiller_version: string
+          id?: string
+          insight_count?: number
+          insight_refs?: string[]
+          metadata?: Json
+          run_id?: string | null
+          skip_reason?: string | null
+        }
+        Update: {
+          chunk_kb_id?: string
+          created_at?: string
+          distilled?: boolean
+          distiller_version?: string
+          id?: string
+          insight_count?: number
+          insight_refs?: string[]
+          metadata?: Json
+          run_id?: string | null
+          skip_reason?: string | null
         }
         Relationships: []
       }
@@ -4288,6 +4426,75 @@ export type Database = {
           },
         ]
       }
+      mentor_anon_copy_drafts: {
+        Row: {
+          alias: string | null
+          best_for: string | null
+          bio: string | null
+          claims: Json
+          company_label: string | null
+          created_at: string
+          generated_at: string
+          headline: string | null
+          id: string
+          leak_flags: Json
+          mentor_id: string
+          model: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          alias?: string | null
+          best_for?: string | null
+          bio?: string | null
+          claims?: Json
+          company_label?: string | null
+          created_at?: string
+          generated_at?: string
+          headline?: string | null
+          id?: string
+          leak_flags?: Json
+          mentor_id: string
+          model?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          alias?: string | null
+          best_for?: string | null
+          bio?: string | null
+          claims?: Json
+          company_label?: string | null
+          created_at?: string
+          generated_at?: string
+          headline?: string | null
+          id?: string
+          leak_flags?: Json
+          mentor_id?: string
+          model?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_anon_copy_drafts_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "community_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_anon_copy_drafts_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "community_members_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentor_contact_requests: {
         Row: {
           admin_notes: string | null
@@ -4704,6 +4911,45 @@ export type Database = {
           },
           {
             foreignKeyName: "report_claims_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports_clean"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_interactions: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          report_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          report_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          report_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_interactions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "user_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_interactions_report_id_fkey"
             columns: ["report_id"]
             isOneToOne: false
             referencedRelation: "user_reports_clean"
@@ -5291,6 +5537,7 @@ export type Database = {
           experience_tiles: Json | null
           founded: string
           id: string
+          is_featured: boolean
           last_verified: string | null
           location: string
           location_id: string | null
@@ -5315,6 +5562,7 @@ export type Database = {
           experience_tiles?: Json | null
           founded: string
           id?: string
+          is_featured?: boolean
           last_verified?: string | null
           location: string
           location_id?: string | null
@@ -5339,6 +5587,7 @@ export type Database = {
           experience_tiles?: Json | null
           founded?: string
           id?: string
+          is_featured?: boolean
           last_verified?: string | null
           location?: string
           location_id?: string | null
@@ -6050,6 +6299,26 @@ export type Database = {
           },
         ]
       }
+      agent_proposals: {
+        Row: {
+          action_type: string | null
+          applied_at: string | null
+          confidence: number | null
+          created_at: string | null
+          id: string | null
+          loop_name: string | null
+          payload: Json | null
+          proposal_key: string | null
+          reason: string | null
+          reviewed_at: string | null
+          run_id: string | null
+          source_table: string | null
+          status: string | null
+          target_id: string | null
+          target_table: string | null
+        }
+        Relationships: []
+      }
       community_members_public: {
         Row: {
           archetype: string | null
@@ -6685,9 +6954,48 @@ export type Database = {
         Returns: undefined
       }
       generate_slug: { Args: { input_text: string }; Returns: string }
+      get_admin_report_quality: {
+        Args: { p_report_ids: string[] }
+        Returns: {
+          build_health: number
+          degraded: boolean
+          report_id: string
+          report_score: number
+          score_presentation: number
+          score_substance: number
+        }[]
+      }
+      get_admin_report_quality_detail: {
+        Args: { p_report_id: string }
+        Returns: {
+          build_health: number
+          created_at: string
+          degraded: boolean
+          generation_time_ms: number
+          groundedness: number
+          insights: Json
+          match_counts: Json
+          presentation: Json
+          rag_hit_rate: number
+          report_score: number
+          report_status: string
+          score_completeness: number
+          score_coverage: number
+          score_plumbing: number
+          score_presentation: number
+          score_substance: number
+          sources: Json
+          substance: Json
+          tables_hit: number
+          total_matches: number
+          utilization: Json
+          utilization_rate: number
+        }[]
+      }
       get_country_directory: { Args: never; Returns: Json }
       get_country_page: { Args: { page_slug: string }; Returns: Json }
       get_ecosystem_stats: { Args: never; Returns: Json }
+      get_report_admin: { Args: { p_report_id: string }; Returns: Json }
       get_shared_report: {
         Args: { p_share_token: string }
         Returns: {
@@ -6721,12 +7029,35 @@ export type Database = {
         Returns: undefined
       }
       is_test_user: { Args: { uid: string }; Returns: boolean }
+      kb_apply_insight_clusters: { Args: { p_rows: Json }; Returns: number }
       kb_check_secret: { Args: { p_candidate: string }; Returns: boolean }
       kb_external_source_id: {
         Args: { p_source_project: string; p_source_ref: string }
         Returns: string
       }
       kb_get_openai_key: { Args: never; Returns: string }
+      kb_insight_cluster_fields: {
+        Args: { p_distiller_version: string }
+        Returns: {
+          claim_len: number
+          cluster_id: string
+          id: string
+          is_canonical: boolean
+          publication_date: string
+        }[]
+      }
+      kb_insight_neighbors: {
+        Args: {
+          p_distiller_version: string
+          p_k?: number
+          p_threshold?: number
+        }
+        Returns: {
+          id_a: string
+          id_b: string
+          sim: number
+        }[]
+      }
       kb_set_embedding: {
         Args: {
           p_embedded_hash: string
@@ -6746,6 +7077,16 @@ export type Database = {
       }
       kb_strip_pii: { Args: { p: string }; Returns: string }
       kb_sync_all: { Args: { p_entity: string }; Returns: number }
+      kb_undistilled_chunks: {
+        Args: { p_distiller_version: string; p_limit?: number }
+        Returns: {
+          chunk_index: number
+          content: string
+          id: string
+          metadata: Json
+          source_id: string
+        }[]
+      }
       log_activity: {
         Args: {
           p_actor_email: string
@@ -6760,6 +7101,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_knowledge_distill: { Args: { p_rows: Json }; Returns: number }
       map_sector_value: { Args: { raw: string }; Returns: string[] }
       map_sector_values: { Args: { raws: string[] }; Returns: string[] }
       match_archive: {
@@ -6850,6 +7192,24 @@ export type Database = {
           title: string
         }[]
       }
+      match_report_insights: {
+        Args: {
+          p_distiller_version?: string
+          p_intents: string[]
+          p_limit?: number
+          p_origin: string
+          p_sectors: string[]
+          p_target?: string
+        }
+        Returns: {
+          answers_intents: Json
+          claim: string
+          is_proprietary: boolean
+          sectors: Json
+          topic_lane: string
+        }[]
+      }
+      prune_chunk_insights: { Args: { p_rows: Json }; Returns: number }
       reap_stuck_reports: { Args: never; Returns: number }
       recent_ii_content: {
         Args: {
@@ -6919,6 +7279,8 @@ export type Database = {
       upsert_kb_ecosystem: { Args: { p_source_id: string }; Returns: undefined }
       upsert_kb_event: { Args: { p_source_id: string }; Returns: undefined }
       upsert_kb_investor: { Args: { p_source_id: string }; Returns: undefined }
+      upsert_kb_knowledge_chunks: { Args: { p_rows: Json }; Returns: number }
+      upsert_kb_knowledge_insights: { Args: { p_rows: Json }; Returns: number }
       upsert_kb_lead_database: {
         Args: { p_source_id: string }
         Returns: undefined
