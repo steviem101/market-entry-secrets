@@ -144,6 +144,12 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
 
   const baseChips = showMoreInd ? [...TOP_INDUSTRIES, ...MORE_INDUSTRIES] : TOP_INDUSTRIES;
   const offList = selected.filter((s) => !baseChips.includes(s));
+  // MES-230 (finding 2): flag selected industries that aren't a recognised canonical
+  // group — scraped free text ("Biometrics", "Identity Verification") lands here and
+  // otherwise resolves to a weaker sector signal. Soft nudge, never a blocker.
+  const nonCanonicalInd = selected.filter(
+    (s) => !INDUSTRY_GROUP_OPTIONS.some((o) => o.toLowerCase() === s.trim().toLowerCase()),
+  );
   const q = indQuery.trim().toLowerCase();
   const results = q
     ? INDUSTRY_GROUP_OPTIONS.filter((i) => i.toLowerCase().includes(q) && !selected.includes(i)).slice(0, 8)
@@ -361,6 +367,12 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
                 </div>
               )}
             </div>
+            {nonCanonicalInd.length > 0 && (
+              <p className="mt-2 flex items-start gap-1.5 text-[12px] text-rc-muted">
+                <span className="mt-0.5 shrink-0 text-rc-primary"><RcIcon name="lightbulb" size={13} /></span>
+                <span>We'll match “{nonCanonicalInd.join('”, “')}” as free text. Pick the closest standard category above for the sharpest matches.</span>
+              </p>
+            )}
           </RcField>
         </>
       )}

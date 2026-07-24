@@ -9,7 +9,7 @@ import { selectKeyPages } from "./keyPageSelect.ts";
 import { buildCompetitorQueries, dedupeCompetitorResults, domainOf, dropNonCompetitors } from "./competitorQueries.ts";
 import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits, goalSelectsGrants } from "./goalServiceTags.ts";
 import { buildServiceTermIndex, expandServiceTags, type ServiceTermRow, type ServiceTermIndex } from "./serviceTerms.ts";
-import { industryGroupsToSectorSlugs } from "./sectorTaxonomy.ts";
+import { industryGroupsToSectorSlugs, unresolvedIndustries } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
 import { goalIdsToIntents, toCanonicalSectors, buildInsightNote, type InsightCard } from "./insightRetrieval.ts";
 import { SEMANTIC_CFG, buildMatchQueryText, groupRankedBySource } from "./semanticMatch.ts";
@@ -2676,6 +2676,14 @@ async function generateReportInBackground(
     const persona = (rawInput as any).persona === "startup" ? "startup" : "international";
     console.log(`Report persona: ${persona}`);
 
+    // MES-230 (finding 2): surface industry labels that resolve to NO sector slug
+    // (silently zeroed signal) in real time, in addition to persisting them in
+    // report_json.metadata.unresolved_industries. Never blocks — observability only.
+    const unresolvedIndustryLabels = unresolvedIndustries(intake.industry_sector);
+    if (unresolvedIndustryLabels.length > 0) {
+      console.warn(`[sector-resolution] ${unresolvedIndustryLabels.length} unresolved industry label(s): ${unresolvedIndustryLabels.join(" | ")}`);
+    }
+
     // 2. Run ALL enrichment + research + matching in parallel
     const fallbackSummary = `${intake.company_name} is a ${intake.company_stage} ${(intake.industry_sector || []).join(", ")} company from ${intake.country_of_origin}${intake.employee_count ? ` with ${intake.employee_count} employees` : ""}. Their target end buyers are in: ${(intake.end_buyer_industries || []).join(", ") || "not specified"}.`;
 
@@ -3995,6 +4003,11 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
       metadata: {
         tables_searched: Object.keys(matches),
         total_matches: Object.values(matches).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
+        // MES-230 (finding 2): the entered/scraped industry labels that resolved to
+        // NO sector slug — their sector signal was silently dropped by the matcher.
+        // Additive observability (no telemetry existed for sector resolution); the
+        // values are the user's own labels (not PII), and generation never blocks on them.
+        unresolved_industries: unresolvedIndustries(intake.industry_sector),
         generation_time_ms: totalMs,
         // Per-phase breakdown of the generation time (ms) — which phase dominates.
         phase_timings: {

@@ -5,7 +5,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { industryGroupsToSectorSlugs, sectorSlug, overlapCount } from "./sectorTaxonomy.ts";
+import { industryGroupsToSectorSlugs, sectorSlug, overlapCount, unresolvedIndustries } from "./sectorTaxonomy.ts";
 
 test("sector slugs match the migration's canonical form", () => {
   assert.equal(sectorSlug("Financial Services"), "financial-services");
@@ -224,4 +224,17 @@ test("overlapCount counts shared elements", () => {
   assert.equal(overlapCount(["a"], ["x"]), 0);
   assert.equal(overlapCount([], ["a"]), 0);
   assert.equal(overlapCount(null, ["a"]), 0);
+});
+
+test("unresolvedIndustries: returns only labels that map to no sector slug (MES-230 finding 2)", () => {
+  // Alias/direct hits are NOT unresolved (biometrics/cybersecurity/fintech resolve).
+  assert.deepEqual(unresolvedIndustries(["Biometrics", "Cybersecurity", "FinTech"]), []);
+  // Genuinely unmapped free text is surfaced, preserving the ORIGINAL label.
+  assert.deepEqual(unresolvedIndustries(["Pet Grooming", "Artisanal Cheese"]), ["Pet Grooming", "Artisanal Cheese"]);
+  // Mixed → only the unmapped label comes back.
+  assert.deepEqual(unresolvedIndustries(["Cybersecurity", "Pet Grooming"]), ["Pet Grooming"]);
+  // Empty / blank / nullish are ignored (never blocks, never noise).
+  assert.deepEqual(unresolvedIndustries([]), []);
+  assert.deepEqual(unresolvedIndustries(null), []);
+  assert.deepEqual(unresolvedIndustries([" ", ""]), []);
 });

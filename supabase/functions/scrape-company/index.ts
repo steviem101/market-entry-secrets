@@ -105,7 +105,10 @@ async function extractProfile(apiKey: string, url: string, content: string): Pro
           role: "system",
           content:
             "You extract a structured company profile from website text. Respond with ONLY a JSON object, no prose, no code fences. " +
-            `Keys: company_name (string), industry_sector (array of 1-3 short industry labels), country_of_origin (string, the HQ country), ` +
+            `Keys: company_name (string), industry_sector (array of 1-3 STANDARD, widely-recognised industry categories — ` +
+            `e.g. "Financial Services", "Software Development", "Cybersecurity", "Healthcare", "Retail" — NOT niche product ` +
+            `descriptions or coined marketing terms; pick the closest recognised category so it maps to a known sector), ` +
+            `country_of_origin (string, the HQ country), ` +
             `company_stage (one of ${JSON.stringify(STAGE_OPTIONS)}), employee_count (one of ${JSON.stringify(EMPLOYEE_OPTIONS)}). ` +
             "Omit any key you cannot determine. Use Australian English.",
         },

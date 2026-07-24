@@ -144,6 +144,24 @@ export function industryGroupsToSectorSlugs(groups: string[] | null | undefined)
   return [...out];
 }
 
+/**
+ * The industry labels that resolve to NO sector slug (MES-230 / finding 2 telemetry).
+ * A value is "unresolved" when it hits neither the canonical group table nor any
+ * keyword alias — its sector signal is then silently dropped by the matcher, with
+ * no visibility today. Same per-value resolution as industryGroupsToSectorSlugs;
+ * returns the ORIGINAL (trimmed) labels so ops can see exactly what didn't map.
+ * Pure + non-blocking — callers log/persist it, never gate generation on it.
+ */
+export function unresolvedIndustries(groups: string[] | null | undefined): string[] {
+  const out: string[] = [];
+  for (const raw of groups ?? []) {
+    const label = (raw ?? '').trim();
+    if (!label) continue;
+    if (industryGroupsToSectorSlugs([label]).length === 0) out.push(label);
+  }
+  return out;
+}
+
 /** Count of shared elements between two arrays (case-sensitive). */
 export function overlapCount(a: string[] | null | undefined, b: string[] | null | undefined): number {
   if (!a?.length || !b?.length) return 0;
