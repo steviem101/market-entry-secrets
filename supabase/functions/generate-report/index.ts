@@ -26,6 +26,7 @@ import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitor
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote, buildIcpGuidanceNote } from "./buyerBriefs.ts";
 import { buildFirmographicsNote } from "./firmographics.ts";
 import { buildFounderPeersNote } from "./founderPeers.ts";
+import { parseDeselectedSections, isSectionDeselected } from "./sectionSelection.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
 import { applyRelevanceSelection, SURFACE_SELECT_IMMIGRATION } from "./selectRelevant.ts";
@@ -3495,6 +3496,20 @@ async function generateReportInBackground(
     const foundersGoalSelected = goalSelectsFounders({ goal_ids: intake.goal_ids, services_needed: intake.services_needed });
     const founderPeersNote = buildFounderPeersNote(foundersGoalSelected, matches.community_members);
 
+    // MES-234: honour explicit section selection (env flag HONOUR_SECTION_SELECTION,
+    // default off → D2 exactly). When on, sections the user REMOVED on Review
+    // (raw_input.section_selection) are skipped below — but only accessible, non-core
+    // sections; core and above-tier sections are never dropped (isSectionDeselected),
+    // so no tier-gated/upsell surface is lost.
+    const honourSectionSelection = ["on", "1", "true"].includes(
+      (Deno.env.get("HONOUR_SECTION_SELECTION") || "").trim().toLowerCase(),
+    );
+    const deselectedSections = parseDeselectedSections(honourSectionSelection, rawInput.section_selection);
+    if (deselectedSections) console.log(`Section selection active: ${[...deselectedSections].join(", ")}`);
+    // Declared at the outer (function) scope so both the template-filter block below and
+    // the metadata block later can see it — the two live in different nested blocks.
+    const deselectedForReport: string[] = [];
+
     // Key-question "who can help" picks (Floats feedback): pick up to 2 entities
     // FROM THE ALREADY-MATCHED SLATE most able to help with the user's stated
     // priority, rendered as cards under the exec-summary answer. Grounded (picks
@@ -3612,8 +3627,27 @@ async function generateReportInBackground(
         phaseTimings.assembly_breakdown = { ...assemblyBreakdown };
       }
 
+      // MES-234: drop deselected always-free, non-core sections BEFORE generation — they
+      // never reach report_json, so every renderer omits them like an absent section (no
+      // empty-shell or regenerate-CTA render path). Core + gated sections are never
+      // dropped. Telemetry lands in metadata.deselected_sections below. Inert unless the
+      // HONOUR_SECTION_SELECTION flag is on (deselectedSections is null when off).
+      // (deselectedForReport is declared at the outer scope above.)
+      const templatesToGenerate = deselectedSections
+        ? (templates || []).filter((t) => {
+            const rti = tierHierarchy.indexOf(t.visibility_tier);
+            const isGated = rti !== 0; // 0 = base "free" tier; gated (>0) or unknown (-1) are kept
+            if (isSectionDeselected(t.section_name, deselectedSections, isGated)) {
+              deselectedForReport.push(t.section_name);
+              return false;
+            }
+            return true;
+          })
+        : (templates || []);
+      if (deselectedForReport.length) console.log(`Sections deselected (skipped): ${deselectedForReport.join(", ")}`);
+
       const results = await Promise.allSettled(
-        templates.map(async (tmpl: any) => {
+        templatesToGenerate.map(async (tmpl: any) => {
           const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
           if (requiredTierIndex === -1) {
             // Unknown/null visibility_tier — fail CLOSED (hidden) rather than
@@ -4045,6 +4079,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // Additive observability (no telemetry existed for sector resolution); the
         // values are the user's own labels (not PII), and generation never blocks on them.
         unresolved_industries: unresolvedIndustries(intake.industry_sector),
+        // MES-234: sections the user removed on Review (dropped before generation). Empty
+        // unless HONOUR_SECTION_SELECTION is on and the user deselected something.
+        deselected_sections: deselectedForReport,
         generation_time_ms: totalMs,
         // Per-phase breakdown of the generation time (ms) — which phase dominates.
         phase_timings: {
