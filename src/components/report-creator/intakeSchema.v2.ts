@@ -316,7 +316,11 @@ export const step1Schema = z.object({
 
 /** STEP 2 — Goals + customers + context. */
 export const step2Schema = z.object({
-  goal_ids: z.array(z.string()).min(1, 'Select at least one goal').max(8),
+  // No max: all goals are selectable (MES-228). The old .max(8) had no cost
+  // rationale — goal count changes neither section count nor research volume
+  // (D2: every section always generates) — and the UI never rendered its error,
+  // so 9+ selections just dead-ended the Continue button.
+  goal_ids: z.array(z.string()).min(1, 'Select at least one goal'),
   timeline: z.enum(TIMELINE_OPTIONS).optional(),
   budget_level: z.enum(BUDGET_OPTIONS).optional(),
   target_customers: targetCustomerSchema,

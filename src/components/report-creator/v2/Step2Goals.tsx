@@ -10,7 +10,7 @@ import { RcIcon } from './icons';
 import { RcGoalCard, RcGhostButton, RcPrimaryButton, RcSectionLabel } from './primitives';
 import { ReportPreview } from './ReportPreview';
 
-export function Step2Goals({ persona, form, set, onNext, onBack }: StepProps) {
+export function Step2Goals({ persona, form, set, errors, onNext, onBack }: StepProps) {
   const goals = GOALS.filter((g) => g.personas.includes(persona));
   const cats = GOAL_CATEGORIES.filter((c) => goals.some((g) => g.category === c.id));
   const selected = form.goal_ids ?? [];
@@ -48,6 +48,13 @@ export function Step2Goals({ persona, form, set, onNext, onBack }: StepProps) {
 
       {/* Sticky action bar */}
       <div className="sticky bottom-0 -mx-4 mt-2 bg-gradient-to-t from-white via-white to-transparent px-4 pb-1 pt-3 sm:-mx-7 sm:px-7">
+        {/* Any goals validation failure must be visible — a silent dead Continue
+            button was the old failure mode (MES-228). */}
+        {errors.goal_ids?.message && (
+          <p role="alert" className="mb-2 text-[12px] font-medium text-rose-500">
+            {String(errors.goal_ids.message)}
+          </p>
+        )}
         <div className="flex items-center justify-between gap-3">
           <RcGhostButton onClick={onBack}>Back</RcGhostButton>
           <div className="flex min-w-0 items-center gap-3">
