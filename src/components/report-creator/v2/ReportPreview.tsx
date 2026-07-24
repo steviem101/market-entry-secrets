@@ -1,13 +1,17 @@
 /**
  * Live report preview (P1.3; reworked for honesty in MES-228 / PD-4).
  *
- * Every report includes the full section set — goal picks shape emphasis and
- * matching, they never add or remove sections (the D2 decision, documented in
- * goalServiceTags.ts). The old preview derived pseudo-sections from goals with
- * "N more to unlock" framing, promising sections that don't exist under those
- * names. Now: the bar shows the selected focus areas; the rail lists the real
- * sections by their real names (tier unlocks live on the report itself and are
- * deliberately not re-promised here).
+ * Goal picks shape emphasis and matching — they never add or remove sections
+ * (the D2 decision, documented in goalServiceTags.ts). The old preview derived
+ * pseudo-sections from goals with "N more to unlock" framing, promising sections
+ * that don't exist under those names. Now the bar shows the selected focus areas
+ * and the rail lists the real sections by their real names.
+ *
+ * Deliberately makes NO per-user completeness claim ("every section included" /
+ * "nothing is removed"): tier gating (get_tier_gated_report) redacts three
+ * sections to locked teasers for free viewers, so an absolute promise here would
+ * over-sell. Tier depth/unlock messaging lives on the report itself (MES-193 /
+ * report_teasers) and is intentionally not restated in the intake preview.
  */
 import { GOALS, type IntakeFormDataV2 } from '../intakeSchema.v2';
 import { SECTION_LABELS, SECTION_ORDER } from '@/components/report/reportSectionConfig';
@@ -38,9 +42,9 @@ export function ReportPreview({
         <span className="mt-0.5 shrink-0 text-rc-primary"><RcIcon name="sparkles" size={16} /></span>
         <div className="min-w-0 flex-1">
           <div className="text-[13px] font-semibold text-rc-ink">
-            Every section included
+            Your report, built around your goals
             <span className="font-normal text-rc-muted">
-              {focus.length > 0 ? ` · your ${focus.length} ${focus.length === 1 ? 'pick sharpens' : 'picks sharpen'} the focus` : ' — pick goals to sharpen the focus'}
+              {focus.length > 0 ? ` · ${focus.length} focus ${focus.length === 1 ? 'area' : 'areas'}` : ' · pick goals to focus it'}
             </span>
           </div>
           <div className="mt-1.5 hidden flex-wrap gap-1.5 sm:flex">
@@ -72,7 +76,7 @@ export function ReportPreview({
         ))}
       </div>
       <p className="mt-3 text-[12px] text-rc-muted">
-        Your goal picks shape what each section emphasises and who we match you with — nothing is removed.
+        Your goal picks shape what each section emphasises and who we match you with.
       </p>
       <div className="mt-4 flex items-center gap-2 whitespace-nowrap border-t border-rc-line pt-4 text-[12px] text-rc-muted">
         <RcIcon name="clock" size={13} /> Generates in ~2–4 minutes

@@ -10,7 +10,7 @@ import { RcIcon } from './icons';
 import { RcGoalCard, RcGhostButton, RcPrimaryButton, RcSectionLabel } from './primitives';
 import { ReportPreview } from './ReportPreview';
 
-export function Step2Goals({ persona, form, set, errors, onNext, onBack }: StepProps) {
+export function Step2Goals({ persona, form, set, onNext, onBack }: StepProps) {
   const goals = GOALS.filter((g) => g.personas.includes(persona));
   const cats = GOAL_CATEGORIES.filter((c) => goals.some((g) => g.category === c.id));
   const selected = form.goal_ids ?? [];
@@ -46,15 +46,12 @@ export function Step2Goals({ persona, form, set, errors, onNext, onBack }: StepP
         })}
       </div>
 
-      {/* Sticky action bar */}
+      {/* Sticky action bar. The real fix for the old "silent dead Continue" was
+          removing goal_ids' .max(8) cap (9+ selections used to fail validation
+          with no rendered error) — see intakeSchema.v2. The only remaining rule,
+          .min(1), is already guarded by the disabled button + "Pick a goal to
+          continue" label, so no separate error surface is reachable here. */}
       <div className="sticky bottom-0 -mx-4 mt-2 bg-gradient-to-t from-white via-white to-transparent px-4 pb-1 pt-3 sm:-mx-7 sm:px-7">
-        {/* Any goals validation failure must be visible — a silent dead Continue
-            button was the old failure mode (MES-228). */}
-        {errors.goal_ids?.message && (
-          <p role="alert" className="mb-2 text-[12px] font-medium text-rose-500">
-            {String(errors.goal_ids.message)}
-          </p>
-        )}
         <div className="flex items-center justify-between gap-3">
           <RcGhostButton onClick={onBack}>Back</RcGhostButton>
           <div className="flex min-w-0 items-center gap-3">
