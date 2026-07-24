@@ -81,18 +81,44 @@ export interface GeoScope {
   targetRegions?: string[];
 }
 
+// MES-233: origin spellings that `geoOriginTerms` would otherwise emit unchanged,
+// disarming the includes()-based agency text corridor. Two classes:
+//   1. short codes the >= 4-char guard drops to [] — "UK"/"US"/"USA"/"UAE" produced
+//      NO corridor terms; map each to its SPECIFIC full-name term (>= 4 chars, safe
+//      for the text match). Deliberately NOT "america"/"britain" (over-match).
+//   2. verbose / native names that don't substring-match the agency's stored short
+//      form — "Republic of Ireland"/"Éire" would emit ["republic of ireland"], which
+//      is NOT a substring of "Enterprise Ireland" (location_country "ireland"), so
+//      the agency corridor stayed disarmed even though the mentor corridor (which
+//      uses countryNormalize) folded them. Fold both to ["ireland"] so BOTH corridors
+//      arm — mirroring the countryNormalize alias (review fix).
+const ORIGIN_TERM_ALIASES: Record<string, string[]> = {
+  uk: ["united kingdom"],
+  gb: ["united kingdom"],
+  usa: ["united states"],
+  us: ["united states"],
+  uae: ["united arab emirates"],
+  "republic of ireland": ["ireland"],
+  eire: ["ireland"],
+  "éire": ["ireland"],
+};
+
 /**
  * Origin-country terms for the corridor check (agencies). An origin trade body
  * (Enterprise Ireland for an Irish founder) is genuinely useful, so it must stay
  * in scope. Returns [] for a blank/Australian origin (already the target market).
- * Length >= 4 avoids "us"/"uk"/"uae" codes false-matching common words.
+ * Short codes ("UK"/"USA"/"UAE") expand via ORIGIN_TERM_ALIASES; otherwise a
+ * Length >= 4 guard avoids bare 2-3 char codes false-matching common words.
  * Underscores/dashes are normalised to spaces to match stored values like
  * "united_kingdom".
  */
 export function geoOriginTerms(countryOfOrigin?: string | null): string[] {
   const term = (countryOfOrigin || "").trim().toLowerCase().replace(/[_-]+/g, " ");
-  if (term.length < 4) return [];
+  if (!term) return [];
   if (term === "australia" || term === "australian") return [];
+  const alias = ORIGIN_TERM_ALIASES[term];
+  if (alias) return alias;
+  if (term.length < 4) return [];
   return [term];
 }
 

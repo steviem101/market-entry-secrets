@@ -2,14 +2,48 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch, stateAgencyRegionMismatch } from "./geoRelevance.ts";
 
-test("geoOriginTerms: intl origin kept, AU/blank/short dropped, underscores normalised", () => {
+test("geoOriginTerms: intl origin kept, AU/blank dropped, underscores normalised", () => {
   assert.deepEqual(geoOriginTerms("Ireland"), ["ireland"]);
   assert.deepEqual(geoOriginTerms("United States"), ["united states"]);
   assert.deepEqual(geoOriginTerms("united_kingdom"), ["united kingdom"]);
   assert.deepEqual(geoOriginTerms("Australia"), []);
   assert.deepEqual(geoOriginTerms(""), []);
   assert.deepEqual(geoOriginTerms(null), []);
-  assert.deepEqual(geoOriginTerms("US"), []); // too short → avoids "contact us" false-match
+});
+
+test("geoOriginTerms (MES-233): short codes expand to a specific full name instead of disarming", () => {
+  // Previously "UK"/"US"/"USA"/"UAE" returned [] (the <4-char guard), silently
+  // disarming the agency corridor. Now each maps to its unambiguous full name —
+  // >= 4 chars, so no "contact us" false-match, but the corridor stays armed.
+  assert.deepEqual(geoOriginTerms("UK"), ["united kingdom"]);
+  assert.deepEqual(geoOriginTerms("uk"), ["united kingdom"]);
+  assert.deepEqual(geoOriginTerms("US"), ["united states"]);
+  assert.deepEqual(geoOriginTerms("USA"), ["united states"]);
+  assert.deepEqual(geoOriginTerms("UAE"), ["united arab emirates"]);
+  assert.deepEqual(geoOriginTerms("GB"), ["united kingdom"]);
+  // A genuinely unknown 2-3 char token is still dropped (no false-match).
+  assert.deepEqual(geoOriginTerms("xy"), []);
+  assert.deepEqual(geoOriginTerms("abc"), []);
+});
+
+test("geoOriginTerms (MES-233 review): verbose/native Irish origin folds to 'ireland' for the AGENCY corridor", () => {
+  // Review fix: the mentor corridor (countryNormalize) folded these, but the agency
+  // corridor (geoOriginTerms text-match) emitted ["republic of ireland"], which is
+  // NOT a substring of "Enterprise Ireland" (location_country "ireland") — so the
+  // agency half stayed disarmed. Fold both verbose and native spellings to "ireland".
+  assert.deepEqual(geoOriginTerms("Republic of Ireland"), ["ireland"]);
+  assert.deepEqual(geoOriginTerms("Eire"), ["ireland"]);
+  assert.deepEqual(geoOriginTerms("Éire"), ["ireland"]);
+  assert.deepEqual(geoOriginTerms("Ireland"), ["ireland"]); // plain form unchanged
+  // End-to-end: a "Republic of Ireland" founder now KEEPS Enterprise Ireland (was dropped).
+  const roi = geoOriginTerms("Republic of Ireland");
+  assert.equal(
+    isAgencyInCorridor(
+      { name: "Enterprise Ireland", organisation_type: "foreign_trade_agency", location_country: "ireland", jurisdiction: ["Australia", "New Zealand"] },
+      roi,
+    ),
+    true,
+  );
 });
 
 // ── Providers / innovation (location-based) — B3 ──────────────────────────

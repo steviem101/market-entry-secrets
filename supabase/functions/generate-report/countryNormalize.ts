@@ -27,6 +27,13 @@ const ALIASES: Record<string, string> = {
   america: "usa",
   uae: "uae",
   "united arab emirates": "uae",
+  // MES-233: verbose / native Irish origin ("Republic of Ireland", "Éire", "Eire")
+  // disarmed the corridor by slugging to "republic-of-ireland"/"éire" instead of
+  // matching "ireland". `normalizeCountry` lowercases but does NOT strip diacritics,
+  // so the accented "éire" key is listed explicitly alongside the ASCII form.
+  "republic of ireland": "ireland",
+  eire: "ireland",
+  "éire": "ireland",
   korea: "korea",
   "south korea": "korea",
   "republic of korea": "korea",
