@@ -131,7 +131,12 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
 
         <RcField label="Industries you sell into" hint="Pick any · up to 5. Search for more or add your own.">
           <div role="group" aria-label="Industries you sell into" className="flex flex-wrap gap-2">
-            {sellsAllEnabled && (
+            {/* Render the catch-all chip when the flag is on OR when a draft already
+                has it selected — so the flag kill-switch (`?sellstoall=0`) can never
+                strand an in-flight draft with `all_industries:true` and no way to
+                un-toggle it (the "matching every industry" branch below hides the
+                specific-industry search). */}
+            {(sellsAllEnabled || sellsAll) && (
               <RcChip size="sm" active={sellsAll} onClick={toggleSellAll}>All industries (sector-agnostic)</RcChip>
             )}
             {sellOffList.map((ind) => <RcChip key={ind} size="sm" active onClick={() => toggleSell(ind)}>{ind}</RcChip>)}
