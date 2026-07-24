@@ -1428,6 +1428,18 @@ const todayIsoForReportTimezone = (): string => {
 const eventsBuyerGeoEnabled = (): boolean =>
   ["on", "1", "true"].includes((Deno.env.get("EVENTS_BUYER_GEO_ENABLED") || "").trim().toLowerCase());
 
+// MES-231: the explicit "we sell to every industry" catch-all. The intake stores
+// the sentinel in raw_input.target_customers.all_industries (empty
+// end_buyer_industries). When set AND the flag is on, the lead-ICP gate stops
+// falling back to the company's OWN sector (so a horizontal seller's lead lists
+// aren't wrongly narrowed to its own vertical). Default off; historical intakes
+// have no sentinel, so this is inert until the redesigned option ships.
+const sellsToAllTarget = (intake: { raw_input?: unknown }): boolean => {
+  if (!["on", "1", "true"].includes((Deno.env.get("SELLS_TO_ALL_ENABLED") || "").trim().toLowerCase())) return false;
+  const tc = (intake?.raw_input as { target_customers?: { all_industries?: unknown } } | undefined)?.target_customers;
+  return tc?.all_industries === true;
+};
+
 // ── Goal-to-service-tag mapping ───────────────────────────────────────
 // Keyed by stable goal_id (with a legacy long-label fallback). Lives in a
 // shared, dependency-free module so it can be unit-tested under Node.
@@ -1755,7 +1767,7 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
     // a count. The old floor backfilled "Recently Funded Australian Startups" into
     // Floats' report purely as filler. If nothing matches, the section is
     // intentionally empty (the custom-list request box is the escape hatch).
-    const icpTokens = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []);
+    const icpTokens = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || [], sellsToAllTarget(intake));
     const rankedLeads = rank(ld, { applySellsTo: true }, 12);
     const gatedLeads = rankedLeads.filter((l: any) => leadMatchesIcp(l, icpTokens)).slice(0, 5);
     matches.lead_databases = gatedLeads.map((l: any) => ({
@@ -2213,7 +2225,7 @@ async function searchMatches(supabase: any, intake: any, serviceTermIndex: Servi
     geoMatcher,
     agencyOriginTerms,
     targetRegions: geoTargetRegions,
-    icpTokens: leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []),
+    icpTokens: leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || [], sellsToAllTarget(intake)),
     excludeImmigration: isDomesticOrigin && !wantsImmigration,
   };
   // Authoritative mode replaces the SIX per-row union gates below (lead-ICP, geo,
@@ -2250,7 +2262,7 @@ async function searchMatches(supabase: any, intake: any, serviceTermIndex: Servi
   // an off-ICP list is dropped, not padded — the custom-list request box is the
   // escape hatch. Empty ICP tokens → leadMatchesIcp returns true → no-op.
   if (!relevanceAuthoritative && merged.lead_databases?.length) {
-    const leadIcp = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || []);
+    const leadIcp = leadIcpTokens(intake.end_buyer_industries || [], intake.industry_sector || [], sellsToAllTarget(intake));
     const before = merged.lead_databases.length;
     merged.lead_databases = merged.lead_databases.filter((l: any) => leadMatchesIcp(l, leadIcp));
     if (merged.lead_databases.length !== before) {

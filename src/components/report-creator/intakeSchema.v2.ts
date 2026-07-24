@@ -257,6 +257,10 @@ export const targetCustomerSchema = z.object({
   customer_type: z.enum(CUSTOMER_TYPE).optional(),
   customer_size: z.enum(CUSTOMER_SIZE).optional(),
   buying_motion: z.enum(BUYING_MOTION).optional(),
+  // MES-231: explicit "we sell to every industry" catch-all for horizontal sellers.
+  // Mutually exclusive with `industries` (selecting it clears the specific list);
+  // the matcher reads it via raw_input to keep the buyer ICP neutral-wide.
+  all_industries: z.boolean().default(false),
   industries: z.array(z.string()).max(5).default([]),
   named_companies: z.array(z.object({
     name: z.string().max(200),
@@ -424,7 +428,10 @@ export function mapV2ToLegacyIntake(
     known_competitors: data.known_competitors
       .filter((c) => (c.name ?? '').trim() || (c.website ?? '').trim())
       .map((c) => ({ name: c.name ?? '', website: c.website ?? '' })),
-    end_buyer_industries: tc.industries,
+    // MES-231: a "sells to all industries" catch-all writes an EMPTY buyer list —
+    // the sentinel (all_industries) rides in raw_input below, where the matcher
+    // reads it to keep the ICP neutral-wide rather than gating to the own sector.
+    end_buyer_industries: tc.all_industries ? [] : tc.industries,
     end_buyers: tc.named_companies
       .filter((b) => (b.name ?? '').trim() || (b.website ?? '').trim())
       .map((b) => ({ name: b.name ?? '', website: b.website ?? '' })),

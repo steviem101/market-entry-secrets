@@ -460,10 +460,23 @@ export function textMatchesAnyToken(haystackParts: Array<string | string[] | nul
  * "Recently Funded Australian Startups" purely as count-filler. Returns [] only
  * when neither signal exists (caller then shows nothing → the custom-list
  * request box is the escape hatch).
+ *
+ * MES-231: `sellsToAll` is the explicit "we sell to every industry" sentinel (a
+ * horizontal seller like Swoop Funding — lends to all businesses). When set, the
+ * own-sector fallback is SUPPRESSED — an empty buyer ICP then means "match every
+ * industry" (leadMatchesIcp returns true for all), not "gate to my own sector".
+ * Without this, a sector-agnostic lender's lead lists were wrongly narrowed to
+ * its OWN vertical (finding 3). Default false → today's fall-back behaviour.
  */
-export function leadIcpTokens(endBuyerIndustries: string[], industrySector: string[]): string[] {
+export function leadIcpTokens(
+  endBuyerIndustries: string[],
+  industrySector: string[],
+  sellsToAll = false,
+): string[] {
   const buyer = industryTokens(endBuyerIndustries || []);
-  return buyer.length ? buyer : industryTokens(industrySector || []);
+  if (buyer.length) return buyer;
+  if (sellsToAll) return [];
+  return industryTokens(industrySector || []);
 }
 
 /**

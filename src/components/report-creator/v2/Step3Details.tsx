@@ -19,15 +19,19 @@ import {
 import { ReportPreview } from './ReportPreview';
 import { CompanyPicker } from './CompanyPicker';
 import { trackIntakeEvent } from '@/lib/analytics/intakeFunnel';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) {
   const copy = PERSONA_COPY[persona];
   const challenges = COMMON_CHALLENGES[persona];
   const prompts = FOCUS_PROMPTS[persona];
-  const tc = form.target_customers ?? { industries: [], named_companies: [], notes: '' };
+  const tc = form.target_customers ?? { industries: [], named_companies: [], notes: '', all_industries: false };
   const comps = form.known_competitors ?? [];
   const named = tc.named_companies ?? [];
   const sellIndustries = tc.industries ?? [];
+  // MES-231: the "All industries (sector-agnostic)" catch-all — flag-gated chip.
+  const sellsAllEnabled = isFeatureEnabled('sells_to_all');
+  const sellsAll = tc.all_industries === true;
   const challengeTags = form.challenges?.tags ?? [];
   const [sellQuery, setSellQuery] = useState('');
   const [showBuyerDetail, setShowBuyerDetail] = useState(!!(tc.customer_size || tc.buying_motion));
@@ -43,7 +47,12 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
   function toggleSell(ind: string) {
     if (sellIndustries.includes(ind)) { setTC({ industries: sellIndustries.filter((x) => x !== ind) }); return; }
     if (sellIndustries.length >= 5) return;
-    setTC({ industries: [...sellIndustries, ind] });
+    // Picking a specific industry is mutually exclusive with the catch-all.
+    setTC({ industries: [...sellIndustries, ind], all_industries: false });
+  }
+  // MES-231: catch-all toggle — mutually exclusive with the specific list.
+  function toggleSellAll() {
+    setTC(sellsAll ? { all_industries: false } : { all_industries: true, industries: [] });
   }
   function toggleChallenge(c: string) {
     set({
@@ -68,7 +77,7 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
   const addCustomSell = () => {
     const v = sellQuery.trim();
     if (v && !sellIndustries.includes(v) && sellIndustries.length < 5) {
-      setTC({ industries: [...sellIndustries, v] });
+      setTC({ industries: [...sellIndustries, v], all_industries: false });
       trackIntakeEvent('field_completed', { step: 3, field_name: 'target_customers.industries', persona, metadata: { custom: true, value: v } });
     }
     setSellQuery('');
@@ -122,9 +131,17 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
 
         <RcField label="Industries you sell into" hint="Pick any · up to 5. Search for more or add your own.">
           <div role="group" aria-label="Industries you sell into" className="flex flex-wrap gap-2">
+            {sellsAllEnabled && (
+              <RcChip size="sm" active={sellsAll} onClick={toggleSellAll}>All industries (sector-agnostic)</RcChip>
+            )}
             {sellOffList.map((ind) => <RcChip key={ind} size="sm" active onClick={() => toggleSell(ind)}>{ind}</RcChip>)}
             {baseSell.map((ind) => <RcChip key={ind} size="sm" active={sellIndustries.includes(ind)} onClick={() => toggleSell(ind)}>{ind}</RcChip>)}
           </div>
+          {sellsAll ? (
+            <p className="mt-2.5 flex items-center gap-1.5 text-[12px] text-rc-muted">
+              <RcIcon name="check" size={13} /> Matching every industry — pick a specific one to narrow.
+            </p>
+          ) : (
           <div className="mt-2.5">
             {sellAtCap ? (
               <p className="flex items-center gap-1.5 text-[12px] text-rc-muted"><RcIcon name="check" size={13} /> Maximum of 5 selected — deselect one to change.</p>
@@ -166,6 +183,7 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
               </div>
             )}
           </div>
+          )}
         </RcField>
 
         <RcField label="Specific companies you want to sell to" hint="Optional · up to 5. Search by name, or paste a website for the most accurate match.">

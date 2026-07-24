@@ -571,6 +571,28 @@ test("leadIcpTokens: prefers end-buyer ICP; falls back to own sector only when n
   assert.deepEqual(leadIcpTokens([], []), []);
 });
 
+test("leadIcpTokens (MES-231): sellsToAll suppresses the own-sector fallback → neutral-wide ICP", () => {
+  // Swoop-style horizontal lender: sells to EVERY industry, own sector = financial.
+  // Today (sellsToAll=false) an empty buyer list falls back to the own sector, so
+  // the lead lists get gated to fintech — the finding-3 bug.
+  assert.deepEqual(
+    leadIcpTokens([], ["Financial Services", "Lending"]).sort(),
+    industryTokens(["Financial Services", "Lending"]).sort(),
+  );
+  // With the explicit catch-all sentinel → NO fallback → [] → leadMatchesIcp passes
+  // every list (neutral-wide), so a sector-agnostic lender sees lead lists beyond
+  // its own vertical.
+  assert.deepEqual(leadIcpTokens([], ["Financial Services", "Lending"], true), []);
+  // A neutral-wide ICP gates nothing (empty tokens → leadMatchesIcp true for all).
+  assert.equal(leadMatchesIcp({ title: "Australian SaaS Companies", sector: "SaaS" }, leadIcpTokens([], ["Financial Services"], true)), true);
+  assert.equal(leadMatchesIcp({ title: "AU Manufacturers", sector: "Manufacturing" }, leadIcpTokens([], ["Financial Services"], true)), true);
+  // A DECLARED buyer list still wins over the sentinel (buyer signal is authoritative).
+  assert.deepEqual(
+    leadIcpTokens(["Hospitals and Health Care"], ["Financial Services"], true).sort(),
+    industryTokens(["Hospitals and Health Care"]).sort(),
+  );
+});
+
 test("lead ICP gate: strict filter drops non-matching lists (no floor padding) — Floats case", () => {
   const tokens = leadIcpTokens([], ["Recruitment Technology", "Artificial Intelligence", "SaaS"]);
   const catalog = [
