@@ -81,18 +81,26 @@ export interface GeoScope {
   targetRegions?: string[];
 }
 
-// MES-233: short-name / code origins that the >= 4-char guard below would otherwise
-// drop to [] — "UK"/"US"/"USA"/"UAE" produced NO corridor terms, silently disarming
-// the agency corridor for those founders. Map each to its SPECIFIC full-name term
-// (>= 4 chars, safe for the includes()-based agency text match) rather than the bare
-// code. Only unambiguous expansions — deliberately NOT "america"/"britain", which
-// over-match ("Latin America", etc.).
+// MES-233: origin spellings that `geoOriginTerms` would otherwise emit unchanged,
+// disarming the includes()-based agency text corridor. Two classes:
+//   1. short codes the >= 4-char guard drops to [] — "UK"/"US"/"USA"/"UAE" produced
+//      NO corridor terms; map each to its SPECIFIC full-name term (>= 4 chars, safe
+//      for the text match). Deliberately NOT "america"/"britain" (over-match).
+//   2. verbose / native names that don't substring-match the agency's stored short
+//      form — "Republic of Ireland"/"Éire" would emit ["republic of ireland"], which
+//      is NOT a substring of "Enterprise Ireland" (location_country "ireland"), so
+//      the agency corridor stayed disarmed even though the mentor corridor (which
+//      uses countryNormalize) folded them. Fold both to ["ireland"] so BOTH corridors
+//      arm — mirroring the countryNormalize alias (review fix).
 const ORIGIN_TERM_ALIASES: Record<string, string[]> = {
   uk: ["united kingdom"],
   gb: ["united kingdom"],
   usa: ["united states"],
   us: ["united states"],
   uae: ["united arab emirates"],
+  "republic of ireland": ["ireland"],
+  eire: ["ireland"],
+  "éire": ["ireland"],
 };
 
 /**

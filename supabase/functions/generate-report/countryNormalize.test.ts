@@ -29,6 +29,9 @@ test("MES-233: verbose Irish origin folds to the same key as 'Ireland'", () => {
   assert.equal(normalizeCountry("Republic of Ireland"), normalizeCountry("Ireland"));
   assert.equal(normalizeCountry("Eire"), "ireland");
   assert.equal(normalizeCountry("eire"), normalizeCountry("ireland"));
+  // Review fix: the native accented spelling folds too (explicit "éire" alias,
+  // since normalizeCountry lowercases but does not strip diacritics).
+  assert.equal(normalizeCountry("Éire"), "ireland");
   // Guard: still distinct from an unrelated origin.
   assert.notEqual(normalizeCountry("Republic of Ireland"), normalizeCountry("Iceland"));
 });

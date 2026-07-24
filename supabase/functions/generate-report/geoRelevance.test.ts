@@ -20,9 +20,30 @@ test("geoOriginTerms (MES-233): short codes expand to a specific full name inste
   assert.deepEqual(geoOriginTerms("US"), ["united states"]);
   assert.deepEqual(geoOriginTerms("USA"), ["united states"]);
   assert.deepEqual(geoOriginTerms("UAE"), ["united arab emirates"]);
+  assert.deepEqual(geoOriginTerms("GB"), ["united kingdom"]);
   // A genuinely unknown 2-3 char token is still dropped (no false-match).
   assert.deepEqual(geoOriginTerms("xy"), []);
   assert.deepEqual(geoOriginTerms("abc"), []);
+});
+
+test("geoOriginTerms (MES-233 review): verbose/native Irish origin folds to 'ireland' for the AGENCY corridor", () => {
+  // Review fix: the mentor corridor (countryNormalize) folded these, but the agency
+  // corridor (geoOriginTerms text-match) emitted ["republic of ireland"], which is
+  // NOT a substring of "Enterprise Ireland" (location_country "ireland") — so the
+  // agency half stayed disarmed. Fold both verbose and native spellings to "ireland".
+  assert.deepEqual(geoOriginTerms("Republic of Ireland"), ["ireland"]);
+  assert.deepEqual(geoOriginTerms("Eire"), ["ireland"]);
+  assert.deepEqual(geoOriginTerms("Éire"), ["ireland"]);
+  assert.deepEqual(geoOriginTerms("Ireland"), ["ireland"]); // plain form unchanged
+  // End-to-end: a "Republic of Ireland" founder now KEEPS Enterprise Ireland (was dropped).
+  const roi = geoOriginTerms("Republic of Ireland");
+  assert.equal(
+    isAgencyInCorridor(
+      { name: "Enterprise Ireland", organisation_type: "foreign_trade_agency", location_country: "ireland", jurisdiction: ["Australia", "New Zealand"] },
+      roi,
+    ),
+    true,
+  );
 });
 
 // ── Providers / innovation (location-based) — B3 ──────────────────────────
