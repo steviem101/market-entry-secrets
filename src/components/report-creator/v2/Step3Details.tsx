@@ -220,6 +220,22 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
             <RcIcon name="check" size={13} /> Maximum of 8 selected — deselect one to change.
           </p>
         )}
+        {/* The redesign specified chips + optional free text; the free-text half
+            was dropped in the Phase 2 build (MES-229 restores it). Flows into
+            the key_challenges synthesis → every section's context note. Uses the
+            shared RcTextInput primitive so a11y/token/focus styling stays in
+            lockstep with every other wizard text field (MES-228 review Q3). */}
+        <RcTextInput
+          value={form.challenges?.other ?? ''} maxLength={200}
+          ariaLabel="Other challenge"
+          placeholder="Something else? Add it in a line — e.g. finding a local distributor we can trust"
+          onChange={(v) => set({ challenges: { ...(form.challenges ?? { tags: [], other: '' }), other: v } })}
+          onBlur={() => {
+            if ((form.challenges?.other ?? '').trim()) {
+              trackIntakeEvent('field_completed', { step: 3, field_name: 'challenges.other', persona });
+            }
+          }}
+        />
       </div>
 
       {/* REPORT FOCUS */}
