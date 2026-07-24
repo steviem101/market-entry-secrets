@@ -3506,6 +3506,9 @@ async function generateReportInBackground(
     );
     const deselectedSections = parseDeselectedSections(honourSectionSelection, rawInput.section_selection);
     if (deselectedSections) console.log(`Section selection active: ${[...deselectedSections].join(", ")}`);
+    // Declared at the outer (function) scope so both the template-filter block below and
+    // the metadata block later can see it — the two live in different nested blocks.
+    const deselectedForReport: string[] = [];
 
     // Key-question "who can help" picks (Floats feedback): pick up to 2 entities
     // FROM THE ALREADY-MATCHED SLATE most able to help with the user's stated
@@ -3629,7 +3632,7 @@ async function generateReportInBackground(
       // empty-shell or regenerate-CTA render path). Core + gated sections are never
       // dropped. Telemetry lands in metadata.deselected_sections below. Inert unless the
       // HONOUR_SECTION_SELECTION flag is on (deselectedSections is null when off).
-      const deselectedForReport: string[] = [];
+      // (deselectedForReport is declared at the outer scope above.)
       const templatesToGenerate = deselectedSections
         ? (templates || []).filter((t) => {
             const rti = tierHierarchy.indexOf(t.visibility_tier);
