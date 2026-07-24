@@ -337,6 +337,10 @@ export const step2Schema = z.object({
   })).max(3).default([]),
   challenges: challengeSchema,
   report_focus: z.string().max(200).optional().default(''),
+  // MES-234: optional explicit "sections to include" (report section keys the user
+  // kept). Absent = D2 (all sections). Persisted into raw_input via the mapping spread;
+  // the edge only honours it when its HONOUR_SECTION_SELECTION flag is on.
+  section_selection: z.array(z.string()).optional(),
 });
 
 export const fullIntakeSchema = step1Schema.merge(step2Schema);

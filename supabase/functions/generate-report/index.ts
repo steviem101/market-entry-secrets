@@ -26,6 +26,7 @@ import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitor
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote, buildIcpGuidanceNote } from "./buyerBriefs.ts";
 import { buildFirmographicsNote } from "./firmographics.ts";
 import { buildFounderPeersNote } from "./founderPeers.ts";
+import { parseDeselectedSections, isSectionDeselected } from "./sectionSelection.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
 import { applyRelevanceSelection, SURFACE_SELECT_IMMIGRATION } from "./selectRelevant.ts";
@@ -3495,6 +3496,17 @@ async function generateReportInBackground(
     const foundersGoalSelected = goalSelectsFounders({ goal_ids: intake.goal_ids, services_needed: intake.services_needed });
     const founderPeersNote = buildFounderPeersNote(foundersGoalSelected, matches.community_members);
 
+    // MES-234: honour explicit section selection (env flag HONOUR_SECTION_SELECTION,
+    // default off → D2 exactly). When on, sections the user REMOVED on Review
+    // (raw_input.section_selection) are skipped below — but only accessible, non-core
+    // sections; core and above-tier sections are never dropped (isSectionDeselected),
+    // so no tier-gated/upsell surface is lost.
+    const honourSectionSelection = ["on", "1", "true"].includes(
+      (Deno.env.get("HONOUR_SECTION_SELECTION") || "").trim().toLowerCase(),
+    );
+    const deselectedSections = parseDeselectedSections(honourSectionSelection, rawInput.section_selection);
+    if (deselectedSections) console.log(`Section selection active: ${[...deselectedSections].join(", ")}`);
+
     // Key-question "who can help" picks (Floats feedback): pick up to 2 entities
     // FROM THE ALREADY-MATCHED SLATE most able to help with the user's stated
     // priority, rendered as cards under the exec-summary answer. Grounded (picks
@@ -3624,6 +3636,16 @@ async function generateReportInBackground(
             console.warn(`Section "${tmpl.section_name}" has unrecognised visibility_tier "${tmpl.visibility_tier}" — defaulting to hidden (fail-closed).`);
           }
           const willBeVisible = requiredTierIndex !== -1 && userTierIndex >= requiredTierIndex;
+
+          // MES-234: the user explicitly removed this accessible, non-core section on
+          // Review → skip it (no model call, cost saving) and record it as intentionally
+          // deselected. Never reached for core or above-tier sections (isSectionDeselected
+          // guards), so no gated/upsell surface is lost. Inert unless the flag is on.
+          if (isSectionDeselected(tmpl.section_name, deselectedSections, willBeVisible)) {
+            console.log(`Section ${tmpl.section_name}: deselected by user — skipping generation`);
+            return { name: tmpl.section_name, data: { content: "", visible: false, deselected: true } };
+          }
+
           // D2: the user explicitly selected a goal that this section addresses.
           const emphasisNote = prioritisedSections.has(tmpl.section_name)
             ? `\n\nPRIORITISED SECTION: the user explicitly selected a goal that this section addresses, so it is one of the outcomes they most want. Make it especially specific, concrete and actionable — lead with the highest-value, most directly useful recommendations (stay within the length budget above).`

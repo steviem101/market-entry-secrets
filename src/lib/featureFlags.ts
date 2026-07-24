@@ -10,7 +10,7 @@
  *   ?v2=0      → disable + clear sticky value (opt back to legacy form)
  */
 
-export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'report_v2' | 'hero_journey' | 'intake_prefill_v3' | 'sells_to_all';
+export type FeatureFlag = 'report_creator_v2' | 'session_booking_banner' | 'intent_hero' | 'comparison_moments' | 'report_teasers' | 'section_refinement' | 'deliverables_hub' | 'concierge_intros' | 'report_v2' | 'hero_journey' | 'intake_prefill_v3' | 'sells_to_all' | 'honour_section_selection';
 
 interface FlagConfig {
   /** Query-string key that toggles the flag. */
@@ -116,6 +116,18 @@ const FLAGS: Record<FeatureFlag, FlagConfig> = {
   sells_to_all: {
     queryKey: 'sellstoall',
     storageKey: 'mes_flag_sells_to_all',
+    defaultValue: false,
+  },
+  // MES-234 (MES-213 Wave 3) honour section selection: an explicit "Sections to
+  // include" control on the Review screen so users can DESELECT optional report
+  // sections. Reverses D2 ("keep all sections, emphasise picked"). This flag gates
+  // only the control's visibility; the edge honours the selection behind its own
+  // HONOUR_SECTION_SELECTION env flag, and core + tier-gated (above-tier) sections are
+  // never dropped — no upsell surface is lost. Ships dark (default off); ?sections=1
+  // shows the control, ?sections=0 is the kill switch.
+  honour_section_selection: {
+    queryKey: 'sections',
+    storageKey: 'mes_flag_honour_section_selection',
     defaultValue: false,
   },
   // MES-162 homepage hero credibility: static real report-output panel in the

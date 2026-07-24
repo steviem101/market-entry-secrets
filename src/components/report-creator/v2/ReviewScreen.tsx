@@ -18,6 +18,17 @@ import {
 } from './primitives';
 import { ReportPreview } from './ReportPreview';
 import type { SetPatch } from './types';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+import { SECTION_ORDER, SECTION_LABELS, TIER_REQUIREMENTS } from '@/components/report/reportSectionConfig';
+
+// MES-234: sections the user may DESELECT on Review. Core sections (executive_summary,
+// action_plan) always generate; tier-gated sections (mentor/first_customers/lead_list)
+// are excluded from the control so their upsell teaser is never at risk — leaving the
+// always-free optional sections as the removable set.
+const CORE_SECTIONS = new Set(['executive_summary', 'action_plan']);
+const TOGGLEABLE_SECTIONS = SECTION_ORDER.filter(
+  (s) => !CORE_SECTIONS.has(s) && !(s in TIER_REQUIREMENTS),
+);
 
 type ReviewStep = 'company' | 'goals' | 'details';
 
@@ -167,6 +178,17 @@ export function ReviewScreen({
     ...(tc.named_companies ?? []).map((c) => c.name).filter(Boolean),
   ];
 
+  // MES-234: "Sections to include" control (flag-gated). section_selection stores the
+  // REMOVED section keys; unticking a section adds it, re-ticking removes it. Absent /
+  // empty = D2 (every section). Core + tier-gated sections are never in the control.
+  const sectionsControlEnabled = isFeatureEnabled('honour_section_selection');
+  const removedSections = form.section_selection ?? [];
+  const toggleSection = (key: string) => {
+    const next = new Set(removedSections);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    set({ section_selection: [...next] });
+  };
+
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
@@ -207,6 +229,30 @@ export function ReviewScreen({
             />
             <InlineScalar label="Focus" value={form.report_focus} onSave={(v) => set({ report_focus: v })} placeholder="What should the report answer?" />
           </Card>
+
+          {sectionsControlEnabled && (
+            <Card title="Sections to include">
+              <p className="pb-1 pt-1 text-[12px] text-rc-muted">
+                Every report includes the essentials. Untick any optional section you'd rather leave out — it won't be generated.
+              </p>
+              {TOGGLEABLE_SECTIONS.map((key) => {
+                const included = !removedSections.includes(key);
+                return (
+                  <label key={key} className="flex cursor-pointer items-center gap-2.5 py-1.5">
+                    <input
+                      type="checkbox" checked={included}
+                      onChange={() => toggleSection(key)}
+                      aria-label={SECTION_LABELS[key] ?? key}
+                      className="h-4 w-4 shrink-0 rounded border-rc-line text-rc-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rc-primary"
+                    />
+                    <span className={`text-[13.5px] ${included ? 'text-rc-ink' : 'text-rc-muted line-through'}`}>
+                      {SECTION_LABELS[key] ?? key}
+                    </span>
+                  </label>
+                );
+              })}
+            </Card>
+          )}
         </div>
 
         <div className="order-1 lg:order-2">
