@@ -46,7 +46,11 @@ export function Step2Goals({ persona, form, set, onNext, onBack }: StepProps) {
         })}
       </div>
 
-      {/* Sticky action bar */}
+      {/* Sticky action bar. The real fix for the old "silent dead Continue" was
+          removing goal_ids' .max(8) cap (9+ selections used to fail validation
+          with no rendered error) — see intakeSchema.v2. The only remaining rule,
+          .min(1), is already guarded by the disabled button + "Pick a goal to
+          continue" label, so no separate error surface is reachable here. */}
       <div className="sticky bottom-0 -mx-4 mt-2 bg-gradient-to-t from-white via-white to-transparent px-4 pb-1 pt-3 sm:-mx-7 sm:px-7">
         <div className="flex items-center justify-between gap-3">
           <RcGhostButton onClick={onBack}>Back</RcGhostButton>
