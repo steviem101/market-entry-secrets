@@ -1657,16 +1657,17 @@ async function searchMatchesOverlap(supabase: any, intake: any, serviceTermIndex
           const loc = (e.location || "").toLowerCase();
           return geoTokens.some((l) => loc.includes(l.toLowerCase()));
         }).length;
+    // For a nation-wide target `geoTokens` is already [] (no city drop), so this
+    // main pass keeps the sector-ranked slate without dropping interstate events —
+    // the sector signal is preserved for National here, in the main path. For a
+    // city-only target the city drop is honoured; if it empties the slate, the
+    // legacy date-bounded fallback below applies, still scoped to the target city.
     let eventResults = regionFilterAndDedupeEvents(gatedEvents, geoTokens, 5);
 
-    // Fallback when the region filter returned nothing. Preserve the sector signal
-    // (MES-232): first re-take the already-ranked, relevance-gated pool WITHOUT the
-    // city drop — those rows scored on the user's own + buyer industry — before
-    // resorting to the sector-blind soonest-in-region query. Flag off keeps the
-    // legacy date-only fallback exactly.
-    if (eventResults.length === 0 && eventsBuyerGeo) {
-      eventResults = regionFilterAndDedupeEvents(gatedEvents, [], 5);
-    }
+    // Fallback when the region filter returned nothing: soonest future events,
+    // date-bounded, scoped to the target city when one was supplied (a city-only
+    // target must NOT surface interstate events — the National relax is the only
+    // path that widens beyond the target city).
     if (eventResults.length === 0) {
       let fbQuery = supabase.from("events")
         .select("id, title, slug, date, location, category, type, organizer, sector, description")
