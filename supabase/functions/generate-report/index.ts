@@ -24,6 +24,7 @@ import { buildPickCandidates, buildPicksPrompt, parsePicks, buildPickCards, type
 import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote, buildIcpGuidanceNote } from "./buyerBriefs.ts";
+import { buildFirmographicsNote } from "./firmographics.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
 import { applyRelevanceSelection, SURFACE_SELECT_IMMIGRATION } from "./selectRelevant.ts";
@@ -3138,8 +3139,11 @@ async function generateReportInBackground(
 
     const targetCustomerDescription = (rawInput as any).target_customer_description || "";
 
-    // Extract additional_notes: stored separately from primary_goals (no longer concatenated)
-    const additionalNotes = (rawInput as any).additional_notes || "";
+    // MES-235: additional_notes handling removed — {{additional_notes}} is referenced by
+    // ZERO active report_templates (verified against prod 2026-07-24). It only ever
+    // duplicated report_focus (see the v2 mapping) and reached no section, so the extraction
+    // and template variable are dropped. The raw_input key is left untouched (deprecate, not
+    // remove — column/schema changes are out of scope for this ticket).
     const revenueStage = (rawInput as any).revenue_stage || "";
     // The user's stated priority — "what matters most" (Step 2 report_focus). Persisted to
     // the report_focus column AND mirrored into raw_input, but previously read by NOTHING,
@@ -3204,7 +3208,6 @@ async function generateReportInBackground(
       timeline: intake.timeline || "Not specified",
       budget_level: intake.budget_level || "Not specified",
       primary_goals: intake.primary_goals || "Not specified",
-      additional_notes: additionalNotes,
       report_focus: reportFocus || "Not specified",
       key_challenges: intake.key_challenges || "Not specified",
       target_customer_description: targetCustomerDescription || "Not specified",
@@ -3319,7 +3322,19 @@ async function generateReportInBackground(
       `from ${intake.country_of_origin}`,
     ].filter(Boolean).join(", ");
     const challengesText = (intake.key_challenges || "").trim();
-    const companyContextNote = `\n\nCOMPANY CONTEXT (weave in where relevant to this section): ${contextBits}.${challengesText ? ` Stated challenges to address: ${challengesText}.` : ""}`;
+    // MES-235: customer_type / customer_size / buying_motion are real user_intake_forms
+    // columns, but generate-report never read them — dead fields. Read them directly and
+    // turn them into a labelled, size/motion-specific go-to-market steer that rides on
+    // EVERY section's company-context note. "" when the user gave no firmographic signal,
+    // so an absent block never reads "Not specified". rawTargetCustomers is also used just
+    // below for the RAW ICP one-liner (raw_input.target_customers.notes).
+    const rawTargetCustomers = rawInput.target_customers || {};
+    const firmographicsNote = buildFirmographicsNote({
+      customer_type: intake.customer_type,
+      customer_size: intake.customer_size,
+      buying_motion: intake.buying_motion,
+    });
+    const companyContextNote = `\n\nCOMPANY CONTEXT (weave in where relevant to this section): ${contextBits}.${challengesText ? ` Stated challenges to address: ${challengesText}.` : ""}${firmographicsNote}`;
 
     // Phase C (RQ ref fb82483e): one canonical set of market metrics for the whole report,
     // so sections can't cite contradicting market-size / value figures. Pulled from the single
@@ -3419,7 +3434,17 @@ async function generateReportInBackground(
     // per-account briefs from the buyer scrape + batched account research, with the
     // parsed ICP one-liner finally driving "who to approach" titles. Empty note when
     // no chips were given.
-    const parsedIcp = parseIcpDescription(targetCustomerDescription);
+    // MES-235: v2 synthesises target_customer_description from chips ("B2B customers —
+    // Mid-market (50-500) — via direct sales — in Fintech"), which parseIcpDescription
+    // mis-read as ONE giant title (the "chip garbage" in the ICP Target Roles block).
+    // Parse the user's RAW one-liner instead. v1 intakes carry no nested target_customers,
+    // so their target_customer_description IS the real one-liner (the fallback keeps them
+    // parsing). A v2 chip-only intake (empty notes) parses to no titles — no garbage — and
+    // the firmographics still reach the prompt via companyContextNote above.
+    const icpOneLiner = typeof rawTargetCustomers.notes === "string"
+      ? rawTargetCustomers.notes
+      : targetCustomerDescription;
+    const parsedIcp = parseIcpDescription(icpOneLiner);
     const buyerBriefsNote = buildBuyerBriefsNote(
       endBuyerScrapeResult || [], parsedIcp, intake.company_name, endBuyerAccountResearch,
       (intake.end_buyers || []).length,
