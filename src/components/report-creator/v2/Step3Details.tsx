@@ -9,7 +9,7 @@ import { useState } from 'react';
 import {
   CUSTOMER_TYPE, CUSTOMER_SIZE, BUYING_MOTION, COMMON_CHALLENGES, FOCUS_PROMPTS,
 } from '../intakeSchema.v2';
-import { INDUSTRY_GROUP_OPTIONS } from '@/constants/linkedinTaxonomy';
+import { searchIndustryOptions, isCanonicalIndustry } from '@/constants/linkedinTaxonomy';
 import type { StepProps } from './types';
 import { PERSONA_COPY, TOP_INDUSTRIES } from './rcData';
 import { RcIcon } from './icons';
@@ -69,10 +69,10 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
   const q = sellQuery.trim().toLowerCase();
   const baseSell = TOP_INDUSTRIES.slice(0, 8);
   const sellOffList = sellIndustries.filter((s) => !baseSell.includes(s));
-  const sellResults = q
-    ? INDUSTRY_GROUP_OPTIONS.filter((i) => i.toLowerCase().includes(q) && !sellIndustries.includes(i)).slice(0, 8)
-    : [];
-  const sellExact = INDUSTRY_GROUP_OPTIONS.some((i) => i.toLowerCase() === q);
+  // MES-230: search spans sectors + groups + everyday synonyms ("banking",
+  // "fintech"…), with matched sector headings expanded above their breakouts.
+  const sellResults = q ? searchIndustryOptions(sellQuery, sellIndustries, 8) : [];
+  const sellExact = isCanonicalIndustry(q);
   const sellAtCap = sellIndustries.length >= 5;
   const addCustomSell = () => {
     const v = sellQuery.trim();

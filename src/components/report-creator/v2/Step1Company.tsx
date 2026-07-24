@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import {
   COUNTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS, REVENUE_STAGE_OPTIONS, REGION_OPTIONS,
 } from '../intakeSchema.v2';
-import { INDUSTRY_GROUP_OPTIONS } from '@/constants/linkedinTaxonomy';
+import { searchIndustryOptions, isCanonicalIndustry } from '@/constants/linkedinTaxonomy';
 import {
   SCRAPE_META_KEY, clearScrapedFields, extractDomain, mergeProvenanceForDomain, mergeScrapeResult, parseScrapeMeta,
   type ScrapeFormSlice, type ScrapeMeta,
@@ -145,10 +145,10 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
   const baseChips = showMoreInd ? [...TOP_INDUSTRIES, ...MORE_INDUSTRIES] : TOP_INDUSTRIES;
   const offList = selected.filter((s) => !baseChips.includes(s));
   const q = indQuery.trim().toLowerCase();
-  const results = q
-    ? INDUSTRY_GROUP_OPTIONS.filter((i) => i.toLowerCase().includes(q) && !selected.includes(i)).slice(0, 8)
-    : [];
-  const exactish = INDUSTRY_GROUP_OPTIONS.some((i) => i.toLowerCase() === q);
+  // MES-230: search spans sectors + groups + everyday synonyms ("banking",
+  // "fintech"…), with matched sector headings expanded above their breakouts.
+  const results = q ? searchIndustryOptions(indQuery, selected, 8) : [];
+  const exactish = isCanonicalIndustry(q);
   const indAtCap = selected.length >= 3;
   const showFields = scrape !== 'detected' || expanded;
 

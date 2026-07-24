@@ -238,3 +238,19 @@ test("unresolvedIndustries: returns only labels that map to no sector slug (MES-
   assert.deepEqual(unresolvedIndustries(null), []);
   assert.deepEqual(unresolvedIndustries([" ", ""]), []);
 });
+
+test("MES-230: sector DISPLAY NAMES resolve directly to their own slug", () => {
+  // The picker now offers sector headings alongside breakout groups; a stored
+  // sector label must roll up exactly — including sectors with no keyword alias.
+  assert.deepEqual(industryGroupsToSectorSlugs(["Financial Services"]), ["financial-services"]);
+  assert.deepEqual(industryGroupsToSectorSlugs(["Wholesale"]), ["wholesale"]);
+  assert.deepEqual(industryGroupsToSectorSlugs(["Holding Companies"]), ["holding-companies"]);
+  assert.deepEqual(
+    industryGroupsToSectorSlugs(["Transportation, Logistics, Supply Chain and Storage"]),
+    ["transportation-logistics-supply-chain-and-storage"],
+  );
+  // Sector + its own breakout dedupe to one slug (no double counting in overlap).
+  assert.deepEqual(industryGroupsToSectorSlugs(["Financial Services", "Insurance"]), ["financial-services"]);
+  // Sector names are not unresolved.
+  assert.deepEqual(unresolvedIndustries(["Financial Services", "Wholesale"]), []);
+});

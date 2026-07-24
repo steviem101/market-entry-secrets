@@ -39,10 +39,15 @@ export function sectorSlug(sectorDisplay: string): string {
   return sectorDisplay.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-// industry group → parent sector slug
+// industry group → parent sector slug. MES-230: sector DISPLAY NAMES resolve
+// too — the intake picker now offers sector headings ("Financial Services")
+// alongside their breakout groups, and some sectors ("Wholesale", "Holding
+// Companies") have no keyword alias, so without this a sector-level pick would
+// silently roll up to nothing.
 const GROUP_TO_SECTOR_SLUG: Record<string, string> = {};
 for (const [sector, groups] of Object.entries(LINKEDIN_TAXONOMY)) {
   const slug = sectorSlug(sector);
+  GROUP_TO_SECTOR_SLUG[sector.toLowerCase()] = slug;
   for (const g of groups) GROUP_TO_SECTOR_SLUG[g.toLowerCase()] = slug;
 }
 
