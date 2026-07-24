@@ -220,6 +220,21 @@ export function Step3Details({ persona, form, set, onNext, onBack }: StepProps) 
             <RcIcon name="check" size={13} /> Maximum of 8 selected — deselect one to change.
           </p>
         )}
+        {/* The redesign specified chips + optional free text; the free-text half
+            was dropped in the Phase 2 build (MES-229 restores it). Flows into
+            the key_challenges synthesis → every section's context note. */}
+        <input
+          value={form.challenges?.other ?? ''} maxLength={200}
+          aria-label="Other challenge"
+          onChange={(e) => set({ challenges: { ...(form.challenges ?? { tags: [], other: '' }), other: e.target.value } })}
+          onBlur={() => {
+            if ((form.challenges?.other ?? '').trim()) {
+              trackIntakeEvent('field_completed', { step: 3, field_name: 'challenges.other', persona });
+            }
+          }}
+          placeholder="Something else? Add it in a line — e.g. finding a local distributor we can trust"
+          className="h-11 w-full rounded-xl border border-rc-line bg-white px-3.5 text-[14px] text-rc-ink placeholder:italic placeholder:text-rc-muted/60 outline-none focus:border-rc-primary focus:ring-2 focus:ring-rc-sky-soft"
+        />
       </div>
 
       {/* REPORT FOCUS */}
