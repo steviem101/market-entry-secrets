@@ -27,6 +27,7 @@ import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBrie
 import { buildFirmographicsNote } from "./firmographics.ts";
 import { buildFounderPeersNote } from "./founderPeers.ts";
 import { parseDeselectedSections, isSectionDeselected } from "./sectionSelection.ts";
+import { applyCorridorBoost, corridorIdSets } from "./corridorLinks.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
 import { applyRelevanceSelection, SURFACE_SELECT_IMMIGRATION } from "./selectRelevant.ts";
@@ -3166,6 +3167,8 @@ async function generateReportInBackground(
     // the template's conditional blocks drop, falling back to a generic orientation.
     let countryProfile: any = null;
     let countryFaqs: any[] = [];
+    // MES-233 AC3 telemetry: curated-corridor rows boosted into the slate (null = flag off / no match).
+    let corridorBoosted: { mentors: number; agencies: number } | null = null;
     try {
       const originKey = normalizeCountry(intake.country_of_origin);
       if (originKey) {
@@ -3184,6 +3187,34 @@ async function generateReportInBackground(
             .order("sort_order");
           countryFaqs = faqs || [];
           console.log(`Country corridor: matched ${match.name} with ${countryFaqs.length} FAQs`);
+
+          // MES-233 AC3: the curated country_entity_links corridor slate finally reaches
+          // reports. Flag-gated (CORRIDOR_LINKS_ENABLED, default off). When on, fetch the
+          // approved corridor mentors/agencies for this origin and lift the ones that were
+          // ALSO matched to the front of their slate (bonus score + "Curated <country>
+          // corridor" reason). Re-rank only — never injects an unmatched entity, so the
+          // geo/tier/dedup gates are untouched.
+          const corridorLinksEnabled = ["on", "1", "true"].includes(
+            (Deno.env.get("CORRIDOR_LINKS_ENABLED") || "").trim().toLowerCase(),
+          );
+          if (corridorLinksEnabled) {
+            try {
+              const { data: links } = await supabase
+                .from("country_entity_links")
+                .select("entity_type, entity_id, status")
+                .eq("country_id", match.id)
+                .eq("status", "approved");
+              const { mentorIds, agencyIds } = corridorIdSets(links || []);
+              const m = applyCorridorBoost(matches.community_members, mentorIds, match.name);
+              matches.community_members = m.rows;
+              const a = applyCorridorBoost(matches.trade_investment_agencies, agencyIds, match.name);
+              matches.trade_investment_agencies = a.rows;
+              corridorBoosted = { mentors: m.boostedCount, agencies: a.boostedCount };
+              if (m.boostedCount || a.boostedCount) {
+                console.log(`Corridor links: boosted ${m.boostedCount} mentors + ${a.boostedCount} agencies for ${match.name}`);
+              }
+            } catch (e) { console.error("Corridor links boost error:", e); }
+          }
         } else {
           console.log(`Country corridor: no countries row for origin "${intake.country_of_origin}" (${originKey})`);
         }
@@ -4082,6 +4113,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // MES-234: sections the user removed on Review (dropped before generation). Empty
         // unless HONOUR_SECTION_SELECTION is on and the user deselected something.
         deselected_sections: deselectedForReport,
+        // MES-233 AC3: curated country_entity_links corridor rows boosted into the slate
+        // (null unless CORRIDOR_LINKS_ENABLED is on and the origin hit a curated corridor).
+        corridor_links_boosted: corridorBoosted,
         generation_time_ms: totalMs,
         // Per-phase breakdown of the generation time (ms) — which phase dominates.
         phase_timings: {
