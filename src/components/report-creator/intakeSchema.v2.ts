@@ -26,6 +26,7 @@
 
 import { z } from 'zod';
 import { INDUSTRY_GROUP_OPTIONS } from '@/constants/linkedinTaxonomy';
+import { resolveCountryOfOrigin } from '@/lib/countryOfOrigin';
 
 // ── Persona ──────────────────────────────────────────────────────────────
 export const PERSONA = ['international', 'startup'] as const;
@@ -313,6 +314,10 @@ export const step1Schema = z.object({
   }).pipe(z.string().url('Please enter a valid URL')),
   company_name: z.string().min(1, 'Company name is required').max(200),
   country_of_origin: z.string().min(1, 'Country is required'),
+  // PD-7: free-text country, shown only when country_of_origin is 'Other'. Resolved into
+  // the effective country by mapV2ToLegacyIntake so downstream prose + corridor matching
+  // use the real country instead of the literal "Other".
+  country_of_origin_other: z.string().max(100).optional(),
   industry_sector: z.array(z.string()).min(1, 'Select at least one industry').max(3),
   company_stage: z.enum(STAGE_OPTIONS, { required_error: 'Company stage is required' }),
   employee_count: z.enum(EMPLOYEE_OPTIONS).optional(),
@@ -422,7 +427,8 @@ export function mapV2ToLegacyIntake(
     user_id: userId,
     company_name: data.company_name,
     website_url: data.website_url,
-    country_of_origin: data.country_of_origin,
+    // PD-7: resolve an "Other" pick + free text into the real country.
+    country_of_origin: resolveCountryOfOrigin(data.country_of_origin, data.country_of_origin_other),
     industry_sector: data.industry_sector,
     company_stage: data.company_stage,
     employee_count: data.employee_count || '',
