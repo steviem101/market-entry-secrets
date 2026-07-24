@@ -27,6 +27,10 @@ const ALIASES: Record<string, string> = {
   america: "usa",
   uae: "uae",
   "united arab emirates": "uae",
+  // MES-233: verbose Irish origin ("Republic of Ireland", "Éire") disarmed the
+  // corridor by slugging to "republic-of-ireland" instead of matching "ireland".
+  "republic of ireland": "ireland",
+  eire: "ireland",
   korea: "korea",
   "south korea": "korea",
   "republic of korea": "korea",

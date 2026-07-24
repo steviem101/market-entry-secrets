@@ -22,6 +22,17 @@ test("underscore tokens fold to the same key as spaced names", () => {
   assert.equal(normalizeCountry("south_africa"), normalizeCountry("South Africa"));
 });
 
+test("MES-233: verbose Irish origin folds to the same key as 'Ireland'", () => {
+  // "Republic of Ireland" previously slugged to "republic-of-ireland" and never
+  // matched an Irish-origin mentor/agency ("ireland") — the corridor disarmed.
+  assert.equal(normalizeCountry("Republic of Ireland"), "ireland");
+  assert.equal(normalizeCountry("Republic of Ireland"), normalizeCountry("Ireland"));
+  assert.equal(normalizeCountry("Eire"), "ireland");
+  assert.equal(normalizeCountry("eire"), normalizeCountry("ireland"));
+  // Guard: still distinct from an unrelated origin.
+  assert.notEqual(normalizeCountry("Republic of Ireland"), normalizeCountry("Iceland"));
+});
+
 test("non-matching origins do not collide", () => {
   assert.notEqual(normalizeCountry("Ireland"), normalizeCountry("Japan"));
   assert.notEqual(normalizeCountry("United Kingdom"), normalizeCountry("usa"));

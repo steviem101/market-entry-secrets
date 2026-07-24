@@ -81,18 +81,36 @@ export interface GeoScope {
   targetRegions?: string[];
 }
 
+// MES-233: short-name / code origins that the >= 4-char guard below would otherwise
+// drop to [] — "UK"/"US"/"USA"/"UAE" produced NO corridor terms, silently disarming
+// the agency corridor for those founders. Map each to its SPECIFIC full-name term
+// (>= 4 chars, safe for the includes()-based agency text match) rather than the bare
+// code. Only unambiguous expansions — deliberately NOT "america"/"britain", which
+// over-match ("Latin America", etc.).
+const ORIGIN_TERM_ALIASES: Record<string, string[]> = {
+  uk: ["united kingdom"],
+  gb: ["united kingdom"],
+  usa: ["united states"],
+  us: ["united states"],
+  uae: ["united arab emirates"],
+};
+
 /**
  * Origin-country terms for the corridor check (agencies). An origin trade body
  * (Enterprise Ireland for an Irish founder) is genuinely useful, so it must stay
  * in scope. Returns [] for a blank/Australian origin (already the target market).
- * Length >= 4 avoids "us"/"uk"/"uae" codes false-matching common words.
+ * Short codes ("UK"/"USA"/"UAE") expand via ORIGIN_TERM_ALIASES; otherwise a
+ * Length >= 4 guard avoids bare 2-3 char codes false-matching common words.
  * Underscores/dashes are normalised to spaces to match stored values like
  * "united_kingdom".
  */
 export function geoOriginTerms(countryOfOrigin?: string | null): string[] {
   const term = (countryOfOrigin || "").trim().toLowerCase().replace(/[_-]+/g, " ");
-  if (term.length < 4) return [];
+  if (!term) return [];
   if (term === "australia" || term === "australian") return [];
+  const alias = ORIGIN_TERM_ALIASES[term];
+  if (alias) return alias;
+  if (term.length < 4) return [];
   return [term];
 }
 

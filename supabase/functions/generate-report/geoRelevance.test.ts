@@ -2,14 +2,27 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildGeoMatcher, geoOriginTerms, isGeoRelevant, isAgencyInCorridor, chamberOriginMismatch, stateAgencyRegionMismatch } from "./geoRelevance.ts";
 
-test("geoOriginTerms: intl origin kept, AU/blank/short dropped, underscores normalised", () => {
+test("geoOriginTerms: intl origin kept, AU/blank dropped, underscores normalised", () => {
   assert.deepEqual(geoOriginTerms("Ireland"), ["ireland"]);
   assert.deepEqual(geoOriginTerms("United States"), ["united states"]);
   assert.deepEqual(geoOriginTerms("united_kingdom"), ["united kingdom"]);
   assert.deepEqual(geoOriginTerms("Australia"), []);
   assert.deepEqual(geoOriginTerms(""), []);
   assert.deepEqual(geoOriginTerms(null), []);
-  assert.deepEqual(geoOriginTerms("US"), []); // too short → avoids "contact us" false-match
+});
+
+test("geoOriginTerms (MES-233): short codes expand to a specific full name instead of disarming", () => {
+  // Previously "UK"/"US"/"USA"/"UAE" returned [] (the <4-char guard), silently
+  // disarming the agency corridor. Now each maps to its unambiguous full name —
+  // >= 4 chars, so no "contact us" false-match, but the corridor stays armed.
+  assert.deepEqual(geoOriginTerms("UK"), ["united kingdom"]);
+  assert.deepEqual(geoOriginTerms("uk"), ["united kingdom"]);
+  assert.deepEqual(geoOriginTerms("US"), ["united states"]);
+  assert.deepEqual(geoOriginTerms("USA"), ["united states"]);
+  assert.deepEqual(geoOriginTerms("UAE"), ["united arab emirates"]);
+  // A genuinely unknown 2-3 char token is still dropped (no false-match).
+  assert.deepEqual(geoOriginTerms("xy"), []);
+  assert.deepEqual(geoOriginTerms("abc"), []);
 });
 
 // ── Providers / innovation (location-based) — B3 ──────────────────────────

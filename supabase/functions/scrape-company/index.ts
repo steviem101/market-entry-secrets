@@ -108,7 +108,7 @@ async function extractProfile(apiKey: string, url: string, content: string): Pro
             `Keys: company_name (string), industry_sector (array of 1-3 STANDARD, widely-recognised industry categories — ` +
             `e.g. "Financial Services", "Software Development", "Cybersecurity", "Healthcare", "Retail" — NOT niche product ` +
             `descriptions or coined marketing terms; pick the closest recognised category so it maps to a known sector), ` +
-            `country_of_origin (string, the HQ country), ` +
+            `country_of_origin (string, the HQ country as its common short name — e.g. "Ireland" (not "Republic of Ireland"), "United Kingdom", "United States"), ` +
             `company_stage (one of ${JSON.stringify(STAGE_OPTIONS)}), employee_count (one of ${JSON.stringify(EMPLOYEE_OPTIONS)}). ` +
             "Omit any key you cannot determine. Use Australian English.",
         },
