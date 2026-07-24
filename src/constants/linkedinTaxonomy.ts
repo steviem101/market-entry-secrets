@@ -279,6 +279,129 @@ export function getSectorsForIndustryGroups(industryGroups: string[]): string[] 
 }
 
 /**
+ * MES-230 — the full set of selectable industry labels for the report-creator
+ * picker: the 20 parent SECTORS plus the 152 breakout GROUPS, deduped (a few
+ * sectors, e.g. "Holding Companies", share a name with their sole group).
+ *
+ * The picker historically offered only the 152 groups, so obvious parent terms
+ * ("Financial Services") and everyday words that aren't taxonomy nodes at all
+ * ("Banking") returned nothing and the field felt broken. Sectors are safe to
+ * store: the matcher rolls a sector label up to the same sector slug as any of
+ * its groups (see generate-report/sectorTaxonomy.ts), so scoring is unchanged.
+ */
+export const INDUSTRY_PICKER_OPTIONS: string[] = Array.from(
+  new Set<string>([...LINKEDIN_SECTORS, ...INDUSTRY_GROUP_OPTIONS]),
+);
+
+const SECTOR_SET = new Set<string>(LINKEDIN_SECTORS);
+
+/** True when `value` is an exact canonical sector or group label (case-insensitive). */
+export function isCanonicalIndustry(value: string): boolean {
+  const v = value.trim().toLowerCase();
+  return INDUSTRY_PICKER_OPTIONS.some((o) => o.toLowerCase() === v);
+}
+
+/**
+ * Everyday search synonyms → canonical taxonomy labels (sector or group display
+ * names). LinkedIn omits terms people actually type — "Banking", "Fintech",
+ * "SaaS", "Cybersecurity" are not nodes — so a literal substring search returns
+ * nothing. Each entry maps a keyword pattern to the canonical option(s) to
+ * surface; when a matched label is a SECTOR, searchIndustryOptions expands it to
+ * its breakout groups so the heading and its children appear together.
+ *
+ * Mirrors the matcher's SECTOR_KEYWORD_ALIASES intent (which already resolves
+ * these terms to sector slugs), so a picked value scores correctly. Every
+ * `labels` value MUST be an exact INDUSTRY_PICKER_OPTIONS entry — enforced by
+ * linkedinTaxonomy.test.ts.
+ */
+export const INDUSTRY_SEARCH_ALIASES: Array<{ match: RegExp; labels: string[] }> = [
+  { match: /\b(?:bank|banking|finance|financial|fintech|lending|credit|insurtech|wealth|payments?)\b/, labels: ['Financial Services'] },
+  { match: /\b(?:saas|software|dev\s?tools|developer tools|cloud|devops)\b/, labels: ['Software Development'] },
+  { match: /\b(?:cyber|cybersecurity|infosec|information security|identity)\b/, labels: ['Software Development', 'IT Services and IT Consulting'] },
+  { match: /\b(?:ai|artificial intelligence|machine learning|ml|data|analytics|big data)\b/, labels: ['Software Development', 'Data Infrastructure and Analytics'] },
+  { match: /\b(?:health|healthcare|medtech|telehealth|digital health)\b/, labels: ['Hospitals and Health Care'] },
+  { match: /\b(?:biotech|pharma|life sciences|therapeutics|medical devices?)\b/, labels: ['Hospitals and Health Care', 'Manufacturing'] },
+  { match: /\b(?:edtech|e-learning|online learning)\b/, labels: ['Education'] },
+  { match: /\b(?:proptech|real estate|realty)\b/, labels: ['Real Estate and Equipment Rental Services'] },
+  { match: /\b(?:agtech|agritech|agriculture|farming|agri-food)\b/, labels: ['Farming, Ranching, Forestry'] },
+  { match: /\b(?:cleantech|climate|renewables?|solar|wind|sustainability)\b/, labels: ['Utilities'] },
+  { match: /\b(?:ecommerce|e-commerce|d2c|dtc|retail)\b/, labels: ['Retail'] },
+  { match: /\b(?:logistics|supply chain|freight|shipping|warehousing)\b/, labels: ['Transportation, Logistics, Supply Chain and Storage'] },
+  { match: /\b(?:crypto|blockchain|web3|defi)\b/, labels: ['Financial Services', 'Software Development'] },
+  { match: /\b(?:consulting|advisory|professional services)\b/, labels: ['Professional Services'] },
+  { match: /\b(?:legal|law)\b/, labels: ['Legal Services'] },
+  { match: /\b(?:accounting|tax|bookkeeping)\b/, labels: ['Accounting'] },
+  { match: /\b(?:marketing|advertising|adtech)\b/, labels: ['Advertising Services'] },
+  { match: /\b(?:recruit(?:ment|ing)?|staffing|talent|human resources|hr)\b/, labels: ['Staffing and Recruiting'] },
+  { match: /\b(?:mining|minerals)\b/, labels: ['Oil, Gas, and Mining'] },
+  { match: /\b(?:oil|gas|petroleum|energy)\b/, labels: ['Oil, Gas, and Mining', 'Utilities'] },
+  { match: /\b(?:hospitality|tourism|travel|restaurants?)\b/, labels: ['Accommodation and Food Services'] },
+  { match: /\b(?:media|entertainment|gaming|streaming|publishing)\b/, labels: ['Entertainment Providers', 'Technology, Information and Media'] },
+  { match: /\b(?:telecom|telco|5g|networking)\b/, labels: ['Telecommunications'] },
+  { match: /\b(?:automotive|ev|electric vehicle|mobility)\b/, labels: ['Transportation, Logistics, Supply Chain and Storage'] },
+  { match: /\b(?:government|public sector|defence|defense|govtech)\b/, labels: ['Government Administration'] },
+  { match: /\b(?:non[- ]?profit|ngo|charity)\b/, labels: ['Consumer Services'] },
+  { match: /\b(?:manufactur|industrial|machinery|robotics)\b/, labels: ['Manufacturing'] },
+];
+
+/**
+ * Rank industry options for a search query: canonical labels (sectors + groups),
+ * best-first, excluding `excluded`, capped at `limit`.
+ *
+ * Resolution: (1) direct substring over sectors + groups; (2) synonym aliases.
+ * Any matched SECTOR is expanded to `heading + its breakout groups`, so a search
+ * for "financial" or "banking" surfaces "Financial Services" AND Capital Markets
+ * / Credit Intermediation / Funds and Trusts / Insurance together. Non-sector
+ * (group) hits follow. Pure — unit-tested; safe to call on every keystroke.
+ */
+export function searchIndustryOptions(
+  query: string,
+  excluded: string[] = [],
+  limit = 8,
+): string[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const excl = new Set(excluded);
+
+  const sectors = new Set<string>();      // matched sectors (expanded to heading + groups)
+  const directGroups: string[] = [];      // groups whose NAME contains the query — rank first
+  const aliasGroups: string[] = [];       // groups surfaced only via a synonym alias
+
+  for (const opt of INDUSTRY_PICKER_OPTIONS) {
+    if (!opt.toLowerCase().includes(q)) continue;
+    if (SECTOR_SET.has(opt)) sectors.add(opt);
+    else directGroups.push(opt);
+  }
+  for (const { match, labels } of INDUSTRY_SEARCH_ALIASES) {
+    if (!match.test(q)) continue;
+    for (const l of labels) {
+      if (SECTOR_SET.has(l)) sectors.add(l);
+      else aliasGroups.push(l);
+    }
+  }
+
+  // Direct name hits lead ("credit interme" → Credit Intermediation first, even
+  // though the "credit" alias also expands Financial Services behind it), then
+  // matched sector headings with their breakouts, then alias-only groups.
+  const ordered: string[] = [...directGroups];
+  for (const sector of LINKEDIN_SECTORS) {
+    if (!sectors.has(sector)) continue;
+    ordered.push(sector, ...(LINKEDIN_TAXONOMY[sector] || []));
+  }
+  ordered.push(...aliasGroups);
+
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const label of ordered) {
+    if (seen.has(label) || excl.has(label)) continue;
+    seen.add(label);
+    out.push(label);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+/**
  * Sector gradient classes for UI display.
  * Maps the 20 LinkedIn sectors to Tailwind gradient classes.
  */

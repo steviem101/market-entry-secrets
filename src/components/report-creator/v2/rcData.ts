@@ -66,20 +66,27 @@ export const PERSONA_COPY: Record<ReportPersona, PersonaCopy> = {
 
 // Top-10 industries surfaced first (≈70% of real usage); the rest sit behind
 // "More (N)". Both are quick-picks — the search field covers the full taxonomy.
-// Every chip MUST be an exact INDUSTRY_GROUP_OPTIONS value (MES-110): non-canonical
-// labels were stored verbatim and silently resolved to zero sectors in the report
-// matcher. rcData.test.ts enforces this.
+// Every chip MUST be an exact INDUSTRY_PICKER_OPTIONS value (MES-110/MES-230:
+// sectors + groups): non-canonical labels were stored verbatim and silently
+// resolved to zero sectors in the report matcher. rcData.test.ts enforces this.
+// MES-230: the three Financial Services breakouts (Capital Markets, Credit
+// Intermediation, Funds and Trusts) confused founders scanning for "Financial
+// Services"/"Banking" — replaced by the parent sector chip (breakouts stay one
+// tap away behind "More" and in search); the freed slots went to the two most
+// common missing verticals, Hospitals and Health Care + Manufacturing (also
+// sector-level chips).
 export const TOP_INDUSTRIES = [
-  'Data Infrastructure and Analytics', 'Software Development', 'Architecture and Planning',
-  'Capital Markets', 'Credit Intermediation', 'IT Services and IT Consulting',
-  'Funds and Trusts', 'Staffing and Recruiting', 'Medical Equipment Manufacturing',
+  'Data Infrastructure and Analytics', 'Software Development', 'Financial Services',
+  'IT Services and IT Consulting', 'Architecture and Planning', 'Staffing and Recruiting',
+  'Hospitals and Health Care', 'Manufacturing', 'Medical Equipment Manufacturing',
   'Services for Renewable Energy',
 ];
 
 export const MORE_INDUSTRIES = [
+  'Capital Markets', 'Credit Intermediation', 'Funds and Trusts', 'Insurance',
   'Advertising Services', 'Machinery Manufacturing', 'Online and Mail Order Retail',
   'Freight and Package Transportation', 'Higher Education', 'Hospitality', 'Real Estate',
-  'Telecommunications', 'Farming', 'Legal Services', 'Chemical Manufacturing', 'Insurance',
+  'Telecommunications', 'Farming', 'Legal Services', 'Chemical Manufacturing',
   'Building Construction', 'Broadcast Media Production and Distribution',
 ];
 
