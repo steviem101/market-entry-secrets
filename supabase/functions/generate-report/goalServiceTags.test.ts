@@ -175,3 +175,31 @@ test("goalSelectsGrants: v2 goal_id + legacy label + negatives", () => {
   assert.equal(goalSelectsGrants({}), false);
   assert.equal(goalSelectsGrants({ goal_ids: null, services_needed: null }), false);
 });
+
+import { goalSelectsFounders } from "./goalServiceTags.ts";
+
+test("goalSelectsFounders: fires for v2 goal_id AND both v1 legacy labels (MES-236)", () => {
+  // v2 flow — stable goal id.
+  assert.equal(goalSelectsFounders({ goal_ids: ["mentors_startup", "founders"] }), true);
+  // v1 flow — original label (historical rows).
+  assert.equal(goalSelectsFounders({ services_needed: ["Connect with other founders and peer networks"] }), true);
+  // v1 flow — reworded label (new submissions) and the v2 label mirror.
+  assert.equal(goalSelectsFounders({ services_needed: ["Connect with founders who've scaled"] }), true);
+  // negatives
+  assert.equal(goalSelectsFounders({ goal_ids: ["investors", "mentors_startup"] }), false);
+  assert.equal(goalSelectsFounders({ services_needed: ["Find investors and venture capital firms"] }), false);
+  assert.equal(goalSelectsFounders({}), false);
+  assert.equal(goalSelectsFounders({ goal_ids: null, services_needed: null }), false);
+});
+
+test("legacy founders label (original + reworded) both still resolve to matching tags", () => {
+  // Guard the dual-key map — historical AND freshly-submitted v1 rows must match.
+  assert.deepEqual(
+    expandGoalsToServiceTags({ services_needed: ["Connect with other founders and peer networks"] }),
+    ["Networking", "Community", "Founder"],
+  );
+  assert.deepEqual(
+    expandGoalsToServiceTags({ services_needed: ["Connect with founders who've scaled"] }),
+    ["Networking", "Community", "Founder"],
+  );
+});

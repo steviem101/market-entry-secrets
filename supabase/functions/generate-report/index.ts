@@ -7,7 +7,7 @@ import { sanitizeScrapedContent } from "../_shared/sanitize.ts";
 import { buildScrapeCache, normaliseScrapeKey, type ScrapeCache } from "../_shared/scrapeCache.ts";
 import { selectKeyPages } from "./keyPageSelect.ts";
 import { buildCompetitorQueries, dedupeCompetitorResults, domainOf, dropNonCompetitors } from "./competitorQueries.ts";
-import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits, goalSelectsGrants } from "./goalServiceTags.ts";
+import { expandGoalsToServiceTags, goalsToPrioritisedSections, countGoalTagHits, goalSelectsGrants, goalSelectsFounders } from "./goalServiceTags.ts";
 import { buildServiceTermIndex, expandServiceTags, type ServiceTermRow, type ServiceTermIndex } from "./serviceTerms.ts";
 import { industryGroupsToSectorSlugs, unresolvedIndustries } from "./sectorTaxonomy.ts";
 import { normalizeCountry, isInternationalOrigin } from "./countryNormalize.ts";
@@ -3490,7 +3490,9 @@ async function generateReportInBackground(
     // archetype ("Scaled Founder"/"International Founder") in their specialties — so when
     // the goal is selected, label those already-matched mentors as grounded founder peers
     // inside the mentor section. Empty (no heading) when the goal is off or none matched.
-    const foundersGoalSelected = (intake.goal_ids || []).includes("founders");
+    // Fires for v2 (goal_ids) AND v1/legacy (services_needed labels) so the sub-slate
+    // and the honest card copy agree in BOTH intake flows (mes-qa review finding).
+    const foundersGoalSelected = goalSelectsFounders({ goal_ids: intake.goal_ids, services_needed: intake.services_needed });
     const founderPeersNote = buildFounderPeersNote(foundersGoalSelected, matches.community_members);
 
     // Key-question "who can help" picks (Floats feedback): pick up to 2 entities

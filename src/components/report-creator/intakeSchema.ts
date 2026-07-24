@@ -29,7 +29,9 @@ export const STARTUP_GOALS = [
   'Find co-working spaces and innovation hubs',
   'Identify grant and government funding opportunities',
   'Access lead lists and customer acquisition resources',
-  'Connect with other founders and peer networks',
+  // MES-236: honest copy — the report surfaces founder-archetype mentors as a grounded
+  // "Founder peers" sub-slate, not a standalone peer-network product (matches v2).
+  'Connect with founders who\'ve scaled',
 ] as const;
 
 // ── Existing option arrays ───────────────────────────────────────────────
