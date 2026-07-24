@@ -74,6 +74,19 @@ test("plain group substring search still works and respects exclusions + cap", (
   assert.deepEqual(searchIndustryOptions("   "), []);
 });
 
+test("name-matched sector headings clear the cap even when their groups embed the name (mes-qa fix)", () => {
+  // Retail/Wholesale/Manufacturing have 18-21 groups containing the sector name;
+  // before the tiered ranking those direct group hits filled the 8-cap and the
+  // heading itself was unselectable — a dead-end for sector-level intent, since
+  // the canonical term also (correctly) suppresses the custom-add button.
+  for (const sector of ["Retail", "Wholesale", "Manufacturing"]) {
+    const results = searchIndustryOptions(sector.toLowerCase());
+    assert.equal(results[0], sector, `heading ${sector} must lead its own name search`);
+  }
+  // The heading leads for partial queries too.
+  assert.equal(searchIndustryOptions("wholesal")[0], "Wholesale");
+});
+
 test("isCanonicalIndustry: sectors and groups are canonical, everyday terms are not", () => {
   assert.ok(isCanonicalIndustry("Financial Services"));
   assert.ok(isCanonicalIndustry("insurance")); // case-insensitive

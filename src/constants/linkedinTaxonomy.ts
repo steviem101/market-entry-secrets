@@ -351,8 +351,11 @@ export const INDUSTRY_SEARCH_ALIASES: Array<{ match: RegExp; labels: string[] }>
  * Resolution: (1) direct substring over sectors + groups; (2) synonym aliases.
  * Any matched SECTOR is expanded to `heading + its breakout groups`, so a search
  * for "financial" or "banking" surfaces "Financial Services" AND Capital Markets
- * / Credit Intermediation / Funds and Trusts / Insurance together. Non-sector
- * (group) hits follow. Pure — unit-tested; safe to call on every keystroke.
+ * / Credit Intermediation / Funds and Trusts / Insurance together. Name-matched
+ * sector headings rank first so they clear the cap even when many of their own
+ * groups also name-match ("wholesale", "retail", "manufacturing"); direct group
+ * hits and alias-only matches follow. Pure — unit-tested; safe to call on every
+ * keystroke.
  */
 export function searchIndustryOptions(
   query: string,
@@ -363,29 +366,39 @@ export function searchIndustryOptions(
   if (!q) return [];
   const excl = new Set(excluded);
 
-  const sectors = new Set<string>();      // matched sectors (expanded to heading + groups)
-  const directGroups: string[] = [];      // groups whose NAME contains the query — rank first
+  const nameSectors = new Set<string>();  // sectors whose NAME contains the query
+  const aliasSectors = new Set<string>(); // sectors surfaced only via a synonym alias
+  const directGroups: string[] = [];      // groups whose NAME contains the query
   const aliasGroups: string[] = [];       // groups surfaced only via a synonym alias
 
   for (const opt of INDUSTRY_PICKER_OPTIONS) {
     if (!opt.toLowerCase().includes(q)) continue;
-    if (SECTOR_SET.has(opt)) sectors.add(opt);
+    if (SECTOR_SET.has(opt)) nameSectors.add(opt);
     else directGroups.push(opt);
   }
   for (const { match, labels } of INDUSTRY_SEARCH_ALIASES) {
     if (!match.test(q)) continue;
     for (const l of labels) {
-      if (SECTOR_SET.has(l)) sectors.add(l);
+      if (SECTOR_SET.has(l)) { if (!nameSectors.has(l)) aliasSectors.add(l); }
       else aliasGroups.push(l);
     }
   }
 
-  // Direct name hits lead ("credit interme" → Credit Intermediation first, even
-  // though the "credit" alias also expands Financial Services behind it), then
-  // matched sector headings with their breakouts, then alias-only groups.
-  const ordered: string[] = [...directGroups];
+  // Three tiers. (1) Sectors matched by their own NAME lead — searching
+  // "wholesale"/"retail"/"manufacturing" must offer the sector heading itself,
+  // which its 18-21 name-embedding groups would otherwise push past the cap
+  // (mes-qa warning on this PR: sector-level intent dead-ended for exactly
+  // those queries). (2) Direct group-name hits ("credit interme" → Credit
+  // Intermediation first). (3) Alias-matched sectors with their breakouts,
+  // then alias-only groups ("banking" → Financial Services family).
+  const ordered: string[] = [];
   for (const sector of LINKEDIN_SECTORS) {
-    if (!sectors.has(sector)) continue;
+    if (!nameSectors.has(sector)) continue;
+    ordered.push(sector, ...(LINKEDIN_TAXONOMY[sector] || []));
+  }
+  ordered.push(...directGroups);
+  for (const sector of LINKEDIN_SECTORS) {
+    if (!aliasSectors.has(sector)) continue;
     ordered.push(sector, ...(LINKEDIN_TAXONOMY[sector] || []));
   }
   ordered.push(...aliasGroups);
