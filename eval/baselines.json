@@ -104,11 +104,11 @@
         "notes": "Heavy repetition of R&DTI 43.5% offset advice and same providers (Fullstack, Stone & Chalk, H2) already covered in service_providers and setup_compliance sections."
       },
       "swot_analysis": {
-        "grounding": 4,
-        "specificity": 4,
-        "personalisation": 4,
-        "duplication": 4,
-        "notes": "Weaknesses section slightly generic; ATS integration friction point could name specific incumbent ATS vendors relevant to Australian boutique agencies."
+        "grounding": 3,
+        "specificity": 3,
+        "personalisation": 3,
+        "duplication": 3,
+        "notes": "Recalibrated 2026-07-24 (owner-approved): the original 4.0 stamp sat on the section's 3-4 judge boundary, so a normal 3.0 roll hit exactly the -1.0 regression gate and tripped it on a provably inert PR (#591 - flag-off corridor boost that never touches swot inputs). Set to the observed floor (3.0), matching the infact/action_plan calibration policy, so ordinary judge variance no longer trips while a genuine >=1.0 drop (to <=2.0) still fails. Prior notes: Weaknesses section slightly generic; ATS integration friction point could name specific incumbent ATS vendors relevant to Australian boutique agencies."
       },
       "first_customers": {
         "grounding": 2,
