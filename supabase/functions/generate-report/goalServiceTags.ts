@@ -33,8 +33,10 @@
 //     index.ts) + the Perplexity grants research every report already runs.
 //   • lead_lists_* — lead_databases matching is semantic + ICP-gated (leadMatchesIcp);
 //     these tags only feed the scorer breadth.
-//   • founders — no peer-founder data source; the goal's real mechanisms are the
-//     mentor/events section emphasis + the "Scaled Founder" specialty term below.
+//   • founders — no separate peer-founder table; the goal's real mechanisms are the
+//     mentor/events section emphasis, the "Scaled Founder" specialty term below, and
+//     (MES-236) a labelled "Founder peers" sub-slate of founder-archetype mentors
+//     surfaced inside mentor_recommendations (see founderPeers.ts).
 export const GOAL_SERVICE_TAGS_BY_ID: Record<string, string[]> = {
   // International
   find_providers: ["Legal", "Tax", "HR", "Accounting", "Finance", "Immigration"],

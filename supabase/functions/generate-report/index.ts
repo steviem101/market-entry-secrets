@@ -25,6 +25,7 @@ import { humanizeMetricLabel, isEstimatedMetric } from "./metricLabel.ts";
 import { buildMentionPrompt, parseMentions, BACKFILL_TARGET } from "./competitorBackfill.ts";
 import { parseIcpDescription, nameMatchesDomain, buildBuyerCards, buildBuyerBriefsNote, buildIcpGuidanceNote } from "./buyerBriefs.ts";
 import { buildFirmographicsNote } from "./firmographics.ts";
+import { buildFounderPeersNote } from "./founderPeers.ts";
 import { scoreAndSort, selectTopN, withMatchMeta, mergeAndRerank, normalizePersonName, dedupeByKey, pruneAcrossGroups, preferRelevant, hasSectorRelevance, isImmigrationFocused, leadIcpTokens, leadMatchesIcp, type MatchContext, type ScoreOpts, type SelectOpts } from "./matchScoring.ts";
 import { scoreRelevance, summariseRelevanceShadow, type RelevanceGates, type RelevanceProfile } from "./scoreRelevance.ts";
 import { applyRelevanceSelection, SURFACE_SELECT_IMMIGRATION } from "./selectRelevant.ts";
@@ -3483,6 +3484,15 @@ async function generateReportInBackground(
     // D2: emphasise (never hide) the sections the user's selected goals map to.
     const prioritisedSections = new Set(goalsToPrioritisedSections({ goal_ids: (intake as any).goal_ids }));
 
+    // MES-236: "Founder peers" sub-slate. The `founders` goal ("Connect with other
+    // founders") had no peer-founder data source, so the card promised a connection the
+    // report never delivered. Real signal exists — vetted mentors carrying a founder
+    // archetype ("Scaled Founder"/"International Founder") in their specialties — so when
+    // the goal is selected, label those already-matched mentors as grounded founder peers
+    // inside the mentor section. Empty (no heading) when the goal is off or none matched.
+    const foundersGoalSelected = (intake.goal_ids || []).includes("founders");
+    const founderPeersNote = buildFounderPeersNote(foundersGoalSelected, matches.community_members);
+
     // Key-question "who can help" picks (Floats feedback): pick up to 2 entities
     // FROM THE ALREADY-MATCHED SLATE most able to help with the user's stated
     // priority, rendered as cards under the exec-summary answer. Grounded (picks
@@ -3649,7 +3659,7 @@ PRESENTATION & FORMATTING (applies to every section):
 - READABILITY: Keep every paragraph under ~110 words — split longer thoughts into multiple short paragraphs or a bullet list. Keep sentences under ~25 words on average. No walls of text.
 - NO PLACEHOLDERS: Never output placeholder text such as "TBD", "TODO", "[insert ...]", lorem ipsum, or bracketed instructions. If a fact is unavailable, omit it or give general guidance instead.
 
-${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${marketIntelNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote + providerRationaleNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote + competitorAuFirstNote : ""}${tmpl.section_name === "investor_recommendations" ? investorStageFitNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote + leadRecommendationNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" ? execFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
+${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synthesisSignalNote}${marketIntelNote}${metricsNote}${tmpl.section_name === "executive_summary" ? "" : metricsRepeatNote}${comparisonNote}${tmpl.section_name === "service_providers" ? supportMixNote + providerRationaleNote : ""}${tmpl.section_name === "competitor_landscape" ? competitorDepthNote + competitorLinkNote + competitorAuFirstNote : ""}${tmpl.section_name === "investor_recommendations" ? investorStageFitNote : ""}${tmpl.section_name === "mentor_recommendations" ? founderPeersNote : ""}${tmpl.section_name === "lead_list" ? leadScopeNote + leadEmptyNote + leadRecommendationNote : ""}${tmpl.section_name === "first_customers" ? (buyerBriefsNote || icpGuidanceNote) : ""}${tmpl.section_name === "action_plan" ? actionPlanFormatNote : ""}${tmpl.section_name === "executive_summary" ? execFormatNote : ""}${tmpl.section_name === "executive_summary" || tmpl.section_name === "action_plan" ? caseStudyProofNote : ""}${auPresenceNote}${tmpl.section_name === "executive_summary" ? auFootprintNote : ""}`;
 
             if (captureSectionPrompts) sectionPrompts[tmpl.section_name] = { system: systemContent, user: prompt };
 
