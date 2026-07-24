@@ -3,16 +3,17 @@
  *
  * Reverses the D2 default ("keep all sections, emphasise picked") ONLY when the
  * HONOUR_SECTION_SELECTION env flag is on: sections the user explicitly DESELECTED on
- * the Review screen are skipped at generation (cutting cost + clutter) and omitted at
- * render. Deliberately upsell-safe:
- *   • CORE sections (executive_summary, action_plan) are NEVER skipped.
- *   • Sections ABOVE the viewer's tier (willBeVisible === false) are NEVER skipped —
- *     their tier-gated teaser must remain, so no upsell surface is ever lost (PD-3).
+ * the Review screen are dropped from the generation batch (cutting cost + clutter), so
+ * they never reach report_json — every renderer then omits them exactly like an absent
+ * section (the report already tolerates missing sections). Deliberately upsell-safe:
+ *   • CORE sections (executive_summary, action_plan) are NEVER dropped.
+ *   • GATED sections (any that require a tier above the base) are NEVER dropped — their
+ *     tier-gated teaser + upgrade/regenerate render paths depend on the section being
+ *     present, so no upsell surface is ever lost (PD-3). Only always-free, non-core
+ *     sections are removable — which is exactly the set the Review control offers.
  *   • The tier-gating RPC (get_tier_gated_report) is untouched; this is an ADDITIONAL
- *     filter over accessible sections only.
- * The Review control only ever offers the accessible, non-core, non-gated sections for
- * removal, so the persisted set can only contain those — but the guards below enforce
- * safety independently of the UI. Flag off / no deselection → byte-identical D2.
+ *     filter over always-free sections only.
+ * Flag off / no deselection → byte-identical D2.
  *
  * `raw_input.section_selection` stores the DESELECTED (removed) section keys — an
  * absent/empty list means "nothing removed" (D2).
@@ -37,17 +38,22 @@ export function parseDeselectedSections(enabled: boolean, raw: unknown): Set<str
 }
 
 /**
- * Should this section be SKIPPED because the user removed it? True only for a section
- * that is in the deselected set, non-core, AND accessible to the viewer (willBeVisible).
- * Core and above-tier sections are never skipped — no gated/upsell surface is lost.
+ * Should this section be DROPPED from generation because the user removed it? True only
+ * for a section that is in the deselected set, non-core, AND not gated (a plain
+ * always-free section). Core and gated sections are never dropped — no gated/upsell
+ * surface is lost, and no empty-shell / regenerate-CTA render path can be triggered.
+ *
+ * `isGatedSection` = the section requires any tier above the base (its report_templates
+ * visibility_tier is not the base "free" tier). Deliberately tier-INDEPENDENT: a
+ * plain-free section is safe to drop for every viewer, a gated one for none.
  */
 export function isSectionDeselected(
   sectionName: string,
   deselected: Set<string> | null,
-  willBeVisible: boolean,
+  isGatedSection: boolean,
 ): boolean {
   if (!deselected) return false;                    // no active deselection → D2
   if (CORE_SECTIONS.has(sectionName)) return false; // core always generates
-  if (!willBeVisible) return false;                 // above the viewer's tier → keep the teaser
-  return deselected.has(sectionName);               // explicitly removed accessible section → skip
+  if (isGatedSection) return false;                 // gated → keep (teaser/upgrade paths need it present)
+  return deselected.has(sectionName);               // removed always-free section → drop
 }

@@ -3624,8 +3624,27 @@ async function generateReportInBackground(
         phaseTimings.assembly_breakdown = { ...assemblyBreakdown };
       }
 
+      // MES-234: drop deselected always-free, non-core sections BEFORE generation — they
+      // never reach report_json, so every renderer omits them like an absent section (no
+      // empty-shell or regenerate-CTA render path). Core + gated sections are never
+      // dropped. Telemetry lands in metadata.deselected_sections below. Inert unless the
+      // HONOUR_SECTION_SELECTION flag is on (deselectedSections is null when off).
+      const deselectedForReport: string[] = [];
+      const templatesToGenerate = deselectedSections
+        ? (templates || []).filter((t) => {
+            const rti = tierHierarchy.indexOf(t.visibility_tier);
+            const isGated = rti !== 0; // 0 = base "free" tier; gated (>0) or unknown (-1) are kept
+            if (isSectionDeselected(t.section_name, deselectedSections, isGated)) {
+              deselectedForReport.push(t.section_name);
+              return false;
+            }
+            return true;
+          })
+        : (templates || []);
+      if (deselectedForReport.length) console.log(`Sections deselected (skipped): ${deselectedForReport.join(", ")}`);
+
       const results = await Promise.allSettled(
-        templates.map(async (tmpl: any) => {
+        templatesToGenerate.map(async (tmpl: any) => {
           const requiredTierIndex = tierHierarchy.indexOf(tmpl.visibility_tier);
           if (requiredTierIndex === -1) {
             // Unknown/null visibility_tier — fail CLOSED (hidden) rather than
@@ -3636,16 +3655,6 @@ async function generateReportInBackground(
             console.warn(`Section "${tmpl.section_name}" has unrecognised visibility_tier "${tmpl.visibility_tier}" — defaulting to hidden (fail-closed).`);
           }
           const willBeVisible = requiredTierIndex !== -1 && userTierIndex >= requiredTierIndex;
-
-          // MES-234: the user explicitly removed this accessible, non-core section on
-          // Review → skip it (no model call, cost saving) and record it as intentionally
-          // deselected. Never reached for core or above-tier sections (isSectionDeselected
-          // guards), so no gated/upsell surface is lost. Inert unless the flag is on.
-          if (isSectionDeselected(tmpl.section_name, deselectedSections, willBeVisible)) {
-            console.log(`Section ${tmpl.section_name}: deselected by user — skipping generation`);
-            return { name: tmpl.section_name, data: { content: "", visible: false, deselected: true } };
-          }
-
           // D2: the user explicitly selected a goal that this section addresses.
           const emphasisNote = prioritisedSections.has(tmpl.section_name)
             ? `\n\nPRIORITISED SECTION: the user explicitly selected a goal that this section addresses, so it is one of the outcomes they most want. Make it especially specific, concrete and actionable — lead with the highest-value, most directly useful recommendations (stay within the length budget above).`
@@ -4067,6 +4076,9 @@ ${citationInstruction}${personaContext}${availabilityNote}${emphasisNote}${synth
         // Additive observability (no telemetry existed for sector resolution); the
         // values are the user's own labels (not PII), and generation never blocks on them.
         unresolved_industries: unresolvedIndustries(intake.industry_sector),
+        // MES-234: sections the user removed on Review (dropped before generation). Empty
+        // unless HONOUR_SECTION_SELECTION is on and the user deselected something.
+        deselected_sections: deselectedForReport,
         generation_time_ms: totalMs,
         // Per-phase breakdown of the generation time (ms) — which phase dominates.
         phase_timings: {

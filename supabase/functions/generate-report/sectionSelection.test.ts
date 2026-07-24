@@ -1,9 +1,10 @@
 /**
  * Tests for MES-234 honour-section-selection decision helpers. Run: `npm test`.
  *
- * Pins the upsell-safe invariants: core sections and above-tier (gated) sections are
- * NEVER skipped; flag-off / empty deselection is byte-identical D2; only accessible,
- * deselected, non-core sections are skipped. `section_selection` stores the REMOVED keys.
+ * Pins the upsell-safe invariants: core sections and GATED sections are NEVER dropped
+ * (so no teaser / empty-shell / regenerate-CTA render path can fire); flag-off / empty
+ * deselection is byte-identical D2; only always-free, non-core, deselected sections are
+ * dropped. `section_selection` stores the REMOVED keys.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -21,26 +22,26 @@ test("parseDeselectedSections: null unless the flag is on AND a non-empty string
 });
 
 test("isSectionDeselected: false whenever deselection is inactive (flag off / D2)", () => {
-  assert.equal(isSectionDeselected("events_resources", null, true), false);
+  assert.equal(isSectionDeselected("events_resources", null, false), false);
 });
 
-test("isSectionDeselected: core sections are NEVER skipped, even if present in the removed set", () => {
+test("isSectionDeselected: core sections are NEVER dropped, even if present in the removed set", () => {
   const removed = new Set(["executive_summary", "action_plan", "events_resources"]);
   for (const core of CORE_SECTIONS) {
-    assert.equal(isSectionDeselected(core, removed, true), false);
+    assert.equal(isSectionDeselected(core, removed, false), false);
   }
 });
 
-test("isSectionDeselected: an accessible, removed, non-core section IS skipped", () => {
+test("isSectionDeselected: an always-free, removed, non-core section IS dropped", () => {
   const removed = new Set(["events_resources"]);
-  assert.equal(isSectionDeselected("events_resources", removed, true), true);   // removed + accessible → skip
-  assert.equal(isSectionDeselected("service_providers", removed, true), false); // not removed → keep
+  assert.equal(isSectionDeselected("events_resources", removed, false), true);   // removed + free → drop
+  assert.equal(isSectionDeselected("service_providers", removed, false), false); // not removed → keep
 });
 
-test("isSectionDeselected: an ABOVE-TIER section is NEVER skipped — its teaser must remain (upsell-safe)", () => {
+test("isSectionDeselected: a GATED section is NEVER dropped — teaser/upgrade path needs it present (upsell-safe)", () => {
   const removed = new Set(["mentor_recommendations"]); // even if it somehow got into the set
-  // willBeVisible = false ⇒ the viewer can't access it (gated) ⇒ keep it for the teaser.
-  assert.equal(isSectionDeselected("mentor_recommendations", removed, false), false);
-  // Same section, viewer CAN access it (paid tier) and removed it → skip.
-  assert.equal(isSectionDeselected("mentor_recommendations", removed, true), true);
+  // isGatedSection = true (requires a tier above base) ⇒ never dropped, for any viewer.
+  assert.equal(isSectionDeselected("mentor_recommendations", removed, true), false);
+  // A plain-free section with the same removal → dropped.
+  assert.equal(isSectionDeselected("events_resources", new Set(["events_resources"]), false), true);
 });
