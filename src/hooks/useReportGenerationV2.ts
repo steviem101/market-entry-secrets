@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { reportApi } from '@/lib/api/reportApi';
 import type { IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
+import { SCRAPE_META_KEY } from '@/lib/intakeScrapeMerge';
 import { trackIntakeEvent, trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 
 /**
@@ -35,7 +36,10 @@ export const useReportGenerationV2 = () => {
     }
   };
   const clearDraft = () => {
-    try { localStorage.removeItem(LOCALSTORAGE_KEY_V2); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(LOCALSTORAGE_KEY_V2);
+      localStorage.removeItem(SCRAPE_META_KEY);
+    } catch { /* ignore */ }
   };
 
   // `heroOriginated` is passed by the caller from its in-memory hero-intent state
@@ -57,6 +61,14 @@ export const useReportGenerationV2 = () => {
 
     try {
       const intakeForm = await reportApi.submitIntakeFormV2(data, user.id);
+
+      // MES-226: the draft's job ends the moment the intake row exists — the
+      // submitted data lives server-side and failed runs are retried from
+      // /my-reports (research_bundle resume), so keeping the local draft only
+      // re-seeds the NEXT intake with a stale company. Clearing here (not just
+      // on `completed`) covers failed and timed-out runs too. The open page is
+      // unaffected: form state lives in RHF, and any further edit re-saves.
+      clearDraft();
 
       // MES-187 A1: derive the member profile from the intake we just collected
       // so the onboarding modal never asks again for what we already have.
@@ -80,7 +92,6 @@ export const useReportGenerationV2 = () => {
       });
 
       if (pollResult.status === 'completed') {
-        clearDraft();
         trackIntakeEvent('report_completed', {
           persona: data.persona,
           intake_form_id: intakeForm.id,

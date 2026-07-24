@@ -4,12 +4,16 @@
  * (never gates Next) and fails soft. The real prefill endpoint lands in Phase 4
  * (prefillFromWebsite currently resolves null → the "couldn't auto-read" path).
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   COUNTRY_OPTIONS, STAGE_OPTIONS, EMPLOYEE_OPTIONS, REVENUE_STAGE_OPTIONS, REGION_OPTIONS,
 } from '../intakeSchema.v2';
 import { INDUSTRY_GROUP_OPTIONS } from '@/constants/linkedinTaxonomy';
-import type { StepProps } from './types';
+import {
+  SCRAPE_META_KEY, clearScrapedFields, extractDomain, mergeScrapeResult, parseScrapeMeta,
+  type ScrapeFormSlice, type ScrapeMeta,
+} from '@/lib/intakeScrapeMerge';
+import type { IntakeValues, StepProps } from './types';
 import { PERSONA_COPY, TOP_INDUSTRIES, MORE_INDUSTRIES } from './rcData';
 import { RcIcon } from './icons';
 import {
@@ -29,6 +33,17 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
   const [showMoreInd, setShowMoreInd] = useState(false);
   const [indQuery, setIndQuery] = useState('');
   const [aiFields, setAiFields] = useState<AiFields>({});
+  // Which fields the last scrape populated (and with what), persisted so a
+  // company switch after leave-and-return still clears scrape-owned values.
+  const [scrapeMeta, setScrapeMeta] = useState<ScrapeMeta | null>(() => {
+    try { return parseScrapeMeta(localStorage.getItem(SCRAPE_META_KEY)); } catch { return null; }
+  });
+  useEffect(() => {
+    try {
+      if (scrapeMeta) localStorage.setItem(SCRAPE_META_KEY, JSON.stringify(scrapeMeta));
+      else localStorage.removeItem(SCRAPE_META_KEY);
+    } catch { /* ignore */ }
+  }, [scrapeMeta]);
   // The default ['Sydney/NSW'] is a suggestion until the user edits regions.
   const [regionSuggested, setRegionSuggested] = useState(
     () => (form.target_regions ?? []).length === 1 && (form.target_regions ?? [])[0] === 'Sydney/NSW',
@@ -40,39 +55,47 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
   async function runScrape() {
     const url = (form.website_url || '').trim();
     if (!url || scrape === 'loading') return;
+
+    // Company switch: when the URL's domain differs from the one a previous
+    // scrape populated, reset exactly the fields that scrape owns (values the
+    // user has edited since are kept). This runs BEFORE the fetch so Company A
+    // can't survive under Company B's URL even when the new scrape fails.
+    let base: ScrapeFormSlice = {
+      company_name: form.company_name,
+      country_of_origin: form.country_of_origin,
+      industry_sector: form.industry_sector,
+      company_stage: form.company_stage,
+      employee_count: form.employee_count,
+    };
+    const nextDomain = extractDomain(url);
+    if (scrapeMeta && nextDomain && nextDomain !== scrapeMeta.domain) {
+      const clearPatch = clearScrapedFields(base, scrapeMeta.provenance);
+      base = { ...base, ...clearPatch };
+      set({ ...clearPatch, website_scrape_accepted: false } as Partial<IntakeValues>);
+      setAiFields({});
+      setScrapeMeta(null);
+    }
+
     setScrape('loading');
     try {
       const result = await prefillFromWebsite(url);
       if (!result) { setScrape('error'); return; }
       const hadRegion = regions.length > 0;
-      const mergedName = form.company_name || result.company_name || '';
-      const mergedCountry = result.country_of_origin ?? form.country_of_origin;
-      const mergedIndustry = result.industry_sector ?? form.industry_sector;
-      const mergedStage = (result.company_stage as typeof form.company_stage) ?? form.company_stage;
-      const mergedEmployees = (result.employee_count as typeof form.employee_count) ?? form.employee_count;
+      const { patch, provenance, aiFields: nextAiFields, missingRequired } = mergeScrapeResult(base, result);
+      // The merge is a suggestion only — acceptance is the user's explicit
+      // "Looks right" click, not the scrape itself (analytics depend on this).
       set({
-        company_name: mergedName,
-        country_of_origin: mergedCountry,
-        industry_sector: mergedIndustry,
-        company_stage: mergedStage,
-        employee_count: mergedEmployees,
+        ...patch,
         target_regions: hadRegion ? regions : ['Sydney/NSW'],
-        website_scrape_accepted: true,
-      });
-      setAiFields({
-        company_name: !form.company_name && !!result.company_name,
-        country_of_origin: !!result.country_of_origin,
-        industry_sector: !!(result.industry_sector && result.industry_sector.length > 0),
-        company_stage: !!result.company_stage,
-        employee_count: !!result.employee_count,
-      });
+      } as Partial<IntakeValues>);
+      setAiFields(nextAiFields);
+      if (nextDomain) setScrapeMeta({ domain: nextDomain, provenance });
       setRegionSuggested(!hadRegion);
       // If a REQUIRED field (especially country — hard to scrape reliably) wasn't
       // captured, expand to the full fields so the user can complete it. Collapsing to
       // the "Here's what we found" card hides the empty required input, so its
       // validation fires invisibly on Next and the button looks broken (observed:
       // nory.ai detected company/industry/stage but not country -> dead Next button).
-      const missingRequired = !mergedName || !mergedCountry || !(mergedIndustry ?? []).length || !mergedStage;
       setExpanded(missingRequired);
       setScrape('detected');
       trackIntakeEvent('website_prefill_shown', { step: 1, persona });
