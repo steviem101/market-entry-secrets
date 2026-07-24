@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { reportApi } from '@/lib/api/reportApi';
 import type { IntakeFormDataV2 } from '@/components/report-creator/intakeSchema.v2';
+import { resolveCountryOfOrigin } from '@/lib/countryOfOrigin';
 import { trackIntakeEvent, trackFunnelEvent } from '@/lib/analytics/intakeFunnel';
 
 /**
@@ -71,7 +72,10 @@ export const useReportGenerationV2 = () => {
       // the report flow by the OnboardingGate / A2).
       void deriveProfileFromIntake({
         company_name: data.company_name,
-        country: data.country_of_origin,
+        // PD-7: resolve "Other" + free text to the real country so the member
+        // profile records e.g. "Brazil", not the literal "Other" (mirrors the
+        // resolution mapV2ToLegacyIntake applies to the report's top-level column).
+        country: resolveCountryOfOrigin(data.country_of_origin, data.country_of_origin_other),
         target_market: 'Australia',
         use_case: data.persona === 'startup' ? 'founder' : 'corporate',
         onboarding_completed: true,

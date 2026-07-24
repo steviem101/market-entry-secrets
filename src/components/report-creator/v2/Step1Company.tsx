@@ -291,6 +291,7 @@ export function Step1Company({ persona, form, set, errors, onNext }: StepProps) 
                     placeholder="Type your country — e.g. Brazil"
                     value={form.country_of_origin_other || ''}
                     onChange={(v) => set({ country_of_origin_other: v })}
+                    maxLength={100}
                     ariaLabel="Enter your country of origin"
                   />
                 </div>
